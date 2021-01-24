@@ -32,6 +32,6 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_ustring(character.home_name)
     |> put_int()
     |> put_short()
-    |> Packets.CharacterList.put_trophies(character.trophies)
+    |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
   end
 end

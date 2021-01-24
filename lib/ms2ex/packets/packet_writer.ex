@@ -125,7 +125,7 @@ defmodule Ms2ex.Packets.PacketWriter do
   def deflate(data) do
     zlib = :zlib.open()
     :ok = :zlib.deflateInit(zlib)
-    deflated = :zlib.deflate(zlib, data)
+    deflated = :zlib.deflate(zlib, data, :sync)
     :zlib.close(zlib)
 
     deflated = Enum.into(deflated, <<>>)
