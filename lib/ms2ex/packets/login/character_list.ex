@@ -29,6 +29,7 @@ defmodule Ms2ex.Packets.CharacterList do
     __MODULE__
     |> build()
     |> put_byte(@modes.end_list)
+    |> put_bool(false)
   end
 
   defp put_entries(packet, []), do: packet
@@ -58,7 +59,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_long(character.id)
     |> put_ustring(character.name)
     |> put_tiny(gender)
-    |> put_byte(0x1)
+    |> put_tiny(0x1)
     |> put_long()
     |> put_int()
     |> put_int(character.map_id)
@@ -79,7 +80,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_int()
     |> put_skin_color(character.skin_color)
     |> put_time(character.inserted_at)
-    |> put_trophies(character.trophies)
+    |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
     |> put_long()
     |> put_ustring(character.guild_name)
     |> put_ustring(character.motto)
@@ -141,12 +142,4 @@ defmodule Ms2ex.Packets.CharacterList do
   end
 
   defp put_club(packet, _club), do: put_bool(packet, false)
-
-  def put_trophies(packet, []), do: packet
-
-  def put_trophies(packet, [t | trophies]) do
-    packet
-    |> put_int(t)
-    |> put_trophies(trophies)
-  end
 end
