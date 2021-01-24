@@ -27,7 +27,7 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :ms2ex, Ms2ex, hash: "ce6ca622429e68b37650d519b326e293"
+config :ms2ex, Ms2ex, version: 12, hash: "ce6ca622429e68b37650d519b326e293"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

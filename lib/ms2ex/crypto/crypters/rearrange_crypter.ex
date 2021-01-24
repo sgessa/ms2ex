@@ -17,8 +17,6 @@ defmodule Ms2ex.Crypto.RearrangeCrypter do
       |> List.update_at(idx, fn _ -> Enum.at(acc, idx + len) end)
       |> List.update_at(idx + len, fn _ -> swap end)
     end)
-
-    # |> IO.inspect(base: :hex, label: "DEC REARR")
   end
 
   def encrypt(data) do
@@ -31,7 +29,5 @@ defmodule Ms2ex.Crypto.RearrangeCrypter do
       |> List.update_at(idx, fn _ -> Enum.at(acc, idx + len) end)
       |> List.update_at(idx + len, fn _ -> swap end)
     end)
-
-    # |> IO.inspect(base: :hex, label: "ENC REARR")
   end
 end

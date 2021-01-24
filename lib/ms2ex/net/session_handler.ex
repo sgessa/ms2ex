@@ -11,8 +11,10 @@ defmodule Ms2ex.Net.SessionHandler do
   @behaviour :ranch_protocol
   @transport :ranch_tcp
 
-  @version 12
-  @block_iv 12
+  @conf Application.get_env(:ms2ex, Ms2ex)
+  @skip_packet_logs @conf[:skip_packet_logs] || []
+  @version @conf[:version] || 12
+  @block_iv @conf[:initial_block_iv] || @version
 
   def start_link(ref, socket, transport, opts) do
     GenServer.start(__MODULE__, {ref, socket, transport, opts}, [])
@@ -118,11 +120,10 @@ defmodule Ms2ex.Net.SessionHandler do
     L.info("Client connected to Channel #{id} on World #{world}")
   end
 
-  @skip_logged_packets ["SEND_LOG", "KEY_TABLE", "USER_SYNC"]
   defp log_incoming_packet(opcode, packet) do
     name = Packets.opcode_to_name(:recv, opcode)
 
-    unless name in @skip_logged_packets do
+    unless name in @skip_packet_logs do
       L.debug("[RECV] #{name}: #{inspect(packet, base: :hex)}")
     end
   end
@@ -130,7 +131,7 @@ defmodule Ms2ex.Net.SessionHandler do
   defp log_sent_packet(opcode, packet) do
     name = Packets.opcode_to_name(:send, opcode)
 
-    unless name in @skip_logged_packets do
+    unless name in @skip_packet_logs do
       packet = inspect(packet, limit: :infinity, base: :hex)
       L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{packet}"]))
     end

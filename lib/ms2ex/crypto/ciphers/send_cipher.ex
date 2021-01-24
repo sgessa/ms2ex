@@ -23,9 +23,7 @@ defmodule Ms2ex.Crypto.SendCipher do
   end
 
   defp encode_seq_base(send_cipher) do
-    # IO.inspect(send_cipher.iv, label: "[SEND] IV")
     enc_seq = send_cipher.version ^^^ Cipher.mask(send_cipher.iv >>> 16)
-    # IO.inspect(enc_seq, label: "[SEND] ENC SEQ")
     send_cipher = Cipher.advance_iv(send_cipher)
     {send_cipher, enc_seq}
   end
