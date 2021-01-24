@@ -48,10 +48,7 @@ defmodule Ms2ex.Crypto.RecvCipher do
   end
 
   defp decode_seq_base(cipher, enc_seq) do
-    # IO.inspect(enc_seq, label: "[RECV] ENC SEQ")
-    # IO.inspect(cipher.iv, label: "[RECV] IV")
     dec_seq = (cipher.iv >>> 16) ^^^ enc_seq
-    # IO.inspect(dec_seq, label: "[RECV] DEC SEQ")
 
     cipher = Cipher.advance_iv(cipher)
     {cipher, dec_seq}

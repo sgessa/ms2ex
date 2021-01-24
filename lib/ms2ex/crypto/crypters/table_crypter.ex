@@ -29,16 +29,12 @@ defmodule Ms2ex.Crypto.TableCrypter do
     Enum.map(data, fn x ->
       Enum.at(tc.decrypted, x)
     end)
-
-    # |> IO.inspect(base: :hex, label: "DEC TABLE")
   end
 
   def encrypt(%__MODULE__{} = tc, data) do
     Enum.map(data, fn x ->
       Enum.at(tc.encrypted, x)
     end)
-
-    # |> IO.inspect(base: :hex, label: "ENC TABLE")
   end
 
   defp shuffle(data, version) do

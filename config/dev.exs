@@ -41,7 +41,7 @@ config :ms2ex, Ms2ex,
   },
   worlds: [
     %{
-      name: "Aincrad",
+      name: "Paperwood",
       channels: [
         %{host: server_host, port: 20002},
         %{host: server_host, port: 20003}
@@ -52,4 +52,5 @@ config :ms2ex, Ms2ex,
     endpoint: "http://#{server_host}/ws.asmx?wsdl",
     resource: "http://#{server_host}",
     locale: "na"
-  }
+  },
+  skip_packet_logs: ["SEND_LOG", "KEY_TABLE", "USER_SYNC"]
