@@ -7,27 +7,24 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {_mode, packet} = get_byte(packet)
 
     {client_tick, packet} = get_int(packet)
-    {server_tick, packet} = get_int(packet)
-    {segments, packet} = get_tiny(packet)
+    {_server_tick, packet} = get_int(packet)
+    {segments, packet} = get_byte(packet)
 
-    states = get_states(segments, packet)
-    sync_packet = Packets.UserSync.bytes(character, states)
-    Field.broadcast(session.field_pid, sync_packet, character.id)
+    if segments > 0 do
+      states = get_states(segments, packet)
+      sync_packet = Packets.UserSync.bytes(character, states)
+      Field.broadcast(session.field_pid, sync_packet, character.id)
+    end
 
-    %{session | client_tick: client_tick, server_tick: server_tick}
+    %{session | client_tick: client_tick}
   end
 
   defp get_states(segments, packet, state \\ [])
 
   defp get_states(segments, packet, states) when segments > 0 do
     sync_state = SyncState.from_packet(packet)
-
-    # Client Ticks
-    {_, packet} = get_int(packet)
-
-    # Server Ticks
-    {_, packet} = get_int(packet)
-
+    {_client_tick, packet} = get_int(packet)
+    {_server_tick, packet} = get_int(packet)
     get_states(segments - 1, packet, states ++ [sync_state])
   end
 

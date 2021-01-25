@@ -7,7 +7,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
   import Net.SessionHandler, only: [push: 2]
 
   def handle(packet, session) do
-    {mode, packet} = get_tiny(packet)
+    {mode, packet} = get_byte(packet)
     {username, packet} = get_ustring(packet)
     {password, _packet} = get_ustring(packet)
 

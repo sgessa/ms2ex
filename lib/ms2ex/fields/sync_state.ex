@@ -37,9 +37,9 @@ defmodule Ms2ex.SyncState do
   def from_packet(packet) do
     state = %__MODULE__{}
 
-    {animation1, packet} = get_tiny(packet)
-    {animation2, packet} = get_tiny(packet)
-    {flag, packet} = get_tiny(packet)
+    {animation1, packet} = get_byte(packet)
+    {animation2, packet} = get_byte(packet)
+    {flag, packet} = get_byte(packet)
 
     state = %{state | animation1: animation1, animation2: animation2, flag: flag}
 
@@ -54,7 +54,9 @@ defmodule Ms2ex.SyncState do
 
     {position, packet} = get_short_coord(packet)
     {rotation, packet} = get_short(packet)
-    {animation3, packet} = get_tiny(packet)
+    {animation3, packet} = get_byte(packet)
+
+    IO.inspect(position, label: "POS")
 
     state = %{state | position: position, rotation: rotation, animation3: animation3}
 
@@ -68,7 +70,7 @@ defmodule Ms2ex.SyncState do
       end
 
     {speed, packet} = get_short_coord(packet)
-    {unknown1, packet} = get_tiny(packet)
+    {unknown1, packet} = get_byte(packet)
     {unknown2, packet} = get_short(packet)
     {unknown3, packet} = get_short(packet)
 
@@ -76,9 +78,9 @@ defmodule Ms2ex.SyncState do
 
     {state, packet} =
       if (state.flag &&& flag(:flag2)) != 0 do
-        # {flag_2_unknown_1, packet} = get_coord(packet)
-        # {flag_2_unknown_2, packet} = get_ustring(packet)
-        # {%{state | unknown_flag_2: {flag_2_unknown_1, flag_2_unknown_2}}, packet}
+        {flag_2_unknown_1, packet} = get_coord(packet)
+        {flag_2_unknown_2, packet} = get_ustring(packet)
+        {%{state | unknown_flag_2: {flag_2_unknown_1, flag_2_unknown_2}}, packet}
         {state, packet}
       else
         {state, packet}
@@ -86,9 +88,9 @@ defmodule Ms2ex.SyncState do
 
     {state, packet} =
       if (state.flag &&& flag(:flag3)) != 0 do
-        # {flag_3_unknown_1, packet} = get_int(packet)
-        # {flag_3_unknown_2, packet} = get_ustring(packet)
-        # {%{state | unknown_flag_3: {flag_3_unknown_1, flag_3_unknown_2}}, packet}
+        {flag_3_unknown_1, packet} = get_int(packet)
+        {flag_3_unknown_2, packet} = get_ustring(packet)
+        {%{state | unknown_flag_3: {flag_3_unknown_1, flag_3_unknown_2}}, packet}
         {state, packet}
       else
         {state, packet}
@@ -96,8 +98,8 @@ defmodule Ms2ex.SyncState do
 
     {state, packet} =
       if (state.flag &&& flag(:flag4)) != 0 do
-        # {flag_4_unknown, packet} = get_ustring(packet)
-        # {%{state | unknown_flag_4: flag_4_unknown}, packet}
+        {flag_4_unknown, packet} = get_ustring(packet)
+        {%{state | unknown_flag_4: flag_4_unknown}, packet}
         {state, packet}
       else
         {state, packet}
@@ -105,9 +107,9 @@ defmodule Ms2ex.SyncState do
 
     {state, packet} =
       if (state.flag &&& flag(:flag5)) != 0 do
-        # {flag_5_unknown_1, packet} = get_int(packet)
-        # {flag_5_unknown_2, packet} = get_ustring(packet)
-        # {%{state | unknown_flag_5: {flag_5_unknown_1, flag_5_unknown_2}}, packet}
+        {flag_5_unknown_1, packet} = get_int(packet)
+        {flag_5_unknown_2, packet} = get_ustring(packet)
+        {%{state | unknown_flag_5: {flag_5_unknown_1, flag_5_unknown_2}}, packet}
         {state, packet}
       else
         {state, packet}
@@ -115,17 +117,17 @@ defmodule Ms2ex.SyncState do
 
     {state, packet} =
       if (state.flag &&& flag(:flag6)) != 0 do
-        # {flag_6_unknown_1, packet} = get_int(packet)
-        # {flag_6_unknown_2, packet} = get_int(packet)
-        # {flag_6_unknown_3, packet} = get_byte(packet)
-        # {flag_6_unknown_4, packet} = get_coord(packet)
-        # {flag_6_unknown_5, packet} = get_coord(packet)
+        {flag_6_unknown_1, packet} = get_int(packet)
+        {flag_6_unknown_2, packet} = get_int(packet)
+        {flag_6_unknown_3, packet} = get_byte(packet)
+        {flag_6_unknown_4, packet} = get_coord(packet)
+        {flag_6_unknown_5, packet} = get_coord(packet)
 
-        # unknown_flag_6 =
-        #   {flag_6_unknown_1, flag_6_unknown_2, flag_6_unknown_3, flag_6_unknown_4,
-        #    flag_6_unknown_5}
+        unknown_flag_6 =
+          {flag_6_unknown_1, flag_6_unknown_2, flag_6_unknown_3, flag_6_unknown_4,
+           flag_6_unknown_5}
 
-        # {%{state | unknown_flag_6: unknown_flag_6}, packet}
+        {%{state | unknown_flag_6: unknown_flag_6}, packet}
         {state, packet}
       else
         {state, packet}
@@ -233,7 +235,5 @@ defmodule Ms2ex.SyncState do
     put_int(packet, state.unknown4)
   end
 
-  def flag(flag) do
-    Keyword.get(Flag.__enum_map__(), flag)
-  end
+  def flag(flag), do: Keyword.get(Flag.__enum_map__(), flag)
 end
