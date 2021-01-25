@@ -4,7 +4,7 @@ defmodule Ms2ex.Users.Account do
   import Ecto.Changeset
 
   schema "accounts" do
-    has_many :characters, Ms2ex.Users.Character
+    has_many :characters, Ms2ex.Character
 
     field :password, :string, virtual: true
     field :password_hash, :string

@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   require Logger
 
   alias Ms2ex.{Field, Net, Packets}
-  alias Ms2ex.InventoryItems, as: Items
+  alias Ms2ex.Inventory, as: Items
 
   # import Packets.PacketReader
   import Net.SessionHandler, only: [push: 2]

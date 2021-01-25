@@ -1,6 +1,5 @@
 defmodule Ms2ex.Packets.CharacterList do
-  alias Ms2ex.Packets
-  alias Ms2ex.Users.Character
+  alias Ms2ex.{Character, Packets}
 
   import Packets.PacketWriter
 

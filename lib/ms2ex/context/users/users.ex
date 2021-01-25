@@ -1,9 +1,6 @@
 defmodule Ms2ex.Users do
-  alias Ms2ex.Users.{Account, Character}
-  alias Ms2ex.InventoryItems.Item
-  alias Ms2ex.Repo
-
-  import Ecto.Query, except: [update: 2]
+  alias Ms2ex.{Characters, Repo}
+  alias Ms2ex.Users.Account
 
   def authenticate(username, password) do
     account = Repo.get_by(Account, username: username)
@@ -37,19 +34,13 @@ defmodule Ms2ex.Users do
 
   def delete(%Account{} = account), do: Repo.delete(account)
 
-  # Characters
-
-  def create_character(%Account{} = account, attrs) do
-    account
-    |> Ecto.build_assoc(:characters)
-    |> Character.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  def get_character(id), do: Repo.get(Character, id)
-
   def load_characters(%Account{} = account) do
-    equips = where(Item, [i], i.slot_type != :none)
-    Repo.preload(account, characters: [equips: equips])
+    account =
+      Repo.preload(account,
+        characters: [equipment: [:face, :face_decor, :hair, :top, :bottom, :shoes]]
+      )
+
+    characters = Enum.map(account.characters, &Characters.load_equips(&1))
+    Map.put(account, :characters, characters)
   end
 end

@@ -1,10 +1,18 @@
-defmodule Ms2ex.InventoryItems do
+defmodule Ms2ex.Inventory do
   alias __MODULE__.Item
-  alias Ms2ex.{Repo, Users.Character}
+  alias Ms2ex.{Repo, Character}
+  alias Ms2ex.Protobuf.{ItemMetadata, ItemSlot}
 
   import Ecto.Query, except: [update: 2]
 
-  def add_item(%Character{} = character, %Item{max_slot: n} = attrs) when n > 1 do
+  def load_metadata(%Item{} = item) do
+    case :ets.lookup(:metadata, item.item_id) do
+      [{_id, %ItemMetadata{} = meta}] -> %{item | metadata: meta}
+      _ -> item
+    end
+  end
+
+  def add_item(%Character{} = character, %Item{metadata: %{max_slot: n}} = attrs) when n > 1 do
     Repo.transaction(fn ->
       case find_item(character, attrs) do
         %Item{} = item ->
@@ -17,7 +25,9 @@ defmodule Ms2ex.InventoryItems do
   end
 
   def add_item(%Character{} = character, %Item{} = attrs) do
-    create(character, attrs)
+    with {:create, item} <- create(character, attrs) do
+      {:ok, {:create, item}}
+    end
   end
 
   defp find_item(%{id: char_id}, %{item_id: item_id, max_slot: max_slot}) do
@@ -57,7 +67,7 @@ defmodule Ms2ex.InventoryItems do
       |> Item.changeset(attrs)
 
     with {:ok, item} <- Repo.insert(changeset) do
-      {:create, item}
+      {:create, load_metadata(item)}
     end
   end
 
@@ -68,11 +78,19 @@ defmodule Ms2ex.InventoryItems do
     |> where([i], i.id == ^id)
     |> Repo.update_all(inc: [amount: new_amount])
 
-    {:update, Repo.get(Item, id), new_amount}
+    item = Item |> Repo.get(id) |> load_metadata()
+    {:update, item, new_amount}
   end
 
-  def load_equips(%Character{} = char) do
-    equips = where(Item, [i], i.slot_type != :none)
-    Repo.preload(char, equips: equips)
+  def load_equips(%Character{id: char_id} = char) do
+    equips =
+      Item
+      |> where([i], i.character_id == ^char_id)
+      |> Repo.all()
+      |> Enum.map(fn item -> load_metadata(item) end)
+
+    Map.put(char, :equips, equips)
   end
+
+  def slot_value(%Item{metadata: %{slot: slot}}), do: ItemSlot.value(slot)
 end

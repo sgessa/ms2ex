@@ -1,20 +1,21 @@
 defmodule Ms2ex.Packets.ItemInventory do
-  alias Ms2ex.InventoryItems.Item
+  alias Ms2ex.Inventory, as: Items
+  alias Items.Item
 
   import Ms2ex.Packets.PacketWriter
 
   @modes %{add: 0x0, load: 0xE, reset: 0xD}
 
   def add_item({:ok, {:create, item}}) do
-    slot_type = Keyword.get(Item.SlotType.__enum_map__(), item.slot_type)
+    slot_value = Items.slot_value(item)
 
     __MODULE__
     |> build()
     |> put_byte(@modes.add)
     |> put_int(item.item_id)
     |> put_long(item.id)
-    |> put_short(slot_type)
-    |> put_int(item.rarity)
+    |> put_short(slot_value)
+    |> put_int(item.metadata.rarity)
     |> put_ustring()
     |> put_item(item)
   end
@@ -27,7 +28,7 @@ defmodule Ms2ex.Packets.ItemInventory do
     packet
     |> put_int(item.item_id)
     |> put_long(item.id)
-    |> put_ustring(Item.slot_name(item.slot_type))
+    |> put_ustring(to_string(item.metadata.slot))
     |> put_int(1)
     |> put_item(item)
     |> put_equips(equips)
@@ -81,9 +82,9 @@ defmodule Ms2ex.Packets.ItemInventory do
       |> Ms2ex.ItemColor.put_item_color(item.color)
       |> put_int(item.appearance_flag)
 
-    case item.slot_type do
-      :face_decor -> put_bytes(packet, item.data)
-      :hair -> Item.Hair.put_hair(packet, item.data)
+    case item.metadata.slot do
+      :FD -> put_bytes(packet, item.data)
+      :HR -> Item.Hair.put_hair(packet, item.data)
       _ -> packet
     end
     |> put_byte()
@@ -123,18 +124,18 @@ defmodule Ms2ex.Packets.ItemInventory do
     |> put_byte(0)
   end
 
-  def load({_name, id}) do
+  def load(tab_id) do
     __MODULE__
     |> build()
     |> put_byte(@modes.load)
-    |> put_byte(id)
+    |> put_byte(tab_id)
     |> put_int()
   end
 
-  def reset({_name, id}) do
+  def reset(tab_id) do
     __MODULE__
     |> build()
     |> put_byte(@modes.reset)
-    |> put_int(id)
+    |> put_int(tab_id)
   end
 end
