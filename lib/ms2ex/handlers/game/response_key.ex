@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{InventoryItems.Item, Net, Packets, Users}
+  alias Ms2ex.{Characters, Net, Packets, Protobuf, Users}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -21,13 +21,24 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     with true <- token_a == session_data.token_a,
          true <- token_b == session_data.token_b do
       account = Users.get(session_data[:account_id])
-      character = Users.get_character(session_data[:character_id])
+
+      character =
+        session_data[:character_id]
+        |> Characters.get()
+        |> Characters.load_equips()
 
       Logger.info(
         "Authorized connection to World #{session.name} for Account #{account.username}"
       )
 
       tick = Ms2ex.sync_ticks()
+
+      inventory_tab_keys = Map.keys(Protobuf.InventoryTab.mapping())
+
+      inventory_tabs =
+        Enum.map(inventory_tab_keys, fn key ->
+          Map.get(Protobuf.InventoryTab.mapping(), key)
+        end)
 
       session
       |> Map.put(:account, account)
@@ -45,7 +56,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(session.channel_id, character))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(Item.TabType.__enum_map__())
+      |> push_inventory_tab(inventory_tabs)
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())

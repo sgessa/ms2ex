@@ -8,6 +8,8 @@ defmodule Ms2ex.Application do
   def start(_type, _args) do
     config = Application.get_env(:ms2ex, Ms2ex)
 
+    load_metadata()
+
     children =
       [
         # Start the Ecto repository
@@ -29,6 +31,20 @@ defmodule Ms2ex.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp load_metadata() do
+    list =
+      [:code.priv_dir(:ms2ex), "resources", "ms2-item-metadata"]
+      |> Path.join()
+      |> File.read!()
+      |> Ms2ex.Protobuf.ListItemMetadata.decode()
+
+    :ets.new(:metadata, [:protected, :set, :named_table])
+
+    for %{id: item_id} = metadata <- list.items do
+      :ets.insert(:metadata, {item_id, metadata})
+    end
   end
 
   defp worlds(worlds) do

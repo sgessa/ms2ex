@@ -1,4 +1,4 @@
-defmodule Ms2ex.Repo.Migrations.CreateInventoryItems do
+defmodule Ms2ex.Repo.Migrations.CreateInventory do
   use Ecto.Migration
 
   def change do
@@ -9,10 +9,6 @@ defmodule Ms2ex.Repo.Migrations.CreateInventoryItems do
       add :amount, :integer, null: false
       add :color, :binary
       add :data, :binary
-      add :is_template, :boolean
-      add :max_slot, :integer, null: false
-      add :slot_type, :integer, null: false
-      add :tab_type, :integer, null: false
 
       timestamps(type: :timestamptz)
     end

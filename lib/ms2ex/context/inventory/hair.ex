@@ -1,4 +1,4 @@
-defmodule Ms2ex.InventoryItems.Item.Hair do
+defmodule Ms2ex.Inventory.Item.Hair do
   import Ms2ex.Packets.{PacketReader, PacketWriter}
 
   @position_length 24

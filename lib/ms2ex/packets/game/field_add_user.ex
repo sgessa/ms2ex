@@ -1,6 +1,6 @@
 defmodule Ms2ex.Packets.FieldAddUser do
   alias Ms2ex.Packets
-  alias Ms2ex.Users.Character
+  alias Ms2ex.Character
 
   import Packets.PacketWriter
 
