@@ -53,4 +53,4 @@ config :ms2ex, Ms2ex,
     resource: "http://#{server_host}",
     locale: "na"
   },
-  skip_packet_logs: ["SEND_LOG", "KEY_TABLE", "USER_SYNC"]
+  skip_packet_logs: ["CHARACTER_LIST", "FIELD_ADD_USER", "KEY_TABLE", "SEND_LOG", "USER_SYNC"]
