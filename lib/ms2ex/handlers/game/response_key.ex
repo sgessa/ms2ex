@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, Net, Packets, Protobuf, Users}
+  alias Ms2ex.{Characters, LoginHandlers, Net, Packets, Protobuf}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -9,27 +9,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    account_id
-    |> Net.SessionRegistry.lookup()
-    |> verify_auth_data(packet, session)
-  end
-
-  defp verify_auth_data({:ok, session_data}, packet, session) do
-    {token_a, packet} = get_int(packet)
-    {token_b, _packet} = get_int(packet)
-
-    with true <- token_a == session_data.token_a,
-         true <- token_b == session_data.token_b do
-      account = Users.get(session_data[:account_id])
-
+    with {:ok, auth_data} = Net.SessionRegistry.lookup(account_id),
+         {:ok, %{account: account} = session} <-
+           LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
       character =
-        session_data[:character_id]
+        auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
-
-      Logger.info(
-        "Authorized connection to World #{session.name} for Account #{account.username}"
-      )
 
       tick = Ms2ex.sync_ticks()
 
@@ -41,7 +27,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end)
 
       session
-      |> Map.put(:account, account)
       |> Map.put(:character, character)
       |> push(Packets.MoveResult.bytes())
       |> push(Packets.LoginRequired.bytes(account.id))
@@ -74,13 +59,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.RequestFieldEnter.bytes(character))
     else
-      _ -> verify_auth_data(false, packet, session)
+      _ -> session
     end
-  end
-
-  defp verify_auth_data(_session_data, _packet, session) do
-    Logger.error("Unauthorized Connection to Channel Server")
-    session
   end
 
   defp push_inventory_tab(session, []), do: session
