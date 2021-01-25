@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp get_states(segments, packet, state \\ [])
 
   defp get_states(segments, packet, states) when segments > 0 do
-    sync_state = SyncState.from_packet(packet)
+    {sync_state, packet} = SyncState.from_packet(packet)
     {_client_tick, packet} = get_int(packet)
     {_server_tick, packet} = get_int(packet)
     get_states(segments - 1, packet, states ++ [sync_state])
