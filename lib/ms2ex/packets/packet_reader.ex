@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.PacketReader do
-  def get_byte(<<b::bytes-1, packet::binary>>), do: {b, packet}
+  def get_byte(<<n::integer-8, packet::binary>>), do: {n, packet}
 
   def get_bytes(packet, n) do
     <<b::bytes-size(n), packet::little-bytes>> = packet
@@ -33,7 +33,6 @@ defmodule Ms2ex.Packets.PacketReader do
   end
 
   def get_short(<<n::little-integer-16, packet::binary>>), do: {n, packet}
-  def get_tiny(<<n::integer-8, packet::binary>>), do: {n, packet}
   def get_ushort(<<n::little-unsigned-integer-16, packet::binary>>), do: {n, packet}
 
   def get_ustring(packet) do
