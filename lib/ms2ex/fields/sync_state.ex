@@ -44,7 +44,7 @@ defmodule Ms2ex.SyncState do
     state = %{state | animation1: animation1, animation2: animation2, flag: flag}
 
     {state, packet} =
-      if (state.flag &&& flag(:flag1)) != 0 do
+      if has_bit?(flag, :flag1) do
         {flag_1_unknown_1, packet} = get_int(packet)
         {flag_1_unknown_2, packet} = get_short(packet)
         {%{state | unknown_flag_1: {flag_1_unknown_1, flag_1_unknown_2}}, packet}
@@ -55,8 +55,6 @@ defmodule Ms2ex.SyncState do
     {position, packet} = get_short_coord(packet)
     {rotation, packet} = get_short(packet)
     {animation3, packet} = get_byte(packet)
-
-    IO.inspect(position, label: "POS")
 
     state = %{state | position: position, rotation: rotation, animation3: animation3}
 
@@ -77,7 +75,7 @@ defmodule Ms2ex.SyncState do
     state = %{state | speed: speed, unknown1: unknown1, unknown2: unknown2, unknown3: unknown3}
 
     {state, packet} =
-      if (state.flag &&& flag(:flag2)) != 0 do
+      if has_bit?(flag, :flag2) do
         {flag_2_unknown_1, packet} = get_coord(packet)
         {flag_2_unknown_2, packet} = get_ustring(packet)
         {%{state | unknown_flag_2: {flag_2_unknown_1, flag_2_unknown_2}}, packet}
@@ -87,7 +85,7 @@ defmodule Ms2ex.SyncState do
       end
 
     {state, packet} =
-      if (state.flag &&& flag(:flag3)) != 0 do
+      if has_bit?(flag, :flag3) do
         {flag_3_unknown_1, packet} = get_int(packet)
         {flag_3_unknown_2, packet} = get_ustring(packet)
         {%{state | unknown_flag_3: {flag_3_unknown_1, flag_3_unknown_2}}, packet}
@@ -97,7 +95,7 @@ defmodule Ms2ex.SyncState do
       end
 
     {state, packet} =
-      if (state.flag &&& flag(:flag4)) != 0 do
+      if has_bit?(flag, :flag4) do
         {flag_4_unknown, packet} = get_ustring(packet)
         {%{state | unknown_flag_4: flag_4_unknown}, packet}
         {state, packet}
@@ -106,7 +104,7 @@ defmodule Ms2ex.SyncState do
       end
 
     {state, packet} =
-      if (state.flag &&& flag(:flag5)) != 0 do
+      if has_bit?(flag, :flag5) do
         {flag_5_unknown_1, packet} = get_int(packet)
         {flag_5_unknown_2, packet} = get_ustring(packet)
         {%{state | unknown_flag_5: {flag_5_unknown_1, flag_5_unknown_2}}, packet}
@@ -116,7 +114,7 @@ defmodule Ms2ex.SyncState do
       end
 
     {state, packet} =
-      if (state.flag &&& flag(:flag6)) != 0 do
+      if has_bit?(flag, :flag6) do
         {flag_6_unknown_1, packet} = get_int(packet)
         {flag_6_unknown_2, packet} = get_int(packet)
         {flag_6_unknown_3, packet} = get_byte(packet)
@@ -133,20 +131,20 @@ defmodule Ms2ex.SyncState do
         {state, packet}
       end
 
-    {unknown4, _packet} = get_int(packet)
+    {unknown4, packet} = get_int(packet)
 
-    %{state | unknown4: unknown4}
+    {%{state | unknown4: unknown4}, packet}
   end
 
-  def put_state(packet, state) do
+  def put_state(packet, %{flag: flag} = state) do
     packet =
       packet
       |> put_tiny(state.animation1)
       |> put_tiny(state.animation2)
-      |> put_tiny(state.flag)
+      |> put_tiny(flag)
 
     packet =
-      if (state.flag &&& flag(:flag1)) != 0 do
+      if has_bit?(flag, :flag1) do
         {flag1_unknown1, flag1_unknown2} = state.unknown_flag_1
 
         packet
@@ -179,7 +177,7 @@ defmodule Ms2ex.SyncState do
       |> put_short(state.unknown3)
 
     packet =
-      if (state.flag &&& flag(:flag2)) != 0 do
+      if has_bit?(flag, :flag2) do
         {coord, str} = state.unknown_flag_2
 
         packet
@@ -190,7 +188,7 @@ defmodule Ms2ex.SyncState do
       end
 
     packet =
-      if (state.flag &&& flag(:flag3)) != 0 do
+      if has_bit?(flag, :flag3) do
         {int, str} = state.unknown_flag_3
 
         packet
@@ -201,14 +199,14 @@ defmodule Ms2ex.SyncState do
       end
 
     packet =
-      if (state.flag &&& flag(:flag4)) != 0 do
+      if has_bit?(flag, :flag4) do
         put_ustring(packet, state.unknown_flag_4)
       else
         packet
       end
 
     packet =
-      if (state.flag &&& flag(:flag5)) != 0 do
+      if has_bit?(flag, :flag5) do
         {int, str} = state.unknown_flag_5
 
         packet
@@ -219,7 +217,7 @@ defmodule Ms2ex.SyncState do
       end
 
     packet =
-      if (state.flag &&& flag(:flag6)) != 0 do
+      if has_bit?(flag, :flag6) do
         {int1, int2, int3, coord1, coord2} = state.unknown_flag_6
 
         packet
@@ -235,5 +233,7 @@ defmodule Ms2ex.SyncState do
     put_int(packet, state.unknown4)
   end
 
-  def flag(flag), do: Keyword.get(Flag.__enum_map__(), flag)
+  def has_bit?(flag, bit), do: (flag &&& flag(bit)) != 0
+
+  defp flag(flag), do: Keyword.get(Flag.__enum_map__(), flag)
 end
