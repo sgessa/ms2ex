@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   defp handle_message({:all, type_id}, msg, _rcpt_name, session) do
     with {:ok, char} <- Registries.Characters.lookup(session.character_id) do
       packet = Packets.UserChat.bytes({:all, type_id}, char, msg)
-      Field.broadcast(char.field_pid, packet)
+      Field.broadcast(char, packet)
     end
 
     session

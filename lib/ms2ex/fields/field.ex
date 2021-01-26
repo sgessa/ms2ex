@@ -21,7 +21,14 @@ defmodule Ms2ex.Field do
     end
   end
 
-  def broadcast(field_pid, packet, sender_pid \\ nil) do
+  def broadcast(character_or_field, packet, sender_pid \\ nil)
+
+  def broadcast(%{map_id: field_id, channel_id: channel_id}, packet, sender_pid) do
+    field_pid = field_name(field_id, channel_id)
+    send(field_pid, {:broadcast, packet, sender_pid})
+  end
+
+  def broadcast(field_pid, packet, sender_pid) do
     send(field_pid, {:broadcast, packet, sender_pid})
   end
 

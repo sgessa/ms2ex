@@ -10,12 +10,12 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {_server_tick, packet} = get_int(packet)
     {segments, packet} = get_byte(packet)
 
-    if segments > 0 do
-      {:ok, character} = Registries.Characters.lookup(character_id)
+    with {:ok, character} <- Registries.Characters.lookup(character_id),
+         true <- segments > 0 do
       states = get_states(segments, packet)
 
       sync_packet = Packets.UserSync.bytes(character, states)
-      Field.broadcast(character.field_pid, sync_packet, session.pid)
+      Field.broadcast(character, sync_packet, session.pid)
 
       first_state = List.first(states)
 

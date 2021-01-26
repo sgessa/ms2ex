@@ -11,11 +11,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     {:ok, character} = Registries.Characters.lookup(character_id)
     character = Items.load_equips(character)
 
-    {:ok, field_pid} = Field.find_or_create(character, session)
-
-    character
-    |> Map.put(:field_pid, field_pid)
-    |> Registries.Characters.update()
+    {:ok, _pid} = Field.find_or_create(character, session)
 
     # const hotbar = session.player.gameOptions.getHotbarById(0);
 

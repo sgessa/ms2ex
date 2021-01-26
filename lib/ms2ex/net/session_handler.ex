@@ -33,7 +33,6 @@ defmodule Ms2ex.Net.SessionHandler do
 
     state =
       Map.merge(opts, %{
-        field_pid: nil,
         pid: self(),
         socket: socket,
         recv_cipher: recv_cipher,
