@@ -16,6 +16,8 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
       account = Users.load_characters(account)
       session = Map.put(session, :account, account)
       handle_login(mode, packet, session)
+    else
+      _ -> push(session, Packets.LoginResult.error())
     end
   end
 
@@ -28,7 +30,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
 
   defp handle_login(0x2, _packet, %{account: account} = session) do
     session
-    |> push(Packets.LoginResult.bytes(account.id))
+    |> push(Packets.LoginResult.success(account.id))
     |> push(Packets.UGC.set_endpoint())
     |> push(Packets.CharacterMaxCount.set_max(4, 6))
     |> push(Packets.CharacterList.start_list())

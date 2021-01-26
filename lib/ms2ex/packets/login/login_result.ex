@@ -1,9 +1,9 @@
 defmodule Ms2ex.Packets.LoginResult do
   import Ms2ex.Packets.PacketWriter
 
-  @modes %{success: 0x0}
+  @modes %{success: 0x0, error: 0x1}
 
-  def bytes(account_id) do
+  def success(account_id) do
     timestamp = DateTime.to_unix(DateTime.utc_now())
 
     __MODULE__
@@ -19,5 +19,12 @@ defmodule Ms2ex.Packets.LoginResult do
     |> put_int()
     |> put_long()
     |> put_int(0x2)
+  end
+
+  # TODO
+  def error() do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.error)
   end
 end
