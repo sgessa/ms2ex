@@ -16,7 +16,7 @@ defmodule Ms2ex.Field do
         GenServer.start(__MODULE__, {character, session}, name: name)
 
       pid ->
-        send(pid, {:add_character, character, session.pid})
+        send(pid, {:add_character, character})
         {:ok, pid}
     end
   end
@@ -28,7 +28,7 @@ defmodule Ms2ex.Field do
   def init({character, session}) do
     Logger.info("Start Field #{character.map_id} @ Channel #{session.channel_id}")
 
-    send(self(), {:add_character, character, session.pid})
+    send(self(), {:add_character, character})
     send(self(), :send_updates)
 
     {:ok,
@@ -52,7 +52,8 @@ defmodule Ms2ex.Field do
     {:noreply, state}
   end
 
-  def handle_info({:add_character, character, session_pid}, state) do
+  def handle_info({:add_character, character}, state) do
+    session_pid = character.session_pid
     Process.monitor(session_pid)
 
     Logger.info("Field #{state.field_id} @ Channel #{state.channel_id}: #{character.name} joined")

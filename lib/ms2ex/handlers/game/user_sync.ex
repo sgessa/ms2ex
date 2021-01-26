@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
       states = get_states(segments, packet)
 
       sync_packet = Packets.UserSync.bytes(character, states)
-      Field.broadcast(session.field_pid, sync_packet, session.pid)
+      Field.broadcast(character.field_pid, sync_packet, session.pid)
 
       first_state = List.first(states)
 
