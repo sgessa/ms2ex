@@ -16,8 +16,11 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
+        |> Map.put(:channel_id, session.channel_id)
+        |> Map.put(:session_pid, session.pid)
+        |> Registries.Characters.update()
 
-      Registries.Characters.update(character)
+      Registries.Characters.register_name(character)
 
       tick = Ms2ex.sync_ticks()
 

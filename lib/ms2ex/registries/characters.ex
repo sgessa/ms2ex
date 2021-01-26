@@ -12,12 +12,23 @@ defmodule Ms2ex.Registries.Characters do
     end
   end
 
+  def lookup_by_name(name) do
+    case :ets.lookup(@table_name, "names:#{name}") do
+      [{_name, character_id} | _] -> lookup(character_id)
+      _ -> :error
+    end
+  end
+
   def update(character) do
     if :ets.insert(@table_name, {character.id, character}) do
-      :ok
+      character
     else
       :error
     end
+  end
+
+  def register_name(%{id: id, name: name}) do
+    :ets.insert(@table_name, {"names:#{name}", id})
   end
 
   def start() do

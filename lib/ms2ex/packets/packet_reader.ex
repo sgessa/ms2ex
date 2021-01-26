@@ -38,9 +38,13 @@ defmodule Ms2ex.Packets.PacketReader do
   def get_ustring(packet) do
     {len, packet} = get_short(packet)
 
-    Enum.reduce(1..len, {"", packet}, fn _, {str, packet} ->
-      {short, packet} = get_short(packet)
-      {str <> <<short::utf8>>, packet}
+    Enum.reduce(0..len, {"", packet}, fn
+      0, {_str, packet} ->
+        {"", packet}
+
+      _, {str, packet} ->
+        {short, packet} = get_short(packet)
+        {str <> <<short::utf8>>, packet}
     end)
   end
 end

@@ -10,9 +10,12 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   def handle(_packet, %{character_id: character_id} = session) do
     {:ok, character} = Registries.Characters.lookup(character_id)
     character = Items.load_equips(character)
-    Registries.Characters.update(character)
 
     {:ok, field_pid} = Field.find_or_create(character, session)
+
+    character
+    |> Map.put(:field_pid, field_pid)
+    |> Registries.Characters.update()
 
     # const hotbar = session.player.gameOptions.getHotbarById(0);
 
@@ -21,7 +24,6 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     # }
 
     session
-    |> Map.put(:field_pid, field_pid)
     |> push(Packets.PlayerStats.bytes(character))
     |> push(Packets.StatPoints.bytes(character))
     |> push(Packets.Emotion.bytes())
