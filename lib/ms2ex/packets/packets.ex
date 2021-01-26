@@ -14,6 +14,7 @@ defmodule Ms2ex.Packets do
     0x10 => "RESPONSE_FIELD_ENTER",
     0x39 => "UGC",
     0x3B => "KEY_TABLE",
+    0x3C => "REQUEST_CHANGE_CHANNEL",
     0x56 => "SEND_LOG",
     0x83 => "GLOBAL_FACTOR"
   }
@@ -27,6 +28,7 @@ defmodule Ms2ex.Packets do
     0xD => "MOVE_RESULT",
     0xE => "LOGIN_TO_GAME",
     0xF => "GAME_TO_LOGIN",
+    0x10 => "GAME_TO_GAME",
     0x11 => "RESPONSE_TIME_SYNC",
     0x13 => "REQUEST_CLIENT_SYNC_TICK",
     0x14 => "SYNC_NUMBER",
