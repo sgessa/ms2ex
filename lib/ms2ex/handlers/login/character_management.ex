@@ -1,5 +1,5 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
-  alias Ms2ex.{Net, Packets}
+  alias Ms2ex.{Net, Packets, Registries}
 
   import Packets.PacketReader
   import Net.SessionHandler, only: [push: 2]
@@ -36,7 +36,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   # This allows us to lookup the session PID from any server.
   defp register_session(account, character, auth_data) do
     :ok =
-      Net.SessionRegistry.register(
+      Registries.Sessions.register(
         account.id,
         Map.merge(auth_data, %{account_id: account.id, character_id: character.id})
       )

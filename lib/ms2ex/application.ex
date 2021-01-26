@@ -5,10 +5,15 @@ defmodule Ms2ex.Application do
 
   use Application
 
+  alias Ms2ex.Registries
+
   def start(_type, _args) do
     config = Application.get_env(:ms2ex, Ms2ex)
 
     load_metadata()
+
+    # Start Character Registry (ETS)
+    Registries.Characters.start()
 
     children =
       [
@@ -21,7 +26,7 @@ defmodule Ms2ex.Application do
         # Start the Endpoint (http/https)
         # Ms2exWeb.Endpoint
         # Start Session Registry
-        {Ms2ex.Net.SessionRegistry, [name: {:via, :swarm, Ms2ex.Net.SessionRegistry}]},
+        {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]},
         # Start Login Server
         {Ms2ex.Net.LoginServer, config[:login]}
       ] ++

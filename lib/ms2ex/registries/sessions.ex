@@ -1,4 +1,4 @@
-defmodule Ms2ex.Net.SessionRegistry do
+defmodule Ms2ex.Registries.Sessions do
   use GenServer
 
   @table_name :session_registry

@@ -126,7 +126,6 @@ defmodule Ms2ex.SyncState do
            flag_6_unknown_5}
 
         {%{state | unknown_flag_6: unknown_flag_6}, packet}
-        {state, packet}
       else
         {state, packet}
       end

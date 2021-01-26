@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestChangeChannel do
   require Logger
 
-  alias Ms2ex.{Net, Packets}
+  alias Ms2ex.{Net, Packets, Registries}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -9,7 +9,8 @@ defmodule Ms2ex.GameHandlers.RequestChangeChannel do
   def handle(packet, session) do
     {channel_id, _packet} = get_short(packet)
 
-    {:ok, session_data} = Net.SessionRegistry.lookup(session.account.id)
-    push(session, Packets.GameToGame.bytes(channel_id, session.character.map_id, session_data))
+    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    {:ok, auth_data} = Registries.Sessions.lookup(session.account.id)
+    push(session, Packets.GameToGame.bytes(channel_id, character.map_id, auth_data))
   end
 end
