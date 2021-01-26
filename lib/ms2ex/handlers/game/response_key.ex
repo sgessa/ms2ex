@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, LoginHandlers, Net, Packets, Protobuf}
+  alias Ms2ex.{Characters, LoginHandlers, Net, Packets, Protobuf, Registries}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -9,13 +9,15 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} = Net.SessionRegistry.lookup(account_id),
+    with {:ok, auth_data} = Registries.Sessions.lookup(account_id),
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
       character =
         auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
+
+      Registries.Characters.update(character)
 
       tick = Ms2ex.sync_ticks()
 
@@ -27,7 +29,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end)
 
       session
-      |> Map.put(:character, character)
+      |> Map.put(:character_id, character.id)
       |> push(Packets.MoveResult.bytes())
       |> push(Packets.LoginRequired.bytes(account.id))
       |> push(Packets.BuddyList.start_list())

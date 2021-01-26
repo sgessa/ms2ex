@@ -58,6 +58,7 @@ defmodule Ms2ex.Character do
     # TODO
     field :clubs, {:array, :map}, virtual: true, default: []
 
+    field :animation, :integer, virtual: true, default: 0
     field :exp, :integer, default: 0
     field :gender, Gender, default: :male
     field :guild_name, :string, virtual: true, default: "h4x0rzz"

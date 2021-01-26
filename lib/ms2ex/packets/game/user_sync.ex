@@ -8,14 +8,6 @@ defmodule Ms2ex.Packets.UserSync do
     |> build()
     |> put_int(character.object_id)
     |> put_byte(length(sync_states))
-    |> put_states(sync_states)
-  end
-
-  defp put_states(packet, []), do: packet
-
-  defp put_states(packet, [state | states]) do
-    packet
-    |> SyncState.put_state(state)
-    |> put_states(states)
+    |> reduce(sync_states, &SyncState.put_state(&2, &1))
   end
 end

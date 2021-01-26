@@ -35,6 +35,7 @@ defmodule Ms2ex.Packets do
     0x15 => "SERVER_ENTER",
     0x16 => "REQUEST_FIELD_ENTER",
     0x17 => "FIELD_ADD_USER",
+    0x18 => "FIELD_REMOVE_USER",
     0x19 => "FIELD_ENTRANCE",
     0x1C => "USER_SYNC",
     0x1F => "EMOTION",

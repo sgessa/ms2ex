@@ -60,4 +60,13 @@ config :ms2ex, Ms2ex,
     resource: "http://#{server_host}",
     locale: "na"
   },
-  skip_packet_logs: ["CHARACTER_LIST", "FIELD_ADD_USER", "KEY_TABLE", "SEND_LOG", "USER_SYNC"]
+  skip_packet_logs: [
+    "CHARACTER_LIST",
+    "EMOTION",
+    "FIELD_ADD_USER",
+    "KEY_TABLE",
+    "PLAYER_STAT",
+    "PROXY_GAME_OBJ",
+    "SEND_LOG",
+    "USER_SYNC"
+  ]
