@@ -44,7 +44,14 @@ config :ms2ex, Ms2ex,
       name: "Paperwood",
       channels: [
         %{host: server_host, port: 20002},
-        %{host: server_host, port: 20003}
+        %{host: server_host, port: 20003},
+        %{host: server_host, port: 20004},
+        %{host: server_host, port: 20005},
+        %{host: server_host, port: 20006},
+        %{host: server_host, port: 20007},
+        %{host: server_host, port: 20008},
+        %{host: server_host, port: 20009},
+        %{host: server_host, port: 20010}
       ]
     }
   ],
