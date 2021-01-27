@@ -132,12 +132,10 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp get_item_attributes(packet, _), do: {%{}, packet}
 
-  defp handle_delete(packet, session) do
+  defp handle_delete(packet, %{account: account} = session) do
     {char_id, _packet} = get_long(packet)
-    account = session.account
-    character = Enum.find(account.characters, &(&1.id == char_id))
 
-    with %Character{} <- character,
+    with %Character{} = character <- Enum.find(account.characters, &(&1.id == char_id)),
          {:ok, _} <- Characters.delete(character) do
       account = Users.load_characters(account, force: true)
 
