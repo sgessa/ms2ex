@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Character, Inventory, Repo, Users.Account}
+  alias Ms2ex.{Character, Metadata, Repo, Users.Account}
 
   def create(%Account{} = account, attrs) do
     account
@@ -23,7 +23,7 @@ defmodule Ms2ex.Characters do
     equips =
       [e.ears, e.hair, e.face, e.face_decor, e.top, e.bottom, e.shoes]
       |> Enum.reject(&is_nil(&1))
-      |> Enum.map(&Inventory.load_metadata(&1))
+      |> Enum.map(&Metadata.Items.load(&1))
 
     Map.put(character, :equips, equips)
   end

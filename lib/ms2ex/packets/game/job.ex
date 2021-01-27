@@ -1,72 +1,44 @@
 defmodule Ms2ex.Packets.Job do
+  alias Ms2ex.Skills
+
   import Ms2ex.Packets.PacketWriter
 
-  @skill_ids [
-    10_500_101,
-    10_500_152,
-    10_500_221,
-    10_500_051,
-    10_500_153,
-    10_500_171,
-    10_500_001,
-    10_500_291,
-    10_500_172,
-    10_500_241,
-    20_000_011,
-    10_500_173,
-    10_500_191,
-    10_500_021,
-    10_500_174,
-    10_500_141,
-    10_500_192,
-    10_500_243,
-    10_500_091,
-    10_500_193,
-    10_500_261,
-    10_500_041,
-    10_500_211,
-    10_500_093,
-    10_500_144,
-    10_500_281,
-    10_500_231,
-    20_000_001,
-    10_500_061,
-    10_500_181,
-    10_500_011,
-    10_500_081,
-    10_500_031,
-    10_500_065,
-    10_500_151,
-    10_500_067,
-    10_500_271,
-    10_500_121,
-    10_500_292,
-    10_500_071,
-    10_500_293,
-    10_500_161,
-    10_500_111,
-    10_500_232,
-    10_500_131,
-    10_500_063,
-    10_500_251,
-    10_500_064,
-    10_500_201
-  ]
+  @job_skill_splits %{
+    none: 0,
+    knight: 9,
+    berserker: 15,
+    wizard: 17,
+    priest: 10,
+    archer: 14,
+    heavy_gunner: 13,
+    thief: 13,
+    assassin: 8,
+    rune_blade: 8,
+    striker: 12,
+    soul_binder: 16,
+    game_master: 0
+  }
 
-  def put_skills(packet, _character) do
-    split = 14
-    count_id = Enum.at(@skill_ids, length(@skill_ids) - split)
+  def put_skills(packet, character) do
+    %{skills: skills, ordered_ids: ordered_ids} = Skills.get_tab(character.job)
+
+    split = Map.get(@job_skill_splits, character.job)
+    split_skill_id = Enum.at(ordered_ids, length(ordered_ids) - split)
 
     packet
-    |> put_byte(length(@skill_ids) - split)
-    |> reduce(@skill_ids, fn skill_id, packet ->
-      packet = if skill_id == count_id, do: put_byte(packet, split), else: packet
+    |> put_byte(length(ordered_ids) - split)
+    |> reduce(ordered_ids, fn skill_id, packet ->
+      packet = if skill_id == split_skill_id, do: put_byte(packet, split), else: packet
+      skill = Map.get(skills, skill_id)
+
+      skill_level = List.first(skill.skill_levels) || %{}
+      level = Map.get(skill_level, :level) || 0
 
       packet
       |> put_byte()
-      |> put_byte(0x0)
+      |> put_bool(skill.learned)
       |> put_int(skill_id)
-      |> put_int(0x1)
+      |> put_int(level)
       |> put_byte()
     end)
     |> put_short()
