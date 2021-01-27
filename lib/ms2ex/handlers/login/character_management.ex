@@ -5,6 +5,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     Equips,
     Inventory,
     ItemColor,
+    Metadata,
     Net,
     Packets,
     Registries,
@@ -116,7 +117,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     {_color_idx, packet} = get_int(packet)
     {attrs, packet} = get_item_attributes(packet, slot_name)
     attrs = Map.merge(attrs, %{item_id: id, color: color})
-    item = Item |> struct(attrs) |> Inventory.load_metadata()
+    item = Item |> struct(attrs) |> Metadata.Items.load()
     {item, packet}
   end
 

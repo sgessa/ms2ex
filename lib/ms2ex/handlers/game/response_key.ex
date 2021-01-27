@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, LoginHandlers, Net, Packets, Protobuf, Registries}
+  alias Ms2ex.{Characters, LoginHandlers, Metadata, Net, Packets, Registries}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -24,11 +24,11 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       tick = Ms2ex.sync_ticks()
 
-      inventory_tab_keys = Map.keys(Protobuf.InventoryTab.mapping())
+      inventory_tab_keys = Map.keys(Metadata.InventoryTab.mapping())
 
       inventory_tabs =
         Enum.map(inventory_tab_keys, fn key ->
-          Map.get(Protobuf.InventoryTab.mapping(), key)
+          Map.get(Metadata.InventoryTab.mapping(), key)
         end)
 
       session
