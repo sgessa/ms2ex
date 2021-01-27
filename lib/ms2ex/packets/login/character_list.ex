@@ -18,6 +18,13 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_entries(characters)
   end
 
+  def append(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.append)
+    |> put_entries([character])
+  end
+
   def start_list() do
     __MODULE__
     |> build()
@@ -40,9 +47,9 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_character(character)
     |> put_ustring(character.profile_url)
     |> put_long()
-    |> put_tiny(length(character.equips))
+    |> put_byte(length(character.equips))
     |> Packets.ItemInventory.put_equips(character.equips)
-    |> put_tiny(length(badges))
+    |> put_byte(length(badges))
     |> put_badges(badges)
     |> put_bool(false)
     # TODO unknown bool logic
@@ -57,8 +64,8 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_long(character.account_id)
     |> put_long(character.id)
     |> put_ustring(character.name)
-    |> put_tiny(gender)
-    |> put_tiny(0x1)
+    |> put_byte(gender)
+    |> put_byte(0x1)
     |> put_long()
     |> put_int()
     |> put_int(character.map_id)
@@ -77,14 +84,14 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_int()
     |> put_coord(character.rotation)
     |> put_int()
-    |> put_skin_color(character.skin_color)
+    |> Ms2ex.SkinColor.put_skin_color(character.skin_color)
     |> put_time(character.inserted_at)
     |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
     |> put_long()
     |> put_ustring(character.guild_name)
     |> put_ustring(character.motto)
     |> put_ustring(character.profile_url)
-    |> put_tiny(length(character.clubs))
+    |> put_byte(length(character.clubs))
     |> put_clubs(character.clubs)
     |> put_byte()
     |> put_bytes(String.duplicate(<<0>>, 12 * 4))

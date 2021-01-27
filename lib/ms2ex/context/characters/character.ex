@@ -1,7 +1,7 @@
 defmodule Ms2ex.Character do
   use Ecto.Schema
 
-  alias Ms2ex.{CharacterEquipment, EctoTypes, Inventory, Users}
+  alias Ms2ex.{Equipment, EctoTypes, Inventory, Users}
 
   import Ecto.Changeset
   import EctoEnum
@@ -45,7 +45,7 @@ defmodule Ms2ex.Character do
   schema "characters" do
     belongs_to :account, Users.Account
 
-    has_one :equipment, CharacterEquipment
+    has_one :equipment, Equipment
     field :equips, {:array, :map}, virtual: true, default: []
 
     has_many :inventory_items, Inventory.Item
@@ -93,8 +93,9 @@ defmodule Ms2ex.Character do
   def changeset(character, attrs) do
     character
     |> cast(attrs, @fields)
-    |> cast_assoc(:equipment, with: &CharacterEquipment.changeset/2)
+    |> cast_assoc(:equipment, with: &Equipment.changeset/2)
     |> validate_required(@fields)
+    |> unique_constraint(:name)
   end
 
   def job_id(%{awakened: true} = char), do: real_job_id(char) * 10 + 1
@@ -111,6 +112,7 @@ defmodule Ms2ex.Character do
     changeset(character, attrs)
   end
 
+  defp get_equip_field(%{metadata: %{slot: :ER}}), do: :ears_id
   defp get_equip_field(%{metadata: %{slot: :HR}}), do: :hair_id
   defp get_equip_field(%{metadata: %{slot: :FA}}), do: :face_id
   defp get_equip_field(%{metadata: %{slot: :FD}}), do: :face_decor_id

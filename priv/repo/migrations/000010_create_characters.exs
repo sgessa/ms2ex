@@ -12,7 +12,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :job, :integer, null: false
       add :map_id, :integer, null: false
       add :motto, :string, null: false
-      add :name, :string, null: false
+      add :name, :citext, null: false
       add :position, :binary, null: false
       add :prestige_exp, :bigint
       add :prestige_level, :integer
@@ -25,5 +25,6 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
     end
 
     create index(:characters, [:account_id])
+    create unique_index(:characters, [:name])
   end
 end

@@ -58,13 +58,13 @@ defmodule Ms2ex.Packets.Job do
     count_id = Enum.at(@skill_ids, length(@skill_ids) - split)
 
     packet
-    |> put_tiny(length(@skill_ids) - split)
+    |> put_byte(length(@skill_ids) - split)
     |> reduce(@skill_ids, fn skill_id, packet ->
-      packet = if skill_id == count_id, do: put_tiny(packet, split), else: packet
+      packet = if skill_id == count_id, do: put_byte(packet, split), else: packet
 
       packet
       |> put_byte()
-      |> put_tiny(0x0)
+      |> put_byte(0x0)
       |> put_int(skill_id)
       |> put_int(0x1)
       |> put_byte()

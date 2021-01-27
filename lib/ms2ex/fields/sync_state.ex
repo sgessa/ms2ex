@@ -138,9 +138,9 @@ defmodule Ms2ex.SyncState do
   def put_state(packet, %{flag: flag} = state) do
     packet =
       packet
-      |> put_tiny(state.animation1)
-      |> put_tiny(state.animation2)
-      |> put_tiny(flag)
+      |> put_byte(state.animation1)
+      |> put_byte(state.animation2)
+      |> put_byte(flag)
 
     packet =
       if has_bit?(flag, :flag1) do
@@ -171,7 +171,7 @@ defmodule Ms2ex.SyncState do
     packet =
       packet
       |> put_short_coord(state.speed)
-      |> put_tiny(state.unknown1)
+      |> put_byte(state.unknown1)
       |> put_short(state.unknown2)
       |> put_short(state.unknown3)
 

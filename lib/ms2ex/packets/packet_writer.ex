@@ -17,14 +17,6 @@ defmodule Ms2ex.Packets.PacketWriter do
   def put_byte(packet, byte \\ 0x0), do: packet <> <<byte>>
   def put_bytes(packet, b), do: packet <> <<b::bytes>>
 
-  def put_color(packet, {blue, green, red, alpha}) do
-    packet
-    |> put_byte(blue)
-    |> put_byte(green)
-    |> put_byte(red)
-    |> put_byte(alpha)
-  end
-
   def put_coord(packet, {x, y, z}) do
     packet
     |> put_float(x)
@@ -49,7 +41,7 @@ defmodule Ms2ex.Packets.PacketWriter do
 
   def put_ecto_enum(packet, type, atom) do
     int = Keyword.get(type.__enum_map__(), atom)
-    put_tiny(packet, int)
+    put_byte(packet, int)
   end
 
   def put_float(packet, number, size \\ 32), do: packet <> <<number::little-float-size(size)>>
@@ -80,12 +72,6 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_short(z)
   end
 
-  def put_skin_color(packet, {primary, secondary}) do
-    packet
-    |> put_color(primary)
-    |> put_color(secondary)
-  end
-
   def put_time(packet, time \\ nil)
 
   def put_time(packet, nil), do: put_long(packet)
@@ -93,8 +79,6 @@ defmodule Ms2ex.Packets.PacketWriter do
   def put_time(packet, time) do
     put_long(packet, DateTime.to_unix(time))
   end
-
-  def put_tiny(packet, int), do: packet <> <<int>>
 
   def put_uchar(packet, ""), do: packet
 
