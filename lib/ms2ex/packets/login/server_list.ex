@@ -7,7 +7,7 @@ defmodule Ms2ex.Packets.ServerList do
     config = Application.get_env(:ms2ex, Ms2ex)
     login_servers = [config[:login]]
     [world | _] = config[:worlds]
-    unknown_data = Enum.shuffle(1..9)
+    channels = length(world.channels)
 
     __MODULE__
     |> build()
@@ -18,9 +18,9 @@ defmodule Ms2ex.Packets.ServerList do
     |> put_short(length(login_servers))
     |> put_servers(login_servers)
     |> put_int(100)
-    |> put_short(length(unknown_data))
-    |> reduce(unknown_data, fn byte, packet ->
-      put_short(packet, byte)
+    |> put_short(channels)
+    |> reduce(1..channels, fn channel_id, packet ->
+      put_short(packet, channel_id)
     end)
   end
 
