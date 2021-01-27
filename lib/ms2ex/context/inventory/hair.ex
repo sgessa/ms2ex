@@ -14,14 +14,14 @@ defmodule Ms2ex.Inventory.Item.Hair do
     {back_length, packet} = get_int(packet)
     {back_pos, packet} = get_bytes(packet, @position_length)
     {front_length, packet} = get_int(packet)
-    {front_pos, _packet} = get_int(packet)
+    {front_pos, packet} = get_bytes(packet, @position_length)
 
-    %__MODULE__{
-      back_length: back_length,
-      back_position: back_pos,
-      front_length: front_length,
-      front_position: front_pos
-    }
+    {%__MODULE__{
+       back_length: back_length,
+       back_position: back_pos,
+       front_length: front_length,
+       front_position: front_pos
+     }, packet}
   end
 
   def put_hair(packet, %__MODULE__{} = hair) do

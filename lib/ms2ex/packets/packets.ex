@@ -46,6 +46,7 @@ defmodule Ms2ex.Packets do
     0x24 => "FURNISHING_INVENTORY",
     0x2F => "PLAYER_STATS",
     0x46 => "STAT_POINTS",
+    0x47 => "CHARACTER_CREATE",
     0x63 => "BUDDY_LIST",
     0x6D => "UGC",
     0x71 => "KEY_TABLE",

@@ -13,7 +13,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_int(character.object_id)
     |> Packets.CharacterList.put_character(character)
     |> put_int(Character.job_id(character))
-    |> put_tiny(0x1)
+    |> put_byte(0x1)
     |> put_int(real_job_id)
     |> Packets.Job.put_skills(character)
     |> put_coord(character.position)
@@ -27,7 +27,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_long()
     |> put_bool(flag_a)
     |> put_int(0x1)
-    |> put_skin_color(character.skin_color)
+    |> Ms2ex.SkinColor.put_skin_color(character.skin_color)
     |> put_ustring(character.profile_url)
     |> put_bool(character.mount != nil)
     # TODO put_mount()
@@ -70,9 +70,9 @@ defmodule Ms2ex.Packets.FieldAddUser do
 
   def appearance(character) do
     ""
-    |> put_tiny(length(character.equips))
+    |> put_byte(length(character.equips))
     |> Packets.ItemInventory.put_equips(character.equips)
-    |> put_tiny(0x1)
+    |> put_byte(0x1)
     |> put_long()
     |> put_long()
     |> put_byte()

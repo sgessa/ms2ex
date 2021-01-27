@@ -34,10 +34,12 @@ defmodule Ms2ex.Users do
 
   def delete(%Account{} = account), do: Repo.delete(account)
 
-  def load_characters(%Account{} = account) do
+  def load_characters(%Account{} = account, opts \\ []) do
     account =
-      Repo.preload(account,
-        characters: [equipment: [:face, :face_decor, :hair, :top, :bottom, :shoes]]
+      Repo.preload(
+        account,
+        [characters: [equipment: [:ears, :face, :face_decor, :hair, :top, :bottom, :shoes]]],
+        opts
       )
 
     characters = Enum.map(account.characters, &Characters.load_equips(&1))

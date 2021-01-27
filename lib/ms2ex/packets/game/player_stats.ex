@@ -25,15 +25,15 @@ defmodule Ms2ex.Packets.PlayerStats do
     # NA 10
     {100, 0, 100},
     # STAMINA 11
-    {100, 0, 100},
+    {120, 120, 120},
     # NA 12
     {100, 0, 100},
     # NA 13
     {100, 0, 100},
     # ATTK SPD 14
-    {100, 1000, 100},
+    {120, 1000, 130},
     # MOV SPD 15
-    {100, 1000, 100},
+    {110, 100, 150},
     # ACCURACY 16
     {100, 0, 100},
     # EVA 17
@@ -49,7 +49,7 @@ defmodule Ms2ex.Packets.PlayerStats do
     # GUARD 22
     {100, 0, 100},
     # JUMP HEIGHT 23
-    {100, 1000, 100},
+    {110, 100, 130},
     # PHYS ATTK 24
     {100, 0, 100},
     # MAGIC ATTK 25

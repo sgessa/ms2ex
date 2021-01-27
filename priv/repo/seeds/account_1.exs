@@ -8,6 +8,8 @@ alias Items.Item
     password: "123456"
   })
 
+ears = Items.load_metadata(%Item{item_id: 10500001})
+
 hair_color =
   ItemColor.build(
     Color.build(47, 47, -86, -1),
@@ -78,6 +80,9 @@ shoes = Items.load_metadata(%Item{item_id: 11_700_709, color: shoes_color})
         Color.build(-82, -65, -22, -1)
       )
   })
+
+{:ok, {:create, item}} = Inventory.add_item(char, ears)
+{:ok, _equip} = Equips.set_equip(char, item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, hair)
 {:ok, _equip} = Equips.set_equip(char, item)
