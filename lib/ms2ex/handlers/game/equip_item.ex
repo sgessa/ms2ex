@@ -34,7 +34,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       item = Metadata.Items.load(item)
 
       unequip_packet = Packets.UnequipItem.bytes(character, id)
-      Field.broadcast(character, unequip_packet, session.pid)
+      Field.broadcast(character, unequip_packet)
 
       session
       |> push(Packets.ItemInventory.add_item({:ok, {:create, item}}))

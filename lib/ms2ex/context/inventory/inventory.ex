@@ -76,8 +76,6 @@ defmodule Ms2ex.Inventory do
     {:update, item, new_amount}
   end
 
-  def slot_value(%Item{metadata: %{slot: slot}}), do: Metadata.ItemSlot.value(slot)
-
   def equip(%Item{location: :inventory} = item) do
     update_item(item, %{location: :equipment})
   end
