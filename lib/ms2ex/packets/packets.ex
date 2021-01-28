@@ -10,7 +10,7 @@ defmodule Ms2ex.Packets do
     0xF => "LOAD_UGC_MAP",
     0x11 => "USER_CHAT",
     0x12 => "USER_SYNC",
-    0x16 => "ITEM_EQUIP",
+    0x16 => "EQUIP_ITEM",
     0xB2 => "RESPONSE_SERVER_ENTER",
     0xBB => "FILE_HASH",
     0x10 => "RESPONSE_FIELD_ENTER",

@@ -1,4 +1,4 @@
-defmodule Ms2ex.GameHandlers.ItemEquip do
+defmodule Ms2ex.GameHandlers.EquipItem do
   alias Ms2ex.{Field, Inventory, Metadata, Packets, Registries}
 
   import Packets.PacketReader
