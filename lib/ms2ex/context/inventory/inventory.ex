@@ -6,6 +6,12 @@ defmodule Ms2ex.Inventory do
 
   def get_by(attrs), do: Repo.get_by(Item, attrs)
 
+  def list_items(%Character{id: char_id}) do
+    Item
+    |> where([i], i.character_id == ^char_id and i.location == ^:inventory)
+    |> Repo.all()
+  end
+
   def add_item(%Character{} = character, %Item{metadata: %{max_slot: n}} = attrs) when n > 1 do
     Repo.transaction(fn ->
       case find_item(character, attrs) do

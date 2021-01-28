@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       Field.broadcast(character, unequip_packet)
 
       session
-      |> push(Packets.ItemInventory.add_item({:ok, {:create, item}}))
+      |> push(Packets.ItemInventory.add_item({:create, item}))
     else
       _ ->
         session

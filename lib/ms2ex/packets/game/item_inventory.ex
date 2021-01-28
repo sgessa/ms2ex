@@ -5,7 +5,7 @@ defmodule Ms2ex.Packets.ItemInventory do
 
   @modes %{add: 0x0, load: 0xE, reset: 0xD}
 
-  def add_item({:ok, {:create, item}}) do
+  def add_item({:create, item}) do
     __MODULE__
     |> build()
     |> put_byte(@modes.add)
@@ -18,7 +18,7 @@ defmodule Ms2ex.Packets.ItemInventory do
     |> put_ustring()
   end
 
-  def add_item({:ok, {:update, _item, _new_amount}}), do: ""
+  def add_item({:update, _item, _new_amount}), do: ""
 
   def put_equips(packet, []), do: packet
 
