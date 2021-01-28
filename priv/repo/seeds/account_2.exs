@@ -1,4 +1,4 @@
-alias Ms2ex.{Characters, Color, Inventory, Inventory, ItemColor, Metadata, SkinColor, Users}
+alias Ms2ex.{Characters, Color, Equips, Inventory, Inventory, ItemColor, Metadata, SkinColor, Users}
 alias Inventory, as: Items
 alias Items.Item
 
@@ -82,22 +82,22 @@ shoes = Metadata.Items.load(%Item{item_id: 11_700_709, color: shoes_color})
   })
 
 {:ok, {:create, item}} = Inventory.add_item(char, ears)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, hair)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, face)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, face_decor)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, top)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, bottom)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, shoes)
-{:ok, _equip} = Inventory.equip(item)
+{:ok, _equip} = Equips.equip(item)

@@ -12,7 +12,7 @@ defmodule Ms2ex.Inventory do
     |> Repo.all()
   end
 
-  def add_item(%Character{} = character, %Item{metadata: %{max_slot: n}} = attrs) when n > 1 do
+  def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
     Repo.transaction(fn ->
       case find_item(character, attrs) do
         %Item{} = item ->
@@ -30,21 +30,21 @@ defmodule Ms2ex.Inventory do
     end
   end
 
-  defp find_item(%{id: char_id}, %{item_id: item_id, max_slot: max_slot}) do
+  defp find_item(%{id: char_id}, %{item_id: item_id, stack_limit: stack_limit}) do
     Item
     |> where([i], i.character_id == ^char_id)
-    |> where([i], i.item_id == ^item_id and i.amount < ^max_slot)
+    |> where([i], i.item_id == ^item_id and i.amount < ^stack_limit)
     |> limit(1)
     |> Repo.one()
   end
 
   defp update_or_create(
          character,
-         %{amount: amount, max_slot: max_slot} = item,
+         %{amount: amount, stack_limit: stack_limit} = item,
          %{amount: new_amount} = attrs
        )
-       when amount + new_amount > max_slot do
-    amount_added = max_slot - amount
+       when amount + new_amount > stack_limit do
+    amount_added = stack_limit - amount
     amount_created = new_amount - amount_added
     attrs = %{attrs | amount: amount_created}
 
@@ -59,7 +59,7 @@ defmodule Ms2ex.Inventory do
   end
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
-    attrs = Map.put(attrs, :inventory_tab, meta.tab)
+    attrs = %{attrs | inventory_tab: meta.tab, equip_slot: meta.slot}
     attrs = Map.from_struct(attrs)
 
     changeset =
@@ -81,24 +81,6 @@ defmodule Ms2ex.Inventory do
 
     item = Item |> Repo.get(id) |> Map.put(:metadata, meta)
     {:update, item, new_amount}
-  end
-
-  def equip(%Item{location: :inventory} = item) do
-    update_item(item, %{location: :equipment})
-  end
-
-  def unequip(%Character{} = character, id) do
-    with %Item{location: :equipment} = item <- get_by(character_id: character.id, id: id),
-         slot <- determine_inventory_slot(item),
-         {:ok, item} <- update_item(item, %{location: :inventory, inventory_slot: slot}) do
-      {:ok, item}
-    else
-      %Item{location: :inventory} ->
-        {:error, :item_not_equipped}
-
-      nil ->
-        {:error, :item_not_found}
-    end
   end
 
   def update_item(%Item{} = item, attrs) do

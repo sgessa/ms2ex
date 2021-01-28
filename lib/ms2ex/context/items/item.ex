@@ -6,12 +6,24 @@ defmodule Ms2ex.Inventory.Item do
   import Ecto.Changeset
   import EctoEnum
 
-  @fields [:amount, :color, :data, :item_id, :inventory_slot, :inventory_tab, :location]
+  @fields [
+    :amount,
+    :color,
+    :data,
+    :equip_slot,
+    :item_id,
+    :inventory_slot,
+    :inventory_tab,
+    :location
+  ]
+
   @required [:amount, :item_id, :location]
+  @equip_slots Map.to_list(Metadata.EquipSlot.mapping())
   @inventory_tabs Map.to_list(Metadata.InventoryTab.mapping())
 
-  defenum(Location, inventory: 0, equipment: 1)
+  defenum(EquipSlot, @equip_slots)
   defenum(InventoryTab, @inventory_tabs)
+  defenum(Location, inventory: 0, equipment: 1)
 
   schema "inventory_items" do
     belongs_to :character, Ms2ex.Character
@@ -27,6 +39,7 @@ defmodule Ms2ex.Inventory.Item do
     field :charges, :integer, virtual: true, default: 0
     field :enchants, :integer, virtual: true, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
+    field :equip_slot, EquipSlot, default: :NONE
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false

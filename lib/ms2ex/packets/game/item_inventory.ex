@@ -3,7 +3,7 @@ defmodule Ms2ex.Packets.ItemInventory do
 
   import Ms2ex.Packets.PacketWriter
 
-  @modes %{add: 0x0, load: 0xE, reset: 0xD}
+  @modes %{add: 0x0, remove: 0x1, load: 0xE, reset: 0xD}
 
   def add_item({:create, item}) do
     __MODULE__
@@ -19,6 +19,13 @@ defmodule Ms2ex.Packets.ItemInventory do
   end
 
   def add_item({:update, _item, _new_amount}), do: ""
+
+  def remove_item(uid) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.remove)
+    |> put_long(uid)
+  end
 
   def put_equips(packet, []), do: packet
 

@@ -39,7 +39,7 @@ defmodule Ms2ex.Packets do
     0x17 => "FIELD_ADD_USER",
     0x18 => "FIELD_REMOVE_USER",
     0x19 => "FIELD_ENTRANCE",
-    0x20 => "EQUIP_ITEM",
+    0x25 => "EQUIP_ITEM",
     0x26 => "UNEQUIP_ITEM",
     0x1C => "USER_SYNC",
     0x1D => "USER_CHAT",
