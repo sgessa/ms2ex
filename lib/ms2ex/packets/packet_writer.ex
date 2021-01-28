@@ -15,7 +15,12 @@ defmodule Ms2ex.Packets.PacketWriter do
   def put_bool(packet, true), do: packet <> <<1>>
   def put_bool(packet, false), do: packet <> <<0>>
   def put_byte(packet, byte \\ 0x0), do: packet <> <<byte>>
-  def put_bytes(packet, b), do: packet <> <<b::bytes>>
+  def put_bytes(packet, b), do: packet <> <<b::little-bytes>>
+
+  def put_bytes(packet, bytes, n) do
+    bytes = String.duplicate(bytes, n)
+    packet <> bytes
+  end
 
   def put_coord(packet, {x, y, z}) do
     packet

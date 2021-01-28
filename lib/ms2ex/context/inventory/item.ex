@@ -1,12 +1,15 @@
 defmodule Ms2ex.Inventory.Item do
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, ItemColor, Color}
+  alias Ms2ex.EctoTypes
 
   import Ecto.Changeset
+  import EctoEnum
 
-  @fields [:amount, :color, :data, :item_id]
-  @required [:amount, :item_id]
+  @fields [:amount, :color, :data, :item_id, :location]
+  @required [:amount, :item_id, :location]
+
+  defenum(Location, inventory: 0, equipment: 1)
 
   schema "inventory_items" do
     belongs_to :character, Ms2ex.Character
@@ -14,15 +17,7 @@ defmodule Ms2ex.Inventory.Item do
     field :item_id, :integer
     field :amount, :integer, default: 1
 
-    field :color, EctoTypes.Term,
-      default:
-        ItemColor.build(
-          Color.build(0, 0, 0, -1),
-          Color.build(0, 0, 0, -1),
-          Color.build(0, 0, 0, -1),
-          0
-        )
-
+    field :color, EctoTypes.Term
     field :data, EctoTypes.Term
     field :metadata, :map, virtual: true
     field :appearance_flag, :integer, virtual: true, default: 0
@@ -33,6 +28,7 @@ defmodule Ms2ex.Inventory.Item do
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
+    field :location, Location, default: :inventory
     field :paired_character_id, :integer, virtual: true, default: 0
     field :paired_character_name, :integer, virtual: true, default: ""
     field :remaining_trades, :integer, virtual: true, default: 0

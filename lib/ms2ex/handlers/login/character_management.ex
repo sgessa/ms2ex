@@ -2,7 +2,6 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
     Character,
     Characters,
-    Equips,
     Inventory,
     ItemColor,
     Metadata,
@@ -90,7 +89,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     with {:ok, character} <- Characters.create(session.account, attrs) do
       Enum.each(equips, fn item ->
         {:ok, {:create, item}} = Inventory.add_item(character, item)
-        {:ok, _equip} = Equips.set_equip(character, item)
+        {:ok, _equip} = Inventory.equip(item)
       end)
 
       character = Characters.load_equips(character, force: true)

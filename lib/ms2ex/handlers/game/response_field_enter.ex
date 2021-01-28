@@ -1,23 +1,15 @@
 defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   require Logger
 
-  alias Ms2ex.{Field, Net, Packets, Registries}
-  alias Ms2ex.Inventory, as: Items
+  alias Ms2ex.{Characters, Field, Net, Packets, Registries}
 
-  # import Packets.PacketReader
   import Net.SessionHandler, only: [push: 2]
 
   def handle(_packet, %{character_id: character_id} = session) do
     {:ok, character} = Registries.Characters.lookup(character_id)
-    character = Items.load_equips(character)
+    character = Characters.load_equips(character)
 
     {:ok, _pid} = Field.find_or_create(character, session)
-
-    # const hotbar = session.player.gameOptions.getHotbarById(0);
-
-    # if (hotbar) {
-    #     session.send(KeyTablePacket.sendHotbars(session.player.gameOptions));
-    # }
 
     session
     |> push(Packets.PlayerStats.bytes(character))

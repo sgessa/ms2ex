@@ -4,6 +4,8 @@ defmodule Ms2ex.Inventory do
 
   import Ecto.Query, except: [update: 2]
 
+  def get_by(attrs), do: Repo.get_by(Item, attrs)
+
   def add_item(%Character{} = character, %Item{metadata: %{max_slot: n}} = attrs) when n > 1 do
     Repo.transaction(fn ->
       case find_item(character, attrs) do
@@ -74,15 +76,28 @@ defmodule Ms2ex.Inventory do
     {:update, item, new_amount}
   end
 
-  def load_equips(%Character{id: char_id} = char) do
-    equips =
-      Item
-      |> where([i], i.character_id == ^char_id)
-      |> Repo.all()
-      |> Enum.map(fn item -> Metadata.Items.load(item) end)
+  def slot_value(%Item{metadata: %{slot: slot}}), do: Metadata.ItemSlot.value(slot)
 
-    Map.put(char, :equips, equips)
+  def equip(%Item{location: :inventory} = item) do
+    update_item(item, %{location: :equipment})
   end
 
-  def slot_value(%Item{metadata: %{slot: slot}}), do: Metadata.ItemSlot.value(slot)
+  def unequip(character_id, id) do
+    with %Item{location: :equipment} = item <- get_by(character_id: character_id, id: id),
+         {:ok, item} <- update_item(item, %{location: :inventory}) do
+      {:ok, item}
+    else
+      %Item{location: :inventory} ->
+        {:error, :item_not_equipped}
+
+      nil ->
+        {:error, :item_not_found}
+    end
+  end
+
+  def update_item(%Item{} = item, attrs) do
+    item
+    |> Item.changeset(attrs)
+    |> Repo.update()
+  end
 end

@@ -43,7 +43,7 @@ defmodule Ms2ex.Metadata.SkillLevel do
   field :feature, 4, type: :string
 end
 
-defmodule Ms2ex.Metadata.ListSkillMetadata do
+defmodule Ms2ex.Metadata.Skills do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
