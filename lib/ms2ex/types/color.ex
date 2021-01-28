@@ -20,6 +20,16 @@ defmodule Ms2ex.ItemColor do
     |> Color.put_color(t)
     |> put_int(idx)
   end
+
+  def put_item_color(packet, nil) do
+    color = Color.build(0, 0, 0, -1)
+
+    packet
+    |> Color.put_color(color)
+    |> Color.put_color(color)
+    |> Color.put_color(color)
+    |> put_int(-1)
+  end
 end
 
 defmodule Ms2ex.SkinColor do

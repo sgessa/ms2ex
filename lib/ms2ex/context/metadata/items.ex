@@ -38,7 +38,7 @@ defmodule Ms2ex.Metadata.GemSlot do
   field :unknown, 12
 end
 
-defmodule Ms2ex.Metadata.ItemSlot do
+defmodule Ms2ex.Metadata.EquipSlot do
   @moduledoc false
   use Protobuf, enum: true, syntax: :proto3
 
@@ -82,18 +82,19 @@ defmodule Ms2ex.Metadata.ItemMetadata do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:id, :slot, :gem_slot, :tab, :rarity, :max_slot, :is_template]
+  defstruct [:id, :slot, :gem_slot, :tab, :rarity, :stack_limit, :is_template]
 
   field :id, 1, type: :int32
-  field :slot, 2, type: Ms2ex.Metadata.ItemSlot, enum: true
+  field :slot, 2, type: Ms2ex.Metadata.EquipSlot, enum: true
   field :gem_slot, 3, type: Ms2ex.Metadata.GemSlot, enum: true
   field :tab, 4, type: Ms2ex.Metadata.InventoryTab, enum: true
   field :rarity, 5, type: :int32
-  field :max_slot, 6, type: :int32
-  field :is_template, 7, type: :bool
-  field :play_count, 8, type: :int32
-  field :recommended_jobs, 9, repeated: true, type: :int32
-  field :content, 10, repeated: true, type: Ms2ex.Metadata.ItemContent
+  field :stack_limit, 6, type: :int32
+  field :is_two_handed, 7, type: :bool
+  field :is_template, 8, type: :bool
+  field :play_count, 9, type: :int32
+  field :recommended_jobs, 10, repeated: true, type: :int32
+  field :content, 11, repeated: true, type: Ms2ex.Metadata.ItemContent
 end
 
 defmodule Ms2ex.Metadata.Items do

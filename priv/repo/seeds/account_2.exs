@@ -1,12 +1,14 @@
-alias Ms2ex.{Characters, Color, Equips, Inventory, ItemColor, SkinColor, Users}
+alias Ms2ex.{Characters, Color, Equips, Inventory, Inventory, ItemColor, Metadata, SkinColor, Users}
 alias Inventory, as: Items
 alias Items.Item
 
 {:ok, account} =
   Users.create(%{
     username: "icra",
-    password: "123456"
+    password: "123"
   })
+
+ears = Metadata.Items.load(%Item{item_id: 10500001})
 
 hair_color =
   ItemColor.build(
@@ -17,7 +19,7 @@ hair_color =
   )
 
 hair =
-  Items.load_metadata(%Item{
+  Metadata.Items.load(%Item{
     item_id: 10_200_001,
     color: hair_color,
     data: %Item.Hair{back_length: 1_065_353_216, front_length: 1_065_353_216}
@@ -31,9 +33,9 @@ face_color =
     0
   )
 
-face = Items.load_metadata(%Item{item_id: 10_300_014, color: face_color})
+face = Metadata.Items.load(%Item{item_id: 10_300_014, color: face_color})
 
-face_decor = Items.load_metadata(%Item{item_id: 10_400_002, data: String.duplicate(<<0>>, 16)})
+face_decor = Metadata.Items.load(%Item{item_id: 10_400_002, data: String.duplicate(<<0>>, 16)})
 
 top_color =
   ItemColor.build(
@@ -43,7 +45,7 @@ top_color =
     0
   )
 
-top = Items.load_metadata(%Item{item_id: 11_400_631, color: top_color})
+top = Metadata.Items.load(%Item{item_id: 11_400_631, color: top_color})
 
 bottom_color =
   ItemColor.build(
@@ -53,7 +55,7 @@ bottom_color =
     0
   )
 
-bottom = Items.load_metadata(%Item{item_id: 11_500_538, color: bottom_color})
+bottom = Metadata.Items.load(%Item{item_id: 11_500_538, color: bottom_color})
 
 shoes_color =
   ItemColor.build(
@@ -63,7 +65,7 @@ shoes_color =
     0
   )
 
-shoes = Items.load_metadata(%Item{item_id: 11_700_709, color: shoes_color})
+shoes = Metadata.Items.load(%Item{item_id: 11_700_709, color: shoes_color})
 
 {:ok, char} =
   Characters.create(account, %{
@@ -79,20 +81,23 @@ shoes = Items.load_metadata(%Item{item_id: 11_700_709, color: shoes_color})
       )
   })
 
+{:ok, {:create, item}} = Inventory.add_item(char, ears)
+{:ok, _equip} = Equips.equip(item)
+
 {:ok, {:create, item}} = Inventory.add_item(char, hair)
-{:ok, _equip} = Equips.set_equip(char, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, face)
-{:ok, _equip} = Equips.set_equip(char, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, face_decor)
-{:ok, _equip} = Equips.set_equip(char, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, top)
-{:ok, _equip} = Equips.set_equip(char, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, bottom)
-{:ok, _equip} = Equips.set_equip(char, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, shoes)
-{:ok, _equip} = Equips.set_equip(char, item)
+{:ok, _equip} = Equips.equip(item)

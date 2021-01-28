@@ -9,6 +9,10 @@ defmodule Ms2ex.Repo.Migrations.CreateInventory do
       add :amount, :integer, null: false
       add :color, :binary
       add :data, :binary
+      add :equip_slot, :integer, null: false
+      add :inventory_slot, :integer, null: false
+      add :inventory_tab, :integer, null: false
+      add :location, :integer, null: false
 
       timestamps(type: :timestamptz)
     end

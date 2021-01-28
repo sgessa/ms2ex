@@ -94,7 +94,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_byte(length(character.clubs))
     |> put_clubs(character.clubs)
     |> put_byte()
-    |> put_bytes(String.duplicate(<<0>>, 12 * 4))
+    |> put_bytes(String.duplicate(<<0x0>>, 12 * 4))
     |> put_ustring()
     |> put_long(character.unknown_id)
     |> put_long(2000)
