@@ -87,7 +87,7 @@ defmodule Ms2ex.Packets.ItemInventory do
       |> put_int(item.appearance_flag)
 
     case item.metadata.slot do
-      :CP -> put_bytes(packet, <<0x0>>, 13)
+      :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13))
       :FD -> put_bytes(packet, item.data)
       :HR -> Inventory.Item.Hair.put_hair(packet, item.data)
       _ -> packet
@@ -102,6 +102,7 @@ defmodule Ms2ex.Packets.ItemInventory do
     |> put_byte()
     |> put_short(basic_attr_length)
     # TODO put basic attrs
+    |> put_short()
     |> put_int()
     |> put_short()
     |> put_short()
