@@ -1,6 +1,6 @@
 defmodule Ms2ex.Inventory do
   alias __MODULE__.Item
-  alias Ms2ex.{Character, Metadata, Repo}
+  alias Ms2ex.{Character, Repo}
 
   import Ecto.Query, except: [update: 2]
 
@@ -52,7 +52,8 @@ defmodule Ms2ex.Inventory do
     update(item, new_amount)
   end
 
-  defp create(character, %{amount: n} = attrs) when n > 0 do
+  defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
+    attrs = Map.put(attrs, :inventory_tab, meta.tab)
     attrs = Map.from_struct(attrs)
 
     changeset =
@@ -61,18 +62,18 @@ defmodule Ms2ex.Inventory do
       |> Item.changeset(attrs)
 
     with {:ok, item} <- Repo.insert(changeset) do
-      {:create, Metadata.Items.load(item)}
+      {:create, %{item | metadata: meta}}
     end
   end
 
   defp create(_character, _attrs), do: :nothing
 
-  defp update(%{id: id}, new_amount) do
+  defp update(%{id: id, metadata: meta}, new_amount) do
     Item
     |> where([i], i.id == ^id)
     |> Repo.update_all(inc: [amount: new_amount])
 
-    item = Item |> Repo.get(id) |> Metadata.Items.load()
+    item = Item |> Repo.get(id) |> Map.put(:metadata, meta)
     {:update, item, new_amount}
   end
 
@@ -80,9 +81,10 @@ defmodule Ms2ex.Inventory do
     update_item(item, %{location: :equipment})
   end
 
-  def unequip(character_id, id) do
-    with %Item{location: :equipment} = item <- get_by(character_id: character_id, id: id),
-         {:ok, item} <- update_item(item, %{location: :inventory}) do
+  def unequip(%Character{} = character, id) do
+    with %Item{location: :equipment} = item <- get_by(character_id: character.id, id: id),
+         slot <- determine_inventory_slot(item),
+         {:ok, item} <- update_item(item, %{location: :inventory, inventory_slot: slot}) do
       {:ok, item}
     else
       %Item{location: :inventory} ->
@@ -97,5 +99,23 @@ defmodule Ms2ex.Inventory do
     item
     |> Item.changeset(attrs)
     |> Repo.update()
+  end
+
+  def determine_inventory_slot(%Item{inventory_slot: -1}), do: -1
+
+  def determine_inventory_slot(%Item{} = item) do
+    if item_in_slot(item.character_id, item.inventory_tab, item.inventory_slot) do
+      -1
+    else
+      item.inventory_slot
+    end
+  end
+
+  def item_in_slot(char_id, tab, slot) do
+    Item
+    |> where([i], i.character_id == ^char_id)
+    |> where([i], i.inventory_tab == ^tab and i.inventory_slot == ^slot)
+    |> limit(1)
+    |> Repo.one()
   end
 end

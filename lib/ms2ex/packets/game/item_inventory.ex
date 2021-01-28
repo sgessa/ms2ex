@@ -6,17 +6,12 @@ defmodule Ms2ex.Packets.ItemInventory do
   @modes %{add: 0x0, load: 0xE, reset: 0xD}
 
   def add_item({:ok, {:create, item}}) do
-    # slot_value = Metadata.ItemSlot.value(item.metadata.slot)
-    # uid = 0x2345
-    slot_value = -1
-
     __MODULE__
     |> build()
     |> put_byte(@modes.add)
     |> put_int(item.item_id)
     |> put_long(item.id)
-    # |> put_long(uid)
-    |> put_short(slot_value)
+    |> put_short(item.inventory_slot)
     |> put_int(item.metadata.rarity)
     |> put_ustring()
     |> put_item(item)

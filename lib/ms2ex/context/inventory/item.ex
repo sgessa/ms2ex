@@ -1,15 +1,17 @@
 defmodule Ms2ex.Inventory.Item do
   use Ecto.Schema
 
-  alias Ms2ex.EctoTypes
+  alias Ms2ex.{EctoTypes, Metadata}
 
   import Ecto.Changeset
   import EctoEnum
 
-  @fields [:amount, :color, :data, :item_id, :location]
+  @fields [:amount, :color, :data, :item_id, :inventory_slot, :inventory_tab, :location]
   @required [:amount, :item_id, :location]
+  @inventory_tabs Map.to_list(Metadata.InventoryTab.mapping())
 
   defenum(Location, inventory: 0, equipment: 1)
+  defenum(InventoryTab, @inventory_tabs)
 
   schema "inventory_items" do
     belongs_to :character, Ms2ex.Character
@@ -28,6 +30,8 @@ defmodule Ms2ex.Inventory.Item do
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
+    field :inventory_slot, :integer, default: -1
+    field :inventory_tab, InventoryTab
     field :location, Location, default: :inventory
     field :paired_character_id, :integer, virtual: true, default: 0
     field :paired_character_name, :integer, virtual: true, default: ""

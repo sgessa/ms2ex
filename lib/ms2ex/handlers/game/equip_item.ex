@@ -30,7 +30,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {id, _packet} = get_long(packet)
 
     with {:ok, character} <- Registries.Characters.lookup(session.character_id),
-         {:ok, item} <- Inventory.unequip(session.character_id, id) do
+         {:ok, item} <- Inventory.unequip(character, id) do
       item = Metadata.Items.load(item)
 
       unequip_packet = Packets.UnequipItem.bytes(character, id)
