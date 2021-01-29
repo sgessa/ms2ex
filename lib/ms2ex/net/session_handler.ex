@@ -95,6 +95,10 @@ defmodule Ms2ex.Net.SessionHandler do
 
   def push(_packet, state), do: state
 
+  def push_notice(state, character, notice) do
+    push(state, Packets.UserChat.bytes(:notice_alert, character, notice))
+  end
+
   defp loop_recv(socket, pid) do
     recv_hdr(socket, pid)
     loop_recv(socket, pid)

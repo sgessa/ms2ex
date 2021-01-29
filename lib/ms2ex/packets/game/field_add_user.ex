@@ -75,7 +75,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
   def appearance(character) do
     ""
     |> put_byte(length(character.equips))
-    |> Packets.ItemInventory.put_equips(character.equips)
+    |> Packets.InventoryItem.put_equips(character.equips)
     |> put_byte(0x1)
     |> put_long()
     |> put_long()

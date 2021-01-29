@@ -1,4 +1,4 @@
-defmodule Ms2ex.Packets.ItemInventory do
+defmodule Ms2ex.Packets.InventoryItem do
   alias Ms2ex.{Inventory, Metadata}
 
   import Ms2ex.Packets.PacketWriter

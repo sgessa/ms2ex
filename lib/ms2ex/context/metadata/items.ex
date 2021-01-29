@@ -124,9 +124,16 @@ defmodule Ms2ex.Metadata.Items do
   end
 
   def load(item) do
-    case :ets.lookup(@table, item.item_id) do
-      [{_id, %ItemMetadata{} = meta}] -> %{item | metadata: meta}
-      _ -> item
+    case lookup(item.item_id) do
+      {:ok, meta} -> %{item | metadata: meta}
+      :error -> item
+    end
+  end
+
+  def lookup(item_id) do
+    case :ets.lookup(@table, item_id) do
+      [{_id, %ItemMetadata{} = meta}] -> {:ok, meta}
+      _ -> :error
     end
   end
 end

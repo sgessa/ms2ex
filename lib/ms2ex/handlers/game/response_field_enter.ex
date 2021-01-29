@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     session =
       Enum.reduce(items, session, fn item, session ->
         item = Metadata.Items.load(item)
-        push(session, Packets.ItemInventory.add_item({:create, item}))
+        push(session, Packets.InventoryItem.add_item({:create, item}))
       end)
 
     session

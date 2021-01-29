@@ -1,7 +1,11 @@
 defmodule Ms2ex.Packets.UserChat do
-  import Ms2ex.Packets.PacketWriter
+  alias Ms2ex.{Chat, Packets}
 
-  def bytes({type, type_id}, character, msg) do
+  import Packets.PacketWriter
+
+  def bytes(type, character, msg) do
+    type_id = Keyword.get(Chat.Type.__enum_map__(), type)
+
     __MODULE__
     |> build()
     |> put_long(character.account_id)

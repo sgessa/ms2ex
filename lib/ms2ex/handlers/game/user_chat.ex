@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{Chat, Field, Net, Packets, Registries}
+  alias Ms2ex.{Chat, Commands, Field, Net, Packets, Registries}
 
   import Packets.PacketReader
   import Net.SessionHandler, only: [push: 2]
@@ -12,33 +12,39 @@ defmodule Ms2ex.GameHandlers.UserChat do
     {rcpt, packet} = get_ustring(packet)
     {_, _packet} = get_long(packet)
 
-    handle_message({type, type_id}, msg, rcpt, session)
+    {:ok, character} = Registries.Characters.lookup(session.character_id)
+
+    case msg do
+      "!" <> cmd ->
+        cmd
+        |> String.trim()
+        |> String.split(" ")
+        |> Commands.handle(character, session)
+
+      _ ->
+        handle_message({type, msg, rcpt}, character, session)
+    end
   end
 
-  defp handle_message({:all, type_id}, msg, _rcpt_name, session) do
-    with {:ok, char} <- Registries.Characters.lookup(session.character_id) do
-      packet = Packets.UserChat.bytes({:all, type_id}, char, msg)
-      Field.broadcast(char, packet)
-    end
-
+  defp handle_message({:all, msg, _rcpt_name}, character, session) do
+    packet = Packets.UserChat.bytes(:all, character, msg)
+    Field.broadcast(character, packet)
     session
   end
 
-  defp handle_message({:whisper_to, type_id}, msg, rcpt_name, session) do
-    {:ok, char} = Registries.Characters.lookup(session.character_id)
-
+  defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
     case Registries.Characters.lookup_by_name(rcpt_name) do
       {:ok, rcpt} ->
-        packet = Packets.UserChat.bytes({:whisper_from, type_id}, char, msg)
+        packet = Packets.UserChat.bytes(:whisper_from, character, msg)
         send(rcpt.session_pid, {:push, packet})
 
-        push(session, Packets.UserChat.bytes({:whisper_to, type_id}, rcpt, msg))
+        push(session, Packets.UserChat.bytes(:whisper_to, rcpt, msg))
 
       _ ->
         reason = "Player is not online."
-        push(session, Packets.UserChat.bytes({:whisper_to, type_id}, char, reason))
+        push(session, Packets.UserChat.bytes(:notice_alert, character, reason))
     end
   end
 
-  defp handle_message(_type, _msg, _rcpt_name, session), do: session
+  defp handle_message(_msg, _character, session), do: session
 end

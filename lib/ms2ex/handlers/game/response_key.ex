@@ -72,8 +72,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   defp push_inventory_tab(session, [tab | tabs]) do
     session
-    |> push(Packets.ItemInventory.reset(tab))
-    |> push(Packets.ItemInventory.load(tab))
+    |> push(Packets.InventoryItem.reset(tab))
+    |> push(Packets.InventoryItem.load(tab))
     |> push_inventory_tab(tabs)
   end
 end

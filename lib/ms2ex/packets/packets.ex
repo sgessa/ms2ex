@@ -44,7 +44,7 @@ defmodule Ms2ex.Packets do
     0x1C => "USER_SYNC",
     0x1D => "USER_CHAT",
     0x1F => "EMOTION",
-    0x21 => "ITEM_INVENTORY",
+    0x21 => "INVENTORY_ITEM",
     0x23 => "MARKET_INVENTORY",
     0x24 => "FURNISHING_INVENTORY",
     0x2F => "PLAYER_STATS",

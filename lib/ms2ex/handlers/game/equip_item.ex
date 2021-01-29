@@ -52,7 +52,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Field.broadcast(character, equip_packet)
 
-      push(session, Packets.ItemInventory.remove_item(item.id))
+      push(session, Packets.InventoryItem.remove_item(item.id))
     else
       _ -> session
     end
@@ -65,7 +65,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
       Field.broadcast(character, unequip_packet)
 
-      push(session, Packets.ItemInventory.add_item({:create, item}))
+      push(session, Packets.InventoryItem.add_item({:create, item}))
     else
       _ -> session
     end
