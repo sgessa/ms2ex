@@ -21,10 +21,21 @@ defmodule Ms2ex.Packets.LoginResult do
     |> put_int(0x2)
   end
 
-  # TODO
   def error() do
+    timestamp = DateTime.to_unix(DateTime.utc_now())
+
     __MODULE__
     |> build()
     |> put_byte(@modes.error)
+    |> put_int()
+    |> put_ustring()
+    |> put_long()
+    |> put_long(timestamp)
+    |> put_int(Ms2ex.sync_ticks())
+    |> put_byte()
+    |> put_byte()
+    |> put_int()
+    |> put_long()
+    |> put_int()
   end
 end
