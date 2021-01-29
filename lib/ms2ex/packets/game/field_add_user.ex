@@ -19,7 +19,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_coord(character.position)
     |> put_coord(character.rotation)
     |> put_byte()
-    |> Packets.Field.put_total_stats(Packets.PlayerStats.stats())
+    |> Packets.Field.put_total_stats(character.stats)
     |> put_byte()
     |> put_byte()
     |> put_int()

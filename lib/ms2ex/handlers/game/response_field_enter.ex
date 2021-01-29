@@ -7,7 +7,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
   def handle(_packet, %{character_id: character_id} = session) do
     {:ok, character} = Registries.Characters.lookup(character_id)
-    character = Characters.load_equips(character)
+
+    character =
+      character
+      |> Characters.load_equips()
+      |> Characters.preload(:stats)
 
     {:ok, _pid} = Field.find_or_create(character, session)
 
@@ -20,8 +24,9 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
       end)
 
     session
-    |> push(Packets.PlayerStats.bytes(character))
-    |> push(Packets.StatPoints.bytes(character))
-    |> push(Packets.Emotion.bytes())
+
+    # |> push(Packets.StatPoints.bytes(character))
+
+    # |> push(Packets.Emotion.bytes())
   end
 end

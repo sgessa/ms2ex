@@ -67,19 +67,27 @@ defmodule Ms2ex.Field do
 
     character_ids = Map.keys(state.sessions)
 
+    # Load other characters present in the field
     for {_id, char} <- Registries.Characters.lookup(character_ids) do
       push(session_pid, Packets.FieldAddUser.bytes(char))
       push(session_pid, Packets.ProxyGameObj.load_player(char))
     end
 
+    # Save Map ID on the database
     Characters.update(character, %{map_id: state.field_id})
+
+    # Update registry
     character = %{character | object_id: state.counter, map_id: state.field_id}
     Registries.Characters.update(character)
 
     state = %{state | counter: state.counter + 1}
 
+    # Tell other characters in the map to load the new player
     broadcast(self(), Packets.FieldAddUser.bytes(character))
     broadcast(self(), Packets.ProxyGameObj.load_player(character))
+
+    # Send Player Stats after Player Object is loaded
+    send(self(), {:push, character.id, Packets.PlayerStats.bytes(character)})
 
     sessions = Map.put(state.sessions, character.id, session_pid)
     {:noreply, %{state | sessions: sessions}}
@@ -88,6 +96,14 @@ defmodule Ms2ex.Field do
   def handle_info({:broadcast, packet, sender_pid}, state) do
     for {_char_id, pid} <- state.sessions, pid != sender_pid do
       push(pid, packet)
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info({:push, character_id, packet}, state) do
+    if session = Map.get(state.sessions, character_id) do
+      push(session, packet)
     end
 
     {:noreply, state}
@@ -122,5 +138,5 @@ defmodule Ms2ex.Field do
     end
   end
 
-  defp push(pid, packet), do: send(pid, {:push, packet})
+  defp push(session_pid, packet), do: send(session_pid, {:push, packet})
 end

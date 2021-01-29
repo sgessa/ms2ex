@@ -27,28 +27,22 @@ defmodule Ms2ex.Packets.Field do
   defp put_passive_skill(packet, _count), do: packet
 
   def put_total_stats(packet, stats) do
-    {total_hp, min_hp, max_hp} = Enum.at(stats, 4)
-    {total_attk_speed, min_attk_speed, max_attk_speed} = Enum.at(stats, 14)
-    {total_mov_speed, min_mov_speed, max_mov_speed} = Enum.at(stats, 15)
-    {total_mount_speed, min_mount_speed, max_mount_speed} = Enum.at(stats, 33)
-    {total_jump_height, min_jump_height, max_jump_height} = Enum.at(stats, 23)
-
     packet
     |> put_byte(0x23)
-    |> put_long(total_hp)
-    |> put_int(total_attk_speed)
-    |> put_int(total_mov_speed)
-    |> put_int(total_mount_speed)
-    |> put_int(total_jump_height)
-    |> put_long(min_hp)
-    |> put_int(min_attk_speed)
-    |> put_int(min_mov_speed)
-    |> put_int(min_mount_speed)
-    |> put_int(min_jump_height)
-    |> put_long(max_hp)
-    |> put_int(max_attk_speed)
-    |> put_int(max_mov_speed)
-    |> put_int(max_mount_speed)
-    |> put_int(max_jump_height)
+    |> put_long(stats.hp_total)
+    |> put_int(stats.attk_speed_total)
+    |> put_int(stats.mov_speed_total)
+    |> put_int(stats.mount_speed_total)
+    |> put_int(stats.jump_height_total)
+    |> put_long(stats.hp_min)
+    |> put_int(stats.attk_speed_min)
+    |> put_int(stats.mov_speed_min)
+    |> put_int(stats.mount_speed_min)
+    |> put_int(stats.jump_height_min)
+    |> put_long(stats.hp_max)
+    |> put_int(stats.attk_speed_max)
+    |> put_int(stats.mov_speed_max)
+    |> put_int(stats.mount_speed_max)
+    |> put_int(stats.jump_height_max)
   end
 end
