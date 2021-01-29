@@ -59,7 +59,7 @@ defmodule Ms2ex.Inventory do
   end
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
-    attrs = %{attrs | inventory_tab: meta.tab, equip_slot: meta.slot}
+    attrs = %{attrs | inventory_tab: meta.tab}
     attrs = Map.from_struct(attrs)
 
     changeset =

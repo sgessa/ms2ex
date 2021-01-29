@@ -10,7 +10,6 @@ defmodule Ms2ex.Inventory.Item do
     :amount,
     :color,
     :data,
-    :equip_slot,
     :item_id,
     :inventory_slot,
     :inventory_tab,
@@ -18,10 +17,8 @@ defmodule Ms2ex.Inventory.Item do
   ]
 
   @required [:amount, :item_id, :location]
-  @equip_slots Map.to_list(Metadata.EquipSlot.mapping())
   @inventory_tabs Map.to_list(Metadata.InventoryTab.mapping())
 
-  defenum(EquipSlot, @equip_slots)
   defenum(InventoryTab, @inventory_tabs)
   defenum(Location, inventory: 0, equipment: 1)
 
@@ -39,7 +36,6 @@ defmodule Ms2ex.Inventory.Item do
     field :charges, :integer, virtual: true, default: 0
     field :enchants, :integer, virtual: true, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
-    field :equip_slot, EquipSlot, default: :NONE
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
