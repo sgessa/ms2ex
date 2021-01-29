@@ -20,12 +20,6 @@ defmodule Ms2ex.Characters do
     |> Repo.update()
   end
 
-  def update_position(char_id, position) do
-    Character
-    |> where([c], c.id == ^char_id)
-    |> Repo.update_all(set: [position: position])
-  end
-
   def delete(%Character{} = character), do: Repo.delete(character)
 
   def load_equips(%Character{} = character, opts \\ []) do

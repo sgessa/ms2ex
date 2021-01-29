@@ -82,7 +82,6 @@ shoes = Metadata.Items.load(%Item{item_id: 11_700_709, color: shoes_color})
     name: "steve1337",
     equipment: %{},
     map_id: 2_000_023,
-    position: {-39, -4347, 9001},
     job: :wizard,
     skin_color:
       SkinColor.build(

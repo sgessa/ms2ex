@@ -15,7 +15,6 @@ defmodule Ms2ex.Character do
     :map_id,
     :motto,
     :name,
-    :position,
     :prestige_exp,
     :prestige_level,
     :profile_url,
@@ -71,7 +70,7 @@ defmodule Ms2ex.Character do
     field :mount, :map, virtual: true
     field :name, :string
     field :object_id, :integer, virtual: true, default: 0
-    field :position, EctoTypes.Term
+    field :position, EctoTypes.Term, virtual: true, default: {0, 0, 0}
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1
     field :profile_url, :string, default: "http://duckduckgo.com"

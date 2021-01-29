@@ -1,6 +1,9 @@
 defmodule Ms2ex.Packets.RequestFieldEnter do
   import Ms2ex.Packets.PacketWriter
 
+  # TODO
+  @spawn_coords {-39, -4347, 9001}
+
   def bytes(character) do
     __MODULE__
     |> build()
@@ -10,7 +13,7 @@ defmodule Ms2ex.Packets.RequestFieldEnter do
     |> put_byte()
     |> put_int()
     |> put_int()
-    |> put_coord(character.position)
+    |> put_coord(@spawn_coords)
     |> put_coord(character.rotation)
     |> put_int()
   end

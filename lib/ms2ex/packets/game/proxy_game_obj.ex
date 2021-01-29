@@ -21,6 +21,9 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     animate: 64
   }
 
+  # TODO
+  @spawn_coords {-39, -4347, 9001}
+
   def load_player(character) do
     real_job_id = Character.real_job_id(character)
 
@@ -34,7 +37,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_ustring(character.profile_url)
     |> put_ustring(character.motto)
     |> put_byte()
-    |> put_coord(character.position)
+    |> put_coord(@spawn_coords)
     |> put_short(character.level)
     |> put_short(real_job_id)
     |> put_int(Character.job_id(character))
