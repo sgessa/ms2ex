@@ -12,10 +12,22 @@ defmodule Ms2ex.Characters do
 
   def get(id), do: Repo.get(Character, id)
 
+  def update(%Character{} = character, attrs) do
+    character
+    |> Character.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def update_position(char_id, position) do
+    Character
+    |> where([c], c.id == ^char_id)
+    |> Repo.update_all(set: [position: position])
+  end
+
+  def delete(%Character{} = character), do: Repo.delete(character)
+
   def load_equips(%Character{} = character, opts \\ []) do
     equips = where(Inventory.Item, [i], i.location == ^:equipment)
     Repo.preload(character, [equips: equips], opts)
   end
-
-  def delete(%Character{} = character), do: Repo.delete(character)
 end

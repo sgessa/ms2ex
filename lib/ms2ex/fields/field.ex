@@ -3,7 +3,7 @@ defmodule Ms2ex.Field do
 
   require Logger
 
-  alias Ms2ex.{Packets, Registries}
+  alias Ms2ex.{Characters, Packets, Registries}
 
   @counter 100_000
   @updates_intval 1000
@@ -112,13 +112,13 @@ defmodule Ms2ex.Field do
     maybe_stop_server(sessions, state)
   end
 
-  defp maybe_stop_server(sessions, state) when length(sessions) < 1 do
-    Logger.info("Field #{state.field_id} @ Channel #{state.channel_id} is empty. Stopping.")
-    {:stop, :normal, state}
-  end
-
   defp maybe_stop_server(sessions, state) do
-    {:noreply, %{state | sessions: sessions}}
+    if Enum.empty?(sessions) do
+      Logger.info("Field #{state.field_id} @ Channel #{state.channel_id} is empty. Stopping.")
+      {:stop, :normal, state}
+    else
+      {:noreply, %{state | sessions: sessions}}
+    end
   end
 
   defp push(pid, packet), do: send(pid, {:push, packet})
