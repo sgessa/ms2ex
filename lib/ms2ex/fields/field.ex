@@ -72,7 +72,8 @@ defmodule Ms2ex.Field do
       push(session_pid, Packets.ProxyGameObj.load_player(char))
     end
 
-    character = Map.put(character, :object_id, state.counter)
+    Characters.update(character, %{map_id: state.field_id})
+    character = %{character | object_id: state.counter, map_id: state.field_id}
     Registries.Characters.update(character)
 
     state = %{state | counter: state.counter + 1}
