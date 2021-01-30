@@ -3,7 +3,7 @@ defmodule Ms2ex.Chat do
 
   defenum(Type,
     all: 0,
-    whisper_from: 1,
+    whisper_from: 3,
     whisper_to: 4,
     whisper_fail: 5,
     whisper_reject: 6,
