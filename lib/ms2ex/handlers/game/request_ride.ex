@@ -37,6 +37,16 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     session
   end
 
+  # Change Ride
+  defp handle_ride(0x2, packet, session) do
+    {item_id, packet} = get_int(packet)
+    {id, _packet} = get_long(packet)
+
+    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
+    session
+  end
+
   defp handle_ride(_mode, _packet, session) do
     session
   end

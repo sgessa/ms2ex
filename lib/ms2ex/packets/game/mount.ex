@@ -25,6 +25,15 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> put_bool(forced)
   end
 
+  def change_ride(character, item_id, id) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.change)
+    |> put_int(character.object_id)
+    |> put_int(item_id)
+    |> put_long(id)
+  end
+
   defp put_mount(packet, %{type: 0x1} = mount) do
     packet
     |> put_int(mount.item_id)
