@@ -29,3 +29,6 @@ ms2ex-*.tar
 
 # Ignore Game Metadata
 /priv/resources/
+
+# Ignore secrets for production release
+/config/*.secret.exs

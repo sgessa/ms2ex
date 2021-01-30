@@ -70,6 +70,6 @@ config :ms2ex, Ms2ex,
     "PLAYER_STAT",
     "PROXY_GAME_OBJ",
     "SEND_LOG",
-    "USER_CHAT",
+    # "USER_CHAT",
     "USER_SYNC"
   ]
