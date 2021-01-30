@@ -2,6 +2,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
     Character,
     Characters,
+    Equips,
     Inventory,
     ItemColor,
     Metadata,
@@ -80,7 +81,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       equipment: %{},
       gender: gender,
       job: job,
-      map_id: 52_000_065,
+      map_id: 2_000_023,
       name: name,
       position: {-800, 600, 500},
       skin_color: skin_color
@@ -89,7 +90,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     with {:ok, character} <- Characters.create(session.account, attrs) do
       Enum.each(equips, fn item ->
         {:ok, {:create, item}} = Inventory.add_item(character, item)
-        {:ok, _equip} = Inventory.equip(item)
+        {:ok, _equip} = Equips.equip(item)
       end)
 
       character = Characters.load_equips(character, force: true)
@@ -101,9 +102,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       |> push(Packets.CharacterMaxCount.set_max(4, 6))
       |> push(Packets.CharacterList.append(character))
     else
-      error ->
-        IO.inspect(error)
-
+      _error ->
         session
         |> push(Packets.CharacterCreate.name_taken())
     end
