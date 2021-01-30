@@ -30,7 +30,9 @@ defmodule Ms2ex.Inventory do
     end
   end
 
-  defp find_item(%{id: char_id}, %{item_id: item_id, stack_limit: stack_limit}) do
+  defp find_item(%{id: char_id}, %{item_id: item_id} = item) do
+    stack_limit = Map.get(item, :stack_limit) || 1
+
     Item
     |> where([i], i.character_id == ^char_id)
     |> where([i], i.item_id == ^item_id and i.amount < ^stack_limit)
