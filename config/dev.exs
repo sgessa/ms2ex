@@ -66,10 +66,11 @@ config :ms2ex, Ms2ex,
     "CHARACTER_LIST",
     "EMOTION",
     "FIELD_ADD_USER",
-    "KEY_TABLE",
+    # "KEY_TABLE",
     "PLAYER_STAT",
     "PROXY_GAME_OBJ",
-    "SEND_LOG",
+    "RIDE_SYNC",
     # "USER_CHAT",
-    "USER_SYNC"
+    "USER_SYNC",
+    "SEND_LOG"
   ]

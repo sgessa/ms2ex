@@ -12,4 +12,19 @@ defmodule Ms2ex.Packets.UGC do
     |> put_ustring(config[:ugc].locale)
     |> put_byte(0x2)
   end
+
+  def put_ugc(packet) do
+    packet
+    |> put_long
+    |> put_ustring()
+    |> put_ustring()
+    |> put_byte()
+    |> put_int()
+    |> put_long()
+    |> put_long()
+    |> put_ustring()
+    |> put_long()
+    |> put_ustring()
+    |> put_byte()
+  end
 end

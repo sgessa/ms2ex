@@ -32,6 +32,11 @@ defmodule Ms2ex.Field do
     send(field_pid, {:broadcast, packet, sender_pid})
   end
 
+  def request_object_id(character) do
+    field_pid = field_name(character.map_id, character.channel_id)
+    GenServer.call(field_pid, :request_object_id)
+  end
+
   def init({character, session}) do
     Logger.info("Start Field #{character.map_id} @ Channel #{session.channel_id}")
 
@@ -45,6 +50,10 @@ defmodule Ms2ex.Field do
        channel_id: session.channel_id,
        sessions: %{}
      }}
+  end
+
+  def handle_call(:request_object_id, _from, state) do
+    {:reply, {:ok, state.counter}, %{state | counter: state.counter + 1}}
   end
 
   def handle_info(:send_updates, state) do

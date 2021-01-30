@@ -80,6 +80,7 @@ shoes = Metadata.Items.load(%Item{item_id: 11_700_709, color: shoes_color})
 {:ok, char} =
   Characters.create(account, %{
     name: "steve1337",
+    level: 70,
     equipment: %{},
     map_id: 2_000_023,
     job: :wizard,

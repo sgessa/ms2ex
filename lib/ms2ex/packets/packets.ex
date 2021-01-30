@@ -17,6 +17,8 @@ defmodule Ms2ex.Packets do
     0x39 => "UGC",
     0x3B => "KEY_TABLE",
     0x3C => "REQUEST_CHANGE_CHANNEL",
+    0x41 => "REQUEST_RIDE",
+    0x42 => "RIDE_SYNC",
     0x56 => "SEND_LOG",
     0x83 => "GLOBAL_FACTOR"
   }
@@ -53,6 +55,8 @@ defmodule Ms2ex.Packets do
     0x63 => "BUDDY_LIST",
     0x6D => "UGC",
     0x71 => "KEY_TABLE",
+    0x7B => "RESPONSE_RIDE",
+    0x7C => "RIDE_SYNC",
     0x7F => "LOAD_UGC_MAP",
     0x80 => "PROXY_GAME_OBJ",
     0xAA => "USER_ENV",
