@@ -21,14 +21,19 @@ defmodule Ms2ex.GameHandlers.RequestRide do
 
     {:ok, character} = Registries.Characters.lookup(session.character_id)
     {:ok, object_id} = Field.request_object_id(character)
-    IO.inspect(object_id: "MOUNT OBJ ID")
 
     mount = %{type: type, item_id: item_id, id: id, object_id: object_id}
-    character = Map.put(character, :mount, mount)
-    Registries.Characters.update(character)
+    Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
 
-    Field.broadcast(character, Packets.ResponseRide.start_ride(character))
+    session
+  end
 
+  # Stop Ride
+  defp handle_ride(0x1, packet, session) do
+    {_, packet} = get_byte(packet)
+    {forced, _packet} = get_bool(packet)
+    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
     session
   end
 

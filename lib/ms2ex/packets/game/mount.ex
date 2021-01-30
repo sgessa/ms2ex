@@ -5,9 +5,7 @@ defmodule Ms2ex.Packets.ResponseRide do
 
   @modes %{start: 0x0, stop: 0x1, change: 0x2}
 
-  def start_ride(character) do
-    mount = character.mount
-
+  def start_ride(character, mount) do
     __MODULE__
     |> build()
     |> put_byte(@modes.start)
@@ -16,6 +14,15 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> put_int(mount.item_id)
     |> put_int(mount.object_id)
     |> put_mount(mount)
+  end
+
+  def stop_ride(character, forced) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.stop)
+    |> put_int(character.object_id)
+    |> put_byte()
+    |> put_bool(forced)
   end
 
   defp put_mount(packet, %{type: 0x1} = mount) do
