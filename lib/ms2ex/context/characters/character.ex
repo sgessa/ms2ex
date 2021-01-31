@@ -1,7 +1,7 @@
 defmodule Ms2ex.Character do
   use Ecto.Schema
 
-  alias Ms2ex.{CharacterStats, EctoTypes, Inventory, Users}
+  alias Ms2ex.{CharacterStats, EctoTypes, Inventory, Metadata.Coord, Users}
 
   import Ecto.Changeset
   import EctoEnum
@@ -70,12 +70,12 @@ defmodule Ms2ex.Character do
     field :mount, :map, virtual: true
     field :name, :string
     field :object_id, :integer, virtual: true, default: 0
-    field :position, EctoTypes.Term, virtual: true, default: {0, 0, 0}
+    field :position, EctoTypes.Term, virtual: true, default: %Coord{x: 2850, y: 2550, z: 1800}
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1
     field :profile_url, :string, default: "http://duckduckgo.com"
     field :rest_exp, :integer, default: 0
-    field :rotation, EctoTypes.Term, default: {0, 0, 0}
+    field :rotation, EctoTypes.Term, virtual: true, default: %Coord{x: 0, y: 0, z: 0}
     field :skin_color, EctoTypes.Term
     field :title_id, :integer, virtual: true, default: 0
 

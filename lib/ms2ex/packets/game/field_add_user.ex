@@ -4,9 +4,6 @@ defmodule Ms2ex.Packets.FieldAddUser do
 
   import Packets.PacketWriter
 
-  # TODO
-  @spawn_coords {-39, -4347, 9001}
-
   def bytes(character) do
     real_job_id = Character.real_job_id(character)
     flag_a = false
@@ -19,7 +16,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_byte(0x1)
     |> put_int(real_job_id)
     |> Packets.Job.put_skills(character)
-    |> put_coord(@spawn_coords)
+    |> put_coord(character.position)
     |> put_coord(character.rotation)
     |> put_byte()
     |> Packets.Field.put_total_stats(character.stats)

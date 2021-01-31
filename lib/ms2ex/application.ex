@@ -11,6 +11,7 @@ defmodule Ms2ex.Application do
     config = Application.get_env(:ms2ex, Ms2ex)
 
     Ms2ex.Metadata.Items.store()
+    Ms2ex.Metadata.Maps.store()
     Ms2ex.Metadata.Skills.store()
 
     # Start Character Registry (ETS)

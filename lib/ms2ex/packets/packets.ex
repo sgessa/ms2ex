@@ -20,6 +20,7 @@ defmodule Ms2ex.Packets do
     0x41 => "REQUEST_RIDE",
     0x42 => "RIDE_SYNC",
     0x56 => "SEND_LOG",
+    0x6D => "REQUEST_CHANGE_FIELD",
     0x83 => "GLOBAL_FACTOR"
   }
 
@@ -52,6 +53,7 @@ defmodule Ms2ex.Packets do
     0x2F => "PLAYER_STATS",
     0x46 => "STAT_POINTS",
     0x47 => "CHARACTER_CREATE",
+    0x49 => "ADD_PORTAL",
     0x63 => "BUDDY_LIST",
     0x6D => "UGC",
     0x71 => "KEY_TABLE",

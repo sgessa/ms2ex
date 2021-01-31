@@ -17,11 +17,18 @@ defmodule Ms2ex.Packets.PacketWriter do
   def put_byte(packet, byte \\ 0x0), do: packet <> <<byte>>
   def put_bytes(packet, b), do: packet <> <<b::bytes>>
 
-  def put_coord(packet, {x, y, z}) do
+  def put_coord(packet, %{x: x, y: y, z: z}) do
     packet
     |> put_float(x)
     |> put_float(y)
     |> put_float(z)
+  end
+
+  def put_coord(packet) do
+    packet
+    |> put_float()
+    |> put_float()
+    |> put_float()
   end
 
   def put_deflated(packet, data, length) when length <= 4 do
@@ -44,7 +51,9 @@ defmodule Ms2ex.Packets.PacketWriter do
     put_byte(packet, int)
   end
 
-  def put_float(packet, number, size \\ 32), do: packet <> <<number::little-float-size(size)>>
+  def put_float(packet, number \\ 0x0, size \\ 32) do
+    packet <> <<number::little-float-size(size)>>
+  end
 
   def put_int(packet, int \\ 0x0), do: packet <> <<int::little-integer-32>>
 
@@ -65,7 +74,7 @@ defmodule Ms2ex.Packets.PacketWriter do
 
   def put_short(packet, short \\ 0x0), do: packet <> <<short::little-integer-16>>
 
-  def put_short_coord(packet, {x, y, z}) do
+  def put_short_coord(packet, %{x: x, y: y, z: z}) do
     packet
     |> put_short(x)
     |> put_short(y)

@@ -18,18 +18,18 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         |> Characters.load_equips()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
-        |> Registries.Characters.update()
 
       Registries.Characters.register_name(character)
 
       tick = Ms2ex.sync_ticks()
 
-      inventory_tab_keys = Map.keys(Metadata.InventoryTab.mapping())
+      {:ok, map} = Metadata.Maps.lookup(character.map_id)
+      spawn = List.first(map.spawns)
 
-      inventory_tabs =
-        Enum.map(inventory_tab_keys, fn key ->
-          Map.get(Metadata.InventoryTab.mapping(), key)
-        end)
+      character = %{character | position: spawn.coord, rotation: spawn.rotation}
+      Registries.Characters.update(character)
+
+      %{map_id: map_id, position: position, rotation: rotation} = character
 
       session
       |> Map.put(:character_id, character.id)
@@ -46,7 +46,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(session.channel_id, character))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(inventory_tabs)
+      |> push_inventory_tab(get_inventory_tabs())
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -62,10 +62,16 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Fishing.load_log())
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
-      |> push(Packets.RequestFieldEnter.bytes(character))
+      |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
     else
       _ -> session
     end
+  end
+
+  defp get_inventory_tabs() do
+    Metadata.InventoryTab.mapping()
+    |> Map.keys()
+    |> Enum.map(&Map.get(Metadata.InventoryTab.mapping(), &1))
   end
 
   defp push_inventory_tab(session, []), do: session

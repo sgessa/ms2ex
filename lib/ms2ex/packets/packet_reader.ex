@@ -1,4 +1,6 @@
 defmodule Ms2ex.Packets.PacketReader do
+  alias Ms2ex.Metadata.Coord
+
   def get_bool(packet) do
     <<bool, packet::bytes>> = packet
 
@@ -20,14 +22,14 @@ defmodule Ms2ex.Packets.PacketReader do
     {x, packet} = get_short(packet)
     {y, packet} = get_short(packet)
     {z, packet} = get_short(packet)
-    {{x, y, z}, packet}
+    {%Coord{x: x, y: y, z: z}, packet}
   end
 
   def get_coord(packet) do
     {x, packet} = get_float(packet)
     {y, packet} = get_float(packet)
     {z, packet} = get_float(packet)
-    {{x, y, z}, packet}
+    {%Coord{x: x, y: y, z: z}, packet}
   end
 
   def get_float(<<n::little-float-32, packet::bytes>>) do

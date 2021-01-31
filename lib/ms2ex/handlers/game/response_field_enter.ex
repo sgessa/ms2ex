@@ -13,7 +13,10 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
       |> Characters.load_equips()
       |> Characters.preload(:stats)
 
-    {:ok, _pid} = Field.find_or_create(character, session)
+    # Check if character is changing map
+    character = maybe_change_map(character)
+
+    {:ok, _pid} = Field.enter(character, session)
 
     items = Inventory.list_items(character)
 
@@ -24,9 +27,20 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
       end)
 
     session
-
     # |> push(Packets.StatPoints.bytes(character))
-
     # |> push(Packets.Emotion.bytes())
   end
+
+  def maybe_change_map(%{change_map: new_map} = character) do
+    # Save Map ID on the database
+    {:ok, character} = Characters.update(character, %{map_id: new_map.id})
+
+    character
+    |> Map.delete(:change_map)
+    |> Map.put(:position, new_map.position)
+    |> Map.put(:rotation, new_map.rotation)
+    |> Registries.Characters.update()
+  end
+
+  def maybe_change_map(character), do: character
 end

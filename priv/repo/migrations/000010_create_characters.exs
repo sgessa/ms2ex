@@ -17,7 +17,6 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :prestige_level, :integer
       add :profile_url, :string
       add :rest_exp, :bigint, null: false
-      add :rotation, :binary, null: false
       add :skin_color, :binary, null: false
 
       timestamps(type: :timestamptz)

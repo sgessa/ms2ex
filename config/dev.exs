@@ -63,6 +63,7 @@ config :ms2ex, Ms2ex,
     locale: "na"
   },
   skip_packet_logs: [
+    "ADD_PORTAL",
     "CHARACTER_LIST",
     "EMOTION",
     "FIELD_ADD_USER",
