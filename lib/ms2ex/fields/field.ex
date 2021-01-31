@@ -5,7 +5,7 @@ defmodule Ms2ex.Field do
 
   alias Ms2ex.{Characters, Packets, Registries}
 
-  @counter 100_000
+  @counter 10
   @updates_intval 1000
 
   def find_or_create(character, session) do
@@ -32,9 +32,9 @@ defmodule Ms2ex.Field do
     send(field_pid, {:broadcast, packet, sender_pid})
   end
 
-  def request_object_id(character) do
+  def add_object(character, object) do
     field_pid = field_name(character.map_id, character.channel_id)
-    GenServer.call(field_pid, :request_object_id)
+    GenServer.call(field_pid, {:add_object, object.object_type, object})
   end
 
   def init({character, session}) do
@@ -48,12 +48,15 @@ defmodule Ms2ex.Field do
        counter: @counter,
        field_id: character.map_id,
        channel_id: session.channel_id,
-       sessions: %{}
+       sessions: %{},
+       mounts: %{}
      }}
   end
 
-  def handle_call(:request_object_id, _from, state) do
-    {:reply, {:ok, state.counter}, %{state | counter: state.counter + 1}}
+  def handle_call({:add_object, :mount, mount}, _from, state) do
+    mount = Map.put(mount, :object_id, state.counter)
+    mounts = Map.put(state.mounts, mount.character_id, mount)
+    {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
   def handle_info(:send_updates, state) do
@@ -76,10 +79,14 @@ defmodule Ms2ex.Field do
 
     character_ids = Map.keys(state.sessions)
 
-    # Load other characters present in the field
+    # Load other characters
     for {_id, char} <- Registries.Characters.lookup(character_ids) do
       push(session_pid, Packets.FieldAddUser.bytes(char))
       push(session_pid, Packets.ProxyGameObj.load_player(char))
+
+      if mount = Map.get(state.mounts, char.id) do
+        push(session_pid, Packets.ResponseRide.start_ride(char, mount))
+      end
     end
 
     # Save Map ID on the database

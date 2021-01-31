@@ -20,9 +20,16 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     {id, _packet} = get_long(packet)
 
     {:ok, character} = Registries.Characters.lookup(session.character_id)
-    {:ok, object_id} = Field.request_object_id(character)
 
-    mount = %{type: type, item_id: item_id, id: id, object_id: object_id}
+    mount = %{
+      character_id: character.id,
+      id: id,
+      item_id: item_id,
+      mount_type: type,
+      object_type: :mount
+    }
+
+    {:ok, mount} = Field.add_object(character, mount)
     Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
 
     session
