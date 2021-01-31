@@ -132,7 +132,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(0)
   end
 
-  # defp put_template(packet, %{metadata: %{is_template: true}}) do
+  # defp put_template(packet, %{metadata: %{is_template?: true}}) do
   #   packet
   #   |> put_ugc()
   #   |> put_long()

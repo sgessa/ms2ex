@@ -78,11 +78,11 @@ defmodule Ms2ex.Metadata.ItemContent do
   field :enchant_level, 8, type: :int32
 end
 
-defmodule Ms2ex.Metadata.ItemMetadata do
+defmodule Ms2ex.Metadata.Item do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:id, :slot, :gem_slot, :tab, :rarity, :stack_limit, :is_template]
+  defstruct [:id, :slot, :gem_slot, :tab, :rarity, :stack_limit, :is_template?]
 
   field :id, 1, type: :int32
   field :slot, 2, type: Ms2ex.Metadata.EquipSlot, enum: true
@@ -90,22 +90,23 @@ defmodule Ms2ex.Metadata.ItemMetadata do
   field :tab, 4, type: Ms2ex.Metadata.InventoryTab, enum: true
   field :rarity, 5, type: :int32
   field :stack_limit, 6, type: :int32
-  field :is_two_handed, 7, type: :bool
-  field :is_template, 8, type: :bool
-  field :play_count, 9, type: :int32
-  field :recommended_jobs, 10, repeated: true, type: :int32
-  field :content, 11, repeated: true, type: Ms2ex.Metadata.ItemContent
+  field :is_two_handed?, 7, type: :bool
+  field :is_dress?, 8, type: :bool
+  field :is_template?, 9, type: :bool
+  field :play_count, 10, type: :int32
+  field :recommended_jobs, 11, repeated: true, type: :int32
+  field :content, 12, repeated: true, type: Ms2ex.Metadata.ItemContent
 end
 
 defmodule Ms2ex.Metadata.Items do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  alias Ms2ex.Metadata.ItemMetadata
+  alias Ms2ex.Metadata.Item
 
   defstruct [:items]
 
-  field :items, 1, repeated: true, type: Ms2ex.Metadata.ItemMetadata
+  field :items, 1, repeated: true, type: Item
 
   @table :item_metadata
 
@@ -132,7 +133,7 @@ defmodule Ms2ex.Metadata.Items do
 
   def lookup(item_id) do
     case :ets.lookup(@table, item_id) do
-      [{_id, %ItemMetadata{} = meta}] -> {:ok, meta}
+      [{_id, %Item{} = meta}] -> {:ok, meta}
       _ -> :error
     end
   end
