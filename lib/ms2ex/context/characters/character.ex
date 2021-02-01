@@ -1,7 +1,7 @@
 defmodule Ms2ex.Character do
   use Ecto.Schema
 
-  alias Ms2ex.{CharacterStats, EctoTypes, Inventory, Metadata.Coord, Users}
+  alias Ms2ex.{CharacterStats, EctoTypes, Inventory, Metadata.Coord, SkillTab, Users}
 
   import Ecto.Changeset
   import EctoEnum
@@ -46,6 +46,8 @@ defmodule Ms2ex.Character do
 
     has_many :equips, Inventory.Item
     has_many :inventory_items, Inventory.Item
+
+    has_many :skill_tabs, SkillTab
 
     has_one :stats, CharacterStats
 
@@ -92,6 +94,7 @@ defmodule Ms2ex.Character do
   def changeset(character, attrs) do
     character
     |> cast(attrs, @fields)
+    |> cast_assoc(:skill_tabs, with: &SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &CharacterStats.changeset/2)
     |> validate_required(@fields)
     |> unique_constraint(:name)

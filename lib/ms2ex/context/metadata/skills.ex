@@ -17,7 +17,7 @@ defmodule Ms2ex.Metadata.SkillJob do
   field :game_master, 999
 end
 
-defmodule Ms2ex.Metadata.SkillMetadata do
+defmodule Ms2ex.Metadata.Skill do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
@@ -47,11 +47,11 @@ defmodule Ms2ex.Metadata.Skills do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  alias Ms2ex.Metadata.SkillMetadata
+  alias Ms2ex.Metadata.Skill
 
   defstruct [:items]
 
-  field :items, 1, repeated: true, type: SkillMetadata
+  field :items, 1, repeated: true, type: Skill
 
   @table :skill_metadata
 
@@ -71,7 +71,7 @@ defmodule Ms2ex.Metadata.Skills do
 
   def get(skill_id) do
     case :ets.lookup(@table, skill_id) do
-      [{_id, %SkillMetadata{} = meta}] -> meta
+      [{_id, %Skill{} = meta}] -> meta
       _ -> nil
     end
   end

@@ -1,4 +1,7 @@
 defmodule Ms2ex.SkillTab do
+  use Ecto.Schema
+  import Ecto.Changeset
+
   @orders %{
     knight: [
       10_100_091,
@@ -610,5 +613,20 @@ defmodule Ms2ex.SkillTab do
     game_master: [0]
   }
 
-  def ordered_skills(job), do: Map.get(@orders, job)
+  schema "skill_tabs" do
+    belongs_to :character, Ms2ex.Character
+
+    has_many :skills, Ms2ex.Skill
+
+    field :name, :string
+  end
+
+  @doc false
+  def changeset(skill_tab, attrs) do
+    skill_tab
+    |> cast(attrs, [:name])
+    |> validate_required([:name])
+  end
+
+  def ordered_skill_ids(job), do: Map.get(@orders, job)
 end

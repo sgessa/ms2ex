@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Job do
-  alias Ms2ex.Skills
+  alias Ms2ex.{Character, Skills}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -19,28 +19,49 @@ defmodule Ms2ex.Packets.Job do
     game_master: 0
   }
 
+  def save(character) do
+    real_job_id = Character.real_job_id(character)
+
+    __MODULE__
+    |> build()
+    |> put_int(character.object_id)
+    |> put_byte(0x9)
+    |> put_int(Character.job_id(character))
+    |> put_byte(0x1)
+    |> put_int(real_job_id)
+    |> put_skills(character)
+  end
+
+  def close() do
+    __MODULE__
+    |> build()
+    |> put_int()
+  end
+
   def put_skills(packet, character) do
-    %{skills: skills, ordered_ids: ordered_ids} = Skills.get_tab(character.job)
+    skill_tab = Skills.get_tab(character)
+    skills = Skills.list(character, skill_tab)
 
     split = Map.get(@job_skill_splits, character.job)
-    split_skill_id = Enum.at(ordered_ids, length(ordered_ids) - split)
+    split_skill = Enum.at(skills, length(skills) - split)
 
     packet
-    |> put_byte(length(ordered_ids) - split)
-    |> reduce(ordered_ids, fn skill_id, packet ->
-      packet = if skill_id == split_skill_id, do: put_byte(packet, split), else: packet
-      skill = Map.get(skills, skill_id)
-
-      skill_level = List.first(skill.skill_levels) || %{}
-      level = Map.get(skill_level, :level) || 0
-
+    |> put_byte(length(skills) - split)
+    |> reduce(skills, fn skill, packet ->
       packet
+      |> maybe_split(skill.skill_id, split_skill.skill_id, split)
       |> put_byte()
       |> put_bool(skill.learned)
-      |> put_int(skill_id)
-      |> put_int(level)
+      |> put_int(skill.skill_id)
+      |> put_int(skill.level)
       |> put_byte()
     end)
     |> put_short()
   end
+
+  defp maybe_split(packet, skill_id, split_skill_id, split) when skill_id == split_skill_id do
+    put_byte(packet, split)
+  end
+
+  defp maybe_split(packet, _skill_id, _split_skill_id, _split), do: packet
 end
