@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Job do
   require Logger
 
-  alias Ms2ex.{Net, Packets, Registries, Skills}
+  alias Ms2ex.{HotBars, Net, Packets, Registries, Skills}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -25,7 +25,11 @@ defmodule Ms2ex.GameHandlers.Job do
 
     save_skills(skill_tab, skills_length, packet)
 
-    push(session, Packets.Job.save(character))
+    hot_bars = HotBars.list(character)
+
+    session
+    |> push(Packets.Job.save(character))
+    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
   end
 
   # TODO: Reset Skill Build (need to check again)
@@ -35,7 +39,11 @@ defmodule Ms2ex.GameHandlers.Job do
     skill_tab = Skills.get_tab(character)
     Skills.reset(character, skill_tab)
 
-    push(session, Packets.Job.save(character))
+    hot_bars = HotBars.list(character)
+
+    session
+    |> push(Packets.Job.save(character))
+    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
   end
 
   defp handle_mode(_mode, _character, session), do: session

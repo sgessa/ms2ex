@@ -93,12 +93,10 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
         {:ok, _equip} = Equips.equip(item)
       end)
 
-      character = Characters.load_equips(character, force: true)
-      characters = session.account.characters ++ [character]
-      account = %{session.account | characters: characters}
+      equips = Equips.list(character)
+      character = %{character | equips: equips}
 
       session
-      |> Map.put(:account, account)
       |> push(Packets.CharacterMaxCount.set_max(4, 6))
       |> push(Packets.CharacterList.append(character))
     else

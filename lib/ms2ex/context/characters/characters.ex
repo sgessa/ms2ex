@@ -1,9 +1,8 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Character, Inventory, Metadata, Repo, Skills, Users.Account}
-
-  import Ecto.Query, except: [update: 2]
+  alias Ms2ex.{Character, Metadata, Repo, Skills, Users.Account}
 
   def create(%Account{} = account, attrs) do
+    attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
     attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
     attrs = Map.put(attrs, :stats, %{})
 
@@ -30,13 +29,14 @@ defmodule Ms2ex.Characters do
       meta = Metadata.Skills.get(id)
       skill_level = List.first(skill.skill_levels)
 
+      attrs = %{
+        skill_id: id,
+        learned: meta.learned,
+        level: skill_level.level
+      }
+
       with :ok <- result,
-           {:ok, _skill} <-
-             Skills.create(skill_tab, %{
-               skill_id: id,
-               learned: meta.learned,
-               level: skill_level.level
-             }) do
+           {:ok, _skill} <- Skills.create(skill_tab, attrs) do
         {:cont, :ok}
       else
         error -> {:halt, error}
@@ -54,12 +54,11 @@ defmodule Ms2ex.Characters do
 
   def delete(%Character{} = character), do: Repo.delete(character)
 
-  def load_equips(%Character{} = character, opts \\ []) do
-    equips = where(Inventory.Item, [i], i.location == ^:equipment)
-    Repo.preload(character, [equips: equips], opts)
-  end
-
   def preload(%Character{} = character, assocs) do
     Repo.preload(character, assocs)
+  end
+
+  def load_equips(%Character{} = character) do
+    %{character | equips: Ms2ex.Equips.list(character)}
   end
 end

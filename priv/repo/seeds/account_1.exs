@@ -8,6 +8,8 @@ alias Items.Item
     password: "123"
   })
 
+skin_color = SkinColor.build(Color.build(-82, -65, -22, -1), Color.build(-82, -65, -22, -1))
+
 ears = Metadata.Items.load(%Item{item_id: 10500001})
 
 hair_color =
@@ -77,18 +79,15 @@ shoes_color =
 
 shoes = Metadata.Items.load(%Item{item_id: 11_700_709, color: shoes_color})
 
+staff = Metadata.Items.load(%Item{item_id: 15260305})
+
 {:ok, char} =
   Characters.create(account, %{
     name: "steve1337",
     level: 70,
-    equipment: %{},
     map_id: 2_000_023,
     job: :wizard,
-    skin_color:
-      SkinColor.build(
-        Color.build(-82, -65, -22, -1),
-        Color.build(-82, -65, -22, -1)
-      )
+    skin_color: skin_color
   })
 
 {:ok, {:create, item}} = Inventory.add_item(char, ears)
@@ -112,4 +111,7 @@ shoes = Metadata.Items.load(%Item{item_id: 11_700_709, color: shoes_color})
 {:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, shoes)
+{:ok, _equip} = Equips.equip(item)
+
+{:ok, {:create, item}} = Inventory.add_item(char, staff)
 {:ok, _equip} = Equips.equip(item)
