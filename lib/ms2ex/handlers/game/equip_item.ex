@@ -11,11 +11,15 @@ defmodule Ms2ex.GameHandlers.EquipItem do
 
   # Equip
   defp handle_mode(0x0, packet, session) do
-    {id, _packet} = get_long(packet)
+    {id, packet} = get_long(packet)
+    {slot_name, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- Registries.Characters.lookup(session.character_id),
+    with true <- Equips.valid_slot?(slot_name),
+         {:ok, character} <- Registries.Characters.lookup(session.character_id),
          %{location: :inventory} = item <- Inventory.get_by(character_id: character.id, id: id) do
-      equip_item(character, item, session)
+      item = Metadata.Items.load(item)
+      equip_slot = String.to_existing_atom(slot_name)
+      equip_item(character, equip_slot, item, session)
     else
       _ ->
         session
@@ -35,12 +39,14 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     end
   end
 
-  defp equip_item(character, %{location: :inventory} = item, session) do
-    item = Metadata.Items.load(item)
+  # Swap
+  defp handle_mode(0x2, _packet, session), do: session
+
+  defp equip_item(character, equip_slot, %{location: :inventory} = item, session) do
     equips = Equips.list(character)
 
     # find currently equipped item in the same slot and unequip it
-    old_items = Equips.find_equipped_in_slot(equips, item)
+    old_items = Equips.find_equipped_in_slot(equips, equip_slot, item)
 
     session =
       Enum.reduce(old_items, session, fn old_item, session ->
@@ -48,7 +54,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       end)
 
     # Equip new item
-    with {:ok, item} <- Equips.equip(item) do
+    with {:ok, item} <- Equips.equip(equip_slot, item) do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Field.broadcast(character, equip_packet)
 

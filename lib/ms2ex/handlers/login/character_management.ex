@@ -79,7 +79,6 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       end)
 
     attrs = %{
-      equipment: %{},
       gender: gender,
       job: job,
       map_id: 2_000_023,
@@ -89,9 +88,9 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     }
 
     with {:ok, character} <- Characters.create(session.account, attrs) do
-      Enum.each(equips, fn item ->
+      Enum.each(equips, fn {equip_slot, item} ->
         {:ok, {:create, item}} = Inventory.add_item(character, item)
-        {:ok, _equip} = Equips.equip(item)
+        {:ok, _equip} = Equips.equip(equip_slot, item)
       end)
 
       equips = Equips.list(character)
@@ -113,9 +112,10 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     {color, packet} = ItemColor.get_item_color(packet)
     {_color_idx, packet} = get_int(packet)
     {attrs, packet} = get_item_attributes(packet, slot_name)
-    attrs = Map.merge(attrs, %{item_id: id, color: color})
+
+    attrs = Map.merge(attrs, %{color: color, item_id: id})
     item = Item |> struct(attrs) |> Metadata.Items.load()
-    {item, packet}
+    {{String.to_existing_atom(slot_name), item}, packet}
   end
 
   defp get_item_attributes(packet, "HR") do

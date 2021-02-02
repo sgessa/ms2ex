@@ -10,6 +10,7 @@ defmodule Ms2ex.Inventory.Item do
     :amount,
     :color,
     :data,
+    :equip_slot,
     :item_id,
     :inventory_slot,
     :inventory_tab,
@@ -17,8 +18,10 @@ defmodule Ms2ex.Inventory.Item do
   ]
 
   @required [:amount, :item_id, :location]
+  @equip_slots Map.to_list(Metadata.EquipSlot.mapping())
   @inventory_tabs Map.to_list(Metadata.InventoryTab.mapping())
 
+  defenum(EquipSlot, @equip_slots)
   defenum(InventoryTab, @inventory_tabs)
   defenum(Location, inventory: 0, equipment: 1)
 
@@ -30,6 +33,7 @@ defmodule Ms2ex.Inventory.Item do
 
     field :color, EctoTypes.Term
     field :data, EctoTypes.Term
+    field :equip_slot, EquipSlot, default: :NONE
     field :metadata, :map, virtual: true
     field :appearance_flag, :integer, virtual: true, default: 0
     field :can_repackage, :boolean, virtual: true, default: true

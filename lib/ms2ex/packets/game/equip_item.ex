@@ -9,7 +9,7 @@ defmodule Ms2ex.Packets.EquipItem do
     |> put_int(character.object_id)
     |> put_int(item.item_id)
     |> put_long(item.id)
-    |> put_ustring(to_string(item.metadata.slot))
+    |> put_ustring(to_string(item.equip_slot))
     |> put_int(item.metadata.rarity)
     |> put_byte()
     |> Packets.InventoryItem.put_item(item)
