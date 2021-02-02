@@ -6,6 +6,8 @@ defmodule Ms2ex.Character do
   import Ecto.Changeset
   import EctoEnum
 
+  @max_level 70
+
   @fields [
     :awakened,
     :exp,
@@ -109,4 +111,6 @@ defmodule Ms2ex.Character do
   def real_job_id(character) do
     Keyword.get(Job.__enum_map__(), character.job)
   end
+
+  def max_level(), do: @max_level
 end

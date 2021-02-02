@@ -9,8 +9,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     Net,
     Packets,
     Registries,
-    SkinColor,
-    Users
+    SkinColor
   }
 
   alias Inventory.Item
@@ -35,23 +34,25 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp handle_login(packet, %{account: account} = session) do
     {char_id, _packet} = get_long(packet)
-    character = Enum.find(account.characters, &(&1.id == char_id))
 
-    auth_data = %{token_a: gen_auth_token(), token_b: gen_auth_token()}
-    register_session(account, character, auth_data)
+    case Characters.get(account, char_id) do
+      %Character{} ->
+        auth_data = %{token_a: gen_auth_token(), token_b: gen_auth_token()}
+        register_session(account.id, char_id, auth_data)
+        push(session, Packets.LoginToGame.login(auth_data))
 
-    session
-    |> Map.put(:character, character)
-    |> push(Packets.LoginToGame.login(auth_data))
+      _ ->
+        session
+    end
   end
 
   # Register session data in the global registry.
   # This allows us to lookup the session PID from any server.
-  defp register_session(account, character, auth_data) do
+  defp register_session(account_id, character_id, auth_data) do
     :ok =
       Registries.Sessions.register(
-        account.id,
-        Map.merge(auth_data, %{account_id: account.id, character_id: character.id})
+        account_id,
+        Map.merge(auth_data, %{account_id: account_id, character_id: character_id})
       )
   end
 
@@ -129,18 +130,17 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp get_item_attributes(packet, _), do: {%{}, packet}
 
-  defp handle_delete(packet, %{account: account} = session) do
+  defp handle_delete(packet, session) do
     {char_id, _packet} = get_long(packet)
 
-    with %Character{} = character <- Enum.find(account.characters, &(&1.id == char_id)),
+    with %Character{} = character <- Characters.get(session.account, char_id),
          {:ok, _} <- Characters.delete(character) do
-      account = Users.load_characters(account, force: true)
+      characters = Characters.list(session.account)
 
       session
-      |> Map.put(:account, account)
       |> push(Packets.CharacterMaxCount.set_max(4, 6))
       |> push(Packets.CharacterList.start_list())
-      |> push(Packets.CharacterList.add_entries(account.characters))
+      |> push(Packets.CharacterList.add_entries(characters))
       |> push(Packets.CharacterList.end_list())
     else
       _ -> session

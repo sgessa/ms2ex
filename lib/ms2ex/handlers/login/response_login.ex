@@ -1,7 +1,7 @@
 defmodule Ms2ex.LoginHandlers.ResponseLogin do
   require Logger
 
-  alias Ms2ex.{Net, Packets, Users}
+  alias Ms2ex.{Characters, Net, Packets, Users}
 
   import Packets.PacketReader
   import Net.SessionHandler, only: [push: 2]
@@ -13,22 +13,22 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
 
     with {:ok, account} <- Users.authenticate(username, password) do
       Logger.info("Account #{username} logged in")
-      account = Users.load_characters(account)
       session = Map.put(session, :account, account)
-      handle_login(mode, packet, session)
+      account = %{account | characters: Characters.list(account)}
+      handle_login(mode, account, session)
     else
       _ -> push(session, Packets.LoginResult.error())
     end
   end
 
-  defp handle_login(0x1, _packet, session) do
+  defp handle_login(0x1, _account, session) do
     session
     |> push(Packets.NpsInfo.bytes())
     |> push(Packets.BannerList.bytes())
     |> push(Packets.ServerList.bytes())
   end
 
-  defp handle_login(0x2, _packet, %{account: account} = session) do
+  defp handle_login(0x2, account, session) do
     session
     |> push(Packets.LoginResult.success(account.id))
     |> push(Packets.UGC.set_endpoint())

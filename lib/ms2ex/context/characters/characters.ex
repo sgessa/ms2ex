@@ -1,6 +1,15 @@
 defmodule Ms2ex.Characters do
   alias Ms2ex.{Character, Metadata, Repo, Skills, Users.Account}
 
+  import Ecto.Query
+
+  def list(%Account{id: account_id}) do
+    Character
+    |> where([c], c.account_id == ^account_id)
+    |> Repo.all()
+    |> Enum.map(&load_equips(&1))
+  end
+
   def create(%Account{} = account, attrs) do
     attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
     attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
@@ -42,6 +51,10 @@ defmodule Ms2ex.Characters do
         error -> {:halt, error}
       end
     end)
+  end
+
+  def get(%Account{id: account_id}, character_id) do
+    Repo.get_by(Character, account_id: account_id, id: character_id)
   end
 
   def get(id), do: Repo.get(Character, id)

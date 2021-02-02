@@ -55,6 +55,8 @@ defmodule Ms2ex.Packets do
     0x23 => "MARKET_INVENTORY",
     0x24 => "FURNISHING_INVENTORY",
     0x2F => "PLAYER_STATS",
+    0x38 => "EXPERIENCE",
+    0x39 => "LEVEL_UP",
     0x3D => "SKILL",
     0x46 => "STAT_POINTS",
     0x47 => "CHARACTER_CREATE",

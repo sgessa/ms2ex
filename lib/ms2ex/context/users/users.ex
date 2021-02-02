@@ -1,7 +1,5 @@
 defmodule Ms2ex.Users do
-  alias Ms2ex.{Inventory, Repo, Users.Account}
-
-  import Ecto.Query, except: [update: 2]
+  alias Ms2ex.{Repo, Users.Account}
 
   def authenticate(username, password) do
     account = Repo.get_by(Account, username: username)
@@ -34,9 +32,4 @@ defmodule Ms2ex.Users do
   end
 
   def delete(%Account{} = account), do: Repo.delete(account)
-
-  def load_characters(%Account{} = account, opts \\ []) do
-    equips = where(Inventory.Item, [i], i.location == ^:equipment)
-    Repo.preload(account, [characters: [equips: equips]], opts)
-  end
 end

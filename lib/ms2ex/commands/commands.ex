@@ -1,5 +1,5 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{Inventory, Metadata, Net, Packets}
+  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, Registries}
 
   import Net.SessionHandler, only: [push: 2, push_notice: 3]
 
@@ -14,6 +14,20 @@ defmodule Ms2ex.Commands do
           push_notice(session, character, "Invalid Item #{item_id}")
       end
     end)
+  end
+
+  def handle(["level", level], character, session) do
+    with {level, _} <- Integer.parse(level),
+         {:ok, character} <- Registries.Characters.lookup(session.character_id) do
+      level = if level > Character.max_level(), do: Character.max_level(), else: level
+      {:ok, character} = Characters.update(character, %{level: level})
+      Registries.Characters.update(character)
+      Field.broadcast(character, Packets.LevelUp.bytes(character, level))
+      push(session, Packets.Experience.bytes(0, 0, 0))
+    else
+      _ ->
+        push_notice(session, character, "Invalid Level #{level}")
+    end
   end
 
   def handle(_args, character, session) do
