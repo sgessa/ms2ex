@@ -4,6 +4,7 @@ defmodule Ms2ex.Characters do
   import Ecto.Query, except: [update: 2]
 
   def create(%Account{} = account, attrs) do
+    attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
     attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
     attrs = Map.put(attrs, :stats, %{})
 
@@ -30,13 +31,14 @@ defmodule Ms2ex.Characters do
       meta = Metadata.Skills.get(id)
       skill_level = List.first(skill.skill_levels)
 
+      attrs = %{
+        skill_id: id,
+        learned: meta.learned,
+        level: skill_level.level
+      }
+
       with :ok <- result,
-           {:ok, _skill} <-
-             Skills.create(skill_tab, %{
-               skill_id: id,
-               learned: meta.learned,
-               level: skill_level.level
-             }) do
+           {:ok, _skill} <- Skills.create(skill_tab, attrs) do
         {:cont, :ok}
       else
         error -> {:halt, error}

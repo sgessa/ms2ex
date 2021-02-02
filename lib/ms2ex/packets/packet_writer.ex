@@ -81,6 +81,12 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_short(z)
   end
 
+  def put_string(packet, str \\ "") do
+    packet
+    |> put_short(byte_size(str))
+    |> put_bytes(str)
+  end
+
   def put_time(packet, time \\ nil)
 
   def put_time(packet, nil), do: put_long(packet)
