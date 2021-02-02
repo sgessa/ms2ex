@@ -8,11 +8,6 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   def handle(_packet, %{character_id: character_id} = session) do
     {:ok, character} = Registries.Characters.lookup(character_id)
 
-    character =
-      character
-      |> Characters.load_equips()
-      |> Characters.preload(:stats)
-
     # Check if character is changing map
     character = maybe_change_map(character)
 
