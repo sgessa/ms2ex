@@ -1,4 +1,4 @@
-defmodule Ms2ex.Users.Account do
+defmodule Ms2ex.Account do
   use Ecto.Schema
 
   import Ecto.Changeset

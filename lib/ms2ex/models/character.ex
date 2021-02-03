@@ -44,7 +44,7 @@ defmodule Ms2ex.Character do
   )
 
   schema "characters" do
-    belongs_to :account, Ms2ex.Users.Account
+    belongs_to :account, Ms2ex.Account
 
     has_many :equips, Inventory.Item
     has_many :inventory_items, Inventory.Item

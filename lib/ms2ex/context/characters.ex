@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Character, Metadata, Repo, Skills, Users.Account}
+  alias Ms2ex.{Character, Metadata, Repo, Skills, Account}
 
   import Ecto.Query
 

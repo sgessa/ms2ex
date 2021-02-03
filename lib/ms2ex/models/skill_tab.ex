@@ -1,5 +1,6 @@
 defmodule Ms2ex.SkillTab do
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @orders %{

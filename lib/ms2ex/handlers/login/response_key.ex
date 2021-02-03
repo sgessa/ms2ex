@@ -1,7 +1,7 @@
 defmodule Ms2ex.LoginHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Net, Packets, Registries, Users}
+  alias Ms2ex.{Net, Packets, Registries, Accounts}
 
   import Net.SessionHandler, only: [push: 2]
   import Packets.PacketReader
@@ -24,7 +24,7 @@ defmodule Ms2ex.LoginHandlers.ResponseKey do
 
     with true <- token_a == auth_data.token_a,
          true <- token_b == auth_data.token_b do
-      account = Users.get(auth_data[:account_id])
+      account = Accounts.get(auth_data[:account_id])
       Logger.info("Authorized connection for Account #{account.username}")
       {:ok, Map.put(session, :account, account)}
     else

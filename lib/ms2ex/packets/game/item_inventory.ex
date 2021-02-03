@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Inventory, Metadata}
+  alias Ms2ex.{Hair, Metadata}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -94,7 +94,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     case item.metadata.slot do
       :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13))
       :FD -> put_bytes(packet, item.data)
-      :HR -> Inventory.Item.Hair.put_hair(packet, item.data)
+      :HR -> Hair.put_hair(packet, item.data)
       _ -> packet
     end
   end

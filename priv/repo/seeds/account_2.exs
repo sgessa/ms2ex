@@ -1,9 +1,9 @@
-alias Ms2ex.{Characters, Color, Equips, Inventory, Inventory, ItemColor, Metadata, SkinColor, Users}
+alias Ms2ex.{Characters, Color, Equips, Hair, Inventory, Inventory, ItemColor, Metadata, SkinColor, Accounts}
 alias Inventory, as: Items
 alias Items.Item
 
 {:ok, account} =
-  Users.create(%{
+  Accounts.create(%{
     username: "icra",
     password: "123"
   })
@@ -18,7 +18,7 @@ hair =
   %Item{
     item_id: 10_200_001,
     color: hair_color,
-    data: %Item.Hair{back_length: 1_065_353_216, front_length: 1_065_353_216}
+    data: %Hair{back_length: 1_065_353_216, front_length: 1_065_353_216}
   } |> Metadata.Items.load()
 
 face_color = ItemColor.build(Color.build(41, 36, -75, -1), Color.build(-29, -29, -9, -1), Color.build(2, 7, 20, -1), 0)

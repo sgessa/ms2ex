@@ -1,5 +1,5 @@
-defmodule Ms2ex.Users do
-  alias Ms2ex.{Repo, Users.Account}
+defmodule Ms2ex.Accounts do
+  alias Ms2ex.{Repo, Account}
 
   def authenticate(username, password) do
     account = Repo.get_by(Account, username: username)

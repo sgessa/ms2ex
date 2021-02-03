@@ -1,8 +1,9 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
+  alias Ms2ex.{Character, Characters}
+
   alias Ms2ex.{
-    Character,
-    Characters,
     Equips,
+    Hair,
     Inventory,
     ItemColor,
     Metadata,
@@ -119,7 +120,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   end
 
   defp get_item_attributes(packet, "HR") do
-    {hair, packet} = Item.Hair.get_hair(packet)
+    {hair, packet} = Hair.get_hair(packet)
     {%{data: hair}, packet}
   end
 
