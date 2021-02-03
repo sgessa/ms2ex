@@ -1,10 +1,9 @@
 defmodule Ms2ex.GameHandlers.RequestChangeField do
   require Logger
 
-  alias Ms2ex.{Field, Metadata, Net, Packets, Registries}
+  alias Ms2ex.{Field, Metadata, Packets, Registries}
 
   import Packets.PacketReader
-  import Net.SessionHandler, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -24,16 +23,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
          {:ok, dst_map} <- Metadata.Maps.lookup(src_portal.target),
          %Metadata.MapPortal{} = dst_portal <-
            Enum.find(dst_map.portals, &(&1.target == src_map_id)) do
-      :ok = Field.leave(character)
-
-      new_map = %{id: dst_map.id, position: dst_portal.coord, rotation: dst_portal.rotation}
-
-      character
-      |> Map.put(:change_map, new_map)
-      |> Registries.Characters.update()
-
-      session
-      |> push(Packets.RequestFieldEnter.bytes(new_map.id, new_map.position, new_map.rotation))
+      Field.change_field(character, session, dst_map.id, dst_portal.coord, dst_portal.rotation)
     else
       _ ->
         session

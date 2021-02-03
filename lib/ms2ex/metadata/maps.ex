@@ -85,13 +85,13 @@ defmodule Ms2ex.Metadata.Maps do
 
     :ets.new(@table, [:protected, :set, :named_table])
 
-    for %{id: item_id} = metadata <- list.items do
-      :ets.insert(@table, {item_id, metadata})
+    for %{id: map_id} = metadata <- list.items do
+      :ets.insert(@table, {map_id, metadata})
     end
   end
 
-  def lookup(item_id) do
-    case :ets.lookup(@table, item_id) do
+  def lookup(map_id) do
+    case :ets.lookup(@table, map_id) do
       [{_id, %Map{} = meta}] -> {:ok, meta}
       _ -> :error
     end

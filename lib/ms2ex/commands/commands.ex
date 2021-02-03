@@ -11,7 +11,7 @@ defmodule Ms2ex.Commands do
         add_item(character, item, session)
       else
         _ ->
-          push_notice(session, character, "Invalid Item #{item_id}")
+          push_notice(session, character, "Invalid Item: #{item_id}")
       end
     end)
   end
@@ -26,12 +26,25 @@ defmodule Ms2ex.Commands do
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
       _ ->
-        push_notice(session, character, "Invalid Level #{level}")
+        push_notice(session, character, "Invalid Level: #{level}")
     end
   end
 
-  def handle(_args, character, session) do
-    push_notice(session, character, "Command not found.")
+  def handle(["map", map_id], character, session) do
+    with {map_id, _} <- Integer.parse(map_id),
+         {:ok, map} <- Metadata.Maps.lookup(map_id),
+         {:ok, character} <- Registries.Characters.lookup(session.character_id) do
+      spawn = List.first(map.spawns)
+      Field.change_field(character, session, map_id, spawn.coord, spawn.rotation)
+    else
+      _ ->
+        push_notice(session, character, "Invalid Map: #{map_id}")
+    end
+  end
+
+  def handle(args, character, session) do
+    IO.inspect(args)
+    push_notice(session, character, "Command not found")
   end
 
   defp add_item(character, item, session) do
