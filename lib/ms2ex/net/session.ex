@@ -1,4 +1,4 @@
-defmodule Ms2ex.Net.SessionHandler do
+defmodule Ms2ex.Net.Session do
   use GenServer
 
   require Logger, as: L
@@ -7,6 +7,8 @@ defmodule Ms2ex.Net.SessionHandler do
   alias Ms2ex.Packets
   alias Ms2ex.Packets.{PacketReader, RequestVersion}
   alias Ms2ex.Net.Router
+
+  import Ms2ex.Net.Utils
 
   @behaviour :ranch_protocol
   @transport :ranch_tcp
@@ -23,7 +25,7 @@ defmodule Ms2ex.Net.SessionHandler do
   def init({_ref, socket, _transport, opts}) do
     @transport.setopts(socket, nodelay: true)
 
-    log_connected_client(opts)
+    log_connected_client(socket, opts)
 
     recv_iv = Cipher.iv_to_int(Cipher.generate_iv())
     send_iv = Cipher.iv_to_int(Cipher.generate_iv())
@@ -52,7 +54,7 @@ defmodule Ms2ex.Net.SessionHandler do
     packet = RequestVersion.build(@version, recv_cipher, send_cipher, @block_iv)
     {send_cipher, packet} = SendCipher.write_header(send_cipher, packet)
 
-    log_sent_packet("HANDSHAKE", packet)
+    log_sent_packet(:handshake, packet)
     @transport.send(socket, packet)
 
     {:noreply, %{state | send_cipher: send_cipher}}
@@ -115,19 +117,23 @@ defmodule Ms2ex.Net.SessionHandler do
     end
   end
 
-  defp log_connected_client(%{type: :login}) do
-    L.info("Client connected to Login Server")
+  defp log_connected_client(socket, %{type: :login}) do
+    L.info("Client #{peername(socket)} connected to Login Server")
   end
 
-  defp log_connected_client(%{channel_id: id, name: world, type: :channel}) do
-    L.info("Client connected to Channel #{id} on World #{world}")
+  defp log_connected_client(socket, %{world_name: world, type: :world_login}) do
+    L.info("Client #{peername(socket)} connected to World #{world}")
+  end
+
+  defp log_connected_client(socket, %{channel_id: id, world_name: world, type: :channel}) do
+    L.info("Client #{peername(socket)} connected to Channel #{id} on World #{world}")
   end
 
   defp log_incoming_packet(opcode, packet) do
     name = Packets.opcode_to_name(:recv, opcode)
 
     unless name in @skip_packet_logs do
-      L.debug("[RECV] #{name}: #{inspect(packet, base: :hex)}")
+      L.debug("[RECV] #{name}: #{stringify_packet(packet)}")
     end
   end
 
@@ -135,8 +141,7 @@ defmodule Ms2ex.Net.SessionHandler do
     name = Packets.opcode_to_name(:send, opcode)
 
     unless name in @skip_packet_logs do
-      packet = inspect(packet, limit: :infinity, base: :hex)
-      L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{packet}"]))
+      L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{stringify_packet(packet)}"]))
     end
   end
 end

@@ -1,9 +1,9 @@
 defmodule Ms2ex.GameHandlers.KeyTable do
   require Logger
 
-  alias Ms2ex.{HotBar, HotBars, Net, Packets, QuickSlot, Registries}
+  alias Ms2ex.{HotBar, HotBars, Net, Packets, QuickSlot, World}
 
-  import Net.SessionHandler, only: [push: 2]
+  import Net.Session, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do
@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.KeyTable do
 
   defp handle_mode(0x3, packet, session) do
     {id, packet} = get_short(packet)
-    {:ok, char} = Registries.Characters.lookup(session.character_id)
+    {:ok, char} = World.get_character(session.world, session.character_id)
     hot_bars = HotBars.list(char)
 
     with %HotBar{} = active_hot_bar <- Enum.at(hot_bars, id) do
@@ -36,7 +36,7 @@ defmodule Ms2ex.GameHandlers.KeyTable do
 
   defp handle_mode(0x5, packet, session) do
     {id, packet} = get_short(packet)
-    {:ok, char} = Registries.Characters.lookup(session.character_id)
+    {:ok, char} = World.get_character(session.world, session.character_id)
     hot_bars = HotBars.list(char)
 
     with %HotBar{} = active_hot_bar <- Enum.at(hot_bars, id) do

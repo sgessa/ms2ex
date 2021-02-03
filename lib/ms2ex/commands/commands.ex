@@ -1,7 +1,7 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, Registries}
+  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, World}
 
-  import Net.SessionHandler, only: [push: 2, push_notice: 3]
+  import Net.Session, only: [push: 2, push_notice: 3]
 
   def handle(["item" | ids], character, session) do
     Enum.reduce(ids, session, fn item_id, session ->
@@ -17,11 +17,10 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["level", level], character, session) do
-    with {level, _} <- Integer.parse(level),
-         {:ok, character} <- Registries.Characters.lookup(session.character_id) do
+    with {level, _} <- Integer.parse(level) do
       level = if level > Character.max_level(), do: Character.max_level(), else: level
       {:ok, character} = Characters.update(character, %{level: level})
-      Registries.Characters.update(character)
+      World.update_character(session.world, character)
       Field.broadcast(character, Packets.LevelUp.bytes(character, level))
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
@@ -32,8 +31,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["map", map_id], character, session) do
     with {map_id, _} <- Integer.parse(map_id),
-         {:ok, map} <- Metadata.Maps.lookup(map_id),
-         {:ok, character} <- Registries.Characters.lookup(session.character_id) do
+         {:ok, map} <- Metadata.Maps.lookup(map_id) do
       spawn = List.first(map.spawns)
       Field.change_field(character, session, map_id, spawn.coord, spawn.rotation)
     else
@@ -41,6 +39,19 @@ defmodule Ms2ex.Commands do
         push_notice(session, character, "Invalid Map: #{map_id}")
     end
   end
+
+  # def handle(["teleport", target_name], character, session) do
+  #   with {:ok, target} <- Registries.Characters.lookup_by_name(target_name),
+  #        {:ok, map} <- Metadata.Maps.lookup(target.map_id),
+  #        {:ok, auth_data} = Registries.Sessions.lookup(session.account.id) do
+  #     spawn = List.first(map.spawns)
+  #     Field.change_field(character, session, map.id, spawn.coord, spawn.rotation)
+  #     push(session, Packets.GameToGame.bytes(target.channel_id, target.map_id, auth_data))
+  #   else
+  #     _ ->
+  #       push_notice(session, character, "Unable to teleport to character: #{target_name}")
+  #   end
+  # end
 
   def handle(args, character, session) do
     IO.inspect(args)

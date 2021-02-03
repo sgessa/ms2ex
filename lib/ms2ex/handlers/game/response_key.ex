@@ -1,9 +1,9 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, LoginHandlers, Metadata, Net, Packets, Registries}
+  alias Ms2ex.{Characters, LoginHandlers, Metadata, Net, Packets, Registries, World}
 
-  import Net.SessionHandler, only: [push: 2]
+  import Net.Session, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do
@@ -20,15 +20,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
 
-      Registries.Characters.register_name(character)
-
       tick = Ms2ex.sync_ticks()
 
       {:ok, map} = Metadata.Maps.lookup(character.map_id)
       spawn = List.first(map.spawns)
 
       character = %{character | position: spawn.coord, rotation: spawn.rotation}
-      Registries.Characters.update(character)
+      World.update_character(session.world, character)
 
       %{map_id: map_id, position: position, rotation: rotation} = character
 

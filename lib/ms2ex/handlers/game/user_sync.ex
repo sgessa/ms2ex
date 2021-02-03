@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{Field, Packets, Registries, SyncState}
+  alias Ms2ex.{Field, Packets, SyncState, World}
 
   import Packets.PacketReader
 
@@ -10,7 +10,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {_server_tick, packet} = get_int(packet)
     {segments, packet} = get_byte(packet)
 
-    with {:ok, character} <- Registries.Characters.lookup(character_id),
+    with {:ok, character} <- World.get_character(session.world, character_id),
          true <- segments > 0 do
       states = get_states(segments, packet)
 
@@ -19,10 +19,12 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
       first_state = List.first(states)
 
-      character
-      |> Map.put(:animation, first_state.animation1)
-      |> Map.put(:position, first_state.position)
-      |> Registries.Characters.update()
+      character =
+        character
+        |> Map.put(:animation, first_state.animation1)
+        |> Map.put(:position, first_state.position)
+
+      World.update_character(session.world, character)
     end
 
     %{session | client_tick: client_tick}

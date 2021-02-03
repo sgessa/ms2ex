@@ -95,6 +95,8 @@ defmodule Ms2ex.Packets do
     Map.get(@recv_ops, opcode) || inspect(opcode, base: base)
   end
 
+  def opcode_to_name(:send, :handshake, _base), do: "HANDSHAKE"
+
   def opcode_to_name(:send, opcode, base) do
     Map.get(@send_ops, opcode) || inspect(opcode, base: base)
   end

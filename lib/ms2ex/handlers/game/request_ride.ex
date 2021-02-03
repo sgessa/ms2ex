@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestRide do
   require Logger
 
-  alias Ms2ex.{Field, Packets, Registries}
+  alias Ms2ex.{Field, Packets, World}
 
   import Packets.PacketReader
 
@@ -19,7 +19,7 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     # TODO check if the user owns this mount
     {id, _packet} = get_long(packet)
 
-    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    {:ok, character} = World.get_character(session.world, session.character_id)
 
     mount = %{
       character_id: character.id,
@@ -39,7 +39,7 @@ defmodule Ms2ex.GameHandlers.RequestRide do
   defp handle_ride(0x1, packet, session) do
     {_, packet} = get_byte(packet)
     {forced, _packet} = get_bool(packet)
-    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    {:ok, character} = World.get_character(session.world, session.character_id)
     Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
     session
   end
@@ -49,7 +49,7 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     {item_id, packet} = get_int(packet)
     {id, _packet} = get_long(packet)
 
-    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    {:ok, character} = World.get_character(session.world, session.character_id)
     Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
     session
   end

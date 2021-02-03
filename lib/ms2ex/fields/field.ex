@@ -1,5 +1,5 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{FieldServer, Net, Packets, Registries}
+  alias Ms2ex.{FieldServer, Net, Packets, World}
 
   def add_character(character) do
     pid = field_pid(character.map_id, character.channel_id)
@@ -35,11 +35,13 @@ defmodule Ms2ex.Field do
 
   def change_field(character, session, field_id, coord, rotation) do
     with :ok <- leave(character) do
-      character
-      |> Map.put(:change_map, %{id: field_id, position: coord, rotation: rotation})
-      |> Registries.Characters.update()
+      character =
+        character
+        |> Map.put(:change_map, %{id: field_id, position: coord, rotation: rotation})
 
-      Net.SessionHandler.push(session, Packets.RequestFieldEnter.bytes(field_id, coord, rotation))
+      World.update_character(session.world, character)
+
+      Net.Session.push(session, Packets.RequestFieldEnter.bytes(field_id, coord, rotation))
     else
       _ -> session
     end

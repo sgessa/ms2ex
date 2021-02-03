@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.RequestQuit do
 
   alias Ms2ex.{Net, Packets, Registries}
 
-  import Net.SessionHandler, only: [push: 2]
+  import Net.Session, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do

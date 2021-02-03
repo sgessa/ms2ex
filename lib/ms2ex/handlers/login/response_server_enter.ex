@@ -4,7 +4,7 @@ defmodule Ms2ex.LoginHandlers.ResponseServerEnter do
   alias Ms2ex.{Characters, Net, Packets}
 
   import Packets.PacketReader
-  import Net.SessionHandler, only: [push: 2]
+  import Net.Session, only: [push: 2]
 
   def handle(packet, session) do
     {0x2, _packet} = get_byte(packet)

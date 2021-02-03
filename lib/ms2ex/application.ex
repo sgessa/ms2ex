@@ -1,21 +1,16 @@
 defmodule Ms2ex.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
 
   alias Ms2ex.Registries
 
-  def start(_type, _args) do
-    config = Application.get_env(:ms2ex, Ms2ex)
+  @config Application.get_env(:ms2ex, Ms2ex)
 
+  def start(_type, _args) do
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()
     Ms2ex.Metadata.Skills.store()
-
-    # Start Character Registry (ETS)
-    Registries.Characters.start()
 
     children =
       [
@@ -30,24 +25,57 @@ defmodule Ms2ex.Application do
         # Start Session Registry
         {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]},
         # Start Login Server
-        {Ms2ex.Net.LoginServer, config[:login]}
-      ] ++
-        worlds(config[:worlds])
+        login_server()
+      ] ++ worlds()
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
-  defp worlds(worlds) do
-    Enum.map(worlds, fn world ->
-      Enum.map(Enum.with_index(world.channels), fn {channel, idx} ->
-        opts = Map.merge(channel, %{channel_id: idx + 1, name: world.name})
-        {Ms2ex.Net.GameServer, opts}
-      end)
+  defp login_server() do
+    opts = Map.merge(@config[:login], %{id: :login_server, type: :login})
+    {Ms2ex.Net.Listener, opts}
+  end
+
+  defp worlds() do
+    worlds = @config[:worlds]
+
+    Enum.reduce(Enum.with_index(worlds), [], fn {world, idx}, worlds ->
+      world_id = :"world:#{idx + 1}"
+
+      world_server =
+        Supervisor.child_spec({Ms2ex.World, [name: {:via, :swarm, world_id}]}, id: world_id)
+
+      world_login_opts =
+        Map.merge(world.login, %{
+          id: :"world_login:#{idx + 1}",
+          type: :world_login,
+          world: world_id,
+          world_name: world.name
+        })
+
+      world_login = {Ms2ex.Net.Listener, world_login_opts}
+
+      worlds ++ [world_server, world_login] ++ channels(world_id, world)
     end)
-    |> List.flatten()
+  end
+
+  defp channels(world_id, world) do
+    Enum.map(Enum.with_index(world.channels), fn {channel, idx} ->
+      channel_id = idx + 1
+      id = :"#{world_id}:channel:#{channel_id}"
+
+      opts =
+        Map.merge(channel, %{
+          channel_id: channel_id,
+          id: id,
+          type: :channel,
+          world: world_id,
+          world_name: world.name
+        })
+
+      {Ms2ex.Net.Listener, opts}
+    end)
   end
 
   # Tell Phoenix to update the endpoint configuration

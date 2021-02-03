@@ -1,8 +1,8 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{Chat, Commands, Field, Net, Packets, Registries}
+  alias Ms2ex.{Chat, Commands, Field, Net, Packets, World}
 
   import Packets.PacketReader
-  import Net.SessionHandler, only: [push: 2]
+  import Net.Session, only: [push: 2]
 
   def handle(packet, session) do
     {type_id, packet} = get_int(packet)
@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
     {rcpt, packet} = get_ustring(packet)
     {_, _packet} = get_long(packet)
 
-    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    {:ok, character} = World.get_character(session.world, session.character_id)
 
     case msg do
       "!" <> cmd ->
@@ -33,7 +33,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
-    case Registries.Characters.lookup_by_name(rcpt_name) do
+    case World.get_character_by_name(session.world, rcpt_name) do
       {:ok, rcpt} ->
         packet = Packets.UserChat.bytes(:whisper_from, character, msg)
         send(rcpt.session_pid, {:push, packet})

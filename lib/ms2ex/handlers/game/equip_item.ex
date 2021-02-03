@@ -1,8 +1,8 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
-  alias Ms2ex.{Characters, Equips, Field, Inventory, Metadata, Packets, Registries}
+  alias Ms2ex.{Characters, Equips, Field, Inventory, Metadata, Packets, World}
 
   import Packets.PacketReader
-  import Ms2ex.Net.SessionHandler, only: [push: 2]
+  import Ms2ex.Net.Session, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {slot_name, _packet} = get_ustring(packet)
 
     with true <- Equips.valid_slot?(slot_name),
-         {:ok, character} <- Registries.Characters.lookup(session.character_id),
+         {:ok, character} <- World.get_character(session.world, session.character_id),
          %{location: :inventory} = item <- Inventory.get_by(character_id: character.id, id: id) do
       item = Metadata.Items.load(item)
       equip_slot = String.to_existing_atom(slot_name)
@@ -30,7 +30,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp handle_mode(0x1, packet, session) do
     {id, _packet} = get_long(packet)
 
-    with {:ok, character} <- Registries.Characters.lookup(session.character_id),
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
          %{location: :equipment} = item <- Inventory.get_by(character_id: character.id, id: id) do
       unequip_item(character, item, session)
     else
@@ -59,9 +59,8 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       Field.broadcast(character, equip_packet)
 
       # Update registry
-      character
-      |> Characters.load_equips()
-      |> Registries.Characters.update()
+      session.world
+      |> World.update_character(Characters.load_equips(character))
 
       push(session, Packets.InventoryItem.remove_item(item.id))
     else
@@ -72,9 +71,8 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp unequip_item(character, item, session) do
     with {:ok, item} <- Equips.unequip(item) do
       # Update registry
-      character
-      |> Characters.load_equips()
-      |> Registries.Characters.update()
+      session.world
+      |> World.update_character(Characters.load_equips(character))
 
       item = Metadata.Items.load(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)

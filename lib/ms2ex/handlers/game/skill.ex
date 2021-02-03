@@ -1,9 +1,9 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Net, Packets, Registries}
+  alias Ms2ex.{Net, Packets, World}
 
-  import Net.SessionHandler, only: [push: 2]
+  import Net.Session, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do
@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
   # First Sent
   def handle_mode(0x0, packet, session) do
-    {:ok, character} = Registries.Characters.lookup(session.character_id)
+    {:ok, character} = World.get_character(session.world, session.character_id)
 
     {skill_uid, packet} = get_long(packet)
     {value, packet} = get_int(packet)
