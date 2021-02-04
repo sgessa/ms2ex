@@ -1,9 +1,8 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Net, Packets, World}
+  alias Ms2ex.{Field, Packets, World}
 
-  import Net.Session, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do
@@ -15,14 +14,17 @@ defmodule Ms2ex.GameHandlers.Skill do
   def handle_mode(0x0, packet, session) do
     {:ok, character} = World.get_character(session.world, session.character_id)
 
-    {skill_uid, packet} = get_long(packet)
+    {id, packet} = get_long(packet)
     {value, packet} = get_int(packet)
-    {_skill_id, packet} = get_int(packet)
-    {_skill_level, packet} = get_short(packet)
+    {skill_id, packet} = get_int(packet)
+    {skill_level, packet} = get_short(packet)
     {_, packet} = get_byte(packet)
     {coords, _packet} = get_coord(packet)
 
-    push(session, Packets.Skill.use_skill(character, value, skill_uid, coords))
+    skill_cast = %{id: id, value: value, skill_id: skill_id, level: skill_level}
+    Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
+
+    session
   end
 
   # Damage

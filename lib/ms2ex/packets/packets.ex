@@ -23,6 +23,7 @@ defmodule Ms2ex.Packets do
     0x3C => "REQUEST_CHANGE_CHANNEL",
     0x41 => "REQUEST_RIDE",
     0x42 => "RIDE_SYNC",
+    0x49 => "TAXI",
     0x56 => "SEND_LOG",
     0x6D => "REQUEST_CHANGE_FIELD",
     0x83 => "GLOBAL_FACTOR"
@@ -70,6 +71,7 @@ defmodule Ms2ex.Packets do
     0x7C => "RIDE_SYNC",
     0x7F => "LOAD_UGC_MAP",
     0x80 => "PROXY_GAME_OBJ",
+    0x82 => "TAXI",
     0xAA => "USER_ENV",
     0xA9 => "DYNAMIC_CHANNEL",
     0xB5 => "BANNER_LIST",
