@@ -76,5 +76,6 @@ config :ms2ex, Ms2ex,
     "RIDE_SYNC",
     # "USER_CHAT",
     "USER_SYNC",
-    "SEND_LOG"
+    "SEND_LOG",
+    "VIBRATE"
   ]

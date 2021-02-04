@@ -17,8 +17,8 @@ defmodule Ms2ex.World do
     call(world, {:get_characters, ids})
   end
 
-  def get_character_by_name(world, character_id) do
-    call(world, {:get_character, character_id})
+  def get_character_by_name(world, character_name) do
+    call(world, {:get_character_by_name, character_name})
   end
 
   def update_character(world, character) do
@@ -49,10 +49,12 @@ defmodule Ms2ex.World do
   end
 
   def handle_call({:get_character_by_name, character_name}, _from, state) do
-    if character = Enum.find(state.characters, fn {_id, char} -> char.name == character_name end) do
-      {:reply, {:ok, character}, state}
-    else
-      {:reply, :error, state}
+    case Enum.find(state.characters, fn {_id, char} -> char.name == character_name end) do
+      {_char_id, character} ->
+        {:reply, {:ok, character}, state}
+
+      _ ->
+        {:reply, :error, state}
     end
   end
 
@@ -75,17 +77,14 @@ defmodule Ms2ex.World do
   end
 
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
-    character =
-      Enum.find(state.characters, fn {_, %{session_pid: char_pid}} -> pid == char_pid end)
+    case Enum.find(state.characters, fn {_, %{session_pid: char_pid}} -> pid == char_pid end) do
+      {char_id, _char} ->
+        characters = Map.delete(state.characters, char_id)
+        {:noreply, %{state | characters: characters}}
 
-    characters =
-      if character do
-        Map.delete(state.characters, character.id)
-      else
-        state.characters
-      end
-
-    {:noreply, %{state | characters: characters}}
+      _ ->
+        {:noreply, state}
+    end
   end
 
   defp call(world, msg) do

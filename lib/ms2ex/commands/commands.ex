@@ -40,21 +40,28 @@ defmodule Ms2ex.Commands do
     end
   end
 
-  # def handle(["teleport", target_name], character, session) do
-  #   with {:ok, target} <- Registries.Characters.lookup_by_name(target_name),
-  #        {:ok, map} <- Metadata.Maps.lookup(target.map_id),
-  #        {:ok, auth_data} = Registries.Sessions.lookup(session.account.id) do
-  #     spawn = List.first(map.spawns)
-  #     Field.change_field(character, session, map.id, spawn.coord, spawn.rotation)
-  #     push(session, Packets.GameToGame.bytes(target.channel_id, target.map_id, auth_data))
-  #   else
-  #     _ ->
-  #       push_notice(session, character, "Unable to teleport to character: #{target_name}")
-  #   end
-  # end
+  def handle(["teleport", target_name], character, session) do
+    case World.get_character_by_name(session.world, target_name) do
+      {:ok, target} ->
+        cond do
+          character.channel_id != target.channel_id ->
+            push_notice(session, character, "Character is in Channel #{target.channel_id}")
 
-  def handle(args, character, session) do
-    IO.inspect(args)
+          character.map_id == target.map_id ->
+            push_notice(session, character, "Already in the same map")
+
+          true ->
+            {:ok, map} = Metadata.Maps.lookup(target.map_id)
+            spawn = List.first(map.spawns)
+            Field.change_field(character, session, map.id, spawn.coord, spawn.rotation)
+        end
+
+      _ ->
+        push_notice(session, character, "Unable to teleport to character: #{target_name}")
+    end
+  end
+
+  def handle(_args, character, session) do
     push_notice(session, character, "Command not found")
   end
 
