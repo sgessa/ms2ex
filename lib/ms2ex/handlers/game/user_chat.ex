@@ -46,5 +46,12 @@ defmodule Ms2ex.GameHandlers.UserChat do
     end
   end
 
+  defp handle_message({:world, msg, _rcpt_name}, character, session) do
+    # TODO check if user has enough merets or a voucher
+    packet = Packets.UserChat.bytes(:world, character, msg)
+    World.broadcast(session.world, packet)
+    session
+  end
+
   defp handle_message(_msg, _character, session), do: session
 end

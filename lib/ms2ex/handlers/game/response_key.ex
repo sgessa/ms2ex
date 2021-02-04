@@ -20,6 +20,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
 
+      World.monitor_character(session.world, character)
+
       tick = Ms2ex.sync_ticks()
 
       {:ok, map} = Metadata.Maps.lookup(character.map_id)

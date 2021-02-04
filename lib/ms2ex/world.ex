@@ -5,6 +5,10 @@ defmodule Ms2ex.World do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
+  def broadcast(world, packet, sender_pid \\ nil) do
+    Swarm.send(world, {:broadcast, packet, sender_pid})
+  end
+
   def get_character(world, character_id) do
     call(world, {:get_character, character_id})
   end
@@ -19,6 +23,10 @@ defmodule Ms2ex.World do
 
   def update_character(world, character) do
     call(world, {:update_character, character})
+  end
+
+  def monitor_character(world, character) do
+    call(world, {:monitor, character})
   end
 
   def init(:ok) do
@@ -51,6 +59,33 @@ defmodule Ms2ex.World do
   def handle_call({:update_character, character}, _from, state) do
     characters = Map.put(state.characters, character.id, character)
     {:reply, :ok, %{state | characters: characters}}
+  end
+
+  def handle_call({:monitor, character}, _from, state) do
+    Process.monitor(character.session_pid)
+    {:reply, :ok, state}
+  end
+
+  def handle_info({:broadcast, packet, sender_pid}, state) do
+    for {_char_id, %{session_pid: pid}} <- state.characters, pid != sender_pid do
+      send(pid, {:push, packet})
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info({:DOWN, _, _, pid, _reason}, state) do
+    character =
+      Enum.find(state.characters, fn {_, %{session_pid: char_pid}} -> pid == char_pid end)
+
+    characters =
+      if character do
+        Map.delete(state.characters, character.id)
+      else
+        state.characters
+      end
+
+    {:noreply, %{state | characters: characters}}
   end
 
   defp call(world, msg) do
