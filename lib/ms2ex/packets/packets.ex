@@ -59,6 +59,7 @@ defmodule Ms2ex.Packets do
     0x38 => "EXPERIENCE",
     0x39 => "LEVEL_UP",
     0x3D => "SKILL",
+    0x3F => "SKILL_DAMAGE",
     0x46 => "STAT_POINTS",
     0x47 => "CHARACTER_CREATE",
     0x49 => "ADD_PORTAL",
