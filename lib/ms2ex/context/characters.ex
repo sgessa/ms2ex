@@ -14,6 +14,7 @@ defmodule Ms2ex.Characters do
     attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
     attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
     attrs = Map.put(attrs, :stats, %{})
+    attrs = Map.put(attrs, :wallet, %{})
 
     changeset =
       account
@@ -80,5 +81,12 @@ defmodule Ms2ex.Characters do
     |> where([t], t.character_id == ^character_id)
     |> select([t], t.title_id)
     |> Repo.all()
+  end
+
+  def get_wallet(%Character{id: character_id}) do
+    Ms2ex.Wallet
+    |> where([w], w.character_id == ^character_id)
+    |> limit(1)
+    |> Repo.one()
   end
 end

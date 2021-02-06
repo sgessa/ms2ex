@@ -30,10 +30,8 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["map", map_id], character, session) do
-    with {map_id, _} <- Integer.parse(map_id),
-         {:ok, map} <- Metadata.Maps.lookup(map_id) do
-      spawn = List.first(map.spawns)
-      Field.change_field(character, session, map_id, spawn.coord, spawn.rotation)
+    with {map_id, _} <- Integer.parse(map_id) do
+      Field.change_field(character, session, map_id)
     else
       _ ->
         push_notice(session, character, "Invalid Map: #{map_id}")
@@ -51,9 +49,7 @@ defmodule Ms2ex.Commands do
             push_notice(session, character, "Already in the same map")
 
           true ->
-            {:ok, map} = Metadata.Maps.lookup(target.map_id)
-            spawn = List.first(map.spawns)
-            Field.change_field(character, session, map.id, spawn.coord, spawn.rotation)
+            Field.change_field(character, session, target.map_id)
         end
 
       _ ->
