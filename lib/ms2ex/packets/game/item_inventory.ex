@@ -12,7 +12,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(item.item_id)
     |> put_long(item.id)
     |> put_short(item.inventory_slot)
-    |> put_int(item.metadata.rarity)
+    |> put_int(item.rarity)
     |> put_ustring()
     |> put_item(item)
     |> put_ustring()
@@ -36,7 +36,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(item.item_id)
     |> put_long(item.id)
     |> put_ustring(to_string(item.equip_slot))
-    |> put_int(1)
+    |> put_int(item.rarity)
     |> put_item(item)
     |> put_equips(equips)
   end

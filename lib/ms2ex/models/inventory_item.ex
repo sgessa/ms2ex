@@ -14,7 +14,8 @@ defmodule Ms2ex.Inventory.Item do
     :item_id,
     :inventory_slot,
     :inventory_tab,
-    :location
+    :location,
+    :rarity
   ]
 
   @required [:amount, :item_id, :location]
@@ -48,6 +49,7 @@ defmodule Ms2ex.Inventory.Item do
     field :location, Location, default: :inventory
     field :paired_character_id, :integer, virtual: true, default: 0
     field :paired_character_name, :integer, virtual: true, default: ""
+    field :rarity, :integer
     field :remaining_trades, :integer, virtual: true, default: 0
     field :times_attr_changed, :integer, virtual: true, default: 0
     field :transfer_flag, :integer, virtual: true, default: 0
