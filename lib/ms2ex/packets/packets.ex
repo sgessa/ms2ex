@@ -24,6 +24,7 @@ defmodule Ms2ex.Packets do
     0x49 => "TAXI",
     0x4B => "REQUEST_WORLD_MAP",
     0x56 => "SEND_LOG",
+    0x6A => "USER_ENV",
     0x6C => "INSIGNIA",
     0x6D => "REQUEST_CHANGE_FIELD",
     0x83 => "GLOBAL_FACTOR",

@@ -1,7 +1,15 @@
 defmodule Ms2ex.Packets.UserEnv do
   import Ms2ex.Packets.PacketWriter
 
-  @modes %{start_list: 0x0, set_titles: 0x2, end_list: 0x4}
+  @modes %{start_list: 0x0, update_title: 0x1, set_titles: 0x2, end_list: 0x4}
+
+  def update_title(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_title)
+    |> put_int(character.object_id)
+    |> put_int(character.title_id)
+  end
 
   def set_titles(titles) do
     __MODULE__
