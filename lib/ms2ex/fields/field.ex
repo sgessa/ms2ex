@@ -1,11 +1,6 @@
 defmodule Ms2ex.Field do
   alias Ms2ex.{FieldServer, Metadata, Net, Packets, World}
 
-  def add_character(character) do
-    pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:add_character, character})
-  end
-
   def add_object(character, object) do
     pid = field_pid(character.map_id, character.channel_id)
     call(pid, {:add_object, object.object_type, object})
@@ -26,8 +21,7 @@ defmodule Ms2ex.Field do
     pid = field_pid(field_id, channel_id)
 
     if pid do
-      send(pid, {:add_character, character})
-      {:ok, pid}
+      call(pid, {:add_character, character})
     else
       GenServer.start(FieldServer, {character, session}, name: field_name(field_id, channel_id))
     end

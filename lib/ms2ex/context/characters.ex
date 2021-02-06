@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Character, Metadata, Repo, Skills, Account}
+  alias Ms2ex.{Character, Emotes, Metadata, Repo, Skills, Account}
 
   import Ecto.Query
 
@@ -11,6 +11,9 @@ defmodule Ms2ex.Characters do
   end
 
   def create(%Account{} = account, attrs) do
+    emotes = Enum.map(Emotes.default_emotes(), &%{emote_id: &1})
+    attrs = Map.put(attrs, :emotes, emotes)
+
     attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
     attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
     attrs = Map.put(attrs, :stats, %{})
