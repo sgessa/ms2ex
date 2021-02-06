@@ -3,28 +3,16 @@ defmodule Ms2ex.Wallet do
 
   import Ecto.Changeset
 
-  @fields [
-    :event_merets,
-    :game_merets,
-    :havi_fruits,
-    :merets,
-    :mesos,
-    :meso_tokens,
-    :rues,
-    :trevas,
-    :valor_tokens
-  ]
-
   @types %{
-    mesos: 0x0,
-    valor_tokens: 0x3,
-    trevas: 0x4,
-    rues: 0x5,
+    event_merets: 0x9,
+    game_merets: 0x8,
     havi_fruits: 0x6,
     merets: 0x7,
-    game_merets: 0x8,
-    event_merets: 0x9,
-    meso_tokens: 0x10
+    mesos: 0x0,
+    meso_tokens: 0x10,
+    rues: 0x5,
+    trevas: 0x4,
+    valor_tokens: 0x3
   }
 
   schema "wallets" do
@@ -34,8 +22,8 @@ defmodule Ms2ex.Wallet do
     field :game_merets, :integer, default: 0
     field :havi_fruits, :integer, default: 0
     field :merets, :integer, default: 100
-    field :meso_tokens, :integer, default: 0
     field :mesos, :integer, default: 10_000
+    field :meso_tokens, :integer, default: 0
     field :rues, :integer, default: 0
     field :trevas, :integer, default: 0
     field :valor_tokens, :integer, default: 0
@@ -44,9 +32,11 @@ defmodule Ms2ex.Wallet do
   @doc false
   def changeset(wallet, attrs) do
     wallet
-    |> cast(attrs, @fields)
-    |> validate_required(@fields)
+    |> cast(attrs, fields())
+    |> validate_required(fields())
   end
 
   def currency_type(currency), do: Map.get(@types, currency)
+
+  defp fields(), do: Map.keys(@types)
 end
