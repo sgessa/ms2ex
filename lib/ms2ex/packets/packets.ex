@@ -8,16 +8,13 @@ defmodule Ms2ex.Packets do
     0xC => "RESPONSE_CLIENT_SYNC_TICK",
     0xD => "REQUEST_QUIT",
     0xF => "LOAD_UGC_MAP",
+    0x10 => "RESPONSE_FIELD_ENTER",
     0x11 => "USER_CHAT",
     0x12 => "USER_SYNC",
     0x16 => "EQUIP_ITEM",
     0x20 => "SKILL",
     0x25 => "JOB",
     0x26 => "VIBRATE",
-    0xA3 => "REQUEST_SKILL_BOOK",
-    0xB2 => "RESPONSE_SERVER_ENTER",
-    0xBB => "FILE_HASH",
-    0x10 => "RESPONSE_FIELD_ENTER",
     0x39 => "UGC",
     0x3B => "KEY_TABLE",
     0x3C => "REQUEST_CHANGE_CHANNEL",
@@ -25,8 +22,12 @@ defmodule Ms2ex.Packets do
     0x42 => "RIDE_SYNC",
     0x49 => "TAXI",
     0x56 => "SEND_LOG",
+    0x6C => "INSIGNIA",
     0x6D => "REQUEST_CHANGE_FIELD",
-    0x83 => "GLOBAL_FACTOR"
+    0x83 => "GLOBAL_FACTOR",
+    0xA3 => "REQUEST_SKILL_BOOK",
+    0xB2 => "RESPONSE_SERVER_ENTER",
+    0xBB => "FILE_HASH"
   }
 
   @send_ops %{
@@ -51,7 +52,7 @@ defmodule Ms2ex.Packets do
     0x26 => "UNEQUIP_ITEM",
     0x1C => "USER_SYNC",
     0x1D => "USER_CHAT",
-    0x1F => "EMOTION",
+    0x1F => "EMOTE",
     0x21 => "INVENTORY_ITEM",
     0x23 => "MARKET_INVENTORY",
     0x24 => "FURNISHING_INVENTORY",
@@ -74,6 +75,7 @@ defmodule Ms2ex.Packets do
     0x82 => "TAXI",
     0xAA => "USER_ENV",
     0xA9 => "DYNAMIC_CHANNEL",
+    0xB3 => "INSIGNIA",
     0xB5 => "BANNER_LIST",
     0xBA => "CHARACTER_MAX_COUNT",
     0xC6 => "FISHING",

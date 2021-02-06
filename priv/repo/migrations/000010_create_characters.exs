@@ -8,6 +8,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :awakened, :boolean, null: false
       add :exp, :bigint, null: false
       add :gender, :integer, null: false
+      add :insignia_id, :integer, null: false
       add :level, :integer, null: false
       add :job, :integer, null: false
       add :map_id, :integer, null: false
@@ -18,6 +19,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :profile_url, :string
       add :rest_exp, :bigint, null: false
       add :skin_color, :binary, null: false
+      add :title_id, :integer, null: false
 
       timestamps(type: :timestamptz)
     end

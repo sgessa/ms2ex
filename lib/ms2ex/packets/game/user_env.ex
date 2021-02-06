@@ -2,22 +2,15 @@ defmodule Ms2ex.Packets.UserEnv do
   import Ms2ex.Packets.PacketWriter
 
   @modes %{start_list: 0x0, set_titles: 0x2, end_list: 0x4}
-  @titles [10_000_565, 10_000_251, 10_000_291, 10_000_292]
 
-  def set_titles() do
+  def set_titles(titles) do
     __MODULE__
     |> build()
     |> put_byte(@modes.set_titles)
-    |> put_int(length(@titles))
-    |> put_titles(@titles)
-  end
-
-  defp put_titles(packet, []), do: packet
-
-  defp put_titles(packet, [title_id | titles]) do
-    packet
-    |> put_int(title_id)
-    |> put_titles(titles)
+    |> put_int(length(titles))
+    |> reduce(titles, fn title_id, packet ->
+      put_int(packet, title_id)
+    end)
   end
 
   def set_mode(mode, integers \\ 1) do

@@ -32,6 +32,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       %{map_id: map_id, position: position, rotation: rotation} = character
 
+      titles = Characters.list_titles(character)
+
       session
       |> Map.put(:character_id, character.id)
       |> push(Packets.MoveResult.bytes())
@@ -53,7 +55,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.MarketInventory.end_list())
       |> push(Packets.FurnishingInventory.start_list())
       |> push(Packets.FurnishingInventory.end_list())
-      |> push(Packets.UserEnv.set_titles())
+      |> push(Packets.UserEnv.set_titles(titles))
       |> push(Packets.UserEnv.set_mode(0x4))
       |> push(Packets.UserEnv.set_mode(0x5))
       |> push(Packets.UserEnv.set_mode(0x8, 2))

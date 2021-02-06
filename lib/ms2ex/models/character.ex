@@ -12,6 +12,7 @@ defmodule Ms2ex.Character do
     :awakened,
     :exp,
     :gender,
+    :insignia_id,
     :level,
     :job,
     :map_id,
@@ -19,10 +20,9 @@ defmodule Ms2ex.Character do
     :name,
     :prestige_exp,
     :prestige_level,
-    :profile_url,
     :rest_exp,
-    :rotation,
-    :skin_color
+    :skin_color,
+    :title_id
   ]
 
   defenum(Gender, male: 0, female: 1)
@@ -51,6 +51,7 @@ defmodule Ms2ex.Character do
 
     has_many :hot_bars, Ms2ex.HotBar
     has_many :skill_tabs, Ms2ex.SkillTab
+    has_many :titles, Ms2ex.CharacterTitle
 
     has_one :stats, Ms2ex.CharacterStats
 
@@ -62,12 +63,15 @@ defmodule Ms2ex.Character do
     # TODO
     field :clubs, {:array, :map}, virtual: true, default: []
 
+    # TODO
+    field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
+
     field :animation, :integer, virtual: true, default: 0
     field :exp, :integer, default: 0
     field :gender, Gender, default: :male
     field :guild_name, :string, virtual: true, default: "h4x0rzz"
     field :home_name, :string, virtual: true, default: ""
-    field :insignia_id, :integer, virtual: true, default: 0
+    field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
     field :job, Job
     field :map_id, :integer
@@ -78,14 +82,11 @@ defmodule Ms2ex.Character do
     field :position, EctoTypes.Term, virtual: true, default: %Coord{x: 2850, y: 2550, z: 1800}
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1
-    field :profile_url, :string, default: "http://duckduckgo.com"
+    field :profile_url, :string, default: ""
     field :rest_exp, :integer, default: 0
     field :rotation, EctoTypes.Term, virtual: true, default: %Coord{x: 0, y: 0, z: 0}
     field :skin_color, EctoTypes.Term
-    field :title_id, :integer, virtual: true, default: 0
-
-    # TODO
-    field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
+    field :title_id, :integer, default: 0
 
     # TODO
     field :unknown_id, :integer, virtual: true, default: 0x01EF80C2

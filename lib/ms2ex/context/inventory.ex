@@ -6,6 +6,12 @@ defmodule Ms2ex.Inventory do
 
   def get_by(attrs), do: Repo.get_by(Item, attrs)
 
+  def all(%Character{id: char_id}) do
+    Item
+    |> where([i], i.character_id == ^char_id)
+    |> Repo.all()
+  end
+
   def list_items(%Character{id: char_id}) do
     Item
     |> where([i], i.character_id == ^char_id and i.location == ^:inventory)

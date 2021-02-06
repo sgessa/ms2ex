@@ -74,4 +74,11 @@ defmodule Ms2ex.Characters do
   def load_equips(%Character{} = character) do
     %{character | equips: Ms2ex.Equips.list(character)}
   end
+
+  def list_titles(%Character{id: character_id}) do
+    Ms2ex.CharacterTitle
+    |> where([t], t.character_id == ^character_id)
+    |> select([t], t.title_id)
+    |> Repo.all()
+  end
 end

@@ -35,13 +35,15 @@ bottom = %Item{item_id: 11_500_538, color: bottom_color} |> Metadata.Items.load(
 shoes_color = ItemColor.build(Color.build(51, 59, 63, -1), Color.build(27, 32, 35, -1), Color.build(15, 18, 20, -1), 0)
 shoes = %Item{item_id: 11_700_709, color: shoes_color} |> Metadata.Items.load()
 
-staff = %Item{item_id: 15260305} |> Metadata.Items.load()
+staff = %Item{item_id: 15260305, rarity: 6} |> Metadata.Items.load()
 
 {:ok, char} =
   Characters.create(account, %{
     name: "steve1337",
     level: 70,
     map_id: 2_000_023,
+    title_id: 10000503,
+    insignia_id: 33,
     job: :wizard,
     skin_color: skin_color
   })
@@ -69,3 +71,9 @@ staff = %Item{item_id: 15260305} |> Metadata.Items.load()
 
 {:ok, {:create, item}} = Inventory.add_item(char, staff)
 {:ok, _equip} = Equips.equip(item.metadata.slot, item)
+
+titles = [10000569, 10000152, 10000570, 10000171, 10000196, 10000195, 10000571, 10000331, 10000190,
+10000458, 10000465, 10000503, 10000512, 10000513, 10000514, 10000537, 10000565, 10000602,
+10000603, 10000638, 10000644]
+
+Enum.each(titles, &Ms2ex.Repo.insert(%Ms2ex.CharacterTitle{character_id: char.id, title_id: &1}))
