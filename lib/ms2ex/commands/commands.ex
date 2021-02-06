@@ -1,5 +1,5 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, World}
+  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, Wallets, World}
 
   import Net.Session, only: [push: 2, push_notice: 3]
 
@@ -35,6 +35,18 @@ defmodule Ms2ex.Commands do
     else
       _ ->
         push_notice(session, character, "Invalid Map: #{map_id}")
+    end
+  end
+
+  def handle([currency, amount], character, session) when currency in ["merets", "mesos"] do
+    currency = String.to_existing_atom(currency)
+
+    with {amount, _} <- Integer.parse(amount),
+         {:ok, wallet} <- Wallets.update(character, currency, amount) do
+      push(session, Packets.Wallet.update(currency, Map.get(wallet, currency)))
+    else
+      _ ->
+        push_notice(session, character, "Invalid amount: #{amount}")
     end
   end
 
