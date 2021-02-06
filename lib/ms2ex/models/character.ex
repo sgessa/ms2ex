@@ -54,6 +54,7 @@ defmodule Ms2ex.Character do
     has_many :titles, Ms2ex.CharacterTitle
 
     has_one :stats, Ms2ex.CharacterStats
+    has_one :wallet, Ms2ex.Wallet
 
     field :awakened, :boolean, default: false
 
@@ -101,6 +102,7 @@ defmodule Ms2ex.Character do
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
     |> cast_assoc(:skill_tabs, with: &Ms2ex.SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &Ms2ex.CharacterStats.changeset/2)
+    |> cast_assoc(:wallet, with: &Ms2ex.Wallet.changeset/2)
     |> validate_required(@fields)
     |> unique_constraint(:name)
   end

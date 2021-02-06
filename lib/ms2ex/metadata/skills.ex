@@ -28,7 +28,8 @@ defmodule Ms2ex.Metadata.Skill do
   field :sub_skills, 3, repeated: true, type: :int32
   field :job, 4, type: Ms2ex.Metadata.SkillJob, enum: true
   field :learned, 5, type: :bool
-  field :state, 6, type: :int32
+  field :state, 6, type: :string
+  field :passive, 7, type: :bool
 end
 
 defmodule Ms2ex.Metadata.SkillLevel do

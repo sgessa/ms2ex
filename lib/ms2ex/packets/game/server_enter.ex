@@ -4,20 +4,7 @@ defmodule Ms2ex.Packets.ServerEnter do
   @unlocked_hidden_maps [52_000_065]
   @unlocked_maps [2_000_062]
 
-  def bytes(channel_id, character) do
-    game_merets = 0x0
-    event_merets = 0x0
-
-    wallet = %{
-      havi_fruits: 2000,
-      merets: 2000,
-      mesos: 2000,
-      meso_tokens: 2000,
-      rues: 2000,
-      trevas: 2000,
-      valor_tokens: 2000
-    }
-
+  def bytes(channel_id, character, wallet) do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
@@ -28,8 +15,8 @@ defmodule Ms2ex.Packets.ServerEnter do
     |> put_long(wallet.mesos)
     |> put_long(wallet.merets)
     |> put_long()
-    |> put_long(game_merets)
-    |> put_long(event_merets)
+    |> put_long(wallet.game_merets)
+    |> put_long(wallet.event_merets)
     |> put_long()
     |> put_long(wallet.valor_tokens)
     |> put_long(wallet.trevas)
