@@ -46,6 +46,8 @@ defmodule Ms2ex.Character do
   schema "characters" do
     belongs_to :account, Ms2ex.Account
 
+    has_many :emotes, Ms2ex.Emote
+
     has_many :equips, Inventory.Item
     has_many :inventory_items, Inventory.Item
 
@@ -99,6 +101,7 @@ defmodule Ms2ex.Character do
   def changeset(character, attrs) do
     character
     |> cast(attrs, @fields)
+    |> cast_assoc(:emotes, with: &Ms2ex.Emote.changeset/2)
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
     |> cast_assoc(:skill_tabs, with: &Ms2ex.SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &Ms2ex.CharacterStats.changeset/2)

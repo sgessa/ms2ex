@@ -12,10 +12,21 @@ defmodule Ms2ex.FieldServer do
   def init({character, session}) do
     Logger.info("Start Field #{character.map_id} @ Channel #{session.channel_id}")
 
-    send(self(), {:add_character, character})
     send(self(), :send_updates)
 
-    {:ok, initialize_state(session.world, character.map_id, session.channel_id)}
+    {
+      :ok,
+      initialize_state(session.world, character.map_id, session.channel_id),
+      {:continue, {:add_character, character}}
+    }
+  end
+
+  def handle_continue({:add_character, character}, state) do
+    {:noreply, add_character(character, state)}
+  end
+
+  def handle_call({:add_character, character}, _from, state) do
+    {:reply, {:ok, self()}, add_character(character, state)}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do
@@ -40,10 +51,6 @@ defmodule Ms2ex.FieldServer do
     Process.send_after(self(), :send_updates, @updates_intval)
 
     {:noreply, state}
-  end
-
-  def handle_info({:add_character, character}, state) do
-    {:noreply, add_character(character, state)}
   end
 
   def handle_info({:broadcast, packet, sender_pid}, state) do

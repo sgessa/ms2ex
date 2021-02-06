@@ -24,8 +24,6 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     hot_bars = HotBars.list(character)
 
     session
-    # |> push(Packets.StatPoints.bytes(character))
-    # |> push(Packets.Emotion.bytes())
     |> push(Packets.KeyTable.send_hot_bars(hot_bars))
   end
 

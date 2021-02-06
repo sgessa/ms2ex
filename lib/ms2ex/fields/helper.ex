@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Field, Metadata, Packets, World}
+  alias Ms2ex.{Emotes, Field, Metadata, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -36,7 +36,9 @@ defmodule Ms2ex.FieldHelper do
     Field.broadcast(self(), Packets.FieldAddUser.bytes(character))
     Field.broadcast(self(), Packets.ProxyGameObj.load_player(character))
 
-    # Send Player Stats after Player Object is loaded
+    # Load Emotes and Player Stats after Player Object is loaded
+    emotes = Emotes.list(character)
+    send(self(), {:push, character.id, Packets.Emote.load(emotes)})
     send(self(), {:push, character.id, Packets.PlayerStats.bytes(character)})
 
     sessions = Map.put(state.sessions, character.id, session_pid)

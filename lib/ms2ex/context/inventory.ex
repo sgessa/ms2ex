@@ -18,6 +18,10 @@ defmodule Ms2ex.Inventory do
     |> Repo.all()
   end
 
+  def get(%{id: char_id}, id) do
+    Repo.get_by(Item, character_id: char_id, id: id)
+  end
+
   def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
     Repo.transaction(fn ->
       case find_item(character, attrs) do
