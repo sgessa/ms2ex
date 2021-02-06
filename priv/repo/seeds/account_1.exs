@@ -2,11 +2,7 @@ alias Ms2ex.{Characters, Color, Equips, Hair, Inventory, Inventory, ItemColor, M
 alias Inventory, as: Items
 alias Items.Item
 
-{:ok, account} =
-  Accounts.create(%{
-    username: "steve",
-    password: "123"
-  })
+{:ok, account} =  Accounts.create(%{username: "steve", password: "123"})
 
 skin_color = SkinColor.build(Color.build(-82, -65, -22, -1), Color.build(-82, -65, -22, -1))
 

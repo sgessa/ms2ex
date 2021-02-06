@@ -31,18 +31,20 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_float()
   end
 
-  def put_deflated(packet, data, length) when length <= 4 do
+  def put_deflated(packet, data) when byte_size(data) <= 4 do
     packet
-    |> put_int(length)
+    |> put_bool(false)
+    |> put_int(byte_size(data))
     |> put_bytes(data)
   end
 
-  def put_deflated(packet, data, length) do
+  def put_deflated(packet, data) do
     deflated_data = deflate(data)
 
     packet
+    |> put_bool(true)
     |> put_int(byte_size(deflated_data) + 4)
-    |> put_int_big(length)
+    |> put_int_big(byte_size(data))
     |> put_bytes(deflated_data)
   end
 

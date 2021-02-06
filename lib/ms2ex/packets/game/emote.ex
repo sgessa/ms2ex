@@ -1,6 +1,5 @@
-defmodule Ms2ex.Packets.Emotion do
+defmodule Ms2ex.Packets.Emote do
   import Ms2ex.Packets.PacketWriter
-
 
   @emotes [
     90_200_011,
@@ -34,24 +33,34 @@ defmodule Ms2ex.Packets.Emotion do
     90_200_060,
     90_200_017,
     90_200_018,
-    90_200_093
+    90_200_093,
+    90_220_033,
+    90_220_012,
+    90_220_001,
+    90_220_033
   ]
 
-  def bytes() do
+  @modes %{load: 0x0, learn: 0x1}
+
+  def load() do
     __MODULE__
     |> build()
-    |> put_byte(0x0)
+    |> put_byte(@modes.load)
     |> put_int(length(@emotes))
-    |> put_emotes(@emotes)
+    |> reduce(@emotes, fn emote_id, packet ->
+      packet
+      |> put_int(emote_id)
+      |> put_int(0x1)
+      |> put_long(0x0)
+    end)
   end
 
-  defp put_emotes(packet, []), do: packet
-
-  defp put_emotes(packet, [id | emotes]) do
-    packet
-    |> put_int(id)
+  def learn(emote_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.learn)
+    |> put_int(emote_id)
     |> put_int()
     |> put_long()
-    |> put_emotes(emotes)
   end
 end

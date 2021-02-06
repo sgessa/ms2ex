@@ -67,7 +67,7 @@ config :ms2ex, Ms2ex,
   skip_packet_logs: [
     "ADD_PORTAL",
     "CHARACTER_LIST",
-    "EMOTION",
+    # "EMOTE",
     "FIELD_ADD_USER",
     "ITEM_INVENTORY",
     "KEY_TABLE",

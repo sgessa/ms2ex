@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Job do
-  alias Ms2ex.{Character, Skills}
+  alias Ms2ex.{Character, Metadata, Skills}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -36,6 +36,32 @@ defmodule Ms2ex.Packets.Job do
     __MODULE__
     |> build()
     |> put_int()
+  end
+
+  def put_passive_skills(packet, character) do
+    skill_tab = Skills.get_tab(character)
+
+    skills =
+      character
+      |> Skills.list(skill_tab)
+      |> Enum.map(&Map.put(&1, :metadata, Metadata.Skills.get(&1.skill_id)))
+      |> Enum.filter(&(&1.metadata.passive and &1.metadata.learned))
+
+    packet
+    |> put_short(length(skills))
+    |> reduce(skills, fn sk, packet ->
+      packet
+      |> put_int(character.object_id)
+      |> put_int()
+      |> put_int(character.object_id)
+      |> put_int()
+      |> put_int()
+      |> put_int(sk.skill_id)
+      |> put_short(sk.level)
+      |> put_int(0x1)
+      |> put_byte(0x1)
+      |> put_long()
+    end)
   end
 
   def put_skills(packet, character) do

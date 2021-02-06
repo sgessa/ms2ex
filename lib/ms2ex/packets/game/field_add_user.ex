@@ -35,24 +35,15 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_time(DateTime.utc_now())
     |> put_int()
     |> put_int()
-    |> put_bool(true)
     |> put_encoded_appearance(character)
   end
 
   defp put_encoded_appearance(packet, character) do
-    appear = appearance(character)
-
-    passive_skills =
-      "01 00 3E FF 5A 00 A4 63 12 02 3E FF 5A 00 D0 71 85 28 D0 71 85 28 0F 38 A0 00 01 00 01 00 00 00 01 00 00 00 00 00 00 00 00"
-
     packet
-    |> put_deflated(appear, byte_size(appear))
-    |> put_byte()
-    |> put_deflated(<<0x1>>, 1)
-    |> put_byte()
-    |> put_deflated(<<0x1>>, 1)
-    # |> Packets.Field.put_passive_skills()
-    |> put_static_packet(passive_skills)
+    |> put_deflated(appearance(character))
+    |> put_deflated(<<0x0>>)
+    |> put_deflated(<<0x0>>)
+    |> Packets.Job.put_passive_skills(character)
     |> put_int()
     |> put_int()
     |> put_byte()
