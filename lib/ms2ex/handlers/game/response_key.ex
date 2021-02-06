@@ -33,6 +33,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       %{map_id: map_id, position: position, rotation: rotation} = character
 
       titles = Characters.list_titles(character)
+      wallet = Characters.get_wallet(character)
 
       session
       |> Map.put(:character_id, character.id)
@@ -46,7 +47,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> Map.put(:server_tick, tick)
       |> push(Packets.RequestClientSyncTick.bytes(tick))
       |> push(Packets.DynamicChannel.bytes())
-      |> push(Packets.ServerEnter.bytes(session.channel_id, character))
+      |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
       |> push_inventory_tab(get_inventory_tabs())
