@@ -31,7 +31,7 @@ bottom = %Item{item_id: 11_500_538, color: bottom_color} |> Metadata.Items.load(
 shoes_color = ItemColor.build(Color.build(51, 59, 63, -1), Color.build(27, 32, 35, -1), Color.build(15, 18, 20, -1), 0)
 shoes = %Item{item_id: 11_700_709, color: shoes_color} |> Metadata.Items.load()
 
-staff = %Item{item_id: 15260305, rarity: 6} |> Metadata.Items.load()
+staff = %Item{item_id: 15260305, enchants: 12, rarity: 6} |> Metadata.Items.load()
 
 {:ok, char} =
   Characters.create(account, %{

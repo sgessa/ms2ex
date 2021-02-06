@@ -10,6 +10,7 @@ defmodule Ms2ex.Inventory.Item do
     :amount,
     :color,
     :data,
+    :enchants,
     :equip_slot,
     :item_id,
     :inventory_slot,
@@ -39,7 +40,7 @@ defmodule Ms2ex.Inventory.Item do
     field :appearance_flag, :integer, virtual: true, default: 0
     field :can_repackage, :boolean, virtual: true, default: true
     field :charges, :integer, virtual: true, default: 0
-    field :enchants, :integer, virtual: true, default: 0
+    field :enchants, :integer, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0

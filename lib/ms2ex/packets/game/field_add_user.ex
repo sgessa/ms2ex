@@ -56,7 +56,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_int()
     |> put_byte()
     |> put_time()
-    |> put_long(9_007_199_254_740_991)
+    |> put_int(2_147_483_647)
     |> put_byte()
     |> put_int()
     |> put_int()
