@@ -1,5 +1,5 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{FieldServer, Net, Packets, World}
+  alias Ms2ex.{FieldServer, Metadata, Net, Packets, World}
 
   def add_character(character) do
     pid = field_pid(character.map_id, character.channel_id)
@@ -30,6 +30,15 @@ defmodule Ms2ex.Field do
       {:ok, pid}
     else
       GenServer.start(FieldServer, {character, session}, name: field_name(field_id, channel_id))
+    end
+  end
+
+  def change_field(character, session, field_id) do
+    with {:ok, map} <- Metadata.Maps.lookup(field_id) do
+      spawn = List.first(map.spawns)
+      change_field(character, session, field_id, spawn.coord, spawn.rotation)
+    else
+      _ -> session
     end
   end
 
