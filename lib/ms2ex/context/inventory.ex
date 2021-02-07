@@ -24,7 +24,7 @@ defmodule Ms2ex.Inventory do
 
   def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
     Repo.transaction(fn ->
-      case find_item(character, attrs) do
+      case find_stack(character, attrs) do
         %Item{} = item ->
           update_or_create(character, item, attrs)
 
@@ -40,12 +40,13 @@ defmodule Ms2ex.Inventory do
     end
   end
 
-  defp find_item(%{id: char_id}, %{item_id: item_id} = item) do
-    stack_limit = Map.get(item, :stack_limit) || 1
+  def find_stack(%{id: char_id}, %{item_id: item_id, metadata: meta}) do
+    stack_limit = Map.get(meta, :stack_limit) || 1
 
     Item
     |> where([i], i.character_id == ^char_id)
     |> where([i], i.item_id == ^item_id and i.amount < ^stack_limit)
+    |> order_by(desc: :amount)
     |> limit(1)
     |> Repo.one()
   end
@@ -60,7 +61,7 @@ defmodule Ms2ex.Inventory do
     amount_created = new_amount - amount_added
     attrs = %{attrs | amount: amount_created}
 
-    with {:update, updated, new_amount} <- update(item, amount_added),
+    with {:update, updated} <- update(item, amount_added),
          {:create, created} <- create(character, attrs) do
       {:update_and_create, {updated, new_amount}, created}
     end
@@ -93,13 +94,23 @@ defmodule Ms2ex.Inventory do
     |> Repo.update_all(inc: [amount: new_amount])
 
     item = Item |> Repo.get(id) |> Map.put(:metadata, meta)
-    {:update, item, new_amount}
+    {:update, item}
   end
 
   def update_item(%Item{} = item, attrs) do
     item
     |> Item.changeset(attrs)
     |> Repo.update()
+  end
+
+  def consume(%Item{amount: amount} = item) when amount > 1 do
+    update(item, -1)
+  end
+
+  def consume(%Item{} = item) do
+    with {:ok, item} <- Repo.delete(item) do
+      {:delete, item}
+    end
   end
 
   def determine_inventory_slot(%Item{inventory_slot: -1}), do: -1
