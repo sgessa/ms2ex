@@ -16,8 +16,11 @@ defmodule Ms2ex.GameHandlers.Emote do
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          %Inventory.Item{} = item <- Inventory.get(character, item_uid),
          %{metadata: %{skill_id: emote_id}} <- Metadata.Items.load(item),
+         consumed_item <- Inventory.consume(item),
          {:ok, _emote} <- Emotes.learn(character, emote_id) do
-      push(session, Packets.Emote.learn(emote_id))
+      session
+      |> push(Packets.InventoryItem.consume(consumed_item))
+      |> push(Packets.Emote.learn(emote_id))
     else
       _ ->
         session
