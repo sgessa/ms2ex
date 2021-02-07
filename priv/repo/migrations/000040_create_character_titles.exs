@@ -4,7 +4,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacterTitles do
   def change do
     create table(:character_titles) do
       add :character_id, references(:characters, on_delete: :delete_all), null: false
-      add :title_id, :integer
+      add :title_id, :integer, null: false
 
       timestamps(type: :timestamptz)
     end
