@@ -82,7 +82,20 @@ defmodule Ms2ex.Metadata.Item do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:id, :slot, :gem_slot, :tab, :rarity, :stack_limit, :is_template?]
+  defstruct [
+    :id,
+    :slot,
+    :gem_slot,
+    :tab,
+    :rarity,
+    :stack_limit,
+    :is_dress?,
+    :is_template?,
+    :play_count,
+    :skill_id,
+    :jobs,
+    :content
+  ]
 
   field :id, 1, type: :int32
   field :slot, 2, type: Ms2ex.Metadata.EquipSlot, enum: true
@@ -94,8 +107,9 @@ defmodule Ms2ex.Metadata.Item do
   field :is_dress?, 8, type: :bool
   field :is_template?, 9, type: :bool
   field :play_count, 10, type: :int32
-  field :recommended_jobs, 11, repeated: true, type: :int32
-  field :content, 12, repeated: true, type: Ms2ex.Metadata.ItemContent
+  field :skill_id, 11, type: :int32
+  field :jobs, 12, repeated: true, type: :int32
+  field :content, 13, repeated: true, type: Ms2ex.Metadata.ItemContent
 end
 
 defmodule Ms2ex.Metadata.Items do
