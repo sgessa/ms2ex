@@ -26,12 +26,17 @@ defmodule Ms2ex.Application do
       # Start the Endpoint (http/https)
       # Ms2exWeb.Endpoint
       # Start Session Registry
-      {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]},
-      {Ms2ex.World, [name: {:via, :swarm, :"world:1"}]}
+      {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]}
     ]
 
+    world_managers =
+      Enum.into(1..length(@config[:worlds]), [], fn idx ->
+        name = :"world:#{idx}"
+        Supervisor.child_spec({Ms2ex.World, [name: {:via, :swarm, name}]}, id: name)
+      end)
+
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(children ++ world_managers, opts)
   end
 
   defp start_login_server() do
