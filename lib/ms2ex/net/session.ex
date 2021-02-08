@@ -19,7 +19,7 @@ defmodule Ms2ex.Net.Session do
   @block_iv @conf[:initial_block_iv] || @version
 
   def start_link(ref, socket, transport, opts) do
-    GenServer.start(__MODULE__, {ref, socket, transport, opts}, [])
+    GenServer.start_link(__MODULE__, {ref, socket, transport, opts}, [])
   end
 
   def init({_ref, socket, _transport, opts}) do
