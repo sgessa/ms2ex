@@ -1,0 +1,62 @@
+defmodule Ms2ex.GameHandlers.Inventory do
+  require Logger
+
+  alias Ms2ex.{Field, Inventory, Net, Packets, TransferFlags, World}
+
+  import Net.Session, only: [push: 2]
+  import Packets.PacketReader
+
+  def handle(packet, session) do
+    {mode, packet} = get_byte(packet)
+    handle_mode(mode, packet, session)
+  end
+
+  # Drop
+  defp handle_mode(0x4, packet, session) do
+    {id, packet} = get_long(packet)
+    {amount, _packet} = get_int(packet)
+
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         %Inventory.Item{} = item <- Inventory.get(character, id),
+         true <- TransferFlags.has_flag?(item.transfer_flags, :tradeable),
+         true <- TransferFlags.has_flag?(item.transfer_flags, :splittable) do
+      consumed_item = Inventory.consume(item, amount)
+      drop_item(character, consumed_item, amount)
+      update_inventory(session, consumed_item)
+    else
+      _ -> session
+    end
+  end
+
+  # Drop Bound
+  defp handle_mode(0x5, packet, session) do
+    {id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         %Inventory.Item{} = item <- Inventory.get(character, id) do
+      update_inventory(session, Inventory.delete(item))
+    else
+      _ -> session
+    end
+  end
+
+  defp handle_mode(_mode, _packet, session), do: session
+
+  defp drop_item(character, {:update, item}, amount) do
+    item = %{item | amount: amount}
+    Field.add_item(character, item)
+  end
+
+  defp drop_item(character, {:delete, item}, amount) do
+    item = %{item | amount: amount}
+    Field.add_item(character, item)
+  end
+
+  defp update_inventory(session, {:update, item}) do
+    push(session, Packets.InventoryItem.update_item(item.id, item.amount))
+  end
+
+  defp update_inventory(session, {:delete, item}) do
+    push(session, Packets.InventoryItem.remove_item(item.id))
+  end
+end

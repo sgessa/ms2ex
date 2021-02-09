@@ -16,7 +16,8 @@ defmodule Ms2ex.Inventory.Item do
     :inventory_slot,
     :inventory_tab,
     :location,
-    :rarity
+    :rarity,
+    :transfer_flags
   ]
 
   @required [:amount, :item_id, :location]
@@ -53,7 +54,7 @@ defmodule Ms2ex.Inventory.Item do
     field :rarity, :integer
     field :remaining_trades, :integer, virtual: true, default: 0
     field :times_attr_changed, :integer, virtual: true, default: 0
-    field :transfer_flag, :integer, virtual: true, default: 0
+    field :transfer_flags, :integer, default: 0
     field :unlocks_at, :utc_datetime, virtual: true
 
     timestamps(type: :utc_datetime)

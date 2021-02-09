@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Hair, Metadata}
+  alias Ms2ex.Hair
 
   import Ms2ex.Packets.PacketWriter
 
@@ -41,8 +41,6 @@ defmodule Ms2ex.Packets.InventoryItem do
   def put_equips(packet, []), do: packet
 
   def put_equips(packet, [item | equips]) do
-    item = Metadata.Items.load(item)
-
     packet
     |> put_int(item.item_id)
     |> put_long(item.id)
@@ -81,7 +79,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     # |> put_template(item)
     # TODO put pets
     # TODO put gem slot
-    |> put_int(item.transfer_flag)
+    |> put_int(item.transfer_flags)
     |> put_byte()
     |> put_int()
     |> put_int()
@@ -102,7 +100,7 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> Ms2ex.ItemColor.put_item_color(item.color)
       |> put_int(item.appearance_flag)
 
-    case item.metadata.slot do
+    case item.equip_slot do
       :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13))
       :FD -> put_bytes(packet, item.data)
       :HR -> Hair.put_hair(packet, item.data)

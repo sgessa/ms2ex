@@ -30,19 +30,24 @@ defmodule Ms2ex.FieldHelper do
     character = %{character | object_id: state.counter, map_id: state.field_id}
     World.update_character(state.world, character)
 
-    state = %{state | counter: state.counter + 1}
+    sessions = Map.put(state.sessions, character.id, session_pid)
+    state = %{state | counter: state.counter + 1, sessions: sessions}
 
     # Tell other characters in the map to load the new player
-    Field.broadcast(self(), Packets.FieldAddUser.bytes(character))
-    Field.broadcast(self(), Packets.ProxyGameObj.load_player(character))
+    broadcast(state.sessions, Packets.FieldAddUser.bytes(character))
+    broadcast(state.sessions, Packets.ProxyGameObj.load_player(character))
+
+    # Load items
+    for {_id, item} <- state.items do
+      send(session_pid, {:push, Packets.FieldAddItem.bytes(item)})
+    end
 
     # Load Emotes and Player Stats after Player Object is loaded
     emotes = Emotes.list(character)
     send(self(), {:push, character.id, Packets.Emote.load(emotes)})
     send(self(), {:push, character.id, Packets.PlayerStats.bytes(character)})
 
-    sessions = Map.put(state.sessions, character.id, session_pid)
-    %{state | sessions: sessions}
+    state
   end
 
   def remove_character(character_id, state) do
@@ -64,18 +69,24 @@ defmodule Ms2ex.FieldHelper do
     {counter, portals} =
       Enum.reduce(map.portals, {@object_counter, %{}}, fn portal, {counter, portals} ->
         portal = Map.put(portal, :object_id, counter)
-        counter = counter + 1
-        {counter, Map.put(portals, portal.id, portal)}
+        {counter + 1, Map.put(portals, portal.id, portal)}
       end)
 
     %{
       channel_id: channel_id,
       counter: counter,
       field_id: map_id,
+      items: %{},
       mounts: %{},
       portals: portals,
       sessions: %{},
       world: world
     }
+  end
+
+  def broadcast(sessions, packet, sender_pid \\ nil) do
+    for {_char_id, pid} <- sessions, pid != sender_pid do
+      send(pid, {:push, packet})
+    end
   end
 end

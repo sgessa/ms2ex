@@ -1,6 +1,18 @@
 defmodule Ms2ex.Field do
   alias Ms2ex.{FieldServer, Metadata, Net, Packets, World}
 
+  def add_item(character, item) do
+    pid = field_pid(character.map_id, character.channel_id)
+    item = Map.put(item, :position, character.position)
+    item = Map.put(item, :character_object_id, character.object_id)
+    call(pid, {:add_item, item})
+  end
+
+  def remove_item(character, object_id) do
+    pid = field_pid(character.map_id, character.channel_id)
+    call(pid, {:remove_item, object_id})
+  end
+
   def add_object(character, object) do
     pid = field_pid(character.map_id, character.channel_id)
     call(pid, {:add_object, object.object_type, object})

@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{Field, FieldHelper, Packets, World}
+  alias Ms2ex.{FieldHelper, Packets, World}
 
   import FieldHelper
 
@@ -29,6 +29,27 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, self()}, add_character(character, state)}
   end
 
+  def handle_call({:add_item, item}, _from, state) do
+    item = Map.put(item, :object_id, state.counter)
+    items = Map.put(state.items, state.counter, item)
+
+    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
+
+    {:reply, {:ok, item}, %{state | counter: state.counter + 1, items: items}}
+  end
+
+  def handle_call({:remove_item, object_id}, _from, state) do
+    case Map.get(state.items, object_id) do
+      nil ->
+        {:reply, :error, state}
+
+      item ->
+        items = Map.delete(state.items, object_id)
+        broadcast(state.sessions, Packets.FieldRemoveItem.bytes(object_id))
+        {:reply, {:ok, item}, %{state | items: items}}
+    end
+  end
+
   def handle_call({:add_object, :mount, mount}, _from, state) do
     mount = Map.put(mount, :object_id, state.counter)
     mounts = Map.put(state.mounts, mount.character_id, mount)
@@ -45,7 +66,7 @@ defmodule Ms2ex.FieldServer do
     character_ids = Map.keys(state.sessions)
 
     for {_id, char} <- World.get_characters(state.world, character_ids) do
-      Field.broadcast(self(), Packets.ProxyGameObj.update_player(char))
+      broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)
@@ -54,10 +75,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_info({:broadcast, packet, sender_pid}, state) do
-    for {_char_id, pid} <- state.sessions, pid != sender_pid do
-      send(pid, {:push, packet})
-    end
-
+    broadcast(state.sessions, packet, sender_pid)
     {:noreply, state}
   end
 

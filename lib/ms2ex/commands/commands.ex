@@ -7,7 +7,8 @@ defmodule Ms2ex.Commands do
     Enum.reduce(ids, session, fn item_id, session ->
       with {item_id, _} <- Integer.parse(item_id),
            {:ok, meta} <- Metadata.Items.lookup(item_id) do
-        item = %Inventory.Item{item_id: item_id, metadata: meta}
+        flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
+        item = %Inventory.Item{item_id: item_id, transfer_flags: flags, metadata: meta}
         add_item(character, item, session)
       else
         _ ->

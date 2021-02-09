@@ -19,7 +19,7 @@ defmodule Ms2ex.Inventory do
   end
 
   def get(%{id: char_id}, id) do
-    Repo.get_by(Item, character_id: char_id, id: id)
+    get_by(character_id: char_id, id: id)
   end
 
   def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
@@ -61,14 +61,14 @@ defmodule Ms2ex.Inventory do
     amount_created = new_amount - amount_added
     attrs = %{attrs | amount: amount_created}
 
-    with {:update, updated} <- update(item, amount_added),
+    with {:update, updated} <- update_qty(item, amount_added),
          {:create, created} <- create(character, attrs) do
       {:update_and_create, {updated, new_amount}, created}
     end
   end
 
   defp update_or_create(_character, item, %{amount: new_amount}) do
-    update(item, new_amount)
+    update_qty(item, new_amount)
   end
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
@@ -88,7 +88,7 @@ defmodule Ms2ex.Inventory do
 
   defp create(_character, _attrs), do: :nothing
 
-  defp update(%{id: id, metadata: meta}, new_amount) do
+  defp update_qty(%{id: id, metadata: meta}, new_amount) do
     Item
     |> where([i], i.id == ^id)
     |> Repo.update_all(inc: [amount: new_amount])
@@ -103,11 +103,15 @@ defmodule Ms2ex.Inventory do
     |> Repo.update()
   end
 
-  def consume(%Item{amount: amount} = item) when amount > 1 do
-    update(item, -1)
+  def consume(item, consumed \\ 1)
+
+  def consume(%Item{amount: amount} = item, consumed) when amount > consumed do
+    update_qty(item, -consumed)
   end
 
-  def consume(%Item{} = item) do
+  def consume(%Item{} = item, _consumed), do: delete(item)
+
+  def delete(%Item{} = item) do
     with {:ok, item} <- Repo.delete(item) do
       {:delete, item}
     end
