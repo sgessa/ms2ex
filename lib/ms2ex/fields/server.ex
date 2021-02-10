@@ -29,6 +29,11 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, self()}, add_character(character, state)}
   end
 
+  def handle_call({:remove_character, character}, _from, state) do
+    send(self(), :maybe_stop)
+    {:reply, :ok, remove_character(character, state)}
+  end
+
   def handle_call({:add_item, item}, _from, state) do
     item = Map.put(item, :object_id, state.counter)
     items = Map.put(state.items, state.counter, item)
@@ -54,12 +59,6 @@ defmodule Ms2ex.FieldServer do
     mount = Map.put(mount, :object_id, state.counter)
     mounts = Map.put(state.mounts, mount.character_id, mount)
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
-  end
-
-  def handle_call({:remove_character, character_id}, _from, state) do
-    state = remove_character(character_id, state)
-    send(self(), :maybe_stop)
-    {:reply, :ok, state}
   end
 
   def handle_info(:send_updates, state) do
@@ -94,17 +93,5 @@ defmodule Ms2ex.FieldServer do
     end
 
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, _, _, pid, _reason}, state) do
-    case Enum.find(state.sessions, fn {_, char_pid} -> pid == char_pid end) do
-      {char_id, _} ->
-        state = remove_character(char_id, state)
-        send(self(), :maybe_stop)
-        {:noreply, state}
-
-      _ ->
-        {:noreply, state}
-    end
   end
 end

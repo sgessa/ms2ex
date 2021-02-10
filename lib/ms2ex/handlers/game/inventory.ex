@@ -21,7 +21,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
          true <- TransferFlags.has_flag?(item.transfer_flags, :tradeable),
          true <- TransferFlags.has_flag?(item.transfer_flags, :splittable) do
       consumed_item = Inventory.consume(item, amount)
-      drop_item(character, consumed_item, amount)
+      Field.add_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)
     else
       _ -> session
@@ -41,16 +41,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
   end
 
   defp handle_mode(_mode, _packet, session), do: session
-
-  defp drop_item(character, {:update, item}, amount) do
-    item = %{item | amount: amount}
-    Field.add_item(character, item)
-  end
-
-  defp drop_item(character, {:delete, item}, amount) do
-    item = %{item | amount: amount}
-    Field.add_item(character, item)
-  end
 
   defp update_inventory(session, {:update, item}) do
     push(session, Packets.InventoryItem.update_item(item.id, item.amount))

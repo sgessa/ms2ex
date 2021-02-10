@@ -5,7 +5,6 @@ defmodule Ms2ex.FieldHelper do
 
   def add_character(character, state) do
     session_pid = character.session_pid
-    Process.monitor(session_pid)
 
     Logger.info("Field #{state.field_id} @ Channel #{state.channel_id}: #{character.name} joined")
 
@@ -50,14 +49,13 @@ defmodule Ms2ex.FieldHelper do
     state
   end
 
-  def remove_character(character_id, state) do
-    mounts = Map.delete(state.mounts, character_id)
-    sessions = Map.delete(state.sessions, character_id)
+  def remove_character(character, state) do
+    Logger.info("Field #{state.field_id} @ Channel #{state.channel_id}: #{character.name} left")
 
-    with {:ok, character} <- World.get_character(state.world, character_id) do
-      Logger.info("Field #{state.field_id} @ Channel #{state.channel_id}: #{character.name} left")
-      Field.broadcast(self(), Packets.FieldRemoveUser.bytes(character))
-    end
+    mounts = Map.delete(state.mounts, character.id)
+    sessions = Map.delete(state.sessions, character.id)
+
+    Field.broadcast(self(), Packets.FieldRemoveUser.bytes(character))
 
     %{state | mounts: mounts, sessions: sessions}
   end

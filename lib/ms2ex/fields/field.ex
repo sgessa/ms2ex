@@ -64,7 +64,7 @@ defmodule Ms2ex.Field do
 
   def leave(character) do
     pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:remove_character, character.id})
+    call(pid, {:remove_character, character})
   end
 
   def push(session_pid, packet), do: send(session_pid, {:push, packet})
