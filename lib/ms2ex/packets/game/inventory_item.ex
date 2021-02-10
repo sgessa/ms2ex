@@ -3,7 +3,15 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   import Ms2ex.Packets.PacketWriter
 
-  @modes %{add: 0x0, remove: 0x1, update: 0x2, load: 0xE, reset: 0xD}
+  @modes %{
+    add: 0x0,
+    remove: 0x1,
+    update: 0x2,
+    move: 0x3,
+    load_items: 0xA,
+    load_tab: 0xE,
+    reset_tab: 0xD
+  }
 
   def add_item({:create, item}) do
     __MODULE__
@@ -36,6 +44,16 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_byte(@modes.update)
     |> put_long(uid)
     |> put_int(amount)
+  end
+
+  def move_item(dst_uid, src_slot, src_uid, dst_slot) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.move)
+    |> put_long(dst_uid)
+    |> put_short(src_slot)
+    |> put_long(src_uid)
+    |> put_short(dst_slot)
   end
 
   def put_equips(packet, []), do: packet
@@ -179,18 +197,34 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_byte(sockets_length)
   end
 
-  def load(tab_id) do
+  def load_tab(tab_id) do
     __MODULE__
     |> build()
-    |> put_byte(@modes.load)
+    |> put_byte(@modes.load_tab)
     |> put_byte(tab_id)
     |> put_int()
   end
 
-  def reset(tab_id) do
+  def reset_tab(tab_id) do
     __MODULE__
     |> build()
-    |> put_byte(@modes.reset)
+    |> put_byte(@modes.reset_tab)
     |> put_int(tab_id)
+  end
+
+  def load_items(tab_id, items) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.load_items)
+    |> put_int(tab_id)
+    |> put_short(length(items))
+    |> reduce(items, fn item, packet ->
+      packet
+      |> put_int(item.item_id)
+      |> put_long(item.id)
+      |> put_short(item.inventory_slot)
+      |> put_int(item.rarity)
+      |> put_item(item)
+    end)
   end
 end

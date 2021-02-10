@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   require Logger
 
-  alias Ms2ex.{Characters, Field, HotBars, Inventory, Metadata, Net, Packets, World}
+  alias Ms2ex.{Characters, Field, HotBars, Net, Packets, World}
 
   import Net.Session, only: [push: 2]
 
@@ -13,18 +13,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
     {:ok, _pid} = Field.enter(character, session)
 
-    items = Inventory.list_items(character)
-
-    session =
-      Enum.reduce(items, session, fn item, session ->
-        item = Metadata.Items.load(item)
-        push(session, Packets.InventoryItem.add_item({:create, item}))
-      end)
-
     hot_bars = HotBars.list(character)
-
-    session
-    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
+    push(session, Packets.KeyTable.send_hot_bars(hot_bars))
   end
 
   def maybe_change_map(world, %{change_map: new_map} = character) do

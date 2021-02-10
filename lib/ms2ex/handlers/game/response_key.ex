@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, LoginHandlers, Metadata, Net, Packets, Registries, World}
+  alias Ms2ex.{Characters, Inventory, LoginHandlers, Metadata, Net, Packets, Registries, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(get_inventory_tabs())
+      |> push_inventory_tab(character, get_inventory_tabs())
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -73,17 +73,18 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp get_inventory_tabs() do
-    Metadata.InventoryTab.mapping()
-    |> Map.keys()
-    |> Enum.map(&Map.get(Metadata.InventoryTab.mapping(), &1))
+    Map.values(Metadata.InventoryTab.mapping())
   end
 
-  defp push_inventory_tab(session, []), do: session
+  defp push_inventory_tab(session, _character, []), do: session
 
-  defp push_inventory_tab(session, [tab | tabs]) do
+  defp push_inventory_tab(session, character, [tab | tabs]) do
+    items = Inventory.list_tab_items(character, tab)
+
     session
-    |> push(Packets.InventoryItem.reset(tab))
-    |> push(Packets.InventoryItem.load(tab))
-    |> push_inventory_tab(tabs)
+    |> push(Packets.InventoryItem.reset_tab(tab))
+    |> push(Packets.InventoryItem.load_tab(tab))
+    |> push(Packets.InventoryItem.load_items(tab, items))
+    |> push_inventory_tab(character, tabs)
   end
 end

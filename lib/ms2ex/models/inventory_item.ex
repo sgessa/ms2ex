@@ -46,7 +46,7 @@ defmodule Ms2ex.Inventory.Item do
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
-    field :inventory_slot, :integer, default: -1
+    field :inventory_slot, :integer
     field :inventory_tab, InventoryTab
     field :location, Location, default: :inventory
     field :paired_character_id, :integer, virtual: true, default: 0

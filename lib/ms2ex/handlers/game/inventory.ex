@@ -11,6 +11,20 @@ defmodule Ms2ex.GameHandlers.Inventory do
     handle_mode(mode, packet, session)
   end
 
+  # Move / Swap
+  defp handle_mode(0x3, packet, session) do
+    {id, packet} = get_long(packet)
+    {dst_slot, _packet} = get_short(packet)
+
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         %Inventory.Item{inventory_slot: src_slot} = src_item <- Inventory.get(character, id),
+         {:ok, dst_uid} <- Inventory.swap(src_item, dst_slot) do
+      push(session, Packets.InventoryItem.move_item(dst_uid, src_slot, src_item.id, dst_slot))
+    else
+      _ -> session
+    end
+  end
+
   # Drop
   defp handle_mode(0x4, packet, session) do
     {id, packet} = get_long(packet)
@@ -35,6 +49,20 @@ defmodule Ms2ex.GameHandlers.Inventory do
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          %Inventory.Item{} = item <- Inventory.get(character, id) do
       update_inventory(session, Inventory.delete(item))
+    else
+      _ -> session
+    end
+  end
+
+  # Sort
+  defp handle_mode(0xA, packet, session) do
+    {tab, _packet} = get_short(packet)
+
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         {:ok, items} <- Inventory.sort_tab(character, tab) do
+      session
+      |> push(Packets.InventoryItem.reset_tab(tab))
+      |> push(Packets.InventoryItem.load_items(tab, items))
     else
       _ -> session
     end

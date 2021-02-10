@@ -6,15 +6,24 @@ defmodule Ms2ex.Inventory do
 
   def get_by(attrs), do: Repo.get_by(Item, attrs)
 
-  def all(%Character{id: char_id}) do
+  def all(%Character{id: character_id}) do
     Item
-    |> where([i], i.character_id == ^char_id)
+    |> where([i], i.character_id == ^character_id)
     |> Repo.all()
   end
 
-  def list_items(%Character{id: char_id}) do
+  def list_items(%Character{id: character_id}) do
     Item
-    |> where([i], i.character_id == ^char_id and i.location == ^:inventory)
+    |> where([i], i.character_id == ^character_id and i.location == ^:inventory)
+    |> order_by(asc: :inventory_slot)
+    |> Repo.all()
+  end
+
+  def list_tab_items(%Character{id: character_id}, inventory_tab) do
+    Item
+    |> where([i], i.character_id == ^character_id)
+    |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
+    |> order_by(asc: :inventory_slot)
     |> Repo.all()
   end
 
@@ -73,7 +82,8 @@ defmodule Ms2ex.Inventory do
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
     rarity = attrs.rarity || meta.rarity
-    attrs = %{attrs | inventory_tab: meta.tab, rarity: rarity}
+    slot = find_first_available_slot(character.id, meta.tab)
+    attrs = %{attrs | inventory_tab: meta.tab, rarity: rarity, inventory_slot: slot}
     attrs = Map.from_struct(attrs)
 
     changeset =
@@ -117,14 +127,17 @@ defmodule Ms2ex.Inventory do
     end
   end
 
-  def determine_inventory_slot(%Item{inventory_slot: -1}), do: -1
+  def find_first_available_slot(character_id, inventory_tab) do
+    slots =
+      Item
+      |> select([i], i.inventory_slot)
+      |> where([i], i.character_id == ^character_id)
+      |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
+      |> order_by(asc: :inventory_slot)
+      |> Repo.all()
 
-  def determine_inventory_slot(%Item{} = item) do
-    if item_in_slot(item.character_id, item.inventory_tab, item.inventory_slot) do
-      -1
-    else
-      item.inventory_slot
-    end
+    # TODO read inventory slots from DB
+    Enum.find(0..149, fn slot -> not Enum.member?(slots, slot) end) || {:error, :full_inventory}
   end
 
   def item_in_slot(char_id, tab, slot) do
@@ -133,5 +146,44 @@ defmodule Ms2ex.Inventory do
     |> where([i], i.inventory_tab == ^tab and i.inventory_slot == ^slot)
     |> limit(1)
     |> Repo.one()
+  end
+
+  def swap(%Item{} = src_item, dst_slot) do
+    Repo.transaction(fn ->
+      case item_in_slot(src_item.character_id, src_item.inventory_tab, dst_slot) do
+        %Item{} = dst_item ->
+          src_slot = src_item.inventory_slot
+
+          {:ok, src_item} = update_item(src_item, %{inventory_slot: nil})
+          {:ok, dst_item} = update_item(dst_item, %{inventory_slot: src_slot})
+          {:ok, _src_item} = update_item(src_item, %{inventory_slot: dst_slot})
+
+          dst_item.id
+
+        nil ->
+          {:ok, _src_item} = update_item(src_item, %{inventory_slot: dst_slot})
+          0
+      end
+    end)
+  end
+
+  def sort_tab(%Character{id: character_id}, inventory_tab) do
+    Repo.transaction(fn ->
+      Item
+      |> where([i], i.character_id == ^character_id)
+      |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
+      |> Repo.update_all(set: [inventory_slot: nil])
+
+      Item
+      |> where([i], i.character_id == ^character_id)
+      |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
+      |> order_by(asc: :item_id)
+      |> Repo.all()
+      |> Enum.with_index()
+      |> Enum.into([], fn {item, idx} ->
+        {:ok, item} = update_item(item, %{inventory_slot: idx})
+        item
+      end)
+    end)
   end
 end

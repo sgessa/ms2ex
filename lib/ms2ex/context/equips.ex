@@ -3,7 +3,7 @@ defmodule Ms2ex.Equips do
   alias Inventory.Item
 
   import Ecto.Query, except: [update: 2]
-  import Inventory, only: [update_item: 2, determine_inventory_slot: 1]
+  import Inventory, only: [update_item: 2, find_first_available_slot: 2]
 
   def list(%Character{id: char_id}) do
     Item
@@ -41,11 +41,11 @@ defmodule Ms2ex.Equips do
   end
 
   def equip(equip_slot, %Item{location: :inventory} = item) do
-    update_item(item, %{equip_slot: equip_slot, location: :equipment})
+    update_item(item, %{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
   end
 
   def unequip(%Item{} = item) do
-    with slot <- determine_inventory_slot(item),
+    with slot <- find_first_available_slot(item.character_id, item.inventory_tab),
          {:ok, item} <-
            update_item(item, %{equip_slot: :NONE, inventory_slot: slot, location: :inventory}) do
       {:ok, item}
