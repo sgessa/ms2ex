@@ -27,6 +27,12 @@ defmodule Ms2ex.FieldHelper do
     sessions = Map.put(state.sessions, character.id, session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
 
+    # Load Mobs
+    for {_id, mob} <- state.mobs do
+      send(session_pid, {:push, Packets.FieldAddNpc.add_mob(mob)})
+      send(session_pid, {:push, Packets.ProxyGameObj.load_npc(mob)})
+    end
+
     # Load NPCs
     for {_id, npc} <- state.npcs do
       send(session_pid, {:push, Packets.FieldAddNpc.add_npc(npc)})
@@ -74,6 +80,7 @@ defmodule Ms2ex.FieldHelper do
     {counter, portals} = load_portals(map, counter)
 
     %{
+      bosses: %{},
       channel_id: channel_id,
       counter: counter,
       field_id: map_id,
@@ -92,6 +99,7 @@ defmodule Ms2ex.FieldHelper do
     |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
     |> Enum.filter(&(&1.friendly == 2))
     |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
+      npc = Map.put(npc, :direction, npc.rotation.z * 10)
       npc = Map.put(npc, :object_id, counter)
       {counter + 1, Map.put(npcs, npc.id, npc)}
     end)

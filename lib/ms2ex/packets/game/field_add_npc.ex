@@ -55,6 +55,29 @@ defmodule Ms2ex.Packets.FieldAddNpc do
     |> put_byte()
   end
 
+  def add_boss(mob) do
+    branches = 0
+
+    __MODULE__
+    |> build()
+    |> put_int(mob.object_id)
+    |> put_int(mob.id)
+    |> put_coord(mob.position)
+    |> put_coord()
+    |> put_string(mob.model)
+    |> put_mob_stats(mob)
+    |> put_long()
+    |> put_long()
+    |> put_int()
+    |> put_byte()
+    |> put_int(branches)
+    |> put_long()
+    |> put_byte()
+    |> put_int(0x1)
+    |> put_int()
+    |> put_byte()
+  end
+
   defp put_mob_stats(packet, mob) do
     flag = 0x23
 

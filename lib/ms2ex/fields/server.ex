@@ -55,6 +55,16 @@ defmodule Ms2ex.FieldServer do
     end
   end
 
+  def handle_call({:add_boss, mob}, _from, state) do
+    mob = Map.put(mob, :object_id, state.counter)
+    bosses = Map.put(state.bosses, state.counter, mob)
+
+    broadcast(state.sessions, Packets.FieldAddNpc.add_boss(mob))
+    broadcast(state.sessions, Packets.ProxyGameObj.load_npc(mob))
+
+    {:reply, {:ok, mob}, %{state | counter: state.counter + 1, bosses: bosses}}
+  end
+
   def handle_call({:add_mob, mob}, _from, state) do
     mob = Map.put(mob, :object_id, state.counter)
     mobs = Map.put(state.mobs, state.counter, mob)
@@ -74,12 +84,16 @@ defmodule Ms2ex.FieldServer do
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
 
+    for {_id, mob} <- state.bosses do
+      broadcast(state.sessions, Packets.ControlNpc.control(:boss, mob))
+    end
+
     for {_id, mob} <- state.mobs do
-      broadcast(state.sessions, Packets.ControlNpc.bytes(mob))
+      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
     end
 
     for {_id, npc} <- state.npcs do
-      broadcast(state.sessions, Packets.ControlNpc.bytes(npc))
+      broadcast(state.sessions, Packets.ControlNpc.control(:npc, npc))
     end
 
     for {_id, char} <- World.get_characters(state.world, character_ids) do
