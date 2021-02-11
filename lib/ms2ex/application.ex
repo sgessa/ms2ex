@@ -11,6 +11,7 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.Insignias.store()
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()
+    Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
 
     start_login_server()

@@ -75,6 +75,8 @@ defmodule Ms2ex.Packets do
     0x47 => "CHARACTER_CREATE",
     0x49 => "ADD_PORTAL",
     0x4A => "JOB",
+    0x56 => "FIELD_ADD_NPC",
+    0x59 => "CONTROL_NPC",
     0x63 => "BUDDY_LIST",
     0x6D => "UGC",
     0x71 => "KEY_TABLE",

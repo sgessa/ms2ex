@@ -20,17 +20,23 @@ defmodule Ms2ex.FieldHelper do
       end
     end
 
-    # Load portals
-    for {_id, portal} <- state.portals do
-      send(session_pid, {:push, Packets.AddPortal.bytes(portal)})
-    end
-
     # Update registry
     character = %{character | object_id: state.counter, map_id: state.field_id}
     World.update_character(state.world, character)
 
     sessions = Map.put(state.sessions, character.id, session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
+
+    # Load NPCs
+    for {_id, npc} <- state.npcs do
+      send(session_pid, {:push, Packets.FieldAddNpc.bytes(npc)})
+      send(session_pid, {:push, Packets.ProxyGameObj.load_npc(npc)})
+    end
+
+    # Load portals
+    for {_id, portal} <- state.portals do
+      send(session_pid, {:push, Packets.AddPortal.bytes(portal)})
+    end
 
     # Tell other characters in the map to load the new player
     broadcast(state.sessions, Packets.FieldAddUser.bytes(character))
@@ -64,11 +70,8 @@ defmodule Ms2ex.FieldHelper do
   def initialize_state(world, map_id, channel_id) do
     {:ok, map} = Metadata.Maps.lookup(map_id)
 
-    {counter, portals} =
-      Enum.reduce(map.portals, {@object_counter, %{}}, fn portal, {counter, portals} ->
-        portal = Map.put(portal, :object_id, counter)
-        {counter + 1, Map.put(portals, portal.id, portal)}
-      end)
+    {counter, npcs} = load_npcs(map, @object_counter)
+    {counter, portals} = load_portals(map, counter)
 
     %{
       channel_id: channel_id,
@@ -76,10 +79,28 @@ defmodule Ms2ex.FieldHelper do
       field_id: map_id,
       items: %{},
       mounts: %{},
+      npcs: npcs,
       portals: portals,
       sessions: %{},
       world: world
     }
+  end
+
+  defp load_npcs(map, counter) do
+    map.npcs
+    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
+    |> Enum.filter(&(&1.friendly == 2))
+    |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
+      npc = Map.put(npc, :object_id, counter)
+      {counter + 1, Map.put(npcs, npc.id, npc)}
+    end)
+  end
+
+  defp load_portals(map, counter) do
+    Enum.reduce(map.portals, {counter, %{}}, fn portal, {counter, portals} ->
+      portal = Map.put(portal, :object_id, counter)
+      {counter + 1, Map.put(portals, portal.id, portal)}
+    end)
   end
 
   def broadcast(sessions, packet, sender_pid \\ nil) do

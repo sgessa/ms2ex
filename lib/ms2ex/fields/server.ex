@@ -64,6 +64,10 @@ defmodule Ms2ex.FieldServer do
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
 
+    for {_id, npc} <- state.npcs do
+      broadcast(state.sessions, Packets.ControlNpc.bytes(npc))
+    end
+
     for {_id, char} <- World.get_characters(state.world, character_ids) do
       broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
     end
