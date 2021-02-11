@@ -2,6 +2,7 @@ defmodule Ms2ex.SyncState do
   use Ecto.Schema
 
   alias Ms2ex.{EctoTypes, Packets}
+  alias Ms2ex.Metadata.Coord
 
   import Bitwise
   import EctoEnum
@@ -10,16 +11,18 @@ defmodule Ms2ex.SyncState do
 
   defenum(Flag, none: 0, flag1: 1, flag2: 2, flag3: 4, flag4: 8, flag5: 16, flag6: 32)
 
+  @default_coord %Coord{x: 0, y: 0, z: 0}
+
   schema "virtual: sync_states" do
     field :animation1, :integer, default: 0
     field :animation2, :integer, default: 0
     field :animation3, :integer, default: 0
     field :flag, :integer, default: 0
-    field :position, EctoTypes.Term, default: {0, 0, 0}
+    field :position, EctoTypes.Term, default: @default_coord
     field :rotation, :integer, default: 0
     field :unknown_float_1, :float, default: 0
     field :unknown_float_2, :float, default: 0
-    field :speed, EctoTypes.Term, default: {0, 0, 0}
+    field :speed, EctoTypes.Term, default: @default_coord
     field :unknown1, :integer, default: 0
     field :unknown2, :integer, default: 0
     field :unknown3, :integer, default: 0
@@ -27,11 +30,11 @@ defmodule Ms2ex.SyncState do
 
     # Flags
     field :unknown_flag_1, EctoTypes.Term, default: {0, 0}
-    field :unknown_flag_2, EctoTypes.Term, default: {{0, 0, 0}, ""}
+    field :unknown_flag_2, EctoTypes.Term, default: {@default_coord, ""}
     field :unknown_flag_3, EctoTypes.Term, default: {0, ""}
     field :unknown_flag_4, :string, default: ""
     field :unknown_flag_5, EctoTypes.Term, default: {0, ""}
-    field :unknown_flag_6, EctoTypes.Term, default: {0, 0, 0, {0, 0, 0}, {0, 0, 0}}
+    field :unknown_flag_6, EctoTypes.Term, default: {0, 0, 0, @default_coord, @default_coord}
   end
 
   def from_packet(packet) do

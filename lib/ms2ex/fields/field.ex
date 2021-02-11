@@ -1,9 +1,26 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{FieldServer, Net, Packets, World}
+  alias Ms2ex.{FieldServer, Metadata, Net, Packets, World}
 
-  def add_character(character) do
+  def add_item(character, item) do
     pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:add_character, character})
+    item = Map.put(item, :position, character.position)
+    item = Map.put(item, :character_object_id, character.object_id)
+    call(pid, {:add_item, item})
+  end
+
+  def remove_item(character, object_id) do
+    pid = field_pid(character.map_id, character.channel_id)
+    call(pid, {:remove_item, object_id})
+  end
+
+  def add_mob(character, mob) do
+    pid = field_pid(character.map_id, character.channel_id)
+    call(pid, {:add_mob, mob})
+  end
+
+  def damage_mobs(character, skill_cast, value, coord, object_ids) do
+    pid = field_pid(character.map_id, character.channel_id)
+    call(pid, {:damage_mobs, character, skill_cast, value, coord, object_ids})
   end
 
   def add_object(character, object) do
@@ -26,10 +43,18 @@ defmodule Ms2ex.Field do
     pid = field_pid(field_id, channel_id)
 
     if pid do
-      send(pid, {:add_character, character})
-      {:ok, pid}
+      call(pid, {:add_character, character})
     else
       GenServer.start(FieldServer, {character, session}, name: field_name(field_id, channel_id))
+    end
+  end
+
+  def change_field(character, session, field_id) do
+    with {:ok, map} <- Metadata.Maps.lookup(field_id) do
+      spawn = List.first(map.spawns)
+      change_field(character, session, field_id, spawn.coord, spawn.rotation)
+    else
+      _ -> session
     end
   end
 
@@ -49,7 +74,7 @@ defmodule Ms2ex.Field do
 
   def leave(character) do
     pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:remove_character, character.id})
+    call(pid, {:remove_character, character})
   end
 
   def push(session_pid, packet), do: send(session_pid, {:push, packet})

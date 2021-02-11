@@ -1,5 +1,5 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, World}
+  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, Wallets, World}
 
   import Net.Session, only: [push: 2, push_notice: 3]
 
@@ -7,7 +7,8 @@ defmodule Ms2ex.Commands do
     Enum.reduce(ids, session, fn item_id, session ->
       with {item_id, _} <- Integer.parse(item_id),
            {:ok, meta} <- Metadata.Items.lookup(item_id) do
-        item = %Inventory.Item{item_id: item_id, metadata: meta}
+        flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
+        item = %Inventory.Item{item_id: item_id, transfer_flags: flags, metadata: meta}
         add_item(character, item, session)
       else
         _ ->
@@ -30,13 +31,45 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["map", map_id], character, session) do
-    with {map_id, _} <- Integer.parse(map_id),
-         {:ok, map} <- Metadata.Maps.lookup(map_id) do
-      spawn = List.first(map.spawns)
-      Field.change_field(character, session, map_id, spawn.coord, spawn.rotation)
+    with {map_id, _} <- Integer.parse(map_id) do
+      Field.change_field(character, session, map_id)
     else
       _ ->
         push_notice(session, character, "Invalid Map: #{map_id}")
+    end
+  end
+
+  def handle(["boss", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
+      Field.add_mob(character, %{mob | boss?: true, position: character.position})
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
+
+  def handle(["mob", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
+      Field.add_mob(character, %{mob | position: character.position})
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
+
+  def handle([currency, amount], character, session) when currency in ["merets", "mesos"] do
+    currency = String.to_existing_atom(currency)
+
+    with {amount, _} <- Integer.parse(amount),
+         {:ok, wallet} <- Wallets.update(character, currency, amount) do
+      push(session, Packets.Wallet.update(currency, Map.get(wallet, currency)))
+    else
+      _ ->
+        push_notice(session, character, "Invalid amount: #{amount}")
     end
   end
 
@@ -51,9 +84,7 @@ defmodule Ms2ex.Commands do
             push_notice(session, character, "Already in the same map")
 
           true ->
-            {:ok, map} = Metadata.Maps.lookup(target.map_id)
-            spawn = List.first(map.spawns)
-            Field.change_field(character, session, map.id, spawn.coord, spawn.rotation)
+            Field.change_field(character, session, target.map_id)
         end
 
       _ ->

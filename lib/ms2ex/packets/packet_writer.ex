@@ -31,18 +31,20 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_float()
   end
 
-  def put_deflated(packet, data, length) when length <= 4 do
+  def put_deflated(packet, data) when byte_size(data) <= 4 do
     packet
-    |> put_int(length)
+    |> put_bool(false)
+    |> put_int(byte_size(data))
     |> put_bytes(data)
   end
 
-  def put_deflated(packet, data, length) do
+  def put_deflated(packet, data) do
     deflated_data = deflate(data)
 
     packet
+    |> put_bool(true)
     |> put_int(byte_size(deflated_data) + 4)
-    |> put_int_big(length)
+    |> put_int_big(byte_size(data))
     |> put_bytes(deflated_data)
   end
 
@@ -76,9 +78,16 @@ defmodule Ms2ex.Packets.PacketWriter do
 
   def put_short_coord(packet, %{x: x, y: y, z: z}) do
     packet
-    |> put_short(x)
-    |> put_short(y)
-    |> put_short(z)
+    |> put_short(trunc(x))
+    |> put_short(trunc(y))
+    |> put_short(trunc(z))
+  end
+
+  def put_short_coord(packet) do
+    packet
+    |> put_short()
+    |> put_short()
+    |> put_short()
   end
 
   def put_string(packet, str \\ "") do

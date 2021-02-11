@@ -5,7 +5,7 @@ defmodule Ms2ex.Metadata.MapNpc do
   defstruct [:id, :coord, :rotation]
 
   field :id, 1, type: :int32
-  field :coord, 2, type: Ms2ex.Metadata.Coord
+  field :position, 2, type: Ms2ex.Metadata.Coord
   field :rotation, 3, type: Ms2ex.Metadata.Coord
 end
 

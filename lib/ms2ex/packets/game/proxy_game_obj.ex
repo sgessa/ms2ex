@@ -7,7 +7,8 @@ defmodule Ms2ex.Packets.ProxyGameObj do
 
   @modes %{
     load_player: 0x3,
-    update_player: 0x5
+    update_player: 0x5,
+    load_npc: 0x6
   }
 
   @updates %{
@@ -106,6 +107,17 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     else
       packet
     end
+  end
+
+  def load_npc(npc) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.load_npc)
+    |> put_int(npc.object_id)
+    |> put_int(npc.id)
+    |> put_byte()
+    |> put_int(200)
+    |> put_coord(npc.position)
   end
 
   defp has_bit?(flag, bit), do: (flag &&& flag(bit)) != 0

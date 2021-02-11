@@ -19,6 +19,7 @@ defmodule Ms2ex.Net.Session do
   @block_iv @conf[:initial_block_iv] || @version
 
   def start_link(ref, socket, transport, opts) do
+    # We do not want the listener to go down if the session crashes
     GenServer.start(__MODULE__, {ref, socket, transport, opts}, [])
   end
 

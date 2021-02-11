@@ -78,7 +78,8 @@ defmodule Ms2ex.World do
 
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
     case Enum.find(state.characters, fn {_, %{session_pid: char_pid}} -> pid == char_pid end) do
-      {char_id, _char} ->
+      {char_id, character} ->
+        Ms2ex.Field.leave(character)
         characters = Map.delete(state.characters, char_id)
         {:noreply, %{state | characters: characters}}
 

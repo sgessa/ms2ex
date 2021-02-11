@@ -1,27 +1,9 @@
 defmodule Ms2ex.Net.Listener do
   require Logger
 
-  def start_link(conf) do
-    log_start(conf)
-
-    :ranch.start_listener(
-      conf[:id],
-      100,
-      :ranch_tcp,
-      [port: conf.port],
-      Ms2ex.Net.Session,
-      conf
-    )
-  end
-
-  def child_spec(opts) do
-    %{
-      id: opts[:id],
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
+  def start(opts) do
+    log_start(opts)
+    :ranch.start_listener(opts.id, :ranch_tcp, [port: opts.port], Ms2ex.Net.Session, opts)
   end
 
   defp log_start(%{type: :channel} = conf) do

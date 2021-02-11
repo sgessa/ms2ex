@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{Field, FieldHelper, Packets, World}
+  alias Ms2ex.{FieldHelper, Packets, World}
 
   import FieldHelper
 
@@ -12,10 +12,55 @@ defmodule Ms2ex.FieldServer do
   def init({character, session}) do
     Logger.info("Start Field #{character.map_id} @ Channel #{session.channel_id}")
 
-    send(self(), {:add_character, character})
     send(self(), :send_updates)
 
-    {:ok, initialize_state(session.world, character.map_id, session.channel_id)}
+    {
+      :ok,
+      initialize_state(session.world, character.map_id, session.channel_id),
+      {:continue, {:add_character, character}}
+    }
+  end
+
+  def handle_continue({:add_character, character}, state) do
+    {:noreply, add_character(character, state)}
+  end
+
+  def handle_call({:add_character, character}, _from, state) do
+    {:reply, {:ok, self()}, add_character(character, state)}
+  end
+
+  def handle_call({:remove_character, character}, _from, state) do
+    send(self(), :maybe_stop)
+    {:reply, :ok, remove_character(character, state)}
+  end
+
+  def handle_call({:add_item, item}, _from, state) do
+    item = Map.put(item, :object_id, state.counter)
+    items = Map.put(state.items, state.counter, item)
+
+    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
+
+    {:reply, {:ok, item}, %{state | counter: state.counter + 1, items: items}}
+  end
+
+  def handle_call({:remove_item, object_id}, _from, state) do
+    case Map.get(state.items, object_id) do
+      nil ->
+        {:reply, :error, state}
+
+      item ->
+        items = Map.delete(state.items, object_id)
+        broadcast(state.sessions, Packets.FieldRemoveItem.bytes(object_id))
+        {:reply, {:ok, item}, %{state | items: items}}
+    end
+  end
+
+  def handle_call({:add_mob, mob}, _from, state) do
+    {:reply, {:ok, mob}, add_mob(mob, state)}
+  end
+
+  def handle_call({:damage_mobs, character, cast, value, coord, object_ids}, _from, state) do
+    {:reply, :ok, damage_mobs(character, cast, value, coord, object_ids, state)}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do
@@ -24,17 +69,23 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
-  def handle_call({:remove_character, character_id}, _from, state) do
-    state = remove_character(character_id, state)
-    send(self(), :maybe_stop)
-    {:reply, :ok, state}
+  def handle_info({:remove_mob, mob}, state) do
+    {:noreply, remove_mob(mob, state)}
   end
 
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
 
+    for {_id, mob} <- state.mobs do
+      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
+    end
+
+    for {_id, npc} <- state.npcs do
+      broadcast(state.sessions, Packets.ControlNpc.control(:npc, npc))
+    end
+
     for {_id, char} <- World.get_characters(state.world, character_ids) do
-      Field.broadcast(self(), Packets.ProxyGameObj.update_player(char))
+      broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)
@@ -42,15 +93,8 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_character, character}, state) do
-    {:noreply, add_character(character, state)}
-  end
-
   def handle_info({:broadcast, packet, sender_pid}, state) do
-    for {_char_id, pid} <- state.sessions, pid != sender_pid do
-      send(pid, {:push, packet})
-    end
-
+    broadcast(state.sessions, packet, sender_pid)
     {:noreply, state}
   end
 
@@ -69,17 +113,5 @@ defmodule Ms2ex.FieldServer do
     end
 
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, _, _, pid, _reason}, state) do
-    case Enum.find(state.sessions, fn {_, char_pid} -> pid == char_pid end) do
-      {char_id, _} ->
-        state = remove_character(char_id, state)
-        send(self(), :maybe_stop)
-        {:noreply, state}
-
-      _ ->
-        {:noreply, state}
-    end
   end
 end

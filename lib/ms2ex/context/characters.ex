@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Character, Metadata, Repo, Skills, Account}
+  alias Ms2ex.{Character, Emotes, Metadata, Repo, Skills, Account}
 
   import Ecto.Query
 
@@ -11,9 +11,13 @@ defmodule Ms2ex.Characters do
   end
 
   def create(%Account{} = account, attrs) do
+    emotes = Enum.map(Emotes.default_emotes(), &%{emote_id: &1})
+    attrs = Map.put(attrs, :emotes, emotes)
+
     attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
     attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
     attrs = Map.put(attrs, :stats, %{})
+    attrs = Map.put(attrs, :wallet, %{})
 
     changeset =
       account
@@ -73,5 +77,19 @@ defmodule Ms2ex.Characters do
 
   def load_equips(%Character{} = character) do
     %{character | equips: Ms2ex.Equips.list(character)}
+  end
+
+  def list_titles(%Character{id: character_id}) do
+    Ms2ex.CharacterTitle
+    |> where([t], t.character_id == ^character_id)
+    |> select([t], t.title_id)
+    |> Repo.all()
+  end
+
+  def get_wallet(%Character{id: character_id}) do
+    Ms2ex.Wallet
+    |> where([w], w.character_id == ^character_id)
+    |> limit(1)
+    |> Repo.one()
   end
 end
