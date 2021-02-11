@@ -124,4 +124,11 @@ defmodule Ms2ex.Metadata.Npcs do
       _ -> nil
     end
   end
+
+  def lookup(npc_id) do
+    case get(npc_id) do
+      nil -> :error
+      mob -> {:ok, mob}
+    end
+  end
 end

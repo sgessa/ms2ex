@@ -55,6 +55,16 @@ defmodule Ms2ex.FieldServer do
     end
   end
 
+  def handle_call({:add_mob, mob}, _from, state) do
+    mob = Map.put(mob, :object_id, state.counter)
+    mobs = Map.put(state.mobs, state.counter, mob)
+
+    broadcast(state.sessions, Packets.FieldAddNpc.add_mob(mob))
+    broadcast(state.sessions, Packets.ProxyGameObj.load_npc(mob))
+
+    {:reply, {:ok, mob}, %{state | counter: state.counter + 1, mobs: mobs}}
+  end
+
   def handle_call({:add_object, :mount, mount}, _from, state) do
     mount = Map.put(mount, :object_id, state.counter)
     mounts = Map.put(state.mounts, mount.character_id, mount)
@@ -63,6 +73,10 @@ defmodule Ms2ex.FieldServer do
 
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
+
+    for {_id, mob} <- state.mobs do
+      broadcast(state.sessions, Packets.ControlNpc.bytes(mob))
+    end
 
     for {_id, npc} <- state.npcs do
       broadcast(state.sessions, Packets.ControlNpc.bytes(npc))

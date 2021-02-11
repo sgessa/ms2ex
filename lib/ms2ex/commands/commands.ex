@@ -39,6 +39,19 @@ defmodule Ms2ex.Commands do
     end
   end
 
+  def handle(["mob", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
+      mob = Map.put(mob, :direction, 2700)
+      mob = %{mob | animation: -1, position: character.position}
+      Field.add_mob(character, mob)
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
+
   def handle([currency, amount], character, session) when currency in ["merets", "mesos"] do
     currency = String.to_existing_atom(currency)
 

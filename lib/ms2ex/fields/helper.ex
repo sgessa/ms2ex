@@ -29,7 +29,7 @@ defmodule Ms2ex.FieldHelper do
 
     # Load NPCs
     for {_id, npc} <- state.npcs do
-      send(session_pid, {:push, Packets.FieldAddNpc.bytes(npc)})
+      send(session_pid, {:push, Packets.FieldAddNpc.add_npc(npc)})
       send(session_pid, {:push, Packets.ProxyGameObj.load_npc(npc)})
     end
 
@@ -78,6 +78,7 @@ defmodule Ms2ex.FieldHelper do
       counter: counter,
       field_id: map_id,
       items: %{},
+      mobs: %{},
       mounts: %{},
       npcs: npcs,
       portals: portals,
