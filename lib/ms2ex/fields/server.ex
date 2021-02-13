@@ -73,6 +73,10 @@ defmodule Ms2ex.FieldServer do
     {:noreply, remove_mob(mob, state)}
   end
 
+  def handle_info({:respawn_mob, mob}, state) do
+    {:noreply, respawn_mob(mob, state)}
+  end
+
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
 

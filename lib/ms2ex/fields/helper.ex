@@ -94,6 +94,13 @@ defmodule Ms2ex.FieldHelper do
     %{state | mobs: mobs}
   end
 
+  def respawn_mob(mob, state) do
+    meta = Metadata.Npcs.get(mob.id)
+    mob = %{mob | stats: meta.stats}
+    add_mob(mob, state)
+  end
+
+  @respawn_intval 10_000
   def damage_mobs(character, cast, value, coord, object_ids, state) do
     targets =
       state.mobs
@@ -110,6 +117,7 @@ defmodule Ms2ex.FieldHelper do
             {:dead, target} ->
               broadcast(state.sessions, Packets.PlayerStats.update_health(target))
               Process.send_after(self(), {:remove_mob, target}, 5000)
+              Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
               target
           end
 
