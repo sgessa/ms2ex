@@ -55,10 +55,6 @@ defmodule Ms2ex.FieldServer do
     end
   end
 
-  def handle_call({:add_mob, mob}, _from, state) do
-    {:reply, {:ok, mob}, add_mob(mob, state)}
-  end
-
   def handle_call({:damage_mobs, character, cast, value, coord, object_ids}, _from, state) do
     {:reply, :ok, damage_mobs(character, cast, value, coord, object_ids, state)}
   end
@@ -69,6 +65,10 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
+  def handle_info({:add_mob, mob}, state) do
+    {:noreply, add_mob(mob, state)}
+  end
+
   def handle_info({:remove_mob, mob}, state) do
     {:noreply, remove_mob(mob, state)}
   end
@@ -76,8 +76,8 @@ defmodule Ms2ex.FieldServer do
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
 
-    for {_id, mob} <- state.mobs do
-      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
+    for {_id, %{stats: %{hp: hp}} = mob} <- state.mobs do
+      if hp.total > 0, do: broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
     end
 
     for {_id, npc} <- state.npcs do

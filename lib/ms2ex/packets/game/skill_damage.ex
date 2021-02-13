@@ -21,7 +21,7 @@ defmodule Ms2ex.Packets.SkillDamage do
       |> put_int(mob.object_id)
       |> put_byte(0x1)
       |> put_bool(dmg.is_critical)
-      |> put_long(dmg.dmg)
+      |> put_long(-dmg.dmg)
     end)
   end
 end

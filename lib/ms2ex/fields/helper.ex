@@ -78,6 +78,7 @@ defmodule Ms2ex.FieldHelper do
         mob.stats.hp.total
       end)
 
+    mob = Map.put(mob, :direction, mob.rotation.z * 10)
     mob = Map.put(mob, :object_id, state.counter)
     mobs = Map.put(state.mobs, state.counter, mob)
 
@@ -108,7 +109,7 @@ defmodule Ms2ex.FieldHelper do
 
             {:dead, target} ->
               broadcast(state.sessions, Packets.PlayerStats.update_health(target))
-              send(self(), {:remove_mob, target})
+              Process.send_after(self(), {:remove_mob, target}, 5000)
               target
           end
 
@@ -131,6 +132,8 @@ defmodule Ms2ex.FieldHelper do
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
 
+    load_mobs(map)
+
     %{
       channel_id: channel_id,
       counter: counter,
@@ -143,6 +146,14 @@ defmodule Ms2ex.FieldHelper do
       sessions: %{},
       world: world
     }
+  end
+
+  defp load_mobs(map) do
+    map.npcs
+    |> Enum.map(&Map.delete(&1, :__struct__))
+    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
+    |> Enum.filter(&(&1.friendly != 2))
+    |> Enum.each(&send(self(), {:add_mob, &1}))
   end
 
   defp load_npcs(map, counter) do

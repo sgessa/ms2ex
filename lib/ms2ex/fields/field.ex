@@ -15,7 +15,7 @@ defmodule Ms2ex.Field do
 
   def add_mob(character, mob) do
     pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:add_mob, mob})
+    send(pid, {:add_mob, mob})
   end
 
   def damage_mobs(character, skill_cast, value, coord, object_ids) do
