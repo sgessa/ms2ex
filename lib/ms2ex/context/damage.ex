@@ -11,15 +11,15 @@ defmodule Ms2ex.Damage do
   end
 
   def apply_damage(%Npc{stats: %{hp: hp}} = npc, %{dmg: dmg} = damage) do
-    hp = hp.total - dmg
+    hp = hp.max - dmg
     hp = if hp < 0, do: 0, else: hp
 
     npc =
       npc
-      |> update_in([key!(:stats), key!(:hp), key!(:total)], fn _ -> hp end)
+      |> update_in([key!(:stats), key!(:hp), key!(:max)], fn _ -> hp end)
       |> Map.put(:damage, damage)
 
-    if npc.stats.hp.total <= 0 do
+    if npc.stats.hp.max <= 0 do
       {:dead, npc}
     else
       {:alive, npc}

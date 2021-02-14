@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Damage, Emotes, Field, Metadata, Packets, World}
+  alias Ms2ex.{Damage, Emotes, Field, Inventory, Metadata, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -72,6 +72,15 @@ defmodule Ms2ex.FieldHelper do
     %{state | mounts: mounts, sessions: sessions}
   end
 
+  def add_item(item, state) do
+    item = Map.put(item, :object_id, state.counter)
+    items = Map.put(state.items, state.counter, item)
+
+    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
+
+    %{state | counter: state.counter + 1, items: items}
+  end
+
   def add_mob(mob, state) do
     mob =
       update_in(mob, [Access.key!(:stats), Access.key!(:hp), Access.key!(:max)], fn _ ->
@@ -116,6 +125,7 @@ defmodule Ms2ex.FieldHelper do
 
             {:dead, target} ->
               broadcast(state.sessions, Packets.PlayerStats.update_health(target))
+              # send(self(), {:death_mob, character, target})
               Process.send_after(self(), {:remove_mob, target}, 5000)
               Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
               target
@@ -131,6 +141,39 @@ defmodule Ms2ex.FieldHelper do
 
     mobs = Map.merge(state.mobs, targets)
     %{state | mobs: mobs}
+  end
+
+  def process_mob_death(character, mob, state) do
+    reward_exp(character, mob)
+    add_mob_loots(character, mob, state)
+  end
+
+  defp add_mob_loots(character, mob, state) do
+    Enum.reduce(mob.drop_box_ids, state, fn id, state ->
+      item = %Inventory.Item{item_id: id}
+
+      case Metadata.Items.load(item) do
+        %{metadata: nil} ->
+          state
+
+        item ->
+          item = Map.put(item, :position, mob.position)
+          item = Map.put(item, :character_object_id, character.object_id)
+          add_item(item, state)
+      end
+    end)
+  end
+
+  # TODO Maybe Level Up character
+  defp reward_exp(character, mob) do
+    current_exp = character.exp
+    rest_exp = character.rest_exp
+    exp_gained = mob.exp
+
+    character = Ms2ex.Characters.add_exp(character, exp_gained)
+
+    exp_packet = Packets.Experience.bytes(exp_gained, current_exp + exp_gained, rest_exp)
+    send(self(), {:push, character.id, exp_packet})
   end
 
   @object_counter 10_000_001

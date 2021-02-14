@@ -35,12 +35,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_call({:add_item, item}, _from, state) do
-    item = Map.put(item, :object_id, state.counter)
-    items = Map.put(state.items, state.counter, item)
-
-    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
-
-    {:reply, {:ok, item}, %{state | counter: state.counter + 1, items: items}}
+    {:reply, {:ok, item}, add_item(item, state)}
   end
 
   def handle_call({:remove_item, object_id}, _from, state) do
@@ -71,6 +66,10 @@ defmodule Ms2ex.FieldServer do
 
   def handle_info({:remove_mob, mob}, state) do
     {:noreply, remove_mob(mob, state)}
+  end
+
+  def handle_info({:death_mob, character, mob}, state) do
+    {:noreply, process_mob_death(character, mob, state)}
   end
 
   def handle_info({:respawn_mob, mob}, state) do

@@ -140,8 +140,12 @@ defmodule Ms2ex.Metadata.Items do
 
   def load(item) do
     case lookup(item.item_id) do
-      {:ok, meta} -> %{item | metadata: meta}
-      :error -> item
+      {:ok, meta} ->
+        rarity = item.rarity || meta.rarity
+        %{item | metadata: meta, rarity: rarity}
+
+      :error ->
+        item
     end
   end
 
