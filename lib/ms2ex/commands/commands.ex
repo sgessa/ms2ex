@@ -42,9 +42,7 @@ defmodule Ms2ex.Commands do
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
-      mob = Map.put(mob, :direction, 2700)
-      mob = %{mob | animation: -1, position: character.position}
-      Field.add_boss(character, mob)
+      Field.add_mob(character, %{mob | boss?: true, position: character.position})
       session
     else
       _ ->
@@ -55,9 +53,7 @@ defmodule Ms2ex.Commands do
   def handle(["mob", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
-      mob = Map.put(mob, :direction, 2700)
-      mob = %{mob | animation: -1, position: character.position}
-      Field.add_mob(character, mob)
+      Field.add_mob(character, %{mob | position: character.position})
       session
     else
       _ ->

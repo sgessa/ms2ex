@@ -8,6 +8,8 @@ defmodule Ms2ex.Application do
   @config Application.get_env(:ms2ex, Ms2ex)
 
   def start(_type, _args) do
+    Registries.SkillCasts.start()
+
     Ms2ex.Metadata.Insignias.store()
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()

@@ -13,14 +13,14 @@ defmodule Ms2ex.Field do
     call(pid, {:remove_item, object_id})
   end
 
-  def add_boss(character, mob) do
-    pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:add_boss, mob})
-  end
-
   def add_mob(character, mob) do
     pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:add_mob, mob})
+    send(pid, {:add_mob, mob})
+  end
+
+  def damage_mobs(character, skill_cast, value, coord, object_ids) do
+    pid = field_pid(character.map_id, character.channel_id)
+    call(pid, {:damage_mobs, character, skill_cast, value, coord, object_ids})
   end
 
   def add_object(character, object) do

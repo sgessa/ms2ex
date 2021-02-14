@@ -3,11 +3,11 @@ defmodule Ms2ex.Packets.Skill do
 
   import Packets.PacketWriter
 
-  def use_skill(skill_cast, coords) do
+  def use_skill(skill_cast, value, coords) do
     __MODULE__
     |> build()
     |> put_long(skill_cast.id)
-    |> put_int(skill_cast.value)
+    |> put_int(value)
     |> put_int(skill_cast.skill_id)
     |> put_short(skill_cast.level)
     |> put_byte()

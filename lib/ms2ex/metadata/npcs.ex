@@ -72,7 +72,7 @@ defmodule Ms2ex.Metadata.Npc do
     :rotation,
     :speed,
     :position,
-    :animation
+    animation: 255
   ]
 
   field :id, 1, type: :int32
@@ -90,6 +90,9 @@ defmodule Ms2ex.Metadata.Npc do
   field :speed, 13, type: Coord
   field :position, 14, type: Coord
   field :animation, 15, type: :int32
+
+  @extra %{boss?: false, direction: 2700}
+  def extra_fields(), do: @extra
 end
 
 defmodule Ms2ex.Metadata.Npcs do
@@ -120,7 +123,7 @@ defmodule Ms2ex.Metadata.Npcs do
 
   def get(npc_id) do
     case :ets.lookup(@table, npc_id) do
-      [{_id, %Npc{} = meta}] -> meta
+      [{_id, %Npc{} = meta}] -> Map.merge(meta, Npc.extra_fields())
       _ -> nil
     end
   end

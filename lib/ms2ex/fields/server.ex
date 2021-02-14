@@ -35,12 +35,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_call({:add_item, item}, _from, state) do
-    item = Map.put(item, :object_id, state.counter)
-    items = Map.put(state.items, state.counter, item)
-
-    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
-
-    {:reply, {:ok, item}, %{state | counter: state.counter + 1, items: items}}
+    {:reply, {:ok, item}, add_item(item, state)}
   end
 
   def handle_call({:remove_item, object_id}, _from, state) do
@@ -55,24 +50,8 @@ defmodule Ms2ex.FieldServer do
     end
   end
 
-  def handle_call({:add_boss, mob}, _from, state) do
-    mob = Map.put(mob, :object_id, state.counter)
-    bosses = Map.put(state.bosses, state.counter, mob)
-
-    broadcast(state.sessions, Packets.FieldAddNpc.add_boss(mob))
-    broadcast(state.sessions, Packets.ProxyGameObj.load_npc(mob))
-
-    {:reply, {:ok, mob}, %{state | counter: state.counter + 1, bosses: bosses}}
-  end
-
-  def handle_call({:add_mob, mob}, _from, state) do
-    mob = Map.put(mob, :object_id, state.counter)
-    mobs = Map.put(state.mobs, state.counter, mob)
-
-    broadcast(state.sessions, Packets.FieldAddNpc.add_mob(mob))
-    broadcast(state.sessions, Packets.ProxyGameObj.load_npc(mob))
-
-    {:reply, {:ok, mob}, %{state | counter: state.counter + 1, mobs: mobs}}
+  def handle_call({:damage_mobs, character, cast, value, coord, object_ids}, _from, state) do
+    {:reply, :ok, damage_mobs(character, cast, value, coord, object_ids, state)}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do
@@ -81,15 +60,27 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
+  def handle_info({:add_mob, mob}, state) do
+    {:noreply, add_mob(mob, state)}
+  end
+
+  def handle_info({:remove_mob, mob}, state) do
+    {:noreply, remove_mob(mob, state)}
+  end
+
+  def handle_info({:death_mob, character, mob}, state) do
+    {:noreply, process_mob_death(character, mob, state)}
+  end
+
+  def handle_info({:respawn_mob, mob}, state) do
+    {:noreply, respawn_mob(mob, state)}
+  end
+
   def handle_info(:send_updates, state) do
     character_ids = Map.keys(state.sessions)
 
-    for {_id, mob} <- state.bosses do
-      broadcast(state.sessions, Packets.ControlNpc.control(:boss, mob))
-    end
-
-    for {_id, mob} <- state.mobs do
-      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
+    for {_id, %{stats: %{hp: hp}} = mob} <- state.mobs do
+      if hp.total > 0, do: broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
     end
 
     for {_id, npc} <- state.npcs do

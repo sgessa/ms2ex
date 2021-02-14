@@ -57,9 +57,9 @@ defmodule Ms2ex.Packets.PacketWriter do
     packet <> <<number::little-float-size(size)>>
   end
 
-  def put_int(packet, int \\ 0x0), do: packet <> <<int::little-integer-32>>
+  def put_int(packet, int \\ 0x0), do: packet <> <<int::little-signed-integer-32>>
 
-  def put_int_big(packet, int \\ 0x0), do: packet <> <<int::big-integer-32>>
+  def put_int_big(packet, int \\ 0x0), do: packet <> <<int::big-signed-integer-32>>
 
   def put_ip_address(packet, addr) do
     addr =
@@ -72,15 +72,22 @@ defmodule Ms2ex.Packets.PacketWriter do
     packet <> addr
   end
 
-  def put_long(packet, int \\ 0x0), do: packet <> <<int::little-integer-64>>
+  def put_long(packet, int \\ 0x0), do: packet <> <<int::little-signed-integer-64>>
 
-  def put_short(packet, short \\ 0x0), do: packet <> <<short::little-integer-16>>
+  def put_short(packet, short \\ 0x0), do: packet <> <<short::little-signed-integer-16>>
 
   def put_short_coord(packet, %{x: x, y: y, z: z}) do
     packet
-    |> put_short(x)
-    |> put_short(y)
-    |> put_short(z)
+    |> put_short(trunc(x))
+    |> put_short(trunc(y))
+    |> put_short(trunc(z))
+  end
+
+  def put_short_coord(packet) do
+    packet
+    |> put_short()
+    |> put_short()
+    |> put_short()
   end
 
   def put_string(packet, str \\ "") do

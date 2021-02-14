@@ -4,6 +4,8 @@ defmodule Ms2ex.Packets.FieldAddItem do
   import Packets.PacketWriter
 
   def bytes(item) do
+    IO.inspect(item)
+
     __MODULE__
     |> build()
     |> put_int(item.object_id)

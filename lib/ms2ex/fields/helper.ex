@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Emotes, Field, Metadata, Packets, World}
+  alias Ms2ex.{Damage, Emotes, Field, Inventory, Metadata, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -67,20 +67,125 @@ defmodule Ms2ex.FieldHelper do
     mounts = Map.delete(state.mounts, character.id)
     sessions = Map.delete(state.sessions, character.id)
 
-    Field.broadcast(self(), Packets.FieldRemoveUser.bytes(character))
+    Field.broadcast(self(), Packets.FieldRemoveObject.bytes(character.object_id))
 
     %{state | mounts: mounts, sessions: sessions}
   end
 
-  @object_counter 10
+  def add_item(item, state) do
+    item = Map.put(item, :object_id, state.counter)
+    items = Map.put(state.items, state.counter, item)
+
+    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
+
+    %{state | counter: state.counter + 1, items: items}
+  end
+
+  def add_mob(mob, state) do
+    mob =
+      update_in(mob, [Access.key!(:stats), Access.key!(:hp), Access.key!(:max)], fn _ ->
+        mob.stats.hp.total
+      end)
+
+    mob = Map.put(mob, :direction, mob.rotation.z * 10)
+    mob = Map.put(mob, :object_id, state.counter)
+    mobs = Map.put(state.mobs, state.counter, mob)
+
+    broadcast(state.sessions, Packets.FieldAddNpc.add_mob(mob))
+    broadcast(state.sessions, Packets.ProxyGameObj.load_npc(mob))
+
+    %{state | counter: state.counter + 1, mobs: mobs}
+  end
+
+  def remove_mob(mob, state) do
+    mobs = Map.delete(state.mobs, mob.object_id)
+    Field.broadcast(self(), Packets.FieldRemoveObject.bytes(mob.object_id))
+    %{state | mobs: mobs}
+  end
+
+  def respawn_mob(mob, state) do
+    meta = Metadata.Npcs.get(mob.id)
+    mob = %{mob | stats: meta.stats}
+    add_mob(mob, state)
+  end
+
+  @respawn_intval 10_000
+  def damage_mobs(character, cast, value, coord, object_ids, state) do
+    targets =
+      state.mobs
+      |> Enum.filter(fn {id, _} -> id in object_ids end)
+      |> Enum.into(%{}, fn {id, target} ->
+        damage = Damage.calculate(character, target)
+
+        target =
+          case Damage.apply_damage(target, damage) do
+            {:alive, target} ->
+              broadcast(state.sessions, Packets.PlayerStats.update_health(target))
+              target
+
+            {:dead, target} ->
+              broadcast(state.sessions, Packets.PlayerStats.update_health(target))
+              # send(self(), {:death_mob, character, target})
+              Process.send_after(self(), {:remove_mob, target}, 5000)
+              Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
+              target
+          end
+
+        {id, target}
+      end)
+
+    broadcast(
+      state.sessions,
+      Packets.SkillDamage.bytes(character.object_id, cast, value, coord, Map.values(targets))
+    )
+
+    mobs = Map.merge(state.mobs, targets)
+    %{state | mobs: mobs}
+  end
+
+  def process_mob_death(character, mob, state) do
+    reward_exp(character, mob)
+    add_mob_loots(character, mob, state)
+  end
+
+  defp add_mob_loots(character, mob, state) do
+    Enum.reduce(mob.drop_box_ids, state, fn id, state ->
+      item = %Inventory.Item{item_id: id}
+
+      case Metadata.Items.load(item) do
+        %{metadata: nil} ->
+          state
+
+        item ->
+          item = Map.put(item, :position, mob.position)
+          item = Map.put(item, :character_object_id, character.object_id)
+          add_item(item, state)
+      end
+    end)
+  end
+
+  # TODO Maybe Level Up character
+  defp reward_exp(character, mob) do
+    current_exp = character.exp
+    rest_exp = character.rest_exp
+    exp_gained = mob.exp
+
+    character = Ms2ex.Characters.add_exp(character, exp_gained)
+
+    exp_packet = Packets.Experience.bytes(exp_gained, current_exp + exp_gained, rest_exp)
+    send(self(), {:push, character.id, exp_packet})
+  end
+
+  @object_counter 10_000_001
   def initialize_state(world, map_id, channel_id) do
     {:ok, map} = Metadata.Maps.lookup(map_id)
 
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
 
+    load_mobs(map)
+
     %{
-      bosses: %{},
       channel_id: channel_id,
       counter: counter,
       field_id: map_id,
@@ -92,6 +197,14 @@ defmodule Ms2ex.FieldHelper do
       sessions: %{},
       world: world
     }
+  end
+
+  defp load_mobs(map) do
+    map.npcs
+    |> Enum.map(&Map.delete(&1, :__struct__))
+    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
+    |> Enum.filter(&(&1.friendly != 2))
+    |> Enum.each(&send(self(), {:add_mob, &1}))
   end
 
   defp load_npcs(map, counter) do

@@ -49,14 +49,6 @@ config :ms2ex, Ms2ex,
         %{host: server_host, port: 20003},
         %{host: server_host, port: 20004}
       ]
-    },
-    %{
-      name: "Snakebark",
-      login: %{host: server_host, port: 20005},
-      channels: [
-        %{host: server_host, port: 20006},
-        %{host: server_host, port: 20007}
-      ]
     }
   ],
   ugc: %{
@@ -69,7 +61,7 @@ config :ms2ex, Ms2ex,
     "CHARACTER_LIST",
     "CONTROL_NPC",
     "EMOTE",
-    "FIELD_ADD_NPC",
+    # "FIELD_ADD_NPC",
     "FIELD_ADD_USER",
     "INVENTORY_ITEM",
     "KEY_TABLE",
