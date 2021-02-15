@@ -46,7 +46,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(npc.direction)
     |> put_short_coord(npc.speed)
     |> put_short(100)
-    |> put_byte(0x1)
+    |> put_byte(0x17)
     |> put_short(npc.animation)
     |> put_short(0x1)
   end

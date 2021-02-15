@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{FieldHelper, Packets, World}
+  alias Ms2ex.{FieldHelper, Mobs, Packets, World}
 
   import FieldHelper
 
@@ -60,6 +60,10 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
+  def handle_info({:add_item, item}, state) do
+    {:noreply, add_item(item, state)}
+  end
+
   def handle_info({:add_mob, mob}, state) do
     {:noreply, add_mob(mob, state)}
   end
@@ -68,27 +72,23 @@ defmodule Ms2ex.FieldServer do
     {:noreply, remove_mob(mob, state)}
   end
 
-  def handle_info({:death_mob, character, mob}, state) do
-    {:noreply, process_mob_death(character, mob, state)}
-  end
-
   def handle_info({:respawn_mob, mob}, state) do
     {:noreply, respawn_mob(mob, state)}
   end
 
   def handle_info(:send_updates, state) do
+    for {_id, %{dead?: false} = mob} <- state.mobs do
+      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
+    end
+
     character_ids = Map.keys(state.sessions)
 
-    for {_id, %{stats: %{hp: hp}} = mob} <- state.mobs do
-      if hp.total > 0, do: broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
+    for {_id, char} <- World.get_characters(state.world, character_ids) do
+      broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
     end
 
     for {_id, npc} <- state.npcs do
       broadcast(state.sessions, Packets.ControlNpc.control(:npc, npc))
-    end
-
-    for {_id, char} <- World.get_characters(state.world, character_ids) do
-      broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)

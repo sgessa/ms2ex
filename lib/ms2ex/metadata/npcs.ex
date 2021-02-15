@@ -91,7 +91,7 @@ defmodule Ms2ex.Metadata.Npc do
   field :position, 14, type: Coord
   field :animation, 15, type: :int32
 
-  @extra %{boss?: false, direction: 2700}
+  @extra %{boss?: false, dead?: false, direction: 2700, respawn: true, spawn: nil}
   def extra_fields(), do: @extra
 end
 

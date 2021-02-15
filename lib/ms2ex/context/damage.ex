@@ -20,7 +20,7 @@ defmodule Ms2ex.Damage do
       |> Map.put(:damage, damage)
 
     if npc.stats.hp.max <= 0 do
-      {:dead, npc}
+      {:dead, %{npc | dead?: true}}
     else
       {:alive, npc}
     end

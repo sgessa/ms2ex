@@ -92,12 +92,4 @@ defmodule Ms2ex.Characters do
     |> limit(1)
     |> Repo.one()
   end
-
-  def add_exp(%Character{id: character_id}, exp_gained) do
-    Character
-    |> where([c], c.id == ^character_id)
-    |> Repo.update_all(inc: [exp: exp_gained])
-
-    get(character_id)
-  end
 end

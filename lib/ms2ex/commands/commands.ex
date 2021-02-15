@@ -20,9 +20,9 @@ defmodule Ms2ex.Commands do
   def handle(["level", level], character, session) do
     with {level, _} <- Integer.parse(level) do
       level = if level > Character.max_level(), do: Character.max_level(), else: level
-      {:ok, character} = Characters.update(character, %{level: level})
+      {:ok, character} = Characters.update(character, %{exp: 0, level: level})
       World.update_character(session.world, character)
-      Field.broadcast(character, Packets.LevelUp.bytes(character, level))
+      Field.broadcast(character, Packets.LevelUp.bytes(character))
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
       _ ->
@@ -42,7 +42,7 @@ defmodule Ms2ex.Commands do
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
-      Field.add_mob(character, %{mob | boss?: true, position: character.position})
+      Field.add_mob(character, %{mob | boss?: true, respawn: false, spawn: character.position})
       session
     else
       _ ->
@@ -53,7 +53,7 @@ defmodule Ms2ex.Commands do
   def handle(["mob", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
-      Field.add_mob(character, %{mob | position: character.position})
+      Field.add_mob(character, %{mob | respawn: false, spawn: character.position})
       session
     else
       _ ->

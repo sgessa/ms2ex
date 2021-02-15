@@ -3,10 +3,10 @@ defmodule Ms2ex.Packets.LevelUp do
 
   import Packets.PacketWriter
 
-  def bytes(character, level) do
+  def bytes(character) do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> put_int(level)
+    |> put_int(character.level)
   end
 end

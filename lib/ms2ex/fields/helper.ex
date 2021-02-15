@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Damage, Emotes, Field, Inventory, Metadata, Packets, World}
+  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -82,13 +82,7 @@ defmodule Ms2ex.FieldHelper do
   end
 
   def add_mob(mob, state) do
-    mob =
-      update_in(mob, [Access.key!(:stats), Access.key!(:hp), Access.key!(:max)], fn _ ->
-        mob.stats.hp.total
-      end)
-
-    mob = Map.put(mob, :direction, mob.rotation.z * 10)
-    mob = Map.put(mob, :object_id, state.counter)
+    mob = Mobs.init_mob(mob, state.counter)
     mobs = Map.put(state.mobs, state.counter, mob)
 
     broadcast(state.sessions, Packets.FieldAddNpc.add_mob(mob))
@@ -104,9 +98,7 @@ defmodule Ms2ex.FieldHelper do
   end
 
   def respawn_mob(mob, state) do
-    meta = Metadata.Npcs.get(mob.id)
-    mob = %{mob | stats: meta.stats}
-    add_mob(mob, state)
+    add_mob(Mobs.respawn_mob(mob), state)
   end
 
   @respawn_intval 10_000
@@ -125,56 +117,29 @@ defmodule Ms2ex.FieldHelper do
 
             {:dead, target} ->
               broadcast(state.sessions, Packets.PlayerStats.update_health(target))
-              # send(self(), {:death_mob, character, target})
-              Process.send_after(self(), {:remove_mob, target}, 5000)
-              Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
+              Mobs.process_death(state.world, character, target)
+              Process.send_after(self(), {:remove_mob, target}, remove_mob_intval(target))
+
+              if target.respawn,
+                do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
+
               target
           end
 
         {id, target}
       end)
 
-    broadcast(
-      state.sessions,
+    dmg_packet =
       Packets.SkillDamage.bytes(character.object_id, cast, value, coord, Map.values(targets))
-    )
 
-    mobs = Map.merge(state.mobs, targets)
-    %{state | mobs: mobs}
+    broadcast(state.sessions, dmg_packet)
+
+    %{state | mobs: Map.merge(state.mobs, targets)}
   end
 
-  def process_mob_death(character, mob, state) do
-    reward_exp(character, mob)
-    add_mob_loots(character, mob, state)
-  end
-
-  defp add_mob_loots(character, mob, state) do
-    Enum.reduce(mob.drop_box_ids, state, fn id, state ->
-      item = %Inventory.Item{item_id: id}
-
-      case Metadata.Items.load(item) do
-        %{metadata: nil} ->
-          state
-
-        item ->
-          item = Map.put(item, :position, mob.position)
-          item = Map.put(item, :character_object_id, character.object_id)
-          add_item(item, state)
-      end
-    end)
-  end
-
-  # TODO Maybe Level Up character
-  defp reward_exp(character, mob) do
-    current_exp = character.exp
-    rest_exp = character.rest_exp
-    exp_gained = mob.exp
-
-    character = Ms2ex.Characters.add_exp(character, exp_gained)
-
-    exp_packet = Packets.Experience.bytes(exp_gained, current_exp + exp_gained, rest_exp)
-    send(self(), {:push, character.id, exp_packet})
-  end
+  # TODO read time from metadata
+  defp remove_mob_intval(%{boss?: true}), do: 7_000
+  defp remove_mob_intval(_mob), do: 3_000
 
   @object_counter 10_000_001
   def initialize_state(world, map_id, channel_id) do
@@ -203,6 +168,7 @@ defmodule Ms2ex.FieldHelper do
     map.npcs
     |> Enum.map(&Map.delete(&1, :__struct__))
     |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
+    |> Enum.map(&Map.put(&1, :spawn, &1.position))
     |> Enum.filter(&(&1.friendly != 2))
     |> Enum.each(&send(self(), {:add_mob, &1}))
   end
