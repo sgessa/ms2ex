@@ -7,6 +7,8 @@ defmodule Ms2ex.Repo.Migrations.CreateInventory do
       add :item_id, :bigint, null: false
 
       add :amount, :integer, null: false
+      add :basic_attributes, :binary
+      add :bonus_attributes, :binary
       add :color, :binary
       add :data, :binary
       add :enchants, :integer, null: false
