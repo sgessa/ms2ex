@@ -126,21 +126,25 @@ defmodule Ms2ex.Packets.InventoryItem do
     end
   end
 
-  def put_item_stats(packet, _item) do
-    basic_attr_length = 0
-    bonus_attr_length = 0
+  def put_item_stats(packet, item) do
+    basic_attributes = item.basic_attributes || []
+    bonus_attributes = item.bonus_attributes || []
 
     packet
     |> put_byte()
-    |> put_short(basic_attr_length)
-    # TODO put basic attrs
+    |> put_short(length(basic_attributes))
+    |> reduce(basic_attributes, fn stat, packet ->
+      put_item_stat(packet, stat)
+    end)
     |> put_short()
     |> put_int()
     |> put_short()
     |> put_short()
     |> put_int()
-    |> put_short(bonus_attr_length)
-    # TODO put bonus attrs
+    |> put_short(length(bonus_attributes))
+    |> reduce(bonus_attributes, fn stat, packet ->
+      put_item_stat(packet, stat)
+    end)
     |> put_short()
     |> put_int()
     |> reduce(1..6, fn _, packet ->
@@ -149,6 +153,13 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> put_short()
       |> put_int()
     end)
+  end
+
+  def put_item_stat(packet, stat) do
+    packet
+    |> put_short(Ms2ex.Metadata.ItemAttribute.value(stat.type))
+    |> put_int(stat.value)
+    |> put_int(stat.percentage)
   end
 
   def put_item_stats_diff(packet, _item) do

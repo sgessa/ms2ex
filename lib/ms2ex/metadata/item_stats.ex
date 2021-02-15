@@ -69,9 +69,9 @@ defmodule Ms2ex.Metadata.ItemStats do
   defstruct [:item_id, :constants, :static, :random]
 
   field :item_id, 1, type: :int32
-  field :basic_attributes, 2, repeated: true, type: Ms2ex.Metadata.ItemOption
-  field :static, 3, repeated: true, type: Ms2ex.Metadata.ItemOption
-  field :bonus_attributes, 4, repeated: true, type: Ms2ex.Metadata.ItemOption
+  field :basic, 2, repeated: true, type: Ms2ex.Metadata.ItemOption
+  field :static_bonus, 3, repeated: true, type: Ms2ex.Metadata.ItemOption
+  field :random_bonus, 4, repeated: true, type: Ms2ex.Metadata.ItemOption
 
   @table :item_stats_metadata
 

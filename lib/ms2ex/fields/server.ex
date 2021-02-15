@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{FieldHelper, Mobs, Packets, World}
+  alias Ms2ex.{FieldHelper, Packets, World}
 
   import FieldHelper
 

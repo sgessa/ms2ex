@@ -54,7 +54,7 @@ defmodule Ms2ex.Packets.PacketWriter do
   end
 
   def put_float(packet, number \\ 0x0, size \\ 32) do
-    packet <> <<number::little-float-size(size)>>
+    packet <> <<number::little-signed-float-size(size)>>
   end
 
   def put_int(packet, int \\ 0x0), do: packet <> <<int::little-signed-integer-32>>
