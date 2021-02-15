@@ -3,7 +3,7 @@ defmodule Ms2ex.ItemStats do
   alias Ms2ex.Metadata
 
   def load(%Item{} = item) do
-    case Metadata.ItemStatList.lookup(item.item_id) do
+    case Metadata.ItemStats.lookup(item.item_id) do
       {:ok, metadata} ->
         item
         |> load_basic_attributes(metadata.basic_attributes)
@@ -47,8 +47,5 @@ defmodule Ms2ex.ItemStats do
   end
 
   defp get_random_options(slots, stats) when slots > length(stats), do: stats
-
-  defp get_random_options(slots, stats) do
-    Enum.take_random(stats, slots)
-  end
+  defp get_random_options(slots, stats), do: Enum.take_random(stats, slots)
 end
