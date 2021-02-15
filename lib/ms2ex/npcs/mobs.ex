@@ -51,7 +51,6 @@ defmodule Ms2ex.Mobs do
     end)
   end
 
-  # TODO implement LEVEL UP
   defp reward_exp(world, character, mob) do
     # TODO adjust EXP formula
     exp_gained = trunc(mob.stats.hp.total / 10)
