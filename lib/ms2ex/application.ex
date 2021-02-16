@@ -18,9 +18,6 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
 
-    start_login_server()
-    start_worlds()
-
     children = [
       # Start the Ecto repository
       Ms2ex.Repo,
@@ -31,7 +28,8 @@ defmodule Ms2ex.Application do
       # Start the Endpoint (http/https)
       # Ms2exWeb.Endpoint
       # Start Session Registry
-      {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]}
+      {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]},
+      {Ms2ex.Net.Listener, login_server_opts()}
     ]
 
     world_managers =
@@ -41,33 +39,55 @@ defmodule Ms2ex.Application do
       end)
 
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
-    Supervisor.start_link(children ++ world_managers, opts)
+    Supervisor.start_link(children ++ world_managers ++ worlds(), opts)
   end
 
-  defp start_login_server() do
-    opts = Map.merge(@config[:login], %{id: :login_server, type: :login})
-    Ms2ex.Net.Listener.start(opts)
+  defp login_server_opts() do
+    Map.merge(@config[:login], %{id: :login_server, type: :login})
   end
 
-  defp start_worlds() do
+  defp worlds() do
     worlds = @config[:worlds]
 
-    Enum.each(Enum.with_index(worlds), fn {world, idx} ->
-      id = :"world_login:#{idx + 1}"
-      opts = world_login_options(world, id)
-      Ms2ex.Net.Listener.start(opts)
+    Enum.reduce(Enum.with_index(worlds), [], fn {world, idx}, processes ->
+      listener_id = :"world_login:#{idx + 1}"
+      processes = processes ++ [world_spec(listener_id, world)]
 
       world_id = :"world:#{idx + 1}"
-      start_channels(world, world_id)
+      processes ++ channels(world, world_id)
     end)
   end
 
-  defp start_channels(world, world_id) do
-    Enum.each(Enum.with_index(world.channels), fn {channel, idx} ->
+  def world_spec(id, world) do
+    args = world_login_options(world)
+    Supervisor.child_spec({Ms2ex.Net.Listener, args}, id: id)
+  end
+
+  def world_login_options(world) do
+    Map.merge(world.login, %{type: :world_login, world_name: world.name})
+  end
+
+  defp channels(world, world_id) do
+    Enum.reduce(Enum.with_index(world.channels), [], fn {channel, idx}, processes ->
       channel_id = idx + 1
-      opts = channel_options(channel, channel_id, world_id, world.name)
-      Ms2ex.Net.Listener.start(opts)
+      listener_id = :"#{world_id}:channel:#{channel_id}"
+
+      args = channel_options(channel, channel_id, world_id, world.name)
+      processes ++ [channel_spec(listener_id, args)]
     end)
+  end
+
+  def channel_spec(id, args) do
+    Supervisor.child_spec({Ms2ex.Net.Listener, args}, id: id)
+  end
+
+  defp channel_options(channel, channel_id, world_id, world_name) do
+    Map.merge(channel, %{
+      channel_id: channel_id,
+      type: :channel,
+      world: world_id,
+      world_name: world_name
+    })
   end
 
   # Tell Phoenix to update the endpoint configuration
@@ -75,25 +95,5 @@ defmodule Ms2ex.Application do
   def config_change(changed, _new, removed) do
     Ms2exWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  defp channel_options(channel, channel_id, world_id, world_name) do
-    id = :"#{world_id}:channel:#{channel_id}"
-
-    Map.merge(channel, %{
-      channel_id: channel_id,
-      id: id,
-      type: :channel,
-      world: world_id,
-      world_name: world_name
-    })
-  end
-
-  def world_login_options(world, id) do
-    Map.merge(world.login, %{
-      id: id,
-      type: :world_login,
-      world_name: world.name
-    })
   end
 end

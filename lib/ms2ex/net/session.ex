@@ -10,23 +10,20 @@ defmodule Ms2ex.Net.Session do
 
   import Ms2ex.Net.Utils
 
-  @behaviour :ranch_protocol
-  @transport :ranch_tcp
+  @transport :gen_tcp
 
   @conf Application.get_env(:ms2ex, Ms2ex)
   @skip_packet_logs @conf[:skip_packet_logs] || []
   @version @conf[:version] || 12
   @block_iv @conf[:initial_block_iv] || @version
 
-  def start_link(ref, socket, transport, opts) do
+  def start(state) do
     # We do not want the listener to go down if the session crashes
-    GenServer.start(__MODULE__, {ref, socket, transport, opts}, [])
+    GenServer.start(__MODULE__, state, [])
   end
 
-  def init({_ref, socket, _transport, opts}) do
-    @transport.setopts(socket, nodelay: true)
-
-    log_connected_client(socket, opts)
+  def init(%{socket: socket} = state) do
+    log_connected_client(state)
 
     recv_iv = Cipher.iv_to_int(Cipher.generate_iv())
     send_iv = Cipher.iv_to_int(Cipher.generate_iv())
@@ -35,9 +32,8 @@ defmodule Ms2ex.Net.Session do
     send_cipher = SendCipher.build(@version, send_iv, @block_iv)
 
     state =
-      Map.merge(opts, %{
+      Map.merge(state, %{
         pid: self(),
-        socket: socket,
         recv_cipher: recv_cipher,
         send_cipher: send_cipher
       })
@@ -118,15 +114,15 @@ defmodule Ms2ex.Net.Session do
     end
   end
 
-  defp log_connected_client(socket, %{type: :login}) do
+  defp log_connected_client(%{socket: socket, type: :login}) do
     L.info("Client #{peername(socket)} connected to Login Server")
   end
 
-  defp log_connected_client(socket, %{world_name: world, type: :world_login}) do
+  defp log_connected_client(%{socket: socket, world_name: world, type: :world_login}) do
     L.info("Client #{peername(socket)} connected to World #{world}")
   end
 
-  defp log_connected_client(socket, %{channel_id: id, world_name: world, type: :channel}) do
+  defp log_connected_client(%{channel_id: id, socket: socket, world_name: world, type: :channel}) do
     L.info("Client #{peername(socket)} connected to Channel #{id} on World #{world}")
   end
 
