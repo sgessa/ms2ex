@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Inventory do
   require Logger
 
-  alias Ms2ex.{Field, Inventory, Net, Packets, TransferFlags, World}
+  alias Ms2ex.{Field, Inventory, Net, Packets, TransferFlags, Wallets, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -63,6 +63,24 @@ defmodule Ms2ex.GameHandlers.Inventory do
       session
       |> push(Packets.InventoryItem.reset_tab(tab))
       |> push(Packets.InventoryItem.load_items(tab, items))
+    else
+      _ -> session
+    end
+  end
+
+  # Expand
+  defp handle_mode(0xB, packet, session) do
+    {tab, _packet} = get_byte(packet)
+
+    meret_price = -390
+
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         {:ok, wallet} <- Wallets.update(character, :merets, meret_price),
+         %Inventory.Tab{tab: tab, slots: slots} <- Inventory.expand_tab(character, tab) do
+      session
+      |> push(Packets.Wallet.update(wallet, :merets))
+      |> push(Packets.InventoryItem.load_tab(tab, slots))
+      |> push(Packets.InventoryItem.expand_tab())
     else
       _ -> session
     end

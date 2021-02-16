@@ -3,15 +3,21 @@ defmodule Ms2ex.Packets.Wallet do
 
   import Packets.PacketWriter
 
-  def update(:mesos, amount) do
-    Packets.Mesos.update(amount)
+  def update(wallet, :mesos) do
+    wallet
+    |> Map.get(:mesos)
+    |> Packets.Mesos.update()
   end
 
-  def update(type, amount) when type in [:merets, :game_merets, :event_merets] do
-    Packets.Merets.update(amount)
+  def update(wallet, type) when type in [:merets, :game_merets, :event_merets] do
+    wallet
+    |> Map.get(type)
+    |> Packets.Merets.update()
   end
 
-  def update(type, amount) do
+  def update(wallet, type) do
+    amount = Map.get(wallet, type)
+
     __MODULE__
     |> build()
     |> put_byte(Wallet.currency_type(type))

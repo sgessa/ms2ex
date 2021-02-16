@@ -66,7 +66,7 @@ defmodule Ms2ex.Commands do
 
     with {amount, _} <- Integer.parse(amount),
          {:ok, wallet} <- Wallets.update(character, currency, amount) do
-      push(session, Packets.Wallet.update(currency, Map.get(wallet, currency)))
+      push(session, Packets.Wallet.update(wallet, currency))
     else
       _ ->
         push_notice(session, character, "Invalid amount: #{amount}")

@@ -1,7 +1,7 @@
 defmodule Ms2ex.Character do
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, Inventory, Metadata.Coord}
+  alias Ms2ex.{EctoTypes, Inventory}
 
   import Ecto.Changeset
   import EctoEnum
@@ -50,6 +50,7 @@ defmodule Ms2ex.Character do
 
     has_many :equips, Inventory.Item
     has_many :inventory_items, Inventory.Item
+    has_many :inventory_tabs, Ms2ex.InventoryTab
 
     has_many :hot_bars, Ms2ex.HotBar
     has_many :skill_tabs, Ms2ex.SkillTab
@@ -82,12 +83,12 @@ defmodule Ms2ex.Character do
     field :mount, :map, virtual: true
     field :name, :string
     field :object_id, :integer, virtual: true, default: 0
-    field :position, EctoTypes.Term, virtual: true, default: %Coord{x: 2850, y: 2550, z: 1800}
+    field :position, EctoTypes.Term, virtual: true
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1
     field :profile_url, :string, default: ""
     field :rest_exp, :integer, default: 0
-    field :rotation, EctoTypes.Term, virtual: true, default: %Coord{x: 0, y: 0, z: 0}
+    field :rotation, EctoTypes.Term, virtual: true
     field :skin_color, EctoTypes.Term
     field :title_id, :integer, default: 0
 
@@ -102,6 +103,7 @@ defmodule Ms2ex.Character do
     character
     |> cast(attrs, @fields)
     |> cast_assoc(:emotes, with: &Ms2ex.Emote.changeset/2)
+    |> cast_assoc(:inventory_tabs, with: &Ms2ex.Inventory.Tab.changeset/2)
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
     |> cast_assoc(:skill_tabs, with: &Ms2ex.SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &Ms2ex.CharacterStats.changeset/2)
@@ -119,4 +121,36 @@ defmodule Ms2ex.Character do
   end
 
   def max_level(), do: @max_level
+
+  def set_default_assocs(attrs) do
+    attrs
+    |> Map.put(:emotes, Enum.map(Ms2ex.Emotes.default_emotes(), &%{emote_id: &1}))
+    |> Map.put(:hot_bars, [%{active: true}, %{}])
+    |> Map.put(:inventory_tabs, default_inventory_tabs())
+    |> Map.put(:skill_tabs, [%{name: "Build 1", skills: default_skills(attrs.job)}])
+    |> Map.put(:stats, %{})
+    |> Map.put(:wallet, %{})
+  end
+
+  defp default_inventory_tabs() do
+    Ms2ex.Inventory.Tab.default_slots()
+    |> Enum.map(fn {tab, slots} ->
+      %{tab: tab, slots: slots}
+    end)
+  end
+
+  defp default_skills(job) do
+    job_skills = Ms2ex.Skills.by_job(job)
+
+    Enum.map(job_skills, fn {id, skill} ->
+      meta = Ms2ex.Metadata.Skills.get(id)
+      skill_level = List.first(skill.skill_levels)
+
+      %{
+        skill_id: id,
+        learned: meta.learned,
+        level: skill_level.level
+      }
+    end)
+  end
 end

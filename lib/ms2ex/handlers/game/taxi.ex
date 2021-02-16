@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
   defp ride_taxi(map_id, currency, cost, session) do
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          {:ok, wallet} <- Wallets.update(character, currency, cost) do
-      session = push(session, Packets.Wallet.update(currency, Map.get(wallet, currency)))
+      session = push(session, Packets.Wallet.update(wallet, currency))
       Field.change_field(character, session, map_id)
     else
       _ ->

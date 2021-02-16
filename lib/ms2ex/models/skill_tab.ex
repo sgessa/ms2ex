@@ -626,6 +626,7 @@ defmodule Ms2ex.SkillTab do
   def changeset(skill_tab, attrs) do
     skill_tab
     |> cast(attrs, [:name])
+    |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
     |> validate_required([:name])
   end
 

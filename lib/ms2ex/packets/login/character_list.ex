@@ -82,7 +82,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_long()
     |> put_long()
     |> put_int()
-    |> put_coord(character.rotation)
+    |> put_coord()
     |> put_int()
     |> Ms2ex.SkinColor.put_skin_color(character.skin_color)
     |> put_time(character.inserted_at)

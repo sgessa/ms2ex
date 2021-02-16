@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.Hair
+  alias Ms2ex.{Hair, Inventory, Metadata}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -9,6 +9,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     update: 0x2,
     move: 0x3,
     load_items: 0xA,
+    expand_tab: 0xC,
     load_tab: 0xE,
     reset_tab: 0xD
   }
@@ -159,7 +160,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     packet
     |> put_short(Ms2ex.Metadata.ItemAttribute.value(stat.type))
     |> put_int(stat.value)
-    |> put_int(stat.percentage)
+    |> put_float(stat.percentage)
   end
 
   def put_item_stats_diff(packet, _item) do
@@ -208,26 +209,11 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_byte(sockets_length)
   end
 
-  def load_tab(tab_id) do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.load_tab)
-    |> put_byte(tab_id)
-    |> put_int()
-  end
-
-  def reset_tab(tab_id) do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.reset_tab)
-    |> put_int(tab_id)
-  end
-
   def load_items(tab_id, items) do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
-    |> put_int(tab_id)
+    |> put_int(Metadata.InventoryTab.value(tab_id))
     |> put_short(length(items))
     |> reduce(items, fn item, packet ->
       packet
@@ -237,5 +223,26 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> put_int(item.rarity)
       |> put_item(item)
     end)
+  end
+
+  def expand_tab() do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.expand_tab)
+  end
+
+  def load_tab(tab_id, total_slots) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.load_tab)
+    |> put_byte(Metadata.InventoryTab.value(tab_id))
+    |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
+  end
+
+  def reset_tab(tab_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.reset_tab)
+    |> put_int(Metadata.InventoryTab.value(tab_id))
   end
 end

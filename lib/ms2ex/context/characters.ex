@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Character, Emotes, Metadata, Repo, Skills, Account}
+  alias Ms2ex.{Account, Character, Repo}
 
   import Ecto.Query
 
@@ -11,13 +11,7 @@ defmodule Ms2ex.Characters do
   end
 
   def create(%Account{} = account, attrs) do
-    emotes = Enum.map(Emotes.default_emotes(), &%{emote_id: &1})
-    attrs = Map.put(attrs, :emotes, emotes)
-
-    attrs = Map.put(attrs, :hot_bars, [%{active: true}, %{}, %{}])
-    attrs = Map.put(attrs, :skill_tabs, [%{name: "Build 1"}])
-    attrs = Map.put(attrs, :stats, %{})
-    attrs = Map.put(attrs, :wallet, %{})
+    attrs = Character.set_default_assocs(attrs)
 
     changeset =
       account
@@ -25,34 +19,10 @@ defmodule Ms2ex.Characters do
       |> Character.changeset(attrs)
 
     Repo.transaction(fn ->
-      with {:ok, character} <- Repo.insert(changeset),
-           :ok <- populate_skill_tab(character) do
+      with {:ok, character} <- Repo.insert(changeset) do
         character
       else
         {:error, reason} -> Repo.rollback(reason)
-      end
-    end)
-  end
-
-  defp populate_skill_tab(character) do
-    skill_tab = List.first(character.skill_tabs)
-    job_skills = Skills.by_job(character.job)
-
-    Enum.reduce_while(job_skills, :ok, fn {id, skill}, result ->
-      meta = Metadata.Skills.get(id)
-      skill_level = List.first(skill.skill_levels)
-
-      attrs = %{
-        skill_id: id,
-        learned: meta.learned,
-        level: skill_level.level
-      }
-
-      with :ok <- result,
-           {:ok, _skill} <- Skills.create(skill_tab, attrs) do
-        {:cont, :ok}
-      else
-        error -> {:halt, error}
       end
     end)
   end
