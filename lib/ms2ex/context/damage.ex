@@ -1,5 +1,5 @@
 defmodule Ms2ex.Damage do
-  alias Ms2ex.{Character, Metadata.Npc}
+  alias Ms2ex.{Character, Characters, Metadata.Npc}
 
   import Access, only: [key!: 1]
 
@@ -11,12 +11,11 @@ defmodule Ms2ex.Damage do
   end
 
   def apply_damage(%Npc{stats: %{hp: hp}} = npc, %{dmg: dmg} = damage) do
-    hp = hp.max - dmg
-    hp = if hp < 0, do: 0, else: hp
+    hp = ensure_positive_health(hp.max - dmg)
 
     npc =
       npc
-      |> update_in([key!(:stats), key!(:hp), key!(:max)], fn _ -> hp end)
+      |> update_health(hp)
       |> Map.put(:damage, damage)
 
     if npc.stats.hp.max <= 0 do
@@ -25,4 +24,28 @@ defmodule Ms2ex.Damage do
       {:alive, npc}
     end
   end
+
+  def receive_fall_dmg(%Character{stats: %{current_hp_min: hp}} = character) do
+    dmg = calculate_fall_dmg(character)
+    hp = ensure_positive_health(hp - dmg, 1)
+    update_health(character, hp)
+  end
+
+  defp calculate_fall_dmg(%Character{position: %{z: height}}) do
+    IO.inspect(height, label: "FELL FROM HEIGHT")
+    150
+  end
+
+  defp update_health(%Character{stats: stats} = character, health) do
+    stats = Map.delete(stats, :__struct__)
+    stats = %{stats | current_hp_min: health}
+    {:ok, character} = Characters.update(character, %{stats: stats})
+    character
+  end
+
+  defp update_health(obj, health) do
+    update_in(obj, [key!(:stats), key!(:hp), key!(:max)], fn _ -> health end)
+  end
+
+  defp ensure_positive_health(health, min \\ 0), do: if(health < 0, do: min, else: health)
 end

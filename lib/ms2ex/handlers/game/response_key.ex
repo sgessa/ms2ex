@@ -27,7 +27,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       {:ok, map} = Metadata.Maps.lookup(character.map_id)
       spawn = List.first(map.spawns)
 
-      character = %{character | position: spawn.coord, rotation: spawn.rotation}
+      character = %{
+        character
+        | position: spawn.coord,
+          rotation: spawn.rotation,
+          safe_position: spawn.coord
+      }
+
       World.update_character(session.world, character)
 
       %{map_id: map_id, position: position, rotation: rotation} = character

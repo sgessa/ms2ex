@@ -89,6 +89,7 @@ defmodule Ms2ex.Character do
     field :profile_url, :string, default: ""
     field :rest_exp, :integer, default: 0
     field :rotation, EctoTypes.Term, virtual: true
+    field :safe_position, EctoTypes.Term, virtual: true
     field :skin_color, EctoTypes.Term
     field :title_id, :integer, default: 0
 
