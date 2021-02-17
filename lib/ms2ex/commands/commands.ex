@@ -3,6 +3,14 @@ defmodule Ms2ex.Commands do
 
   import Net.Session, only: [push: 2, push_notice: 3]
 
+  def handle(["heal"], %{stats: stats} = character, session) do
+    max_hp = stats.hp_total
+    stats = stats |> Map.delete(:__struct__) |> Map.put(:current_hp_min, max_hp)
+    {:ok, character} = Characters.update(character, %{stats: stats})
+    World.update_character(session.world, character)
+    push(session, Packets.Stats.set_character_stats(character))
+  end
+
   def handle(["item" | ids], character, session) do
     Enum.reduce(ids, session, fn item_id, session ->
       with {item_id, _} <- Integer.parse(item_id),
