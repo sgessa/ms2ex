@@ -36,7 +36,7 @@ defmodule Ms2ex.Field do
   def enter(%{map_id: field_id} = character, %{channel_id: channel_id} = session) do
     pid = field_pid(field_id, channel_id)
 
-    if pid do
+    if pid && Process.alive?(pid) do
       call(pid, {:add_character, character})
     else
       GenServer.start(FieldServer, {character, session}, name: field_name(field_id, channel_id))

@@ -152,8 +152,6 @@ defmodule Ms2ex.FieldHelper do
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
 
-    load_mobs(map)
-
     %{
       channel_id: channel_id,
       counter: counter,
@@ -166,15 +164,6 @@ defmodule Ms2ex.FieldHelper do
       sessions: %{},
       world: world
     }
-  end
-
-  defp load_mobs(map) do
-    map.npcs
-    |> Enum.map(&Map.delete(&1, :__struct__))
-    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
-    |> Enum.map(&Map.put(&1, :spawn, &1.position))
-    |> Enum.filter(&(&1.friendly != 2))
-    |> Enum.each(&send(self(), {:add_mob, &1}))
   end
 
   defp load_npcs(map, counter) do
