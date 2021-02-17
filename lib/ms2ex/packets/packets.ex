@@ -78,7 +78,7 @@ defmodule Ms2ex.Packets do
     0x4A => "JOB",
     0x56 => "FIELD_ADD_NPC",
     0x59 => "CONTROL_NPC",
-    0x60 => "USER_MOVE_BY_PORTAL",
+    0x60 => "MOVE_CHARACTER",
     0x63 => "BUDDY_LIST",
     0x67 => "FALL_DAMAGE",
     0x6D => "UGC",

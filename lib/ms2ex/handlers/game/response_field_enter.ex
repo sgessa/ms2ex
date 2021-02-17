@@ -9,7 +9,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     {:ok, character} = World.get_character(session.world, character_id)
 
     # Check if character is changing map
-    character = maybe_change_map(session.world, character)
+    character = maybe_change_map(character)
+    World.update_character(session.world, character)
 
     {:ok, _pid} = Field.enter(character, session)
 
@@ -17,20 +18,15 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     push(session, Packets.KeyTable.send_hot_bars(hot_bars))
   end
 
-  def maybe_change_map(world, %{change_map: new_map} = character) do
+  defp maybe_change_map(%{change_map: new_map} = character) do
     # Save Map ID on the database
     {:ok, character} = Characters.update(character, %{map_id: new_map.id})
 
-    character =
-      character
-      |> Map.delete(:change_map)
-      |> Map.put(:position, new_map.position)
-      |> Map.put(:rotation, new_map.rotation)
-
-    World.update_character(world, character)
-
     character
+    |> Map.delete(:change_map)
+    |> Map.put(:position, new_map.position)
+    |> Map.put(:rotation, new_map.rotation)
   end
 
-  def maybe_change_map(_world, character), do: character
+  defp maybe_change_map(character), do: character
 end

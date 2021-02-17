@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
       World.update_character(session.world, character)
 
       session
-      |> push(Packets.UserMoveByPortal.bytes(character))
+      |> push(Packets.MoveCharacter.bytes(character, character.safe_position))
       |> push(Packets.Stats.set_character_stats(character))
       |> push(Packets.FallDamage.bytes(character, 0))
     else

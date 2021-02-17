@@ -22,6 +22,7 @@ defmodule Ms2ex.FieldHelper do
 
     # Update registry
     character = %{character | object_id: state.counter, map_id: state.field_id}
+    character = Map.put(character, :field_pid, self())
     World.update_character(state.world, character)
 
     sessions = Map.put(state.sessions, character.id, session_pid)
@@ -55,8 +56,11 @@ defmodule Ms2ex.FieldHelper do
 
     # Load Emotes and Player Stats after Player Object is loaded
     emotes = Emotes.list(character)
-    send(self(), {:push, character.id, Packets.Emote.load(emotes)})
-    send(self(), {:push, character.id, Packets.Stats.set_character_stats(character)})
+    send(session_pid, {:push, Packets.Emote.load(emotes)})
+    send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
+
+    # If character teleported or was summoned by an other user
+    maybe_teleport_character(state.world, character)
 
     state
   end
@@ -198,4 +202,12 @@ defmodule Ms2ex.FieldHelper do
       send(pid, {:push, packet})
     end
   end
+
+  defp maybe_teleport_character(world, %{update_position: coord} = character) do
+    character = Map.delete(character, :update_position)
+    World.update_character(world, character)
+    send(character.session_pid, {:push, Packets.MoveCharacter.bytes(character, coord)})
+  end
+
+  defp maybe_teleport_character(session, _character), do: session
 end

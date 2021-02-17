@@ -81,6 +81,30 @@ defmodule Ms2ex.Commands do
     end
   end
 
+  def handle(["summon", target_name], character, session) do
+    case World.get_character_by_name(session.world, target_name) do
+      {:ok, target} ->
+        cond do
+          character.channel_id != target.channel_id ->
+            push_notice(session, character, "Character is in Channel #{target.channel_id}")
+
+          character.map_id == target.map_id ->
+            coord = character.position
+            send(target.session_pid, {:push, Packets.MoveCharacter.bytes(target, coord)})
+            session
+
+          true ->
+            target = Map.put(target, :update_position, character.position)
+            World.update_character(session.world, target)
+            send(target.session_pid, {:summon, target, character.map_id})
+            session
+        end
+
+      _ ->
+        push_notice(session, character, "Unable to summon character: #{target_name}")
+    end
+  end
+
   def handle(["teleport", target_name], character, session) do
     case World.get_character_by_name(session.world, target_name) do
       {:ok, target} ->
@@ -89,9 +113,11 @@ defmodule Ms2ex.Commands do
             push_notice(session, character, "Character is in Channel #{target.channel_id}")
 
           character.map_id == target.map_id ->
-            push_notice(session, character, "Already in the same map")
+            push(session, Packets.MoveCharacter.bytes(character, target.position))
 
           true ->
+            character = Map.put(character, :update_position, target.position)
+            World.update_character(session.world, character)
             Field.change_field(character, session, target.map_id)
         end
 

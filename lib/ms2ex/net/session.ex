@@ -57,6 +57,10 @@ defmodule Ms2ex.Net.Session do
     {:noreply, %{state | send_cipher: send_cipher}}
   end
 
+  def handle_info({:summon, character, map_id}, state) do
+    {:noreply, Ms2ex.Field.change_field(character, state, map_id)}
+  end
+
   def handle_info({:tcp, data}, %{recv_cipher: cipher} = state) do
     {cipher, packet} = RecvCipher.decrypt(cipher, data)
 

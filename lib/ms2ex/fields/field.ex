@@ -2,40 +2,34 @@ defmodule Ms2ex.Field do
   alias Ms2ex.{FieldServer, Metadata, Net, Packets, World}
 
   def add_item(character, item) do
-    pid = field_pid(character.map_id, character.channel_id)
     item = Map.put(item, :position, character.position)
     item = Map.put(item, :character_object_id, character.object_id)
-    call(pid, {:add_item, item})
+    call(character.field_pid, {:add_item, item})
   end
 
   def remove_item(character, object_id) do
-    pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:remove_item, object_id})
+    call(character.field_pid, {:remove_item, object_id})
   end
 
   def add_mob(character, mob) do
-    pid = field_pid(character.map_id, character.channel_id)
-    send(pid, {:add_mob, mob})
+    send(character.field_pid, {:add_mob, mob})
   end
 
   def damage_mobs(character, skill_cast, value, coord, object_ids) do
-    pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:damage_mobs, character, skill_cast, value, coord, object_ids})
+    call(character.field_pid, {:damage_mobs, character, skill_cast, value, coord, object_ids})
   end
 
   def add_object(character, object) do
-    pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:add_object, object.object_type, object})
+    call(character.field_pid, {:add_object, object.object_type, object})
   end
 
   def broadcast(character_or_field, packet, sender_pid \\ nil)
 
-  def broadcast(%{map_id: field_id, channel_id: channel_id}, packet, sender_pid) do
-    pid = field_pid(field_id, channel_id)
+  def broadcast(%{field_pid: pid}, packet, sender_pid) do
     if pid, do: send(pid, {:broadcast, packet, sender_pid})
   end
 
-  def broadcast(pid, packet, sender_pid) do
+  def broadcast(pid, packet, sender_pid) when is_pid(pid) do
     send(pid, {:broadcast, packet, sender_pid})
   end
 
@@ -73,8 +67,7 @@ defmodule Ms2ex.Field do
   end
 
   def leave(character) do
-    pid = field_pid(character.map_id, character.channel_id)
-    call(pid, {:remove_character, character})
+    call(character.field_pid, {:remove_character, character})
   end
 
   def push(session_pid, packet), do: send(session_pid, {:push, packet})
