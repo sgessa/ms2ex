@@ -27,7 +27,7 @@ defmodule Ms2ex.Damage do
 
   def receive_fall_dmg(%Character{stats: %{current_hp_min: hp}} = character) do
     dmg = calculate_fall_dmg(character)
-    hp = ensure_positive_health(hp - dmg, 1)
+    hp = ensure_positive_health(hp - dmg, 25)
     update_health(character, hp)
   end
 
