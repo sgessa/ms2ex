@@ -64,7 +64,7 @@ defmodule Ms2ex.Packets do
     0x2B => "FIELD_ADD_ITEM",
     0x2C => "FIELD_REMOVE_ITEM",
     0x2D => "FIELD_PICKUP_ITEM",
-    0x2F => "PLAYER_STATS",
+    0x2F => "STATS",
     0x38 => "EXPERIENCE",
     0x39 => "LEVEL_UP",
     0x3A => "MESOS",

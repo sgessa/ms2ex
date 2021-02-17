@@ -4,52 +4,44 @@ defmodule Ms2ex.GameHandlers.UserSync do
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
 
-  def handle(packet, %{character_id: character_id} = session) do
+  def handle(packet, session) do
     {_mode, packet} = get_byte(packet)
 
     {client_tick, packet} = get_int(packet)
     {_server_tick, packet} = get_int(packet)
-    {segments, packet} = get_byte(packet)
+    {segment_length, packet} = get_byte(packet)
 
-    with {:ok, character} <- World.get_character(session.world, character_id),
-         true <- segments > 0 do
-      states = get_states(segments, packet)
+    session
+    |> Map.put(:client_tick, client_tick)
+    |> process_segments(segment_length, packet)
+  end
 
-      sync_packet = Packets.UserSync.bytes(character, states)
-      Field.broadcast(character, sync_packet, session.pid)
+  defp process_segments(session, segment_length, packet) when segment_length > 0 do
+    {:ok, character} = World.get_character(session.world, session.character_id)
 
-      first_state = List.first(states)
+    states = get_states(segment_length, packet)
 
-      character =
-        if is_coord_safe?(character, first_state.position) do
-          block = Metadata.Coord.closest_block(character.position)
-          %{character | safe_position: block}
-        else
-          character
-        end
+    sync_packet = Packets.UserSync.bytes(character, states)
+    Field.broadcast(character, sync_packet, session.pid)
 
-      character = %{character | animation: first_state.animation1, position: first_state.position}
+    first_state = List.first(states)
+
+    character = maybe_set_safe_position(character, first_state.position)
+    character = %{character | animation: first_state.animation1, position: first_state.position}
+    World.update_character(session.world, character)
+
+    if is_out_of_bounds?(character.map_id, character.position) do
+      # TODO this is a temporary solution until we parse the map blocks
+      character = handle_out_of_bounds(character)
+      character = Damage.receive_fall_dmg(character)
       World.update_character(session.world, character)
 
-      session =
-        if is_out_of_bounds?(character.map_id, character.position) do
-          # TODO this is a temporary solution until we parse the map blocks
-          character = handle_out_of_bounds(character)
-          character = Damage.receive_fall_dmg(character)
-          World.update_character(session.world, character)
-
-          session
-          |> push(Packets.UserMoveByPortal.bytes(character))
-          |> push(Packets.PlayerStats.bytes(character))
-          |> push(Packets.FallDamage.bytes(character, 0))
-        else
-          session
-        end
-
-      %{session | client_tick: client_tick}
+      session
+      |> push(Packets.UserMoveByPortal.bytes(character))
+      |> push(Packets.Stats.set_character_stats(character))
+      |> push(Packets.FallDamage.bytes(character, 0))
     else
-      _ ->
-        %{session | client_tick: client_tick}
+      session
     end
   end
 
@@ -63,6 +55,15 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp get_states(_segments, _packet, states), do: states
+
+  defp maybe_set_safe_position(character, new_position) do
+    if is_coord_safe?(character, new_position) do
+      block = Metadata.Coord.closest_block(character.position)
+      %{character | safe_position: block}
+    else
+      character
+    end
+  end
 
   defp is_coord_safe?(character, position) do
     coord = Metadata.Coord.subtract(character.safe_position, position)

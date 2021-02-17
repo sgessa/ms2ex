@@ -1,9 +1,9 @@
-defmodule Ms2ex.Packets.PlayerStats do
+defmodule Ms2ex.Packets.Stats do
   alias Ms2ex.{CharacterStats, Packets}
 
   import Packets.PacketWriter
 
-  def bytes(character) do
+  def set_character_stats(character) do
     stat_list = CharacterStats.fields()
 
     __MODULE__

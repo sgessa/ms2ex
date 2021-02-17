@@ -56,7 +56,7 @@ defmodule Ms2ex.FieldHelper do
     # Load Emotes and Player Stats after Player Object is loaded
     emotes = Emotes.list(character)
     send(self(), {:push, character.id, Packets.Emote.load(emotes)})
-    send(self(), {:push, character.id, Packets.PlayerStats.bytes(character)})
+    send(self(), {:push, character.id, Packets.Stats.set_character_stats(character)})
 
     state
   end
@@ -112,11 +112,11 @@ defmodule Ms2ex.FieldHelper do
         target =
           case Damage.apply_damage(target, damage) do
             {:alive, target} ->
-              broadcast(state.sessions, Packets.PlayerStats.update_health(target))
+              broadcast(state.sessions, Packets.Stats.update_health(target))
               target
 
             {:dead, target} ->
-              broadcast(state.sessions, Packets.PlayerStats.update_health(target))
+              broadcast(state.sessions, Packets.Stats.update_health(target))
               Mobs.process_death(state.world, character, target)
               Process.send_after(self(), {:remove_mob, target}, remove_mob_intval(target))
 
