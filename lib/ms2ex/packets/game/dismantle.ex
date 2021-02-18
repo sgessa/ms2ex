@@ -31,11 +31,11 @@ defmodule Ms2ex.Packets.Dismantle do
     |> build()
     |> put_byte(@mode.preview_results)
     |> put_int(length)
-    |> reduce(rewards, fn {reward_id, count}, packet ->
+    |> reduce(rewards, fn {reward_id, amount}, packet ->
       packet
       |> put_int(reward_id)
-      |> put_int(count)
-      |> put_int(count)
+      |> put_int(amount)
+      |> put_int(amount)
     end)
   end
 
@@ -47,10 +47,10 @@ defmodule Ms2ex.Packets.Dismantle do
     |> put_byte(@mode.show_rewards)
     |> put_byte(0x1)
     |> put_int(length)
-    |> reduce(rewards, fn {reward_id, count}, packet ->
+    |> reduce(rewards, fn {reward_id, amount}, packet ->
       packet
       |> put_int(reward_id)
-      |> put_int(count)
+      |> put_int(amount)
     end)
   end
 end

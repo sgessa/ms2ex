@@ -35,10 +35,10 @@ defmodule Ms2ex.Dismantle do
         rewards = Map.get(item.metadata, :dismantle_rewards, [])
 
         Enum.reduce(rewards, total_rewards, fn reward, total_rewards ->
-          if reward.id != 0 do
-            count = Map.get(total_rewards, reward.id, 0)
-            count = count + reward.count * amount
-            Map.put(total_rewards, reward.id, count)
+          if reward.item_id != 0 do
+            total_amount = Map.get(total_rewards, reward.item_id, 0)
+            total_amount = total_amount + reward.amount * amount
+            Map.put(total_rewards, reward.item_id, total_amount)
           else
             total_rewards
           end
