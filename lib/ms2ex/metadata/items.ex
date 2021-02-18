@@ -78,6 +78,14 @@ defmodule Ms2ex.Metadata.ItemContent do
   field :enchant_level, 8, type: :int32
 end
 
+defmodule Ms2ex.Metadata.DismantleReward do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  field :id, 1, type: :int32
+  field :count, 2, type: :int32
+end
+
 defmodule Ms2ex.Metadata.Item do
   @moduledoc false
   use Protobuf, syntax: :proto3
@@ -89,6 +97,8 @@ defmodule Ms2ex.Metadata.Item do
     :tab,
     :rarity,
     :stack_limit,
+    :dismantable?,
+    :is_two_handed?,
     :is_dress?,
     :is_template?,
     :play_count,
@@ -103,13 +113,16 @@ defmodule Ms2ex.Metadata.Item do
   field :tab, 4, type: Ms2ex.Metadata.InventoryTab, enum: true
   field :rarity, 5, type: :int32
   field :stack_limit, 6, type: :int32
-  field :is_two_handed?, 7, type: :bool
-  field :is_dress?, 8, type: :bool
-  field :is_template?, 9, type: :bool
-  field :play_count, 10, type: :int32
-  field :skill_id, 11, type: :int32
-  field :jobs, 12, repeated: true, type: :int32
-  field :content, 13, repeated: true, type: Ms2ex.Metadata.ItemContent
+  field :dismantable?, 7, type: :bool
+  field :is_two_handed?, 8, type: :bool
+  field :is_dress?, 9, type: :bool
+  field :is_template?, 10, type: :bool
+  field :play_count, 11, type: :int32
+  field :file_name, 12, type: :string
+  field :skill_id, 13, type: :int32
+  field :jobs, 14, repeated: true, type: :int32
+  field :content, 15, repeated: true, type: Ms2ex.Metadata.ItemContent
+  field :dismantle_rewards, 16, repeated: true, type: Ms2ex.Metadata.DismantleReward
 end
 
 defmodule Ms2ex.Metadata.Items do

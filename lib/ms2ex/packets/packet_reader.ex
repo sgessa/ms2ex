@@ -36,8 +36,8 @@ defmodule Ms2ex.Packets.PacketReader do
     {n, packet}
   end
 
-  def get_int(<<n::little-integer-32, packet::binary>>), do: {n, packet}
-  def get_long(<<n::little-integer-64, packet::binary>>), do: {n, packet}
+  def get_int(<<n::little-signed-integer-32, packet::binary>>), do: {n, packet}
+  def get_long(<<n::little-signed-integer-64, packet::binary>>), do: {n, packet}
 
   def get_string(packet) do
     {len, packet} = get_short(packet)

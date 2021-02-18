@@ -26,7 +26,7 @@ defmodule Ms2ex.Inventory do
     |> Repo.all()
   end
 
-  def list_tab_items(%{character_id: character_id, tab: tab}) do
+  def list_tab_items(character_id, tab) do
     Item
     |> where([i], i.character_id == ^character_id)
     |> where([i], i.location == ^:inventory and i.inventory_tab == ^tab)
