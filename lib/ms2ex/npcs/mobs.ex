@@ -13,7 +13,7 @@ defmodule Ms2ex.Mobs do
   end
 
   def respawn_mob(mob) do
-    fields = Map.take(mob, [:boss?, :respawn, :spawn])
+    fields = Map.take(mob, [:is_boss?, :respawn, :spawn])
     meta = Metadata.Npcs.get(mob.id)
 
     mob

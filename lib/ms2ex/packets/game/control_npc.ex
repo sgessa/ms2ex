@@ -24,7 +24,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
-  defp npc_data(:mob, %{boss?: true} = npc) do
+  defp npc_data(:mob, %{is_boss?: true} = npc) do
     ""
     |> put_int(npc.object_id)
     |> put_byte()

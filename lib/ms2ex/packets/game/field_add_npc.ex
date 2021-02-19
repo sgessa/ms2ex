@@ -36,7 +36,7 @@ defmodule Ms2ex.Packets.FieldAddNpc do
     |> put_int()
   end
 
-  def add_mob(%{boss?: true} = mob) do
+  def add_mob(%{is_boss?: true} = mob) do
     branches = 0
 
     __MODULE__

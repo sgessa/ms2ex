@@ -31,9 +31,9 @@ defmodule Ms2ex.Damage do
     update_health(character, hp)
   end
 
-  defp calculate_fall_dmg(%Character{position: %{z: height}}) do
-    IO.inspect(height, label: "FELL FROM HEIGHT")
-    150
+  @fall_dmg 150
+  defp calculate_fall_dmg(%Character{position: %{z: _height}}) do
+    @fall_dmg
   end
 
   defp update_health(%Character{stats: stats} = character, health) do

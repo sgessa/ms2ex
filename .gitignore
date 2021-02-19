@@ -30,5 +30,8 @@ ms2ex-*.tar
 # Ignore Game Metadata
 /priv/resources/
 
+# MapleShark dump files
+/dumps/
+
 # Ignore secrets for production release
 /config/*.secret.exs

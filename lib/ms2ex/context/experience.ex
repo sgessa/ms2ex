@@ -12,7 +12,7 @@ defmodule Ms2ex.Experience do
 
     if total_exp >= tnl do
       diff = total_exp - tnl
-      {:ok, character} = Characters.update(character, %{level: level + 1, exp: diff})
+      {:ok, character} = Characters.update(character, %{level: level + 1, exp: 0})
       maybe_add_exp(character, diff)
     else
       Characters.update(character, %{exp: total_exp})

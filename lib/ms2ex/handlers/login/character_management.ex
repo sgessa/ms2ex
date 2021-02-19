@@ -81,10 +81,9 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     attrs = %{
       gender: gender,
-      job: job,
+      job: Ms2ex.Metadata.SkillJob.key(job),
       map_id: 2_000_023,
       name: name,
-      position: {-800, 600, 500},
       skin_color: skin_color
     }
 

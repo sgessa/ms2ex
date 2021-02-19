@@ -142,12 +142,14 @@ defmodule Ms2ex.FieldHelper do
   end
 
   # TODO read time from metadata
-  defp remove_mob_intval(%{boss?: true}), do: 7_000
+  defp remove_mob_intval(%{is_boss?: true}), do: 7_000
   defp remove_mob_intval(_mob), do: 3_000
 
   @object_counter 10_000_001
   def initialize_state(world, map_id, channel_id) do
     {:ok, map} = Metadata.Maps.lookup(map_id)
+
+    load_mobs(map)
 
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
@@ -164,6 +166,15 @@ defmodule Ms2ex.FieldHelper do
       sessions: %{},
       world: world
     }
+  end
+
+  defp load_mobs(map) do
+    map.id
+    |> Metadata.MobSpawns.lookup_by_map()
+    |> Enum.map(&Map.delete(&1, :__struct__))
+    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.mob_id), &1))
+    |> Enum.map(&Map.put(&1, :spawn, &1.position))
+    |> Enum.each(&send(self(), {:add_mob, &1}))
   end
 
   defp load_npcs(map, counter) do
