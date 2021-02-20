@@ -33,7 +33,8 @@ defmodule Ms2ex.Packets do
     0x83 => "GLOBAL_FACTOR",
     0xA3 => "REQUEST_SKILL_BOOK",
     0xB2 => "RESPONSE_SERVER_ENTER",
-    0xBB => "FILE_HASH"
+    0xBB => "FILE_HASH",
+    0xB9 => "CHAT_STICKER"
   }
 
   @send_ops %{
@@ -103,6 +104,7 @@ defmodule Ms2ex.Packets do
     0x10E => "RESPONSE_SKILL_BOOK",
     0x11B => "LOGIN_REQUIRED",
     0x11E => "PRESTIGE",
+    0x128 => "CHAT_STICKER",
     0x132 => "UNKNOWN_SYNC"
   }
 

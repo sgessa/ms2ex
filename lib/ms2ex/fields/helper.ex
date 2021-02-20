@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, World}
+  alias Ms2ex.{ChatStickers, Damage, Emotes, Field, Metadata, Mobs, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -55,9 +55,13 @@ defmodule Ms2ex.FieldHelper do
     end
 
     # Load Emotes and Player Stats after Player Object is loaded
+    send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
+
     emotes = Emotes.list(character)
     send(session_pid, {:push, Packets.Emote.load(emotes)})
-    send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
+
+    stickers = ChatStickers.list_groups(character)
+    send(session_pid, {:push, Packets.ChatSticker.load(stickers)})
 
     # If character teleported or was summoned by an other user
     maybe_teleport_character(state.world, character)
