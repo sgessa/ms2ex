@@ -120,7 +120,7 @@ defmodule Ms2ex.Metadata.Item do
   field :play_count, 11, type: :int32
   field :file_name, 12, type: :string
   field :skill_id, 13, type: :int32
-  field :jobs, 14, repeated: true, type: :int32
+  field :jobs, 14, repeated: true, type: Ms2ex.Metadata.Job, enum: true
   field :content, 15, repeated: true, type: Ms2ex.Metadata.ItemContent
   field :dismantle_rewards, 16, repeated: true, type: Ms2ex.Metadata.DismantleReward
 end

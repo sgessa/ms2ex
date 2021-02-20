@@ -55,4 +55,6 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
       _ -> session
     end
   end
+
+  defp handle_mode(_mode, _packet, session), do: session
 end

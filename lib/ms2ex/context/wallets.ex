@@ -1,7 +1,7 @@
 defmodule Ms2ex.Wallets do
   alias Ms2ex.{Character, Repo, Wallet}
 
-  import Ecto.Query, except: [update: 2]
+  import Ecto.Query, only: [where: 3]
 
   def update(%Character{id: character_id}, currency, value) do
     Repo.transaction(fn ->

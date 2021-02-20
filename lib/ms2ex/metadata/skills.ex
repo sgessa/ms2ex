@@ -1,22 +1,3 @@
-defmodule Ms2ex.Metadata.SkillJob do
-  @moduledoc false
-  use Protobuf, enum: true, syntax: :proto3
-
-  field :none, 0
-  field :knight, 10
-  field :berseker, 20
-  field :wizard, 30
-  field :priest, 40
-  field :archer, 50
-  field :heavy_gunner, 60
-  field :thief, 70
-  field :assassin, 80
-  field :rune_blade, 90
-  field :striker, 100
-  field :soul_binder, 110
-  field :game_master, 999
-end
-
 defmodule Ms2ex.Metadata.Skill do
   @moduledoc false
   use Protobuf, syntax: :proto3
@@ -26,7 +7,7 @@ defmodule Ms2ex.Metadata.Skill do
   field :id, 1, type: :int32
   field :skill_levels, 2, repeated: true, type: Ms2ex.Metadata.SkillLevel
   field :sub_skills, 3, repeated: true, type: :int32
-  field :job, 4, type: Ms2ex.Metadata.SkillJob, enum: true
+  field :job, 4, type: Ms2ex.Metadata.Job, enum: true
   field :learned, 5, type: :bool
   field :state, 6, type: :string
   field :passive, 7, type: :bool
