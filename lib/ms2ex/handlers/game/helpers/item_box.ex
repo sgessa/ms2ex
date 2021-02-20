@@ -37,8 +37,6 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     Enum.reduce(contents, session, fn content, session ->
       %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> Metadata.Items.load()
 
-      IO.inspect(jobs)
-
       if character.job in jobs or :none in jobs do
         add_item(session, character, content)
       else
