@@ -97,7 +97,7 @@ defmodule Ms2ex.FieldHelper do
 
   def remove_mob(mob, state) do
     mobs = Map.delete(state.mobs, mob.object_id)
-    Field.broadcast(self(), Packets.FieldRemoveObject.bytes(mob.object_id))
+    Field.broadcast(self(), Packets.FieldRemoveNpc.bytes(mob.object_id))
     %{state | mobs: mobs}
   end
 
@@ -122,7 +122,7 @@ defmodule Ms2ex.FieldHelper do
             {:dead, target} ->
               broadcast(state.sessions, Packets.Stats.update_health(target))
               Mobs.process_death(state.world, character, target)
-              Process.send_after(self(), {:remove_mob, target}, remove_mob_intval(target))
+              Process.send_after(self(), {:remove_mob, target}, target.dead_at)
 
               if target.respawn,
                 do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
@@ -140,10 +140,6 @@ defmodule Ms2ex.FieldHelper do
 
     %{state | mobs: Map.merge(state.mobs, targets)}
   end
-
-  # TODO read time from metadata
-  defp remove_mob_intval(%{is_boss?: true}), do: 7_000
-  defp remove_mob_intval(_mob), do: 3_000
 
   @object_counter 10_000_001
   def initialize_state(world, map_id, channel_id) do

@@ -123,8 +123,13 @@ defmodule Ms2ex.Metadata.Npcs do
 
   def get(npc_id) do
     case :ets.lookup(@table, npc_id) do
-      [{_id, %Npc{} = meta}] -> Map.merge(meta, Npc.extra_fields())
-      _ -> nil
+      [{_id, %Npc{} = meta}] ->
+        meta
+        |> Map.merge(Npc.extra_fields())
+        |> Map.put(:dead_at, trunc(meta.dead_at) * 1000)
+
+      _ ->
+        nil
     end
   end
 

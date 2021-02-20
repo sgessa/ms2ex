@@ -78,6 +78,7 @@ defmodule Ms2ex.Packets do
     0x49 => "ADD_PORTAL",
     0x4A => "JOB",
     0x56 => "FIELD_ADD_NPC",
+    0x57 => "FIELD_REMOVE_NPC",
     0x59 => "CONTROL_NPC",
     0x60 => "MOVE_CHARACTER",
     0x63 => "BUDDY_LIST",
