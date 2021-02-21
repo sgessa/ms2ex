@@ -15,6 +15,7 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.ItemStats.store()
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()
+    Ms2ex.Metadata.MapBlocks.store()
     Ms2ex.Metadata.MobSpawns.store()
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
@@ -36,7 +37,7 @@ defmodule Ms2ex.Application do
     world_managers =
       Enum.into(1..length(@config[:worlds]), [], fn idx ->
         name = :"world:#{idx}"
-        Supervisor.child_spec({Ms2ex.World, [name: {:via, :swarm, name}]}, id: name)
+        Supervisor.child_spec({Ms2ex.WorldServer, [name: {:via, :swarm, name}]}, id: name)
       end)
 
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]

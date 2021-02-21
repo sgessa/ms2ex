@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{Damage, Field, Metadata, Packets, SyncState, World}
+  alias Ms2ex.{Damage, Field, MapBlock, Metadata, Packets, SyncState, World}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -24,17 +24,19 @@ defmodule Ms2ex.GameHandlers.UserSync do
     sync_packet = Packets.UserSync.bytes(character, states)
     Field.broadcast(character, sync_packet, session.pid)
 
-    first_state = List.first(states)
+    %{animation1: animation, position: new_position} = List.first(states)
+    closest_block = MapBlock.closest_block(new_position)
+    # Get the block under the character
+    closest_block = %{closest_block | z: closest_block.z - MapBlock.block_size()}
 
-    character = maybe_set_safe_position(character, first_state.position)
-    character = %{character | animation: first_state.animation1, position: first_state.position}
+    character = maybe_set_safe_position(character, new_position, closest_block)
+    character = %{character | animation: animation, position: new_position}
     World.update_character(session.world, character)
 
     if is_out_of_bounds?(character.map_id, character.position) do
-      # TODO this is a temporary solution until we parse the map blocks
       character = handle_out_of_bounds(character)
       character = Damage.receive_fall_dmg(character)
-      World.update_character(session.world, character)
+      # World.update_character(session.world, character)
 
       session
       |> push(Packets.MoveCharacter.bytes(character, character.safe_position))
@@ -56,18 +58,20 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
   defp get_states(_segments, _packet, states), do: states
 
-  defp maybe_set_safe_position(character, new_position) do
-    if is_coord_safe?(character, new_position) do
-      block = Metadata.Coord.closest_block(character.position)
-      %{character | safe_position: block}
+  defp maybe_set_safe_position(character, new_position, closest_block) do
+    if is_coord_safe?(character, new_position, closest_block) do
+      %{character | safe_position: closest_block}
     else
       character
     end
   end
 
-  defp is_coord_safe?(character, position) do
-    coord = Metadata.Coord.subtract(character.safe_position, position)
-    Metadata.Coord.length(coord) > 200 && character.position.z == position.z
+  defp is_coord_safe?(character, current_position, closest_block) do
+    block_diff = MapBlock.subtract(character.safe_position, closest_block)
+
+    MapBlock.exists?(character.map_id, closest_block) &&
+      MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
+
     # && !character.on_air_mount?
   end
 
@@ -75,24 +79,30 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {:ok, map} = Metadata.Maps.lookup(map_id)
     %{bounding_box_0: box0, bounding_box_1: box1} = map
 
-    z = if box0.z > box1.z, do: box0.z, else: box1.z
-    y = if box0.y > box1.y, do: box0.y, else: box1.y
-    x = if box0.x > box1.x, do: box0.x, else: box1.x
-    higher_bound = %{z: z, y: y, x: x}
+    {high_z, low_z} = find_high_low_bounds(box0.z, box1.z)
+    {high_y, low_y} = find_high_low_bounds(box0.y, box1.y)
+    {high_x, low_x} = find_high_low_bounds(box0.x, box1.x)
 
-    z = if box0.z < box1.z, do: box0.z, else: box1.z
-    y = if box0.y < box1.y, do: box0.y, else: box1.y
-    x = if box0.x < box1.x, do: box0.x, else: box1.x
-    lower_bound = %{z: z, y: y, x: x}
-
-    coord.z > higher_bound.z || coord.z < lower_bound.z ||
-      coord.y > higher_bound.y || coord.y < lower_bound.y ||
-      coord.x > higher_bound.x || coord.x < lower_bound.x
+    coord.z > high_z || coord.z < low_z ||
+      coord.y > high_y || coord.y < low_y ||
+      coord.x > high_x || coord.x < low_x
   end
 
-  defp handle_out_of_bounds(character) do
-    safe_position = character.safe_position
-    safe_position = %{safe_position | z: safe_position.z + 30}
-    %{character | safe_position: safe_position}
+  defp find_high_low_bounds(x, y) when x > y, do: {x, y}
+  defp find_high_low_bounds(x, y), do: {y, x}
+
+  defp handle_out_of_bounds(%{position: pos, safe_position: safe_pos} = character) do
+    # Without this player will spawn inside the block
+    # for some reason if coord is negative player is teleported one block over,
+    # which can result player being stuck inside a block
+    safe_pos = %{safe_pos | z: safe_pos.z + MapBlock.block_size() + 1}
+
+    safe_pos =
+      if pos.x < 0, do: %{safe_pos | x: safe_pos.x - MapBlock.block_size()}, else: safe_pos
+
+    safe_pos =
+      if pos.y < 0, do: %{safe_pos | y: safe_pos.y - MapBlock.block_size()}, else: safe_pos
+
+    %{character | safe_position: safe_pos}
   end
 end

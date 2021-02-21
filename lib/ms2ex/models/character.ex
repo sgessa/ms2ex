@@ -74,6 +74,7 @@ defmodule Ms2ex.Character do
     field :animation, :integer, virtual: true, default: 0
     field :exp, :integer, default: 0
     field :gender, Gender, default: :male
+    field :group_chats, {:array, :map}, virtual: true, default: []
     field :guild_name, :string, virtual: true, default: "h4x0rzz"
     field :home_name, :string, virtual: true, default: ""
     field :insignia_id, :integer, default: 0
