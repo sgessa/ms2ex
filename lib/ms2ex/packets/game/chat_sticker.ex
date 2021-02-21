@@ -5,7 +5,8 @@ defmodule Ms2ex.Packets.ChatSticker do
     load: 0x0,
     expired_sticker_notification: 0x1,
     add: 0x2,
-    use: 0x3,
+    chat: 0x3,
+    group_chat: 0x4,
     favorite: 0x5,
     unfavorite: 0x6
   }
@@ -19,6 +20,7 @@ defmodule Ms2ex.Packets.ChatSticker do
     |> reduce(stickers, fn sticker_id, packet ->
       packet
       |> put_int(sticker_id)
+      # TODO expiration
       |> put_long(9_223_372_036_854_775_807)
     end)
   end
@@ -41,12 +43,21 @@ defmodule Ms2ex.Packets.ChatSticker do
     |> put_long(expiration)
   end
 
-  def use(sticker_id, script) do
+  def chat(sticker_id, script) do
     __MODULE__
     |> build()
-    |> put_byte(@modes.use)
+    |> put_byte(@modes.chat)
     |> put_int(sticker_id)
     |> put_ustring(script)
+    |> put_byte()
+  end
+
+  def group_chat(sticker_id, chat_name) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.group_chat)
+    |> put_int(sticker_id)
+    |> put_ustring(chat_name)
     |> put_byte()
   end
 

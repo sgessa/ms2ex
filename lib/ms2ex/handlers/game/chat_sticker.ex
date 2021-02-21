@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.ChatSticker do
-  alias Ms2ex.{ChatSticker, ChatStickers, Packets, World}
+  alias Ms2ex.{ChatSticker, ChatStickers, Metadata, Packets, World}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -15,16 +15,31 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     session
   end
 
-  # Use
+  # Chat
   defp handle_mode(0x3, packet, session) do
     {sticker_id, packet} = get_int(packet)
     {script, _packet} = get_ustring(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
+      push(session, Packets.ChatSticker.chat(sticker_id, script))
+    else
+      _ -> session
+    end
+  end
 
-    case ChatStickers.get(character, sticker_id) do
-      nil -> session
-      _ -> push(session, Packets.ChatSticker.use(sticker_id, script))
+  # Group Chat
+  defp handle_mode(0x4, packet, session) do
+    {sticker_id, packet} = get_int(packet)
+    {chat_name, _packet} = get_ustring(packet)
+
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
+      push(session, Packets.ChatSticker.group_chat(sticker_id, chat_name))
+    else
+      _ -> session
     end
   end
 
@@ -32,10 +47,10 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   defp handle_mode(0x5, packet, session) do
     {sticker_id, _packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
-
-    with %ChatSticker{} = sticker <- ChatStickers.get(character, sticker_id) do
-      ChatStickers.favorite(sticker, true)
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
+      # TODO???
       push(session, Packets.ChatSticker.favorite(sticker_id))
     else
       _ -> session
@@ -46,10 +61,10 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   defp handle_mode(0x6, packet, session) do
     {sticker_id, _packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
-
-    with %ChatSticker{} = sticker <- ChatStickers.get(character, sticker_id) do
-      ChatStickers.favorite(sticker, false)
+    with {:ok, character} <- World.get_character(session.world, session.character_id),
+         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
+      # TODO???
       push(session, Packets.ChatSticker.unfavorite(sticker_id))
     else
       _ -> session

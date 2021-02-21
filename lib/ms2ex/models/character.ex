@@ -27,21 +27,8 @@ defmodule Ms2ex.Character do
 
   defenum(Gender, male: 0, female: 1)
 
-  defenum(Job,
-    none: 0,
-    knight: 10,
-    berseker: 20,
-    wizard: 30,
-    priest: 40,
-    archer: 50,
-    heavy_gunner: 60,
-    thief: 70,
-    assassin: 80,
-    rune_blade: 90,
-    striker: 100,
-    soul_binder: 110,
-    game_master: 999
-  )
+  @jobs Map.to_list(Ms2ex.Metadata.Job.mapping())
+  defenum(Job, @jobs)
 
   schema "characters" do
     belongs_to :account, Ms2ex.Account
@@ -138,7 +125,7 @@ defmodule Ms2ex.Character do
   end
 
   defp default_stickers() do
-    Enum.map(Ms2ex.ChatStickers.default_stickers(), &%{sticker_id: &1})
+    Enum.map(Ms2ex.ChatStickers.default_stickers(), &%{group_id: &1})
   end
 
   defp default_inventory_tabs() do

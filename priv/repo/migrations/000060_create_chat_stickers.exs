@@ -7,13 +7,12 @@ defmodule Ms2ex.Repo.Migrations.CreateChatStickers do
 
       add :expires_at, :timestamptz
       add :favorited, :boolean, null: false
-      add :sticker_id, :integer, null: false
       add :group_id, :integer, null: false
 
       timestamps(type: :timestamptz)
     end
 
     create index(:chat_stickers, [:character_id])
-    create unique_index(:chat_stickers, [:character_id, :sticker_id])
+    create unique_index(:chat_stickers, [:character_id, :group_id])
   end
 end
