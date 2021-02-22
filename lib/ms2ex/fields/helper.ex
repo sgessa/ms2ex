@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, World}
+  alias Ms2ex.{ChatStickers, Damage, Emotes, Field, Metadata, Mobs, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -45,6 +45,12 @@ defmodule Ms2ex.FieldHelper do
       send(session_pid, {:push, Packets.AddPortal.bytes(portal)})
     end
 
+    # Load Interactable Objects
+    if map_size(state.interactable) > 0 do
+      objects = Map.values(state.interactable)
+      send(session_pid, {:push, Packets.AddInteractObjects.bytes(objects)})
+    end
+
     # Tell other characters in the map to load the new player
     broadcast(state.sessions, Packets.FieldAddUser.bytes(character))
     broadcast(state.sessions, Packets.ProxyGameObj.load_player(character))
@@ -55,9 +61,14 @@ defmodule Ms2ex.FieldHelper do
     end
 
     # Load Emotes and Player Stats after Player Object is loaded
+    send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
+
     emotes = Emotes.list(character)
     send(session_pid, {:push, Packets.Emote.load(emotes)})
-    send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
+
+    favorite_stickers = ChatStickers.list_favorited(character)
+    sticker_groups = ChatStickers.list_groups(character)
+    send(session_pid, {:push, Packets.ChatSticker.load(favorite_stickers, sticker_groups)})
 
     # If character teleported or was summoned by an other user
     maybe_teleport_character(state.world, character)
@@ -149,11 +160,13 @@ defmodule Ms2ex.FieldHelper do
 
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
+    {counter, interactable} = load_interactable(map, counter)
 
     %{
       channel_id: channel_id,
       counter: counter,
       field_id: map_id,
+      interactable: interactable,
       items: %{},
       mobs: %{},
       mounts: %{},
@@ -190,6 +203,14 @@ defmodule Ms2ex.FieldHelper do
     Enum.reduce(map.portals, {counter, %{}}, fn portal, {counter, portals} ->
       portal = Map.put(portal, :object_id, counter)
       {counter + 1, Map.put(portals, portal.id, portal)}
+    end)
+  end
+
+  defp load_interactable(map, counter) do
+    # TODO group these objects by their correct packet type
+    Enum.reduce(map.interact_objects, {counter, %{}}, fn object, {counter, objects} ->
+      object = Map.put(object, :object_id, counter)
+      {counter + 1, Map.put(objects, object.uuid, object)}
     end)
   end
 

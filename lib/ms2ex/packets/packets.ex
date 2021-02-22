@@ -14,10 +14,12 @@ defmodule Ms2ex.Packets do
     0x13 => "EMOTE",
     0x16 => "EQUIP_ITEM",
     0x17 => "INVENTORY",
+    0x19 => "USE_ITEM",
     0x1C => "PICKUP_ITEM",
     0x20 => "SKILL",
     0x25 => "JOB",
     0x26 => "VIBRATE",
+    0x37 => "REQUEST_CUBE",
     0x39 => "UGC",
     0x3B => "KEY_TABLE",
     0x3C => "REQUEST_CHANGE_CHANNEL",
@@ -34,7 +36,8 @@ defmodule Ms2ex.Packets do
     0x83 => "GLOBAL_FACTOR",
     0xA3 => "REQUEST_SKILL_BOOK",
     0xB2 => "RESPONSE_SERVER_ENTER",
-    0xBB => "FILE_HASH"
+    0xBB => "FILE_HASH",
+    0xB9 => "CHAT_STICKER"
   }
 
   @send_ops %{
@@ -67,6 +70,7 @@ defmodule Ms2ex.Packets do
     0x2C => "FIELD_REMOVE_ITEM",
     0x2D => "FIELD_PICKUP_ITEM",
     0x2F => "STATS",
+    0x30 => "USER_BATTLE",
     0x38 => "EXPERIENCE",
     0x39 => "LEVEL_UP",
     0x3A => "MESOS",
@@ -83,7 +87,9 @@ defmodule Ms2ex.Packets do
     0x59 => "CONTROL_NPC",
     0x60 => "MOVE_CHARACTER",
     0x63 => "BUDDY_LIST",
+    0x65 => "ADD_INTERACT_OBJECTS",
     0x67 => "FALL_DAMAGE",
+    0x6B => "RESPONSE_CUBE",
     0x6D => "UGC",
     0x71 => "KEY_TABLE",
     0x77 => "VIBRATE",
@@ -105,6 +111,7 @@ defmodule Ms2ex.Packets do
     0x10E => "RESPONSE_SKILL_BOOK",
     0x11B => "LOGIN_REQUIRED",
     0x11E => "PRESTIGE",
+    0x128 => "CHAT_STICKER",
     0x132 => "UNKNOWN_SYNC"
   }
 

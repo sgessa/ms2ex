@@ -10,6 +10,7 @@ defmodule Ms2ex.Application do
   def start(_type, _args) do
     Registries.SkillCasts.start()
 
+    Ms2ex.Metadata.ChatStickers.store()
     Ms2ex.Metadata.ExpTable.store()
     Ms2ex.Metadata.Insignias.store()
     Ms2ex.Metadata.ItemStats.store()

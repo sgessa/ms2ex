@@ -27,26 +27,15 @@ defmodule Ms2ex.Character do
 
   defenum(Gender, male: 0, female: 1)
 
-  defenum(Job,
-    none: 0,
-    knight: 10,
-    berseker: 20,
-    wizard: 30,
-    priest: 40,
-    archer: 50,
-    heavy_gunner: 60,
-    thief: 70,
-    assassin: 80,
-    rune_blade: 90,
-    striker: 100,
-    soul_binder: 110,
-    game_master: 999
-  )
+  @jobs Map.to_list(Ms2ex.Metadata.Job.mapping())
+  defenum(Job, @jobs)
 
   schema "characters" do
     belongs_to :account, Ms2ex.Account
 
     has_many :emotes, Ms2ex.Emote
+    has_many :favorite_stickers, Ms2ex.FavoriteChatSticker
+    has_many :stickers, Ms2ex.ChatStickerGroup
 
     has_many :equips, Inventory.Item
     has_many :inventory_items, Inventory.Item
@@ -109,6 +98,7 @@ defmodule Ms2ex.Character do
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
     |> cast_assoc(:skill_tabs, with: &Ms2ex.SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &Ms2ex.CharacterStats.changeset/2)
+    |> cast_assoc(:stickers, with: &Ms2ex.ChatStickerGroup.changeset/2)
     |> cast_assoc(:wallet, with: &Ms2ex.Wallet.changeset/2)
     |> validate_required(@fields)
     |> unique_constraint(:name)
@@ -126,12 +116,17 @@ defmodule Ms2ex.Character do
 
   def set_default_assocs(attrs) do
     attrs
+    |> Map.put(:stickers, default_stickers())
     |> Map.put(:emotes, Enum.map(Ms2ex.Emotes.default_emotes(), &%{emote_id: &1}))
     |> Map.put(:hot_bars, [%{active: true}, %{}])
     |> Map.put(:inventory_tabs, default_inventory_tabs())
     |> Map.put(:skill_tabs, [%{name: "Build 1", skills: default_skills(attrs.job)}])
     |> Map.put(:stats, %{})
     |> Map.put(:wallet, %{})
+  end
+
+  defp default_stickers() do
+    Enum.map(Ms2ex.ChatStickers.default_stickers(), &%{group_id: &1})
   end
 
   defp default_inventory_tabs() do
