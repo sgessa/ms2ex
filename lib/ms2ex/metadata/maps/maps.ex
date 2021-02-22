@@ -10,7 +10,7 @@ defmodule Ms2ex.Metadata.Map do
     :objects,
     :bounding_box_0,
     :bounding_box_1,
-    :interact_actors,
+    :interact_objects,
     :interact_meshes
   ]
 
@@ -21,7 +21,7 @@ defmodule Ms2ex.Metadata.Map do
   field :objects, 5, repeated: true, type: Ms2ex.Metadata.MapObject
   field :bounding_box_0, 6, type: Ms2ex.Metadata.Coord
   field :bounding_box_1, 7, type: Ms2ex.Metadata.Coord
-  field :interact_actors, 8, repeated: true, type: Ms2ex.Metadata.MapInteractable
+  field :interact_objects, 8, repeated: true, type: Ms2ex.Metadata.MapInteractable
   field :interact_meshes, 9, repeated: true, type: Ms2ex.Metadata.MapInteractable
 end
 

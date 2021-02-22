@@ -18,6 +18,13 @@ defmodule Ms2ex.Packets.PacketReader do
     {b, packet}
   end
 
+  def get_sbyte_coord(packet) do
+    {x, packet} = get_sbyte(packet)
+    {y, packet} = get_sbyte(packet)
+    {z, packet} = get_sbyte(packet)
+    {%Coord{x: x, y: y, z: z}, packet}
+  end
+
   def get_short_coord(packet) do
     {x, packet} = get_short(packet)
     {y, packet} = get_short(packet)
@@ -38,6 +45,8 @@ defmodule Ms2ex.Packets.PacketReader do
 
   def get_int(<<n::little-signed-integer-32, packet::binary>>), do: {n, packet}
   def get_long(<<n::little-signed-integer-64, packet::binary>>), do: {n, packet}
+
+  def get_sbyte(<<n::little-signed-integer-8, packet::binary>>), do: {n, packet}
 
   def get_string(packet) do
     {len, packet} = get_short(packet)
