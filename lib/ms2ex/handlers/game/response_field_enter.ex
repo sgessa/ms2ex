@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   require Logger
 
-  alias Ms2ex.{Characters, Field, HotBars, Net, Packets, World}
+  alias Ms2ex.{Characters, ChatStickers, Field, HotBars, Net, Packets, World}
 
   import Net.Session, only: [push: 2]
 
@@ -15,7 +15,13 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     {:ok, _pid} = Field.enter(character, session)
 
     hot_bars = HotBars.list(character)
-    push(session, Packets.KeyTable.send_hot_bars(hot_bars))
+
+    favorite_stickers = ChatStickers.list_favorited(character)
+    sticker_groups = ChatStickers.list_groups(character)
+
+    session
+    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
+    |> push(Packets.ChatSticker.load(favorite_stickers, sticker_groups))
   end
 
   defp maybe_change_map(%{change_map: new_map} = character) do

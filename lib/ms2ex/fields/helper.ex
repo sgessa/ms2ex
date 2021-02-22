@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{ChatStickers, Damage, Emotes, Field, Metadata, Mobs, Packets, World}
+  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, World}
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -64,11 +64,12 @@ defmodule Ms2ex.FieldHelper do
     send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
 
     emotes = Emotes.list(character)
-    send(session_pid, {:push, Packets.Emote.load(emotes)})
+    send(self(), {:push, Packets.Emote.load(emotes)})
 
-    favorite_stickers = ChatStickers.list_favorited(character)
-    sticker_groups = ChatStickers.list_groups(character)
-    send(session_pid, {:push, Packets.ChatSticker.load(favorite_stickers, sticker_groups)})
+    # Load Premium membership if active
+    if membership = Ms2ex.PremiumMemberships.get(character.account_id) do
+      send(session_pid, {:push, Packets.PremiumClub.activate(character, membership)})
+    end
 
     # If character teleported or was summoned by an other user
     maybe_teleport_character(state.world, character)
