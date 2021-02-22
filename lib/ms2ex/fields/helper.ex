@@ -60,8 +60,9 @@ defmodule Ms2ex.FieldHelper do
     emotes = Emotes.list(character)
     send(session_pid, {:push, Packets.Emote.load(emotes)})
 
-    stickers = ChatStickers.list_groups(character)
-    send(session_pid, {:push, Packets.ChatSticker.load(stickers)})
+    favorite_stickers = ChatStickers.list_favorited(character)
+    sticker_groups = ChatStickers.list_groups(character)
+    send(session_pid, {:push, Packets.ChatSticker.load(favorite_stickers, sticker_groups)})
 
     # If character teleported or was summoned by an other user
     maybe_teleport_character(state.world, character)

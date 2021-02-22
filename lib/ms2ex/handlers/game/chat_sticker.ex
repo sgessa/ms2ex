@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.ChatSticker do
-  alias Ms2ex.{ChatSticker, ChatStickers, Metadata, Packets, World}
+  alias Ms2ex.{ChatStickerGroup, ChatStickers, Metadata, Packets, World}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
 
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
-         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
+         %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.chat(sticker_id, script))
     else
       _ -> session
@@ -36,7 +36,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
 
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
-         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
+         %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.group_chat(sticker_id, chat_name))
     else
       _ -> session
@@ -49,8 +49,8 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
 
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
-         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
-      # TODO???
+         %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
+      ChatStickers.favorite(character, sticker_id, sticker.group_id)
       push(session, Packets.ChatSticker.favorite(sticker_id))
     else
       _ -> session
@@ -63,8 +63,8 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
 
     with {:ok, character} <- World.get_character(session.world, session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
-         %ChatSticker{} <- ChatStickers.get(character, sticker.group_id) do
-      # TODO???
+         %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
+      ChatStickers.unfavorite(character, sticker_id)
       push(session, Packets.ChatSticker.unfavorite(sticker_id))
     else
       _ -> session

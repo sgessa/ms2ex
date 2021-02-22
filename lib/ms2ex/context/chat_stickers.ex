@@ -1,34 +1,47 @@
 defmodule Ms2ex.ChatStickers do
-  alias Ms2ex.{Character, ChatSticker, Repo}
+  alias Ms2ex.{Character, ChatStickerGroup, FavoriteChatSticker, Repo}
 
   import Ecto.Query, except: [update: 2]
 
-  @default_stickers 1..7
-
   def list_groups(%Character{id: character_id}) do
-    ChatSticker
+    ChatStickerGroup
     |> where([s], s.character_id == ^character_id)
     |> group_by([s], s.group_id)
     |> select([s], s.group_id)
     |> Repo.all()
   end
 
-  def get(%Character{id: character_id}, sticker_id) do
-    Repo.get_by(ChatSticker, character_id: character_id, sticker_id: sticker_id)
+  def get(%Character{id: character_id}, group_id) do
+    Repo.get_by(ChatStickerGroup, character_id: character_id, group_id: group_id)
   end
 
-  def add(%Character{} = character, sticker_id) do
+  def add(%Character{} = character, group_id) do
     character
     |> Ecto.build_assoc(:stickers)
-    |> ChatSticker.changeset(%{sticker_id: sticker_id})
+    |> ChatStickerGroup.changeset(%{group_id: group_id})
     |> Repo.insert()
   end
 
-  def favorite(%ChatSticker{} = sticker, is_favorited) do
-    sticker
-    |> ChatSticker.changeset(%{favorited: is_favorited})
-    |> Repo.update()
+  def list_favorited(%Character{id: character_id}) do
+    FavoriteChatSticker
+    |> where([s], s.character_id == ^character_id)
+    |> select([s], s.sticker_id)
+    |> Repo.all()
   end
 
+  def favorite(%Character{} = character, sticker_id, group_id) do
+    character
+    |> Ecto.build_assoc(:favorite_stickers)
+    |> FavoriteChatSticker.changeset(%{sticker_id: sticker_id, group_id: group_id})
+    |> Repo.insert()
+  end
+
+  def unfavorite(%Character{id: character_id}, sticker_id) do
+    FavoriteChatSticker
+    |> where([s], s.character_id == ^character_id and s.sticker_id == ^sticker_id)
+    |> Repo.delete_all()
+  end
+
+  @default_stickers 1..7
   def default_stickers(), do: @default_stickers
 end

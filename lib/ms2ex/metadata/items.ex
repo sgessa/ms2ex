@@ -123,6 +123,8 @@ defmodule Ms2ex.Metadata.Item do
   field :jobs, 14, repeated: true, type: Ms2ex.Metadata.Job, enum: true
   field :content, 15, repeated: true, type: Ms2ex.Metadata.ItemContent
   field :dismantle_rewards, 16, repeated: true, type: Ms2ex.Metadata.DismantleReward
+  field :function_name, 17, type: :string
+  field :function_param, 18, type: :int32
 end
 
 defmodule Ms2ex.Metadata.Items do

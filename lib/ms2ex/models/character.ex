@@ -34,7 +34,8 @@ defmodule Ms2ex.Character do
     belongs_to :account, Ms2ex.Account
 
     has_many :emotes, Ms2ex.Emote
-    has_many :stickers, Ms2ex.ChatSticker
+    has_many :favorite_stickers, Ms2ex.FavoriteChatSticker
+    has_many :stickers, Ms2ex.ChatStickerGroup
 
     has_many :equips, Inventory.Item
     has_many :inventory_items, Inventory.Item
@@ -97,7 +98,7 @@ defmodule Ms2ex.Character do
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
     |> cast_assoc(:skill_tabs, with: &Ms2ex.SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &Ms2ex.CharacterStats.changeset/2)
-    |> cast_assoc(:stickers, with: &Ms2ex.ChatSticker.changeset/2)
+    |> cast_assoc(:stickers, with: &Ms2ex.ChatStickerGroup.changeset/2)
     |> cast_assoc(:wallet, with: &Ms2ex.Wallet.changeset/2)
     |> validate_required(@fields)
     |> unique_constraint(:name)
