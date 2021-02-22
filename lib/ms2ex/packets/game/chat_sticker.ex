@@ -11,6 +11,7 @@ defmodule Ms2ex.Packets.ChatSticker do
     unfavorite: 0x6
   }
 
+  @unlimited 9_223_372_036_854_775_807
   def load(favorite_stickers, sticker_groups) do
     __MODULE__
     |> build()
@@ -24,7 +25,7 @@ defmodule Ms2ex.Packets.ChatSticker do
       packet
       |> put_int(group_id)
       # TODO expiration
-      |> put_long(9_223_372_036_854_775_807)
+      |> put_long(@unlimited)
     end)
   end
 
@@ -36,7 +37,7 @@ defmodule Ms2ex.Packets.ChatSticker do
     |> put_int(1)
   end
 
-  def add(item_id, group_id, expiration) do
+  def add(item_id, group_id, expiration \\ @unlimited) do
     __MODULE__
     |> build()
     |> put_byte(@modes.add)

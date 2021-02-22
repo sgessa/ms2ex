@@ -42,6 +42,6 @@ defmodule Ms2ex.ChatStickers do
     |> Repo.delete_all()
   end
 
-  @default_stickers 1..7
+  @default_stickers 1..3
   def default_stickers(), do: @default_stickers
 end
