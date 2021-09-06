@@ -20,8 +20,8 @@ defmodule Ms2ex.SyncState do
     field :flag, :integer, default: 0
     field :position, EctoTypes.Term, default: @default_coord
     field :rotation, :integer, default: 0
-    field :unknown_float_1, :float, default: 0
-    field :unknown_float_2, :float, default: 0
+    field :unknown_float_1, :float, default: 0.0
+    field :unknown_float_2, :float, default: 0.0
     field :speed, EctoTypes.Term, default: @default_coord
     field :unknown1, :integer, default: 0
     field :unknown2, :integer, default: 0
