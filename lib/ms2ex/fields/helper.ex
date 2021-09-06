@@ -66,7 +66,7 @@ defmodule Ms2ex.FieldHelper do
     send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
 
     emotes = Emotes.list(character)
-    send(self(), {:push, Packets.Emote.load(emotes)})
+    send(session_pid, {:push, Packets.Emote.load(emotes)})
 
     # Load Premium membership if active
     with %Membership{} = membership <- Memberships.get(character.account_id),
