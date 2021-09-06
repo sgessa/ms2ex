@@ -33,7 +33,7 @@ defmodule Ms2ex.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.5.7"},
+      {:phoenix, "~> 1.5"},
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.4"},
       {:postgrex, ">= 0.0.0"},
@@ -45,7 +45,7 @@ defmodule Ms2ex.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:bcrypt_elixir, "~> 2.2.0"},
       {:swarm, "~> 3.4.0"},
-      {:protobuf, "~> 0.7.1"},
+      {:protobuf, ">= 0.0.0"},
       {:varint, ">= 0.0.0"}
     ]
   end
