@@ -2,6 +2,8 @@ defmodule Ms2ex.FieldHelper do
   require Logger
 
   alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, World}
+  alias Ms2ex.PremiumMembership, as: Membership
+  alias Ms2ex.PremiumMemberships, as: Memberships
 
   def add_character(character, state) do
     session_pid = character.session_pid
@@ -67,7 +69,8 @@ defmodule Ms2ex.FieldHelper do
     send(self(), {:push, Packets.Emote.load(emotes)})
 
     # Load Premium membership if active
-    if membership = Ms2ex.PremiumMemberships.get(character.account_id) do
+    with %Membership{} = membership <- Memberships.get(character.account_id),
+         false <- Memberships.expired?(membership) do
       send(session_pid, {:push, Packets.PremiumClub.activate(character, membership)})
     end
 

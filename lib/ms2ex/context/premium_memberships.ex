@@ -37,4 +37,13 @@ defmodule Ms2ex.PremiumMemberships do
     |> PremiumMembership.changeset(attrs)
     |> Repo.update()
   end
+
+  def expired?(%{expires_at: expires_at}) do
+    now = DateTime.utc_now()
+
+    case DateTime.compare(expires_at, now) do
+      :gt -> false
+      _ -> true
+    end
+  end
 end
