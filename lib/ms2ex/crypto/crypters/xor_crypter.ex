@@ -28,14 +28,14 @@ defmodule Ms2ex.Crypto.XorCrypter do
   def decrypt(%__MODULE__{} = xc, data) do
     Enum.reduce(0..(length(data) - 1), data, fn idx, acc ->
       table = Enum.at(xc.table, idx &&& 1)
-      List.update_at(acc, idx, &(&1 ^^^ table))
+      List.update_at(acc, idx, &bxor(&1, table))
     end)
   end
 
   def encrypt(%__MODULE__{} = xc, data) do
     Enum.reduce(0..(length(data) - 1), data, fn idx, acc ->
       table = Enum.at(xc.table, idx &&& 1)
-      List.update_at(acc, idx, &(&1 ^^^ table))
+      List.update_at(acc, idx, &bxor(&1, table))
     end)
   end
 end

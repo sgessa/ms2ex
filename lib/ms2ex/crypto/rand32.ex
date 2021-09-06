@@ -21,13 +21,13 @@ defmodule Ms2ex.Crypto.Rand32 do
   end
 
   def random({:rand32, s1, s2, s3}) do
-    s1 = (s1 <<< 12 &&& 0xFFFFE000) ^^^ (s1 >>> 6 &&& 0x00001FFF) ^^^ (s1 >>> 19)
-    s2 = (s2 <<< 4 &&& 0xFFFFFF80) ^^^ (s2 >>> 23 &&& 0x0000007F) ^^^ (s2 >>> 25)
-    s3 = (s3 <<< 17 &&& 0xFFE00000) ^^^ (s3 >>> 8 &&& 0x001FFFFF) ^^^ (s3 >>> 11)
+    s1 = (s1 <<< 12 &&& 0xFFFFE000) |> bxor(s1 >>> 6 &&& 0x00001FFF) |> bxor(s1 >>> 19)
+    s2 = (s2 <<< 4 &&& 0xFFFFFF80) |> bxor(s2 >>> 23 &&& 0x0000007F) |> bxor(s2 >>> 25)
+    s3 = (s3 <<< 17 &&& 0xFFE00000) |> bxor(s3 >>> 8 &&& 0x001FFFFF) |> bxor(s3 >>> 11)
 
     rand32 = {:rand32, s1, s2, s3}
-    rand = (s1 ^^^ s2 ^^^ s3) >>> 0
-    {rand32, rand}
+    rand = s1 |> bxor(s2) |> bxor(s3)
+    {rand32, rand >>> 0}
   end
 
   def random_float(rand32) do
