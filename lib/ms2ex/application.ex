@@ -8,6 +8,8 @@ defmodule Ms2ex.Application do
   @config Application.get_env(:ms2ex, Ms2ex)
 
   def start(_type, _args) do
+    Ms2ex.WorldGraph.store()
+
     Registries.SkillCasts.start()
 
     Ms2ex.Metadata.ChatStickers.store()
