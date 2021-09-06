@@ -48,7 +48,7 @@ defmodule Ms2ex.Crypto.RecvCipher do
   end
 
   defp decode_seq_base(cipher, enc_seq) do
-    dec_seq = (cipher.iv >>> 16) ^^^ enc_seq
+    dec_seq = bxor(cipher.iv >>> 16, enc_seq)
 
     cipher = Cipher.advance_iv(cipher)
     {cipher, dec_seq}

@@ -1,3 +1,30 @@
+defmodule Ms2ex.Metadata.SkillAttack do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  field :condition_skill_ids, 1, repeated: true, type: :int32
+end
+
+defmodule Ms2ex.Metadata.SkillData do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  field :duration, 1, type: :int32
+  field :buff_type, 2, type: :int32
+  field :buff_sub_type, 3, type: :int32
+  field :buff_category, 4, type: :int32
+  field :event_buff_type, 5, type: :int32
+  field :max_stacks, 6, type: :int32
+end
+
+defmodule Ms2ex.Metadata.SkillMotion do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  field :sequence_name, 1, type: :string
+  field :effect, 2, type: :string
+end
+
 defmodule Ms2ex.Metadata.Skill do
   @moduledoc false
   use Protobuf, syntax: :proto3
@@ -17,12 +44,14 @@ defmodule Ms2ex.Metadata.SkillLevel do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:level, :spirit, :damage_rate, :feature]
-
   field :level, 1, type: :int32
   field :spirit, 2, type: :int32
-  field :damage_rate, 3, type: :float
-  field :feature, 4, type: :string
+  field :stamina, 3, type: :int32
+  field :damage_rate, 4, type: :float
+  field :feature, 5, type: :string
+  field :motion, 6, type: Ms2ex.Metadata.SkillMotion
+  field :attack, 7, type: Ms2ex.Metadata.SkillAttack
+  field :data, 8, type: Ms2ex.Metadata.SkillData
 end
 
 defmodule Ms2ex.Metadata.Skills do

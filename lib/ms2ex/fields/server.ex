@@ -117,4 +117,9 @@ defmodule Ms2ex.FieldServer do
 
     {:noreply, state}
   end
+
+  def handle_info(data, state) do
+    Logger.warn("[Field] Unknown message: #{inspect(data)}")
+    {:noreply, state}
+  end
 end

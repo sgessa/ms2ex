@@ -54,7 +54,7 @@ defmodule Ms2ex.Inventory.Item do
     field :inventory_tab, InventoryTab
     field :location, Location, default: :inventory
     field :paired_character_id, :integer, virtual: true, default: 0
-    field :paired_character_name, :integer, virtual: true, default: ""
+    field :paired_character_name, :string, virtual: true, default: ""
     field :rarity, :integer
     field :remaining_trades, :integer, virtual: true, default: 0
     field :times_attr_changed, :integer, virtual: true, default: 0
