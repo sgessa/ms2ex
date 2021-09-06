@@ -78,6 +78,21 @@ defmodule Ms2ex.Metadata.ItemContent do
   field :enchant_level, 8, type: :int32
 end
 
+defmodule Ms2ex.Metadata.ItemFunction do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  field :name, 1, type: :string
+  field :id, 2, type: :int32
+  field :duration, 3, type: :int32
+  field :field_id, 4, type: :int32
+  field :capacity, 5, type: :int32
+  field :target_level, 6, type: :int32
+  field :count, 7, type: :int32
+  field :total_user, 8, type: :int32
+  field :rarity, 9, type: :int32
+end
+
 defmodule Ms2ex.Metadata.DismantleReward do
   @moduledoc false
   use Protobuf, syntax: :proto3
@@ -108,23 +123,26 @@ defmodule Ms2ex.Metadata.Item do
   ]
 
   field :id, 1, type: :int32
-  field :slot, 2, type: Ms2ex.Metadata.EquipSlot, enum: true
-  field :gem_slot, 3, type: Ms2ex.Metadata.GemSlot, enum: true
-  field :tab, 4, type: Ms2ex.Metadata.InventoryTab, enum: true
+  field :slot, 2, enum: true, type: Ms2ex.Metadata.EquipSlot
+  field :gem_slot, 3, enum: true, type: Ms2ex.Metadata.GemSlot
+  field :tab, 4, enum: true, type: Ms2ex.Metadata.InventoryTab
   field :rarity, 5, type: :int32
   field :stack_limit, 6, type: :int32
   field :dismantable?, 7, type: :bool
   field :is_two_handed?, 8, type: :bool
   field :is_dress?, 9, type: :bool
   field :is_template?, 10, type: :bool
-  field :play_count, 11, type: :int32
-  field :file_name, 12, type: :string
-  field :skill_id, 13, type: :int32
-  field :jobs, 14, repeated: true, type: Ms2ex.Metadata.Job, enum: true
-  field :content, 15, repeated: true, type: Ms2ex.Metadata.ItemContent
-  field :dismantle_rewards, 16, repeated: true, type: Ms2ex.Metadata.DismantleReward
-  field :function_name, 17, type: :string
-  field :function_param, 18, type: :int32
+  field :gender, 11, type: :int32
+  field :play_count, 12, type: :int32
+  field :custom_score?, 13, type: :bool
+  field :selling_prices, 15, repeated: true, type: :int32
+  field :selling_custom_price, 16, repeated: true, type: :int32
+  field :file_name, 17, type: :string
+  field :skill_id, 18, type: :int32
+  field :jobs, 19, enum: true, repeated: true, type: Ms2ex.Metadata.Job
+  field :content, 20, repeated: true, type: Ms2ex.Metadata.ItemContent
+  field :dismantle_rewards, 21, repeated: true, type: Ms2ex.Metadata.DismantleReward
+  field :function_data, 22, type: Ms2ex.Metadata.ItemFunction
 end
 
 defmodule Ms2ex.Metadata.Items do
