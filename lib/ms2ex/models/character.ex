@@ -22,6 +22,7 @@ defmodule Ms2ex.Character do
     :prestige_level,
     :rest_exp,
     :skin_color,
+    :taxis,
     :title_id
   ]
 
@@ -81,6 +82,7 @@ defmodule Ms2ex.Character do
     field :rotation, EctoTypes.Term, virtual: true
     field :safe_position, EctoTypes.Term, virtual: true
     field :skin_color, EctoTypes.Term
+    field :taxis, {:array, :integer}, default: []
     field :title_id, :integer, default: 0
 
     # TODO

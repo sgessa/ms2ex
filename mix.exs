@@ -46,7 +46,8 @@ defmodule Ms2ex.MixProject do
       {:bcrypt_elixir, "~> 2.2.0"},
       {:swarm, "~> 3.4.0"},
       {:protobuf, ">= 0.0.0"},
-      {:varint, ">= 0.0.0"}
+      {:varint, ">= 0.0.0"},
+      {:libgraph, "~> 0.13"}
     ]
   end
 

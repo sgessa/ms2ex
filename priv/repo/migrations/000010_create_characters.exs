@@ -19,6 +19,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :profile_url, :string
       add :rest_exp, :bigint, null: false
       add :skin_color, :binary, null: false
+      add :taxis, {:array, :integer}, null: false
       add :title_id, :integer, null: false
 
       timestamps(type: :timestamptz)
