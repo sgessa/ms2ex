@@ -44,7 +44,7 @@ config :ms2ex, Ms2ex,
   worlds: [
     %{
       name: "Paperwood",
-      login: %{host: server_host, port: 20002},
+      login: %{host: server_host, port: 8526},
       channels: [
         %{host: server_host, port: 20003},
         %{host: server_host, port: 20004}
