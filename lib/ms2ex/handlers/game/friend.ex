@@ -23,18 +23,16 @@ defmodule Ms2ex.GameHandlers.Friend do
          :ok <- check_block_list(character, rcpt),
          :ok <- check_is_already_friend(character, rcpt),
          {:ok, {src, dst}} <- Friends.add(character, rcpt, msg) do
-      rcpt_online? = !!Map.get(rcpt, :session_pid)
-
-      if rcpt_online? do
+      if Map.get(rcpt, :session_pid) do
         # rcpt = Characters.preload(rcpt, :friends, force: true)
         rcpt = Map.put(rcpt, :friends, [dst | rcpt.friends])
         World.update_character(session.world, rcpt)
-        send(rcpt.session_pid, {:push, Packets.Friend.add_to_list(dst, true)})
+        send(rcpt.session_pid, {:push, Packets.Friend.add_to_list(session.world, dst)})
       end
 
       session
       |> push(Packets.Friend.notice(:request_sent, rcpt_name))
-      |> push(Packets.Friend.add_to_list(src, rcpt_online?))
+      |> push(Packets.Friend.add_to_list(session.world, src))
     else
       {:error, notice_packet} ->
         push(session, notice_packet)

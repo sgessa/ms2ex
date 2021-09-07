@@ -33,22 +33,38 @@ defmodule Ms2ex.Packets.Friend do
     |> put_byte(0xF)
   end
 
-  def end_list() do
+  def load_list(world, friends) do
+    IO.inspect(friends)
+
+    __MODULE__
+    |> build()
+    |> put_byte(0x1)
+    |> put_int(Enum.count(friends))
+    |> reduce(friends, &put_friend(&2, world, &1))
+  end
+
+  def end_list(friend_count) do
     __MODULE__
     |> build()
     |> put_byte(0x13)
-    |> put_int(0)
+    |> put_int(friend_count)
   end
 
-  def add_to_list(friend, rcpt_online?) do
+  def add_to_list(world, friend) do
     __MODULE__
     |> build()
     |> put_byte(0x9)
-    |> put_friend(friend, rcpt_online?)
+    |> put_friend(world, friend)
   end
 
-  defp put_friend(packet, friend, rcpt_online?) do
+  defp put_friend(packet, world, friend) do
     real_job_id = Character.real_job_id(friend.rcpt)
+
+    friend_online? =
+      case Ms2ex.World.get_character_by_name(world, friend.rcpt.name) do
+        {:ok, _} -> true
+        _ -> false
+      end
 
     packet
     |> put_long(friend.shared_id)
@@ -65,7 +81,7 @@ defmodule Ms2ex.Packets.Friend do
     |> put_bool(friend.status == :accepted)
     |> put_bool(friend.status == :pending)
     |> put_bool(friend.status == :blocked)
-    |> put_bool(rcpt_online?)
+    |> put_bool(friend_online?)
     |> put_byte()
     |> put_long(DateTime.to_unix(friend.inserted_at))
     |> put_ustring(friend.rcpt.profile_url)
