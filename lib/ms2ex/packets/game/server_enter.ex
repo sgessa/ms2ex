@@ -1,8 +1,6 @@
 defmodule Ms2ex.Packets.ServerEnter do
   import Ms2ex.Packets.PacketWriter
 
-  @unlocked_maps [2_000_023]
-
   def bytes(channel_id, character, wallet) do
     __MODULE__
     |> build()
@@ -29,8 +27,8 @@ defmodule Ms2ex.Packets.ServerEnter do
     |> put_ustring(character.profile_url)
     |> put_byte()
     |> put_byte()
-    |> put_short(length(@unlocked_maps))
-    |> put_maps(@unlocked_maps)
+    |> put_short(length(character.discovered_maps))
+    |> put_maps(character.discovered_maps)
     |> put_short(length(character.taxis))
     |> put_maps(character.taxis)
     |> put_long()

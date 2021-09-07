@@ -10,6 +10,7 @@ defmodule Ms2ex.Character do
 
   @fields [
     :awakened,
+    :discovered_maps,
     :exp,
     :gender,
     :insignia_id,
@@ -61,6 +62,7 @@ defmodule Ms2ex.Character do
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
 
     field :animation, :integer, virtual: true, default: 0
+    field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0
     field :gender, Gender, default: :male
     field :group_chats, {:array, :map}, virtual: true, default: []
