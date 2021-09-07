@@ -1,5 +1,5 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{FieldServer, Metadata, Net, Packets, World}
+  alias Ms2ex.{Characters, FieldServer, Metadata, Net, Packets, World}
 
   def add_item(character, item) do
     item = Map.put(item, :position, character.position)
@@ -56,6 +56,7 @@ defmodule Ms2ex.Field do
     with :ok <- leave(character) do
       character =
         character
+        |> Characters.maybe_discover_map(field_id)
         |> Map.put(:change_map, %{id: field_id, position: coord, rotation: rotation})
 
       World.update_character(session.world, character)

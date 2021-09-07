@@ -6,6 +6,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :account_id, references(:accounts, on_delete: :delete_all), null: false
 
       add :awakened, :boolean, null: false
+      add :discovered_maps, {:array, :integer}, null: false
       add :exp, :bigint, null: false
       add :gender, :integer, null: false
       add :insignia_id, :integer, null: false

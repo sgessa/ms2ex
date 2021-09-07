@@ -62,4 +62,14 @@ defmodule Ms2ex.Characters do
     |> limit(1)
     |> Repo.one()
   end
+
+  def maybe_discover_map(%Character{discovered_maps: maps} = character, new_map) do
+    if Enum.member?(maps, new_map) do
+      character
+    else
+      maps = [new_map | maps]
+      {:ok, character} = __MODULE__.update(character, %{discovered_maps: maps})
+      character
+    end
+  end
 end
