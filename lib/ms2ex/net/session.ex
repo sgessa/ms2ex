@@ -55,7 +55,9 @@ defmodule Ms2ex.Net.Session do
     :ok =
       transport.setopts(socket, [
         :binary,
-        active: :once
+        active: :once,
+        nodelay: true,
+        linger: {true, 0}
       ])
 
     Process.flag(:trap_exit, true)
