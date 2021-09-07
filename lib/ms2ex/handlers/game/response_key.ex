@@ -16,7 +16,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
-        |> Characters.preload(:stats)
+        |> Characters.preload([:friends, :stats])
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
 
@@ -45,8 +45,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> Map.put(:character_id, character.id)
       |> push(Packets.MoveResult.bytes())
       |> push(Packets.LoginRequired.bytes(account.id))
-      |> push(Packets.BuddyList.start_list())
-      |> push(Packets.BuddyList.end_list())
+      |> push(Packets.Friend.start_list())
+      |> push(Packets.Friend.end_list())
       |> push(Packets.ResponseTimeSync.init(0x1, tick))
       |> push(Packets.ResponseTimeSync.init(0x3, tick))
       |> push(Packets.ResponseTimeSync.init(0x2, tick))

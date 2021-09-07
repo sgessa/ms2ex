@@ -37,6 +37,7 @@ defmodule Ms2ex.Character do
 
     has_many :emotes, Ms2ex.Emote
     has_many :favorite_stickers, Ms2ex.FavoriteChatSticker
+    has_many :friends, Ms2ex.Friend
     has_many :stickers, Ms2ex.ChatStickerGroup
 
     has_many :equips, Inventory.Item

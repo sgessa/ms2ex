@@ -33,6 +33,8 @@ defmodule Ms2ex.Characters do
 
   def get(id), do: Repo.get(Character, id)
 
+  def get_by(attrs), do: Repo.get_by(Character, attrs)
+
   def update(%Character{} = character, attrs) do
     character
     |> Character.changeset(attrs)
@@ -41,8 +43,8 @@ defmodule Ms2ex.Characters do
 
   def delete(%Character{} = character), do: Repo.delete(character)
 
-  def preload(%Character{} = character, assocs) do
-    Repo.preload(character, assocs)
+  def preload(%Character{} = character, assocs, opts \\ []) do
+    Repo.preload(character, assocs, opts)
   end
 
   def load_equips(%Character{} = character) do
