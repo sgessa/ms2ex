@@ -24,7 +24,6 @@ defmodule Ms2ex.GameHandlers.Friend do
          :ok <- check_is_already_friend(character, rcpt),
          {:ok, {src, dst}} <- Friends.add(character, rcpt, msg) do
       if Map.get(rcpt, :session_pid) do
-        # rcpt = Characters.preload(rcpt, :friends, force: true)
         rcpt = Map.put(rcpt, :friends, [dst | rcpt.friends])
         World.update_character(session.world, rcpt)
         send(rcpt.session_pid, {:push, Packets.Friend.add_to_list(session.world, dst)})
@@ -45,8 +44,27 @@ defmodule Ms2ex.GameHandlers.Friend do
   end
 
   # Decline
-  defp handle_mode(0x4, _packet, session) do
-    session
+  defp handle_mode(0x4, packet, %{world: world} = session) do
+    {shared_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(world, session.character_id),
+         %{status: :accepted, rcpt: sender} <-
+           Friends.get_by_character_and_shared_id(session.character_id, shared_id, true),
+         %{status: :pending} <-
+           Friends.get_by_character_and_shared_id(sender.id, shared_id) do
+      Friends.delete(shared_id)
+
+      with {:ok, sender_session} <- World.get_character_by_name(world, sender.name) do
+        remove_friend_from_session(world, sender_session, shared_id)
+        send(sender_session.session_pid, {:push, Packets.Friend.remove(shared_id, character)})
+      end
+
+      remove_friend_from_session(world, character, shared_id)
+      push(session, Packets.Friend.decline(shared_id))
+    else
+      _ ->
+        session
+    end
   end
 
   # Block

@@ -1,6 +1,19 @@
 defmodule Ms2ex.Friends do
   alias Ms2ex.{Character, Friend, Repo}
 
+  import Ecto.Query
+
+  def get_by_character_and_shared_id(char_id, shared_id, preload_rcpt? \\ false) do
+    Friend
+    |> where([f], f.shared_id == ^shared_id and f.rcpt_id != ^char_id)
+    |> maybe_preload_rcpt(preload_rcpt?)
+    |> limit(1)
+    |> Repo.one()
+  end
+
+  defp maybe_preload_rcpt(query, true), do: preload(query, [_f], [:rcpt])
+  defp maybe_preload_rcpt(query, _), do: query
+
   def add(%Character{} = character, %Character{} = friend, message) do
     <<guid::signed-integer-size(64)>> = :crypto.strong_rand_bytes(8)
 
@@ -23,5 +36,11 @@ defmodule Ms2ex.Friends do
           Repo.rollback(changeset)
       end
     end)
+  end
+
+  def delete(shared_id) do
+    Friend
+    |> where([f], f.shared_id == ^shared_id)
+    |> Repo.delete_all()
   end
 end

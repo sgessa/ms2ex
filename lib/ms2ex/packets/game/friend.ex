@@ -57,6 +57,25 @@ defmodule Ms2ex.Packets.Friend do
     |> put_friend(world, friend)
   end
 
+  def remove(shared_id, character) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x7)
+    |> put_byte()
+    |> put_long(shared_id)
+    |> put_long(character.account_id)
+    |> put_long(character.id)
+    |> put_ustring(character.name)
+  end
+
+  def decline(shared_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x4)
+    |> put_byte()
+    |> put_long(shared_id)
+  end
+
   defp put_friend(packet, world, friend) do
     real_job_id = Character.real_job_id(friend.rcpt)
 
