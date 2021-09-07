@@ -131,17 +131,17 @@ defmodule Ms2ex.Net.Session do
     {:noreply, state}
   end
 
-  def handle_info({:tcp_closed, _}, %{peername: peername} = state) do
+  def handle_info({:tcp_closed, _}, state) do
     Logger.info(fn ->
-      "Peer #{peername} disconnected"
+      "Client disconnected"
     end)
 
     {:stop, :normal, state}
   end
 
-  def handle_info({:tcp_error, _, reason}, %{peername: peername} = state) do
+  def handle_info({:tcp_error, _, reason}, state) do
     Logger.info(fn ->
-      "Error with peer #{peername}: #{inspect(reason)}"
+      "TCP error: #{inspect(reason)}"
     end)
 
     {:stop, :normal, state}

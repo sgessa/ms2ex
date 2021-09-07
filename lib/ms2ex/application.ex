@@ -98,8 +98,6 @@ defmodule Ms2ex.Application do
   end
 
   defp server_tcp_chidspec(server_config) do
-    IO.inspect(server_config)
-
     :ranch.child_spec(
       # ensure unique name!
       :"#{server_config.type}-#{server_config.port}",
