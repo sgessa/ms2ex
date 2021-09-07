@@ -47,7 +47,8 @@ defmodule Ms2ex.MixProject do
       {:swarm, "~> 3.4.0"},
       {:protobuf, ">= 0.0.0"},
       {:varint, ">= 0.0.0"},
-      {:libgraph, "~> 0.13"}
+      {:libgraph, "~> 0.13"},
+      {:ranch, "~> 2.0", override: true}
     ]
   end
 
