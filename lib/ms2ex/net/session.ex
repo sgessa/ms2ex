@@ -55,9 +55,7 @@ defmodule Ms2ex.Net.Session do
     :ok =
       transport.setopts(socket, [
         :binary,
-        active: :once,
-        nodelay: true,
-        linger: {true, 0}
+        active: :once
       ])
 
     Process.flag(:trap_exit, true)
@@ -105,25 +103,10 @@ defmodule Ms2ex.Net.Session do
         %{
           socket: socket,
           transport: transport,
-          yet_to_parse: yet_to_parse,
-          recv_cipher: cipher
+          yet_to_parse: yet_to_parse
         } = state
       ) do
-    state =
-      case parse_packet(yet_to_parse <> message) do
-        {not_parsed, {:ok, packet}} ->
-          {cipher, packet} = RecvCipher.decrypt(cipher, packet)
-
-          {opcode, packet} = PacketReader.get_short(packet)
-
-          log_incoming_packet(opcode, packet)
-
-          state = Router.route(opcode, packet, %{state | recv_cipher: cipher})
-          %{state | yet_to_parse: not_parsed}
-
-        {not_parsed, {}} ->
-          %{state | yet_to_parse: not_parsed}
-      end
+    state = process_packet(yet_to_parse, message, state)
 
     # accept another message
     :ok = transport.setopts(socket, active: :once)
@@ -169,6 +152,31 @@ defmodule Ms2ex.Net.Session do
 
   def push_notice(state, character, notice) do
     push(state, Packets.UserChat.bytes(:notice_alert, character, notice))
+  end
+
+  defp process_packet(yet_to_parse, message, state) do
+    case parse_packet(yet_to_parse <> message) do
+      {<<>>, {:ok, packet}} ->
+        state = decrypt_data(packet, state)
+        %{state | yet_to_parse: <<>>}
+
+      {not_parsed, {:ok, packet}} ->
+        state = decrypt_data(packet, state)
+        process_packet(<<>>, not_parsed, state)
+
+      {not_parsed, {}} ->
+        %{state | yet_to_parse: not_parsed}
+    end
+  end
+
+  defp decrypt_data(packet, state) do
+    {cipher, packet} = RecvCipher.decrypt(state.recv_cipher, packet)
+
+    {opcode, packet} = PacketReader.get_short(packet)
+
+    log_incoming_packet(opcode, packet)
+
+    Router.route(opcode, packet, %{state | recv_cipher: cipher})
   end
 
   defp parse_packet(
