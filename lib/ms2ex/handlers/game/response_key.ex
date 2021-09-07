@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
 
-      World.monitor_character(session.world, character)
+      World.monitor_character(character)
 
       tick = Ms2ex.sync_ticks()
 
@@ -34,7 +34,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
           safe_position: spawn.coord
       }
 
-      World.update_character(session.world, character)
+      World.update_character(character)
 
       %{friends: friends, map_id: map_id, position: position, rotation: rotation} =
         Characters.preload(character, friends: :rcpt)
@@ -47,7 +47,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.MoveResult.bytes())
       |> push(Packets.LoginRequired.bytes(account.id))
       |> push(Packets.Friend.start_list())
-      |> push(Packets.Friend.load_list(session.world, friends))
+      |> push(Packets.Friend.load_list(friends))
       |> push(Packets.Friend.end_list(Enum.count(friends)))
       |> push(Packets.ResponseTimeSync.init(0x1, tick))
       |> push(Packets.ResponseTimeSync.init(0x3, tick))

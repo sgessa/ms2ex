@@ -17,7 +17,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     states = get_states(segment_length, packet)
 
@@ -31,12 +31,12 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: animation, position: new_position}
-    World.update_character(session.world, character)
+    World.update_character(character)
 
     if is_out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
       character = Damage.receive_fall_dmg(character)
-      # World.update_character(session.world, character)
+      # World.update_character(character)
 
       session
       |> push(Packets.MoveCharacter.bytes(character, character.safe_position))

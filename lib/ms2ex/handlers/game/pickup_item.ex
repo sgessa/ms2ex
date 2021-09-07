@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.PickupItem do
   def handle(packet, session) do
     {object_id, _packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     # TODO check that user inventory is not full
 

@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.Emote do
   defp handle_mode(0x1, packet, session) do
     {item_uid, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          %Inventory.Item{} = item <- Inventory.get(character, item_uid),
          %{metadata: %{skill_id: emote_id}} <- Metadata.Items.load(item),
          consumed_item <- Inventory.consume(item),
@@ -31,7 +31,7 @@ defmodule Ms2ex.GameHandlers.Emote do
   defp handle_mode(0x2, packet, session) do
     {emote_id, _packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
     Field.broadcast(character, Packets.Emote.use(character, emote_id), self())
 
     session

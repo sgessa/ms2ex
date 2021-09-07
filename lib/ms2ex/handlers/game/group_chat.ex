@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
 
   # Create
   def handle_mode(0x1, _packet, session) do
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
     maybe_create_chat(session, character)
   end
 
@@ -24,14 +24,14 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     {rcpt_name, packet} = get_ustring(packet)
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
-         {:ok, rcpt} <- get_rcpt(session.world, character, rcpt_name),
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, rcpt} <- get_rcpt(character, rcpt_name),
          :ok <- validate_rcpt(character, rcpt),
          {:ok, chat} <- get_chat(session, chat_id),
          :ok <- validate_chat(chat) do
-      add_character_chat(session.world, rcpt, chat)
+      add_character_chat(rcpt, chat)
 
-      {:ok, chat} = World.update_group_chat(session.world, chat, rcpt)
+      {:ok, chat} = World.update_group_chat(chat, rcpt)
 
       send(rcpt.session_pid, {:push, Packets.GroupChat.update(chat)})
       send(rcpt.session_pid, {:push, Packets.GroupChat.join(character, rcpt, chat)})
@@ -47,9 +47,9 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   def handle_mode(0x4, packet, session) do
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, chat} <- get_chat(session, chat_id),
-         :ok <- World.leave_group_chat(session.world, chat, character) do
+         :ok <- World.leave_group_chat(chat, character) do
       push(session, Packets.GroupChat.leave(chat))
     else
       _ -> session
@@ -61,7 +61,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     {msg, packet} = get_ustring(packet)
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, chat} <- get_chat(session, chat_id) do
       for member <- chat.members do
         send(member.session_pid, {:push, Packets.GroupChat.chat(chat, character, msg)})
@@ -81,9 +81,9 @@ defmodule Ms2ex.GameHandlers.GroupChat do
 
   defp maybe_create_chat(session, character) do
     chat = %GroupChat{members: [character]}
-    {:ok, chat} = World.add_group_chat(session.world, chat)
+    {:ok, chat} = World.add_group_chat(chat)
 
-    add_character_chat(session.world, character, chat)
+    add_character_chat(character, chat)
 
     session
     |> push(Packets.GroupChat.update(chat))
@@ -91,7 +91,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   end
 
   defp get_chat(session, chat_id) do
-    case World.get_group_chat(session.world, chat_id) do
+    case World.get_group_chat(chat_id) do
       {:ok, chat} -> {:ok, chat}
       :error -> {:error, session}
     end
@@ -100,8 +100,8 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   defp validate_chat(%{members: members}) when length(members) >= @max_chat_members, do: :error
   defp validate_chat(_chat), do: :ok
 
-  defp get_rcpt(world, character, rcpt_name) do
-    case World.get_character_by_name(world, rcpt_name) do
+  defp get_rcpt(character, rcpt_name) do
+    case World.get_character_by_name(rcpt_name) do
       {:ok, rcpt} ->
         {:ok, rcpt}
 
@@ -123,8 +123,8 @@ defmodule Ms2ex.GameHandlers.GroupChat do
 
   defp validate_rcpt(_character, _rcpt), do: :ok
 
-  defp add_character_chat(world, character, chat) do
+  defp add_character_chat(character, chat) do
     chats = [chat.id | character.group_chats]
-    World.update_character(world, %{character | group_chats: chats})
+    World.update_character(%{character | group_chats: chats})
   end
 end

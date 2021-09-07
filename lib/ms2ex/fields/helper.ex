@@ -13,7 +13,7 @@ defmodule Ms2ex.FieldHelper do
     character_ids = Map.keys(state.sessions)
 
     # Load other characters
-    for {_id, char} <- World.get_characters(state.world, character_ids) do
+    for {_id, char} <- World.get_characters(character_ids) do
       send(session_pid, {:push, Packets.FieldAddUser.bytes(char)})
       send(session_pid, {:push, Packets.ProxyGameObj.load_player(char)})
 
@@ -25,7 +25,7 @@ defmodule Ms2ex.FieldHelper do
     # Update registry
     character = %{character | object_id: state.counter, map_id: state.field_id}
     character = Map.put(character, :field_pid, self())
-    World.update_character(state.world, character)
+    World.update_character(character)
 
     sessions = Map.put(state.sessions, character.id, session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
@@ -75,7 +75,7 @@ defmodule Ms2ex.FieldHelper do
     end
 
     # If character teleported or was summoned by an other user
-    maybe_teleport_character(state.world, character)
+    maybe_teleport_character(character)
 
     state
   end
@@ -136,7 +136,7 @@ defmodule Ms2ex.FieldHelper do
 
             {:dead, target} ->
               broadcast(state.sessions, Packets.Stats.update_health(target))
-              Mobs.process_death(state.world, character, target)
+              Mobs.process_death(character, target)
               Process.send_after(self(), {:remove_mob, target}, target.dead_at)
 
               if target.respawn,
@@ -157,7 +157,7 @@ defmodule Ms2ex.FieldHelper do
   end
 
   @object_counter 10_000_001
-  def initialize_state(world, map_id, channel_id) do
+  def initialize_state(map_id, channel_id) do
     {:ok, map} = Metadata.Maps.lookup(map_id)
 
     load_mobs(map)
@@ -176,8 +176,7 @@ defmodule Ms2ex.FieldHelper do
       mounts: %{},
       npcs: npcs,
       portals: portals,
-      sessions: %{},
-      world: world
+      sessions: %{}
     }
   end
 
@@ -224,11 +223,11 @@ defmodule Ms2ex.FieldHelper do
     end
   end
 
-  defp maybe_teleport_character(world, %{update_position: coord} = character) do
+  defp maybe_teleport_character(%{update_position: coord} = character) do
     character = Map.delete(character, :update_position)
-    World.update_character(world, character)
+    World.update_character(character)
     send(character.session_pid, {:push, Packets.MoveCharacter.bytes(character, coord)})
   end
 
-  defp maybe_teleport_character(session, _character), do: session
+  defp maybe_teleport_character(_character), do: nil
 end

@@ -193,7 +193,7 @@ defmodule Ms2ex.Net.Session do
     {unparsed, {}}
   end
 
-  defp log_connected_client(%{socket: socket, type: :login}) do
+  defp log_connected_client(%{socket: socket, type: :login_server}) do
     L.info("Client #{peername(socket)} connected to Login Server")
   end
 
@@ -201,8 +201,8 @@ defmodule Ms2ex.Net.Session do
     L.info("Client #{peername(socket)} connected to World #{world}")
   end
 
-  defp log_connected_client(%{channel_id: id, socket: socket, world_name: world, type: :channel}) do
-    L.info("Client #{peername(socket)} connected to Channel #{id} on World #{world}")
+  defp log_connected_client(%{channel_id: id, socket: socket, type: :channel}) do
+    L.info("Client #{peername(socket)} connected to Channel #{id}")
   end
 
   defp log_incoming_packet(opcode, packet) do

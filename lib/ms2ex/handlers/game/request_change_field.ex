@@ -11,7 +11,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
   end
 
   defp handle_change_field(0x0, packet, session) do
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     {src_map_id, packet} = get_int(packet)
 

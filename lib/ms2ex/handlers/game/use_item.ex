@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     {item_uid, packet} = get_long(packet)
     # {item_type, packet} = get_short(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          %Inventory.Item{} = item <- Inventory.get(character, item_uid),
          item <- Metadata.Items.load(item) do
       # session

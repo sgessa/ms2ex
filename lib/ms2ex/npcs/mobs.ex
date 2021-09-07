@@ -27,8 +27,8 @@ defmodule Ms2ex.Mobs do
     end)
   end
 
-  def process_death(world, character, mob) do
-    reward_exp(world, character, mob)
+  def process_death(character, mob) do
+    reward_exp(character, mob)
     add_mob_loots(character, mob)
   end
 
@@ -51,13 +51,13 @@ defmodule Ms2ex.Mobs do
     end)
   end
 
-  defp reward_exp(world, character, mob) do
+  defp reward_exp(character, mob) do
     # TODO adjust EXP formula
     exp_gained = trunc(mob.stats.hp.total / 10)
     old_lvl = character.level
 
     {:ok, character} = Ms2ex.Experience.maybe_add_exp(character, exp_gained)
-    World.update_character(world, character)
+    World.update_character(character)
 
     if old_lvl != character.level do
       broadcast(self(), Packets.LevelUp.bytes(character))

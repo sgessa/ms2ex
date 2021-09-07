@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.Job do
 
   # Save Skill Build
   defp handle_mode(0x9, packet, session) do
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     skill_tab = Skills.get_tab(character)
     {skills_length, packet} = get_int(packet)
@@ -34,7 +34,7 @@ defmodule Ms2ex.GameHandlers.Job do
 
   # TODO: Reset Skill Build (need to check again)
   defp handle_mode(0xA, _packet, session) do
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     skill_tab = Skills.get_tab(character)
     Skills.reset(character, skill_tab)

@@ -6,11 +6,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   import Net.Session, only: [push: 2]
 
   def handle(_packet, %{character_id: character_id} = session) do
-    {:ok, character} = World.get_character(session.world, character_id)
+    {:ok, character} = World.get_character(character_id)
 
     # Check if character is changing map
     character = maybe_change_map(character)
-    World.update_character(session.world, character)
+    World.update_character(character)
 
     {:ok, _pid} = Field.enter(character, session)
 

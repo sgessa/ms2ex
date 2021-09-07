@@ -41,16 +41,14 @@ config :ms2ex, Ms2ex,
     host: server_host,
     port: 20001
   },
-  worlds: [
-    %{
-      name: "Paperwood",
-      login: %{host: server_host, port: 8526},
-      channels: [
-        %{host: server_host, port: 20003},
-        %{host: server_host, port: 20004}
-      ]
-    }
-  ],
+  world: %{
+    name: "Paperwood",
+    login: %{host: server_host, port: 8526},
+    channels: [
+      %{host: server_host, port: 20003},
+      %{host: server_host, port: 20004}
+    ]
+  },
   ugc: %{
     endpoint: "http://#{server_host}/ws.asmx?wsdl",
     resource: "http://#{server_host}",

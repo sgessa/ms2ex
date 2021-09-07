@@ -12,9 +12,9 @@ defmodule Ms2ex.GameHandlers.UserEnv do
     {title_id, _packet} = get_int(packet)
 
     if title_id >= 0 do
-      {:ok, character} = World.get_character(session.world, session.character_id)
+      {:ok, character} = World.get_character(session.character_id)
       {:ok, character} = Characters.update(character, %{title_id: title_id})
-      World.update_character(session.world, character)
+      World.update_character(character)
 
       Field.broadcast(character, Packets.UserEnv.update_title(character))
     end

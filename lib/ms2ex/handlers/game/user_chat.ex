@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
     {rcpt, packet} = get_ustring(packet)
     {_, _packet} = get_long(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     case msg do
       "!" <> cmd ->
@@ -33,7 +33,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
-    case World.get_character_by_name(session.world, rcpt_name) do
+    case World.get_character_by_name(rcpt_name) do
       {:ok, rcpt} ->
         packet = Packets.UserChat.bytes(:whisper_from, character, msg)
         send(rcpt.session_pid, {:push, packet})
@@ -49,7 +49,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   defp handle_message({:world, msg, _rcpt_name}, character, session) do
     # TODO check if user has enough merets or a voucher
     packet = Packets.UserChat.bytes(:world, character, msg)
-    World.broadcast(session.world, packet)
+    World.broadcast(packet)
     session
   end
 

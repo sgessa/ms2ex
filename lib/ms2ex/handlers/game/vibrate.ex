@@ -6,7 +6,7 @@ defmodule Ms2ex.GameHandlers.Vibrate do
   import Packets.PacketReader
 
   def handle(packet, session) do
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     {entity_id, packet} = get_string(packet)
     {some_id, packet} = get_long(packet)
