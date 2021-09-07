@@ -1,12 +1,12 @@
 defmodule Ms2ex.Packets.LoginToGame do
   import Ms2ex.Packets.PacketWriter
 
+  @config Application.get_env(:ms2ex, Ms2ex)
+  @world @config[:world]
   @modes %{success: 0x0}
 
   def login(auth_data) do
-    config = Application.get_env(:ms2ex, Ms2ex)
-    [world | _] = config[:worlds]
-    channel = List.first(world.channels)
+    channel = List.first(@world[:channels])
 
     __MODULE__
     |> build()

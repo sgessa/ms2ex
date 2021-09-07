@@ -8,7 +8,7 @@ defmodule Ms2ex.GameHandlers.RequestSkillBook do
 
   def handle(packet, session) do
     {mode, _packet} = get_byte(packet)
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
     handle_mode(mode, character, session)
   end
 

@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {sticker_id, packet} = get_int(packet)
     {script, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.chat(sticker_id, script))
@@ -34,7 +34,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {sticker_id, packet} = get_int(packet)
     {chat_name, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.group_chat(sticker_id, chat_name))
@@ -47,7 +47,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   defp handle_mode(0x5, packet, session) do
     {sticker_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       ChatStickers.favorite(character, sticker_id, sticker.group_id)
@@ -61,7 +61,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   defp handle_mode(0x6, packet, session) do
     {sticker_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       ChatStickers.unfavorite(character, sticker_id)

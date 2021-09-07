@@ -33,12 +33,12 @@ defmodule Ms2ex.Packets.Friend do
     |> put_byte(0xF)
   end
 
-  def load_list(world, friends) do
+  def load_list(friends) do
     __MODULE__
     |> build()
     |> put_byte(0x1)
     |> put_int(Enum.count(friends))
-    |> reduce(friends, &put_friend(&2, world, &1))
+    |> reduce(friends, &put_friend(&2, &1))
   end
 
   def end_list(friend_count) do
@@ -48,11 +48,11 @@ defmodule Ms2ex.Packets.Friend do
     |> put_int(friend_count)
   end
 
-  def add_to_list(world, friend) do
+  def add_to_list(friend) do
     __MODULE__
     |> build()
     |> put_byte(0x9)
-    |> put_friend(world, friend)
+    |> put_friend(friend)
   end
 
   def remove(shared_id, character) do
@@ -85,16 +85,16 @@ defmodule Ms2ex.Packets.Friend do
     |> put_long(shared_id)
   end
 
-  def update(world, friend) do
+  def update(friend) do
     __MODULE__
     |> build()
     |> put_byte(0x8)
-    |> put_friend(world, friend)
+    |> put_friend(friend)
   end
 
-  def presence_notification(world, shared_id, rcpt) do
+  def presence_notification(shared_id, rcpt) do
     friend_online? =
-      case Ms2ex.World.get_character_by_name(world, rcpt.name) do
+      case Ms2ex.World.get_character_by_name(rcpt.name) do
         {:ok, _} -> true
         _ -> false
       end
@@ -114,11 +114,11 @@ defmodule Ms2ex.Packets.Friend do
     |> put_long(shared_id)
   end
 
-  defp put_friend(packet, world, friend) do
+  defp put_friend(packet, friend) do
     real_job_id = Character.real_job_id(friend.rcpt)
 
     friend_online? =
-      case Ms2ex.World.get_character_by_name(world, friend.rcpt.name) do
+      case Ms2ex.World.get_character_by_name(friend.rcpt.name) do
         {:ok, _} -> true
         _ -> false
       end

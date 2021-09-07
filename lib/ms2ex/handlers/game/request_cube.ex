@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
   def handle_mode(0x11, packet, session) do
     {coord, _packet} = get_sbyte_coord(packet)
 
-    with {:ok, character} <- World.get_character(session.world, session.character_id),
+    with {:ok, character} <- World.get_character(session.character_id),
          {:ok, map} <- Metadata.Maps.lookup(character.map_id),
          {:ok, object} <- find_object(map, coord) do
       session
@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
 
   # Drop
   def handle_mode(0x12, _packet, session) do
-    with {:ok, character} <- World.get_character(session.world, session.character_id) do
+    with {:ok, character} <- World.get_character(session.character_id) do
       session
       |> push(Packets.ResponseCube.drop(character))
       |> push(Packets.UserBattle.bytes(character, false))

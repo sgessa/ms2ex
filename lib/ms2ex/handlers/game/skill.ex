@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {value, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
     {:ok, skill_cast} = Registries.SkillCasts.get_skill_cast(cast_id)
 
     {coord, packet} = get_coord(packet)

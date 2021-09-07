@@ -16,7 +16,7 @@ defmodule Ms2ex.FieldServer do
 
     {
       :ok,
-      initialize_state(session.world, character.map_id, session.channel_id),
+      initialize_state(character.map_id, session.channel_id),
       {:continue, {:add_character, character}}
     }
   end
@@ -83,7 +83,7 @@ defmodule Ms2ex.FieldServer do
 
     character_ids = Map.keys(state.sessions)
 
-    for {_id, char} <- World.get_characters(state.world, character_ids) do
+    for {_id, char} <- World.get_characters(character_ids) do
       broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
     end
 

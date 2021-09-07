@@ -5,12 +5,12 @@ defmodule Ms2ex.GameHandlers.Insignia do
 
   def handle(packet, session) do
     {insignia_id, _packet} = get_short(packet)
-    {:ok, character} = World.get_character(session.world, session.character_id)
+    {:ok, character} = World.get_character(session.character_id)
 
     with {:ok, metadata} <- Metadata.Insignias.lookup(insignia_id),
          true <- can_equip_insignia?(character, metadata, insignia_id) do
       {:ok, character} = Characters.update(character, %{insignia_id: insignia_id})
-      World.update_character(session.world, character)
+      World.update_character(character)
       Field.broadcast(character, Packets.Insignia.update(character, insignia_id, true))
     else
       _ ->

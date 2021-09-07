@@ -59,7 +59,7 @@ defmodule Ms2ex.Field do
         |> Characters.maybe_discover_map(field_id)
         |> Map.put(:change_map, %{id: field_id, position: coord, rotation: rotation})
 
-      World.update_character(session.world, character)
+      World.update_character(character)
 
       Net.Session.push(session, Packets.RequestFieldEnter.bytes(field_id, coord, rotation))
     else

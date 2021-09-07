@@ -3,9 +3,10 @@ defmodule Ms2ex.Packets.ServerList do
 
   @mod_set 0x1
   @config Application.get_env(:ms2ex, Ms2ex)
+  @world @config[:world]
 
   def bytes() do
-    worlds = @config[:worlds]
+    worlds = [@world]
 
     __MODULE__
     |> build()

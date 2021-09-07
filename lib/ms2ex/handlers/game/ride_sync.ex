@@ -10,7 +10,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
     {_server_tick, packet} = get_int(packet)
     {segments, packet} = get_byte(packet)
 
-    with {:ok, character} <- World.get_character(session.world, character_id),
+    with {:ok, character} <- World.get_character(character_id),
          true <- segments > 0 do
       states = get_states(segments, packet)
 
