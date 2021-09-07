@@ -23,6 +23,8 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
 
+    server_config = login_server_opts()
+
     children = [
       # Start the Ecto repository
       Ms2ex.Repo,
@@ -34,7 +36,7 @@ defmodule Ms2ex.Application do
       # Ms2exWeb.Endpoint
       # Start Session Registry
       {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]},
-      {Ms2ex.Net.Listener, login_server_opts()}
+      server_tcp_chidspec(server_config)
     ]
 
     world_managers =
@@ -65,7 +67,7 @@ defmodule Ms2ex.Application do
 
   def world_spec(id, world) do
     args = world_login_options(world)
-    Supervisor.child_spec({Ms2ex.Net.Listener, args}, id: id)
+    Supervisor.child_spec(server_tcp_chidspec(args), id: id)
   end
 
   def world_login_options(world) do
@@ -83,7 +85,7 @@ defmodule Ms2ex.Application do
   end
 
   def channel_spec(id, args) do
-    Supervisor.child_spec({Ms2ex.Net.Listener, args}, id: id)
+    Supervisor.child_spec(server_tcp_chidspec(args), id: id)
   end
 
   defp channel_options(channel, channel_id, world_id, world_name) do
@@ -93,6 +95,17 @@ defmodule Ms2ex.Application do
       world: world_id,
       world_name: world_name
     })
+  end
+
+  defp server_tcp_chidspec(server_config) do
+    :ranch.child_spec(
+      # ensure unique name!
+      :"#{server_config.type}-#{server_config.port}",
+      :ranch_tcp,
+      [{:port, server_config.port}],
+      Ms2ex.Net.Session,
+      [server_config]
+    )
   end
 
   # Tell Phoenix to update the endpoint configuration
