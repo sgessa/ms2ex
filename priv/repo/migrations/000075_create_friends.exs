@@ -7,6 +7,7 @@ defmodule Ms2ex.Repo.Migrations.CreateFriends do
       add :rcpt_id, references(:characters, on_delete: :delete_all), null: false
 
       add :block_reason, :string
+      add :is_request, :boolean
       add :message, :string
       add :shared_id, :bigint
       add :status, :integer, null: false

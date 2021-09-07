@@ -34,8 +34,6 @@ defmodule Ms2ex.Packets.Friend do
   end
 
   def load_list(world, friends) do
-    IO.inspect(friends)
-
     __MODULE__
     |> build()
     |> put_byte(0x1)
@@ -68,11 +66,51 @@ defmodule Ms2ex.Packets.Friend do
     |> put_ustring(character.name)
   end
 
+  def accept(shared_id, rcpt) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x3)
+    |> put_byte()
+    |> put_long(shared_id)
+    |> put_long(rcpt.id)
+    |> put_long(rcpt.account_id)
+    |> put_ustring(rcpt.name)
+  end
+
   def decline(shared_id) do
     __MODULE__
     |> build()
     |> put_byte(0x4)
     |> put_byte()
+    |> put_long(shared_id)
+  end
+
+  def update(world, friend) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x8)
+    |> put_friend(world, friend)
+  end
+
+  def presence_notification(world, shared_id, rcpt) do
+    friend_online? =
+      case Ms2ex.World.get_character_by_name(world, rcpt.name) do
+        {:ok, _} -> true
+        _ -> false
+      end
+
+    __MODULE__
+    |> build()
+    |> put_byte(0xE)
+    |> put_bool(friend_online?)
+    |> put_long(shared_id)
+    |> put_ustring(rcpt.name)
+  end
+
+  def accept_notification(shared_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0xB)
     |> put_long(shared_id)
   end
 
@@ -97,7 +135,7 @@ defmodule Ms2ex.Packets.Friend do
     |> put_int(real_job_id)
     |> put_int(Character.job_id(friend.rcpt))
     |> put_short(friend.rcpt.level)
-    |> put_bool(friend.status == :accepted)
+    |> put_bool(friend.is_request)
     |> put_bool(friend.status == :pending)
     |> put_bool(friend.status == :blocked)
     |> put_bool(friend_online?)

@@ -12,6 +12,7 @@ defmodule Ms2ex.Friend do
 
     field :block_reason, :string, default: ""
     field :message, :string, default: ""
+    field :is_request, :boolean, default: false
     field :shared_id, :integer
     field :status, Status, default: :pending
 
@@ -19,9 +20,17 @@ defmodule Ms2ex.Friend do
   end
 
   @doc false
+  def changeset(friend, attrs) do
+    friend
+    |> cast(attrs, [:block_reason, :message, :is_request, :shared_id, :status])
+    |> validate_required([:status])
+    |> unique_constraint(:rcpt, name: :friends_character_id_rcpt_id_index)
+  end
+
+  @doc false
   def add(friend, rcpt, attrs) do
     friend
-    |> cast(attrs, [:block_reason, :message, :shared_id, :status])
+    |> cast(attrs, [:message, :is_request, :shared_id, :status])
     |> put_assoc(:rcpt, rcpt)
     |> validate_required([:message, :shared_id, :status])
     |> unique_constraint(:rcpt, name: :friends_character_id_rcpt_id_index)

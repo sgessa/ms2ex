@@ -15,7 +15,7 @@ defmodule Ms2ex.Friends do
   defp maybe_preload_rcpt(query, _), do: query
 
   def add(%Character{} = character, %Character{} = friend, message) do
-    <<guid::signed-integer-size(64)>> = :crypto.strong_rand_bytes(8)
+    <<guid::integer-size(32)>> = :crypto.strong_rand_bytes(4)
 
     src =
       character
@@ -25,7 +25,12 @@ defmodule Ms2ex.Friends do
     dst =
       friend
       |> Ecto.build_assoc(:friends)
-      |> Friend.add(character, %{shared_id: guid, status: :accepted, message: message})
+      |> Friend.add(character, %{
+        shared_id: guid,
+        is_request: true,
+        status: :accepted,
+        message: message
+      })
 
     Repo.transaction(fn ->
       with {:ok, src} <- Repo.insert(src),
@@ -36,6 +41,12 @@ defmodule Ms2ex.Friends do
           Repo.rollback(changeset)
       end
     end)
+  end
+
+  def update(%Friend{} = friend, attrs) do
+    friend
+    |> Friend.changeset(attrs)
+    |> Repo.update()
   end
 
   def delete(shared_id) do

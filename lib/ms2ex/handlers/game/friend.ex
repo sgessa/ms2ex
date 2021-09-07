@@ -39,8 +39,30 @@ defmodule Ms2ex.GameHandlers.Friend do
   end
 
   # Accept
-  defp handle_mode(0x3, _packet, session) do
-    session
+  defp handle_mode(0x3, packet, %{world: world} = session) do
+    {shared_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(world, session.character_id),
+         %{status: :accepted, rcpt: sender} = dst_req <-
+           Friends.get_by_character_and_shared_id(session.character_id, shared_id, true),
+         %{status: :pending} = src_req <-
+           Friends.get_by_character_and_shared_id(sender.id, shared_id) do
+      {:ok, dst_req} = Friends.update(dst_req, %{is_request: false})
+      {:ok, src_req} = Friends.update(src_req, %{status: :accepted})
+
+      with {:ok, sender_session} <- World.get_character_by_name(world, sender.name) do
+        src_req = Map.put(src_req, :rcpt, character)
+        send(sender_session.session_pid, {:push, Packets.Friend.update(world, src_req)})
+        send(sender_session.session_pid, {:push, Packets.Friend.accept_notification(shared_id)})
+      end
+
+      session
+      |> push(Packets.Friend.accept(shared_id, sender))
+      |> push(Packets.Friend.update(world, dst_req))
+      |> push(Packets.Friend.presence_notification(world, shared_id, sender))
+    else
+      _ -> session
+    end
   end
 
   # Decline
