@@ -35,7 +35,7 @@ defmodule Ms2ex.Application do
         # Start the Endpoint (http/https)
         # Ms2exWeb.Endpoint
         # Start Session Registry
-        {Registries.Sessions, [name: {:via, :swarm, Registries.Sessions}]},
+        {Ms2ex.Sessions, [name: Ms2ex.Sessions]},
         Supervisor.child_spec({Ms2ex.WorldServer, [name: {:via, :swarm, :world}]}, id: :world),
         server_tcp_chidspec(login_server_opts()),
         server_tcp_chidspec(world_login_opts())

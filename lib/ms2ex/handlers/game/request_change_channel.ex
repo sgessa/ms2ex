@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestChangeChannel do
   require Logger
 
-  alias Ms2ex.{Net, Packets, Registries, World}
+  alias Ms2ex.{Net, Packets, Sessions, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeChannel do
     # TODO check channel_id is valid
 
     {:ok, character} = World.get_character(session.character_id)
-    {:ok, auth_data} = Registries.Sessions.lookup(session.account.id)
+    {:ok, auth_data} = Sessions.lookup(session.account.id)
 
     World.update_character(Map.put(character, :channel_id, channel_id))
 
