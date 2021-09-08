@@ -3,6 +3,13 @@ defmodule Ms2ex.Friends do
 
   import Ecto.Query
 
+  def get_reverse_friends(%Character{id: char_id} = char) do
+    Friend
+    |> where([f], f.rcpt_id == ^char_id)
+    |> Repo.all()
+    |> Enum.map(&Map.put(&1, :rcpt, char))
+  end
+
   def get_by_character_and_shared_id(char_id, shared_id, preload_rcpt? \\ false) do
     Friend
     |> where([f], f.shared_id == ^shared_id and f.rcpt_id != ^char_id)

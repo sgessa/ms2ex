@@ -66,15 +66,15 @@ defmodule Ms2ex.Packets.Friend do
     |> put_ustring(friend.rcpt.name)
   end
 
-  def accept(shared_id, rcpt) do
+  def accept(friend) do
     __MODULE__
     |> build()
     |> put_byte(0x3)
     |> put_byte()
-    |> put_long(shared_id)
-    |> put_long(rcpt.id)
-    |> put_long(rcpt.account_id)
-    |> put_ustring(rcpt.name)
+    |> put_long(friend.shared_id)
+    |> put_long(friend.rcpt.id)
+    |> put_long(friend.rcpt.account_id)
+    |> put_ustring(friend.rcpt.name)
   end
 
   def decline(shared_id) do
@@ -130,19 +130,13 @@ defmodule Ms2ex.Packets.Friend do
     |> put_ustring(friend.rcpt.name)
   end
 
-  def presence_notification(shared_id, rcpt) do
-    friend_online? =
-      case Ms2ex.World.get_character_by_name(rcpt.name) do
-        {:ok, _} -> true
-        _ -> false
-      end
-
+  def presence_notification(friend) do
     __MODULE__
     |> build()
     |> put_byte(0xE)
-    |> put_bool(friend_online?)
-    |> put_long(shared_id)
-    |> put_ustring(rcpt.name)
+    |> put_bool(!friend.rcpt.online?)
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
   end
 
   def accept_notification(shared_id) do

@@ -5,6 +5,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
+  import Ms2ex.GameHandlers.Helper.Session, only: [init_character: 1]
 
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
@@ -31,13 +32,16 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         character
         | position: spawn.coord,
           rotation: spawn.rotation,
-          safe_position: spawn.coord
+          safe_position: spawn.coord,
+          online?: true
       }
 
       World.update_character(character)
 
-      %{friends: friends, map_id: map_id, position: position, rotation: rotation} =
-        Characters.preload(character, friends: :rcpt)
+      character = Characters.preload(character, friends: :rcpt)
+      %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
+
+      init_character(character)
 
       titles = Characters.list_titles(character)
       wallet = Characters.get_wallet(character)

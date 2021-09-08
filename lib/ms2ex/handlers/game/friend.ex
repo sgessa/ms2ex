@@ -57,9 +57,9 @@ defmodule Ms2ex.GameHandlers.Friend do
       end
 
       session
-      |> push(Packets.Friend.accept(shared_id, sender))
+      |> push(Packets.Friend.accept(dst_req))
       |> push(Packets.Friend.update(dst_req))
-      |> push(Packets.Friend.presence_notification(shared_id, sender))
+      |> push(Packets.Friend.presence_notification(dst_req))
     else
       _ -> session
     end
