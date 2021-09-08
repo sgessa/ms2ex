@@ -21,17 +21,10 @@ defmodule Ms2ex.Packets.LoginResult do
     |> put_int(0x2)
   end
 
-  def incorrect_id() do
+  def error(code) do
     __MODULE__
     |> build()
-    |> put_byte(@modes.incorrect_id)
-    |> reduce(1..45, fn _, packet -> put_byte(packet) end)
-  end
-
-  def already_logged_in() do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.already_logged_in)
+    |> put_byte(Map.get(@modes, code))
     |> reduce(1..45, fn _, packet -> put_byte(packet) end)
   end
 end

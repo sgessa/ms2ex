@@ -10,11 +10,11 @@ defmodule Ms2ex.Sessions do
   end
 
   def init(:ok) do
-    {:ok, %{accounts: %{}}}
+    {:ok, %{}}
   end
 
   def handle_call({:lookup, account_id}, _from, state) do
-    case Map.get(state.accounts, account_id) do
+    case Map.get(state, account_id) do
       nil -> {:reply, :error, state}
       meta -> {:reply, {:ok, meta}, state}
     end
@@ -23,23 +23,24 @@ defmodule Ms2ex.Sessions do
   def handle_call({:register, account_id, meta}, {pid, _}, state) do
     IO.inspect("TRACK PID")
 
-    Process.monitor(pid)
+    existing_pids = get_in(state, [account_id, :pids]) || []
 
-    existing_meta = Map.get(state.accounts, account_id) || %{pids: []}
-    existing_pids = Map.get(existing_meta, :pids)
-    new_pids = [pid | existing_pids]
+    if pid in existing_pids do
+      meta = Map.put(meta, :pids, existing_pids)
+      {:reply, :ok, Map.put(state, account_id, meta)}
+    else
+      Process.monitor(pid)
+      new_pids = [pid | existing_pids]
+      IO.inspect(new_pids, label: "NEW PIDS")
 
-    IO.inspect(new_pids, label: "NEW PIDS")
-
-    meta = Map.put(meta, :pids, new_pids)
-    accounts = Map.put(state.accounts, account_id, meta)
-
-    {:reply, :ok, %{accounts: accounts}}
+      meta = Map.put(meta, :pids, new_pids)
+      {:reply, :ok, Map.put(state, account_id, meta)}
+    end
   end
 
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
     res =
-      Enum.find(state.accounts, fn {_id, meta} ->
+      Enum.find(state, fn {_id, meta} ->
         Enum.member?(meta.pids, pid)
       end)
 
@@ -52,9 +53,7 @@ defmodule Ms2ex.Sessions do
 
         # Update account metadata
         meta = %{meta | pids: pids}
-        accounts = Map.put(state.accounts, account_id, meta)
-
-        {:noreply, %{accounts: accounts}}
+        {:noreply, Map.put(state, account_id, meta)}
 
       _ ->
         {:noreply, state}

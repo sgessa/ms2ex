@@ -22,8 +22,8 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
       account = %{account | characters: Characters.list(account)}
       handle_login(mode, account, session)
     else
-      {:error, :invalid_credentials} -> push(session, Packets.LoginResult.incorrect_id())
-      {:error, :already_logged_in} -> push(session, Packets.LoginResult.already_logged_in())
+      {:error, :invalid_credentials} -> push(session, Packets.LoginResult.error(:incorrect_id))
+      {:error, :already_logged_in} -> push(session, Packets.LoginResult.error(:already_logged_in))
     end
   end
 

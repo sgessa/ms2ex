@@ -10,8 +10,8 @@ defmodule Ms2ex.LoginHandlers.ResponseKey do
     {account_id, packet} = get_long(packet)
 
     with {:ok, auth_data} <- Sessions.lookup(account_id),
-         {:ok, session} <-
-           verify_auth_data(auth_data, packet, session) do
+         {:ok, session} <- verify_auth_data(auth_data, packet, session) do
+      Sessions.register(account_id, auth_data)
       push(session, Packets.MoveResult.bytes())
     else
       _ -> session
