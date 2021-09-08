@@ -9,7 +9,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     Metadata,
     Net,
     Packets,
-    Registries,
+    Sessions,
     SkinColor
   }
 
@@ -47,11 +47,11 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     end
   end
 
-  # Register session data in the global registry.
-  # This allows us to lookup the session PID from any server.
   defp register_session(account_id, character_id, auth_data) do
+    IO.inspect("TRACK SESSION WITH META")
+
     :ok =
-      Registries.Sessions.register(
+      Sessions.register(
         account_id,
         Map.merge(auth_data, %{account_id: account_id, character_id: character_id})
       )

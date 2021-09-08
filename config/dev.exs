@@ -39,11 +39,11 @@ server_host = System.get_env("SERVER_HOST") || "127.0.0.1"
 config :ms2ex, Ms2ex,
   login: %{
     host: server_host,
-    port: 20001
+    port: 8526
   },
   world: %{
     name: "Paperwood",
-    login: %{host: server_host, port: 8526},
+    login: %{host: server_host, port: 20001},
     channels: [
       %{host: server_host, port: 20003},
       %{host: server_host, port: 20004}

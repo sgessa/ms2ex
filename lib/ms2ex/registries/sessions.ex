@@ -1,7 +1,5 @@
-defmodule Ms2ex.Registries.Sessions do
+defmodule Ms2ex.Sessions do
   use GenServer
-
-  @table_name :session_registry
 
   def lookup(account_id), do: call({:lookup, account_id})
 
@@ -12,26 +10,55 @@ defmodule Ms2ex.Registries.Sessions do
   end
 
   def init(:ok) do
-    :ets.new(@table_name, [:private, :set, :named_table])
-    {:ok, nil}
+    {:ok, %{}}
   end
 
   def handle_call({:lookup, account_id}, _from, state) do
-    case :ets.lookup(@table_name, account_id) do
-      [{_account_id, tags} | _] -> {:reply, {:ok, tags}, state}
-      _ -> {:reply, :error, state}
+    case Map.get(state, account_id) do
+      nil -> {:reply, :error, state}
+      meta -> {:reply, {:ok, meta}, state}
     end
   end
 
-  def handle_call({:register, account_id, tags}, _from, state) do
-    if :ets.insert(@table_name, {account_id, tags}) do
-      {:reply, :ok, state}
+  def handle_call({:register, account_id, meta}, {pid, _}, state) do
+    IO.inspect("TRACK PID")
+
+    existing_pids = get_in(state, [account_id, :pids]) || []
+
+    if pid in existing_pids do
+      meta = Map.put(meta, :pids, existing_pids)
+      {:reply, :ok, Map.put(state, account_id, meta)}
     else
-      {:reply, :error, state}
+      Process.monitor(pid)
+      new_pids = [pid | existing_pids]
+      IO.inspect(new_pids, label: "NEW PIDS")
+
+      meta = Map.put(meta, :pids, new_pids)
+      {:reply, :ok, Map.put(state, account_id, meta)}
     end
   end
 
-  defp call(msg) do
-    GenServer.call({:via, :swarm, __MODULE__}, msg)
+  def handle_info({:DOWN, _, _, pid, _reason}, state) do
+    res =
+      Enum.find(state, fn {_id, meta} ->
+        Enum.member?(meta.pids, pid)
+      end)
+
+    case res do
+      {account_id, meta} ->
+        IO.inspect("UNTRACK PID")
+
+        # Untrack session PID
+        pids = List.delete(meta.pids, pid)
+
+        # Update account metadata
+        meta = %{meta | pids: pids}
+        {:noreply, Map.put(state, account_id, meta)}
+
+      _ ->
+        {:noreply, state}
+    end
   end
+
+  defp call(msg), do: GenServer.call(__MODULE__, msg)
 end

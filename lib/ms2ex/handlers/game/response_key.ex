@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, Inventory, LoginHandlers, Metadata, Net, Packets, Registries, World}
+  alias Ms2ex.{Characters, Inventory, LoginHandlers, Metadata, Net, Packets, Sessions, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -10,9 +10,11 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} = Registries.Sessions.lookup(account_id),
+    with {:ok, auth_data} = Sessions.lookup(account_id),
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
+      Sessions.register(account.id, auth_data)
+
       character =
         auth_data[:character_id]
         |> Characters.get()

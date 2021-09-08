@@ -1,7 +1,7 @@
 defmodule Ms2ex.LoginHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Net, Packets, Registries, Accounts}
+  alias Ms2ex.{Accounts, Net, Packets, Sessions}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -9,9 +9,9 @@ defmodule Ms2ex.LoginHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} = Registries.Sessions.lookup(account_id),
-         {:ok, session} <-
-           verify_auth_data(auth_data, packet, session) do
+    with {:ok, auth_data} <- Sessions.lookup(account_id),
+         {:ok, session} <- verify_auth_data(auth_data, packet, session) do
+      Sessions.register(account_id, auth_data)
       push(session, Packets.MoveResult.bytes())
     else
       _ -> session
