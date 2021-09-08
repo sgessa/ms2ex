@@ -84,8 +84,7 @@ defmodule Ms2ex.GameHandlers.Friend do
       remove_friend_from_session(character, shared_id)
       push(session, Packets.Friend.decline(shared_id))
     else
-      _ ->
-        session
+      _ -> session
     end
   end
 
@@ -100,8 +99,24 @@ defmodule Ms2ex.GameHandlers.Friend do
   end
 
   # Remove Friend
-  defp handle_mode(0x7, _packet, session) do
-    session
+  defp handle_mode(0x7, packet, session) do
+    {shared_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         %{rcpt: sender} <-
+           Friends.get_by_character_and_shared_id(session.character_id, shared_id, true) do
+      Friends.delete(shared_id)
+
+      with {:ok, sender_session} <- World.get_character_by_name(sender.name) do
+        remove_friend_from_session(sender_session, shared_id)
+        send(sender_session.session_pid, {:push, Packets.Friend.remove(shared_id, character)})
+      end
+
+      remove_friend_from_session(character, shared_id)
+      push(session, Packets.Friend.remove(shared_id, sender))
+    else
+      _ -> session
+    end
   end
 
   # Edit Block Reason
