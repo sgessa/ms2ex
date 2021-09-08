@@ -145,8 +145,20 @@ defmodule Ms2ex.GameHandlers.Friend do
   end
 
   # Edit Block Reason
-  defp handle_mode(0xA, _packet, session) do
-    session
+  defp handle_mode(0xA, packet, session) do
+    {shared_id, packet} = get_long(packet)
+    {rcpt_name, packet} = get_ustring(packet)
+    {new_reason, _packet} = get_ustring(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         friend <-
+           Friends.get_by_character_and_shared_id(character.id, shared_id, true),
+         true <- rcpt_name == friend.rcpt.name,
+         {:ok, friend} <- Friends.update(friend, %{block_reason: new_reason}) do
+      push(session, Packets.Friend.edit_block_reason(friend))
+    else
+      _ -> session
+    end
   end
 
   # Cancel Request

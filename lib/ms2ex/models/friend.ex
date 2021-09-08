@@ -22,8 +22,8 @@ defmodule Ms2ex.Friend do
   @doc false
   def changeset(friend, attrs) do
     friend
-    |> cast(attrs, [:block_reason, :message, :is_request, :shared_id, :status])
-    |> validate_required([:status])
+    |> cast(attrs, [:block_reason, :message, :is_request, :status])
+    |> validate_required([:shared_id, :status])
     |> unique_constraint(:rcpt, name: :friends_character_id_rcpt_id_index)
   end
 

@@ -118,6 +118,18 @@ defmodule Ms2ex.Packets.Friend do
     |> put_long(shared_id)
   end
 
+  def edit_block_reason(friend) do
+    __MODULE__
+    |> build()
+    |> put_byte(0xA)
+    |> put_byte()
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
+    |> put_ustring(friend.block_reason)
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
+  end
+
   def presence_notification(shared_id, rcpt) do
     friend_online? =
       case Ms2ex.World.get_character_by_name(rcpt.name) do
