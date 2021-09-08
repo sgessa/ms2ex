@@ -21,8 +21,6 @@ defmodule Ms2ex.Sessions do
   end
 
   def handle_call({:register, account_id, meta}, {pid, _}, state) do
-    IO.inspect("TRACK PID")
-
     existing_pids = get_in(state, [account_id, :pids]) || []
 
     if pid in existing_pids do
@@ -31,8 +29,6 @@ defmodule Ms2ex.Sessions do
     else
       Process.monitor(pid)
       new_pids = [pid | existing_pids]
-      IO.inspect(new_pids, label: "NEW PIDS")
-
       meta = Map.put(meta, :pids, new_pids)
       {:reply, :ok, Map.put(state, account_id, meta)}
     end
@@ -46,8 +42,6 @@ defmodule Ms2ex.Sessions do
 
     case res do
       {account_id, meta} ->
-        IO.inspect("UNTRACK PID")
-
         # Untrack session PID
         pids = List.delete(meta.pids, pid)
 
