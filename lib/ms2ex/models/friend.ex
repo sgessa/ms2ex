@@ -14,7 +14,7 @@ defmodule Ms2ex.Friend do
     field :message, :string, default: ""
     field :is_request, :boolean, default: false
     field :shared_id, :integer
-    field :status, Status, default: :pending
+    field :status, Status
 
     timestamps(type: :utc_datetime)
   end
@@ -22,8 +22,8 @@ defmodule Ms2ex.Friend do
   @doc false
   def changeset(friend, attrs) do
     friend
-    |> cast(attrs, [:block_reason, :message, :is_request, :shared_id, :status])
-    |> validate_required([:status])
+    |> cast(attrs, [:block_reason, :message, :is_request, :status])
+    |> validate_required([:shared_id, :status])
     |> unique_constraint(:rcpt, name: :friends_character_id_rcpt_id_index)
   end
 
@@ -34,5 +34,21 @@ defmodule Ms2ex.Friend do
     |> put_assoc(:rcpt, rcpt)
     |> validate_required([:message, :shared_id, :status])
     |> unique_constraint(:rcpt, name: :friends_character_id_rcpt_id_index)
+  end
+
+  @doc false
+  def block(friend, rcpt, attrs) do
+    friend
+    |> cast(attrs, [:block_reason, :shared_id, :status])
+    |> put_assoc(:rcpt, rcpt)
+    |> validate_required([:block_reason, :shared_id, :status])
+    |> unique_constraint(:rcpt, name: :friends_character_id_rcpt_id_index)
+  end
+
+  @doc false
+  def block_friend(friend, reason) do
+    friend
+    |> change(status: :blocked, block_reason: reason)
+    |> validate_required([:block_reason, :shared_id, :status])
   end
 end

@@ -7,7 +7,7 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
     rcpt = find_from_world(rcpt_name) || find_from_db(rcpt_name)
 
     if rcpt do
-      {:ok, Characters.preload(rcpt, :friends)}
+      {:ok, rcpt}
     else
       {:error, Packets.Friend.notice(:char_not_found, rcpt_name)}
     end
@@ -15,6 +15,7 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
 
   defp find_from_db(char_name) do
     Characters.get_by(name: char_name)
+    |> Characters.preload(:friends)
   end
 
   defp find_from_world(char_name) do
@@ -29,6 +30,16 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
       :ok
     else
       {:error, Packets.Friend.notice(:cannot_add_self, rcpt.name)}
+    end
+  end
+
+  def check_block_list_size(character, rcpt, error_notice) do
+    size = character.friends |> Enum.filter(&(&1.status == :blocked)) |> Enum.count()
+
+    if size < @friend_list_max_size do
+      :ok
+    else
+      {:error, Packets.Friend.notice(error_notice, rcpt.name)}
     end
   end
 

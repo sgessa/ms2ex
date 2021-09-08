@@ -3,6 +3,8 @@ defmodule Ms2ex.WorldServer do
 
   alias Ms2ex.{GroupChat, Packets}
 
+  import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
+
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
@@ -82,10 +84,19 @@ defmodule Ms2ex.WorldServer do
     {:noreply, state}
   end
 
+  def handle_info({:presence_notification, friend}, state) do
+    if character = Map.get(state.characters, friend.character_id) do
+      send(character.session_pid, {:push, Packets.Friend.presence_notification(friend)})
+    end
+
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
     case Enum.find(state.characters, fn {_, %{session_pid: char_pid}} -> pid == char_pid end) do
       {char_id, character} ->
-        Ms2ex.Field.leave(character)
+        cleanup(%{character | online?: false})
+
         state = leave_group_chats(character, state)
         characters = Map.delete(state.characters, char_id)
         {:noreply, %{state | characters: characters}}

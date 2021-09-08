@@ -55,32 +55,40 @@ defmodule Ms2ex.Packets.Friend do
     |> put_friend(friend)
   end
 
-  def remove(shared_id, character) do
+  def remove(friend) do
     __MODULE__
     |> build()
     |> put_byte(0x7)
     |> put_byte()
-    |> put_long(shared_id)
-    |> put_long(character.account_id)
-    |> put_long(character.id)
-    |> put_ustring(character.name)
+    |> put_long(friend.shared_id)
+    |> put_long(friend.rcpt.account_id)
+    |> put_long(friend.rcpt.id)
+    |> put_ustring(friend.rcpt.name)
   end
 
-  def accept(shared_id, rcpt) do
+  def accept(friend) do
     __MODULE__
     |> build()
     |> put_byte(0x3)
     |> put_byte()
-    |> put_long(shared_id)
-    |> put_long(rcpt.id)
-    |> put_long(rcpt.account_id)
-    |> put_ustring(rcpt.name)
+    |> put_long(friend.shared_id)
+    |> put_long(friend.rcpt.id)
+    |> put_long(friend.rcpt.account_id)
+    |> put_ustring(friend.rcpt.name)
   end
 
   def decline(shared_id) do
     __MODULE__
     |> build()
     |> put_byte(0x4)
+    |> put_byte()
+    |> put_long(shared_id)
+  end
+
+  def cancel(shared_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x11)
     |> put_byte()
     |> put_long(shared_id)
   end
@@ -92,19 +100,43 @@ defmodule Ms2ex.Packets.Friend do
     |> put_friend(friend)
   end
 
-  def presence_notification(shared_id, rcpt) do
-    friend_online? =
-      case Ms2ex.World.get_character_by_name(rcpt.name) do
-        {:ok, _} -> true
-        _ -> false
-      end
+  def block(friend) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x5)
+    |> put_byte()
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
+    |> put_ustring(friend.block_reason)
+  end
 
+  def unblock(shared_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x6)
+    |> put_byte()
+    |> put_long(shared_id)
+  end
+
+  def edit_block_reason(friend) do
+    __MODULE__
+    |> build()
+    |> put_byte(0xA)
+    |> put_byte()
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
+    |> put_ustring(friend.block_reason)
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
+  end
+
+  def presence_notification(friend) do
     __MODULE__
     |> build()
     |> put_byte(0xE)
-    |> put_bool(friend_online?)
-    |> put_long(shared_id)
-    |> put_ustring(rcpt.name)
+    |> put_bool(!friend.rcpt.online?)
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
   end
 
   def accept_notification(shared_id) do
