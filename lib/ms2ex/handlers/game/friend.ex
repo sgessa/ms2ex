@@ -125,8 +125,26 @@ defmodule Ms2ex.GameHandlers.Friend do
   end
 
   # Cancel Request
-  defp handle_mode(0x11, _packet, session) do
-    session
+  defp handle_mode(0x11, packet, session) do
+    {shared_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         %{status: :pending, rcpt: sender} <-
+           Friends.get_by_character_and_shared_id(session.character_id, shared_id, true),
+         %{is_request: true} <-
+           Friends.get_by_character_and_shared_id(sender.id, shared_id) do
+      Friends.delete(shared_id)
+
+      with {:ok, sender_session} <- World.get_character_by_name(sender.name) do
+        remove_friend_from_session(sender_session, shared_id)
+        send(sender_session.session_pid, {:push, Packets.Friend.remove(shared_id, character)})
+      end
+
+      remove_friend_from_session(character, shared_id)
+      push(session, Packets.Friend.cancel(shared_id))
+    else
+      _ -> session
+    end
   end
 
   defp handle_mode(_mode, _packet, session), do: session

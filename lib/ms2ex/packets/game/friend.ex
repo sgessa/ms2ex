@@ -85,6 +85,14 @@ defmodule Ms2ex.Packets.Friend do
     |> put_long(shared_id)
   end
 
+  def cancel(shared_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x11)
+    |> put_byte()
+    |> put_long(shared_id)
+  end
+
   def update(friend) do
     __MODULE__
     |> build()
