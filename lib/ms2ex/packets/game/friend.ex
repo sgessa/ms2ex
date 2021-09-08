@@ -55,15 +55,15 @@ defmodule Ms2ex.Packets.Friend do
     |> put_friend(friend)
   end
 
-  def remove(shared_id, character) do
+  def remove(friend) do
     __MODULE__
     |> build()
     |> put_byte(0x7)
     |> put_byte()
-    |> put_long(shared_id)
-    |> put_long(character.account_id)
-    |> put_long(character.id)
-    |> put_ustring(character.name)
+    |> put_long(friend.shared_id)
+    |> put_long(friend.rcpt.account_id)
+    |> put_long(friend.rcpt.id)
+    |> put_ustring(friend.rcpt.name)
   end
 
   def accept(shared_id, rcpt) do
@@ -98,6 +98,24 @@ defmodule Ms2ex.Packets.Friend do
     |> build()
     |> put_byte(0x8)
     |> put_friend(friend)
+  end
+
+  def block(friend) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x5)
+    |> put_byte()
+    |> put_long(friend.shared_id)
+    |> put_ustring(friend.rcpt.name)
+    |> put_ustring(friend.block_reason)
+  end
+
+  def unblock(shared_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x6)
+    |> put_byte()
+    |> put_long(shared_id)
   end
 
   def presence_notification(shared_id, rcpt) do
