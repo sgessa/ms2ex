@@ -48,8 +48,6 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   end
 
   defp register_session(account_id, character_id, auth_data) do
-    IO.inspect("TRACK SESSION WITH META")
-
     :ok =
       Sessions.register(
         account_id,

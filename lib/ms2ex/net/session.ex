@@ -136,6 +136,18 @@ defmodule Ms2ex.Net.Session do
     {:noreply, push(state, packet)}
   end
 
+  def handle_info({:subscribe_friend_presence, character_id}, state) do
+    IO.inspect("CHAR #{state.character_id} SUBSCRIBES TO CHAR #{character_id}")
+    Phoenix.PubSub.subscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
+    {:noreply, state}
+  end
+
+  def handle_info({:unsubscribe_friend_presence, character_id}, state) do
+    IO.inspect("CHAR #{state.character_id} UNSUBSCRIBES TO CHAR #{character_id}")
+    Phoenix.PubSub.unsubscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
+    {:noreply, state}
+  end
+
   def handle_info({:friend_presence, data}, state) do
     friend = Ms2ex.Friends.get_by_character_and_shared_id(state.character_id, data.shared_id)
     friend = Map.put(friend, :rcpt, data.character)

@@ -84,14 +84,6 @@ defmodule Ms2ex.WorldServer do
     {:noreply, state}
   end
 
-  # def handle_info({:presence_notification, friend}, state) do
-  #   if character = Map.get(state.characters, friend.character_id) do
-  #     send(character.session_pid, {:push, Packets.Friend.presence_notification(friend)})
-  #   end
-
-  #   {:noreply, state}
-  # end
-
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
     case Enum.find(state.characters, fn {_, %{session_pid: char_pid}} -> pid == char_pid end) do
       {char_id, character} ->
