@@ -136,6 +136,12 @@ defmodule Ms2ex.Net.Session do
     {:noreply, push(state, packet)}
   end
 
+  def handle_info({:friend_presence, data}, state) do
+    friend = Ms2ex.Friends.get_by_character_and_shared_id(state.character_id, data.shared_id)
+    friend = Map.put(friend, :rcpt, data.character)
+    {:noreply, push(state, Packets.Friend.presence_notification(friend))}
+  end
+
   def handle_info(_data, state), do: {:noreply, state}
 
   def push(state, packet) when is_binary(packet) and byte_size(packet) > 0 do
