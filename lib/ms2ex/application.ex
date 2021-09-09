@@ -31,7 +31,7 @@ defmodule Ms2ex.Application do
         # Start the Telemetry supervisor
         Ms2exWeb.Telemetry,
         # Start the PubSub system
-        # {Phoenix.PubSub, name: Ms2ex.PubSub},
+        {Phoenix.PubSub, name: Ms2ex.PubSub},
         # Start the Endpoint (http/https)
         # Ms2exWeb.Endpoint
         # Start Session Registry

@@ -39,10 +39,6 @@ defmodule Ms2ex.World do
     call({:update_group_chat, group_chat, new_member})
   end
 
-  def send_presence_notification(friend) do
-    Swarm.send(:world, {:presence_notification, friend})
-  end
-
   defp call(msg) do
     GenServer.call({:via, :swarm, :world}, msg)
   end

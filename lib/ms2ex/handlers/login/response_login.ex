@@ -15,7 +15,6 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
          :ok <- check_if_already_logged_in(account.id) do
       Logger.info("Account #{username} logged in")
 
-      IO.inspect("TRACK EMPTY SESSION")
       Sessions.register(account.id, %{})
 
       session = Map.put(session, :account, account)
