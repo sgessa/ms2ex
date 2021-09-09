@@ -137,13 +137,11 @@ defmodule Ms2ex.Net.Session do
   end
 
   def handle_info({:subscribe_friend_presence, character_id}, state) do
-    IO.inspect("CHAR #{state.character_id} SUBSCRIBES TO CHAR #{character_id}")
     Phoenix.PubSub.subscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
     {:noreply, state}
   end
 
   def handle_info({:unsubscribe_friend_presence, character_id}, state) do
-    IO.inspect("CHAR #{state.character_id} UNSUBSCRIBES TO CHAR #{character_id}")
     Phoenix.PubSub.unsubscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
     {:noreply, state}
   end
