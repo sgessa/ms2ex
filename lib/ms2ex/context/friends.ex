@@ -15,7 +15,7 @@ defmodule Ms2ex.Friends do
   defp maybe_preload_rcpt(query, _), do: query
 
   def send_request(%Character{} = character, %Character{} = friend, message) do
-    shared_id = generate_shared_id()
+    shared_id = Ms2ex.generate_id()
 
     src_attrs = %{message: message, shared_id: shared_id, status: :pending}
 
@@ -48,7 +48,7 @@ defmodule Ms2ex.Friends do
   end
 
   def block(%Character{} = character, %Character{} = rcpt, reason) do
-    shared_id = generate_shared_id()
+    shared_id = Ms2ex.generate_id()
     attrs = %{shared_id: shared_id, block_reason: reason, status: :blocked}
 
     character
@@ -84,9 +84,4 @@ defmodule Ms2ex.Friends do
   end
 
   def delete(friend), do: Repo.delete(friend)
-
-  defp generate_shared_id() do
-    <<guid::integer-size(32)>> = :crypto.strong_rand_bytes(4)
-    guid
-  end
 end

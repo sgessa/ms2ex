@@ -9,7 +9,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     Metadata,
     Net,
     Packets,
-    Sessions,
+    SessionManager,
     SkinColor
   }
 
@@ -38,7 +38,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     case Characters.get(account, char_id) do
       %Character{} ->
-        auth_data = %{token_a: gen_auth_token(), token_b: gen_auth_token()}
+        auth_data = %{token_a: Ms2ex.generate_id(), token_b: Ms2ex.generate_id()}
         register_session(account.id, char_id, auth_data)
         push(session, Packets.LoginToGame.login(auth_data))
 
@@ -49,14 +49,10 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp register_session(account_id, character_id, auth_data) do
     :ok =
-      Sessions.register(
+      SessionManager.register(
         account_id,
         Map.merge(auth_data, %{account_id: account_id, character_id: character_id})
       )
-  end
-
-  defp gen_auth_token() do
-    floor(:rand.uniform() * floor(:math.pow(2, 31)))
   end
 
   defp handle_create(packet, session) do
