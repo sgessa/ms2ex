@@ -15,20 +15,24 @@ defmodule Ms2ex.GameHandlers.Party do
 
     {:ok, character} = World.get_character(session.character_id)
 
-    with {:ok, target} <- World.get_character_by_name(target_name) do
-      cond do
-        character.id == target.id ->
-          push(session, Packets.Party.notice(:invite_self, character))
-
-        character.party_id ->
-          invite_to_party(session, character, target)
-
-        true ->
-          create_party(session, character, target)
+    target =
+      case World.get_character_by_name(target_name) do
+        {:ok, target} -> target
+        _ -> nil
       end
-    else
-      _ ->
+
+    cond do
+      is_nil(target) ->
         push(session, Packets.Party.notice(:unable_to_invite, character))
+
+      character.id == target.id ->
+        push(session, Packets.Party.notice(:invite_self, character))
+
+      character.party_id ->
+        invite_to_party(session, character, target)
+
+      true ->
+        create_party(session, character, target)
     end
   end
 
