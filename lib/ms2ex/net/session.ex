@@ -11,8 +11,9 @@ defmodule Ms2ex.Net.Session do
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
   alias Ms2ex.Packets
-  alias Ms2ex.Packets.{PacketReader, RequestVersion}
+  alias Ms2ex.Packets.PacketReader
   alias Ms2ex.Net.Router
+  alias Ms2ex.Net.SessionSender
 
   import Ms2ex.Net.Utils
 
@@ -21,6 +22,14 @@ defmodule Ms2ex.Net.Session do
   @version @conf[:version] || 12
   @block_iv @conf[:initial_block_iv] || @version
 
+  @doc """
+  Starts the handler with `:proc_lib.spawn_link/3`.
+  """
+  def start_link(ref, transport, opts) do
+    pid = :proc_lib.spawn_link(__MODULE__, :init, [ref, transport, opts])
+    {:ok, pid}
+  end
+
   # genserver complaining
   def init(init_arg) do
     {:ok, init_arg}
@@ -28,12 +37,18 @@ defmodule Ms2ex.Net.Session do
 
   # Client
 
-  @doc """
-  Starts the handler with `:proc_lib.spawn_link/3`.
-  """
-  def start_link(ref, transport, opts) do
-    pid = :proc_lib.spawn_link(__MODULE__, :init, [ref, transport, opts])
-    {:ok, pid}
+  def push(state, packet) when is_binary(packet) and byte_size(packet) > 0 do
+    if Process.alive?(state.sender_pid) do
+      SessionSender.push(state.sender_pid, packet)
+    end
+
+    state
+  end
+
+  def push(state, _packet), do: state
+
+  def push_notice(state, character, notice) do
+    push(state, Packets.UserChat.bytes(:notice_alert, character, notice))
   end
 
   @doc """
@@ -68,36 +83,34 @@ defmodule Ms2ex.Net.Session do
     recv_cipher = RecvCipher.build(@version, recv_iv, @block_iv)
     send_cipher = SendCipher.build(@version, send_iv, @block_iv)
 
-    send(self(), :send_handshake)
+    sender_pid = SessionSender.start_link(socket, transport, send_cipher, self())
 
-    :gen_server.enter_loop(
-      __MODULE__,
-      [],
+    SessionSender.handshake(sender_pid, recv_cipher)
+
+    state =
       Map.merge(state, %{
         transport: transport,
         yet_to_parse: <<>>,
         pid: self(),
         recv_cipher: recv_cipher,
-        send_cipher: send_cipher
+        sender_pid: sender_pid
       })
+
+    :gen_server.enter_loop(
+      __MODULE__,
+      [],
+      state
     )
   end
 
   # Server callbacks
 
-  def handle_info(:send_handshake, state) do
-    %{recv_cipher: recv_cipher, send_cipher: send_cipher, socket: socket} = state
-    packet = RequestVersion.build(@version, recv_cipher, send_cipher, @block_iv)
-    {send_cipher, packet} = SendCipher.write_header(send_cipher, packet)
-
-    log_sent_packet(:handshake, packet)
-    state.transport.send(socket, packet)
-
-    {:noreply, %{state | send_cipher: send_cipher}}
-  end
-
   def handle_info({:summon, character, map_id}, state) do
     {:noreply, Ms2ex.Field.change_field(character, state, map_id)}
+  end
+
+  def handle_info({:push, packet}, state) do
+    {:noreply, push(state, packet)}
   end
 
   def handle_info(
@@ -117,23 +130,23 @@ defmodule Ms2ex.Net.Session do
   end
 
   def handle_info({:tcp_closed, _}, state) do
-    Logger.info(fn ->
+    L.info(fn ->
       "Client disconnected"
     end)
+
+    shutdown(state.socket, state.transport, state.sender_pid)
 
     {:stop, :normal, state}
   end
 
   def handle_info({:tcp_error, _, reason}, state) do
-    Logger.info(fn ->
+    L.info(fn ->
       "TCP error: #{inspect(reason)}"
     end)
 
-    {:stop, :normal, state}
-  end
+    shutdown(state.socket, state.transport, state.sender_pid)
 
-  def handle_info({:push, packet}, state) do
-    {:noreply, push(state, packet)}
+    {:stop, :normal, state}
   end
 
   def handle_info({:subscribe_friend_presence, character_id}, state) do
@@ -158,22 +171,16 @@ defmodule Ms2ex.Net.Session do
 
   def handle_info(_data, state), do: {:noreply, state}
 
-  def push(state, packet) when is_binary(packet) and byte_size(packet) > 0 do
-    %{send_cipher: cipher, socket: socket, transport: transport} = state
+  defp shutdown(socket, transport, sender_pid) do
+    Ms2ex.Net.SessionSender.stop(sender_pid)
 
-    {opcode, data} = PacketReader.get_short(packet)
-    log_sent_packet(opcode, data)
+    receive do
+      {:EXIT, _responder_pid, :normal} -> :ok
+    end
 
-    {cipher, enc_packet} = SendCipher.encrypt(cipher, packet)
-    transport.send(socket, enc_packet)
+    L.warn("Closing socket!!")
 
-    %{state | send_cipher: cipher}
-  end
-
-  def push(_packet, state), do: state
-
-  def push_notice(state, character, notice) do
-    push(state, Packets.UserChat.bytes(:notice_alert, character, notice))
+    :ok = transport.close(socket)
   end
 
   defp process_packet(yet_to_parse, message, state) do
@@ -230,14 +237,6 @@ defmodule Ms2ex.Net.Session do
 
     unless name in @skip_packet_logs do
       L.debug("[RECV] #{name}: #{stringify_packet(packet)}")
-    end
-  end
-
-  defp log_sent_packet(opcode, packet) do
-    name = Packets.opcode_to_name(:send, opcode)
-
-    unless name in @skip_packet_logs do
-      L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{stringify_packet(packet)}"]))
     end
   end
 end
