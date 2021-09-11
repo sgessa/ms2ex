@@ -23,6 +23,10 @@ defmodule Ms2ex.Party do
     Enum.find(members, &(&1.id == leader_id))
   end
 
+  def get_member(%__MODULE__{members: members}, member_id) do
+    Enum.find(members, &(&1.id == member_id))
+  end
+
   def add_member(party, character) do
     members = [character | party.members]
     %{party | members: members}
@@ -51,6 +55,10 @@ defmodule Ms2ex.Party do
 
   def in_party?(party, character) do
     !!Enum.find(party.members, &(&1.id == character.id))
+  end
+
+  def is_leader?(party, character) do
+    party.leader_id == character.id
   end
 
   def full?(party), do: Enum.count(party.members) >= @max_members

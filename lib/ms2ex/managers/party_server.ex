@@ -43,6 +43,10 @@ defmodule Ms2ex.PartyServer do
     call(character.party_id, {:remove_member, character})
   end
 
+  def kick_member(party, character_id) do
+    call(party.id, {:kick_member, character_id})
+  end
+
   def subscribe(party_id) do
     PubSub.subscribe(Ms2ex.PubSub, "party:#{party_id}")
   end
@@ -95,13 +99,33 @@ defmodule Ms2ex.PartyServer do
   def handle_call({:remove_member, character}, _from, state) do
     broadcast(state.id, Packets.Party.member_left(character))
     state = Party.remove_member(state, character)
+
     member_online = Enum.find(state.members, & &1.online?)
 
-    if member_online do
-      {:reply, :ok, maybe_find_new_leader(state, character, member_online)}
-    else
-      send(self(), :shutdown)
+    if Party.new?(state) or !member_online do
+      disband(state)
       {:reply, :ok, state}
+    else
+      {:reply, :ok, maybe_find_new_leader(state, character, member_online)}
+    end
+  end
+
+  def handle_call({:kick_member, character_id}, _from, state) do
+    case Party.get_member(state, character_id) do
+      nil ->
+        {:reply, :error, state}
+
+      character ->
+        broadcast(state.id, Packets.Party.kick(character))
+
+        state = Party.remove_member(state, character)
+
+        if Party.new?(state) do
+          disband(state)
+          {:reply, {:ok, character}, state}
+        else
+          {:reply, {:ok, character}, state}
+        end
     end
   end
 
@@ -124,6 +148,14 @@ defmodule Ms2ex.PartyServer do
       %{party | leader_id: new_leader.id}
     else
       party
+    end
+  end
+
+  defp disband(party) do
+    send(self(), :shutdown)
+
+    for m <- party.members, m.online? do
+      send(m.session_pid, {:disband_party, m})
     end
   end
 

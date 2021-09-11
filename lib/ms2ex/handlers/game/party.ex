@@ -33,6 +33,7 @@ defmodule Ms2ex.GameHandlers.Party do
         invite_to_party(session, character, target)
 
       true ->
+        IO.inspect(character.party_id)
         create_party(session, character, target)
     end
   end
@@ -68,6 +69,25 @@ defmodule Ms2ex.GameHandlers.Party do
       World.update_character(character)
 
       push(session, Packets.Party.leave(character))
+    end
+  end
+
+  # Kick
+  defp handle_mode(0x4, packet, session) do
+    {target_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, party} <- PartyServer.lookup(character.party_id),
+         true <- Party.is_leader?(party, character),
+         {:ok, target} <- PartyServer.kick_member(party, target_id) do
+      if target.online? do
+        send(target.session_pid, {:unsubscribe_party, party.id})
+      end
+
+      target = %{target | party_id: nil}
+      World.update_character(target)
+
+      session
     end
   end
 
