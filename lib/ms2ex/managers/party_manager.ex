@@ -7,6 +7,8 @@ defmodule Ms2ex.PartyManager do
 
   def lookup(character), do: call({:lookup, character})
 
+  def register(party, character), do: cast({:register, party, character})
+
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
@@ -29,6 +31,10 @@ defmodule Ms2ex.PartyManager do
     end
   end
 
+  def handle_cast({:register, party, character}, state) do
+    {:noreply, Map.put(state, character.id, %{party_id: party.id, pid: party.pid})}
+  end
+
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
     state =
       state
@@ -39,4 +45,5 @@ defmodule Ms2ex.PartyManager do
   end
 
   defp call(msg), do: GenServer.call(__MODULE__, msg)
+  defp cast(msg), do: GenServer.cast(__MODULE__, msg)
 end

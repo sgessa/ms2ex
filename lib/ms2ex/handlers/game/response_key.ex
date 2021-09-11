@@ -50,48 +50,40 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
 
-      party = PartyServer.lookup!(character.party_id)
-
-      session =
-        session
-        |> Map.put(:character_id, character.id)
-        |> push(Packets.MoveResult.bytes())
-        |> push(Packets.LoginRequired.bytes(account.id))
-        |> push(Packets.Friend.start_list())
-        |> push(Packets.Friend.load_list(friends))
-        |> push(Packets.Friend.end_list(Enum.count(friends)))
-        |> push(Packets.ResponseTimeSync.init(0x1, tick))
-        |> push(Packets.ResponseTimeSync.init(0x3, tick))
-        |> push(Packets.ResponseTimeSync.init(0x2, tick))
-        |> Map.put(:server_tick, tick)
-        |> push(Packets.RequestClientSyncTick.bytes(tick))
-        |> push(Packets.DynamicChannel.bytes())
-        |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
-        |> push(Packets.SyncNumber.bytes())
-        |> push(Packets.Prestige.bytes(character))
-        |> push_inventory_tab(Inventory.list_tabs(character))
-        |> push(Packets.MarketInventory.count(0))
-        |> push(Packets.MarketInventory.start_list())
-        |> push(Packets.MarketInventory.end_list())
-        |> push(Packets.FurnishingInventory.start_list())
-        |> push(Packets.FurnishingInventory.end_list())
-        |> push(Packets.UserEnv.set_titles(titles))
-        |> push(Packets.UserEnv.set_mode(0x4))
-        |> push(Packets.UserEnv.set_mode(0x5))
-        |> push(Packets.UserEnv.set_mode(0x8, 2))
-        |> push(Packets.UserEnv.set_mode(0x9))
-        |> push(Packets.UserEnv.set_mode(0xA))
-        |> push(Packets.UserEnv.set_mode(0xC))
-        |> push(Packets.Fishing.load_log())
-        |> push(Packets.KeyTable.request())
-        |> push(Packets.FieldEntrance.bytes())
-        |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
-
-      if party do
-        push(session, Packets.Party.create(party, false))
-      else
-        session
-      end
+      session
+      |> Map.put(:character_id, character.id)
+      |> push(Packets.MoveResult.bytes())
+      |> push(Packets.LoginRequired.bytes(account.id))
+      |> push(Packets.Friend.start_list())
+      |> push(Packets.Friend.load_list(friends))
+      |> push(Packets.Friend.end_list(Enum.count(friends)))
+      |> push(Packets.ResponseTimeSync.init(0x1, tick))
+      |> push(Packets.ResponseTimeSync.init(0x3, tick))
+      |> push(Packets.ResponseTimeSync.init(0x2, tick))
+      |> Map.put(:server_tick, tick)
+      |> push(Packets.RequestClientSyncTick.bytes(tick))
+      |> push(Packets.DynamicChannel.bytes())
+      |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
+      |> push(Packets.SyncNumber.bytes())
+      |> push(Packets.Prestige.bytes(character))
+      |> push_inventory_tab(Inventory.list_tabs(character))
+      |> push(Packets.MarketInventory.count(0))
+      |> push(Packets.MarketInventory.start_list())
+      |> push(Packets.MarketInventory.end_list())
+      |> push(Packets.FurnishingInventory.start_list())
+      |> push(Packets.FurnishingInventory.end_list())
+      |> push(Packets.UserEnv.set_titles(titles))
+      |> push(Packets.UserEnv.set_mode(0x4))
+      |> push(Packets.UserEnv.set_mode(0x5))
+      |> push(Packets.UserEnv.set_mode(0x8, 2))
+      |> push(Packets.UserEnv.set_mode(0x9))
+      |> push(Packets.UserEnv.set_mode(0xA))
+      |> push(Packets.UserEnv.set_mode(0xC))
+      |> push(Packets.Fishing.load_log())
+      |> push(Packets.KeyTable.request())
+      |> push(Packets.FieldEntrance.bytes())
+      |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push_party(character)
     else
       _ -> session
     end
@@ -132,5 +124,29 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     |> push(Packets.InventoryItem.load_tab(inventory_tab.tab, inventory_tab.slots))
     |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items))
     |> push_inventory_tab(tabs)
+  end
+
+  defp push_party(session, character) do
+    party = PartyServer.lookup!(character.party_id)
+
+    if party do
+      session
+      |> push(Packets.Party.create(party, false))
+      |> create_party(party, character)
+    else
+      session
+    end
+  end
+
+  defp create_party(session, party, character) do
+    PartyServer.broadcast_from(self(), party.id, Packets.Party.update_hitpoints(character))
+
+    Enum.reduce(party.members, session, fn m, session ->
+      if m.id != character.id do
+        push(session, Packets.Party.update_hitpoints(m))
+      else
+        session
+      end
+    end)
   end
 end

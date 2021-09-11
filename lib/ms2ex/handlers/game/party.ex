@@ -74,8 +74,6 @@ defmodule Ms2ex.GameHandlers.Party do
         push(session, Packets.Party.notice(:full_party, character))
 
       true ->
-        is_new_party? = Party.new?(party)
-
         PartyServer.broadcast(party.id, Packets.Party.join(character))
 
         character = %{character | party_id: party.id}
@@ -86,12 +84,8 @@ defmodule Ms2ex.GameHandlers.Party do
 
         session = push(session, Packets.Party.create(party))
 
-        if is_new_party? do
-          PartyServer.broadcast(party.id, Packets.Party.update_hitpoints(leader))
-        else
-          for m <- party.members, m.id != character.id do
-            PartyServer.broadcast(party.id, Packets.Party.update_hitpoints(m))
-          end
+        for m <- party.members do
+          PartyServer.broadcast(party.id, Packets.Party.update_hitpoints(m))
         end
 
         session

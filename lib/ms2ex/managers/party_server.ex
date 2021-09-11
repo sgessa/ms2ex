@@ -1,7 +1,7 @@
 defmodule Ms2ex.PartyServer do
   use GenServer
 
-  alias Ms2ex.{Party, Packets}
+  alias Ms2ex.{Packets, Party, PartyManager}
   alias Phoenix.PubSub
 
   require Logger, as: L
@@ -10,6 +10,12 @@ defmodule Ms2ex.PartyServer do
 
   def broadcast(party_id, packet) do
     PubSub.broadcast(Ms2ex.PubSub, "party:#{party_id}", {:push, packet})
+  end
+
+  def broadcast_from(_pid, nil, _packet), do: :error
+
+  def broadcast_from(sender_pid, party_id, packet) do
+    PubSub.broadcast_from(Ms2ex.PubSub, sender_pid, "party:#{party_id}", {:push, packet})
   end
 
   def lookup(nil), do: :error
@@ -90,6 +96,7 @@ defmodule Ms2ex.PartyServer do
     if Party.in_party?(party, member) do
       Party.update_member(party, member)
     else
+      PartyManager.register(party, member)
       Party.add_member(party, member)
     end
   end
