@@ -1,4 +1,6 @@
 defmodule Ms2ex.Party do
+  @max_members 10
+
   defstruct [
     :id,
     :leader_id,
@@ -20,4 +22,27 @@ defmodule Ms2ex.Party do
   def get_leader(%__MODULE__{leader_id: leader_id, members: members}) do
     Enum.find(members, &(&1.id == leader_id))
   end
+
+  def add_member(party, character) do
+    members = [character | party.members]
+    %{party | members: members}
+  end
+
+  def update_member(party, character) do
+    case Enum.find_index(party.members, &(&1.id == character.id)) do
+      nil ->
+        party
+
+      index ->
+        members = List.update_at(party.members, index, fn _ -> character end)
+        %{party | members: members}
+    end
+  end
+
+  def in_party?(party, character) do
+    !!Enum.find(party.members, &(&1.id == character.id))
+  end
+
+  def full?(party), do: Enum.count(party.members) >= @max_members
+  def new?(party), do: Enum.count(party.members) == 1
 end

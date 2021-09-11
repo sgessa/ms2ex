@@ -1,6 +1,4 @@
 defmodule Ms2ex.World do
-  alias Ms2ex.PartyServer
-
   def broadcast(packet, sender_pid \\ nil) do
     Swarm.send(:world, {:broadcast, packet, sender_pid})
   end
@@ -18,7 +16,6 @@ defmodule Ms2ex.World do
   end
 
   def update_character(character) do
-    PartyServer.update_member(character)
     call({:update_character, character})
   end
 

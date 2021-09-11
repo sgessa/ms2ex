@@ -1,7 +1,8 @@
 defmodule Ms2ex.GameHandlers.Party do
-  alias Ms2ex.{Packets, Party, PartyManager, PartyServer, World}
+  alias Ms2ex.{Packets, Party, PartyNotice, PartyServer, World}
 
   import Packets.PacketReader
+  import Ms2ex.GameHandlers.Helper.Party
   import Ms2ex.Net.Session, only: [push: 2]
 
   def handle(packet, session) do
@@ -37,68 +38,63 @@ defmodule Ms2ex.GameHandlers.Party do
   end
 
   # Invitation Response
-  # defp handle_mode(0x2, packet, session) do
-  #   {target_name, packet} = get_ustring(packet)
-  #   {notice_code, packet} = get_byte(packet)
-  #   {party_id, _packet} = get_int(packet)
+  defp handle_mode(0x2, packet, session) do
+    {_target_name, packet} = get_ustring(packet)
 
-  #   PartyServer.lookup(party_id)
-  # end
+    {resp_code, packet} = get_byte(packet)
+    response = PartyNotice.from_int(resp_code)
+
+    {party_id, _packet} = get_int(packet)
+
+    {:ok, character} = World.get_character(session.character_id)
+
+    case PartyServer.lookup(party_id) do
+      {:ok, party} ->
+        handle_invitation(session, response, party, character)
+
+      _ ->
+        push(session, Packets.Party.notice(:party_not_found, character))
+    end
+  end
 
   defp handle_mode(_, _packet, session), do: session
 
-  def create_party(session, character, %{party_id: nil} = target) do
-    {:ok, party} = PartyManager.create(character)
+  defp handle_invitation(session, response, party, character) do
+    leader = Party.get_leader(party)
 
-    character = %{character | party_id: party.id}
-    World.update_character(character)
+    cond do
+      Party.in_party?(party, character) ->
+        session
 
-    send(target.session_pid, {:push, Packets.Party.invite(character)})
-    push(session, Packets.Party.create(party))
-  end
+      response != :accepted_invite ->
+        send(leader.session_pid, {:push, Packets.Party.notice(response, character)})
+        session
 
-  def create_party(session, character, %{party_id: target_party_id} = target) do
-    {:ok, target_party} = PartyServer.lookup(target_party_id)
+      Party.full?(party) ->
+        push(session, Packets.Party.notice(:full_party, character))
 
-    if Enum.count(target_party.members) == 1 do
-      {:ok, party} = PartyManager.create(character)
+      true ->
+        is_new_party? = Party.new?(party)
 
-      character = %{character | party_id: party.id}
-      World.update_character(character)
+        PartyServer.broadcast(party.id, Packets.Party.join(character))
 
-      send(target.session_pid, {:push, Packets.Party.invite(character)})
-      push(session, Packets.Party.create(party))
-    else
-      leader = Party.get_leader(target_party)
-      send(leader.session_pid, {:push, Packets.Party.join_request(character)})
-      push(session, Packets.Party.notice(:request_to_join, target))
-    end
-  end
+        character = %{character | party_id: party.id}
+        {:ok, party} = PartyServer.update_member(character)
 
-  def invite_to_party(session, character, target) do
-    with :ok <- is_leader?(character),
-         :ok <- already_in_party?(character, target) do
-      send(target.session_pid, {:push, Packets.Party.invite(character)})
-      session
-    else
-      {:error, notice_packet} ->
-        push(session, notice_packet)
-    end
-  end
+        World.update_character(character)
+        PartyServer.subscribe(party.id)
 
-  defp is_leader?(character) do
-    if character.party.leader_id == character.id do
-      :ok
-    else
-      {:error, Packets.Party.notice(:not_leader, character)}
-    end
-  end
+        session = push(session, Packets.Party.create(party))
 
-  defp already_in_party?(character, target) do
-    if target.party && Enum.count(target.party.members) > 1 do
-      {:error, Packets.Party.notice(:unable_to_invite, character)}
-    else
-      :ok
+        if is_new_party? do
+          PartyServer.broadcast(party.id, Packets.Party.update_hitpoints(leader))
+        else
+          for m <- party.members, m.id != character.id do
+            PartyServer.broadcast(party.id, Packets.Party.update_hitpoints(m))
+          end
+        end
+
+        session
     end
   end
 end
