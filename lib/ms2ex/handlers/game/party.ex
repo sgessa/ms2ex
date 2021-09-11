@@ -57,6 +57,20 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
+  # Leave
+  defp handle_mode(0x3, _packet, session) do
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, _party} <- PartyServer.lookup(character.party_id) do
+      PartyServer.unsubscribe(character.party_id)
+      PartyServer.remove_member(character)
+
+      character = %{character | party_id: nil}
+      World.update_character(character)
+
+      push(session, Packets.Party.leave(character))
+    end
+  end
+
   # Promote Leader
   defp handle_mode(0x11, packet, session) do
     {target_name, _packet} = get_ustring(packet)

@@ -41,6 +41,24 @@ defmodule Ms2ex.Packets.Party do
     |> put_dungeon_info()
   end
 
+  def leave(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x3)
+    |> put_long(character.id)
+    # 1 = current character leaving
+    |> put_byte(1)
+  end
+
+  def member_left(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x3)
+    |> put_long(character.id)
+    # 0 = other member leaving
+    |> put_byte(0)
+  end
+
   def update_hitpoints(character) do
     __MODULE__
     |> build()

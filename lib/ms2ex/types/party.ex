@@ -39,6 +39,16 @@ defmodule Ms2ex.Party do
     end
   end
 
+  def remove_member(party, character) do
+    case Enum.find_index(party.members, &(&1.id == character.id)) do
+      nil ->
+        party
+
+      index ->
+        %{party | members: List.delete_at(party.members, index)}
+    end
+  end
+
   def in_party?(party, character) do
     !!Enum.find(party.members, &(&1.id == character.id))
   end
