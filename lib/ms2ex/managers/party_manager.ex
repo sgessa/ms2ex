@@ -19,14 +19,12 @@ defmodule Ms2ex.PartyManager do
     {:ok, pid} = PartyServer.start(leader)
     Process.monitor(pid)
     {:ok, party} = PartyServer.lookup(pid)
-    {:reply, {:ok, party}, Map.put(state, leader.id, pid)}
+    {:reply, {:ok, party}, Map.put(state, leader.id, %{party_id: party.id, pid: pid})}
   end
 
   def handle_call({:lookup, character}, _from, state) do
-    with party_pid when is_pid(party_pid) <- Map.get(state, character.id),
-         {:ok, party} <- PartyServer.lookup(party_pid) do
-      {:reply, {:ok, party}, state}
-    else
+    case Map.get(state, character.id) do
+      %{party_id: party_id} -> {:reply, {:ok, party_id}, state}
       _ -> {:reply, :error, state}
     end
   end
@@ -34,7 +32,7 @@ defmodule Ms2ex.PartyManager do
   def handle_info({:DOWN, _, _, pid, _reason}, state) do
     state =
       state
-      |> Enum.reject(fn {_, party_pid} -> party_pid == pid end)
+      |> Enum.reject(fn {_, %{pid: party_pid}} -> party_pid == pid end)
       |> Enum.into(%{})
 
     {:noreply, state}

@@ -89,7 +89,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   defp maybe_set_party(character) do
     case PartyManager.lookup(character) do
-      {:ok, party} -> %{character | party_id: party.id}
+      {:ok, party_id} -> %{character | party_id: party_id}
       _ -> character
     end
   end
