@@ -4,6 +4,10 @@ defmodule Ms2ex.PartyServer do
   alias Ms2ex.{Party, Packets}
   alias Phoenix.PubSub
 
+  require Logger, as: L
+
+  def broadcast(nil, _packet), do: :error
+
   def broadcast(party_id, packet) do
     PubSub.broadcast(Ms2ex.PubSub, "party:#{party_id}", {:push, packet})
   end
@@ -12,7 +16,18 @@ defmodule Ms2ex.PartyServer do
   def lookup(pid) when is_pid(pid), do: GenServer.call(pid, :lookup)
   def lookup(party_id), do: call(party_id, :lookup)
 
-  def disband_if_empty(party_id), do: call(party_id, :disband_if_empty)
+  def lookup!(nil), do: nil
+
+  def lookup!(party_id) do
+    case call(party_id, :lookup) do
+      {:ok, party} -> party
+      _ -> nil
+    end
+  end
+
+  def member_offline(character) do
+    call(character.party_id, {:member_offline, character})
+  end
 
   def add_member(party_id, character) do
     call(party_id, {:update_member, character})
@@ -33,6 +48,9 @@ defmodule Ms2ex.PartyServer do
   def init(leader) do
     party = Party.create(leader)
     Process.register(self(), :"party:#{party.id}")
+
+    L.debug(fn -> "NEW PARTY CREATED WITH ID: #{party.id}" end)
+
     {:ok, party}
   end
 
@@ -40,27 +58,49 @@ defmodule Ms2ex.PartyServer do
     {:reply, {:ok, state}, state}
   end
 
-  def handle_call(:disband_if_empty, _from, state) do
-    if Enum.count(state.members) == 1 do
-      {:stop, :normal, state}
+  def handle_call({:member_offline, character}, _from, state) do
+    state = update_member(state, character)
+    member_online = Enum.find(state.members, & &1.online?)
+
+    if member_online do
+      broadcast(state.id, Packets.Party.logout_notice(character))
+      state = maybe_find_new_leader(state, character, member_online)
+      {:reply, :ok, state}
     else
-      {:reply, {:error, :not_empty}, state}
+      send(self(), :shutdown)
+      {:reply, :ok, state}
     end
   end
 
-  def handle_call({:update_member, member}, _from, state) do
-    state =
-      if Party.in_party?(state, member) do
-        Party.update_member(state, member)
-      else
-        Party.add_member(state, member)
-      end
+  def handle_call({:update_member, character}, _from, state) do
+    state = update_member(state, character)
 
     unless Party.new?(state) do
-      broadcast(state.id, Packets.Party.update_member(member))
+      broadcast(state.id, Packets.Party.update_member(character))
     end
 
     {:reply, {:ok, state}, state}
+  end
+
+  def handle_info(:shutdown, state) do
+    {:stop, :normal, state}
+  end
+
+  defp update_member(party, member) do
+    if Party.in_party?(party, member) do
+      Party.update_member(party, member)
+    else
+      Party.add_member(party, member)
+    end
+  end
+
+  defp maybe_find_new_leader(party, character, new_leader) do
+    if character.id == party.leader_id do
+      broadcast(party.id, Packets.Party.set_leader(new_leader))
+      %{party | leader_id: new_leader.id}
+    else
+      party
+    end
   end
 
   defp call(party_id, args) do

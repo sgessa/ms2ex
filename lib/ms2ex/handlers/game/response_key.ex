@@ -9,6 +9,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     Net,
     Packets,
     PartyManager,
+    PartyServer,
     SessionManager,
     World
   }
@@ -49,39 +50,48 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
 
-      session
-      |> Map.put(:character_id, character.id)
-      |> push(Packets.MoveResult.bytes())
-      |> push(Packets.LoginRequired.bytes(account.id))
-      |> push(Packets.Friend.start_list())
-      |> push(Packets.Friend.load_list(friends))
-      |> push(Packets.Friend.end_list(Enum.count(friends)))
-      |> push(Packets.ResponseTimeSync.init(0x1, tick))
-      |> push(Packets.ResponseTimeSync.init(0x3, tick))
-      |> push(Packets.ResponseTimeSync.init(0x2, tick))
-      |> Map.put(:server_tick, tick)
-      |> push(Packets.RequestClientSyncTick.bytes(tick))
-      |> push(Packets.DynamicChannel.bytes())
-      |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
-      |> push(Packets.SyncNumber.bytes())
-      |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(Inventory.list_tabs(character))
-      |> push(Packets.MarketInventory.count(0))
-      |> push(Packets.MarketInventory.start_list())
-      |> push(Packets.MarketInventory.end_list())
-      |> push(Packets.FurnishingInventory.start_list())
-      |> push(Packets.FurnishingInventory.end_list())
-      |> push(Packets.UserEnv.set_titles(titles))
-      |> push(Packets.UserEnv.set_mode(0x4))
-      |> push(Packets.UserEnv.set_mode(0x5))
-      |> push(Packets.UserEnv.set_mode(0x8, 2))
-      |> push(Packets.UserEnv.set_mode(0x9))
-      |> push(Packets.UserEnv.set_mode(0xA))
-      |> push(Packets.UserEnv.set_mode(0xC))
-      |> push(Packets.Fishing.load_log())
-      |> push(Packets.KeyTable.request())
-      |> push(Packets.FieldEntrance.bytes())
-      |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      party = PartyServer.lookup!(character.party_id)
+
+      session =
+        session
+        |> Map.put(:character_id, character.id)
+        |> push(Packets.MoveResult.bytes())
+        |> push(Packets.LoginRequired.bytes(account.id))
+        |> push(Packets.Friend.start_list())
+        |> push(Packets.Friend.load_list(friends))
+        |> push(Packets.Friend.end_list(Enum.count(friends)))
+        |> push(Packets.ResponseTimeSync.init(0x1, tick))
+        |> push(Packets.ResponseTimeSync.init(0x3, tick))
+        |> push(Packets.ResponseTimeSync.init(0x2, tick))
+        |> Map.put(:server_tick, tick)
+        |> push(Packets.RequestClientSyncTick.bytes(tick))
+        |> push(Packets.DynamicChannel.bytes())
+        |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
+        |> push(Packets.SyncNumber.bytes())
+        |> push(Packets.Prestige.bytes(character))
+        |> push_inventory_tab(Inventory.list_tabs(character))
+        |> push(Packets.MarketInventory.count(0))
+        |> push(Packets.MarketInventory.start_list())
+        |> push(Packets.MarketInventory.end_list())
+        |> push(Packets.FurnishingInventory.start_list())
+        |> push(Packets.FurnishingInventory.end_list())
+        |> push(Packets.UserEnv.set_titles(titles))
+        |> push(Packets.UserEnv.set_mode(0x4))
+        |> push(Packets.UserEnv.set_mode(0x5))
+        |> push(Packets.UserEnv.set_mode(0x8, 2))
+        |> push(Packets.UserEnv.set_mode(0x9))
+        |> push(Packets.UserEnv.set_mode(0xA))
+        |> push(Packets.UserEnv.set_mode(0xC))
+        |> push(Packets.Fishing.load_log())
+        |> push(Packets.KeyTable.request())
+        |> push(Packets.FieldEntrance.bytes())
+        |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+
+      if party do
+        push(session, Packets.Party.create(party, false))
+      else
+        session
+      end
     else
       _ -> session
     end
@@ -89,8 +99,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   defp maybe_set_party(character) do
     case PartyManager.lookup(character) do
-      {:ok, party_id} -> %{character | party_id: party_id}
-      _ -> character
+      {:ok, party_id} ->
+        character = %{character | party_id: party_id}
+        PartyServer.update_member(character)
+        character
+
+      _ ->
+        character
     end
   end
 

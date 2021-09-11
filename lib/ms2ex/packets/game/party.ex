@@ -79,6 +79,31 @@ defmodule Ms2ex.Packets.Party do
     |> put_ustring(character.name)
   end
 
+  def login_notice(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x5)
+    |> Packets.CharacterList.put_character(character)
+    |> put_long()
+    |> put_int()
+    |> put_short()
+    |> put_byte()
+  end
+
+  def logout_notice(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x6)
+    |> put_long(character.id)
+  end
+
+  def set_leader(leader) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x8)
+    |> put_long(leader.id)
+  end
+
   defp put_dungeon_info(packet) do
     packet
     |> put_int(1)
