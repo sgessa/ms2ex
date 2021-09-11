@@ -57,6 +57,21 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
+  # Promote Leader
+  defp handle_mode(0x11, packet, session) do
+    {target_name, _packet} = get_ustring(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, new_leader} <- World.get_character_by_name(target_name),
+         {:ok, party} <- PartyServer.lookup(character.party_id),
+         true <- party.leader_id == character.id do
+      PartyServer.broadcast(party.id, Packets.Party.set_leader(new_leader))
+      session
+    else
+      _ -> session
+    end
+  end
+
   defp handle_mode(_, _packet, session), do: session
 
   defp handle_invitation(session, response, party, character) do
