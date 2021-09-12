@@ -1,4 +1,4 @@
-defmodule Ms2ex.Net.SessionSender do
+defmodule Ms2ex.Net.SenderSession do
   use GenServer
 
   require Logger, as: L

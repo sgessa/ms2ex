@@ -10,7 +10,7 @@ defmodule Ms2ex.Net.Session do
   @behaviour :ranch_protocol
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
-  alias Ms2ex.Net.{Router, SessionSender}
+  alias Ms2ex.Net.{Router, SenderSession}
   alias Ms2ex.{Packets, PartyServer, World}
   alias Packets.PacketReader
 
@@ -38,7 +38,7 @@ defmodule Ms2ex.Net.Session do
 
   def push(state, packet) when is_binary(packet) and byte_size(packet) > 0 do
     if Process.alive?(state.sender_pid) do
-      SessionSender.push(state.sender_pid, packet)
+      SenderSession.push(state.sender_pid, packet)
     end
 
     state
@@ -82,9 +82,9 @@ defmodule Ms2ex.Net.Session do
     recv_cipher = RecvCipher.build(@version, recv_iv, @block_iv)
     send_cipher = SendCipher.build(@version, send_iv, @block_iv)
 
-    sender_pid = SessionSender.start_link(socket, transport, send_cipher, self())
+    sender_pid = SenderSession.start_link(socket, transport, send_cipher, self())
 
-    SessionSender.handshake(sender_pid, recv_cipher)
+    SenderSession.handshake(sender_pid, recv_cipher)
 
     state =
       Map.merge(state, %{
@@ -186,7 +186,7 @@ defmodule Ms2ex.Net.Session do
   def handle_info(_data, state), do: {:noreply, state}
 
   defp shutdown(socket, transport, sender_pid) do
-    Ms2ex.Net.SessionSender.stop(sender_pid)
+    Ms2ex.Net.SenderSession.stop(sender_pid)
 
     receive do
       {:EXIT, _responder_pid, :normal} -> :ok
