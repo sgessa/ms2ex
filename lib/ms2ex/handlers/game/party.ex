@@ -106,6 +106,33 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
+  # Start Ready Check
+  defp handle_mode(0x2E, _packet, session) do
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, party} <- PartyServer.lookup(character.party_id) do
+      if Party.is_leader?(party, character) do
+        PartyServer.start_ready_check(party)
+      end
+
+      session
+    end
+  end
+
+  # Handle Ready Check
+  defp handle_mode(0x30, packet, session) do
+    {_n, packet} = get_int(packet)
+    {resp, _packet} = get_bool(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, party} <- PartyServer.lookup(character.party_id),
+         false <- Enum.member?(party.ready_check, character.id) do
+      PartyServer.ready_check(party, character, resp)
+      session
+    else
+      _ -> session
+    end
+  end
+
   defp handle_mode(_, _packet, session), do: session
 
   defp handle_invitation(session, response, party, character) do

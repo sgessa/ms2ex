@@ -135,6 +135,36 @@ defmodule Ms2ex.Packets.Party do
     |> put_ustring(character.name)
   end
 
+  def start_ready_check(party) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x2F)
+    |> put_byte(2)
+    |> put_int(Enum.count(party.ready_check))
+    |> put_long(DateTime.to_unix(DateTime.utc_now()) + Ms2ex.sync_ticks())
+    |> put_int(Enum.count(party.members))
+    |> reduce(party.members, fn m, packet ->
+      put_long(packet, m.id)
+    end)
+    |> put_int()
+    |> put_long(party.leader_id)
+    |> put_int()
+  end
+
+  def ready_check(character, resp) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x30)
+    |> put_long(character.id)
+    |> put_bool(resp)
+  end
+
+  def end_ready_check() do
+    __MODULE__
+    |> build()
+    |> put_byte(0x31)
+  end
+
   defp put_dungeon_info(packet) do
     packet
     |> put_int(1)

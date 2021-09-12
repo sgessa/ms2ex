@@ -47,6 +47,14 @@ defmodule Ms2ex.PartyServer do
     call(party.id, {:kick_member, character_id})
   end
 
+  def start_ready_check(party) do
+    cast(party.id, :start_ready_check)
+  end
+
+  def ready_check(party, character, response) do
+    cast(party.id, {:ready_check, character, response})
+  end
+
   def subscribe(party_id) do
     PubSub.subscribe(Ms2ex.PubSub, "party:#{party_id}")
   end
@@ -129,6 +137,42 @@ defmodule Ms2ex.PartyServer do
     end
   end
 
+  def handle_cast(:start_ready_check, state) do
+    if Party.ready_check_in_progress?(state) do
+      {:noreply, state}
+    else
+      broadcast(state.id, Packets.Party.start_ready_check(state))
+      Process.send_after(self(), :end_ready_check, 20_000)
+      {:noreply, state}
+    end
+  end
+
+  def handle_cast({:ready_check, character, response}, state) do
+    state = %{state | ready_check: [character.id | state.ready_check]}
+    broadcast(state.id, Packets.Party.ready_check(character, response))
+
+    if Enum.count(state.members) == Enum.count(state.ready_check) do
+      broadcast(state.id, Packets.Party.end_ready_check())
+      {:noreply, %{state | ready_check: []}}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_info(:end_ready_check, state) do
+    if Enum.count(state.members) != Enum.count(state.ready_check) do
+      for m <- state.members, !Enum.member?(state.ready_check, m.id) do
+        broadcast(state.id, Packets.Party.ready_check(m, false))
+      end
+
+      broadcast(state.id, Packets.Party.end_ready_check())
+
+      {:noreply, %{state | ready_check: []}}
+    else
+      {:noreply, state}
+    end
+  end
+
   def handle_info(:shutdown, state) do
     {:stop, :normal, state}
   end
@@ -162,6 +206,12 @@ defmodule Ms2ex.PartyServer do
   defp call(party_id, args) do
     with pid when is_pid(pid) <- Process.whereis(:"party:#{party_id}") do
       GenServer.call(pid, args)
+    end
+  end
+
+  defp cast(party_id, args) do
+    with pid when is_pid(pid) <- Process.whereis(:"party:#{party_id}") do
+      GenServer.cast(pid, args)
     end
   end
 end

@@ -6,7 +6,8 @@ defmodule Ms2ex.Party do
     :leader_id,
     :formed_at,
     :pid,
-    members: []
+    members: [],
+    ready_check: []
   ]
 
   def create(leader) do
@@ -63,4 +64,8 @@ defmodule Ms2ex.Party do
 
   def full?(party), do: Enum.count(party.members) >= @max_members
   def new?(party), do: Enum.count(party.members) == 1
+
+  def ready_check_in_progress?(%__MODULE__{ready_check: r}) do
+    Enum.count(r) > 0
+  end
 end
