@@ -1,7 +1,7 @@
 defmodule Ms2ex.Characters do
   alias Ms2ex.{Account, Character, Repo}
 
-  import Ecto.Query
+  import Ecto.Query, except: [update: 2]
 
   def list(%Account{id: account_id}) do
     Character
@@ -19,7 +19,8 @@ defmodule Ms2ex.Characters do
       |> Character.changeset(attrs)
 
     Repo.transaction(fn ->
-      with {:ok, character} <- Repo.insert(changeset) do
+      with {:ok, %{skill_tabs: [tab | _]} = character} <- Repo.insert(changeset),
+           {:ok, character} <- update(character, %{active_skill_tab_id: tab.id}) do
         character
       else
         {:error, reason} -> Repo.rollback(reason)

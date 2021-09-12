@@ -617,17 +617,18 @@ defmodule Ms2ex.SkillTab do
   schema "skill_tabs" do
     belongs_to :character, Ms2ex.Character
 
-    has_many :skills, Ms2ex.Skill
+    has_many :skills, Ms2ex.Skill, on_replace: :delete
 
     field :name, :string
+    field :tab_id, :integer
   end
 
   @doc false
   def changeset(skill_tab, attrs) do
     skill_tab
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :tab_id])
     |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
-    |> validate_required([:name])
+    |> validate_required([:name, :tab_id])
   end
 
   def ordered_skill_ids(job), do: Map.get(@orders, job)

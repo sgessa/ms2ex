@@ -2,7 +2,8 @@ defmodule Ms2ex.Metadata.SkillAttack do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  field :condition_skill_ids, 1, repeated: true, type: :int32
+  field :attack_point, 1, type: :int32
+  field :target_count, 2, type: :int32
 end
 
 defmodule Ms2ex.Metadata.SkillData do
@@ -15,6 +16,7 @@ defmodule Ms2ex.Metadata.SkillData do
   field :buff_category, 4, type: :int32
   field :event_buff_type, 5, type: :int32
   field :max_stacks, 6, type: :int32
+  field :keep_condition, 7, type: :int32
 end
 
 defmodule Ms2ex.Metadata.SkillMotion do
@@ -25,19 +27,24 @@ defmodule Ms2ex.Metadata.SkillMotion do
   field :effect, 2, type: :string
 end
 
-defmodule Ms2ex.Metadata.Skill do
+defmodule Ms2ex.Metadata.SkillCondition do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:id, :skill_levels, :sub_skills, :job, :learned, :state]
-
   field :id, 1, type: :int32
-  field :skill_levels, 2, repeated: true, type: Ms2ex.Metadata.SkillLevel
-  field :sub_skills, 3, repeated: true, type: :int32
-  field :job, 4, type: Ms2ex.Metadata.Job, enum: true
-  field :learned, 5, type: :bool
-  field :state, 6, type: :string
-  field :passive, 7, type: :bool
+  field :level, 2, type: :int32
+  field :splash, 3, type: :bool
+  field :target, 4, type: :int32
+  field :owner, 5, type: :int32
+end
+
+defmodule Ms2ex.Metadata.SkillUpgrade do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  field :level_required, 1, type: :int32
+  field :skills_required, 2, type: :int32, repeated: true
+  field :skill_levels_required, 3, type: :int32, repeated: true
 end
 
 defmodule Ms2ex.Metadata.SkillLevel do
@@ -50,8 +57,45 @@ defmodule Ms2ex.Metadata.SkillLevel do
   field :damage_rate, 4, type: :float
   field :feature, 5, type: :string
   field :motion, 6, type: Ms2ex.Metadata.SkillMotion
-  field :attack, 7, type: Ms2ex.Metadata.SkillAttack
-  field :data, 8, type: Ms2ex.Metadata.SkillData
+  field :attacks, 7, type: Ms2ex.Metadata.SkillAttack, repeated: true
+  field :cibdutuibs, 8, type: Ms2ex.Metadata.SkillCondition
+  field :data, 9, type: Ms2ex.Metadata.SkillData
+  field :skill_upgrade, 10, type: Ms2ex.Metadata.SkillUpgrade
+end
+
+defmodule Ms2ex.Metadata.Skill do
+  @moduledoc false
+  use Protobuf, syntax: :proto3
+
+  defstruct [
+    :id,
+    :skill_levels,
+    :sub_skills,
+    :job,
+    :current_level,
+    :state,
+    :damage_type,
+    :type,
+    :sub_type,
+    :element,
+    :super_armor,
+    :sp_recovery?,
+    :max_level
+  ]
+
+  field :id, 1, type: :int32
+  field :skill_levels, 2, repeated: true, type: Ms2ex.Metadata.SkillLevel
+  field :sub_skills, 3, repeated: true, type: :int32
+  field :job, 4, type: Ms2ex.Metadata.Job, enum: true
+  field :current_level, 5, type: :int32
+  field :state, 6, type: :string
+  field :damage_type, 7, type: :int32
+  field :type, 8, type: :int32
+  field :sub_type, 9, type: :int32
+  field :element, 10, type: :int32
+  field :super_armor, 11, type: :bool
+  field :sp_recovery?, 12, type: :bool
+  field :max_level, 13, type: :int32
 end
 
 defmodule Ms2ex.Metadata.Skills do

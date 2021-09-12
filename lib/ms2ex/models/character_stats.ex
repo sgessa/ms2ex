@@ -63,7 +63,7 @@ defmodule Ms2ex.CharacterStats do
 
     field :hp_min, :integer, default: 500
     field :hp_max, :integer, default: 500
-    field :hp_cur, :integer, default: 0
+    field :hp_cur, :integer, default: 500
 
     field :current_hp_min, :integer, default: 500
     field :current_hp_max, :integer, default: 0
@@ -77,9 +77,9 @@ defmodule Ms2ex.CharacterStats do
     field :hp_regen_time_max, :integer, default: 3000
     field :hp_regen_time_cur, :integer, default: 3000
 
-    field :spirit_cur, :integer, default: 100
     field :spirit_min, :integer, default: 100
-    field :spirit_max, :integer, default: 0
+    field :spirit_max, :integer, default: 100
+    field :spirit_cur, :integer, default: 100
 
     field :sp_regen_min, :integer, default: 1
     field :sp_regen_max, :integer, default: 1
@@ -89,9 +89,9 @@ defmodule Ms2ex.CharacterStats do
     field :sp_regen_time_max, :integer, default: 200
     field :sp_regen_time_cur, :integer, default: 200
 
-    field :stamina_cur, :integer, default: 120
     field :stamina_min, :integer, default: 120
     field :stamina_max, :integer, default: 120
+    field :stamina_cur, :integer, default: 120
 
     field :stamina_regen_min, :integer, default: 10
     field :stamina_regen_max, :integer, default: 10

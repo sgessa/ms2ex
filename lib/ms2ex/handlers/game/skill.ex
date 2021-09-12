@@ -16,11 +16,11 @@ defmodule Ms2ex.GameHandlers.Skill do
     {cast_id, packet} = get_long(packet)
     {value, packet} = get_int(packet)
     {skill_id, packet} = get_int(packet)
-    {skill_level, packet} = get_short(packet)
+    {skill, packet} = get_short(packet)
     {_, packet} = get_byte(packet)
     {coords, _packet} = get_coord(packet)
 
-    skill_cast = %{id: cast_id, skill_id: skill_id, level: skill_level}
+    skill_cast = %{id: cast_id, skill_id: skill_id, level: skill}
     Registries.SkillCasts.set_skill_cast(skill_cast)
 
     push(session, Packets.Skill.use_skill(skill_cast, value, coords))

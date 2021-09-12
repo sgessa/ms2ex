@@ -27,6 +27,10 @@ defmodule Ms2ex.Character do
     :title_id
   ]
 
+  @optional_fields [
+    :active_skill_tab_id
+  ]
+
   defenum(Gender, male: 0, female: 1)
 
   @jobs Map.to_list(Ms2ex.Metadata.Job.mapping())
@@ -34,6 +38,7 @@ defmodule Ms2ex.Character do
 
   schema "characters" do
     belongs_to :account, Ms2ex.Account
+    belongs_to :active_skill_tab, Ms2ex.SkillTab
 
     has_many :emotes, Ms2ex.Emote
     has_many :favorite_stickers, Ms2ex.FavoriteChatSticker
@@ -99,7 +104,7 @@ defmodule Ms2ex.Character do
   @doc false
   def changeset(character, attrs) do
     character
-    |> cast(attrs, @fields)
+    |> cast(attrs, @fields ++ @optional_fields)
     |> cast_assoc(:emotes, with: &Ms2ex.Emote.changeset/2)
     |> cast_assoc(:inventory_tabs, with: &Ms2ex.Inventory.Tab.changeset/2)
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
@@ -122,12 +127,14 @@ defmodule Ms2ex.Character do
   def max_level(), do: @max_level
 
   def set_default_assocs(attrs) do
+    job = Map.get(attrs, :job)
+
     attrs
     |> Map.put(:stickers, default_stickers())
     |> Map.put(:emotes, Enum.map(Ms2ex.Emotes.default_emotes(), &%{emote_id: &1}))
     |> Map.put(:hot_bars, [%{active: true}, %{}])
     |> Map.put(:inventory_tabs, default_inventory_tabs())
-    |> Map.put(:skill_tabs, [%{name: "Build 1", skills: default_skills(attrs.job)}])
+    |> Map.put(:skill_tabs, default_skill_tabs(job))
     |> Map.put(:stats, %{})
     |> Map.put(:wallet, %{})
   end
@@ -143,18 +150,9 @@ defmodule Ms2ex.Character do
     end)
   end
 
-  defp default_skills(job) do
+  defp default_skill_tabs(job) do
     job_skills = Ms2ex.Skills.by_job(job)
-
-    Enum.map(job_skills, fn {id, skill} ->
-      meta = Ms2ex.Metadata.Skills.get(id)
-      skill_level = List.first(skill.skill_levels)
-
-      %{
-        skill_id: id,
-        learned: meta.learned,
-        level: skill_level.level
-      }
-    end)
+    skills = Enum.map(job_skills, fn {id, meta} -> %{skill_id: id, level: meta.current_level} end)
+    [%{name: "Build 1", skills: skills, tab_id: 1}]
   end
 end
