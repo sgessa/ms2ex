@@ -4,7 +4,7 @@ defmodule Ms2ex.Commands do
   import Net.Session, only: [push: 2, push_notice: 3]
 
   def handle(["heal"], %{stats: stats} = character, session) do
-    max_hp = stats.hp_total
+    max_hp = stats.hp_cur
     stats = stats |> Map.delete(:__struct__) |> Map.put(:current_hp_min, max_hp)
     {:ok, character} = Characters.update(character, %{stats: stats})
     World.update_character(character)

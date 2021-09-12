@@ -78,6 +78,7 @@ defmodule Ms2ex.Character do
     field :name, :string
     field :object_id, :integer, virtual: true, default: 0
     field :online?, :boolean, default: false, virtual: true
+    field :party_id, :integer, virtual: true
     field :position, EctoTypes.Term, virtual: true
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1

@@ -1,4 +1,4 @@
-defmodule Ms2ex.Sessions do
+defmodule Ms2ex.SessionManager do
   use GenServer
 
   def lookup(account_id), do: call({:lookup, account_id})

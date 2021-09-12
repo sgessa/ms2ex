@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
-  alias Ms2ex.{Character, Field}
+  alias Ms2ex.{Character, Field, Packets, PartyServer}
   alias Phoenix.PubSub
 
   def init_character(%Character{} = character) do
@@ -8,10 +8,16 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
     end
 
     notify_friend_presence(character)
+
+    if character.party_id do
+      notify_party_presence(character)
+      PartyServer.subscribe(character.party_id)
+    end
   end
 
   def cleanup(character) do
     Field.leave(character)
+    notify_party_presence(character)
     notify_friend_presence(character)
   end
 
@@ -20,5 +26,13 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
       data = %{character: character, shared_id: friend.shared_id}
       PubSub.broadcast(Ms2ex.PubSub, "friend_presence:#{character.id}", {:friend_presence, data})
     end
+  end
+
+  defp notify_party_presence(%{online?: true} = character) do
+    PartyServer.broadcast(character.party_id, Packets.Party.login_notice(character))
+  end
+
+  defp notify_party_presence(character) do
+    PartyServer.member_offline(character)
   end
 end

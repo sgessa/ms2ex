@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{Chat, Commands, Field, Net, Packets, World}
+  alias Ms2ex.{Chat, Commands, Field, Net, Packets, PartyServer, World}
 
   import Packets.PacketReader
   import Net.Session, only: [push: 2]
@@ -50,6 +50,16 @@ defmodule Ms2ex.GameHandlers.UserChat do
     # TODO check if user has enough merets or a voucher
     packet = Packets.UserChat.bytes(:world, character, msg)
     World.broadcast(packet)
+    session
+  end
+
+  defp handle_message({:party, msg, _rcpt_name}, character, session) do
+    packet = Packets.UserChat.bytes(:party, character, msg)
+
+    if character.party_id do
+      PartyServer.broadcast(character.party_id, packet)
+    end
+
     session
   end
 

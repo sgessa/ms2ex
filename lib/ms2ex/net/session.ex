@@ -10,10 +10,9 @@ defmodule Ms2ex.Net.Session do
   @behaviour :ranch_protocol
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
-  alias Ms2ex.Packets
-  alias Ms2ex.Packets.PacketReader
-  alias Ms2ex.Net.Router
-  alias Ms2ex.Net.SessionSender
+  alias Ms2ex.Net.{Router, SessionSender}
+  alias Ms2ex.{Packets, PartyServer, World}
+  alias Packets.PacketReader
 
   import Ms2ex.Net.Utils
 
@@ -105,10 +104,6 @@ defmodule Ms2ex.Net.Session do
 
   # Server callbacks
 
-  def handle_info({:summon, character, map_id}, state) do
-    {:noreply, Ms2ex.Field.change_field(character, state, map_id)}
-  end
-
   def handle_info({:push, packet}, state) do
     {:noreply, push(state, packet)}
   end
@@ -167,6 +162,25 @@ defmodule Ms2ex.Net.Session do
      state
      |> push(Packets.Friend.update(friend))
      |> push(Packets.Friend.presence_notification(friend))}
+  end
+
+  def handle_info({:summon, character, map_id}, state) do
+    {:noreply, Ms2ex.Field.change_field(character, state, map_id)}
+  end
+
+  def handle_info({:unsubscribe_party, party_id}, state) do
+    PartyServer.unsubscribe(party_id)
+    {:noreply, state}
+  end
+
+  def handle_info({:disband_party, character}, state) do
+    PartyServer.unsubscribe(character.party_id)
+    push(state, Packets.Party.disband())
+
+    character = %{character | party_id: nil}
+    World.update_character(character)
+
+    {:noreply, state}
   end
 
   def handle_info(_data, state), do: {:noreply, state}

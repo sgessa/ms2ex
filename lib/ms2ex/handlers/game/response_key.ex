@@ -1,7 +1,18 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{Characters, Inventory, LoginHandlers, Metadata, Net, Packets, Sessions, World}
+  alias Ms2ex.{
+    Characters,
+    Inventory,
+    LoginHandlers,
+    Metadata,
+    Net,
+    Packets,
+    PartyManager,
+    PartyServer,
+    SessionManager,
+    World
+  }
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -10,10 +21,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} = Sessions.lookup(account_id),
+    with {:ok, auth_data} = SessionManager.lookup(account_id),
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
-      Sessions.register(account.id, auth_data)
+      SessionManager.register(account.id, auth_data)
 
       character =
         auth_data[:character_id]
@@ -27,26 +38,17 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       tick = Ms2ex.sync_ticks()
 
-      {:ok, map} = Metadata.Maps.lookup(character.map_id)
-      spawn = List.first(map.spawns)
-
-      character = %{
-        character
-        | position: spawn.coord,
-          rotation: spawn.rotation,
-          safe_position: spawn.coord,
-          online?: true
-      }
+      character = character |> set_spawn_position() |> maybe_set_party()
 
       World.update_character(character)
 
       character = Characters.preload(character, friends: :rcpt)
-      %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
-
       init_character(character)
 
       titles = Characters.list_titles(character)
       wallet = Characters.get_wallet(character)
+
+      %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
 
       session
       |> Map.put(:character_id, character.id)
@@ -81,9 +83,35 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push_party(character)
     else
       _ -> session
     end
+  end
+
+  defp maybe_set_party(character) do
+    case PartyManager.lookup(character) do
+      {:ok, party_id} ->
+        character = %{character | party_id: party_id}
+        PartyServer.update_member(character)
+        character
+
+      _ ->
+        character
+    end
+  end
+
+  defp set_spawn_position(character) do
+    {:ok, map} = Metadata.Maps.lookup(character.map_id)
+    spawn = List.first(map.spawns)
+
+    %{
+      character
+      | position: spawn.coord,
+        rotation: spawn.rotation,
+        safe_position: spawn.coord,
+        online?: true
+    }
   end
 
   defp push_inventory_tab(session, []), do: session
@@ -96,5 +124,29 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     |> push(Packets.InventoryItem.load_tab(inventory_tab.tab, inventory_tab.slots))
     |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items))
     |> push_inventory_tab(tabs)
+  end
+
+  defp push_party(session, character) do
+    party = PartyServer.lookup!(character.party_id)
+
+    if party do
+      session
+      |> push(Packets.Party.create(party, false))
+      |> create_party(party, character)
+    else
+      session
+    end
+  end
+
+  defp create_party(session, party, character) do
+    PartyServer.broadcast_from(self(), party.id, Packets.Party.update_hitpoints(character))
+
+    Enum.reduce(party.members, session, fn m, session ->
+      if m.id != character.id do
+        push(session, Packets.Party.update_hitpoints(m))
+      else
+        session
+      end
+    end)
   end
 end
