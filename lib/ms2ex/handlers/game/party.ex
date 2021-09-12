@@ -106,6 +106,21 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
+  # Start Vote Kick
+  defp handle_mode(0x2D, packet, session) do
+    {target_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- World.get_character(session.character_id),
+         {:ok, party} <- PartyServer.lookup(character.party_id) do
+      if Enum.count(party.members) < 4 do
+        push(session, Packets.Party.notice(:insufficient_memmber_count_for_kick_vote, character))
+      else
+        PartyServer.start_vote_kick(party, target_id)
+        session
+      end
+    end
+  end
+
   # Start Ready Check
   defp handle_mode(0x2E, _packet, session) do
     with {:ok, character} <- World.get_character(session.character_id),

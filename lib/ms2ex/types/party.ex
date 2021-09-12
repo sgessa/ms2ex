@@ -7,7 +7,8 @@ defmodule Ms2ex.Party do
     :formed_at,
     :pid,
     members: [],
-    ready_check: []
+    ready_check: [],
+    vote_kick: []
   ]
 
   def create(leader) do

@@ -47,6 +47,10 @@ defmodule Ms2ex.PartyServer do
     call(party.id, {:kick_member, character_id})
   end
 
+  def start_vote_kick(party, character_id) do
+    cast(party.id, {:start_vote_kick, character_id})
+  end
+
   def start_ready_check(party) do
     cast(party.id, :start_ready_check)
   end
@@ -134,6 +138,17 @@ defmodule Ms2ex.PartyServer do
         else
           {:reply, {:ok, character}, state}
         end
+    end
+  end
+
+  def handle_cast({:start_vote_kick, character_id}, state) do
+    case Party.get_member(state, character_id) do
+      nil ->
+        {:reply, :error, state}
+
+      _character ->
+        # TODO send packet
+        {:reply, :ok, state}
     end
   end
 
