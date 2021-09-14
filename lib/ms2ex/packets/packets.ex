@@ -37,7 +37,7 @@ defmodule Ms2ex.Packets do
     0x6D => "REQUEST_CHANGE_FIELD",
     0x83 => "GLOBAL_FACTOR",
     0x8F => "PREMIUM_CLUB",
-    0xA3 => "REQUEST_SKILL_BOOK",
+    0xA3 => "SKILL_BOOK",
     0xB2 => "RESPONSE_SERVER_ENTER",
     0xBB => "FILE_HASH",
     0xB9 => "CHAT_STICKER"
@@ -113,7 +113,7 @@ defmodule Ms2ex.Packets do
     0xC6 => "FISHING",
     0xC8 => "NPS_INFO",
     0xED => "PREMIUM_CLUB",
-    0x10E => "RESPONSE_SKILL_BOOK",
+    0x10E => "SKILL_BOOK",
     0x11B => "LOGIN_REQUIRED",
     0x11E => "PRESTIGE",
     0x128 => "CHAT_STICKER",

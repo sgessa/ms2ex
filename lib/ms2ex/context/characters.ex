@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Account, Character, Repo}
+  alias Ms2ex.{Account, Character, Repo, Skills}
 
   import Ecto.Query, except: [update: 2]
 
@@ -19,8 +19,7 @@ defmodule Ms2ex.Characters do
       |> Character.changeset(attrs)
 
     Repo.transaction(fn ->
-      with {:ok, %{skill_tabs: [tab | _]} = character} <- Repo.insert(changeset),
-           {:ok, character} <- update(character, %{active_skill_tab_id: tab.id}) do
+      with {:ok, character} <- Repo.insert(changeset) do
         character
       else
         {:error, reason} -> Repo.rollback(reason)
@@ -50,6 +49,17 @@ defmodule Ms2ex.Characters do
 
   def load_equips(%Character{} = character) do
     %{character | equips: Ms2ex.Equips.list(character)}
+  end
+
+  def load_skills(%Character{} = character, opts \\ []) do
+    %{skill_tabs: tabs} = Repo.preload(character, :skill_tabs, opts)
+
+    tabs =
+      Enum.map(tabs, fn t ->
+        %{t | skills: Skills.load_tab_skills(character, t)}
+      end)
+
+    %{character | skill_tabs: tabs}
   end
 
   def list_titles(%Character{id: character_id}) do

@@ -5,7 +5,7 @@ defmodule Ms2ex.Skill do
   schema "skills" do
     belongs_to :skill_tab, Ms2ex.SkillTab
 
-    field :level, :integer, default: 0
+    field :level, :integer
     field :skill_id, :integer
   end
 

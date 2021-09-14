@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Job do
   require Logger
 
-  alias Ms2ex.{HotBars, Net, Packets, Skills, World}
+  alias Ms2ex.{Characters, HotBars, Net, Packets, Skills, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -23,7 +23,8 @@ defmodule Ms2ex.GameHandlers.Job do
     skill_tab = Skills.get_active_tab(character)
     {skills_length, packet} = get_int(packet)
 
-    save_skills(skill_tab, skills_length, packet)
+    character = save_skills(character, skill_tab, skills_length, packet)
+    World.update_character(character)
 
     hot_bars = HotBars.list(character)
 
@@ -37,21 +38,19 @@ defmodule Ms2ex.GameHandlers.Job do
     {:ok, character} = World.get_character(session.character_id)
 
     skill_tab = Skills.get_active_tab(character)
-    Skills.reset(character, skill_tab)
+    character = Skills.reset(character, skill_tab)
+    World.update_character(character)
 
-    # hot_bars = HotBars.list(character)
-
-    session
-    |> push(Packets.Job.save(character))
-
-    # |> push(Packets.KeyTable.send_hot_bars(hot_bars))
+    push(session, Packets.Job.save(character))
   end
 
   defp handle_mode(_mode, _character, session), do: session
 
-  defp save_skills(_tab, len, _packet) when len < 1, do: :ok
+  defp save_skills(character, _tab, len, _packet) when len < 1 do
+    Characters.load_skills(character, force: true)
+  end
 
-  defp save_skills(tab, len, packet) do
+  defp save_skills(character, tab, len, packet) do
     {skill_id, packet} = get_int(packet)
     {level, packet} = get_short(packet)
     {learned, packet} = get_bool(packet)
@@ -59,6 +58,6 @@ defmodule Ms2ex.GameHandlers.Job do
     level = if learned, do: level, else: 0
     Skills.find_and_update(tab, skill_id, %{level: level})
 
-    save_skills(tab, len - 1, packet)
+    save_skills(character, tab, len - 1, packet)
   end
 end

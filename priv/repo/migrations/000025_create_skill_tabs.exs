@@ -11,9 +11,7 @@ defmodule Ms2ex.Repo.Migrations.CreateSkillTabs do
     create index(:skill_tabs, [:character_id])
 
     alter table(:characters) do
-      add :active_skill_tab_id, references(:skill_tabs)
+      add :active_skill_tab_id, :integer
     end
-
-    create index(:characters, [:active_skill_tab_id])
   end
 end

@@ -38,7 +38,6 @@ defmodule Ms2ex.Character do
 
   schema "characters" do
     belongs_to :account, Ms2ex.Account
-    belongs_to :active_skill_tab, Ms2ex.SkillTab
 
     has_many :emotes, Ms2ex.Emote
     has_many :favorite_stickers, Ms2ex.FavoriteChatSticker
@@ -67,6 +66,7 @@ defmodule Ms2ex.Character do
     # TODO
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
 
+    field :active_skill_tab_id, :integer, default: 1
     field :animation, :integer, virtual: true, default: 0
     field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0

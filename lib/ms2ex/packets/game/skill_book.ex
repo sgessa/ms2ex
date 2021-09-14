@@ -1,6 +1,4 @@
-defmodule Ms2ex.Packets.ResponseSkillBook do
-  alias Ms2ex.Skills
-
+defmodule Ms2ex.Packets.SkillBook do
   import Ms2ex.Packets.PacketWriter
 
   def open(character) do
@@ -13,13 +11,13 @@ defmodule Ms2ex.Packets.ResponseSkillBook do
     |> put_long(character.active_skill_tab_id)
     |> put_int(length(skill_tabs))
     |> reduce(skill_tabs, fn tab, packet ->
-      skills = character |> Skills.list(tab) |> Enum.filter(&(&1.level > 0))
+      learned_skills = Enum.filter(tab.skills, &(&1.level > 0))
 
       packet
-      |> put_long(tab.id)
+      |> put_long(tab.tab_id)
       |> put_ustring(tab.name)
-      |> put_int(length(skills))
-      |> reduce(skills, fn skill, packet ->
+      |> put_int(length(learned_skills))
+      |> reduce(learned_skills, fn skill, packet ->
         packet
         |> put_int(skill.skill_id)
         |> put_int(skill.level)
