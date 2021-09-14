@@ -44,7 +44,7 @@ defmodule Ms2ex.Packets.Job do
     skills =
       skill_tab.skills
       |> Enum.map(&Map.put(&1, :metadata, Metadata.Skills.get(&1.skill_id)))
-      |> Enum.filter(&(&1.metadata.type == 1 and &1.metadata.current_level == 1))
+      |> Enum.filter(&(&1.metadata.type == 1 and &1.metadata.starting_level == 1))
 
     packet
     |> put_short(length(skills))

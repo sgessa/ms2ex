@@ -152,7 +152,10 @@ defmodule Ms2ex.Character do
 
   defp default_skill_tabs(job) do
     job_skills = Ms2ex.Skills.by_job(job)
-    skills = Enum.map(job_skills, fn {id, meta} -> %{skill_id: id, level: meta.current_level} end)
+
+    skills =
+      Enum.map(job_skills, fn {id, meta} -> %{skill_id: id, level: meta.starting_level} end)
+
     [%{name: "Build 1", skills: skills, tab_id: 1}]
   end
 end

@@ -23,7 +23,7 @@ defmodule Ms2ex.Skills do
           Map.put(acc, id, meta)
 
         meta.id == @swimming_id or meta.id == @climbing_id ->
-          Map.put(acc, id, %{meta | current_level: 1})
+          Map.put(acc, id, %{meta | starting_level: 1})
 
         true ->
           acc
@@ -72,7 +72,7 @@ defmodule Ms2ex.Skills do
     skills =
       Enum.map(tab.skills, fn skill ->
         meta = Map.get(job_skills, skill.skill_id)
-        %{skill | level: meta.current_level}
+        %{skill | level: meta.starting_level}
       end)
 
     tab = %{tab | skills: skills}

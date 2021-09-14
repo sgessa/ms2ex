@@ -72,7 +72,7 @@ defmodule Ms2ex.Metadata.Skill do
     :skill_levels,
     :sub_skills,
     :job,
-    :current_level,
+    :starting_level,
     :state,
     :damage_type,
     :type,
@@ -87,7 +87,7 @@ defmodule Ms2ex.Metadata.Skill do
   field :skill_levels, 2, repeated: true, type: Ms2ex.Metadata.SkillLevel
   field :sub_skills, 3, repeated: true, type: :int32
   field :job, 4, type: Ms2ex.Metadata.Job, enum: true
-  field :current_level, 5, type: :int32
+  field :starting_level, 5, type: :int32
   field :state, 6, type: :string
   field :damage_type, 7, type: :int32
   field :type, 8, type: :int32
