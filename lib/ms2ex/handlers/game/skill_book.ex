@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.SkillBook do
   require Logger
 
-  alias Ms2ex.{Net, Packets, World}
+  alias Ms2ex.{Net, Packets, Skills, Wallets, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -61,6 +61,19 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     # World.update_character(character)
 
     push(session, Packets.SkillBook.save(character, selected_tab_id))
+  end
+
+  # Add Tab
+  @add_tab_cost -990
+  defp handle_mode(0x4, _packet, character, session) do
+    with {:ok, wallet} <- Wallets.update(character, :merets, @add_tab_cost),
+         {:ok, character} <- Skills.add_tab(character) do
+      World.update_character(character)
+
+      session
+      |> push(Packets.Wallet.update(wallet, :merets))
+      |> push(Packets.SkillBook.add_tab(character))
+    end
   end
 
   defp handle_mode(_mode, _packet, _character, session), do: session

@@ -631,5 +631,35 @@ defmodule Ms2ex.SkillTab do
     |> validate_required([:name, :tab_id])
   end
 
+  @doc false
+  def reset(skill_tab, attrs) do
+    skill_tab
+    |> cast(attrs, [])
+    |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
+  end
+
+  @doc false
+  def add(character, attrs) do
+    %__MODULE__{}
+    |> cast(attrs, [:name, :tab_id])
+    |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
+    |> put_assoc(:character, character)
+    |> validate_required([:name, :tab_id])
+  end
+
   def ordered_skill_ids(job), do: Map.get(@orders, job)
+
+  def set_skills(job, attrs \\ %{}) do
+    job_skills = Ms2ex.Skills.by_job(job)
+
+    skills =
+      Enum.map(job_skills, fn {id, meta} -> %{skill_id: id, level: meta.starting_level} end)
+
+    # Reorder skills according to the character job
+    ordered_ids = ordered_skill_ids(job)
+    tmp = Enum.into(skills, %{}, &{&1.skill_id, &1})
+    skills = Enum.map(ordered_ids, &Map.get(tmp, &1))
+
+    Map.put(attrs, :skills, skills)
+  end
 end

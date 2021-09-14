@@ -34,4 +34,12 @@ defmodule Ms2ex.Packets.SkillBook do
     # 0x1 = unsaved points, 0x2 = no unsaved points
     |> put_int(0x2)
   end
+
+  def add_tab(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x4)
+    |> put_int(0x2)
+    |> put_long(character.active_skill_tab_id)
+  end
 end
