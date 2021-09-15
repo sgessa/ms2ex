@@ -33,15 +33,13 @@ defmodule Ms2ex.Skills do
 
   def get_active_tab(%Character{skill_tabs: tabs} = character) do
     %{active_skill_tab_id: tab_id} = character
-    Enum.find(tabs, &(&1.tab_id == tab_id))
+    Enum.find(tabs, &(&1.id == tab_id))
   end
 
   def add_tab(%Character{} = character) do
     %{job: job, skill_tabs: tabs} = character
 
-    new_tab_id = length(tabs) + 1
-    name = "Build #{new_tab_id}"
-    attrs = SkillTab.set_skills(job, %{name: name, tab_id: new_tab_id})
+    attrs = SkillTab.set_skills(job, %{name: "Build #{length(tabs) + 1}"})
     changes = SkillTab.add(character, attrs)
 
     with {:ok, new_tab} <- Repo.insert(changes) do
@@ -53,11 +51,10 @@ defmodule Ms2ex.Skills do
     Enum.find(tabs, &(&1.id == tab_id))
   end
 
-  def load_tab_skills(%Character{id: char_id, job: job}, %SkillTab{id: tab_id}) do
+  def load_tab_skills(%Character{job: job}, %SkillTab{id: tab_id}) do
     skills =
       Skill
-      |> join(:inner, [s], t in assoc(s, :skill_tab))
-      |> where([s, t], t.character_id == ^char_id and s.skill_tab_id == ^tab_id)
+      |> where([s], s.skill_tab_id == ^tab_id)
       |> Repo.all()
       |> Enum.into(%{}, &{&1.skill_id, &1})
 
@@ -77,25 +74,5 @@ defmodule Ms2ex.Skills do
     skill
     |> Skill.changeset(attrs)
     |> Repo.update()
-  end
-
-  def reset(%Character{} = character, %SkillTab{} = tab) do
-    attrs = %{skills: SkillTab.set_skills(character.job)}
-    changes = SkillTab.reset(tab, attrs)
-
-    case Repo.update(changes) do
-      {:ok, tab} ->
-        case Enum.find_index(character.skill_tabs, &(&1.id == tab.id)) do
-          nil ->
-            character
-
-          index ->
-            skill_tabs = List.update_at(character.skill_tabs, index, fn _ -> tab end)
-            %{character | skill_tabs: skill_tabs}
-        end
-
-      _ ->
-        character
-    end
   end
 end

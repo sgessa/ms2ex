@@ -66,7 +66,7 @@ defmodule Ms2ex.Character do
     # TODO
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
 
-    field :active_skill_tab_id, :integer, default: 1
+    field :active_skill_tab_id, :integer
     field :animation, :integer, virtual: true, default: 0
     field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0
@@ -151,6 +151,6 @@ defmodule Ms2ex.Character do
   end
 
   defp default_skill_tabs(job) do
-    [Ms2ex.SkillTab.set_skills(job, %{name: "Build 1", tab_id: 1})]
+    [Ms2ex.SkillTab.set_skills(job, %{name: "Build 1"})]
   end
 end

@@ -14,7 +14,7 @@ defmodule Ms2ex.Packets.SkillBook do
       learned_skills = Enum.filter(tab.skills, &(&1.level > 0))
 
       packet
-      |> put_long(tab.tab_id)
+      |> put_long(tab.id)
       |> put_ustring(tab.name)
       |> put_int(length(learned_skills))
       |> reduce(learned_skills, fn skill, packet ->

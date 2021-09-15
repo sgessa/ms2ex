@@ -620,31 +620,23 @@ defmodule Ms2ex.SkillTab do
     has_many :skills, Ms2ex.Skill, on_replace: :delete
 
     field :name, :string
-    field :tab_id, :integer
   end
 
   @doc false
   def changeset(skill_tab, attrs) do
     skill_tab
-    |> cast(attrs, [:name, :tab_id])
+    |> cast(attrs, [:name])
     |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
-    |> validate_required([:name, :tab_id])
-  end
-
-  @doc false
-  def reset(skill_tab, attrs) do
-    skill_tab
-    |> cast(attrs, [])
-    |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
+    |> validate_required([:name])
   end
 
   @doc false
   def add(character, attrs) do
     %__MODULE__{}
-    |> cast(attrs, [:name, :tab_id])
+    |> cast(attrs, [:name])
     |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
     |> put_assoc(:character, character)
-    |> validate_required([:name, :tab_id])
+    |> validate_required([:name])
   end
 
   def ordered_skill_ids(job), do: Map.get(@orders, job)

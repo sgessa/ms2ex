@@ -19,7 +19,8 @@ defmodule Ms2ex.Characters do
       |> Character.changeset(attrs)
 
     Repo.transaction(fn ->
-      with {:ok, character} <- Repo.insert(changeset) do
+      with {:ok, %{skill_tabs: [tab]} = character} <- Repo.insert(changeset),
+           {:ok, character} <- update(character, %{active_skill_tab_id: tab.id}) do
         character
       else
         {:error, reason} -> Repo.rollback(reason)

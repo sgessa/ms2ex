@@ -36,11 +36,6 @@ defmodule Ms2ex.GameHandlers.Job do
   # Reset Skill Build
   defp handle_mode(0xA, _packet, session) do
     {:ok, character} = World.get_character(session.character_id)
-
-    skill_tab = Skills.get_active_tab(character)
-    character = Skills.reset(character, skill_tab)
-    World.update_character(character)
-
     push(session, Packets.Job.save(character))
   end
 
