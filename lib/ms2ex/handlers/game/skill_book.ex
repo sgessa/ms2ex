@@ -24,24 +24,40 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     {_, packet} = get_int(packet)
     {tab_count, packet} = get_int(packet)
 
-    {_packet, character} =
-      Enum.reduce(1..tab_count, {packet, character}, fn _, {packet, character} ->
-        {tab_id, packet} = get_long(packet)
-        {tab_name, packet} = get_ustring(packet)
+    Enum.reduce(1..tab_count, packet, fn _, packet ->
+      {tab_id, packet} = get_long(packet)
+      {tab_name, packet} = get_ustring(packet)
 
-        tab = Skills.get_tab(character, tab_id)
-        {:ok, tab} = add_or_update_tab(tab, character, %{id: tab_id, name: tab_name})
+      tab = Skills.get_tab(character, tab_id)
+      {:ok, tab} = add_or_update_tab(tab, character, %{id: tab_id, name: tab_name})
 
-        {skill_count, packet} = get_int(packet)
-        {skills, packet} = save_skills(skill_count, tab, packet)
+      {skill_count, packet} = get_int(packet)
+      packet = save_skills(skill_count, character, tab, packet)
 
-        {packet, update_character_skill_tab(character, tab, skills)}
-      end)
+      packet
+    end)
 
+    character = Characters.load_skills(character, force: true)
     {:ok, character} = Characters.update(character, %{active_skill_tab_id: active_tab_id})
     World.update_character(character)
 
     push(session, Packets.SkillBook.save(character, selected_tab_id))
+  end
+
+  # Rename Tab
+  defp handle_mode(0x2, packet, character, session) do
+    {tab_id, packet} = get_long(packet)
+    {new_name, _packet} = get_ustring(packet)
+
+    tab = Skills.get_tab(character, tab_id)
+    {:ok, tab} = Skills.update_tab(tab, %{name: new_name})
+
+    idx = Enum.find_index(character.skill_tabs, &(&1.id == tab_id))
+    tabs = List.update_at(character.skill_tabs, idx, fn _ -> tab end)
+
+    World.update_character(%{character | skill_tabs: tabs})
+
+    push(session, Packets.SkillBook.rename(tab_id, new_name))
   end
 
   # Add Tab
@@ -64,20 +80,8 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     Skills.update_tab(tab, attrs)
   end
 
-  defp update_character_skill_tab(character, tab, new_skills) do
-    index = Enum.find_index(character.skill_tabs, &(&1.id == tab.id))
-
-    # Update tab skills
-    skill_tabs =
-      List.update_at(character.skill_tabs, index, fn _ ->
-        %{tab | skills: new_skills}
-      end)
-
-    %{character | skill_tabs: skill_tabs}
-  end
-
-  defp save_skills(skill_count, tab, packet) when skill_count > 0 do
-    Enum.reduce(1..skill_count, {[], packet}, fn _, {_skills, packet} ->
+  defp save_skills(skill_count, character, tab, packet) when skill_count > 0 do
+    Enum.reduce(1..skill_count, packet, fn _, packet ->
       {skill_id, packet} = get_int(packet)
 
       {skill_level, packet} = get_int(packet)
@@ -86,13 +90,11 @@ defmodule Ms2ex.GameHandlers.SkillBook do
       skill = Skills.find_in_tab(tab, skill_id)
       {:ok, skill} = Skills.update(skill, %{level: skill_level})
 
-      # Update skill in tab
-      index = Enum.find_index(tab.skills, &(&1.skill_id == skill_id))
-      skills = List.update_at(tab.skills, index, fn _ -> skill end)
+      Skills.update_subskills(character, tab, skill)
 
-      {skills, packet}
+      packet
     end)
   end
 
-  defp save_skills(_skill_count, tab, packet), do: {tab.skills, packet}
+  defp save_skills(_skill_count, _char, _tab, packet), do: packet
 end

@@ -82,4 +82,13 @@ defmodule Ms2ex.Skills do
     |> Skill.changeset(attrs)
     |> Repo.update()
   end
+
+  def update_subskills(%Character{job: job}, %SkillTab{} = tab, %Skill{} = parent) do
+    job_skill = Map.get(by_job(job), parent.skill_id)
+
+    Enum.each(job_skill.sub_skills, fn sub_id ->
+      sub = find_in_tab(tab, sub_id)
+      {:ok, _sub} = update(sub, %{level: parent.level})
+    end)
+  end
 end

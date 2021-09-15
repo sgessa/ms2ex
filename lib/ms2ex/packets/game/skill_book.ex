@@ -35,6 +35,15 @@ defmodule Ms2ex.Packets.SkillBook do
     |> put_int(0x2)
   end
 
+  def rename(tab_id, new_name) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x2)
+    |> put_long(tab_id)
+    |> put_ustring(new_name)
+    |> put_byte()
+  end
+
   def add_tab(character) do
     __MODULE__
     |> build()
