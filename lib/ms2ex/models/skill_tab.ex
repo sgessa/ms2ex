@@ -633,7 +633,7 @@ defmodule Ms2ex.SkillTab do
   @doc false
   def add(character, attrs) do
     %__MODULE__{}
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:id, :name])
     |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
     |> put_assoc(:character, character)
     |> validate_required([:name])

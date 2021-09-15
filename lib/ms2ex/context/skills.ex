@@ -36,15 +36,22 @@ defmodule Ms2ex.Skills do
     Enum.find(tabs, &(&1.id == tab_id))
   end
 
-  def add_tab(%Character{} = character) do
-    %{job: job, skill_tabs: tabs} = character
+  def find_in_tab(%SkillTab{skills: skills}, skill_id) do
+    Enum.find(skills, &(&1.skill_id == skill_id))
+  end
 
-    attrs = SkillTab.set_skills(job, %{name: "Build #{length(tabs) + 1}"})
-    changes = SkillTab.add(character, attrs)
+  def add_tab(%Character{} = character, attrs) do
+    attrs = SkillTab.set_skills(character.job, attrs)
 
-    with {:ok, new_tab} <- Repo.insert(changes) do
-      {:ok, Map.put(character, :skill_tabs, tabs ++ [new_tab])}
-    end
+    character
+    |> SkillTab.add(attrs)
+    |> Repo.insert()
+  end
+
+  def update_tab(%SkillTab{} = tab, attrs) do
+    tab
+    |> SkillTab.changeset(attrs)
+    |> Repo.update()
   end
 
   def get_tab(%Character{skill_tabs: tabs}, tab_id) do
