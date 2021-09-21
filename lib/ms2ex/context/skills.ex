@@ -87,8 +87,9 @@ defmodule Ms2ex.Skills do
     job_skill = Map.get(by_job(job), parent.skill_id)
 
     Enum.each(job_skill.sub_skills, fn sub_id ->
-      sub = find_in_tab(tab, sub_id)
-      {:ok, _sub} = update(sub, %{level: parent.level})
+      if sub = find_in_tab(tab, sub_id) do
+        {:ok, _sub} = update(sub, %{level: parent.level})
+      end
     end)
   end
 end

@@ -39,6 +39,23 @@ defmodule Ms2ex.GameHandlers.Job do
     push(session, Packets.Job.save(character))
   end
 
+  # Preset Skill Build
+  defp handle_mode(0xB, packet, session) do
+    {skills_length, packet} = get_int(packet)
+
+    {:ok, character} = World.get_character(session.character_id)
+
+    skill_tab = Skills.get_active_tab(character)
+    character = save_skills(character, skill_tab, skills_length, packet)
+    World.update_character(character)
+
+    hot_bars = HotBars.list(character)
+
+    session
+    |> push(Packets.Job.save(character))
+    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
+  end
+
   defp handle_mode(_mode, _character, session), do: session
 
   defp save_skills(character, _tab, len, _packet) when len < 1 do
