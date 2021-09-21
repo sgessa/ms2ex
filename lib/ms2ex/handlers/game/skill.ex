@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Field, Net, Packets, Registries, World}
+  alias Ms2ex.{Field, Net, Packets, SkillCast, SkillCasts, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -11,19 +11,51 @@ defmodule Ms2ex.GameHandlers.Skill do
     handle_mode(mode, packet, session)
   end
 
-  # First Sent
+  # Cast
   def handle_mode(0x0, packet, session) do
     {cast_id, packet} = get_long(packet)
-    {value, packet} = get_int(packet)
+    {server_tick, packet} = get_int(packet)
     {skill_id, packet} = get_int(packet)
-    {skill, packet} = get_short(packet)
-    {_, packet} = get_byte(packet)
-    {coords, _packet} = get_coord(packet)
+    {skill_lvl, packet} = get_short(packet)
+    {attack_point, packet} = get_byte(packet)
 
-    skill_cast = %{id: cast_id, skill_id: skill_id, level: skill}
-    Registries.SkillCasts.set_skill_cast(skill_cast)
+    {position, packet} = get_coord(packet)
+    {direction, packet} = get_coord(packet)
+    {rotation, packet} = get_coord(packet)
 
-    push(session, Packets.Skill.use_skill(skill_cast, value, coords))
+    {_, packet} = get_float(packet)
+
+    {client_tick, packet} = get_int(packet)
+
+    {_, packet} = get_bool(packet)
+    {_, packet} = get_bool(packet)
+    {_flag, _packet} = get_bool(packet)
+
+    # if (flag) {
+    #   packet.ReadInt();
+    #   string unkString = packet.ReadUnicodeString();
+    # }
+
+    {:ok, character} = World.get_character(session.character_id)
+
+    skill_cast =
+      SkillCast.build(
+        cast_id,
+        character.object_id,
+        skill_id,
+        skill_lvl,
+        attack_point,
+        server_tick,
+        client_tick
+      )
+
+    character = SkillCasts.cast(character, skill_cast)
+    World.update_character(character)
+
+    coords = {position, direction, rotation}
+    Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
+
+    push(session, Packets.Stats.set_character_stats(character))
   end
 
   # Damage
@@ -46,23 +78,23 @@ defmodule Ms2ex.GameHandlers.Skill do
   end
 
   defp handle_damage(0x1, packet, session) do
-    {cast_id, packet} = get_long(packet)
-    {value, packet} = get_int(packet)
-    {_char_obj_id, packet} = get_int(packet)
+    # {cast_id, packet} = get_long(packet)
+    # {value, packet} = get_int(packet)
+    # {_char_obj_id, packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.character_id)
-    {:ok, skill_cast} = Registries.SkillCasts.get_skill_cast(cast_id)
+    # {:ok, character} = World.get_character(session.character_id)
+    # {:ok, skill_cast} = Registries.SkillCasts.get_skill_cast(cast_id)
 
-    {coord, packet} = get_coord(packet)
-    {_coord2, packet} = get_coord(packet)
-    {_coord3, packet} = get_coord(packet)
-    {_, packet} = get_byte(packet)
+    # {coord, packet} = get_coord(packet)
+    # {_coord2, packet} = get_coord(packet)
+    # {_coord3, packet} = get_coord(packet)
+    # {_, packet} = get_byte(packet)
 
-    {target_count, packet} = get_byte(packet)
-    {_, packet} = get_int(packet)
+    # {target_count, packet} = get_byte(packet)
+    # {_, packet} = get_int(packet)
 
-    {target_ids, _packet} = find_targets(packet, target_count)
-    Field.damage_mobs(character, skill_cast, value, coord, target_ids)
+    # {target_ids, _packet} = find_targets(packet, target_count)
+    # Field.damage_mobs(character, skill_cast, value, coord, target_ids)
 
     session
   end

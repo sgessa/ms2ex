@@ -37,6 +37,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
       packet
     end)
 
+    # TODO avoid SQL query
     character = Characters.load_skills(character, force: true)
     {:ok, character} = Characters.update(character, %{active_skill_tab_id: active_tab_id})
     World.update_character(character)

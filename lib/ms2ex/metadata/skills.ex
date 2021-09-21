@@ -1,3 +1,58 @@
+defmodule Ms2ex.Metadata.SkillType do
+  @moduledoc false
+  use Protobuf, enum: true, syntax: :proto3
+
+  field :none, 0
+  field :attack, 1
+  field :unknown, 2
+  field :gm, 3
+end
+
+defmodule Ms2ex.Metadata.SubSkillType do
+  @moduledoc false
+  use Protobuf, enum: true, syntax: :proto3
+
+  field :none, 0
+  field :unknown, 1
+  field :status, 2
+  field :unknown2, 3
+  field :unknown3, 4
+  field :gm, 5
+  field :global, 6
+  field :unknown4, 7
+  field :unknown5, 8
+  field :unknown6, 9
+end
+
+defmodule Ms2ex.Metadata.BuffType do
+  @moduledoc false
+  use Protobuf, enum: true, syntax: :proto3
+
+  field :none, 0
+  field :buff, 1
+  field :debuff, 2
+  field :unknown, 3
+end
+
+defmodule Ms2ex.Metadata.SubBuffType do
+  @moduledoc false
+  use Protobuf, enum: true, syntax: :proto3
+
+  field :none, 0
+  field :owner, 1
+  field :entity, 2
+  field :element, 4
+  field :shield, 6
+  field :crowd_control, 8
+  field :recovery, 16
+  field :unknown2, 32
+  field :unknown3, 64
+  field :unknown4, 128
+  field :unknown5, 256
+  field :unknown6, 512
+  field :unknown7, 1024
+end
+
 defmodule Ms2ex.Metadata.SkillAttack do
   @moduledoc false
   use Protobuf, syntax: :proto3
@@ -11,8 +66,8 @@ defmodule Ms2ex.Metadata.SkillData do
   use Protobuf, syntax: :proto3
 
   field :duration, 1, type: :int32
-  field :buff_type, 2, type: :int32
-  field :buff_sub_type, 3, type: :int32
+  field :buff_type, 2, enum: true, type: Ms2ex.Metadata.BuffType
+  field :sub_buff_type, 3, enum: true, type: Ms2ex.Metadata.SubBuffType
   field :buff_category, 4, type: :int32
   field :event_buff_type, 5, type: :int32
   field :max_stacks, 6, type: :int32
@@ -90,8 +145,8 @@ defmodule Ms2ex.Metadata.Skill do
   field :starting_level, 5, type: :int32
   field :state, 6, type: :string
   field :damage_type, 7, type: :int32
-  field :type, 8, type: :int32
-  field :sub_type, 9, type: :int32
+  field :type, 8, enum: true, type: Ms2ex.Metadata.SkillType
+  field :sub_type, 9, enum: true, type: Ms2ex.Metadata.SubSkillType
   field :element, 10, type: :int32
   field :super_armor, 11, type: :bool
   field :sp_recovery?, 12, type: :bool
@@ -129,5 +184,9 @@ defmodule Ms2ex.Metadata.Skills do
       [{_id, %Skill{} = meta}] -> meta
       _ -> nil
     end
+  end
+
+  def get_level(%Skill{skill_levels: levels}, lvl) do
+    Enum.find(levels, &(&1.level == lvl))
   end
 end

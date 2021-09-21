@@ -3,15 +3,11 @@ defmodule Ms2ex.Application do
 
   use Application
 
-  alias Ms2ex.Registries
-
   @config Application.get_env(:ms2ex, Ms2ex)
   @world @config[:world]
 
   def start(_type, _args) do
     Ms2ex.WorldGraph.store()
-
-    Registries.SkillCasts.start()
 
     Ms2ex.Metadata.ChatStickers.store()
     Ms2ex.Metadata.ExpTable.store()

@@ -50,6 +50,12 @@ defmodule Ms2ex.FieldServer do
     end
   end
 
+  def handle_call({:add_status, status}, _from, state) do
+    broadcast(state.sessions, Packets.Buff.send(:add, status))
+    Process.send_after(self(), {:remove_status, status}, status.duration)
+    {:reply, :ok, state}
+  end
+
   def handle_call({:damage_mobs, character, cast, value, coord, object_ids}, _from, state) do
     {:reply, :ok, damage_mobs(character, cast, value, coord, object_ids, state)}
   end
@@ -62,6 +68,11 @@ defmodule Ms2ex.FieldServer do
 
   def handle_info({:add_item, item}, state) do
     {:noreply, add_item(item, state)}
+  end
+
+  def handle_info({:remove_status, status}, state) do
+    broadcast(state.sessions, Packets.Buff.send(:remove, status))
+    {:noreply, state}
   end
 
   def handle_info({:add_mob, mob}, state) do

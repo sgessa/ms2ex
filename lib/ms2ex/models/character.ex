@@ -91,6 +91,7 @@ defmodule Ms2ex.Character do
     field :rest_exp, :integer, default: 0
     field :rotation, EctoTypes.Term, virtual: true
     field :safe_position, EctoTypes.Term, virtual: true
+    field :skill_cast, EctoTypes.Term, virtual: true
     field :skin_color, EctoTypes.Term
     field :taxis, {:array, :integer}, default: []
     field :title_id, :integer, default: 0

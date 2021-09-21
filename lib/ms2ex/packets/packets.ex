@@ -83,6 +83,7 @@ defmodule Ms2ex.Packets do
     0x3E => "SKILL_DAMAGE",
     0x46 => "STAT_POINTS",
     0x47 => "CHARACTER_CREATE",
+    0x48 => "BUFF",
     0x49 => "ADD_PORTAL",
     0x4A => "JOB",
     0x54 => "PARTY",

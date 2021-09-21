@@ -11,6 +11,10 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:remove_item, object_id})
   end
 
+  def add_status(character, status) do
+    call(character.field_pid, {:add_status, status})
+  end
+
   def add_mob(character, mob) do
     send(character.field_pid, {:add_mob, mob})
   end
