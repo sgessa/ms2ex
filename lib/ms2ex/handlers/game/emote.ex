@@ -32,7 +32,7 @@ defmodule Ms2ex.GameHandlers.Emote do
     {emote_id, _packet} = get_int(packet)
 
     {:ok, character} = World.get_character(session.character_id)
-    Field.broadcast(character, Packets.Emote.use(character, emote_id), self())
+    Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
 
     session
   end

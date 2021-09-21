@@ -12,7 +12,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     character = maybe_change_map(character)
     World.update_character(character)
 
-    {:ok, _pid} = Field.enter(character, session)
+    Field.subscribe(character)
+    {:ok, _pid} = Field.enter(character)
 
     hot_bars = HotBars.list(character)
 
@@ -25,7 +26,6 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   end
 
   defp maybe_change_map(%{change_map: new_map} = character) do
-    # Save Map ID on the database
     {:ok, character} = Characters.update(character, %{map_id: new_map.id})
 
     character

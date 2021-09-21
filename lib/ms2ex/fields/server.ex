@@ -3,20 +3,20 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{FieldHelper, Packets, World}
+  alias Ms2ex.{Field, FieldHelper, Packets, World}
 
   import FieldHelper
 
   @updates_intval 1000
 
-  def init({character, session}) do
-    Logger.info("Start Field #{character.map_id} @ Channel #{session.channel_id}")
+  def init(character) do
+    Logger.info("Start Field #{character.map_id} @ Channel #{character.channel_id}")
 
     send(self(), :send_updates)
 
     {
       :ok,
-      initialize_state(character.map_id, session.channel_id),
+      initialize_state(character.map_id, character.channel_id),
       {:continue, {:add_character, character}}
     }
   end
@@ -45,13 +45,13 @@ defmodule Ms2ex.FieldServer do
 
       item ->
         items = Map.delete(state.items, object_id)
-        broadcast(state.sessions, Packets.FieldRemoveItem.bytes(object_id))
+        Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(object_id))
         {:reply, {:ok, item}, %{state | items: items}}
     end
   end
 
   def handle_call({:add_status, status}, _from, state) do
-    broadcast(state.sessions, Packets.Buff.send(:add, status))
+    Field.broadcast(state.topic, Packets.Buff.send(:add, status))
     Process.send_after(self(), {:remove_status, status}, status.duration)
     {:reply, :ok, state}
   end
@@ -71,7 +71,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_info({:remove_status, status}, state) do
-    broadcast(state.sessions, Packets.Buff.send(:remove, status))
+    Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
     {:noreply, state}
   end
 
@@ -89,26 +89,21 @@ defmodule Ms2ex.FieldServer do
 
   def handle_info(:send_updates, state) do
     for {_id, %{dead?: false} = mob} <- state.mobs do
-      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
+      Field.broadcast(state.topic, Packets.ControlNpc.control(:mob, mob))
     end
 
     character_ids = Map.keys(state.sessions)
 
     for {_id, char} <- World.get_characters(character_ids) do
-      broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
+      Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
     end
 
     for {_id, npc} <- state.npcs do
-      broadcast(state.sessions, Packets.ControlNpc.control(:npc, npc))
+      Field.broadcast(state.topic, Packets.ControlNpc.control(:npc, npc))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)
 
-    {:noreply, state}
-  end
-
-  def handle_info({:broadcast, packet, sender_pid}, state) do
-    broadcast(state.sessions, packet, sender_pid)
     {:noreply, state}
   end
 

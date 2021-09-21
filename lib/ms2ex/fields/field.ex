@@ -1,5 +1,6 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{Characters, FieldServer, Metadata, Net, Packets, World}
+  alias Ms2ex.{Character, Characters, FieldServer, Metadata, Net, Packets, World}
+  alias Phoenix.PubSub
 
   def add_item(character, item) do
     item = Map.put(item, :position, character.position)
@@ -27,23 +28,41 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:add_object, object.object_type, object})
   end
 
-  def broadcast(character_or_field, packet, sender_pid \\ nil)
-
-  def broadcast(%{field_pid: pid}, packet, sender_pid) do
-    if pid, do: send(pid, {:broadcast, packet, sender_pid})
+  def broadcast(%Character{} = character, packet) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
   end
 
-  def broadcast(pid, packet, sender_pid) when is_pid(pid) do
-    send(pid, {:broadcast, packet, sender_pid})
+  def broadcast(topic, packet) when is_binary(topic) do
+    PubSub.broadcast(Ms2ex.PubSub, topic, {:push, packet})
   end
 
-  def enter(%{map_id: field_id} = character, %{channel_id: channel_id} = session) do
-    pid = field_pid(field_id, channel_id)
+  def broadcast_from(%Character{} = character, packet, from) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.broadcast_from(Ms2ex.PubSub, from, to_string(topic), {:push, packet})
+  end
+
+  def subscribe(%Character{} = character) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.subscribe(Ms2ex.PubSub, to_string(topic))
+  end
+
+  def unsubscribe(%Character{} = character) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
+  end
+
+  def enter(%Character{} = character) do
+    pid = field_pid(character.map_id, character.channel_id)
 
     if pid && Process.alive?(pid) do
       call(pid, {:add_character, character})
     else
-      GenServer.start(FieldServer, {character, session}, name: field_name(field_id, channel_id))
+      GenServer.start(
+        FieldServer,
+        character,
+        name: field_name(character.map_id, character.channel_id)
+      )
     end
   end
 

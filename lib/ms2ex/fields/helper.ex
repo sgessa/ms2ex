@@ -54,8 +54,8 @@ defmodule Ms2ex.FieldHelper do
     end
 
     # Tell other characters in the map to load the new player
-    broadcast(state.sessions, Packets.FieldAddUser.bytes(character))
-    broadcast(state.sessions, Packets.ProxyGameObj.load_player(character))
+    Field.broadcast(character, Packets.FieldAddUser.bytes(character))
+    Field.broadcast(character, Packets.ProxyGameObj.load_player(character))
 
     # Load items
     for {_id, item} <- state.items do
@@ -86,7 +86,7 @@ defmodule Ms2ex.FieldHelper do
     mounts = Map.delete(state.mounts, character.id)
     sessions = Map.delete(state.sessions, character.id)
 
-    Field.broadcast(self(), Packets.FieldRemoveObject.bytes(character.object_id))
+    Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
 
     %{state | mounts: mounts, sessions: sessions}
   end
@@ -95,7 +95,7 @@ defmodule Ms2ex.FieldHelper do
     item = Map.put(item, :object_id, state.counter)
     items = Map.put(state.items, state.counter, item)
 
-    broadcast(state.sessions, Packets.FieldAddItem.bytes(item))
+    Field.broadcast(state.topic, Packets.FieldAddItem.bytes(item))
 
     %{state | counter: state.counter + 1, items: items}
   end
@@ -104,8 +104,8 @@ defmodule Ms2ex.FieldHelper do
     mob = Mobs.init_mob(mob, state.counter)
     mobs = Map.put(state.mobs, state.counter, mob)
 
-    broadcast(state.sessions, Packets.FieldAddNpc.add_mob(mob))
-    broadcast(state.sessions, Packets.ProxyGameObj.load_npc(mob))
+    Field.broadcast(state.topic, Packets.FieldAddNpc.add_mob(mob))
+    Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(mob))
 
     %{state | counter: state.counter + 1, mobs: mobs}
   end
@@ -131,11 +131,11 @@ defmodule Ms2ex.FieldHelper do
         target =
           case Damage.apply_damage(target, damage) do
             {:alive, target} ->
-              broadcast(state.sessions, Packets.Stats.update_health(target))
+              Field.broadcast(state.topic, Packets.Stats.update_health(target))
               target
 
             {:dead, target} ->
-              broadcast(state.sessions, Packets.Stats.update_health(target))
+              Field.broadcast(state.topic, Packets.Stats.update_health(target))
               Mobs.process_death(character, target)
               Process.send_after(self(), {:remove_mob, target}, target.dead_at)
 
@@ -151,7 +151,7 @@ defmodule Ms2ex.FieldHelper do
     dmg_packet =
       Packets.SkillDamage.bytes(character.object_id, cast, value, coord, Map.values(targets))
 
-    broadcast(state.sessions, dmg_packet)
+    Field.broadcast(state.topic, dmg_packet)
 
     %{state | mobs: Map.merge(state.mobs, targets)}
   end
@@ -176,7 +176,8 @@ defmodule Ms2ex.FieldHelper do
       mounts: %{},
       npcs: npcs,
       portals: portals,
-      sessions: %{}
+      sessions: %{},
+      topic: "field:#{map_id}:channel:#{channel_id}"
     }
   end
 
@@ -215,12 +216,6 @@ defmodule Ms2ex.FieldHelper do
       object = Map.put(object, :object_id, counter)
       {counter + 1, Map.put(objects, object.uuid, object)}
     end)
-  end
-
-  def broadcast(sessions, packet, sender_pid \\ nil) do
-    for {_char_id, pid} <- sessions, pid != sender_pid do
-      send(pid, {:push, packet})
-    end
   end
 
   defp maybe_teleport_character(%{update_position: coord} = character) do

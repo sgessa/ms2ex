@@ -68,6 +68,7 @@ defmodule Ms2ex.Character do
 
     field :active_skill_tab_id, :integer
     field :animation, :integer, virtual: true, default: 0
+    field :channel_id, :integer, virtual: true
     field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0
     field :gender, Gender, default: :male

@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
       states = get_states(segments, packet)
 
       sync_packet = Packets.RideSync.bytes(character, states)
-      Field.broadcast(character, sync_packet, session.pid)
+      Field.broadcast_from(character, sync_packet, session.pid)
     end
 
     session

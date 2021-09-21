@@ -77,7 +77,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     session
   end
 
-  defp handle_damage(0x1, packet, session) do
+  defp handle_damage(0x1, _packet, session) do
     # {cast_id, packet} = get_long(packet)
     # {value, packet} = get_int(packet)
     # {_char_obj_id, packet} = get_int(packet)

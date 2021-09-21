@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     states = get_states(segment_length, packet)
 
     sync_packet = Packets.UserSync.bytes(character, states)
-    Field.broadcast(character, sync_packet, session.pid)
+    Field.broadcast_from(character, sync_packet, session.pid)
 
     %{animation1: animation, position: new_position} = List.first(states)
     closest_block = MapBlock.closest_block(new_position)
