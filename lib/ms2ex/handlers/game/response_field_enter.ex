@@ -26,6 +26,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   end
 
   defp maybe_change_map(%{change_map: new_map} = character) do
+    Field.unsubscribe(character)
     {:ok, character} = Characters.update(character, %{map_id: new_map.id})
 
     character
