@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Field, Net, Packets, SkillCast, SkillCasts, StatsManager, World}
+  alias Ms2ex.{Field, Net, Packets, SkillCast, SkillCasts, SkillStatus, StatsManager, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -32,8 +32,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_flag, _packet} = get_bool(packet)
 
     # if (flag) {
-    #   packet.ReadInt();
-    #   string unkString = packet.ReadUnicodeString();
+    #   packet.ReadInt()
+    #   string unkString = packet.ReadUnicodeString()
     # }
 
     {:ok, character} = World.get_character(session.character_id)
@@ -49,8 +49,9 @@ defmodule Ms2ex.GameHandlers.Skill do
         client_tick
       )
 
-    character = SkillCasts.cast(character, skill_cast)
-    World.update_character(character)
+    Agent.start(fn -> skill_cast end, name: :"skill_cast:#{skill_cast.id}")
+
+    SkillCasts.cast(character, skill_cast)
 
     coords = {position, direction, rotation}
     Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
@@ -59,7 +60,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     push(session, Packets.Stats.set_character_stats(%{character | stats: stats}))
   end
 
-  # Damage
+  # Damage Mode
   def handle_mode(0x1, packet, session) do
     {damage_type, packet} = get_byte(packet)
     handle_damage(damage_type, packet, session)
@@ -67,34 +68,46 @@ defmodule Ms2ex.GameHandlers.Skill do
 
   def handle_mode(_mode, _packet, session), do: session
 
-  defp handle_damage(0x0, _packet, session) do
-    # {cast_id, packet} = get_long(packet)
-    # {value, packet} = get_byte(packet)
-    # {coord, packet} = get_coord(packet)
-    # {_coord2, packet} = get_coord(packet)
-    # {target_count, packet} = get_byte(packet)
-    # {_, packet} = get_int(packet)
+  # Sync Damage
+  defp handle_damage(0x0, packet, session) do
+    {cast_id, packet} = get_long(packet)
+    {_attack_point, packet} = get_byte(packet)
+    {position, packet} = get_coord(packet)
+    {rotation, packet} = get_coord(packet)
+    {target_count, packet} = get_byte(packet)
+    {_, packet} = get_int(packet)
+    {projectiles, _packet} = get_projectiles(packet, target_count)
+
+    {:ok, character} = World.get_character(session.character_id)
+    coords = {position, rotation}
+
+    if skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1) do
+      Field.broadcast(
+        character,
+        Packets.SkillDamage.sync_damage(skill_cast, coords, character, target_count, projectiles)
+      )
+    end
 
     session
   end
 
-  defp handle_damage(0x1, _packet, session) do
-    # {cast_id, packet} = get_long(packet)
-    # {value, packet} = get_int(packet)
-    # {_char_obj_id, packet} = get_int(packet)
+  defp handle_damage(0x1, packet, session) do
+    {cast_id, packet} = get_long(packet)
+    {attack_counter, packet} = get_int(packet)
+    {_char_obj_id, packet} = get_int(packet)
 
-    # {:ok, character} = World.get_character(session.character_id)
-    # {:ok, skill_cast} = Registries.SkillCasts.get_skill_cast(cast_id)
+    {position, packet} = get_coord(packet)
+    {impact_pos, packet} = get_coord(packet)
+    {rotation, packet} = get_coord(packet)
+    {_attack_point, packet} = get_byte(packet)
 
-    # {coord, packet} = get_coord(packet)
-    # {_coord2, packet} = get_coord(packet)
-    # {_coord3, packet} = get_coord(packet)
-    # {_, packet} = get_byte(packet)
+    {target_count, packet} = get_byte(packet)
+    {_, packet} = get_int(packet)
 
-    # {target_count, packet} = get_byte(packet)
-    # {_, packet} = get_int(packet)
+    {:ok, character} = World.get_character(session.character_id)
+    skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1)
 
-    # {target_ids, _packet} = find_targets(packet, target_count)
+    mobs = damage_targets(session, character, target_count, [], packet)
     # Field.damage_mobs(character, skill_cast, value, coord, target_ids)
 
     session
@@ -111,15 +124,59 @@ defmodule Ms2ex.GameHandlers.Skill do
     session
   end
 
-  def find_targets(packet, count) do
-    Enum.reduce(0..count, {[], packet}, fn
+  defp damage_targets(session, character, target_count, mobs, packet) when target_count > 0 do
+    {obj_id, packet} = get_int(packet)
+    {_, packet} = get_byte(packet)
+
+    mob = Field.get_mob(obj_id)
+    dmg = DamageHandler.calc_dmg(mob)
+    mob = Mob.apply_dmg(mob, dmg)
+
+    push(session, Packets.Stats.update_mob_stats(mob))
+
+    if mob.is_dead? do
+      # handle_mob_kill(session, mob)
+    end
+
+    mobs = mobs ++ [{mob, dmg}]
+    skill_cast = character.skill_cast
+
+    if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
+      status = SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
+      Field.add_status(character, status)
+    end
+
+    damage_targets(session, character, target_count - 1, mobs, packet)
+  end
+
+  defp damage_targets(_session, _char, _target_count, mobs, _packet), do: mobs
+
+  defp get_projectiles(packet, target_count) do
+    projectiles = %{
+      attk_count: [],
+      source_ids: [],
+      target_ids: [],
+      animations: []
+    }
+
+    Enum.reduce(0..target_count, {projectiles, packet}, fn
       0, acc ->
         acc
 
-      _, {targets, packet} ->
-        {obj_id, packet} = get_int(packet)
-        {_, packet} = get_byte(packet)
-        {[obj_id | targets], packet}
+      _, {projectiles, packet} ->
+        {attk_count, packet} = get_int(packet)
+        {source_id, packet} = get_int(packet)
+        {target_id, packet} = get_int(packet)
+        {animation, packet} = get_short(packet)
+
+        projectiles = %{
+          attk_count: projectiles.attk_count ++ [attk_count],
+          source_ids: projectiles.source_ids ++ [source_id],
+          target_ids: projectiles.target_ids ++ [target_id],
+          animations: projectiles.animations ++ [animation]
+        }
+
+        {projectiles, packet}
     end)
   end
 end

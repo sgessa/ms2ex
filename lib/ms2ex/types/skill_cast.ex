@@ -61,6 +61,15 @@ defmodule Ms2ex.SkillCast do
     verify_skill_type(cast, :none, :status, :buff, :entity)
   end
 
+  def entity_debuff?(cast) do
+    verify_skill_type(cast, :none, :status, :debuff, :entity) ||
+      verify_buff_type(cast, :debuff, :entity)
+  end
+
+  def element_debuff?(cast) do
+    verify_skill_type(cast, :none, :status, :debuff, :element)
+  end
+
   def shield_buff?(cast) do
     verify_skill_type(cast, :none, :status, :buff, :shield)
   end
