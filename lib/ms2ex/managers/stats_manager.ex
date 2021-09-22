@@ -3,7 +3,7 @@ defmodule Ms2ex.StatsManager do
 
   alias Ms2ex.{Character, Characters, Field, Packets, World}
 
-  @regen_stats [:sp, :sta]
+  @regen_stats [:hp, :sp, :sta]
 
   def lookup(character), do: call(character, :lookup)
 
