@@ -71,6 +71,7 @@ defmodule Ms2ex.Character do
     field :channel_id, :integer, virtual: true
     field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0
+    field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Gender, default: :male
     field :group_chats, {:array, :map}, virtual: true, default: []
     field :guild_name, :string, virtual: true, default: "h4x0rzz"

@@ -147,7 +147,7 @@ defmodule Ms2ex.PartyServer do
         {:reply, :error, state}
 
       _character ->
-        # TODO send packet
+        # TODO send start vote kick packet
         {:reply, :ok, state}
     end
   end

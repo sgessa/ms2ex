@@ -13,17 +13,13 @@ defmodule Ms2ex.SkillCasts do
 
       character = %{character | skill_cast: skill_cast}
 
-      # TODO send notice
-
       if SkillCast.owner_buff?(skill_cast) or SkillCast.entity_buff?(skill_cast) or
            SkillCast.shield_buff?(skill_cast) or SkillCast.owner_debuff?(skill_cast) do
         status = SkillStatus.new(skill_cast, character.object_id, character.object_id, 1)
         Field.add_status(character, status)
       end
 
-      # TODO refresh out-of-combat timer
-
-      character
+      Field.enter_battle_stance(character)
     end
   end
 end

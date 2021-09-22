@@ -1,4 +1,6 @@
 defmodule Ms2ex.World do
+  alias Ms2ex.Character
+
   def broadcast(packet, sender_pid \\ nil) do
     Swarm.send(:world, {:broadcast, packet, sender_pid})
   end
@@ -15,11 +17,11 @@ defmodule Ms2ex.World do
     call({:get_character_by_name, character_name})
   end
 
-  def update_character(character) do
+  def update_character(%Character{} = character) do
     call({:update_character, character})
   end
 
-  def monitor_character(character) do
+  def monitor_character(%Character{} = character) do
     call({:monitor, character})
   end
 
@@ -31,15 +33,13 @@ defmodule Ms2ex.World do
     call({:get_group_chat, group_chat_id})
   end
 
-  def leave_group_chat(group_chat, character) do
+  def leave_group_chat(group_chat, %Character{} = character) do
     call({:leave_group_chat, group_chat, character})
   end
 
-  def update_group_chat(group_chat, new_member) do
+  def update_group_chat(group_chat, %Character{} = new_member) do
     call({:update_group_chat, group_chat, new_member})
   end
 
-  defp call(msg) do
-    GenServer.call({:via, :swarm, :world}, msg)
-  end
+  defp call(msg), do: GenServer.call({:via, :swarm, :world}, msg)
 end

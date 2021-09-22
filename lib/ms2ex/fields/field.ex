@@ -2,30 +2,38 @@ defmodule Ms2ex.Field do
   alias Ms2ex.{Character, Characters, FieldServer, Metadata, Net, Packets, World}
   alias Phoenix.PubSub
 
-  def add_item(character, item) do
+  def add_item(%Character{} = character, item) do
     item = Map.put(item, :position, character.position)
     item = Map.put(item, :character_object_id, character.object_id)
     call(character.field_pid, {:add_item, item})
   end
 
-  def remove_item(character, object_id) do
+  def remove_item(%Character{} = character, object_id) do
     call(character.field_pid, {:remove_item, object_id})
   end
 
-  def add_status(character, status) do
+  def add_status(%Character{} = character, status) do
     call(character.field_pid, {:add_status, status})
   end
 
-  def add_mob(character, mob) do
+  def add_mob(%Character{} = character, mob) do
     send(character.field_pid, {:add_mob, mob})
   end
 
-  def damage_mobs(character, skill_cast, value, coord, object_ids) do
+  def damage_mobs(%Character{} = character, skill_cast, value, coord, object_ids) do
     call(character.field_pid, {:damage_mobs, character, skill_cast, value, coord, object_ids})
   end
 
-  def add_object(character, object) do
+  def add_object(%Character{} = character, object) do
     call(character.field_pid, {:add_object, object.object_type, object})
+  end
+
+  def enter_battle_stance(%Character{} = character) do
+    cast(character.field_pid, {:enter_battle_stance, character})
+  end
+
+  def cancel_battle_stance(%Character{} = character) do
+    cast(character.field_pid, {:cancel_battle_stance, character})
   end
 
   def broadcast(%Character{} = character, packet) do
@@ -106,4 +114,7 @@ defmodule Ms2ex.Field do
 
   defp call(nil, _args), do: :error
   defp call(pid, args), do: GenServer.call(pid, args)
+
+  defp cast(nil, _args), do: :error
+  defp cast(pid, args), do: GenServer.cast(pid, args)
 end

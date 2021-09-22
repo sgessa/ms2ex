@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
          {:ok, object} <- find_object(map, coord) do
       session
       |> push(Packets.ResponseCube.pickup(character, object.weapon_id, coord))
-      |> push(Packets.UserBattle.bytes(character, true))
+      |> push(Packets.UserBattle.set_stance(character, true))
     else
       _ -> session
     end
@@ -29,7 +29,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
     with {:ok, character} <- World.get_character(session.character_id) do
       session
       |> push(Packets.ResponseCube.drop(character))
-      |> push(Packets.UserBattle.bytes(character, false))
+      |> push(Packets.UserBattle.set_stance(character, false))
     else
       _ -> session
     end
