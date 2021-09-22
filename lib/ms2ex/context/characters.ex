@@ -1,5 +1,5 @@
 defmodule Ms2ex.Characters do
-  alias Ms2ex.{Account, Character, Repo, Skills}
+  alias Ms2ex.{Account, Character, CharacterStats, Repo, Skills}
 
   import Ecto.Query, except: [update: 2]
 
@@ -61,6 +61,13 @@ defmodule Ms2ex.Characters do
       end)
 
     %{character | skill_tabs: tabs}
+  end
+
+  def get_stats(%Character{id: char_id}) do
+    CharacterStats
+    |> where([s], s.character_id == ^char_id)
+    |> limit(1)
+    |> Repo.one()
   end
 
   def list_titles(%Character{id: character_id}) do

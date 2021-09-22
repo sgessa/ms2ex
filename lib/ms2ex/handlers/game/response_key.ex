@@ -11,6 +11,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     PartyManager,
     PartyServer,
     SessionManager,
+    StatsManager,
     World
   }
 
@@ -30,10 +31,12 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
-        |> Characters.preload([:friends, :stats])
+        |> Characters.preload([:friends])
         |> Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
+
+      StatsManager.start_link(character)
 
       World.monitor_character(character)
 

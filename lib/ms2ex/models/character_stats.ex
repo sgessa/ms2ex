@@ -3,44 +3,6 @@ defmodule Ms2ex.CharacterStats do
 
   import Ecto.Changeset
 
-  @stats [
-    :str,
-    :dex,
-    :int,
-    :luk,
-    :hp,
-    :hp_regen,
-    :hp_regen_time,
-    :spirit,
-    :sp_regen,
-    :sp_regen_time,
-    :stamina,
-    :stamina_regen,
-    :stamina_regen_time,
-    :attk_speed,
-    :mov_speed,
-    :accuracy,
-    :evasion,
-    :crit_rate,
-    :crit_dmg,
-    :crit_evasion,
-    :def,
-    :guard,
-    :jump_height,
-    :phys_attk,
-    :magic_attk,
-    :phys_res,
-    :magic_res,
-    :min_attk,
-    :max_attk,
-    :min_dmg,
-    :max_dmg,
-    :pierce,
-    :mount_speed,
-    :bonus_attk,
-    :pet_bonus_attk
-  ]
-
   schema "character_stats" do
     belongs_to :character, Ms2ex.Character
 
@@ -72,9 +34,9 @@ defmodule Ms2ex.CharacterStats do
     field :hp_regen_time_max, :integer, default: 3000
     field :hp_regen_time_cur, :integer, default: 3000
 
-    field :spirit_min, :integer, default: 100
-    field :spirit_cur, :integer, default: 100
-    field :spirit_max, :integer, default: 100
+    field :sp_min, :integer, default: 100
+    field :sp_cur, :integer, default: 100
+    field :sp_max, :integer, default: 100
 
     field :sp_regen_min, :integer, default: 1
     field :sp_regen_cur, :integer, default: 1
@@ -84,17 +46,17 @@ defmodule Ms2ex.CharacterStats do
     field :sp_regen_time_cur, :integer, default: 200
     field :sp_regen_time_max, :integer, default: 200
 
-    field :stamina_min, :integer, default: 120
-    field :stamina_cur, :integer, default: 120
-    field :stamina_max, :integer, default: 120
+    field :sta_min, :integer, default: 120
+    field :sta_cur, :integer, default: 120
+    field :sta_max, :integer, default: 120
 
-    field :stamina_regen_min, :integer, default: 10
-    field :stamina_regen_cur, :integer, default: 10
-    field :stamina_regen_max, :integer, default: 10
+    field :sta_regen_min, :integer, default: 10
+    field :sta_regen_cur, :integer, default: 10
+    field :sta_regen_max, :integer, default: 10
 
-    field :stamina_regen_time_min, :integer, default: 500
-    field :stamina_regen_time_cur, :integer, default: 500
-    field :stamina_regen_time_max, :integer, default: 500
+    field :sta_regen_time_min, :integer, default: 500
+    field :sta_regen_time_cur, :integer, default: 500
+    field :sta_regen_time_max, :integer, default: 500
 
     field :attk_speed_min, :integer, default: 100
     field :attk_speed_cur, :integer, default: 100
@@ -192,10 +154,8 @@ defmodule Ms2ex.CharacterStats do
     |> validate_required(fields())
   end
 
-  def list(), do: @stats
-
   def fields() do
-    list()
+    Ms2ex.StatId.list()
     |> Enum.map(&[:"#{&1}_min", :"#{&1}_cur", :"#{&1}_max"])
     |> List.flatten()
   end

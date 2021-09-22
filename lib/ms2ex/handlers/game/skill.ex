@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Field, Net, Packets, SkillCast, SkillCasts, World}
+  alias Ms2ex.{Field, Net, Packets, SkillCast, SkillCasts, StatsManager, World}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -55,7 +55,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     coords = {position, direction, rotation}
     Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
 
-    push(session, Packets.Stats.set_character_stats(character))
+    {:ok, stats} = StatsManager.lookup(character)
+    push(session, Packets.Stats.set_character_stats(%{character | stats: stats}))
   end
 
   # Damage

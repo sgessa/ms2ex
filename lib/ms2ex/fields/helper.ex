@@ -1,7 +1,7 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, World}
+  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, StatsManager, World}
   alias Ms2ex.PremiumMembership, as: Membership
   alias Ms2ex.PremiumMemberships, as: Memberships
 
@@ -14,7 +14,8 @@ defmodule Ms2ex.FieldHelper do
 
     # Load other characters
     for {_id, char} <- World.get_characters(character_ids) do
-      send(session_pid, {:push, Packets.FieldAddUser.bytes(char)})
+      {:ok, stats} = StatsManager.lookup(char)
+      send(session_pid, {:push, Packets.FieldAddUser.bytes(%{char | stats: stats})})
       send(session_pid, {:push, Packets.ProxyGameObj.load_player(char)})
 
       if mount = Map.get(state.mounts, char.id) do
@@ -29,6 +30,9 @@ defmodule Ms2ex.FieldHelper do
 
     sessions = Map.put(state.sessions, character.id, session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
+
+    {:ok, stats} = StatsManager.lookup(character)
+    character = %{character | stats: stats}
 
     # Load Mobs
     for {_id, mob} <- state.mobs do

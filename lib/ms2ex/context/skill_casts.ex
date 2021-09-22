@@ -1,13 +1,15 @@
 defmodule Ms2ex.SkillCasts do
-  alias Ms2ex.{Character, Field, SkillCast, SkillStatus, Stats}
+  alias Ms2ex.{Character, Field, SkillCast, SkillStatus, StatsManager}
 
-  def cast(%Character{stats: stats} = character, %SkillCast{} = skill_cast) do
+  def cast(%Character{} = character, %SkillCast{} = skill_cast) do
     sp_cost = SkillCast.sp_cost(skill_cast)
     stamina_cost = SkillCast.stamina_cost(skill_cast)
 
-    if stats.spirit_cur >= sp_cost and stats.stamina_cur >= stamina_cost do
-      character = Stats.consume_sp(character, sp_cost)
-      character = Stats.consume_stamina(character, stamina_cost)
+    {:ok, stats} = StatsManager.lookup(character)
+
+    if stats.sp_cur >= sp_cost and stats.sta_cur >= stamina_cost do
+      StatsManager.consume(character, :sp, sp_cost)
+      StatsManager.consume(character, :sta, stamina_cost)
 
       character = %{character | skill_cast: skill_cast}
 
@@ -21,8 +23,6 @@ defmodule Ms2ex.SkillCasts do
 
       # TODO refresh out-of-combat timer
 
-      character
-    else
       character
     end
   end
