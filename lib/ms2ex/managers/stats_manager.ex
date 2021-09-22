@@ -23,6 +23,7 @@ defmodule Ms2ex.StatsManager do
     {:ok,
      %{
        character_id: character.id,
+       regen_hp?: false,
        regen_sp?: false,
        regen_sta?: false,
        stats: stats
