@@ -29,9 +29,6 @@ defmodule Ms2ex.GameHandlers.GroupChat do
          :ok <- validate_rcpt(character, rcpt),
          {:ok, chat} <- get_chat(character, chat_id),
          :ok <- validate_chat(chat) do
-      ids = [chat.id | rcpt.group_chat_ids]
-      CharacterManager.update(%{rcpt | group_chat_ids: ids})
-
       {:ok, chat} = GroupChat.add_member(chat, rcpt)
       GroupChat.broadcast(chat.id, Packets.GroupChat.update_members(chat, rcpt))
 
@@ -51,10 +48,6 @@ defmodule Ms2ex.GameHandlers.GroupChat do
          {:ok, chat} <- GroupChat.remove_member(chat, character) do
       GroupChat.unsubscribe(chat)
       GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
-
-      chat_ids = Enum.reject(character.group_chat_ids, &(&1 == chat.id))
-      CharacterManager.update(%{character | group_chat_ids: chat_ids})
-
       push(session, Packets.GroupChat.leave(chat))
     else
       _ -> session
@@ -86,9 +79,6 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     chat = %GroupChat{id: Ms2ex.generate_id(), member_ids: [character.id]}
     {:ok, _} = GroupChat.start(chat)
     GroupChat.subscribe(chat)
-
-    ids = [chat.id | character.group_chat_ids]
-    CharacterManager.update(%{character | group_chat_ids: ids})
 
     session
     |> push(Packets.GroupChat.update(%{chat | members: [character]}))
