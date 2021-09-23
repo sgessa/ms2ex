@@ -44,7 +44,6 @@ defmodule Ms2ex.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:bcrypt_elixir, "~> 2.2.0"},
-      {:swarm, "~> 3.4.0"},
       {:protobuf, ">= 0.0.0"},
       {:varint, ">= 0.0.0"},
       {:libgraph, "~> 0.13"},

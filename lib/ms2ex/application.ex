@@ -33,7 +33,6 @@ defmodule Ms2ex.Application do
         # Start Session Registry
         {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
         {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]},
-        Supervisor.child_spec({Ms2ex.WorldServer, [name: {:via, :swarm, :world}]}, id: :world),
         server_tcp_chidspec(login_server_opts()),
         server_tcp_chidspec(world_login_opts())
       ] ++ channel_listeners()

@@ -11,7 +11,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     Packets,
     PartyManager,
     PartyServer,
-    SessionManager
+    SessionManager,
+    World
   }
 
   import Net.Session, only: [push: 2]
@@ -25,6 +26,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
       SessionManager.register(account.id, auth_data)
+      World.subscribe()
 
       character =
         auth_data[:character_id]
