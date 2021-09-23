@@ -73,6 +73,7 @@ defmodule Ms2ex.Character do
     field :exp, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Gender, default: :male
+    field :group_chat_ids, {:array, :integer}, virtual: true, default: []
     field :guild_name, :string, virtual: true, default: "h4x0rzz"
     field :home_name, :string, virtual: true, default: ""
     field :insignia_id, :integer, default: 0
