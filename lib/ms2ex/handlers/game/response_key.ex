@@ -3,6 +3,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   alias Ms2ex.{
     Characters,
+    CharacterManager,
     Inventory,
     LoginHandlers,
     Metadata,
@@ -10,9 +11,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     Packets,
     PartyManager,
     PartyServer,
-    SessionManager,
-    StatsManager,
-    World
+    SessionManager
   }
 
   import Net.Session, only: [push: 2]
@@ -31,20 +30,17 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
-        |> Characters.preload([:friends])
+        |> Characters.preload([:friends, :stats])
         |> Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
-
-      StatsManager.start_link(character)
-
-      World.monitor_character(character)
 
       tick = Ms2ex.sync_ticks()
 
       character = character |> set_spawn_position() |> maybe_set_party()
 
-      World.update_character(character)
+      CharacterManager.start_link(character)
+      CharacterManager.monitor(character)
 
       character = Characters.preload(character, friends: :rcpt)
       init_character(character)

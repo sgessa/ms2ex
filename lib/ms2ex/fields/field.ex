@@ -1,5 +1,5 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{Character, Characters, FieldServer, Metadata, Net, Packets, World}
+  alias Ms2ex.{Character, Characters, CharacterManager, FieldServer, Metadata, Net, Packets}
   alias Phoenix.PubSub
 
   def add_item(%Character{} = character, item) do
@@ -90,7 +90,7 @@ defmodule Ms2ex.Field do
         |> Characters.maybe_discover_map(field_id)
         |> Map.put(:change_map, %{id: field_id, position: coord, rotation: rotation})
 
-      World.update_character(character)
+      CharacterManager.update(character)
 
       Net.Session.push(session, Packets.RequestFieldEnter.bytes(field_id, coord, rotation))
     else

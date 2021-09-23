@@ -1,5 +1,5 @@
 defmodule Ms2ex.Mobs do
-  alias Ms2ex.{Inventory, Metadata, Packets, World}
+  alias Ms2ex.{CharacterManager, Inventory, Metadata, Packets}
 
   import Ms2ex.Field, only: [broadcast: 2]
 
@@ -57,7 +57,7 @@ defmodule Ms2ex.Mobs do
     old_lvl = character.level
 
     {:ok, character} = Ms2ex.Experience.maybe_add_exp(character, exp_gained)
-    World.update_character(character)
+    CharacterManager.update(character)
 
     if old_lvl != character.level do
       broadcast(self(), Packets.LevelUp.bytes(character))

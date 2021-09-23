@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
-  alias Ms2ex.{Characters, Equips, Field, Inventory, Metadata, Packets, World}
+  alias Ms2ex.{Characters, CharacterManager, Equips, Field, Inventory, Metadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {slot_name, _packet} = get_ustring(packet)
 
     with true <- Equips.valid_slot?(slot_name),
-         {:ok, character} <- World.get_character(session.character_id),
+         {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{location: :inventory} = item <- Inventory.get_by(character_id: character.id, id: id) do
       item = Metadata.Items.load(item)
       equip_slot = String.to_existing_atom(slot_name)
@@ -30,7 +30,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp handle_mode(0x1, packet, session) do
     {id, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{location: :equipment} = item <- Inventory.get_by(character_id: character.id, id: id) do
       unequip_item(character, item, session)
     else
@@ -59,7 +59,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       Field.broadcast(character, equip_packet)
 
       # Update registry
-      World.update_character(Characters.load_equips(character))
+      CharacterManager.update(Characters.load_equips(character))
 
       push(session, Packets.InventoryItem.remove_item(item.id))
     else
@@ -70,7 +70,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp unequip_item(character, item, session) do
     with {:ok, item} <- Equips.unequip(item) do
       # Update registry
-      World.update_character(Characters.load_equips(character))
+      CharacterManager.update(Characters.load_equips(character))
 
       item = Metadata.Items.load(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)

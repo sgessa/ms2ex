@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Dismantle do
-  alias Ms2ex.{Dismantle, Inventory, Metadata, Packets, World}
+  alias Ms2ex.{CharacterManager, Dismantle, Inventory, Metadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -19,7 +19,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   # Add
   def handle_mode(0x1, packet, session) do
     inventory = get_inventory(session)
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     {slot, packet} = get_int(packet)
     {item_uid, packet} = get_long(packet)
@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   # Remove
   def handle_mode(0x2, packet, session) do
     inventory = get_inventory(session)
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     {item_uid, _packet} = get_long(packet)
 
@@ -59,7 +59,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   # Dismantle
   def handle_mode(0x3, _packet, session) do
     inventory = get_inventory(session)
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     session
     |> consume_items(character)
@@ -73,7 +73,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     {inv_tab, packet} = get_byte(packet)
     {max_rarity, _packet} = get_byte(packet)
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     items = Inventory.list_tab_items(character.id, inv_tab)
     auto_add(session, character, max_rarity, items)

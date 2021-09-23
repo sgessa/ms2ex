@@ -14,7 +14,7 @@ defmodule Ms2ex.Packets.Stats do
     |> put_stats(character.stats)
   end
 
-  def update(character, stats, updated_stats) do
+  def update(character, updated_stats) do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
@@ -24,12 +24,12 @@ defmodule Ms2ex.Packets.Stats do
       :hp, packet ->
         packet
         |> put_byte(StatId.from_name(:hp))
-        |> put_hp(stats)
+        |> put_hp(character.stats)
 
       s, packet ->
         packet
         |> put_byte(StatId.from_name(s))
-        |> put_stat(stats, s)
+        |> put_stat(character.stats, s)
     end)
   end
 

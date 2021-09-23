@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{Field, FieldHelper, Packets, World}
+  alias Ms2ex.{CharacterManager, Field, FieldHelper, Packets}
 
   import FieldHelper
 
@@ -103,10 +103,10 @@ defmodule Ms2ex.FieldServer do
       Field.broadcast(state.topic, Packets.ControlNpc.control(:mob, mob))
     end
 
-    character_ids = Map.keys(state.sessions)
-
-    for {_id, char} <- World.get_characters(character_ids) do
-      Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+    for char_id <- Map.keys(state.sessions) do
+      with {:ok, char} <- CharacterManager.lookup(char_id) do
+        Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+      end
     end
 
     for {_id, npc} <- state.npcs do

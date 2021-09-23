@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
-  alias Ms2ex.{Character, Field, Packets, PartyServer}
+  alias Ms2ex.{Character, Field, GroupChat, Packets, PartyServer}
   alias Phoenix.PubSub
 
   def init_character(%Character{} = character) do
@@ -19,6 +19,13 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
     Field.leave(character)
     notify_party_presence(character)
     notify_friend_presence(character)
+    leave_group_chats(character)
+  end
+
+  defp leave_group_chats(character) do
+    Enum.each(character.group_chat_ids, fn chat_id ->
+      GroupChat.remove_member(%GroupChat{id: chat_id}, character)
+    end)
   end
 
   defp notify_friend_presence(character) do

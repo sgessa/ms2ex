@@ -47,10 +47,10 @@ defmodule Ms2ex.Packets.SkillDamage do
       idx, packet ->
         packet
         |> put_long()
-        |> put_int(Enum.at(projectiles.attk_count, idx))
-        |> put_int(Enum.at(projectiles.source_ids, idx))
-        |> put_int(Enum.at(projectiles.target_ids, idx))
-        |> put_short(Enum.at(projectiles.animations, idx))
+        |> put_int(Enum.at(projectiles.attk_count, idx - 1))
+        |> put_int(Enum.at(projectiles.source_ids, idx - 1))
+        |> put_int(Enum.at(projectiles.target_ids, idx - 1))
+        |> put_short(Enum.at(projectiles.animations, idx - 1))
         |> put_byte()
         |> put_byte()
     end)

@@ -1,14 +1,14 @@
 defmodule Ms2ex.GameHandlers.SkillBook do
   require Logger
 
-  alias Ms2ex.{Characters, Net, Packets, Skills, Wallets, World}
+  alias Ms2ex.{Characters, CharacterManager, Net, Packets, Skills, Wallets}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
     handle_mode(mode, packet, character, session)
   end
 
@@ -40,7 +40,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     # TODO avoid SQL query
     character = Characters.load_skills(character, force: true)
     {:ok, character} = Characters.update(character, %{active_skill_tab_id: active_tab_id})
-    World.update_character(character)
+    CharacterManager.update(character)
 
     push(session, Packets.SkillBook.save(character, selected_tab_id))
   end
@@ -56,7 +56,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     idx = Enum.find_index(character.skill_tabs, &(&1.id == tab_id))
     tabs = List.update_at(character.skill_tabs, idx, fn _ -> tab end)
 
-    World.update_character(%{character | skill_tabs: tabs})
+    CharacterManager.update(%{character | skill_tabs: tabs})
 
     push(session, Packets.SkillBook.rename(tab_id, new_name))
   end

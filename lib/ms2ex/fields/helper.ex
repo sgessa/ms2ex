@@ -1,7 +1,16 @@
 defmodule Ms2ex.FieldHelper do
   require Logger
 
-  alias Ms2ex.{Damage, Emotes, Field, Metadata, Mobs, Packets, StatsManager, World}
+  alias Ms2ex.{
+    CharacterManager,
+    Damage,
+    Emotes,
+    Field,
+    Metadata,
+    Mobs,
+    Packets
+  }
+
   alias Ms2ex.PremiumMembership, as: Membership
   alias Ms2ex.PremiumMemberships, as: Memberships
 
@@ -10,29 +19,25 @@ defmodule Ms2ex.FieldHelper do
 
     Logger.info("Field #{state.field_id} @ Channel #{state.channel_id}: #{character.name} joined")
 
-    character_ids = Map.keys(state.sessions)
-
     # Load other characters
-    for {_id, char} <- World.get_characters(character_ids) do
-      {:ok, stats} = StatsManager.lookup(char)
-      send(session_pid, {:push, Packets.FieldAddUser.bytes(%{char | stats: stats})})
-      send(session_pid, {:push, Packets.ProxyGameObj.load_player(char)})
+    for char_id <- Map.keys(state.sessions) do
+      with {:ok, char} <- CharacterManager.lookup(char_id) do
+        send(session_pid, {:push, Packets.FieldAddUser.bytes(char)})
+        send(session_pid, {:push, Packets.ProxyGameObj.load_player(char)})
 
-      if mount = Map.get(state.mounts, char.id) do
-        send(session_pid, {:push, Packets.ResponseRide.start_ride(char, mount)})
+        if mount = Map.get(state.mounts, char.id) do
+          send(session_pid, {:push, Packets.ResponseRide.start_ride(char, mount)})
+        end
       end
     end
 
     # Update registry
     character = %{character | object_id: state.counter, map_id: state.field_id}
     character = Map.put(character, :field_pid, self())
-    World.update_character(character)
+    CharacterManager.update(character)
 
     sessions = Map.put(state.sessions, character.id, session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
-
-    {:ok, stats} = StatsManager.lookup(character)
-    character = %{character | stats: stats}
 
     # Load Mobs
     for {_id, mob} <- state.mobs do
@@ -224,7 +229,7 @@ defmodule Ms2ex.FieldHelper do
 
   defp maybe_teleport_character(%{update_position: coord} = character) do
     character = Map.delete(character, :update_position)
-    World.update_character(character)
+    CharacterManager.update(character)
     send(character.session_pid, {:push, Packets.MoveCharacter.bytes(character, coord)})
   end
 

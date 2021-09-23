@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Job do
   require Logger
 
-  alias Ms2ex.{Characters, HotBars, Net, Packets, Skills, World}
+  alias Ms2ex.{Characters, CharacterManager, HotBars, Net, Packets, Skills}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -18,13 +18,13 @@ defmodule Ms2ex.GameHandlers.Job do
 
   # Save Skill Build
   defp handle_mode(0x9, packet, session) do
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     skill_tab = Skills.get_active_tab(character)
     {skills_length, packet} = get_int(packet)
 
     character = save_skills(character, skill_tab, skills_length, packet)
-    World.update_character(character)
+    CharacterManager.update(character)
 
     hot_bars = HotBars.list(character)
 
@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.Job do
 
   # Reset Skill Build
   defp handle_mode(0xA, _packet, session) do
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
     push(session, Packets.Job.save(character))
   end
 
@@ -43,11 +43,11 @@ defmodule Ms2ex.GameHandlers.Job do
   defp handle_mode(0xB, packet, session) do
     {skills_length, packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     skill_tab = Skills.get_active_tab(character)
     character = save_skills(character, skill_tab, skills_length, packet)
-    World.update_character(character)
+    CharacterManager.update(character)
 
     hot_bars = HotBars.list(character)
 

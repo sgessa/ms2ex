@@ -9,7 +9,8 @@ defmodule Ms2ex.SkillCast do
     :server_tick,
     :client_tick,
     :attack_point,
-    :meta
+    :meta,
+    motion_point: 0
   ]
 
   def build(id, char_obj_id, skill_id, skill_lvl, attack_pt, srv_tick, client_tick) do

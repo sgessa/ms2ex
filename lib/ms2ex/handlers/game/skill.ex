@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Field, Net, Packets, SkillCast, SkillCasts, SkillStatus, StatsManager, World}
+  alias Ms2ex.{CharacterManager, Field, Net, Packets, SkillCast, SkillStatus}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -36,7 +36,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     #   string unkString = packet.ReadUnicodeString()
     # }
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     skill_cast =
       SkillCast.build(
@@ -51,13 +51,13 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     Agent.start(fn -> skill_cast end, name: :"skill_cast:#{skill_cast.id}")
 
-    SkillCasts.cast(character, skill_cast)
+    # TODO move to CharacterManager
+    {:ok, character} = CharacterManager.cast_skill(character, skill_cast)
 
     coords = {position, direction, rotation}
     Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
 
-    {:ok, stats} = StatsManager.lookup(character)
-    push(session, Packets.Stats.set_character_stats(%{character | stats: stats}))
+    push(session, Packets.Stats.set_character_stats(character))
   end
 
   # Damage Mode
@@ -78,7 +78,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_int(packet)
     {projectiles, _packet} = get_projectiles(packet, target_count)
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
     coords = {position, rotation}
 
     if skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1) do
@@ -104,7 +104,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
     skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1)
 
     mobs = damage_targets(session, character, target_count, [], packet)

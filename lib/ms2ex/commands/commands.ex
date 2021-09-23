@@ -1,5 +1,15 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, Wallets, World}
+  alias Ms2ex.{
+    Character,
+    Characters,
+    CharacterManager,
+    Field,
+    Inventory,
+    Metadata,
+    Net,
+    Packets,
+    Wallets
+  }
 
   import Net.Session, only: [push: 2, push_notice: 3]
 
@@ -7,7 +17,7 @@ defmodule Ms2ex.Commands do
     max_hp = stats.hp_cur
     stats = stats |> Map.delete(:__struct__) |> Map.put(:current_hp_min, max_hp)
     {:ok, character} = Characters.update(character, %{stats: stats})
-    World.update_character(character)
+    CharacterManager.update(character)
     push(session, Packets.Stats.set_character_stats(character))
   end
 
@@ -29,7 +39,7 @@ defmodule Ms2ex.Commands do
     with {level, _} <- Integer.parse(level) do
       level = if level > Character.max_level(), do: Character.max_level(), else: level
       {:ok, character} = Characters.update(character, %{exp: 0, level: level})
-      World.update_character(character)
+      CharacterManager.update(character)
       Field.broadcast(character, Packets.LevelUp.bytes(character))
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
@@ -82,7 +92,7 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["summon", target_name], character, session) do
-    case World.get_character_by_name(target_name) do
+    case CharacterManager.lookup_by_name(target_name) do
       {:ok, target} ->
         cond do
           character.channel_id != target.channel_id ->
@@ -95,7 +105,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             target = Map.put(target, :update_position, character.position)
-            World.update_character(target)
+            CharacterManager.update(target)
             send(target.session_pid, {:summon, target, character.map_id})
             session
         end
@@ -106,7 +116,7 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["teleport", target_name], character, session) do
-    case World.get_character_by_name(target_name) do
+    case CharacterManager.lookup_by_name(target_name) do
       {:ok, target} ->
         cond do
           character.channel_id != target.channel_id ->
@@ -117,7 +127,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             character = Map.put(character, :update_position, target.position)
-            World.update_character(character)
+            CharacterManager.update(character)
             Field.change_field(character, session, target.map_id)
         end
 

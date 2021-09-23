@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.RequestCube do
-  alias Ms2ex.{Field, Metadata, Packets, World}
+  alias Ms2ex.{CharacterManager, Field, Metadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
   def handle_mode(0x11, packet, session) do
     {coord, _packet} = get_sbyte_coord(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, map} <- Metadata.Maps.lookup(character.map_id),
          {:ok, object} <- find_object(map, coord) do
       Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
@@ -25,7 +25,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
 
   # Drop
   def handle_mode(0x12, _packet, session) do
-    with {:ok, character} <- World.get_character(session.character_id) do
+    with {:ok, character} <- CharacterManager.lookup(session.character_id) do
       Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
       push(session, Packets.ResponseCube.drop(character))
     else
