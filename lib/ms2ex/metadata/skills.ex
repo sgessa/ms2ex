@@ -8,6 +8,16 @@ defmodule Ms2ex.Metadata.SkillType do
   field :gm, 3
 end
 
+defmodule Ms2ex.Metadata.SkillDamageType do
+  @moduledoc false
+  use Protobuf, enum: true, syntax: :proto3
+
+  field :none, 0
+  field :physical, 1
+  field :magic, 2
+  field :unknown, 3
+end
+
 defmodule Ms2ex.Metadata.SubSkillType do
   @moduledoc false
   use Protobuf, enum: true, syntax: :proto3
@@ -144,7 +154,7 @@ defmodule Ms2ex.Metadata.Skill do
   field :job, 4, type: Ms2ex.Metadata.Job, enum: true
   field :starting_level, 5, type: :int32
   field :state, 6, type: :string
-  field :damage_type, 7, type: :int32
+  field :damage_type, 7, enum: true, type: Ms2ex.Metadata.SkillDamageType
   field :type, 8, enum: true, type: Ms2ex.Metadata.SkillType
   field :sub_type, 9, enum: true, type: Ms2ex.Metadata.SubSkillType
   field :element, 10, type: :int32

@@ -37,7 +37,7 @@ defmodule Ms2ex.Field do
   end
 
   def broadcast(%Character{} = character, packet) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.field_id, character.channel_id)
     PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
   end
 
@@ -46,22 +46,22 @@ defmodule Ms2ex.Field do
   end
 
   def broadcast_from(%Character{} = character, packet, from) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.field_id, character.channel_id)
     PubSub.broadcast_from(Ms2ex.PubSub, from, to_string(topic), {:push, packet})
   end
 
   def subscribe(%Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.field_id, character.channel_id)
     PubSub.subscribe(Ms2ex.PubSub, to_string(topic))
   end
 
   def unsubscribe(%Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.field_id, character.channel_id)
     PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
   end
 
   def enter(%Character{} = character) do
-    pid = field_pid(character.map_id, character.channel_id)
+    pid = field_pid(character.field_id, character.channel_id)
 
     if pid && Process.alive?(pid) do
       call(pid, {:add_character, character})
@@ -69,7 +69,7 @@ defmodule Ms2ex.Field do
       GenServer.start(
         FieldServer,
         character,
-        name: field_name(character.map_id, character.channel_id)
+        name: field_name(character.field_id, character.channel_id)
       )
     end
   end
@@ -104,12 +104,12 @@ defmodule Ms2ex.Field do
 
   def push(session_pid, packet), do: send(session_pid, {:push, packet})
 
-  defp field_pid(field_id, channel_id) do
-    Process.whereis(field_name(field_id, channel_id))
+  def field_name(field_id, channel_id) do
+    :"field:#{field_id}:channel:#{channel_id}"
   end
 
-  defp field_name(field_id, channel_id) do
-    :"field:#{field_id}:channel:#{channel_id}"
+  defp field_pid(field_id, channel_id) do
+    Process.whereis(field_name(field_id, channel_id))
   end
 
   defp call(nil, _args), do: :error

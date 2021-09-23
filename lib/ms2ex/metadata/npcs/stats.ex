@@ -2,11 +2,11 @@ defmodule Ms2ex.Metadata.NpcStat do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:total, :min, :max]
+  defstruct [:bonus, :base, :total]
 
-  field :total, 1, type: :int32
-  field :min, 2, type: :int32
-  field :max, 3, type: :int32
+  field :bonus, 1, type: :int32
+  field :base, 2, type: :int32
+  field :total, 3, type: :int32
 end
 
 defmodule Ms2ex.Metadata.NpcStats do

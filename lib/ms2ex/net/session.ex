@@ -174,8 +174,8 @@ defmodule Ms2ex.Net.Session do
      |> push(Packets.Friend.presence_notification(friend))}
   end
 
-  def handle_info({:summon, character, map_id}, state) do
-    {:noreply, Ms2ex.Field.change_field(character, state, map_id)}
+  def handle_info({:summon, character, field_id}, state) do
+    {:noreply, Ms2ex.Field.change_field(character, state, field_id)}
   end
 
   def handle_info({:unsubscribe_party, party_id}, state) do

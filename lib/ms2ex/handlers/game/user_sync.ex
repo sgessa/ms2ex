@@ -33,7 +33,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     character = %{character | animation: animation, position: new_position}
     CharacterManager.update(character)
 
-    if is_out_of_bounds?(character.map_id, character.position) do
+    if is_out_of_bounds?(character.field_id, character.position) do
       character = handle_out_of_bounds(character)
       character = Damage.receive_fall_dmg(character)
       # CharacterManager.update(character)
@@ -69,14 +69,14 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp is_coord_safe?(character, current_position, closest_block) do
     block_diff = MapBlock.subtract(character.safe_position, closest_block)
 
-    MapBlock.exists?(character.map_id, closest_block) &&
+    MapBlock.exists?(character.field_id, closest_block) &&
       MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
 
     # && !character.on_air_mount?
   end
 
-  defp is_out_of_bounds?(map_id, coord) do
-    {:ok, map} = Metadata.Maps.lookup(map_id)
+  defp is_out_of_bounds?(field_id, coord) do
+    {:ok, map} = Metadata.Maps.lookup(field_id)
     %{bounding_box_0: box0, bounding_box_1: box1} = map
 
     {high_z, low_z} = find_high_low_bounds(box0.z, box1.z)

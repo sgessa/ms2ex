@@ -9,6 +9,7 @@ defmodule Ms2ex.Metadata.Npc do
     :id,
     :name,
     :model,
+    :template_id,
     :friendly,
     :level,
     :skill_ids,
@@ -16,7 +17,8 @@ defmodule Ms2ex.Metadata.Npc do
     :exp,
     :drop_box_ids,
     :rotation,
-    :speed,
+    :walk_speed,
+    :run_speed,
     :position,
     :stats,
     :basic,
@@ -30,25 +32,32 @@ defmodule Ms2ex.Metadata.Npc do
   field :id, 1, type: :int32
   field :name, 2, type: :string
   field :model, 3, type: :string
-  field :friendly, 4, type: :int32
-  field :level, 5, type: :int32
-  field :skill_ids, 6, repeated: true, type: :int32
-  field :ai_info, 7, type: :string
-  field :exp, 8, type: :int32
-  field :drop_box_ids, 9, repeated: true, type: :int32
-  field :rotation, 10, type: Coord
-  field :speed, 11, type: Coord
-  field :position, 12, type: Coord
-  field :animation, 13, type: :int32
-  field :basic, 14, type: Metadata.NpcBasic
-  field :combat, 15, type: Metadata.NpcCombat
-  field :dead, 16, type: Metadata.NpcDead
-  field :distance, 17, type: Metadata.NpcDistance
-  field :interact, 18, type: Metadata.NpcInteract
-  field :stats, 19, type: Metadata.NpcStats
-
-  @extra %{is_boss?: false, dead?: false, direction: 2700, respawn: true, spawn: nil}
-  def extra_fields(), do: @extra
+  field :template_id, 4, type: :int32
+  field :friendly, 5, type: :int32
+  field :level, 6, type: :int32
+  field :skill_ids, 7, repeated: true, type: :int32
+  field :skill_levels, 8, repeated: true, type: :int32
+  field :skill_priorities, 9, repeated: true, type: :int32
+  field :skill_probs, 10, repeated: true, type: :int32
+  field :skill_cooldown, 11, type: :int32
+  # field :state_actions, 12, repeated: true, type: Metadata.NpcAction
+  field :ai_info, 13, type: :string
+  field :exp, 14, type: :int32
+  field :drop_box_ids, 15, repeated: true, type: :int32
+  field :rotation, 16, type: Coord
+  field :walk_speed, 17, type: :float
+  field :run_speed, 18, type: :float
+  field :move_range, 19, type: :int32
+  field :position, 20, type: Coord
+  field :animation, 21, type: :int32
+  field :basic, 22, type: Metadata.NpcBasic
+  field :combat, 23, type: Metadata.NpcCombat
+  field :dead, 24, type: Metadata.NpcDead
+  field :distance, 25, type: Metadata.NpcDistance
+  field :interact, 26, type: Metadata.NpcInteract
+  field :stats, 27, type: Metadata.NpcStats
+  field :type, 28, type: :int32
+  field :shop_id, 29, type: :int32
 end
 
 defmodule Ms2ex.Metadata.Npcs do
@@ -79,13 +88,8 @@ defmodule Ms2ex.Metadata.Npcs do
 
   def get(npc_id) do
     case :ets.lookup(@table, npc_id) do
-      [{_id, %Npc{} = meta}] ->
-        meta
-        |> Map.merge(Npc.extra_fields())
-        |> Map.put(:dead_at, trunc(meta.dead.time) * 1000)
-
-      _ ->
-        nil
+      [{_id, %Npc{} = meta}] -> meta
+      _ -> nil
     end
   end
 

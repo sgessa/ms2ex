@@ -74,7 +74,8 @@ defmodule Ms2ex.CharacterManager do
 
       Field.enter_battle_stance(character)
 
-      {:reply, {:ok, %{character | skill_cast: skill_cast}}, character}
+      character = %{character | skill_cast: skill_cast}
+      {:reply, {:ok, character}, character}
     else
       {:reply, {:ok, character}, character}
     end
@@ -93,7 +94,7 @@ defmodule Ms2ex.CharacterManager do
       # TODO check if regen enabled
 
       character = %{character | stats: regen(character.stats, stat_id)}
-      Field.broadcast(character, Packets.Stats.update(character, [stat_id]))
+      Field.broadcast(character, Packets.Stats.update_char_stats(character, [stat_id]))
 
       Process.send_after(self(), {:regen, stat_id}, intval)
 

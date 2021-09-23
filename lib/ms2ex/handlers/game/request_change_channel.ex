@@ -16,6 +16,6 @@ defmodule Ms2ex.GameHandlers.RequestChangeChannel do
 
     CharacterManager.update(Map.put(character, :channel_id, channel_id))
 
-    push(session, Packets.GameToGame.bytes(channel_id, character.map_id, auth_data))
+    push(session, Packets.GameToGame.bytes(channel_id, character.field_id, auth_data))
   end
 end

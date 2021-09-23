@@ -10,13 +10,13 @@ defmodule Ms2ex.FieldServer do
   @updates_intval 1000
 
   def init(character) do
-    Logger.info("Start Field #{character.map_id} @ Channel #{character.channel_id}")
+    Logger.info("Start Field #{character.field_id} @ Channel #{character.channel_id}")
 
     send(self(), :send_updates)
 
     {
       :ok,
-      initialize_state(character.map_id, character.channel_id),
+      initialize_state(character.field_id, character.channel_id),
       {:continue, {:add_character, character}}
     }
   end
@@ -56,10 +56,6 @@ defmodule Ms2ex.FieldServer do
     {:reply, :ok, state}
   end
 
-  def handle_call({:damage_mobs, character, cast, value, coord, object_ids}, _from, state) do
-    {:reply, :ok, damage_mobs(character, cast, value, coord, object_ids, state)}
-  end
-
   def handle_call({:add_object, :mount, mount}, _from, state) do
     mount = Map.put(mount, :object_id, state.counter)
     mounts = Map.put(state.mounts, mount.character_id, mount)
@@ -81,8 +77,8 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, mob}, state) do
-    {:noreply, add_mob(mob, state)}
+  def handle_info({:add_mob, spawn}, state) do
+    {:noreply, add_mob(spawn, state)}
   end
 
   def handle_info({:remove_mob, mob}, state) do
@@ -99,10 +95,6 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_info(:send_updates, state) do
-    for {_id, %{dead?: false} = mob} <- state.mobs do
-      Field.broadcast(state.topic, Packets.ControlNpc.control(:mob, mob))
-    end
-
     for char_id <- Map.keys(state.sessions) do
       with {:ok, char} <- CharacterManager.lookup(char_id) do
         Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))

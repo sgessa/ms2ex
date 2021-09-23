@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, Net, Packets, SkillCast, SkillStatus}
+  alias Ms2ex.{CharacterManager, Damage, Field, Mob, Net, Packets, SkillCast, SkillStatus}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -49,9 +49,8 @@ defmodule Ms2ex.GameHandlers.Skill do
         client_tick
       )
 
-    Agent.start(fn -> skill_cast end, name: :"skill_cast:#{skill_cast.id}")
+    SkillCast.start(skill_cast)
 
-    # TODO move to CharacterManager
     {:ok, character} = CharacterManager.cast_skill(character, skill_cast)
 
     coords = {position, direction, rotation}
@@ -105,9 +104,10 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_int(packet)
 
     {:ok, character} = CharacterManager.lookup(session.character_id)
-    skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1)
+    # skill_cast = SkillCast.get(cast_id)
 
-    mobs = damage_targets(session, character, target_count, [], packet)
+    crit? = Damage.roll_crit(character)
+    mobs = damage_targets(session, character, crit?, target_count, [], packet)
     # Field.damage_mobs(character, skill_cast, value, coord, target_ids)
 
     session
@@ -124,32 +124,39 @@ defmodule Ms2ex.GameHandlers.Skill do
     session
   end
 
-  defp damage_targets(session, character, target_count, mobs, packet) when target_count > 0 do
+  defp damage_targets(session, character, crit?, target_count, mobs, packet)
+       when target_count > 0 do
     {obj_id, packet} = get_int(packet)
     {_, packet} = get_byte(packet)
 
-    mob = Field.get_mob(obj_id)
-    dmg = DamageHandler.calc_dmg(mob)
-    mob = Mob.apply_dmg(mob, dmg)
+    mobs =
+      case Mob.lookup(character, obj_id) do
+        {:ok, mob} ->
+          {mob, dmg} = damage_mob(character, mob, crit?)
+          push(session, Packets.Stats.update_mob_health(mob))
+          mobs ++ [{mob, dmg}]
 
-    push(session, Packets.Stats.update_mob_stats(mob))
+        _ ->
+          mobs
+      end
 
-    if mob.is_dead? do
-      # handle_mob_kill(session, mob)
-    end
+    damage_targets(session, character, crit?, target_count - 1, mobs, packet)
+  end
 
-    mobs = mobs ++ [{mob, dmg}]
+  defp damage_targets(_session, _char, _crit?, _target_count, mobs, _packet), do: mobs
+
+  defp damage_mob(character, mob, crit?) do
     skill_cast = character.skill_cast
+    dmg = Damage.calculate(character, mob, crit?)
+    {:ok, mob} = Mob.inflict_dmg(mob, dmg)
 
     if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
       status = SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
       Field.add_status(character, status)
     end
 
-    damage_targets(session, character, target_count - 1, mobs, packet)
+    {mob, dmg}
   end
-
-  defp damage_targets(_session, _char, _target_count, mobs, _packet), do: mobs
 
   defp get_projectiles(packet, target_count) do
     projectiles = %{

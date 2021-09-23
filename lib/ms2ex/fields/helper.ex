@@ -3,10 +3,10 @@ defmodule Ms2ex.FieldHelper do
 
   alias Ms2ex.{
     CharacterManager,
-    Damage,
     Emotes,
     Field,
     Metadata,
+    Mob,
     Mobs,
     Packets
   }
@@ -32,7 +32,7 @@ defmodule Ms2ex.FieldHelper do
     end
 
     # Update registry
-    character = %{character | object_id: state.counter, map_id: state.field_id}
+    character = %{character | object_id: state.counter, field_id: state.field_id}
     character = Map.put(character, :field_pid, self())
     CharacterManager.update(character)
 
@@ -109,13 +109,11 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(mob, state) do
-    mob = Mobs.init_mob(mob, state.counter)
-    mobs = Map.put(state.mobs, state.counter, mob)
+  def add_mob(spawn, state) do
+    mob = Mob.build(state.field_id, state.channel_id, state.counter, spawn)
+    {:ok, mob_pid} = Mob.start_link(mob)
 
-    Field.broadcast(state.topic, Packets.FieldAddNpc.add_mob(mob))
-    Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(mob))
-
+    mobs = Map.put(state.mobs, state.counter, mob_pid)
     %{state | counter: state.counter + 1, mobs: mobs}
   end
 
@@ -129,47 +127,50 @@ defmodule Ms2ex.FieldHelper do
     add_mob(Mobs.respawn_mob(mob), state)
   end
 
-  @respawn_intval 10_000
-  def damage_mobs(character, cast, value, coord, object_ids, state) do
-    targets =
-      state.mobs
-      |> Enum.filter(fn {id, _} -> id in object_ids end)
-      |> Enum.into(%{}, fn {id, target} ->
-        damage = Damage.calculate(character, target)
+  # @respawn_intval 10_000
+  # def damage_mobs(character, cast, value, coord, object_ids, state) do
+  #   targets =
+  #     state.mobs
+  #     |> Enum.filter(fn {id, _} -> id in object_ids end)
+  #     |> Enum.into(%{}, fn {id, target} ->
+  #       damage = Damage.calculate(character, target)
 
-        target =
-          case Damage.apply_damage(target, damage) do
-            {:alive, target} ->
-              Field.broadcast(state.topic, Packets.Stats.update_health(target))
-              target
+  #       target =
+  #         case Damage.apply_damage(target, damage) do
+  #           {:alive, target} ->
+  #             Field.broadcast(state.topic, Packets.Stats.update_health(target))
+  #             target
 
-            {:dead, target} ->
-              Field.broadcast(state.topic, Packets.Stats.update_health(target))
-              Mobs.process_death(character, target)
-              Process.send_after(self(), {:remove_mob, target}, target.dead_at)
+  #           {:dead, target} ->
+  #             Field.broadcast(state.topic, Packets.Stats.update_health(target))
+  #             Mobs.process_death(character, target)
+  #             Process.send_after(self(), {:remove_mob, target}, target.dead_at)
 
-              if target.respawn,
-                do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
+  #             if target.respawn,
+  #               do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
 
-              target
-          end
+  #             target
+  #         end
 
-        {id, target}
-      end)
+  #       {id, target}
+  #     end)
 
-    dmg_packet =
-      Packets.SkillDamage.bytes(character.object_id, cast, value, coord, Map.values(targets))
+  #   dmg_packet =
+  #     Packets.SkillDamage.bytes(character.object_id, cast, value, coord, Map.values(targets))
 
-    Field.broadcast(state.topic, dmg_packet)
+  #   Field.broadcast(state.topic, dmg_packet)
 
-    %{state | mobs: Map.merge(state.mobs, targets)}
-  end
+  #   %{state | mobs: Map.merge(state.mobs, targets)}
+  # end
 
   @object_counter 10_000_001
-  def initialize_state(map_id, channel_id) do
-    {:ok, map} = Metadata.Maps.lookup(map_id)
+  def initialize_state(field_id, channel_id) do
+    {:ok, map} = Metadata.Maps.lookup(field_id)
 
-    load_mobs(map)
+    # Load Mobs
+    Enum.each(Metadata.MobSpawns.lookup_by_map(map.id), fn spawn ->
+      send(self(), {:add_mob, spawn})
+    end)
 
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
@@ -178,7 +179,7 @@ defmodule Ms2ex.FieldHelper do
     %{
       channel_id: channel_id,
       counter: counter,
-      field_id: map_id,
+      field_id: field_id,
       interactable: interactable,
       items: %{},
       mobs: %{},
@@ -186,17 +187,8 @@ defmodule Ms2ex.FieldHelper do
       npcs: npcs,
       portals: portals,
       sessions: %{},
-      topic: "field:#{map_id}:channel:#{channel_id}"
+      topic: "field:#{field_id}:channel:#{channel_id}"
     }
-  end
-
-  defp load_mobs(map) do
-    map.id
-    |> Metadata.MobSpawns.lookup_by_map()
-    |> Enum.map(&Map.delete(&1, :__struct__))
-    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.mob_id), &1))
-    |> Enum.map(&Map.put(&1, :spawn, &1.position))
-    |> Enum.each(&send(self(), {:add_mob, &1}))
   end
 
   defp load_npcs(map, counter) do

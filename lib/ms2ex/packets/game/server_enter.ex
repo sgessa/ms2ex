@@ -41,9 +41,9 @@ defmodule Ms2ex.Packets.ServerEnter do
 
   defp put_maps(packet, []), do: packet
 
-  defp put_maps(packet, [map_id | maps]) do
+  defp put_maps(packet, [field_id | maps]) do
     packet
-    |> put_int(map_id)
+    |> put_int(field_id)
     |> put_maps(maps)
   end
 end

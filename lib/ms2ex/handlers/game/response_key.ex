@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       titles = Characters.list_titles(character)
       wallet = Characters.get_wallet(character)
 
-      %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
+      %{friends: friends, field_id: field_id, position: position, rotation: rotation} = character
 
       session
       |> Map.put(:character_id, character.id)
@@ -84,7 +84,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Fishing.load_log())
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
-      |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push(Packets.RequestFieldEnter.bytes(field_id, position, rotation))
       |> push_party(character)
     else
       _ -> session
@@ -104,7 +104,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp set_spawn_position(character) do
-    {:ok, map} = Metadata.Maps.lookup(character.map_id)
+    {:ok, map} = Metadata.Maps.lookup(character.field_id)
     spawn = List.first(map.spawns)
 
     %{

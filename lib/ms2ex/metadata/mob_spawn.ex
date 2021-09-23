@@ -3,9 +3,9 @@ defmodule Ms2ex.Metadata.MobSpawn do
 
   alias Ms2ex.Metadata.Coord
 
-  defstruct [:map_id, :mob_id, :position]
+  defstruct [:field_id, :mob_id, :position]
 
-  field :map_id, 1, type: :int32
+  field :field_id, 1, type: :int32
   field :mob_id, 2, type: :int32
   field :position, 3, type: Coord
   field :is_boss?, 4, type: :bool
@@ -32,13 +32,13 @@ defmodule Ms2ex.Metadata.MobSpawns do
 
     :ets.new(@table, [:protected, :bag, :named_table])
 
-    for %{map_id: map_id} = mob <- list.items do
-      :ets.insert(@table, {map_id, mob})
+    for %{field_id: field_id} = mob <- list.items do
+      :ets.insert(@table, {field_id, mob})
     end
   end
 
-  def lookup_by_map(map_id) do
-    case :ets.lookup(@table, map_id) do
+  def lookup_by_map(field_id) do
+    case :ets.lookup(@table, field_id) do
       [] -> []
       results -> Enum.map(results, fn {_, mob} -> mob end)
     end

@@ -1,24 +1,24 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{Packets, StatId}
+  alias Ms2ex.{Mob, Packets, StatId}
 
   import Packets.PacketWriter
 
-  @mode %{update: 0x1, set_char_stats: 0x23, update_npc_stat: 0x4}
+  @mode %{update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
 
   def set_character_stats(character) do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
     |> put_byte()
-    |> put_byte(@mode.set_char_stats)
+    |> put_byte(@mode.send_stats)
     |> put_stats(character.stats)
   end
 
-  def update(character, updated_stats) do
+  def update_char_stats(character, updated_stats) do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> put_byte(@mode.update)
+    |> put_byte(@mode.update_char_stats)
     |> put_byte(0x1)
     |> reduce(updated_stats, fn
       :hp, packet ->
@@ -33,16 +33,16 @@ defmodule Ms2ex.Packets.Stats do
     end)
   end
 
-  def update_health(obj) do
+  def update_mob_health(%Mob{} = mob) do
     __MODULE__
     |> build()
-    |> put_int(obj.object_id)
+    |> put_int(mob.object_id)
     |> put_byte()
     |> put_byte(0x1)
-    |> put_byte(@mode.update_npc_stat)
-    |> put_long(obj.stats.hp.total)
-    |> put_long(obj.stats.hp.min)
-    |> put_long(obj.stats.hp.max)
+    |> put_byte(@mode.update_mob_health)
+    |> put_long(mob.stats.hp.bonus)
+    |> put_long(mob.stats.hp.base)
+    |> put_long(mob.stats.hp.total)
   end
 
   def put_stats(packet, stats) do
@@ -53,6 +53,17 @@ defmodule Ms2ex.Packets.Stats do
       stat, packet ->
         put_stat(packet, stats, stat)
     end)
+  end
+
+  def put_default_mob_stats(packet, %Mob{} = mob) do
+    packet
+    |> put_byte(@mode.send_stats)
+    |> put_long(mob.stats.hp.bonus)
+    |> put_int(100)
+    |> put_long(mob.stats.hp.base)
+    |> put_int(100)
+    |> put_long(mob.stats.hp.total)
+    |> put_int(100)
   end
 
   defp put_hp(packet, stats) do

@@ -3,15 +3,6 @@ defmodule Ms2ex.Mobs do
 
   import Ms2ex.Field, only: [broadcast: 2]
 
-  def init_mob(mob, object_id) do
-    mob
-    |> set_default_hp()
-    |> Map.put(:animation, 255)
-    |> Map.put(:direction, mob.rotation.z * 10)
-    |> Map.put(:object_id, object_id)
-    |> Map.put(:position, mob.spawn)
-  end
-
   def respawn_mob(mob) do
     fields = Map.take(mob, [:is_boss?, :respawn, :spawn])
     meta = Metadata.Npcs.get(mob.id)
@@ -19,12 +10,6 @@ defmodule Ms2ex.Mobs do
     mob
     |> Map.merge(meta)
     |> Map.merge(fields)
-  end
-
-  defp set_default_hp(mob) do
-    update_in(mob, [Access.key!(:stats), Access.key!(:hp), Access.key!(:max)], fn _ ->
-      mob.stats.hp.total
-    end)
   end
 
   def process_death(character, mob) do

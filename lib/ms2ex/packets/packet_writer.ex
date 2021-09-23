@@ -83,6 +83,8 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_byte(z)
   end
 
+  def put_short_coord(packet, coord \\ nil)
+
   def put_short_coord(packet, %{x: x, y: y, z: z}) do
     packet
     |> put_short(trunc(x))
@@ -90,7 +92,7 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_short(trunc(z))
   end
 
-  def put_short_coord(packet) do
+  def put_short_coord(packet, nil) do
     packet
     |> put_short()
     |> put_short()
