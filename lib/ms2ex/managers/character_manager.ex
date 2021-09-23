@@ -31,8 +31,8 @@ defmodule Ms2ex.CharacterManager do
     cast(character, {:consume, stat, amount})
   end
 
-  def start_link(%Character{} = character) do
-    GenServer.start_link(__MODULE__, character, name: process_name(character.id))
+  def start(%Character{} = character) do
+    GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
 
   def init(character) do
@@ -104,7 +104,7 @@ defmodule Ms2ex.CharacterManager do
   end
 
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
-    cleanup(%{character | online?: false})
+    cleanup(character)
     {:stop, :normal, character}
   end
 

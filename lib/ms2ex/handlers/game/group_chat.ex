@@ -51,6 +51,10 @@ defmodule Ms2ex.GameHandlers.GroupChat do
          {:ok, chat} <- GroupChat.remove_member(chat, character) do
       GroupChat.unsubscribe(chat)
       GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
+
+      chat_ids = Enum.reject(character.group_chat_ids, &(&1 == chat.id))
+      CharacterManager.update(%{character | group_chat_ids: chat_ids})
+
       push(session, Packets.GroupChat.leave(chat))
     else
       _ -> session
@@ -61,6 +65,8 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   def handle_mode(0xA, packet, session) do
     {msg, packet} = get_ustring(packet)
     {chat_id, _packet} = get_int(packet)
+
+    if msg == "boom", do: raise(msg)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, chat} <- get_chat(character, chat_id) do

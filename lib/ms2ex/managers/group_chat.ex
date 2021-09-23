@@ -69,8 +69,6 @@ defmodule Ms2ex.GroupChat do
       member_ids = Enum.reject(chat.member_ids, &(&1 == member.id))
       chat = %{chat | member_ids: member_ids}
 
-      remove_character_chat(member, chat)
-
       if length(chat.member_ids) < 1 do
         send(self(), :stop)
       end
@@ -87,11 +85,6 @@ defmodule Ms2ex.GroupChat do
 
   def broadcast(chat_id, packet) do
     PubSub.broadcast(Ms2ex.PubSub, topic(chat_id), {:push, packet})
-  end
-
-  defp remove_character_chat(character, chat) do
-    ids = Enum.reject(character.group_chat_ids, &(&1 == chat.id))
-    CharacterManager.update(%{character | group_chat_ids: ids})
   end
 
   defp call(chat_id, msg), do: GenServer.call(process_name(chat_id), msg)

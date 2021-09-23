@@ -16,6 +16,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
   end
 
   def cleanup(character) do
+    character = %{character | online?: false}
     Field.leave(character)
     notify_party_presence(character)
     notify_friend_presence(character)
@@ -24,7 +25,8 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
   defp leave_group_chats(character) do
     Enum.each(character.group_chat_ids, fn chat_id ->
-      GroupChat.remove_member(%GroupChat{id: chat_id}, character)
+      {:ok, chat} = GroupChat.remove_member(%GroupChat{id: chat_id}, character)
+      GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
     end)
   end
 

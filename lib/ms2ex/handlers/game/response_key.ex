@@ -39,7 +39,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character = character |> set_spawn_position() |> maybe_set_party()
 
-      CharacterManager.start_link(character)
+      CharacterManager.start(character)
       CharacterManager.monitor(character)
 
       character = Characters.preload(character, friends: :rcpt)
