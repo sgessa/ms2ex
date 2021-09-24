@@ -79,8 +79,8 @@ defmodule Ms2ex.Field do
   end
 
   def change_field(character, session, field_id) do
-    with {:ok, map} <- Metadata.Maps.lookup(field_id) do
-      spawn = List.first(map.spawns)
+    with {:ok, map} <- Metadata.MapEntities.lookup(field_id) do
+      spawn = List.first(map.character_spawns)
       change_field(character, session, field_id, spawn.coord, spawn.rotation)
     else
       _ -> session

@@ -5,12 +5,12 @@ defmodule Ms2ex.Mob do
 
   defstruct [
     :animation,
+    :boss?,
     :channel_id,
     :direction,
     :field_id,
     :field_topic,
     :id,
-    :metadata,
     :object_id,
     :position,
     :rotation,
@@ -27,12 +27,12 @@ defmodule Ms2ex.Mob do
 
     %__MODULE__{
       animation: meta.animation,
+      boss?: spawn.boss?,
       channel_id: channel_id,
       direction: meta.rotation.z * 10,
       field_id: field_id,
       field_topic: field_topic(field_id, channel_id),
       id: meta.id,
-      metadata: meta,
       object_id: object_id,
       position: spawn.position,
       rotation: meta.rotation,
@@ -40,12 +40,6 @@ defmodule Ms2ex.Mob do
       stats: meta.stats
     }
   end
-
-  # defp reset_hp(stats) do
-  #   update_in(stats, [Access.key!(:hp), Access.key!(:max)], fn _ ->
-  #     stats.hp.total
-  #   end)
-  # end
 
   def inflict_dmg(%__MODULE__{} = mob, dmg) do
     call(mob, {:inflict_dmg, dmg})

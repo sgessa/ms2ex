@@ -13,9 +13,9 @@ defmodule Ms2ex.MapBlock do
   end
 
   def exists?(field_id, block) do
-    blocks = Metadata.MapBlocks.lookup(field_id)
+    map = Metadata.Maps.lookup(field_id)
 
-    if Enum.find(blocks, &(block == &1)) do
+    if Enum.find(map.blocks, &(block == &1)) do
       true
     else
       false

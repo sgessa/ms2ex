@@ -15,7 +15,7 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.ItemStats.store()
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()
-    Ms2ex.Metadata.MapBlocks.store()
+    Ms2ex.Metadata.MapEntities.store()
     Ms2ex.Metadata.MagicPaths.store()
     Ms2ex.Metadata.MobSpawns.store()
     Ms2ex.Metadata.Npcs.store()

@@ -37,7 +37,7 @@ defmodule Ms2ex.Packets.FieldAddNpc do
   end
 
   # TODO add boss packet
-  def add_mob(%Mob{metadata: %{is_boss?: true}} = mob) do
+  def add_mob(%Mob{boss?: true} = mob) do
     __MODULE__
     |> build()
     |> put_int(mob.object_id)

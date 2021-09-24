@@ -8,18 +8,16 @@ defmodule Ms2ex.Metadata.MobSpawn do
   field :field_id, 1, type: :int32
   field :mob_id, 2, type: :int32
   field :position, 3, type: Coord
-  field :is_boss?, 4, type: :bool
+  field :boss?, 4, type: :bool
 end
 
 defmodule Ms2ex.Metadata.MobSpawns do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  alias Ms2ex.Metadata.MobSpawn
-
   defstruct [:items]
 
-  field :items, 1, repeated: true, type: MobSpawn
+  field :items, 1, repeated: true, type: Ms2ex.Metadata.MobSpawn
 
   @table :mob_spawn_metadata
 

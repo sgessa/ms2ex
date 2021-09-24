@@ -95,8 +95,8 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, spawn}, state) do
-    {:noreply, add_mob(spawn, state)}
+  def handle_info({:add_mob, map_npc}, state) do
+    {:noreply, add_mob(map_npc, state)}
   end
 
   def handle_info({:remove_mob, mob}, state) do

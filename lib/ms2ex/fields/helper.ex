@@ -167,7 +167,7 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_001
   def initialize_state(field_id, channel_id) do
-    {:ok, map} = Metadata.Maps.lookup(field_id)
+    {:ok, map} = Metadata.MapEntities.lookup(field_id)
 
     # Load Mobs
     Enum.each(Metadata.MobSpawns.lookup_by_map(map.id), fn spawn ->
@@ -215,7 +215,7 @@ defmodule Ms2ex.FieldHelper do
 
   defp load_interactable(map, counter) do
     # TODO group these objects by their correct packet type
-    Enum.reduce(map.interact_objects, {counter, %{}}, fn object, {counter, objects} ->
+    Enum.reduce(map.interactable_objects, {counter, %{}}, fn object, {counter, objects} ->
       object = Map.put(object, :object_id, counter)
       {counter + 1, Map.put(objects, object.uuid, object)}
     end)

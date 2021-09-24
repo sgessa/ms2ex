@@ -104,8 +104,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp set_spawn_position(character) do
-    {:ok, map} = Metadata.Maps.lookup(character.field_id)
-    spawn = List.first(map.spawns)
+    {:ok, map} = Metadata.MapEntities.lookup(character.field_id)
+    spawn = List.first(map.character_spawns)
 
     %{
       character

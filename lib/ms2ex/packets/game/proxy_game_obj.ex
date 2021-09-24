@@ -117,7 +117,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_int(npc.id)
     |> put_byte()
     |> put_int(200)
-    |> put_coord(npc.spawn)
+    |> put_coord(npc.position)
   end
 
   defp has_bit?(flag, bit), do: (flag &&& flag(bit)) != 0
