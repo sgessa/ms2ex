@@ -90,13 +90,14 @@ defmodule Ms2ex.GameHandlers.Skill do
     session
   end
 
+  # Damage
   defp handle_damage(0x1, packet, session) do
     {cast_id, packet} = get_long(packet)
     {attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
 
     {position, packet} = get_coord(packet)
-    {impact_pos, packet} = get_coord(packet)
+    {_impact_pos, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
     {_attack_point, packet} = get_byte(packet)
 
@@ -104,22 +105,57 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_int(packet)
 
     {:ok, character} = CharacterManager.lookup(session.character_id)
-    # skill_cast = SkillCast.get(cast_id)
 
-    crit? = Damage.roll_crit(character)
-    mobs = damage_targets(session, character, crit?, target_count, [], packet)
-    # Field.damage_mobs(character, skill_cast, value, coord, target_ids)
+    if character.skill_cast.id == cast_id do
+      crit? = Damage.roll_crit(character)
+      mobs = damage_targets(session, character, crit?, target_count, [], packet)
+
+      # TODO check whether it's a player or an ally
+      if SkillCast.heal?(character.skill_cast) do
+        status =
+          SkillStatus.new(character.skill_cast, character.object_id, character.object_id, 1)
+
+        Field.add_status(character, status)
+
+        # TODO heal based on stats
+        heal = 50
+        Field.broadcast(character, Packets.SkillDamage.heal(status, heal))
+
+        {:ok, character} = CharacterManager.increase_stat(character, :hp, heal)
+        push(session, Packets.Stats.update_char_stats(character, :hp))
+      else
+        coords = {position, rotation}
+
+        Field.broadcast(
+          character,
+          Packets.SkillDamage.damage(character, mobs, coords, attack_counter)
+        )
+      end
+    end
 
     session
   end
 
-  defp handle_damage(0x2, _packet, session) do
-    # {cast_id, packet} = get_long(packet)
-    # {_, packet} = get_byte(packet)
-    # {_, packet} = get_int(packet)
-    # {_, packet} = get_int(packet)
-    # {_coord, packet} = get_coord(packet)
-    # {_coord2, packet} = get_coord(packet)
+  # AoE Damage
+  defp handle_damage(0x2, packet, session) do
+    {cast_id, packet} = get_long(packet)
+    {_mode, packet} = get_byte(packet)
+    {_, packet} = get_int(packet)
+    {_, packet} = get_int(packet)
+    {_position, packet} = get_coord(packet)
+    {_rotation, _packet} = get_coord(packet)
+
+    {:ok, character} = CharacterManager.lookup(session.character_id)
+
+    if character.skill_cast.id == cast_id do
+      conditions =
+        character.skill_cast |> SkillCast.condition_skills() |> Enum.filter(& &1.splash)
+
+      for s <- conditions do
+        skill_cast = SkillCast.build(s.id, s.level, character.skill_cast, session.server_tick)
+        Field.add_region_skill(character, skill_cast)
+      end
+    end
 
     session
   end

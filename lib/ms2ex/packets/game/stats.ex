@@ -14,6 +14,10 @@ defmodule Ms2ex.Packets.Stats do
     |> put_stats(character.stats)
   end
 
+  def update_char_stats(character, stat) when not is_list(stat) do
+    update_char_stats(character, [stat])
+  end
+
   def update_char_stats(character, updated_stats) do
     __MODULE__
     |> build()

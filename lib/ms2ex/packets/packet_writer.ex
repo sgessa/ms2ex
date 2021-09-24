@@ -17,6 +17,8 @@ defmodule Ms2ex.Packets.PacketWriter do
   def put_byte(packet, byte \\ 0x0), do: packet <> <<byte>>
   def put_bytes(packet, b), do: packet <> <<b::bytes>>
 
+  def put_coord(packet, coord \\ nil)
+
   def put_coord(packet, %{x: x, y: y, z: z}) do
     packet
     |> put_float(x)
@@ -24,7 +26,7 @@ defmodule Ms2ex.Packets.PacketWriter do
     |> put_float(z)
   end
 
-  def put_coord(packet) do
+  def put_coord(packet, nil) do
     packet
     |> put_float()
     |> put_float()

@@ -40,9 +40,11 @@ defmodule Ms2ex.FieldHelper do
     state = %{state | counter: state.counter + 1, sessions: sessions}
 
     # Load Mobs
-    for {_id, mob} <- state.mobs do
-      send(session_pid, {:push, Packets.FieldAddNpc.add_mob(mob)})
-      send(session_pid, {:push, Packets.ProxyGameObj.load_npc(mob)})
+    for {obj_id, _pid} <- state.mobs do
+      with {:ok, mob} <- Mob.lookup(character, obj_id) do
+        send(session_pid, {:push, Packets.FieldAddNpc.add_mob(mob)})
+        send(session_pid, {:push, Packets.ProxyGameObj.load_npc(mob)})
+      end
     end
 
     # Load NPCs

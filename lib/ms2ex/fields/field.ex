@@ -12,6 +12,10 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:remove_item, object_id})
   end
 
+  def add_region_skill(%Character{} = character, region_skill) do
+    call(character.field_pid, {:add_region_skill, character.position, region_skill})
+  end
+
   def add_status(%Character{} = character, status) do
     call(character.field_pid, {:add_status, status})
   end

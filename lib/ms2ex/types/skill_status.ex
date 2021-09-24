@@ -18,7 +18,7 @@ defmodule Ms2ex.SkillStatus do
     stacks = stacks |> min(SkillCast.max_stacks(skill_cast)) |> max(0)
 
     %__MODULE__{
-      id: Ms2ex.generate_id(),
+      id: Ms2ex.generate_long(),
       target: target,
       source: source,
       stacks: stacks,

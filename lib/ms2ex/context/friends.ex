@@ -15,7 +15,7 @@ defmodule Ms2ex.Friends do
   defp maybe_preload_rcpt(query, _), do: query
 
   def send_request(%Character{} = character, %Character{} = friend, message) do
-    shared_id = Ms2ex.generate_id()
+    shared_id = Ms2ex.generate_long()
 
     src_attrs = %{message: message, shared_id: shared_id, status: :pending}
 
@@ -48,7 +48,7 @@ defmodule Ms2ex.Friends do
   end
 
   def block(%Character{} = character, %Character{} = rcpt, reason) do
-    shared_id = Ms2ex.generate_id()
+    shared_id = Ms2ex.generate_long()
     attrs = %{shared_id: shared_id, block_reason: reason, status: :blocked}
 
     character

@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, FieldHelper, Packets}
+  alias Ms2ex.{CharacterManager, Field, FieldHelper, Packets, SkillCast}
 
   import FieldHelper
 
@@ -50,6 +50,19 @@ defmodule Ms2ex.FieldServer do
     end
   end
 
+  def handle_call({:add_region_skill, position, skill}, _from, state) do
+    source_id = Ms2ex.generate_int()
+
+    Field.broadcast(
+      state.topic,
+      Packets.RegionSkill.add(source_id, position, skill)
+    )
+
+    duration = SkillCast.duration(skill)
+    Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
+    {:reply, :ok, state}
+  end
+
   def handle_call({:add_status, status}, _from, state) do
     Field.broadcast(state.topic, Packets.Buff.send(:add, status))
     Process.send_after(self(), {:remove_status, status}, status.duration)
@@ -70,6 +83,11 @@ defmodule Ms2ex.FieldServer do
 
   def handle_info({:add_item, item}, state) do
     {:noreply, add_item(item, state)}
+  end
+
+  def handle_info({:remove_region_skill, source_id}, state) do
+    Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    {:noreply, state}
   end
 
   def handle_info({:remove_status, status}, state) do

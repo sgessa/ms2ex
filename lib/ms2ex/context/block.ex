@@ -26,6 +26,10 @@ defmodule Ms2ex.MapBlock do
     :math.sqrt(x * x + y * y + z * z)
   end
 
+  def add(%Coord{} = left, %Coord{} = right) do
+    %Coord{x: left.x + right.x, y: left.y + right.y, z: left.z + right.z}
+  end
+
   def subtract(%Coord{} = left, %Coord{} = right) do
     %Coord{x: left.x - right.x, y: left.y - right.y, z: left.z - right.z}
   end

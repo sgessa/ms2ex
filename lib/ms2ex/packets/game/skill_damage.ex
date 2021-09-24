@@ -3,27 +3,37 @@ defmodule Ms2ex.Packets.SkillDamage do
 
   import Packets.PacketWriter
 
-  def bytes(object_id, skill_cast, value, coords, mobs) do
+  def damage(character, mobs, {position, rotation}, attk_counter) do
+    skill_cast = character.skill_cast
+
     __MODULE__
     |> build()
     |> put_byte(0x1)
     |> put_long(skill_cast.id)
-    |> put_int(value)
-    |> put_int(object_id)
-    |> put_int(object_id)
+    |> put_int(attk_counter)
+    |> put_int(character.object_id)
+    |> put_int(character.object_id)
     |> put_int(skill_cast.skill_id)
-    |> put_int(skill_cast.level)
-    |> put_short_coord(coords)
-    |> put_short_coord()
+    |> put_short(skill_cast.skill_level)
+    |> put_byte(skill_cast.motion_point)
+    |> put_byte(skill_cast.attack_point)
+    |> put_short_coord(position)
+    |> put_short_coord(rotation)
     |> put_byte(length(mobs))
-    |> reduce(mobs, fn %{damage: dmg} = mob, packet ->
+    |> reduce(mobs, fn {mob, effect}, packet ->
       packet
       |> put_int(mob.object_id)
-      |> put_byte(0x1)
-      |> put_bool(dmg.is_critical)
-      |> put_long(-dmg.dmg)
+      |> put_bool(effect.dmg > 0)
+      |> put_bool(effect.crit?)
+      |> maybe_put_dmg(effect.dmg)
     end)
   end
+
+  defp maybe_put_dmg(packet, dmg) when dmg != 0 do
+    put_long(packet, -dmg)
+  end
+
+  defp maybe_put_dmg(packet, _dmg), do: packet
 
   def sync_damage(skill_cast, {position, rotation}, character, target_count, projectiles) do
     __MODULE__
@@ -54,5 +64,17 @@ defmodule Ms2ex.Packets.SkillDamage do
         |> put_byte()
         |> put_byte()
     end)
+  end
+
+  def heal(status, heal_amount) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x4)
+    |> put_int(status.source)
+    |> put_int(status.target)
+    |> put_int(status.id)
+    |> put_int(heal_amount)
+    |> put_long()
+    |> put_byte(0x1)
   end
 end

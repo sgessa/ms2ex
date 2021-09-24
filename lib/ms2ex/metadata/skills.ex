@@ -69,6 +69,8 @@ defmodule Ms2ex.Metadata.SkillAttack do
 
   field :attack_point, 1, type: :int32
   field :target_count, 2, type: :int32
+  field :magic_path_id, 3, type: :int32
+  field :cube_magic_path_id, 4, type: :int32
 end
 
 defmodule Ms2ex.Metadata.SkillData do
@@ -116,6 +118,19 @@ defmodule Ms2ex.Metadata.SkillLevel do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
+  defstruct [
+    :level,
+    :spirit,
+    :stamina,
+    :damage_rate,
+    :feature,
+    :motion,
+    :attacks,
+    :conditions,
+    :data,
+    :skill_upgrade
+  ]
+
   field :level, 1, type: :int32
   field :spirit, 2, type: :int32
   field :stamina, 3, type: :int32
@@ -123,7 +138,7 @@ defmodule Ms2ex.Metadata.SkillLevel do
   field :feature, 5, type: :string
   field :motion, 6, type: Ms2ex.Metadata.SkillMotion
   field :attacks, 7, type: Ms2ex.Metadata.SkillAttack, repeated: true
-  field :cibdutuibs, 8, type: Ms2ex.Metadata.SkillCondition
+  field :conditions, 8, type: Ms2ex.Metadata.SkillCondition
   field :data, 9, type: Ms2ex.Metadata.SkillData
   field :skill_upgrade, 10, type: Ms2ex.Metadata.SkillUpgrade
 end

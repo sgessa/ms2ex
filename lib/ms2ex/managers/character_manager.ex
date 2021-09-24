@@ -28,7 +28,13 @@ defmodule Ms2ex.CharacterManager do
   def consume_stat(_character, _stat, amount) when amount <= 0, do: :error
 
   def consume_stat(%Character{} = character, stat, amount) do
-    cast(character, {:consume, stat, amount})
+    cast(character, {:consume_stat, stat, amount})
+  end
+
+  def increase_stat(_character, _stat, amount) when amount <= 0, do: :error
+
+  def increase_stat(%Character{} = character, stat, amount) do
+    cast(character, {:increase_stat, stat, amount})
   end
 
   def start(%Character{} = character) do
@@ -81,8 +87,18 @@ defmodule Ms2ex.CharacterManager do
     end
   end
 
-  def handle_cast({:consume, stat_id, amount}, character) do
+  def handle_cast({:consume_stat, stat_id, amount}, character) do
     {:noreply, decrease_stat(character, stat_id, amount)}
+  end
+
+  def handle_cast({:increase_stat, stat_id, amount}, character) do
+    cur = Map.get(character.stats, :"#{stat_id}_cur")
+    max = Map.get(character.stats, :"#{stat_id}_max")
+
+    amount = (cur + amount) |> max(0) |> min(max)
+    stats = Map.put(character.stats, :"#{stat_id}_cur", amount)
+
+    {:noreply, %{character | stats: stats}}
   end
 
   def handle_info({:regen, stat_id}, character) do
