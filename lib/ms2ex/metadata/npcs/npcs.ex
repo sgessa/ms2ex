@@ -99,4 +99,11 @@ defmodule Ms2ex.Metadata.Npcs do
       mob -> {:ok, mob}
     end
   end
+
+  def from_main_tag(tag) do
+    @table
+    |> :ets.tab2list()
+    |> Enum.filter(fn {_id, npc} -> tag in npc.basic.main_tags end)
+    |> Enum.map(fn {_id, npc} -> npc end)
+  end
 end

@@ -34,7 +34,7 @@ defmodule Ms2ex.Metadata.MapEntity do
   field :npcs, 2, repeated: true, type: Ms2ex.Metadata.MapNpc
   field :portals, 3, repeated: true, type: Ms2ex.Metadata.MapPortal
   field :character_spawns, 4, repeated: true, type: Ms2ex.Metadata.CharacterSpawn
-  # field :mob_spawns, 5, repeated: true, type: Ms2ex.Metadata.MobSpawn
+  field :mob_spawns, 5, repeated: true, type: Ms2ex.Metadata.MobSpawn
   field :objects, 6, repeated: true, type: Ms2ex.Metadata.MapObject
   field :bounding_box_0, 7, type: Ms2ex.Metadata.Coord
   field :bounding_box_1, 8, type: Ms2ex.Metadata.Coord

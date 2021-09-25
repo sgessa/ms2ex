@@ -1,11 +1,10 @@
 defmodule Ms2ex.Mob do
   use GenServer
 
-  alias Ms2ex.{Character, Field, Metadata, Packets}
+  alias Ms2ex.{Character, Field, Packets}
 
   defstruct [
     :animation,
-    :boss?,
     :channel_id,
     :direction,
     :field_id,
@@ -15,31 +14,27 @@ defmodule Ms2ex.Mob do
     :object_id,
     :position,
     :rotation,
-    :spawn,
     :speed,
     :stats,
+    boss?: false,
     dead?: false
   ]
 
   @updates_intval 1_000
 
-  def build(field_id, channel_id, object_id, spawn) do
-    meta = Metadata.Npcs.get(spawn.mob_id)
-
+  def build(field_id, channel_id, object_id, npc, spawn_position) do
     %__MODULE__{
-      animation: meta.animation,
-      boss?: spawn.boss?,
+      animation: npc.animation,
       channel_id: channel_id,
-      direction: meta.rotation.z * 10,
+      direction: npc.rotation.z * 10,
       field_id: field_id,
       field_topic: field_topic(field_id, channel_id),
-      id: meta.id,
-      model: meta.model,
+      id: npc.id,
+      model: npc.model,
       object_id: object_id,
-      position: spawn.position,
-      rotation: meta.rotation,
-      spawn: spawn.position,
-      stats: meta.stats
+      position: spawn_position,
+      rotation: npc.rotation,
+      stats: npc.stats
     }
   end
 

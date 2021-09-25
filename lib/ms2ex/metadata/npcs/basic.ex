@@ -37,6 +37,8 @@ defmodule Ms2ex.Metadata.NpcBasic do
   field :rare_degree, 13, type: :int32
   field :difficulty, 14, type: :int32
   field :property_tags, 15, repeated: true, type: :string
-  field :event_tags, 16, repeated: true, type: :string
-  field :race, 17, type: :string
+  field :main_tags, 16, repeated: true, type: :string
+  field :sub_tags, 17, repeated: true, type: :string
+  field :event_tags, 18, repeated: true, type: :string
+  field :race, 19, type: :string
 end
