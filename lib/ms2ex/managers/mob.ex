@@ -70,8 +70,7 @@ defmodule Ms2ex.Mob do
     mob = set_stat(mob, :hp, :total, hp)
 
     if hp == 0 do
-      send(self(), :stop)
-      mob = %{mob | dead?: true}
+      kill_mob(mob)
       {:reply, {:ok, mob}, mob}
     else
       {:reply, {:ok, mob}, mob}
@@ -84,6 +83,10 @@ defmodule Ms2ex.Mob do
     {:noreply, mob}
   end
 
+  def handle_info(:stop, mob) do
+    {:stop, :normal, mob}
+  end
+
   # Field Server stopped
   def handle_info({:DOWN, _, _, _pid, _reason}, mob) do
     {:stop, :normal, mob}
@@ -93,6 +96,15 @@ defmodule Ms2ex.Mob do
     update_in(mob, [Access.key!(:stats), Access.key!(stat_id), Access.key!(stat_val)], fn _ ->
       val
     end)
+  end
+
+  # @respawn_intval 10_000
+  defp kill_mob(mob) do
+    # Mobs.process_death(character, target)
+    Process.send_after(self(), :stop, mob.dead_animation_duration * 1000)
+    #  if target.respawn,
+    #    do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
+    %{mob | dead?: true}
   end
 
   defp call(char, mob_object_id, msg) do

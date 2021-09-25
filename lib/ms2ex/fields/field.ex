@@ -24,10 +24,6 @@ defmodule Ms2ex.Field do
     send(character.field_pid, {:add_mob, mob})
   end
 
-  def damage_mobs(%Character{} = character, skill_cast, value, coord, object_ids) do
-    call(character.field_pid, {:damage_mobs, character, skill_cast, value, coord, object_ids})
-  end
-
   def add_object(%Character{} = character, object) do
     call(character.field_pid, {:add_object, object.object_type, object})
   end

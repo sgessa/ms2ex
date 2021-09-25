@@ -95,17 +95,13 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, spawn}, state) do
-    {:noreply, spawn_mobs(spawn, state)}
+  def handle_info({:add_mob, spawn_group, mob}, state) do
+    {:noreply, add_mob(spawn_group, mob, state)}
   end
 
   def handle_info({:remove_mob, mob}, state) do
     {:noreply, remove_mob(mob, state)}
   end
-
-  # def handle_info({:respawn_mob, mob}, state) do
-  #   {:noreply, respawn_mob(mob, state)}
-  # end
 
   def handle_info({:leave_battle_stance, character}, state) do
     Field.broadcast(character, Packets.UserBattle.set_stance(character, false))

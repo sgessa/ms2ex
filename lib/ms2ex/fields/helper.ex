@@ -111,28 +111,23 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def spawn_mobs(%{data: data} = spawn_group, state) do
-    spawn_points = Metadata.MobSpawn.select_points(spawn_group.spawn_radius)
+  def add_mob(spawn_group, mob, state) do
+    field_mobs = state.mobs[spawn_group.id] || []
+    group_spawn_count = mob.basic.group_spawn_count
 
-    mobs = Metadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
+    if length(field_mobs) + group_spawn_count > spawn_group.data.max_population do
+      state
+    else
+      spawn_points = Metadata.MobSpawn.select_points(spawn_group.spawn_radius)
+      spawn_point = Enum.at(spawn_points, rem(length(field_mobs), length(spawn_points)))
+      spawn_position = MapBlock.add(spawn_group.position, spawn_point)
 
-    Enum.reduce(mobs, state, fn mob, state ->
-      field_mobs = state.mobs[spawn_group.id] || []
-      group_spawn_count = mob.basic.group_spawn_count
+      mob = Mob.build(state.field_id, state.channel_id, state.counter, mob, spawn_position)
+      {:ok, _pid} = Mob.start(mob)
 
-      if length(field_mobs) + group_spawn_count > data.max_population do
-        state
-      else
-        spawn_point = Enum.at(spawn_points, rem(length(field_mobs), length(spawn_points)))
-        spawn_position = MapBlock.add(spawn_group.position, spawn_point)
-
-        mob = Mob.build(state.field_id, state.channel_id, state.counter, mob, spawn_position)
-        {:ok, _pid} = Mob.start(mob)
-
-        field_mobs = Map.put(state.mobs, spawn_group.id, [state.counter | field_mobs])
-        %{state | counter: state.counter + 1, mobs: field_mobs}
-      end
-    end)
+      field_mobs = Map.put(state.mobs, spawn_group.id, [state.counter | field_mobs])
+      %{state | counter: state.counter + 1, mobs: field_mobs}
+    end
   end
 
   def remove_mob(mob, state) do
@@ -141,35 +136,11 @@ defmodule Ms2ex.FieldHelper do
     %{state | mobs: mobs}
   end
 
-  # def respawn_mob(mob, state) do
-  #   add_mob(Mobs.respawn_mob(mob), state)
-  # end
-
-  # @respawn_intval 10_000
-  # def damage_mobs(character, cast, value, coord, object_ids, state) do
-  #
-
-  #           {:dead, target} ->
-  #             Field.broadcast(state.topic, Packets.Stats.update_health(target))
-  #             Mobs.process_death(character, target)
-  #             Process.send_after(self(), {:remove_mob, target}, target.dead_at)
-
-  #             if target.respawn,
-  #               do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
-
-  #             target
-  # end
-
   @object_counter 10_000_001
   def initialize_state(field_id, channel_id) do
     {:ok, map} = Metadata.MapEntities.lookup(field_id)
 
-    # Load Mobs
-    map.mob_spawns
-    |> Enum.filter(& &1.data)
-    |> Enum.each(fn spawn ->
-      send(self(), {:add_mob, spawn})
-    end)
+    load_mobs(map)
 
     {counter, npcs} = load_npcs(map, @object_counter)
     {counter, portals} = load_portals(map, counter)
@@ -201,6 +172,17 @@ defmodule Ms2ex.FieldHelper do
 
       {counter + 1, Map.put(npcs, npc.id, npc)}
     end)
+  end
+
+  defp load_mobs(map) do
+    map.mob_spawns
+    |> Enum.filter(& &1.data)
+    |> Enum.each(&spawn_mob_group(&1))
+  end
+
+  defp spawn_mob_group(%{data: data} = spawn_group) do
+    mobs = Metadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
+    Enum.each(mobs, &send(self(), {:add_mob, spawn_group, &1}))
   end
 
   defp load_portals(map, counter) do
