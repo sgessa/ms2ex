@@ -20,8 +20,8 @@ defmodule Ms2ex.SkillCast do
       parent_skill: parent_skill,
       server_tick: srv_tick,
       skill_id: skill_id,
-      skill_level: skill_lvl
-      # meta: Metadata.Skills.get(skill_id)
+      skill_level: skill_lvl,
+      meta: Metadata.Skills.get(skill_id)
     }
   end
 

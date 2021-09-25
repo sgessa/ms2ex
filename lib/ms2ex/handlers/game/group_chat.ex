@@ -83,7 +83,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   end
 
   defp maybe_create_chat(session, character) do
-    chat = %GroupChat{id: Ms2ex.generate_long(), member_ids: [character.id]}
+    chat = %GroupChat{id: Ms2ex.generate_int(), member_ids: [character.id]}
     {:ok, _} = GroupChat.start(chat)
     GroupChat.subscribe(chat)
 

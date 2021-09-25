@@ -113,7 +113,7 @@ defmodule Ms2ex.FieldHelper do
 
   def add_mob(spawn, state) do
     mob = Mob.build(state.field_id, state.channel_id, state.counter, spawn)
-    {:ok, mob_pid} = Mob.start_link(mob)
+    {:ok, mob_pid} = Mob.start(mob)
 
     mobs = Map.put(state.mobs, state.counter, mob_pid)
     %{state | counter: state.counter + 1, mobs: mobs}
@@ -131,17 +131,7 @@ defmodule Ms2ex.FieldHelper do
 
   # @respawn_intval 10_000
   # def damage_mobs(character, cast, value, coord, object_ids, state) do
-  #   targets =
-  #     state.mobs
-  #     |> Enum.filter(fn {id, _} -> id in object_ids end)
-  #     |> Enum.into(%{}, fn {id, target} ->
-  #       damage = Damage.calculate(character, target)
-
-  #       target =
-  #         case Damage.apply_damage(target, damage) do
-  #           {:alive, target} ->
-  #             Field.broadcast(state.topic, Packets.Stats.update_health(target))
-  #             target
+  #
 
   #           {:dead, target} ->
   #             Field.broadcast(state.topic, Packets.Stats.update_health(target))
@@ -152,17 +142,6 @@ defmodule Ms2ex.FieldHelper do
   #               do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
 
   #             target
-  #         end
-
-  #       {id, target}
-  #     end)
-
-  #   dmg_packet =
-  #     Packets.SkillDamage.bytes(character.object_id, cast, value, coord, Map.values(targets))
-
-  #   Field.broadcast(state.topic, dmg_packet)
-
-  #   %{state | mobs: Map.merge(state.mobs, targets)}
   # end
 
   @object_counter 10_000_001

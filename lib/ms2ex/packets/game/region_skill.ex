@@ -21,7 +21,7 @@ defmodule Ms2ex.Packets.RegionSkill do
     |> put_byte(length(moves))
     |> put_moves(moves, effect_position)
     |> put_int(skill_cast.skill_id)
-    |> put_short(skill_cast.level)
+    |> put_short(skill_cast.skill_level)
     |> put_long()
   end
 

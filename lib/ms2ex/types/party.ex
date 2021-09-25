@@ -13,7 +13,7 @@ defmodule Ms2ex.Party do
 
   def create(leader) do
     %__MODULE__{
-      id: Ms2ex.generate_long(),
+      id: Ms2ex.generate_int(),
       formed_at: DateTime.utc_now(),
       leader_id: leader.id,
       members: [leader],

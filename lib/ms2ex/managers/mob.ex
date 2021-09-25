@@ -11,6 +11,7 @@ defmodule Ms2ex.Mob do
     :field_id,
     :field_topic,
     :id,
+    :model,
     :object_id,
     :position,
     :rotation,
@@ -33,6 +34,7 @@ defmodule Ms2ex.Mob do
       field_id: field_id,
       field_topic: field_topic(field_id, channel_id),
       id: meta.id,
+      model: meta.model,
       object_id: object_id,
       position: spawn.position,
       rotation: meta.rotation,
@@ -49,11 +51,13 @@ defmodule Ms2ex.Mob do
     call(character, object_id, :lookup)
   end
 
-  def start_link(%__MODULE__{} = mob) do
-    GenServer.start_link(__MODULE__, mob, name: :"#{mob.field_topic}:mob:#{mob.object_id}")
+  def start(%__MODULE__{} = mob) do
+    GenServer.start(__MODULE__, {mob, self()}, name: :"#{mob.field_topic}:mob:#{mob.object_id}")
   end
 
-  def init(mob) do
+  def init({mob, field_pid}) do
+    Process.monitor(field_pid)
+
     Field.broadcast(mob.field_topic, Packets.FieldAddNpc.add_mob(mob))
     Field.broadcast(mob.field_topic, Packets.ProxyGameObj.load_npc(mob))
 
@@ -83,6 +87,11 @@ defmodule Ms2ex.Mob do
     Field.broadcast(mob.field_topic, Packets.ControlNpc.control(:mob, mob))
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, mob}
+  end
+
+  # Field Server stopped
+  def handle_info({:DOWN, _, _, _pid, _reason}, mob) do
+    {:stop, :normal, mob}
   end
 
   defp set_stat(mob, stat_id, stat_val, val) do

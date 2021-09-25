@@ -6,9 +6,9 @@ defmodule Ms2ex.MapBlock do
   def block_size(), do: @block_size
 
   def closest_block(%Coord{x: x, y: y, z: z}) do
-    x = floor((x + 75) / @block_size) * @block_size
-    y = floor((y + 75) / @block_size) * @block_size
-    z = floor((z + 75) / @block_size) * @block_size
+    x = round(x / @block_size) * @block_size
+    y = round(y / @block_size) * @block_size
+    z = floor(z / @block_size) * @block_size
     %Coord{x: x, y: y, z: z}
   end
 
@@ -26,11 +26,11 @@ defmodule Ms2ex.MapBlock do
     :math.sqrt(x * x + y * y + z * z)
   end
 
-  def add(%Coord{} = left, %Coord{} = right) do
+  def add(left, right) do
     %Coord{x: left.x + right.x, y: left.y + right.y, z: left.z + right.z}
   end
 
-  def subtract(%Coord{} = left, %Coord{} = right) do
+  def subtract(left, right) do
     %Coord{x: left.x - right.x, y: left.y - right.y, z: left.z - right.z}
   end
 

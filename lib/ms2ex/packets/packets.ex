@@ -86,6 +86,7 @@ defmodule Ms2ex.Packets do
     0x48 => "BUFF",
     0x49 => "ADD_PORTAL",
     0x4A => "JOB",
+    0x4D => "REGION_SKILL",
     0x54 => "PARTY",
     0x56 => "FIELD_ADD_NPC",
     0x57 => "FIELD_REMOVE_NPC",

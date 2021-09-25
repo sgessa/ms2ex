@@ -1,7 +1,5 @@
 defmodule Ms2ex.Damage do
-  alias Ms2ex.{Character, Characters, Mob, SkillCast}
-
-  import Access, only: [key!: 1]
+  alias Ms2ex.{Character, Mob, SkillCast}
 
   def roll_crit(%Character{} = character) do
     crit_rate = character.stats.crit_rate_cur + 50
@@ -54,25 +52,8 @@ defmodule Ms2ex.Damage do
     end
   end
 
-  def receive_fall_dmg(%Character{stats: %{current_hp_min: hp}} = character) do
-    dmg = calculate_fall_dmg(character)
-    hp = max(hp - dmg, 25)
-    update_health(character, hp)
-  end
-
   @fall_dmg 150
-  defp calculate_fall_dmg(%Character{position: %{z: _height}}) do
+  def calculate_fall_dmg(%Character{}) do
     @fall_dmg
-  end
-
-  defp update_health(%Character{stats: stats} = character, health) do
-    stats = Map.delete(stats, :__struct__)
-    stats = %{stats | hp_cur: health}
-    {:ok, character} = Characters.update(character, %{stats: stats})
-    character
-  end
-
-  defp update_health(obj, health) do
-    update_in(obj, [key!(:stats), key!(:hp), key!(:max)], fn _ -> health end)
   end
 end

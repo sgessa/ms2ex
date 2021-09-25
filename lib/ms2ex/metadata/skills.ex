@@ -138,7 +138,7 @@ defmodule Ms2ex.Metadata.SkillLevel do
   field :feature, 5, type: :string
   field :motion, 6, type: Ms2ex.Metadata.SkillMotion
   field :attacks, 7, type: Ms2ex.Metadata.SkillAttack, repeated: true
-  field :conditions, 8, type: Ms2ex.Metadata.SkillCondition
+  field :conditions, 8, repeated: true, type: Ms2ex.Metadata.SkillCondition
   field :data, 9, type: Ms2ex.Metadata.SkillData
   field :skill_upgrade, 10, type: Ms2ex.Metadata.SkillUpgrade
 end

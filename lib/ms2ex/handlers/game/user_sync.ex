@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{CharacterManager, Damage, Field, MapBlock, Metadata, Packets, SyncState}
+  alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -35,13 +35,8 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     if is_out_of_bounds?(character.field_id, character.position) do
       character = handle_out_of_bounds(character)
-      character = Damage.receive_fall_dmg(character)
-      # CharacterManager.update(character)
-
-      session
-      |> push(Packets.MoveCharacter.bytes(character, character.safe_position))
-      |> push(Packets.Stats.set_character_stats(character))
-      |> push(Packets.FallDamage.bytes(character, 0))
+      CharacterManager.receive_fall_dmg(character)
+      push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     else
       session
     end

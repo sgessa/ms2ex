@@ -1,7 +1,7 @@
 defmodule Ms2ex.CharacterManager do
   use GenServer
 
-  alias Ms2ex.{Character, Characters, Field, Packets, SkillCast, SkillStatus}
+  alias Ms2ex.{Character, Characters, Damage, Field, Packets, PartyServer, SkillCast, SkillStatus}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
 
@@ -23,6 +23,10 @@ defmodule Ms2ex.CharacterManager do
 
   def cast_skill(%Character{} = character, %SkillCast{} = skill_cast) do
     call(character, {:cast_skill, skill_cast})
+  end
+
+  def receive_fall_dmg(%Character{} = character) do
+    cast(character, :receive_fall_dmg)
   end
 
   def consume_stat(_character, _stat, amount) when amount <= 0, do: :error
@@ -101,6 +105,17 @@ defmodule Ms2ex.CharacterManager do
     {:noreply, %{character | stats: stats}}
   end
 
+  def handle_cast(:receive_fall_dmg, character) do
+    hp = Map.get(character.stats, :hp_cur)
+    dmg = Damage.calculate_fall_dmg(character)
+    character = set_stat(character, :hp, max(hp - dmg, 25))
+
+    send(character.session_pid, {:push, Packets.Stats.set_character_stats(character)})
+    send(character.session_pid, {:push, Packets.FallDamage.bytes(character, 0)})
+
+    {:noreply, character}
+  end
+
   def handle_info({:regen, stat_id}, character) do
     intval = Map.get(character.stats, :"#{stat_id}_regen_time_cur")
     cur = Map.get(character.stats, :"#{stat_id}_cur")
@@ -108,9 +123,8 @@ defmodule Ms2ex.CharacterManager do
 
     if cur < max do
       # TODO check if regen enabled
-
       character = %{character | stats: regen(character.stats, stat_id)}
-      Field.broadcast(character, Packets.Stats.update_char_stats(character, [stat_id]))
+      broadcast_new_stats(character, stat_id)
 
       Process.send_after(self(), {:regen, stat_id}, intval)
 
@@ -125,6 +139,27 @@ defmodule Ms2ex.CharacterManager do
     {:stop, :normal, character}
   end
 
+  defp decrease_stat(character, stat_id, amount) do
+    cur = Map.get(character.stats, :"#{stat_id}_cur")
+    set_stat(character, stat_id, cur - amount)
+  end
+
+  defp set_stat(character, stat_id, amount) do
+    total = Map.get(character.stats, :"#{stat_id}_max")
+    amount = amount |> max(0) |> min(total)
+    stats = Map.put(character.stats, :"#{stat_id}_cur", amount)
+
+    if stat_id in @regen_stats && !Map.get(character, :"regen_#{stat_id}?") && amount < total do
+      intval = Map.get(character.stats, :"#{stat_id}_regen_time_cur")
+      Process.send_after(self(), {:regen, stat_id}, intval)
+    end
+
+    character = %{character | stats: stats}
+    broadcast_new_stats(character, stat_id)
+
+    character
+  end
+
   defp regen(stats, stat_id) do
     stat_cur = Map.get(stats, :"#{stat_id}_cur")
     stat_max = Map.get(stats, :"#{stat_id}_max")
@@ -134,6 +169,11 @@ defmodule Ms2ex.CharacterManager do
     Map.put(stats, :"#{stat_id}_cur", post_regen)
   end
 
+  defp broadcast_new_stats(character, stat_id) do
+    Field.broadcast(character, Packets.Stats.update_char_stats(character, [stat_id]))
+    PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
+  end
+
   defp call(%Character{id: id}, msg), do: GenServer.call(process_name(id), msg)
   defp call(character_id, msg), do: GenServer.call(process_name(character_id), msg)
 
@@ -141,17 +181,4 @@ defmodule Ms2ex.CharacterManager do
   defp cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
 
   defp process_name(character_id), do: :"characters:#{character_id}"
-
-  defp decrease_stat(character, stat_id, amount) do
-    cur = Map.get(character.stats, :"#{stat_id}_cur")
-    amount = min(cur, amount)
-    stats = Map.put(character.stats, :"#{stat_id}_cur", cur - amount)
-
-    if stat_id in @regen_stats && !Map.get(character, :"regen_#{stat_id}?") do
-      intval = Map.get(character.stats, :"#{stat_id}_regen_time_cur")
-      Process.send_after(self(), {:regen, stat_id}, intval)
-    end
-
-    %{character | stats: stats}
-  end
 end

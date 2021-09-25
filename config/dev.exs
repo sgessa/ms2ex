@@ -67,7 +67,7 @@ config :ms2ex, Ms2ex,
     "PROXY_GAME_OBJ",
     "RIDE_SYNC",
     "SEND_LOG",
-    "STATS"
+    "STATS",
     "USER_BATTLE",
     # "USER_CHAT",
     "USER_SYNC",
