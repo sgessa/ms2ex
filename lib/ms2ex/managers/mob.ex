@@ -18,7 +18,8 @@ defmodule Ms2ex.Mob do
     :speed,
     :stats,
     boss?: false,
-    dead?: false
+    dead?: false,
+    respawn?: true
   ]
 
   @updates_intval 1_000

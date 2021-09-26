@@ -111,13 +111,6 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_boss(%Metadata.Npc{} = npc, position, state) do
-    mob = Mob.build(state, npc, position)
-    mob = %{mob | boss?: true}
-    {:ok, _pid} = Mob.start(mob)
-    %{state | counter: state.counter + 1}
-  end
-
   def add_mob(%Metadata.Npc{} = npc, position, state) do
     mob = Mob.build(state, npc, position)
     {:ok, _pid} = Mob.start(mob)

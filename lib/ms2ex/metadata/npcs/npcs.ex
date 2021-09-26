@@ -26,7 +26,9 @@ defmodule Ms2ex.Metadata.Npc do
     :dead,
     :distance,
     :interact,
-    animation: 255
+    animation: 255,
+    boss?: false,
+    respawn?: true
   ]
 
   field :id, 1, type: :int32

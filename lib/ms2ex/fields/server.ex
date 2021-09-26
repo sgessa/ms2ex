@@ -95,10 +95,6 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_boss, %Metadata.Npc{} = npc, position}, state) do
-    {:noreply, add_boss(npc, position, state)}
-  end
-
   def handle_info({:add_mob, %Metadata.Npc{} = npc, position}, state) do
     {:noreply, add_mob(npc, position, state)}
   end

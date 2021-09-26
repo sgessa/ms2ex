@@ -20,10 +20,6 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:add_status, status})
   end
 
-  def add_boss(%Character{} = character, %Metadata.Npc{} = npc) do
-    send(character.field_pid, {:add_boss, npc, character.position})
-  end
-
   def add_mob(%Character{} = character, %Metadata.Npc{} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
