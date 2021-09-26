@@ -27,8 +27,7 @@ defmodule Ms2ex.Metadata.Npc do
     :distance,
     :interact,
     animation: 255,
-    boss?: false,
-    respawn?: true
+    boss?: false
   ]
 
   field :id, 1, type: :int32
@@ -98,7 +97,7 @@ defmodule Ms2ex.Metadata.Npcs do
   def lookup(npc_id) do
     case get(npc_id) do
       nil -> :error
-      mob -> {:ok, mob}
+      npc -> {:ok, npc}
     end
   end
 

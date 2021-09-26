@@ -101,8 +101,11 @@ defmodule Ms2ex.CharacterManager do
 
     amount = (cur + amount) |> max(0) |> min(max)
     stats = Map.put(character.stats, :"#{stat_id}_cur", amount)
+    character = %{character | stats: stats}
 
-    {:noreply, %{character | stats: stats}}
+    broadcast_new_stats(character, stat_id)
+
+    {:noreply, character}
   end
 
   def handle_cast(:receive_fall_dmg, character) do
@@ -110,7 +113,6 @@ defmodule Ms2ex.CharacterManager do
     dmg = Damage.calculate_fall_dmg(character)
     character = set_stat(character, :hp, max(hp - dmg, 25))
 
-    send(character.session_pid, {:push, Packets.Stats.set_character_stats(character)})
     send(character.session_pid, {:push, Packets.FallDamage.bytes(character, 0)})
 
     {:noreply, character}

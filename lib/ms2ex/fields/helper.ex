@@ -117,29 +117,36 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1}
   end
 
-  def add_mob(%Metadata.MobSpawn{} = spawn_group, mob, state) do
-    field_mobs = state.mobs[spawn_group.id] || []
-    group_spawn_count = mob.basic.group_spawn_count
-
-    if length(field_mobs) + group_spawn_count > spawn_group.data.max_population do
-      state
-    else
-      spawn_points = Metadata.MobSpawn.select_points(spawn_group.spawn_radius)
-      spawn_point = Enum.at(spawn_points, rem(length(field_mobs), length(spawn_points)))
-      spawn_position = MapBlock.add(spawn_group.position, spawn_point)
-
-      mob = Mob.build(state, mob, spawn_position)
-      {:ok, _pid} = Mob.start(mob)
-
-      field_mobs = Map.put(state.mobs, spawn_group.id, [state.counter | field_mobs])
-      %{state | counter: state.counter + 1, mobs: field_mobs}
+  def add_mob(%Metadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
+    case Metadata.Npcs.lookup(mob.id) do
+      {:ok, npc} -> add_mob(spawn_group, npc, state)
+      _ -> state
     end
   end
 
-  def remove_mob(mob, state) do
-    mobs = Map.delete(state.mobs, mob.object_id)
-    Field.broadcast(self(), Packets.FieldRemoveNpc.bytes(mob.object_id))
-    %{state | mobs: mobs}
+  def add_mob(%Metadata.MobSpawn{} = spawn_group, %Metadata.Npc{} = npc, state) do
+    population = state.mobs[spawn_group.id] || []
+    group_spawn_count = npc.basic.group_spawn_count
+
+    if length(population) + group_spawn_count > spawn_group.data.max_population do
+      state
+    else
+      spawn_points = Metadata.MobSpawn.select_points(spawn_group.spawn_radius)
+      spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
+      spawn_position = MapBlock.add(spawn_group.position, spawn_point)
+
+      mob = Mob.build(state, npc, spawn_position, spawn_group)
+      {:ok, _pid} = Mob.start(mob)
+
+      population = Map.put(state.mobs, spawn_group.id, [state.counter | population])
+      %{state | counter: state.counter + 1, mobs: population}
+    end
+  end
+
+  def remove_mob(spawn_group_id, object_id, state) do
+    population = state.mobs[spawn_group_id] || []
+    population = List.delete(population, object_id)
+    %{state | mobs: Map.put(state.mobs, spawn_group_id, population)}
   end
 
   @object_counter 10_000_001

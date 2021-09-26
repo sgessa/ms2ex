@@ -41,8 +41,8 @@ defmodule Ms2ex.Field do
     PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
   end
 
-  def broadcast(topic, packet) when is_binary(topic) do
-    PubSub.broadcast(Ms2ex.PubSub, topic, {:push, packet})
+  def broadcast(topic, packet) do
+    PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
   end
 
   def broadcast_from(%Character{} = character, packet, from) do
@@ -106,10 +106,6 @@ defmodule Ms2ex.Field do
 
   def field_name(field_id, channel_id) do
     :"field:#{field_id}:channel:#{channel_id}"
-  end
-
-  def field_topic(field_id, channel_id) do
-    field_id |> field_name(channel_id) |> to_string()
   end
 
   defp field_pid(field_id, channel_id) do

@@ -5,40 +5,40 @@ defmodule Ms2ex.Mob do
 
   defstruct [
     :animation,
-    :channel_id,
     :dead_animation_duration,
     :direction,
-    :field_id,
-    :field_topic,
+    :field,
     :id,
     :model,
     :object_id,
     :position,
+    :respawnable?,
     :rotation,
+    :spawn_group,
     :speed,
     :stats,
-    boss?: false,
-    dead?: false,
-    respawn?: true
+    boss?: false
   ]
 
   @updates_intval 1_000
 
-  def build(field, npc, spawn_position) do
+  def build(field, npc, spawn_position, spawn_group \\ nil) do
     # TODO get animation sequence from metadata
+
+    respawnable? = if Map.has_key?(npc, :respawnable?), do: npc.respawnable?, else: true
 
     %__MODULE__{
       animation: npc.animation || 255,
-      channel_id: field.channel_id,
       dead_animation_duration: trunc(npc.dead.time + 3) * 1000,
       direction: npc.rotation.z * 10,
-      field_id: field.field_id,
-      field_topic: Field.field_topic(field.field_id, field.channel_id),
+      field: Field.field_name(field.field_id, field.channel_id),
       id: npc.id,
       model: npc.model,
       object_id: field.counter,
       position: spawn_position,
+      respawnable?: respawnable?,
       rotation: npc.rotation,
+      spawn_group: spawn_group,
       stats: npc.stats
     }
   end
@@ -52,14 +52,14 @@ defmodule Ms2ex.Mob do
   end
 
   def start(%__MODULE__{} = mob) do
-    GenServer.start(__MODULE__, {mob, self()}, name: :"#{mob.field_topic}:mob:#{mob.object_id}")
+    GenServer.start(__MODULE__, {mob, self()}, name: :"#{mob.field}:mob:#{mob.object_id}")
   end
 
   def init({mob, field_pid}) do
     Process.monitor(field_pid)
 
-    Field.broadcast(mob.field_topic, Packets.FieldAddNpc.add_mob(mob))
-    Field.broadcast(mob.field_topic, Packets.ProxyGameObj.load_npc(mob))
+    Field.broadcast(mob.field, Packets.FieldAddNpc.add_mob(mob))
+    Field.broadcast(mob.field, Packets.ProxyGameObj.load_npc(mob))
 
     send(self(), :send_updates)
 
@@ -83,14 +83,24 @@ defmodule Ms2ex.Mob do
   end
 
   def handle_info(:send_updates, mob) do
-    Field.broadcast(mob.field_topic, Packets.FieldObject.control(:mob, mob))
+    Field.broadcast(mob.field, Packets.ControlNpc.bytes(:mob, mob))
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, mob}
   end
 
   def handle_info(:stop, mob) do
-    Field.broadcast(mob.field_topic, Packets.FieldRemoveNpc.bytes(mob.object_id))
-    Field.broadcast(mob.field_topic, Packets.FieldObject.remove_npc(mob))
+    Field.broadcast(mob.field, Packets.FieldRemoveNpc.bytes(mob.object_id))
+    Field.broadcast(mob.field, Packets.ProxyGameObj.remove_npc(mob))
+
+    if mob.spawn_group do
+      send(mob.field, {:remove_mob, mob.spawn_group.id, mob.object_id})
+    end
+
+    if mob.respawnable? do
+      respawn_time = mob.spawn_group.data.spawn_time * 1000
+      Process.send_after(mob.field, {:add_mob, mob}, respawn_time)
+    end
+
     {:stop, :normal, mob}
   end
 
@@ -105,17 +115,13 @@ defmodule Ms2ex.Mob do
     end)
   end
 
-  # @respawn_intval 10_000
   defp kill_mob(mob) do
     # Mobs.process_death(character, target)
     Process.send_after(self(), :stop, mob.dead_animation_duration)
-    #  if target.respawn,
-    #    do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
-    %{mob | dead?: true}
   end
 
-  defp call(char, mob_object_id, msg) do
-    process = process_name(char.field_id, char.channel_id, mob_object_id)
+  defp call(%Character{} = char, mob_object_id, msg) do
+    process = process_name(char, mob_object_id)
 
     if pid = Process.whereis(process) do
       GenServer.call(pid, msg)
@@ -124,7 +130,7 @@ defmodule Ms2ex.Mob do
     end
   end
 
-  defp call(mob, msg) do
+  defp call(%__MODULE__{} = mob, msg) do
     if pid = find_pid(mob) do
       GenServer.call(pid, msg)
     else
@@ -132,14 +138,18 @@ defmodule Ms2ex.Mob do
     end
   end
 
-  defp find_pid(char_or_mob) do
-    char_or_mob.field_id
-    |> process_name(char_or_mob.channel_id, char_or_mob.object_id)
+  defp find_pid(mob) do
+    mob
+    |> process_name()
     |> Process.whereis()
   end
 
-  defp process_name(field_id, channel_id, object_id) do
-    field_name = Field.field_name(field_id, channel_id)
+  defp process_name(%__MODULE__{} = mob) do
+    :"#{mob.field}:mob:#{mob.object_id}"
+  end
+
+  defp process_name(%Character{} = char, object_id) do
+    field_name = Field.field_name(char.field_id, char.channel_id)
     :"#{field_name}:mob:#{object_id}"
   end
 end

@@ -13,12 +13,10 @@ defmodule Ms2ex.Commands do
 
   import Net.Session, only: [push: 2, push_notice: 3]
 
-  def handle(["heal"], %{stats: stats} = character, session) do
-    max_hp = stats.hp_cur
-    stats = stats |> Map.delete(:__struct__) |> Map.put(:current_hp_min, max_hp)
-    {:ok, character} = Characters.update(character, %{stats: stats})
-    CharacterManager.update(character)
-    push(session, Packets.Stats.set_character_stats(character))
+  def handle(["heal"], character, session) do
+    max_hp = character.stats.hp_max
+    CharacterManager.increase_stat(character, :hp, max_hp)
+    session
   end
 
   def handle(["item" | ids], character, session) do
@@ -60,7 +58,8 @@ defmodule Ms2ex.Commands do
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
-      Field.add_mob(character, %{npc | boss?: true, respawn?: false})
+      npc = Map.merge(npc, %{boss?: true, respawnable?: false})
+      Field.add_mob(character, npc)
       session
     else
       _ ->
@@ -71,7 +70,8 @@ defmodule Ms2ex.Commands do
   def handle(["mob", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
-      Field.add_mob(character, %{npc | respawn?: false})
+      npc = Map.merge(npc, %{respawnable?: false})
+      Field.add_mob(character, npc)
       session
     else
       _ ->
