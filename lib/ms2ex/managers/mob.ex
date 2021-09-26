@@ -6,6 +6,7 @@ defmodule Ms2ex.Mob do
   defstruct [
     :animation,
     :channel_id,
+    :dead_animation_duration,
     :direction,
     :field_id,
     :field_topic,
@@ -22,16 +23,19 @@ defmodule Ms2ex.Mob do
 
   @updates_intval 1_000
 
-  def build(field_id, channel_id, object_id, npc, spawn_position) do
+  def build(field, npc, spawn_position) do
+    # TODO get animation sequence from metadata
+
     %__MODULE__{
-      animation: npc.animation,
-      channel_id: channel_id,
+      animation: npc.animation || 255,
+      channel_id: field.channel_id,
+      dead_animation_duration: trunc(npc.dead.time + 3) * 1000,
       direction: npc.rotation.z * 10,
-      field_id: field_id,
-      field_topic: field_topic(field_id, channel_id),
+      field_id: field.field_id,
+      field_topic: Field.field_topic(field.field_id, field.channel_id),
       id: npc.id,
       model: npc.model,
-      object_id: object_id,
+      object_id: field.counter,
       position: spawn_position,
       rotation: npc.rotation,
       stats: npc.stats
@@ -78,12 +82,14 @@ defmodule Ms2ex.Mob do
   end
 
   def handle_info(:send_updates, mob) do
-    Field.broadcast(mob.field_topic, Packets.ControlNpc.control(:mob, mob))
+    Field.broadcast(mob.field_topic, Packets.FieldObject.control(:mob, mob))
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, mob}
   end
 
   def handle_info(:stop, mob) do
+    Field.broadcast(mob.field_topic, Packets.FieldRemoveNpc.bytes(mob.object_id))
+    Field.broadcast(mob.field_topic, Packets.FieldObject.remove_npc(mob))
     {:stop, :normal, mob}
   end
 
@@ -101,7 +107,7 @@ defmodule Ms2ex.Mob do
   # @respawn_intval 10_000
   defp kill_mob(mob) do
     # Mobs.process_death(character, target)
-    Process.send_after(self(), :stop, mob.dead_animation_duration * 1000)
+    Process.send_after(self(), :stop, mob.dead_animation_duration)
     #  if target.respawn,
     #    do: Process.send_after(self(), {:respawn_mob, target}, @respawn_intval)
     %{mob | dead?: true}
@@ -131,13 +137,8 @@ defmodule Ms2ex.Mob do
     |> Process.whereis()
   end
 
-  defp field_topic(field_id, channel_id) do
-    field_id
-    |> Field.field_name(channel_id)
-    |> to_string()
-  end
-
   defp process_name(field_id, channel_id, object_id) do
-    :"#{field_topic(field_id, channel_id)}:mob:#{object_id}"
+    field_name = Field.field_name(field_id, channel_id)
+    :"#{field_name}:mob:#{object_id}"
   end
 end

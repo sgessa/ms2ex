@@ -111,7 +111,20 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(spawn_group, mob, state) do
+  def add_boss(%Metadata.Npc{} = npc, position, state) do
+    mob = Mob.build(state, npc, position)
+    mob = %{mob | boss?: true}
+    {:ok, _pid} = Mob.start(mob)
+    %{state | counter: state.counter + 1}
+  end
+
+  def add_mob(%Metadata.Npc{} = npc, position, state) do
+    mob = Mob.build(state, npc, position)
+    {:ok, _pid} = Mob.start(mob)
+    %{state | counter: state.counter + 1}
+  end
+
+  def add_mob(%Metadata.MobSpawn{} = spawn_group, mob, state) do
     field_mobs = state.mobs[spawn_group.id] || []
     group_spawn_count = mob.basic.group_spawn_count
 
@@ -122,7 +135,7 @@ defmodule Ms2ex.FieldHelper do
       spawn_point = Enum.at(spawn_points, rem(length(field_mobs), length(spawn_points)))
       spawn_position = MapBlock.add(spawn_group.position, spawn_point)
 
-      mob = Mob.build(state.field_id, state.channel_id, state.counter, mob, spawn_position)
+      mob = Mob.build(state, mob, spawn_position)
       {:ok, _pid} = Mob.start(mob)
 
       field_mobs = Map.put(state.mobs, spawn_group.id, [state.counter | field_mobs])

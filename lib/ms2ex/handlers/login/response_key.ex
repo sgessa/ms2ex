@@ -22,10 +22,6 @@ defmodule Ms2ex.LoginHandlers.ResponseKey do
     {token_a, packet} = get_int(packet)
     {token_b, _packet} = get_int(packet)
 
-    IO.inspect(token_a, label: "A")
-    IO.inspect(token_b, label: "B")
-    IO.inspect(auth_data)
-
     with true <- token_a == auth_data.token_a,
          true <- token_b == auth_data.token_b do
       account = Accounts.get(auth_data[:account_id])

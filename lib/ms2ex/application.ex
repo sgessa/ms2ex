@@ -17,7 +17,6 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.Maps.store()
     Ms2ex.Metadata.MapEntities.store()
     Ms2ex.Metadata.MagicPaths.store()
-    # Ms2ex.Metadata.MobSpawns.store()
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
 
@@ -31,8 +30,10 @@ defmodule Ms2ex.Application do
         {Phoenix.PubSub, name: Ms2ex.PubSub},
         # Start the Endpoint (http/https)
         Ms2exWeb.Endpoint,
+        # Start Managers
         {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
         {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]},
+        # Start TCP Listeners
         server_tcp_chidspec(login_server_opts()),
         server_tcp_chidspec(world_login_opts())
       ] ++ channel_listeners()

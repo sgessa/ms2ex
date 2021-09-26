@@ -90,7 +90,7 @@ defmodule Ms2ex.Packets do
     0x54 => "PARTY",
     0x56 => "FIELD_ADD_NPC",
     0x57 => "FIELD_REMOVE_NPC",
-    0x59 => "CONTROL_NPC",
+    0x59 => "FIELD_OBJECT",
     0x60 => "MOVE_CHARACTER",
     0x63 => "FRIEND",
     0x65 => "ADD_INTERACT_OBJECTS",

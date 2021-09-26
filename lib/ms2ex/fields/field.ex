@@ -20,8 +20,12 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:add_status, status})
   end
 
-  def add_mob(%Character{} = character, mob) do
-    send(character.field_pid, {:add_mob, mob})
+  def add_boss(%Character{} = character, %Metadata.Npc{} = npc) do
+    send(character.field_pid, {:add_boss, npc, character.position})
+  end
+
+  def add_mob(%Character{} = character, %Metadata.Npc{} = npc) do
+    send(character.field_pid, {:add_mob, npc, character.position})
   end
 
   def add_object(%Character{} = character, object) do
@@ -106,6 +110,10 @@ defmodule Ms2ex.Field do
 
   def field_name(field_id, channel_id) do
     :"field:#{field_id}:channel:#{channel_id}"
+  end
+
+  def field_topic(field_id, channel_id) do
+    field_id |> field_name(channel_id) |> to_string()
   end
 
   defp field_pid(field_id, channel_id) do

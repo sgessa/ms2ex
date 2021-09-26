@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, FieldHelper, Packets, SkillCast}
+  alias Ms2ex.{CharacterManager, Field, FieldHelper, Metadata, Packets, SkillCast}
 
   import FieldHelper
 
@@ -95,7 +95,15 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, spawn_group, mob}, state) do
+  def handle_info({:add_boss, %Metadata.Npc{} = npc, position}, state) do
+    {:noreply, add_boss(npc, position, state)}
+  end
+
+  def handle_info({:add_mob, %Metadata.Npc{} = npc, position}, state) do
+    {:noreply, add_mob(npc, position, state)}
+  end
+
+  def handle_info({:add_mob, %Metadata.MobSpawn{} = spawn_group, mob}, state) do
     {:noreply, add_mob(spawn_group, mob, state)}
   end
 
@@ -116,7 +124,7 @@ defmodule Ms2ex.FieldServer do
     end
 
     for {_id, npc} <- state.npcs do
-      Field.broadcast(state.topic, Packets.ControlNpc.control(:npc, npc))
+      Field.broadcast(state.topic, Packets.FieldObject.control(:npc, npc))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)
