@@ -41,7 +41,7 @@ dagger = Metadata.Items.load(%Item{item_id: 13_160_311})
   Characters.create(account, %{
     name: "icra1337",
     level: 70,
-    map_id: 2_000_023,
+    field_id: 2_000_023,
     job: :thief,
     skin_color: skin_color
   })

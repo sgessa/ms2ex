@@ -3,15 +3,11 @@ defmodule Ms2ex.Application do
 
   use Application
 
-  alias Ms2ex.Registries
-
   @config Application.get_env(:ms2ex, Ms2ex)
   @world @config[:world]
 
   def start(_type, _args) do
     Ms2ex.WorldGraph.store()
-
-    Registries.SkillCasts.start()
 
     Ms2ex.Metadata.ChatStickers.store()
     Ms2ex.Metadata.ExpTable.store()
@@ -19,8 +15,8 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.ItemStats.store()
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()
-    Ms2ex.Metadata.MapBlocks.store()
-    Ms2ex.Metadata.MobSpawns.store()
+    Ms2ex.Metadata.MapEntities.store()
+    Ms2ex.Metadata.MagicPaths.store()
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
 
@@ -33,11 +29,11 @@ defmodule Ms2ex.Application do
         # Start the PubSub system
         {Phoenix.PubSub, name: Ms2ex.PubSub},
         # Start the Endpoint (http/https)
-        # Ms2exWeb.Endpoint
-        # Start Session Registry
+        Ms2exWeb.Endpoint,
+        # Start Managers
         {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
         {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]},
-        Supervisor.child_spec({Ms2ex.WorldServer, [name: {:via, :swarm, :world}]}, id: :world),
+        # Start TCP Listeners
         server_tcp_chidspec(login_server_opts()),
         server_tcp_chidspec(world_login_opts())
       ] ++ channel_listeners()

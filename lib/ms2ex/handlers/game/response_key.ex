@@ -3,6 +3,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   alias Ms2ex.{
     Characters,
+    CharacterManager,
     Inventory,
     LoginHandlers,
     Metadata,
@@ -25,22 +26,23 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
       SessionManager.register(account.id, auth_data)
+      World.subscribe()
 
       character =
         auth_data[:character_id]
         |> Characters.get()
         |> Characters.load_equips()
         |> Characters.preload([:friends, :stats])
+        |> Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
-
-      World.monitor_character(character)
 
       tick = Ms2ex.sync_ticks()
 
       character = character |> set_spawn_position() |> maybe_set_party()
 
-      World.update_character(character)
+      CharacterManager.start(character)
+      CharacterManager.monitor(character)
 
       character = Characters.preload(character, friends: :rcpt)
       init_character(character)
@@ -48,7 +50,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       titles = Characters.list_titles(character)
       wallet = Characters.get_wallet(character)
 
-      %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
+      %{friends: friends, field_id: field_id, position: position, rotation: rotation} = character
 
       session
       |> Map.put(:character_id, character.id)
@@ -82,7 +84,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Fishing.load_log())
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
-      |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push(Packets.RequestFieldEnter.bytes(field_id, position, rotation))
       |> push_party(character)
     else
       _ -> session
@@ -102,8 +104,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp set_spawn_position(character) do
-    {:ok, map} = Metadata.Maps.lookup(character.map_id)
-    spawn = List.first(map.spawns)
+    {:ok, map} = Metadata.MapEntities.lookup(character.field_id)
+    spawn = List.first(map.character_spawns)
 
     %{
       character

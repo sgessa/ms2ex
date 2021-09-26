@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Friend do
-  alias Ms2ex.{Friends, Packets, World}
+  alias Ms2ex.{CharacterManager, Friends, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.Friend do
     {rcpt_name, packet} = get_ustring(packet)
     {msg, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, rcpt} <- find_rcpt(rcpt_name),
          :ok <- validate_rcpt(character, rcpt),
          :ok <- check_friend_list_size(character, rcpt, :cannot_add_friends),
@@ -25,7 +25,7 @@ defmodule Ms2ex.GameHandlers.Friend do
          {:ok, {src, dst}} <- Friends.send_request(character, rcpt, msg) do
       if Map.get(rcpt, :session_pid) do
         rcpt = Map.put(rcpt, :friends, [dst | rcpt.friends])
-        World.update_character(rcpt)
+        CharacterManager.update(rcpt)
         send(rcpt.session_pid, {:push, Packets.Friend.add_to_list(dst)})
       end
 
@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.Friend do
   defp handle_mode(0x3, packet, session) do
     {shared_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{status: :accepted, rcpt: sender} = dst_req <-
            Friends.get_by_character_and_shared_id(session.character_id, shared_id, true),
          %{status: :pending} = src_req <-
@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.Friend do
       {:ok, dst_req} = Friends.update(dst_req, %{is_request: false})
       {:ok, src_req} = Friends.update(src_req, %{status: :accepted})
 
-      with {:ok, sender_session} <- World.get_character_by_name(sender.name) do
+      with {:ok, sender_session} <- CharacterManager.lookup_by_name(sender.name) do
         src_req = Map.put(src_req, :rcpt, character)
         send(sender_session.session_pid, {:subscribe_friend_presence, character.id})
         send(sender_session.session_pid, {:push, Packets.Friend.update(src_req)})
@@ -71,14 +71,14 @@ defmodule Ms2ex.GameHandlers.Friend do
   defp handle_mode(0x4, packet, session) do
     {shared_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{status: :accepted, rcpt: sender} <-
            Friends.get_by_character_and_shared_id(session.character_id, shared_id, true),
          %{status: :pending} <-
            Friends.get_by_character_and_shared_id(sender.id, shared_id) do
       Friends.delete_all(shared_id)
 
-      with {:ok, sender_session} <- World.get_character_by_name(sender.name) do
+      with {:ok, sender_session} <- CharacterManager.lookup_by_name(sender.name) do
         remove_friend_from_session(sender_session, shared_id)
         req = %{shared_id: shared_id, rcpt: character}
         send(sender_session.session_pid, {:push, Packets.Friend.remove(req)})
@@ -97,7 +97,7 @@ defmodule Ms2ex.GameHandlers.Friend do
     {rcpt_name, packet} = get_ustring(packet)
     {reason, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          :ok <- check_block_list_size(character, rcpt_name, :cannot_block),
          {:ok, rcpt} <- find_rcpt(rcpt_name) do
       if shared_id == 0 do
@@ -112,7 +112,7 @@ defmodule Ms2ex.GameHandlers.Friend do
   defp handle_mode(0x6, packet, session) do
     {shared_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          src <-
            Friends.get_by_character_and_shared_id(character.id, shared_id, true) do
       remove_friend_from_session(character, shared_id)
@@ -128,12 +128,12 @@ defmodule Ms2ex.GameHandlers.Friend do
   defp handle_mode(0x7, packet, session) do
     {shared_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{rcpt: rcpt} = friend <-
            Friends.get_by_character_and_shared_id(character.id, shared_id, true) do
       Friends.delete_all(shared_id)
 
-      with {:ok, rcpt_session} <- World.get_character_by_name(rcpt.name) do
+      with {:ok, rcpt_session} <- CharacterManager.lookup_by_name(rcpt.name) do
         remove_friend_from_session(rcpt_session, shared_id)
         req = %{shared_id: shared_id, rcpt: character}
         send(rcpt_session.session_pid, {:unsubscribe_friend_presence, character.id})
@@ -154,7 +154,7 @@ defmodule Ms2ex.GameHandlers.Friend do
     {rcpt_name, packet} = get_ustring(packet)
     {new_reason, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          friend <-
            Friends.get_by_character_and_shared_id(character.id, shared_id, true),
          true <- rcpt_name == friend.rcpt.name,
@@ -169,14 +169,14 @@ defmodule Ms2ex.GameHandlers.Friend do
   defp handle_mode(0x11, packet, session) do
     {shared_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{status: :pending, rcpt: rcpt} <-
            Friends.get_by_character_and_shared_id(session.character_id, shared_id, true),
          %{is_request: true} = dst <-
            Friends.get_by_character_and_shared_id(rcpt.id, shared_id) do
       Friends.delete_all(shared_id)
 
-      with {:ok, rcpt_session} <- World.get_character_by_name(rcpt.name) do
+      with {:ok, rcpt_session} <- CharacterManager.lookup_by_name(rcpt.name) do
         remove_friend_from_session(rcpt_session, shared_id)
         dst = Map.put(dst, :rcpt, character)
         send(rcpt_session.session_pid, {:push, Packets.Friend.remove(dst)})
@@ -194,7 +194,7 @@ defmodule Ms2ex.GameHandlers.Friend do
   defp block(session, character, rcpt, reason) do
     with {:ok, block} <- Friends.block(character, rcpt, reason) do
       rcpt = Map.put(rcpt, :friends, [block | rcpt.friends])
-      World.update_character(rcpt)
+      CharacterManager.update(rcpt)
 
       session
       |> push(Packets.Friend.add_to_list(block))

@@ -1,18 +1,19 @@
 defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   require Logger
 
-  alias Ms2ex.{Characters, ChatStickers, Field, HotBars, Net, Packets, World}
+  alias Ms2ex.{Characters, CharacterManager, ChatStickers, Field, HotBars, Net, Packets}
 
   import Net.Session, only: [push: 2]
 
   def handle(_packet, %{character_id: character_id} = session) do
-    {:ok, character} = World.get_character(character_id)
+    {:ok, character} = CharacterManager.lookup(character_id)
 
     # Check if character is changing map
     character = maybe_change_map(character)
-    World.update_character(character)
+    CharacterManager.update(character)
 
-    {:ok, _pid} = Field.enter(character, session)
+    Field.subscribe(character)
+    {:ok, _pid} = Field.enter(character)
 
     hot_bars = HotBars.list(character)
 
@@ -25,8 +26,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   end
 
   defp maybe_change_map(%{change_map: new_map} = character) do
-    # Save Map ID on the database
-    {:ok, character} = Characters.update(character, %{map_id: new_map.id})
+    Field.unsubscribe(character)
+    {:ok, character} = Characters.update(character, %{field_id: new_map.id})
 
     character
     |> Map.delete(:change_map)

@@ -6,7 +6,6 @@ defmodule Ms2ex.Repo.Migrations.CreateSkills do
       add :skill_tab_id, references(:skill_tabs, on_delete: :delete_all), null: false
 
       add :skill_id, :integer, null: false
-      add :learned, :boolean, null: false
       add :level, :integer, null: false
     end
 

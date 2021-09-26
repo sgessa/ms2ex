@@ -1,6 +1,12 @@
 defmodule Ms2ex do
-  def generate_id() do
-    floor(:rand.uniform() * floor(:math.pow(2, 31)))
+  def generate_int() do
+    <<x::signed-integer-size(32)>> = :crypto.strong_rand_bytes(4)
+    x
+  end
+
+  def generate_long() do
+    <<x::signed-integer-size(64)>> = :crypto.strong_rand_bytes(8)
+    x
   end
 
   def sync_ticks() do

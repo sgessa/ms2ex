@@ -44,6 +44,7 @@ defmodule Ms2ex.Packets.PacketReader do
   end
 
   def get_int(<<n::little-signed-integer-32, packet::binary>>), do: {n, packet}
+
   def get_long(<<n::little-signed-integer-64, packet::binary>>), do: {n, packet}
 
   def get_sbyte(<<n::little-signed-integer-8, packet::binary>>), do: {n, packet}

@@ -1,6 +1,5 @@
 defmodule Ms2ex.Packets.FieldAddUser do
-  alias Ms2ex.Packets
-  alias Ms2ex.Character
+  alias Ms2ex.{Character, Packets}
 
   import Packets.PacketWriter
 
@@ -20,7 +19,9 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_coord(character.rotation)
     |> put_byte()
     |> Packets.Field.put_current_stats(character.stats)
-    |> put_byte()
+    # combat CTS
+    |> put_bool(false)
+    # Guide
     |> put_byte()
     |> put_int()
     |> put_long()

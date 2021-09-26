@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.RideSync do
-  alias Ms2ex.{Field, Packets, SyncState, World}
+  alias Ms2ex.{CharacterManager, Field, Packets, SyncState}
 
   import Packets.PacketReader
 
@@ -10,12 +10,12 @@ defmodule Ms2ex.GameHandlers.RideSync do
     {_server_tick, packet} = get_int(packet)
     {segments, packet} = get_byte(packet)
 
-    with {:ok, character} <- World.get_character(character_id),
+    with {:ok, character} <- CharacterManager.lookup(character_id),
          true <- segments > 0 do
       states = get_states(segments, packet)
 
       sync_packet = Packets.RideSync.bytes(character, states)
-      Field.broadcast(character, sync_packet, session.pid)
+      Field.broadcast_from(character, sync_packet, session.pid)
     end
 
     session

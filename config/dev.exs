@@ -66,8 +66,10 @@ config :ms2ex, Ms2ex,
     "PLAYER_STATS",
     "PROXY_GAME_OBJ",
     "RIDE_SYNC",
+    "SEND_LOG",
+    "STATS",
+    "USER_BATTLE",
     # "USER_CHAT",
     "USER_SYNC",
-    "SEND_LOG",
     "VIBRATE"
   ]

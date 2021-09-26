@@ -1,8 +1,10 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{Chat, Commands, Field, Net, Packets, PartyServer, World}
+  alias Ms2ex.{CharacterManager, Chat, Commands, Field, Net, Packets, PartyServer, Wallets, World}
 
   import Packets.PacketReader
   import Net.Session, only: [push: 2]
+
+  @world_chat_cost -30
 
   def handle(packet, session) do
     {type_id, packet} = get_int(packet)
@@ -12,7 +14,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
     {rcpt, packet} = get_ustring(packet)
     {_, _packet} = get_long(packet)
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     case msg do
       "!" <> cmd ->
@@ -33,23 +35,31 @@ defmodule Ms2ex.GameHandlers.UserChat do
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
-    case World.get_character_by_name(rcpt_name) do
+    case CharacterManager.lookup_by_name(rcpt_name) do
       {:ok, rcpt} ->
+        # TODO check if rcpt blocked character
         packet = Packets.UserChat.bytes(:whisper_from, character, msg)
         send(rcpt.session_pid, {:push, packet})
 
         push(session, Packets.UserChat.bytes(:whisper_to, rcpt, msg))
 
       _ ->
-        reason = "Player is not online."
-        push(session, Packets.UserChat.bytes(:notice_alert, character, reason))
+        push(session, Packets.UserChat.error(character, :whisper_fail, :unable_to_whisper))
     end
   end
 
   defp handle_message({:world, msg, _rcpt_name}, character, session) do
-    # TODO check if user has enough merets or a voucher
-    packet = Packets.UserChat.bytes(:world, character, msg)
-    World.broadcast(packet)
+    # TODO check if user has a voucher
+
+    case Wallets.update(character, :merets, @world_chat_cost) do
+      {:ok, wallet} ->
+        World.broadcast(Packets.UserChat.bytes(:world, character, msg))
+        push(session, Packets.Wallet.update(wallet, :merets))
+
+      _ ->
+        push(session, Packets.UserChat.error(character, :notice_alert, :insufficient_merets))
+    end
+
     session
   end
 

@@ -1,7 +1,9 @@
 defmodule Ms2ex.Packets.ControlNpc do
+  alias Ms2ex.Mob
+
   import Ms2ex.Packets.PacketWriter
 
-  def control(type, npc) do
+  def bytes(type, npc) do
     data = npc_data(type, npc)
 
     __MODULE__
@@ -17,14 +19,15 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_byte()
     |> put_short_coord(npc.position)
     |> put_short(npc.direction)
-    |> put_short_coord(npc.speed)
+    # speed
+    |> put_short_coord()
     |> put_short(100)
     |> put_byte(0x1)
     |> put_short(npc.animation)
     |> put_short(0x1)
   end
 
-  defp npc_data(:mob, %{is_boss?: true} = npc) do
+  defp npc_data(:mob, %Mob{boss?: true} = npc) do
     ""
     |> put_int(npc.object_id)
     |> put_byte()
@@ -38,7 +41,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
-  defp npc_data(:mob, npc) do
+  defp npc_data(:mob, %Mob{} = npc) do
     ""
     |> put_int(npc.object_id)
     |> put_byte()
@@ -46,7 +49,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(npc.direction)
     |> put_short_coord(npc.speed)
     |> put_short(100)
-    |> put_byte(0x17)
+    |> put_byte(0x1)
     |> put_short(npc.animation)
     |> put_short(0x1)
   end

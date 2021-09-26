@@ -3,20 +3,20 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{FieldHelper, Packets, World}
+  alias Ms2ex.{CharacterManager, Field, FieldHelper, Metadata, Mob, Packets, SkillCast}
 
   import FieldHelper
 
   @updates_intval 1000
 
-  def init({character, session}) do
-    Logger.info("Start Field #{character.map_id} @ Channel #{session.channel_id}")
+  def init(character) do
+    Logger.info("Start Field #{character.field_id} @ Channel #{character.channel_id}")
 
     send(self(), :send_updates)
 
     {
       :ok,
-      initialize_state(character.map_id, session.channel_id),
+      initialize_state(character.field_id, character.channel_id),
       {:continue, {:add_character, character}}
     }
   end
@@ -45,13 +45,28 @@ defmodule Ms2ex.FieldServer do
 
       item ->
         items = Map.delete(state.items, object_id)
-        broadcast(state.sessions, Packets.FieldRemoveItem.bytes(object_id))
+        Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(object_id))
         {:reply, {:ok, item}, %{state | items: items}}
     end
   end
 
-  def handle_call({:damage_mobs, character, cast, value, coord, object_ids}, _from, state) do
-    {:reply, :ok, damage_mobs(character, cast, value, coord, object_ids, state)}
+  def handle_call({:add_region_skill, position, skill}, _from, state) do
+    source_id = Ms2ex.generate_int()
+
+    Field.broadcast(
+      state.topic,
+      Packets.RegionSkill.add(source_id, position, skill)
+    )
+
+    duration = SkillCast.duration(skill)
+    Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:add_status, status}, _from, state) do
+    Field.broadcast(state.topic, Packets.Buff.send(:add, status))
+    Process.send_after(self(), {:remove_status, status}, status.duration)
+    {:reply, :ok, state}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do
@@ -60,44 +75,60 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
+  def handle_cast({:enter_battle_stance, character}, state) do
+    Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
+    Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
+    {:noreply, state}
+  end
+
   def handle_info({:add_item, item}, state) do
     {:noreply, add_item(item, state)}
   end
 
-  def handle_info({:add_mob, mob}, state) do
-    {:noreply, add_mob(mob, state)}
+  def handle_info({:remove_region_skill, source_id}, state) do
+    Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    {:noreply, state}
   end
 
-  def handle_info({:remove_mob, mob}, state) do
-    {:noreply, remove_mob(mob, state)}
+  def handle_info({:remove_status, status}, state) do
+    Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
+    {:noreply, state}
   end
 
-  def handle_info({:respawn_mob, mob}, state) do
-    {:noreply, respawn_mob(mob, state)}
+  def handle_info({:add_mob, %Metadata.Npc{} = npc, position}, state) do
+    {:noreply, add_mob(npc, position, state)}
+  end
+
+  def handle_info({:add_mob, %Metadata.MobSpawn{} = spawn_group, %Metadata.Npc{} = npc}, state) do
+    {:noreply, add_mob(spawn_group, npc, state)}
+  end
+
+  def handle_info({:add_mob, %Mob{} = mob}, state) do
+    {:noreply, add_mob(mob.spawn_group, mob, state)}
+  end
+
+  def handle_info({:remove_mob, spawn_group_id, object_id}, state) do
+    {:noreply, remove_mob(spawn_group_id, object_id, state)}
+  end
+
+  def handle_info({:leave_battle_stance, character}, state) do
+    Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    {:noreply, state}
   end
 
   def handle_info(:send_updates, state) do
-    for {_id, %{dead?: false} = mob} <- state.mobs do
-      broadcast(state.sessions, Packets.ControlNpc.control(:mob, mob))
-    end
-
-    character_ids = Map.keys(state.sessions)
-
-    for {_id, char} <- World.get_characters(character_ids) do
-      broadcast(state.sessions, Packets.ProxyGameObj.update_player(char))
+    for char_id <- Map.keys(state.sessions) do
+      with {:ok, char} <- CharacterManager.lookup(char_id) do
+        Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+      end
     end
 
     for {_id, npc} <- state.npcs do
-      broadcast(state.sessions, Packets.ControlNpc.control(:npc, npc))
+      Field.broadcast(state.topic, Packets.ControlNpc.bytes(:npc, npc))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)
 
-    {:noreply, state}
-  end
-
-  def handle_info({:broadcast, packet, sender_pid}, state) do
-    broadcast(state.sessions, packet, sender_pid)
     {:noreply, state}
   end
 

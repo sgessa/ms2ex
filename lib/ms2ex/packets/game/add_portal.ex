@@ -1,6 +1,4 @@
 defmodule Ms2ex.Packets.AddPortal do
-  alias Ms2ex.Metadata.MapPortal
-
   import Ms2ex.Packets.PacketWriter
 
   def bytes(portal) do
@@ -8,8 +6,8 @@ defmodule Ms2ex.Packets.AddPortal do
     |> build()
     |> put_byte(0x0)
     |> put_int(portal.id)
-    |> put_bool(MapPortal.has_flag?(portal, :visible))
-    |> put_bool(MapPortal.has_flag?(portal, :enabled))
+    |> put_bool(portal.visible?)
+    |> put_bool(portal.enabled?)
     |> put_coord(portal.coord)
     |> put_coord(portal.rotation)
     |> put_coord()
@@ -17,7 +15,7 @@ defmodule Ms2ex.Packets.AddPortal do
     |> put_int(portal.target)
     |> put_int(portal.object_id)
     |> put_int()
-    |> put_bool(MapPortal.has_flag?(portal, :minimap_visible))
+    |> put_bool(portal.mini_map_visible?)
     |> put_long()
     |> put_byte()
     |> put_int()

@@ -17,9 +17,57 @@ defmodule Ms2ex.Skills do
   def by_job(job) do
     skills = :ets.tab2list(@metadata_table)
 
-    Enum.filter(skills, fn {_id, meta} ->
-      meta.job == job or meta.id == @swimming_id or meta.id == @climbing_id
+    Enum.reduce(skills, %{}, fn {id, meta}, acc ->
+      cond do
+        meta.job == job ->
+          Map.put(acc, id, meta)
+
+        meta.id == @swimming_id or meta.id == @climbing_id ->
+          Map.put(acc, id, %{meta | starting_level: 1})
+
+        true ->
+          acc
+      end
     end)
+  end
+
+  def get_active_tab(%Character{skill_tabs: tabs} = character) do
+    %{active_skill_tab_id: tab_id} = character
+    Enum.find(tabs, &(&1.id == tab_id))
+  end
+
+  def find_in_tab(%SkillTab{skills: skills}, skill_id) do
+    Enum.find(skills, &(&1.skill_id == skill_id))
+  end
+
+  def add_tab(%Character{} = character, attrs) do
+    attrs = SkillTab.set_skills(character.job, attrs)
+
+    character
+    |> SkillTab.add(attrs)
+    |> Repo.insert()
+  end
+
+  def update_tab(%SkillTab{} = tab, attrs) do
+    tab
+    |> SkillTab.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def get_tab(%Character{skill_tabs: tabs}, tab_id) do
+    Enum.find(tabs, &(&1.id == tab_id))
+  end
+
+  def load_tab_skills(%Character{job: job}, %SkillTab{id: tab_id}) do
+    skills =
+      Skill
+      |> where([s], s.skill_tab_id == ^tab_id)
+      |> Repo.all()
+      |> Enum.into(%{}, &{&1.skill_id, &1})
+
+    # Return skills ordered according to the character job
+    ordered_ids = SkillTab.ordered_skill_ids(job)
+    Enum.map(ordered_ids, &Map.get(skills, &1))
   end
 
   def find_and_update(%SkillTab{} = tab, skill_id, attrs) do
@@ -29,46 +77,19 @@ defmodule Ms2ex.Skills do
     end
   end
 
-  def create(tab, attrs) do
-    tab
-    |> Ecto.build_assoc(:skills)
-    |> Skill.changeset(attrs)
-    |> Repo.insert()
-  end
-
   def update(%Skill{} = skill, attrs) do
     skill
     |> Skill.changeset(attrs)
     |> Repo.update()
   end
 
-  def get_tab(%{id: character_id}) do
-    SkillTab
-    |> where([t], t.character_id == ^character_id)
-    |> limit(1)
-    |> Repo.one()
-  end
+  def update_subskills(%Character{job: job}, %SkillTab{} = tab, %Skill{} = parent) do
+    job_skill = Map.get(by_job(job), parent.skill_id)
 
-  def list(%Character{job: job}, %SkillTab{id: tab_id}) do
-    character_skills =
-      Skill
-      |> where([s], s.skill_tab_id == ^tab_id)
-      |> Repo.all()
-      |> Enum.into(%{}, &{&1.skill_id, &1})
-
-    ordered_ids = SkillTab.ordered_skill_ids(job)
-
-    Enum.map(ordered_ids, &Map.get(character_skills, &1))
-  end
-
-  def reset(%Character{} = character, %SkillTab{} = tab) do
-    skills = list(character, tab)
-
-    Enum.each(skills, fn skill ->
-      meta = Metadata.Skills.get(skill.skill_id)
-      skill_level = List.first(meta.skill_levels)
-      learned = meta.learned
-      update(skill, %{learned: learned, level: skill_level.level})
+    Enum.each(job_skill.sub_skills, fn sub_id ->
+      if sub = find_in_tab(tab, sub_id) do
+        {:ok, _sub} = update(sub, %{level: parent.level})
+      end
     end)
   end
 end

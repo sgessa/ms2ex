@@ -39,13 +39,12 @@ defmodule Ms2ex.Packets.Job do
   end
 
   def put_passive_skills(packet, character) do
-    skill_tab = Skills.get_tab(character)
+    skill_tab = Skills.get_active_tab(character)
 
     skills =
-      character
-      |> Skills.list(skill_tab)
+      skill_tab.skills
       |> Enum.map(&Map.put(&1, :metadata, Metadata.Skills.get(&1.skill_id)))
-      |> Enum.filter(&(&1.metadata.passive and &1.metadata.learned))
+      |> Enum.filter(&(&1.metadata.type == 1 and &1.metadata.starting_level == 1))
 
     packet
     |> put_short(length(skills))
@@ -65,8 +64,13 @@ defmodule Ms2ex.Packets.Job do
   end
 
   def put_skills(packet, character) do
-    skill_tab = Skills.get_tab(character)
-    skills = Skills.list(character, skill_tab)
+    skill_tab = Skills.get_active_tab(character)
+
+    skills =
+      Enum.map(skill_tab.skills, fn s ->
+        meta = Metadata.Skills.get(s.skill_id)
+        Map.put(s, :meta, meta)
+      end)
 
     split = Map.get(@job_skill_splits, character.job)
     split_skill = Enum.at(skills, length(skills) - split)
@@ -74,12 +78,15 @@ defmodule Ms2ex.Packets.Job do
     packet
     |> put_byte(length(skills) - split)
     |> reduce(skills, fn skill, packet ->
+      %{level: max_level} = List.last(skill.meta.skill_levels)
+      skill_level = 1 |> max(skill.level) |> min(max_level)
+
       packet
       |> maybe_split(skill.skill_id, split_skill.skill_id, split)
       |> put_byte()
-      |> put_bool(skill.learned)
+      |> put_bool(skill.level > 0)
       |> put_int(skill.skill_id)
-      |> put_int(skill.level)
+      |> put_int(skill_level)
       |> put_byte()
     end)
     |> put_short()

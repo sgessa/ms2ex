@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.PickupItem do
   require Logger
 
-  alias Ms2ex.{Field, Inventory, Metadata, Net, Packets, World}
+  alias Ms2ex.{CharacterManager, Field, Inventory, Metadata, Net, Packets}
 
   import Net.Session, only: [push: 2]
   import Packets.PacketReader
@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.PickupItem do
   def handle(packet, session) do
     {object_id, _packet} = get_int(packet)
 
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     # TODO check that user inventory is not full
 

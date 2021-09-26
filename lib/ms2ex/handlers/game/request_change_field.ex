@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestChangeField do
   require Logger
 
-  alias Ms2ex.{Field, Metadata, Packets, World}
+  alias Ms2ex.{CharacterManager, Field, Metadata, Packets}
 
   import Packets.PacketReader
 
@@ -11,18 +11,18 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
   end
 
   defp handle_change_field(0x0, packet, session) do
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
-    {src_map_id, packet} = get_int(packet)
+    {src_field_id, packet} = get_int(packet)
 
-    with true <- src_map_id == character.map_id,
-         {:ok, src_map} <- Metadata.Maps.lookup(src_map_id),
+    with true <- src_field_id == character.field_id,
+         {:ok, src_map} <- Metadata.MapEntities.lookup(src_field_id),
          {src_portal_id, _packet} = get_int(packet),
          %Metadata.MapPortal{} = src_portal <-
            Enum.find(src_map.portals, &(&1.id == src_portal_id)),
-         {:ok, dst_map} <- Metadata.Maps.lookup(src_portal.target),
+         {:ok, dst_map} <- Metadata.MapEntities.lookup(src_portal.target),
          %Metadata.MapPortal{} = dst_portal <-
-           Enum.find(dst_map.portals, &(&1.target == src_map_id)) do
+           Enum.find(dst_map.portals, &(&1.target == src_field_id)) do
       Field.change_field(character, session, dst_map.id, dst_portal.coord, dst_portal.rotation)
     else
       _ ->

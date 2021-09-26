@@ -11,7 +11,7 @@ defmodule Ms2ex.Net.Session do
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
   alias Ms2ex.Net.{Router, SenderSession}
-  alias Ms2ex.{Packets, PartyServer, World}
+  alias Ms2ex.{CharacterManager, GroupChat, Packets, PartyServer}
   alias Packets.PacketReader
 
   import Ms2ex.Net.Utils
@@ -144,6 +144,16 @@ defmodule Ms2ex.Net.Session do
     {:stop, :normal, state}
   end
 
+  def handle_info({:join_group_chat, inviter, rcpt, chat}, state) do
+    GroupChat.subscribe(chat)
+    chat = GroupChat.load_members(chat)
+
+    {:noreply,
+     state
+     |> push(Packets.GroupChat.update(chat))
+     |> push(Packets.GroupChat.join(inviter, rcpt, chat))}
+  end
+
   def handle_info({:subscribe_friend_presence, character_id}, state) do
     Phoenix.PubSub.subscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
     {:noreply, state}
@@ -164,8 +174,8 @@ defmodule Ms2ex.Net.Session do
      |> push(Packets.Friend.presence_notification(friend))}
   end
 
-  def handle_info({:summon, character, map_id}, state) do
-    {:noreply, Ms2ex.Field.change_field(character, state, map_id)}
+  def handle_info({:summon, character, field_id}, state) do
+    {:noreply, Ms2ex.Field.change_field(character, state, field_id)}
   end
 
   def handle_info({:unsubscribe_party, party_id}, state) do
@@ -178,7 +188,7 @@ defmodule Ms2ex.Net.Session do
     push(state, Packets.Party.disband())
 
     character = %{character | party_id: nil}
-    World.update_character(character)
+    CharacterManager.update(character)
 
     {:noreply, state}
   end

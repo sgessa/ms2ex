@@ -1,4 +1,4 @@
-defmodule Ms2ex.Metadata.MapInteractable do
+defmodule Ms2ex.Metadata.InteractableObject do
   @moduledoc false
   use Protobuf, syntax: :proto3
 

@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{Damage, Field, MapBlock, Metadata, Packets, SyncState, World}
+  alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -17,12 +17,12 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do
-    {:ok, character} = World.get_character(session.character_id)
+    {:ok, character} = CharacterManager.lookup(session.character_id)
 
     states = get_states(segment_length, packet)
 
     sync_packet = Packets.UserSync.bytes(character, states)
-    Field.broadcast(character, sync_packet, session.pid)
+    Field.broadcast_from(character, sync_packet, session.pid)
 
     %{animation1: animation, position: new_position} = List.first(states)
     closest_block = MapBlock.closest_block(new_position)
@@ -31,17 +31,12 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: animation, position: new_position}
-    World.update_character(character)
+    CharacterManager.update(character)
 
-    if is_out_of_bounds?(character.map_id, character.position) do
+    if is_out_of_bounds?(character.field_id, character.position) do
       character = handle_out_of_bounds(character)
-      character = Damage.receive_fall_dmg(character)
-      # World.update_character(character)
-
-      session
-      |> push(Packets.MoveCharacter.bytes(character, character.safe_position))
-      |> push(Packets.Stats.set_character_stats(character))
-      |> push(Packets.FallDamage.bytes(character, 0))
+      CharacterManager.receive_fall_dmg(character)
+      push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     else
       session
     end
@@ -69,14 +64,14 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp is_coord_safe?(character, current_position, closest_block) do
     block_diff = MapBlock.subtract(character.safe_position, closest_block)
 
-    MapBlock.exists?(character.map_id, closest_block) &&
+    MapBlock.exists?(character.field_id, closest_block) &&
       MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
 
     # && !character.on_air_mount?
   end
 
-  defp is_out_of_bounds?(map_id, coord) do
-    {:ok, map} = Metadata.Maps.lookup(map_id)
+  defp is_out_of_bounds?(field_id, coord) do
+    {:ok, map} = Metadata.MapEntities.lookup(field_id)
     %{bounding_box_0: box0, bounding_box_1: box1} = map
 
     {high_z, low_z} = find_high_low_bounds(box0.z, box1.z)

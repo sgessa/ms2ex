@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UseItem do
-  alias Ms2ex.{ChatStickers, Inventory, Metadata, Packets, World}
+  alias Ms2ex.{CharacterManager, ChatStickers, Inventory, Metadata, Packets}
   alias Ms2ex.GameHandlers.Helper.ItemBox
 
   import Packets.PacketReader
@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     {item_uid, packet} = get_long(packet)
     # {item_type, packet} = get_short(packet)
 
-    with {:ok, character} <- World.get_character(session.character_id),
+    with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %Inventory.Item{} = item <- Inventory.get(character, item_uid),
          item <- Metadata.Items.load(item) do
       # session

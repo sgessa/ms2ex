@@ -16,7 +16,7 @@ defmodule Ms2ex.Character do
     :insignia_id,
     :level,
     :job,
-    :map_id,
+    :field_id,
     :motto,
     :name,
     :prestige_exp,
@@ -25,6 +25,10 @@ defmodule Ms2ex.Character do
     :skin_color,
     :taxis,
     :title_id
+  ]
+
+  @optional_fields [
+    :active_skill_tab_id
   ]
 
   defenum(Gender, male: 0, female: 1)
@@ -62,17 +66,20 @@ defmodule Ms2ex.Character do
     # TODO
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
 
+    field :active_skill_tab_id, :integer
     field :animation, :integer, virtual: true, default: 0
+    field :channel_id, :integer, virtual: true
     field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0
+    field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Gender, default: :male
-    field :group_chats, {:array, :map}, virtual: true, default: []
+    field :group_chat_ids, {:array, :integer}, virtual: true, default: []
     field :guild_name, :string, virtual: true, default: "h4x0rzz"
     field :home_name, :string, virtual: true, default: ""
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
     field :job, Job
-    field :map_id, :integer
+    field :field_id, :integer
     field :motto, :string, default: "Let's Maple!"
     field :mount, :map, virtual: true
     field :name, :string
@@ -86,6 +93,7 @@ defmodule Ms2ex.Character do
     field :rest_exp, :integer, default: 0
     field :rotation, EctoTypes.Term, virtual: true
     field :safe_position, EctoTypes.Term, virtual: true
+    field :skill_cast, EctoTypes.Term, virtual: true
     field :skin_color, EctoTypes.Term
     field :taxis, {:array, :integer}, default: []
     field :title_id, :integer, default: 0
@@ -99,7 +107,7 @@ defmodule Ms2ex.Character do
   @doc false
   def changeset(character, attrs) do
     character
-    |> cast(attrs, @fields)
+    |> cast(attrs, @fields ++ @optional_fields)
     |> cast_assoc(:emotes, with: &Ms2ex.Emote.changeset/2)
     |> cast_assoc(:inventory_tabs, with: &Ms2ex.Inventory.Tab.changeset/2)
     |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
@@ -122,12 +130,14 @@ defmodule Ms2ex.Character do
   def max_level(), do: @max_level
 
   def set_default_assocs(attrs) do
+    job = Map.get(attrs, :job)
+
     attrs
     |> Map.put(:stickers, default_stickers())
     |> Map.put(:emotes, Enum.map(Ms2ex.Emotes.default_emotes(), &%{emote_id: &1}))
     |> Map.put(:hot_bars, [%{active: true}, %{}])
     |> Map.put(:inventory_tabs, default_inventory_tabs())
-    |> Map.put(:skill_tabs, [%{name: "Build 1", skills: default_skills(attrs.job)}])
+    |> Map.put(:skill_tabs, default_skill_tabs(job))
     |> Map.put(:stats, %{})
     |> Map.put(:wallet, %{})
   end
@@ -143,18 +153,7 @@ defmodule Ms2ex.Character do
     end)
   end
 
-  defp default_skills(job) do
-    job_skills = Ms2ex.Skills.by_job(job)
-
-    Enum.map(job_skills, fn {id, skill} ->
-      meta = Ms2ex.Metadata.Skills.get(id)
-      skill_level = List.first(skill.skill_levels)
-
-      %{
-        skill_id: id,
-        learned: meta.learned,
-        level: skill_level.level
-      }
-    end)
+  defp default_skill_tabs(job) do
+    [Ms2ex.SkillTab.set_skills(job, %{name: "Build 1"})]
   end
 end

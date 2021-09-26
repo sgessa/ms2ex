@@ -1,32 +1,86 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{CharacterStats, Packets}
+  alias Ms2ex.{Mob, Packets, StatId}
 
   import Packets.PacketWriter
 
-  @mode %{set_char_stats: 0x23, update_npc_stat: 0x4}
+  @mode %{update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
 
   def set_character_stats(character) do
-    stat_list = CharacterStats.fields()
-
     __MODULE__
     |> build()
     |> put_int(character.object_id)
     |> put_byte()
-    |> put_byte(@mode.set_char_stats)
-    |> reduce(stat_list, fn stat, packet ->
-      put_int(packet, Map.get(character.stats, stat))
+    |> put_byte(@mode.send_stats)
+    |> put_stats(character.stats)
+  end
+
+  def update_char_stats(character, stat) when not is_list(stat) do
+    update_char_stats(character, [stat])
+  end
+
+  def update_char_stats(character, updated_stats) do
+    __MODULE__
+    |> build()
+    |> put_int(character.object_id)
+    |> put_byte(@mode.update_char_stats)
+    |> put_byte(0x1)
+    |> reduce(updated_stats, fn
+      :hp, packet ->
+        packet
+        |> put_byte(StatId.from_name(:hp))
+        |> put_hp(character.stats)
+
+      s, packet ->
+        packet
+        |> put_byte(StatId.from_name(s))
+        |> put_stat(character.stats, s)
     end)
   end
 
-  def update_health(obj) do
+  def update_mob_health(%Mob{} = mob) do
     __MODULE__
     |> build()
-    |> put_int(obj.object_id)
+    |> put_int(mob.object_id)
     |> put_byte()
     |> put_byte(0x1)
-    |> put_byte(@mode.update_npc_stat)
-    |> put_long(obj.stats.hp.total)
-    |> put_long(obj.stats.hp.min)
-    |> put_long(obj.stats.hp.max)
+    |> put_byte(@mode.update_mob_health)
+    |> put_long(mob.stats.hp.bonus)
+    |> put_long(mob.stats.hp.base)
+    |> put_long(mob.stats.hp.total)
+  end
+
+  def put_stats(packet, stats) do
+    reduce(packet, StatId.list(), fn
+      :hp, packet ->
+        put_hp(packet, stats)
+
+      stat, packet ->
+        put_stat(packet, stats, stat)
+    end)
+  end
+
+  def put_default_mob_stats(packet, %Mob{} = mob) do
+    packet
+    |> put_byte(@mode.send_stats)
+    |> put_long(mob.stats.hp.bonus)
+    |> put_int(100)
+    |> put_long(mob.stats.hp.base)
+    |> put_int(100)
+    |> put_long(mob.stats.hp.total)
+    |> put_int(100)
+  end
+
+  defp put_hp(packet, stats) do
+    packet
+    |> put_long(Map.get(stats, :hp_max))
+    |> put_long(Map.get(stats, :hp_min))
+    |> put_long(Map.get(stats, :hp_cur))
+  end
+
+  defp put_stat(packet, stats, stat) do
+    packet
+    |> put_int(Map.get(stats, :"#{stat}_max"))
+    |> put_int(Map.get(stats, :"#{stat}_min"))
+    |> put_int(Map.get(stats, :"#{stat}_cur"))
   end
 end

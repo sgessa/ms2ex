@@ -1,14 +1,22 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{Character, Characters, Field, Inventory, Metadata, Net, Packets, Wallets, World}
+  alias Ms2ex.{
+    Character,
+    Characters,
+    CharacterManager,
+    Field,
+    Inventory,
+    Metadata,
+    Net,
+    Packets,
+    Wallets
+  }
 
   import Net.Session, only: [push: 2, push_notice: 3]
 
-  def handle(["heal"], %{stats: stats} = character, session) do
-    max_hp = stats.hp_cur
-    stats = stats |> Map.delete(:__struct__) |> Map.put(:current_hp_min, max_hp)
-    {:ok, character} = Characters.update(character, %{stats: stats})
-    World.update_character(character)
-    push(session, Packets.Stats.set_character_stats(character))
+  def handle(["heal"], character, session) do
+    max_hp = character.stats.hp_max
+    CharacterManager.increase_stat(character, :hp, max_hp)
+    session
   end
 
   def handle(["item" | ids], character, session) do
@@ -29,7 +37,7 @@ defmodule Ms2ex.Commands do
     with {level, _} <- Integer.parse(level) do
       level = if level > Character.max_level(), do: Character.max_level(), else: level
       {:ok, character} = Characters.update(character, %{exp: 0, level: level})
-      World.update_character(character)
+      CharacterManager.update(character)
       Field.broadcast(character, Packets.LevelUp.bytes(character))
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
@@ -38,19 +46,20 @@ defmodule Ms2ex.Commands do
     end
   end
 
-  def handle(["map", map_id], character, session) do
-    with {map_id, _} <- Integer.parse(map_id) do
-      Field.change_field(character, session, map_id)
+  def handle(["map", field_id], character, session) do
+    with {field_id, _} <- Integer.parse(field_id) do
+      Field.change_field(character, session, field_id)
     else
       _ ->
-        push_notice(session, character, "Invalid Map: #{map_id}")
+        push_notice(session, character, "Invalid Map: #{field_id}")
     end
   end
 
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
-         {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
-      Field.add_mob(character, %{mob | is_boss?: true, respawn: false, spawn: character.position})
+         {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
+      npc = Map.merge(npc, %{boss?: true, respawnable?: false})
+      Field.add_mob(character, npc)
       session
     else
       _ ->
@@ -60,8 +69,9 @@ defmodule Ms2ex.Commands do
 
   def handle(["mob", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
-         {:ok, mob} <- Metadata.Npcs.lookup(mob_id) do
-      Field.add_mob(character, %{mob | respawn: false, spawn: character.position})
+         {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
+      npc = Map.merge(npc, %{respawnable?: false})
+      Field.add_mob(character, npc)
       session
     else
       _ ->
@@ -82,21 +92,21 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["summon", target_name], character, session) do
-    case World.get_character_by_name(target_name) do
+    case CharacterManager.lookup_by_name(target_name) do
       {:ok, target} ->
         cond do
           character.channel_id != target.channel_id ->
             push_notice(session, character, "Character is in Channel #{target.channel_id}")
 
-          character.map_id == target.map_id ->
+          character.field_id == target.field_id ->
             coord = character.position
             send(target.session_pid, {:push, Packets.MoveCharacter.bytes(target, coord)})
             session
 
           true ->
             target = Map.put(target, :update_position, character.position)
-            World.update_character(target)
-            send(target.session_pid, {:summon, target, character.map_id})
+            CharacterManager.update(target)
+            send(target.session_pid, {:summon, target, character.field_id})
             session
         end
 
@@ -106,19 +116,19 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["teleport", target_name], character, session) do
-    case World.get_character_by_name(target_name) do
+    case CharacterManager.lookup_by_name(target_name) do
       {:ok, target} ->
         cond do
           character.channel_id != target.channel_id ->
             push_notice(session, character, "Character is in Channel #{target.channel_id}")
 
-          character.map_id == target.map_id ->
+          character.field_id == target.field_id ->
             push(session, Packets.MoveCharacter.bytes(character, target.position))
 
           true ->
             character = Map.put(character, :update_position, target.position)
-            World.update_character(character)
-            Field.change_field(character, session, target.map_id)
+            CharacterManager.update(character)
+            Field.change_field(character, session, target.field_id)
         end
 
       _ ->

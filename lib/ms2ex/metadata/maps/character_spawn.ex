@@ -1,4 +1,4 @@
-defmodule Ms2ex.Metadata.MapSpawn do
+defmodule Ms2ex.Metadata.CharacterSpawn do
   @moduledoc false
   use Protobuf, syntax: :proto3
 

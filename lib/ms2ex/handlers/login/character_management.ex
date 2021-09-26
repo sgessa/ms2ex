@@ -38,7 +38,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     case Characters.get(account, char_id) do
       %Character{} ->
-        auth_data = %{token_a: Ms2ex.generate_id(), token_b: Ms2ex.generate_id()}
+        auth_data = %{token_a: Ms2ex.generate_int(), token_b: Ms2ex.generate_int()}
         register_session(account.id, char_id, auth_data)
         push(session, Packets.LoginToGame.login(auth_data))
 
@@ -76,7 +76,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     attrs = %{
       gender: gender,
       job: Ms2ex.Metadata.Job.key(job),
-      map_id: 2_000_023,
+      field_id: 2_000_023,
       name: name,
       skin_color: skin_color
     }

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.FieldAddNpc do
-  alias Ms2ex.Packets
+  alias Ms2ex.{Mob, Packets}
 
   import Packets.PacketWriter
 
@@ -36,22 +36,24 @@ defmodule Ms2ex.Packets.FieldAddNpc do
     |> put_int()
   end
 
-  def add_mob(%{is_boss?: true} = mob) do
+  def add_mob(%Mob{boss?: true} = mob) do
     branches = 0
 
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
     |> put_int(mob.id)
-    |> put_coord(mob.spawn)
-    |> put_coord()
+    |> put_coord(mob.position)
+    |> put_coord(mob.rotation)
     |> put_string(mob.model)
-    |> put_mob_stats(mob)
+    |> Packets.Stats.put_default_mob_stats(mob)
+    |> put_byte()
     |> put_long()
     |> put_long()
     |> put_int()
     |> put_byte()
     |> put_int(branches)
+    # TODO put branches
     |> put_long()
     |> put_byte()
     |> put_int(0x1)
@@ -59,35 +61,18 @@ defmodule Ms2ex.Packets.FieldAddNpc do
     |> put_byte()
   end
 
-  def add_mob(mob) do
-    branches = 0
-
+  def add_mob(%Mob{} = mob) do
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
     |> put_int(mob.id)
-    |> put_coord(mob.spawn)
-    |> put_coord()
-    |> put_mob_stats(mob)
-    |> put_byte()
-    |> put_int(branches)
+    |> put_coord(mob.position)
+    |> put_coord(mob.rotation)
+    |> Packets.Stats.put_default_mob_stats(mob)
     |> put_long()
-    |> put_byte()
-    |> put_int(0x1)
+    |> put_int()
+    |> put_int(0xE)
     |> put_int()
     |> put_byte()
-  end
-
-  defp put_mob_stats(packet, mob) do
-    flag = 0x23
-
-    packet
-    |> put_byte(flag)
-    |> put_long(mob.stats.hp.total)
-    |> put_int()
-    |> put_long(mob.stats.hp.min)
-    |> put_int()
-    |> put_long(mob.stats.hp.max)
-    |> put_int()
   end
 end
