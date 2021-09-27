@@ -7,19 +7,11 @@ defmodule Ms2ex.Crypto.RearrangeCrypter do
 
   def index(), do: @index
 
-  def decrypt(data) do
-    len = length(data) >>> 1
+  def decrypt(data), do: encrypt_or_decrypt(data)
 
-    Enum.reduce(0..(len - 1), data, fn idx, acc ->
-      swap = Enum.at(acc, idx)
+  def encrypt(data), do: encrypt_or_decrypt(data)
 
-      acc
-      |> List.update_at(idx, fn _ -> Enum.at(acc, idx + len) end)
-      |> List.update_at(idx + len, fn _ -> swap end)
-    end)
-  end
-
-  def encrypt(data) do
+  def encrypt_or_decrypt(data) do
     len = length(data) >>> 1
 
     Enum.reduce(0..(len - 1), data, fn idx, acc ->
