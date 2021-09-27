@@ -5,10 +5,13 @@ defmodule Ms2ex.FieldHelper do
     CharacterManager,
     Emotes,
     Field,
+    Inventory,
+    Items,
     MapBlock,
     Metadata,
     Mob,
-    Packets
+    Packets,
+    Wallets
   }
 
   alias Ms2ex.PremiumMembership, as: Membership
@@ -40,7 +43,9 @@ defmodule Ms2ex.FieldHelper do
     state = %{state | counter: state.counter + 1, sessions: sessions}
 
     # Load Mobs
-    for {obj_id, _pid} <- state.mobs do
+    mobs = state.mobs |> Map.values() |> List.flatten()
+
+    for obj_id <- mobs do
       with {:ok, mob} <- Mob.lookup(character, obj_id) do
         send(session_pid, {:push, Packets.FieldAddNpc.add_mob(mob)})
         send(session_pid, {:push, Packets.ProxyGameObj.load_npc(mob)})
@@ -70,7 +75,11 @@ defmodule Ms2ex.FieldHelper do
 
     # Load items
     for {_id, item} <- state.items do
-      send(session_pid, {:push, Packets.FieldAddItem.bytes(item)})
+      send(session_pid, {:push, Packets.FieldAddItem.add_item(item)})
+    end
+
+    for {_id, item} <- state.mob_drops do
+      send(session_pid, {:push, Packets.FieldAddItem.add_mob_drop(item)})
     end
 
     # Load Emotes and Player Stats after Player Object is loaded
@@ -102,13 +111,67 @@ defmodule Ms2ex.FieldHelper do
     %{state | mounts: mounts, sessions: sessions}
   end
 
-  def add_item(item, state) do
-    item = Map.put(item, :object_id, state.counter)
+  def pickup_item(character, item, state) do
+    cond do
+      Items.mesos?(item) ->
+        :skip
+
+      Items.merets?(item) ->
+        Wallets.update(character, :merets, item.amount)
+
+      Items.exp?(item) ->
+        # Wallets.update(character, :merets, item.amount)
+        :todo
+
+      Items.sp?(item) ->
+        CharacterManager.increase_stat(character, :sp, item.amount)
+
+      Items.stamina?(item) ->
+        CharacterManager.increase_stat(character, :sta, item.amount)
+
+      true ->
+        item = Metadata.Items.load(item)
+
+        with {:ok, result} <- Inventory.add_item(character, item) do
+          {_status, item} = result
+          send(character.session_pid, {:push, Packets.InventoryItem.add_item(result)})
+          send(character.session_pid, {:push, Packets.InventoryItem.mark_item_new(item)})
+        end
+    end
+
+    Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
+    Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
+
+    items = Map.delete(state.items, item.object_id)
+    %{state | items: items}
+  end
+
+  def drop_item(character, item, state) do
+    item =
+      item
+      |> Map.put(:position, character.position)
+      |> Map.put(:object_id, state.counter)
+      |> Map.put(:source_object_id, character.object_id)
+
+    Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+
     items = Map.put(state.items, state.counter, item)
-
-    Field.broadcast(state.topic, Packets.FieldAddItem.bytes(item))
-
     %{state | counter: state.counter + 1, items: items}
+  end
+
+  def add_mob_drop(mob, item, state) do
+    item =
+      item
+      |> Map.put(:position, mob.position)
+      |> Map.put(:object_id, state.counter)
+      |> Map.put(:lock_character_id, mob.last_attacker.id)
+      |> Map.put(:source_object_id, mob.object_id)
+      |> Map.put(:target_object_id, mob.last_attacker.object_id)
+
+    Field.broadcast(state.topic, Packets.FieldAddItem.add_mob_drop(item))
+
+    items = Map.put(state.mob_drops, state.counter, item)
+    %{state | counter: state.counter + 1, mob_drops: items}
   end
 
   def add_mob(%Metadata.Npc{} = npc, position, state) do
@@ -166,6 +229,7 @@ defmodule Ms2ex.FieldHelper do
       interactable: interactable,
       items: %{},
       mobs: %{},
+      mob_drops: %{},
       mounts: %{},
       npcs: npcs,
       portals: portals,

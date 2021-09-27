@@ -1,14 +1,16 @@
 defmodule Ms2ex.Mob do
   use GenServer
 
-  alias Ms2ex.{Character, Field, Packets}
+  alias Ms2ex.{Character, Field, Mobs, Packets}
 
   defstruct [
     :animation,
     :dead_animation_duration,
     :direction,
+    :exp,
     :field,
     :id,
+    :last_attacker,
     :model,
     :object_id,
     :position,
@@ -31,6 +33,7 @@ defmodule Ms2ex.Mob do
       animation: npc.animation || 255,
       dead_animation_duration: trunc(npc.dead.time + 3) * 1000,
       direction: npc.rotation.z * 10,
+      exp: npc.exp,
       field: Field.field_name(field.field_id, field.channel_id),
       id: npc.id,
       model: npc.model,
@@ -43,8 +46,8 @@ defmodule Ms2ex.Mob do
     }
   end
 
-  def inflict_dmg(%__MODULE__{} = mob, dmg) do
-    call(mob, {:inflict_dmg, dmg})
+  def inflict_dmg(%Character{} = attacker, %__MODULE__{} = mob, dmg) do
+    call(mob, {:inflict_dmg, attacker, dmg})
   end
 
   def lookup(%Character{} = character, object_id) do
@@ -70,7 +73,8 @@ defmodule Ms2ex.Mob do
     {:reply, {:ok, mob}, mob}
   end
 
-  def handle_call({:inflict_dmg, %{dmg: dmg}}, _from, mob) do
+  def handle_call({:inflict_dmg, attacker, %{dmg: dmg}}, _from, mob) do
+    mob = %{mob | last_attacker: attacker}
     hp = max(0, mob.stats.hp.total - dmg)
     mob = set_stat(mob, :hp, :total, hp)
 
@@ -116,8 +120,12 @@ defmodule Ms2ex.Mob do
   end
 
   defp kill_mob(mob) do
-    # Mobs.process_death(character, target)
     Process.send_after(self(), :stop, mob.dead_animation_duration)
+
+    Mobs.drop_rewards(mob)
+    Mobs.reward_exp(mob)
+    # TODO send achievements
+    # TODO check quest
   end
 
   defp call(%Character{} = char, mob_object_id, msg) do

@@ -16,6 +16,7 @@ defmodule Ms2ex.Packets do
     0x17 => "INVENTORY",
     0x19 => "USE_ITEM",
     0x1C => "PICKUP_ITEM",
+    0x1D => "PICKUP_MONEY",
     0x20 => "SKILL",
     0x25 => "JOB",
     0x26 => "VIBRATE",

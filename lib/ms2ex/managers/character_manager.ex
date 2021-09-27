@@ -41,6 +41,12 @@ defmodule Ms2ex.CharacterManager do
     cast(character, {:increase_stat, stat, amount})
   end
 
+  def earn_exp(_character, amount) when amount <= 0, do: :error
+
+  def earn_exp(%Character{} = character, amount) do
+    cast(character, {:earn_exp, amount})
+  end
+
   def start(%Character{} = character) do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
@@ -104,6 +110,20 @@ defmodule Ms2ex.CharacterManager do
     character = %{character | stats: stats}
 
     broadcast_new_stats(character, stat_id)
+
+    {:noreply, character}
+  end
+
+  def handle_cast({:earn_exp, amount}, character) do
+    old_lvl = character.level
+    {:ok, character} = Ms2ex.Experience.maybe_add_exp(character, amount)
+
+    if old_lvl != character.level do
+      Field.broadcast(character, Packets.LevelUp.bytes(character))
+    end
+
+    exp_packet = Packets.Experience.bytes(amount, character.exp, character.rest_exp)
+    send(character.session_pid, {:push, exp_packet})
 
     {:noreply, character}
   end

@@ -3,7 +3,7 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, FieldHelper, Metadata, Mob, Packets, SkillCast}
+  alias Ms2ex.{CharacterManager, Field, FieldHelper, Inventory, Metadata, Mob, Packets, SkillCast}
 
   import FieldHelper
 
@@ -34,19 +34,13 @@ defmodule Ms2ex.FieldServer do
     {:reply, :ok, remove_character(character, state)}
   end
 
-  def handle_call({:add_item, item}, _from, state) do
-    {:reply, {:ok, item}, add_item(item, state)}
-  end
-
-  def handle_call({:remove_item, object_id}, _from, state) do
+  def handle_call({:pickup_item, character, object_id}, _from, state) do
     case Map.get(state.items, object_id) do
       nil ->
         {:reply, :error, state}
 
       item ->
-        items = Map.delete(state.items, object_id)
-        Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(object_id))
-        {:reply, {:ok, item}, %{state | items: items}}
+        {:reply, {:ok, item}, pickup_item(character, item, state)}
     end
   end
 
@@ -75,14 +69,18 @@ defmodule Ms2ex.FieldServer do
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
   end
 
+  def handle_cast({:drop_item, source, item}, state) do
+    {:noreply, drop_item(source, item, state)}
+  end
+
+  def handle_cast({:add_mob_drop, %Mob{} = mob, %Inventory.Item{} = item}, state) do
+    {:noreply, add_mob_drop(mob, item, state)}
+  end
+
   def handle_cast({:enter_battle_stance, character}, state) do
     Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
     Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
     {:noreply, state}
-  end
-
-  def handle_info({:add_item, item}, state) do
-    {:noreply, add_item(item, state)}
   end
 
   def handle_info({:remove_region_skill, source_id}, state) do
@@ -139,14 +137,6 @@ defmodule Ms2ex.FieldServer do
     else
       {:noreply, state}
     end
-  end
-
-  def handle_info({:push, character_id, packet}, state) do
-    if session_pid = Map.get(state.sessions, character_id) do
-      send(session_pid, {:push, packet})
-    end
-
-    {:noreply, state}
   end
 
   def handle_info(data, state) do

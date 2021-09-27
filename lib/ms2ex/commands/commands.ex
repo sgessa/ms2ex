@@ -142,8 +142,13 @@ defmodule Ms2ex.Commands do
 
   defp add_item(character, item, session) do
     case Inventory.add_item(character, item) do
-      {:ok, result} -> push(session, Packets.InventoryItem.add_item(result))
-      _ -> session
+      {:ok, {_, item} = result} ->
+        session
+        |> push(Packets.InventoryItem.add_item(result))
+        |> push(Packets.InventoryItem.mark_item_new(item))
+
+      _ ->
+        session
     end
   end
 end

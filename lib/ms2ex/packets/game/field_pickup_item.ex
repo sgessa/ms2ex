@@ -9,5 +9,6 @@ defmodule Ms2ex.Packets.FieldPickupItem do
     |> put_byte(0x1)
     |> put_int(item.object_id)
     |> put_int(character.object_id)
+    |> put_long(item.amount)
   end
 end

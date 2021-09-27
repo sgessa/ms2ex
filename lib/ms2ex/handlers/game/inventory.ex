@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
          true <- TransferFlags.has_flag?(item.transfer_flags, :tradeable),
          true <- TransferFlags.has_flag?(item.transfer_flags, :splittable) do
       consumed_item = Inventory.consume(item, amount)
-      Field.add_item(character, %{item | amount: amount})
+      Field.drop_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)
     else
       _ -> session

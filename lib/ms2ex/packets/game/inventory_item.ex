@@ -8,6 +8,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     remove: 0x1,
     update: 0x2,
     move: 0x3,
+    mark_item_new: 0x8,
     load_items: 0xA,
     expand_tab: 0xC,
     load_tab: 0xE,
@@ -28,6 +29,15 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def add_item({:update, item}), do: update_item(item.id, item.amount)
+
+  def mark_item_new(item) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.mark_item_new)
+    |> put_long(item.id)
+    |> put_int(item.amount)
+    |> put_ustring()
+  end
 
   def consume({:delete, item}), do: remove_item(item.id)
   def consume({:update, item}), do: update_item(item.id, item.amount)

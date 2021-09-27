@@ -9,6 +9,9 @@ defmodule Ms2ex do
     x
   end
 
+  # TODO handle chances between 0 and 1
+  def roll(chance_pct), do: Enum.random(0..100) <= chance_pct
+
   def sync_ticks() do
     {res, 0} = System.cmd("awk", ["{print $1}", "/proc/uptime"])
 
