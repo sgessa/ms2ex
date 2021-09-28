@@ -3,7 +3,16 @@ defmodule Ms2ex.FieldServer do
 
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, FieldHelper, Inventory, Metadata, Mob, Packets, SkillCast}
+  alias Ms2ex.{
+    CharacterManager,
+    Field,
+    FieldHelper,
+    Item,
+    Metadata,
+    Mob,
+    Packets,
+    SkillCast
+  }
 
   import FieldHelper
 
@@ -73,7 +82,7 @@ defmodule Ms2ex.FieldServer do
     {:noreply, drop_item(source, item, state)}
   end
 
-  def handle_cast({:add_mob_drop, %Mob{} = mob, %Inventory.Item{} = item}, state) do
+  def handle_cast({:add_mob_drop, %Mob{} = mob, %Item{} = item}, state) do
     {:noreply, add_mob_drop(mob, item, state)}
   end
 

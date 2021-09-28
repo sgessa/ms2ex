@@ -5,6 +5,7 @@ defmodule Ms2ex.Commands do
     CharacterManager,
     Field,
     Inventory,
+    Item,
     Metadata,
     Net,
     Packets,
@@ -24,7 +25,7 @@ defmodule Ms2ex.Commands do
       with {item_id, _} <- Integer.parse(item_id),
            {:ok, meta} <- Metadata.Items.lookup(item_id) do
         flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-        item = %Inventory.Item{item_id: item_id, transfer_flags: flags, metadata: meta}
+        item = %Item{item_id: item_id, transfer_flags: flags, metadata: meta}
         add_item(character, item, session)
       else
         _ ->

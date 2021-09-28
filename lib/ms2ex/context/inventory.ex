@@ -1,6 +1,6 @@
 defmodule Ms2ex.Inventory do
-  alias __MODULE__.{Item, Tab}
-  alias Ms2ex.{Character, ItemStats, Metadata, Repo}
+  alias __MODULE__.Tab
+  alias Ms2ex.{Character, Item, ItemStats, Metadata, Repo}
 
   import Ecto.Query, except: [update: 2]
 

@@ -1,6 +1,5 @@
 defmodule Ms2ex.Equips do
-  alias Ms2ex.{Character, Inventory, Metadata, Repo}
-  alias Inventory.Item
+  alias Ms2ex.{Character, Inventory, Item, Metadata, Repo}
 
   import Ecto.Query, except: [update: 2]
   import Inventory, only: [update_item: 2, find_first_available_slot: 2]

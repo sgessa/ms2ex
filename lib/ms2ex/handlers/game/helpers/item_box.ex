@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
-  alias Ms2ex.{Inventory, Inventory.Item, Metadata, Packets, Wallets}
+  alias Ms2ex.{Inventory, Item, Metadata, Packets, Wallets}
 
   import Ms2ex.Net.Session, only: [push: 2]
 
@@ -55,7 +55,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
         if success do
           character.job in jobs or :none in jobs
         else
-          not (character.job in jobs) or :none in jobs
+          character.job not in jobs or :none in jobs
         end
       end)
 

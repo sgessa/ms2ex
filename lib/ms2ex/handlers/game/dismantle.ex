@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Dismantle do
-  alias Ms2ex.{CharacterManager, Dismantle, Inventory, Metadata, Packets}
+  alias Ms2ex.{CharacterManager, Dismantle, Inventory, Item, Metadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -107,7 +107,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
     Enum.reduce(inventory.slots, session, fn {_slot, {id, amount}}, session ->
       case Inventory.get(character, id) do
-        %Inventory.Item{} = item ->
+        %Item{} = item ->
           consumed_item = Inventory.consume(item, amount)
           push(session, Packets.InventoryItem.consume(consumed_item))
 
@@ -121,7 +121,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     inventory = get_inventory(session)
 
     Enum.reduce(inventory.rewards, session, fn {item_id, amount}, session ->
-      item = %Inventory.Item{item_id: item_id, amount: amount} |> Metadata.Items.load()
+      item = %Item{item_id: item_id, amount: amount} |> Metadata.Items.load()
 
       case Inventory.add_item(character, item) do
         {:ok, result} -> push(session, Packets.InventoryItem.add_item(result))

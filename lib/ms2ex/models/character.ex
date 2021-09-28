@@ -1,7 +1,7 @@
 defmodule Ms2ex.Character do
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, Inventory}
+  alias Ms2ex.EctoTypes
 
   import Ecto.Changeset
   import EctoEnum
@@ -44,8 +44,8 @@ defmodule Ms2ex.Character do
     has_many :friends, Ms2ex.Friend
     has_many :stickers, Ms2ex.ChatStickerGroup
 
-    has_many :equips, Inventory.Item
-    has_many :inventory_items, Inventory.Item
+    has_many :equips, Ms2ex.Item
+    has_many :inventory_items, Ms2ex.Item
     has_many :inventory_tabs, Ms2ex.Inventory.Tab
 
     has_many :hot_bars, Ms2ex.HotBar

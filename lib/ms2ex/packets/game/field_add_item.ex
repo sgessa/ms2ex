@@ -3,7 +3,7 @@ defmodule Ms2ex.Packets.FieldAddItem do
 
   import Packets.PacketWriter
 
-  def add_item(item) do
+  def add_item(%{mob_drop?: false} = item) do
     __MODULE__
     |> build()
     |> put_int(item.object_id)
@@ -22,7 +22,7 @@ defmodule Ms2ex.Packets.FieldAddItem do
     |> Packets.InventoryItem.put_item(item)
   end
 
-  def add_mob_drop(item) do
+  def add_item(item) do
     __MODULE__
     |> build()
     |> put_int(item.object_id)
