@@ -1,6 +1,6 @@
 defmodule Ms2ex.Inventory do
-  alias __MODULE__.{Item, Tab}
-  alias Ms2ex.{Character, ItemStats, Metadata, Repo}
+  alias __MODULE__.Tab
+  alias Ms2ex.{Character, Item, ItemStats, Metadata, Repo}
 
   import Ecto.Query, except: [update: 2]
 
@@ -38,7 +38,9 @@ defmodule Ms2ex.Inventory do
     get_by(character_id: char_id, id: id)
   end
 
-  def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
+  # Item is stackable
+  def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs)
+      when n > 1 do
     Repo.transaction(fn ->
       case find_stack(character, attrs) do
         %Item{} = item ->
@@ -50,6 +52,7 @@ defmodule Ms2ex.Inventory do
     end)
   end
 
+  # Item is not stackable
   def add_item(%Character{} = character, %Item{} = attrs) do
     with {:create, item} <- create(character, attrs) do
       {:ok, {:create, item}}

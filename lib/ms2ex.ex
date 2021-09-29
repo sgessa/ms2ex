@@ -9,6 +9,11 @@ defmodule Ms2ex do
     x
   end
 
+  # Calculate probability
+  def roll(chance_pct) do
+    chance_pct <= 0 + 100 * :rand.uniform()
+  end
+
   def sync_ticks() do
     {res, 0} = System.cmd("awk", ["{print $1}", "/proc/uptime"])
 

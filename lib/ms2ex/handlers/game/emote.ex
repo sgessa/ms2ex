@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Emote do
-  alias Ms2ex.{CharacterManager, Emotes, Field, Inventory, Metadata, Packets}
+  alias Ms2ex.{CharacterManager, Emotes, Field, Inventory, Item, Metadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.Session, only: [push: 2]
@@ -14,7 +14,7 @@ defmodule Ms2ex.GameHandlers.Emote do
     {item_uid, _packet} = get_long(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Inventory.Item{} = item <- Inventory.get(character, item_uid),
+         %Item{} = item <- Inventory.get(character, item_uid),
          %{metadata: %{skill_id: emote_id}} <- Metadata.Items.load(item),
          consumed_item <- Inventory.consume(item),
          {:ok, _emote} <- Emotes.learn(character, emote_id) do

@@ -169,7 +169,7 @@ defmodule Ms2ex.GameHandlers.Skill do
       case Mob.lookup(character, obj_id) do
         {:ok, mob} ->
           {mob, dmg} = damage_mob(character, mob, crit?)
-          push(session, Packets.Stats.update_mob_health(mob))
+          Field.broadcast(character, Packets.Stats.update_mob_health(mob))
           mobs ++ [{mob, dmg}]
 
         _ ->
@@ -184,7 +184,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   defp damage_mob(character, mob, crit?) do
     skill_cast = character.skill_cast
     dmg = Damage.calculate(character, mob, crit?)
-    {:ok, mob} = Mob.inflict_dmg(mob, dmg)
+    {:ok, mob} = Mob.inflict_dmg(character, mob, dmg)
 
     if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
       status = SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)

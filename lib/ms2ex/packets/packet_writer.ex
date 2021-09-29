@@ -59,7 +59,9 @@ defmodule Ms2ex.Packets.PacketWriter do
     packet <> <<number::little-signed-float-size(size)>>
   end
 
-  def put_int(packet, int \\ 0x0), do: packet <> <<int::little-signed-integer-32>>
+  def put_int(packet, int \\ 0x0)
+  def put_int(packet, nil), do: put_int(packet)
+  def put_int(packet, int), do: packet <> <<int::little-signed-integer-32>>
 
   def put_int_big(packet, int \\ 0x0), do: packet <> <<int::big-signed-integer-32>>
 
@@ -74,7 +76,9 @@ defmodule Ms2ex.Packets.PacketWriter do
     packet <> addr
   end
 
-  def put_long(packet, int \\ 0x0), do: packet <> <<int::little-signed-integer-64>>
+  def put_long(packet, int \\ 0x0)
+  def put_long(packet, nil), do: put_long(packet)
+  def put_long(packet, int), do: packet <> <<int::little-signed-integer-64>>
 
   def put_short(packet, short \\ 0x0), do: packet <> <<short::little-signed-integer-16>>
 

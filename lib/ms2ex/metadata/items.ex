@@ -171,7 +171,7 @@ defmodule Ms2ex.Metadata.Items do
     end
   end
 
-  def load(item) do
+  def load(%{metadata: nil} = item) do
     case lookup(item.item_id) do
       {:ok, meta} ->
         rarity = item.rarity || meta.rarity
@@ -181,6 +181,8 @@ defmodule Ms2ex.Metadata.Items do
         item
     end
   end
+
+  def load(item), do: item
 
   def lookup(item_id) do
     case :ets.lookup(@table, item_id) do

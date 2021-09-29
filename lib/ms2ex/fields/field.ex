@@ -1,15 +1,17 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{Character, Characters, CharacterManager, FieldServer, Metadata, Net, Packets}
+  alias Ms2ex.{Character, Characters, CharacterManager, FieldServer, Metadata, Mob, Net, Packets}
   alias Phoenix.PubSub
 
-  def add_item(%Character{} = character, item) do
-    item = Map.put(item, :position, character.position)
-    item = Map.put(item, :character_object_id, character.object_id)
-    call(character.field_pid, {:add_item, item})
+  def add_mob_drop(%Mob{} = mob, item) do
+    cast(mob.field, {:add_mob_drop, mob, item})
   end
 
-  def remove_item(%Character{} = character, object_id) do
-    call(character.field_pid, {:remove_item, object_id})
+  def drop_item(%Character{} = character, item) do
+    cast(character.field_pid, {:drop_item, character, item})
+  end
+
+  def pickup_item(%Character{} = character, object_id) do
+    call(character.field_pid, {:pickup_item, character, object_id})
   end
 
   def add_region_skill(%Character{} = character, region_skill) do
