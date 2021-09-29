@@ -16,13 +16,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     {:ok, _pid} = Field.enter(character)
 
     hot_bars = HotBars.list(character)
+    push(session, Packets.KeyTable.send_hot_bars(hot_bars))
 
     favorite_stickers = ChatStickers.list_favorited(character)
     sticker_groups = ChatStickers.list_groups(character)
-
-    session
-    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
-    |> push(Packets.ChatSticker.load(favorite_stickers, sticker_groups))
+    push(session, Packets.ChatSticker.load(favorite_stickers, sticker_groups))
   end
 
   defp maybe_change_map(%{change_map: new_map} = character) do

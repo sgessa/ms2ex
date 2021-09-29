@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
   # Open
   def handle_mode(0x0, _packet, session) do
-    Map.put(session, :dismantle_inventory, @default_inventory)
+    send(self(), {:update, %{session | dismantle_inventory: @default_inventory}})
   end
 
   # Add
@@ -28,8 +28,9 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     {slot, inventory} = Dismantle.add(inventory, slot, item_uid, amount)
     inventory = Dismantle.update_rewards(character, inventory)
 
+    send(self(), {:update, %{session | dismantle_inventory: inventory}})
+
     session
-    |> Map.put(:dismantle_inventory, inventory)
     |> push(Packets.Dismantle.add(item_uid, slot, amount))
     |> push(Packets.Dismantle.preview_results(inventory.rewards))
   end
@@ -46,8 +47,9 @@ defmodule Ms2ex.GameHandlers.Dismantle do
         inventory = Dismantle.remove(inventory, slot)
         inventory = Dismantle.update_rewards(character, inventory)
 
+        send(self(), {:update, %{session | dismantle_inventory: inventory}})
+
         session
-        |> Map.put(:dismantle_inventory, inventory)
         |> push(Packets.Dismantle.remove(item_uid))
         |> push(Packets.Dismantle.preview_results(inventory.rewards))
 
@@ -61,11 +63,12 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     inventory = get_inventory(session)
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
+    send(self(), {:update, %{session | dismantle_inventory: @default_inventory}})
+
     session
     |> consume_items(character)
     |> add_rewards(character)
     |> push(Packets.Dismantle.show_rewards(inventory.rewards))
-    |> Map.put(:dismantle_inventory, @default_inventory)
   end
 
   # Auto Add
@@ -95,8 +98,9 @@ defmodule Ms2ex.GameHandlers.Dismantle do
       {slot, inventory} = Dismantle.append(inventory, item.id, item.amount)
       inventory = Dismantle.update_rewards(character, inventory)
 
+      send(self(), {:update, %{session | dismantle_inventory: inventory}})
+
       session
-      |> Map.put(:dismantle_inventory, inventory)
       |> push(Packets.Dismantle.add(item.id, slot, item.amount))
       |> push(Packets.Dismantle.preview_results(inventory.rewards))
     end)

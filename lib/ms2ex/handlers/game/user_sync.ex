@@ -11,9 +11,9 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {_server_tick, packet} = get_int(packet)
     {segment_length, packet} = get_byte(packet)
 
-    session
-    |> Map.put(:client_tick, client_tick)
-    |> process_segments(segment_length, packet)
+    send(self(), {:update, %{session | client_tick: client_tick}})
+
+    process_segments(session, segment_length, packet)
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do

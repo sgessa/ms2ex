@@ -8,9 +8,9 @@ defmodule Ms2ex.Net.Router do
 
     if handler = binary_to_atom(handler_name, session.type) do
       handler.handle(packet, session)
-    else
-      session
     end
+
+    session
   end
 
   defp get_handler(opcode), do: Map.get(Packets.recv_ops(), opcode) || :unknown_packet

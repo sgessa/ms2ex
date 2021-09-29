@@ -7,8 +7,6 @@ defmodule Ms2ex.Net.Session do
 
   require Logger, as: L
 
-  @behaviour :ranch_protocol
-
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
   alias Ms2ex.Net.{Router, SenderSession}
   alias Ms2ex.{CharacterManager, GroupChat, Packets, PartyServer}
@@ -16,10 +14,28 @@ defmodule Ms2ex.Net.Session do
 
   import Ms2ex.Net.Utils
 
+  @behaviour :ranch_protocol
   @conf Application.get_env(:ms2ex, Ms2ex)
   @skip_packet_logs @conf[:skip_packet_logs] || []
   @version @conf[:version] || 12
   @block_iv @conf[:initial_block_iv] || @version
+
+  defstruct [
+    :account,
+    :channel_id,
+    :character_id,
+    :client_tick,
+    :dismantle_inventory,
+    :yet_to_parse,
+    :pid,
+    :recv_cipher,
+    :sender_pid,
+    :server_tick,
+    :socket,
+    :transport,
+    :type,
+    :world_name
+  ]
 
   @doc """
   Starts the handler with `:proc_lib.spawn_link/3`.
@@ -55,12 +71,11 @@ defmodule Ms2ex.Net.Session do
   Finally it makes the existing process into a `:gen_server` process and
   enters the `:gen_server` receive loop with `:gen_server.enter_loop/3`.
   """
-  def init(ref, transport, opts) do
+  def init(ref, transport, [state]) do
     {:ok, socket} = :ranch.handshake(ref)
 
-    [state] = opts
-
-    state = Map.put(state, :socket, socket)
+    state = struct(__MODULE__, state)
+    state = %{state | socket: socket}
 
     log_connected_client(state)
 
@@ -86,40 +101,24 @@ defmodule Ms2ex.Net.Session do
 
     SenderSession.handshake(sender_pid, recv_cipher)
 
-    state =
-      Map.merge(state, %{
-        transport: transport,
+    state = %{
+      state
+      | transport: transport,
         yet_to_parse: <<>>,
         pid: self(),
         recv_cipher: recv_cipher,
         sender_pid: sender_pid
-      })
+    }
 
-    :gen_server.enter_loop(
-      __MODULE__,
-      [],
-      state
-    )
+    :gen_server.enter_loop(__MODULE__, [], state)
   end
 
   # Server callbacks
-
-  def handle_info({:push, packet}, state) do
-    {:noreply, push(state, packet)}
-  end
-
-  def handle_info(
-        {:tcp, _, message},
-        %{
-          socket: socket,
-          transport: transport,
-          yet_to_parse: yet_to_parse
-        } = state
-      ) do
-    state = process_packet(yet_to_parse, message, state)
+  def handle_info({:tcp, _, message}, state) do
+    state = process_packet(state.yet_to_parse, message, state)
 
     # accept another message
-    :ok = transport.setopts(socket, active: :once)
+    :ok = state.transport.setopts(state.socket, active: :once)
 
     {:noreply, state}
   end
@@ -193,6 +192,7 @@ defmodule Ms2ex.Net.Session do
     {:noreply, state}
   end
 
+  def handle_info({:update, session}, _state), do: {:noreply, session}
   def handle_info(_data, state), do: {:noreply, state}
 
   defp shutdown(socket, transport, sender_pid) do
@@ -229,7 +229,10 @@ defmodule Ms2ex.Net.Session do
 
     log_incoming_packet(opcode, packet)
 
-    Router.route(opcode, packet, %{state | recv_cipher: cipher})
+    state = %{state | recv_cipher: cipher}
+    Router.route(opcode, packet, state)
+
+    state
   end
 
   defp parse_packet(

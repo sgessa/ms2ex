@@ -16,8 +16,8 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
       Logger.info("Account #{username} logged in")
 
       SessionManager.register(account.id, %{})
+      send(self(), {:update, %{session | account: account}})
 
-      session = Map.put(session, :account, account)
       account = %{account | characters: Characters.list(account)}
       handle_login(mode, account, session)
     else

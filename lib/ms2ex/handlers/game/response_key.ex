@@ -52,8 +52,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       %{friends: friends, field_id: field_id, position: position, rotation: rotation} = character
 
+      session = %{session | character_id: character.id, server_tick: tick}
+      send(self(), {:update, session})
+
       session
-      |> Map.put(:character_id, character.id)
       |> push(Packets.MoveResult.bytes())
       |> push(Packets.LoginRequired.bytes(account.id))
       |> push(Packets.Friend.start_list())
@@ -62,7 +64,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ResponseTimeSync.init(0x1, tick))
       |> push(Packets.ResponseTimeSync.init(0x3, tick))
       |> push(Packets.ResponseTimeSync.init(0x2, tick))
-      |> Map.put(:server_tick, tick)
       |> push(Packets.RequestClientSyncTick.bytes(tick))
       |> push(Packets.DynamicChannel.bytes())
       |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
@@ -86,9 +87,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.RequestFieldEnter.bytes(field_id, position, rotation))
       |> push_party(character)
-    else
-      _ -> session
     end
+
+    session
   end
 
   defp maybe_set_party(character) do
