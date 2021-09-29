@@ -26,7 +26,7 @@ defmodule Ms2ex.Items do
   @rue_id 90_000_013
   def rue?(%Item{item_id: @rue_id}), do: true
   def rue?(%Item{}), do: false
-  def rue(amount), do: init(@valor_token_id, amount)
+  def rue(amount), do: init(@rue_id, amount)
 
   @havi_fruit_id 90_000_014
   def havi_fruit?(%Item{item_id: @havi_fruit_id}), do: true
