@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   alias Ms2ex.{CharacterManager, GroupChat, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @max_chats_per_user GroupChat.max_chats_per_user()
   @max_chat_members GroupChat.max_members()
@@ -35,10 +35,8 @@ defmodule Ms2ex.GameHandlers.GroupChat do
       {:ok, chat} = GroupChat.add_member(chat, rcpt)
       GroupChat.broadcast(chat.id, Packets.GroupChat.update_members(chat, rcpt))
 
-      send(rcpt.session_pid, {:join_group_chat, character, rcpt, chat})
+      send(rcpt.sender_session_pid, {:join_group_chat, character, rcpt, chat})
       push(session, Packets.GroupChat.invite(character, rcpt, chat))
-    else
-      _ -> session
     end
   end
 
@@ -56,8 +54,6 @@ defmodule Ms2ex.GameHandlers.GroupChat do
       CharacterManager.update(%{character | group_chat_ids: chat_ids})
 
       push(session, Packets.GroupChat.leave(chat))
-    else
-      _ -> session
     end
   end
 
@@ -72,8 +68,6 @@ defmodule Ms2ex.GameHandlers.GroupChat do
          {:ok, chat} <- get_chat(character, chat_id) do
       GroupChat.broadcast(chat.id, Packets.GroupChat.chat(chat, character, msg))
       session
-    else
-      _ -> session
     end
   end
 
@@ -114,18 +108,14 @@ defmodule Ms2ex.GameHandlers.GroupChat do
         {:ok, rcpt}
 
       :error ->
-        character.session_pid
-        |> send({:push, Packets.GroupChat.error(@error.offline_player, character, rcpt_name)})
-
+        push(character, Packets.GroupChat.error(@error.offline_player, character, rcpt_name))
         :error
     end
   end
 
   defp validate_rcpt(character, %{group_chats: chats} = rcpt)
        when length(chats) >= @max_chats_per_user do
-    character.session_pid
-    |> send({:push, Packets.GroupChat.error(@error.max_groups, character, rcpt.name)})
-
+    push(character, Packets.GroupChat.error(@error.max_groups, character, rcpt.name))
     :error
   end
 

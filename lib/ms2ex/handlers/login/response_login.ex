@@ -4,7 +4,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
   alias Ms2ex.{Accounts, Characters, Net, Packets, SessionManager}
 
   import Packets.PacketReader
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -16,7 +16,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
       Logger.info("Account #{username} logged in")
 
       SessionManager.register(account.id, %{})
-      send(self(), {:update, %{session | account: account}})
+      send(self(), {:update, %{account: account}})
 
       account = %{account | characters: Characters.list(account)}
       handle_login(mode, account, session)

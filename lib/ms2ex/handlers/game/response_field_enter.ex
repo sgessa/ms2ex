@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
   alias Ms2ex.{Characters, CharacterManager, ChatStickers, Field, HotBars, Net, Packets}
 
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2, run: 2]
 
   def handle(_packet, %{character_id: character_id} = session) do
     {:ok, character} = CharacterManager.lookup(character_id)
@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     character = maybe_change_map(character)
     CharacterManager.update(character)
 
-    Field.subscribe(character)
+    run(session, fn -> Field.subscribe(character) end)
     {:ok, _pid} = Field.enter(character)
 
     hot_bars = HotBars.list(character)

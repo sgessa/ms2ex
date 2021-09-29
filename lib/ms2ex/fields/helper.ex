@@ -17,19 +17,19 @@ defmodule Ms2ex.FieldHelper do
   alias Ms2ex.PremiumMembership, as: Membership
   alias Ms2ex.PremiumMemberships, as: Memberships
 
-  def add_character(character, state) do
-    session_pid = character.session_pid
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
+  def add_character(character, state) do
     Logger.info("Field #{state.field_id} @ Channel #{state.channel_id}: #{character.name} joined")
 
     # Load other characters
     for char_id <- Map.keys(state.sessions) do
       with {:ok, char} <- CharacterManager.lookup(char_id) do
-        send(session_pid, {:push, Packets.FieldAddUser.bytes(char)})
-        send(session_pid, {:push, Packets.ProxyGameObj.load_player(char)})
+        push(character, Packets.FieldAddUser.bytes(char))
+        push(character, Packets.ProxyGameObj.load_player(char))
 
         if mount = Map.get(state.mounts, char.id) do
-          send(session_pid, {:push, Packets.ResponseRide.start_ride(char, mount)})
+          push(character, Packets.ResponseRide.start_ride(char, mount))
         end
       end
     end
@@ -39,7 +39,7 @@ defmodule Ms2ex.FieldHelper do
     character = Map.put(character, :field_pid, self())
     CharacterManager.update(character)
 
-    sessions = Map.put(state.sessions, character.id, session_pid)
+    sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
 
     # Load Mobs
@@ -47,26 +47,26 @@ defmodule Ms2ex.FieldHelper do
 
     for obj_id <- mobs do
       with {:ok, mob} <- Mob.lookup(character, obj_id) do
-        send(session_pid, {:push, Packets.FieldAddNpc.add_mob(mob)})
-        send(session_pid, {:push, Packets.ProxyGameObj.load_npc(mob)})
+        push(character, Packets.FieldAddNpc.add_mob(mob))
+        push(character, Packets.ProxyGameObj.load_npc(mob))
       end
     end
 
     # Load NPCs
     for {_id, npc} <- state.npcs do
-      send(session_pid, {:push, Packets.FieldAddNpc.add_npc(npc)})
-      send(session_pid, {:push, Packets.ProxyGameObj.load_npc(npc)})
+      push(character, Packets.FieldAddNpc.add_npc(npc))
+      push(character, Packets.ProxyGameObj.load_npc(npc))
     end
 
     # Load portals
     for {_id, portal} <- state.portals do
-      send(session_pid, {:push, Packets.AddPortal.bytes(portal)})
+      push(character, Packets.AddPortal.bytes(portal))
     end
 
     # Load Interactable Objects
     if map_size(state.interactable) > 0 do
       objects = Map.values(state.interactable)
-      send(session_pid, {:push, Packets.AddInteractObjects.bytes(objects)})
+      push(character, Packets.AddInteractObjects.bytes(objects))
     end
 
     # Tell other characters in the map to load the new player
@@ -75,19 +75,19 @@ defmodule Ms2ex.FieldHelper do
 
     # Load items
     for {_id, item} <- state.items do
-      send(session_pid, {:push, Packets.FieldAddItem.add_item(item)})
+      push(character, Packets.FieldAddItem.add_item(item))
     end
 
     # Load Emotes and Player Stats after Player Object is loaded
-    send(session_pid, {:push, Packets.Stats.set_character_stats(character)})
+    push(character, Packets.Stats.set_character_stats(character))
 
     emotes = Emotes.list(character)
-    send(session_pid, {:push, Packets.Emote.load(emotes)})
+    push(character, Packets.Emote.load(emotes))
 
     # Load Premium membership if active
     with %Membership{} = membership <- Memberships.get(character.account_id),
          false <- Memberships.expired?(membership) do
-      send(session_pid, {:push, Packets.PremiumClub.activate(character, membership)})
+      push(character, Packets.PremiumClub.activate(character, membership))
     end
 
     # If character teleported or was summoned by an other user
@@ -135,8 +135,8 @@ defmodule Ms2ex.FieldHelper do
 
         with {:ok, result} <- Inventory.add_item(character, item) do
           {_status, item} = result
-          send(character.session_pid, {:push, Packets.InventoryItem.add_item(result)})
-          send(character.session_pid, {:push, Packets.InventoryItem.mark_item_new(item)})
+          push(character, Packets.InventoryItem.add_item(result))
+          push(character, Packets.InventoryItem.mark_item_new(item))
         end
     end
 
@@ -283,7 +283,7 @@ defmodule Ms2ex.FieldHelper do
   defp maybe_teleport_character(%{update_position: coord} = character) do
     character = Map.delete(character, :update_position)
     CharacterManager.update(character)
-    send(character.session_pid, {:push, Packets.MoveCharacter.bytes(character, coord)})
+    push(character, Packets.MoveCharacter.bytes(character, coord))
   end
 
   defp maybe_teleport_character(_character), do: nil

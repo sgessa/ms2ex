@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   alias Ms2ex.{CharacterManager, Dismantle, Inventory, Item, Metadata, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @default_inventory %{slots: %{}, rewards: %{}}
 
@@ -12,8 +12,8 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   end
 
   # Open
-  def handle_mode(0x0, _packet, session) do
-    send(self(), {:update, %{session | dismantle_inventory: @default_inventory}})
+  def handle_mode(0x0, _packet, _session) do
+    send(self(), {:update, %{dismantle_inventory: @default_inventory}})
   end
 
   # Add
@@ -28,7 +28,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     {slot, inventory} = Dismantle.add(inventory, slot, item_uid, amount)
     inventory = Dismantle.update_rewards(character, inventory)
 
-    send(self(), {:update, %{session | dismantle_inventory: inventory}})
+    send(self(), {:update, %{dismantle_inventory: inventory}})
 
     session
     |> push(Packets.Dismantle.add(item_uid, slot, amount))
@@ -47,7 +47,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
         inventory = Dismantle.remove(inventory, slot)
         inventory = Dismantle.update_rewards(character, inventory)
 
-        send(self(), {:update, %{session | dismantle_inventory: inventory}})
+        send(self(), {:update, %{dismantle_inventory: inventory}})
 
         session
         |> push(Packets.Dismantle.remove(item_uid))
@@ -63,7 +63,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     inventory = get_inventory(session)
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
-    send(self(), {:update, %{session | dismantle_inventory: @default_inventory}})
+    send(self(), {:update, %{dismantle_inventory: @default_inventory}})
 
     session
     |> consume_items(character)
@@ -98,7 +98,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
       {slot, inventory} = Dismantle.append(inventory, item.id, item.amount)
       inventory = Dismantle.update_rewards(character, inventory)
 
-      send(self(), {:update, %{session | dismantle_inventory: inventory}})
+      send(self(), {:update, %{dismantle_inventory: inventory}})
 
       session
       |> push(Packets.Dismantle.add(item.id, slot, item.amount))

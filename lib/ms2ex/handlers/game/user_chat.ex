@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   alias Ms2ex.{CharacterManager, Chat, Commands, Field, Net, Packets, PartyServer, Wallets, World}
 
   import Packets.PacketReader
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
 
   @world_chat_cost -30
 
@@ -38,9 +38,8 @@ defmodule Ms2ex.GameHandlers.UserChat do
     case CharacterManager.lookup_by_name(rcpt_name) do
       {:ok, rcpt} ->
         # TODO check if rcpt blocked character
-        packet = Packets.UserChat.bytes(:whisper_from, character, msg)
-        send(rcpt.session_pid, {:push, packet})
 
+        push(rcpt, Packets.UserChat.bytes(:whisper_from, character, msg))
         push(session, Packets.UserChat.bytes(:whisper_to, rcpt, msg))
 
       _ ->

@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
   alias Ms2ex.{Characters, CharacterManager, Field, Packets, Taxi, Wallets, WorldGraph}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -57,12 +57,8 @@ defmodule Ms2ex.GameHandlers.Taxi do
 
   defp ride_taxi(field_id, currency, cost, session) do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, wallet} <- Wallets.update(character, currency, cost) do
-      session = push(session, Packets.Wallet.update(wallet, currency))
-      Field.change_field(character, session, field_id)
-    else
-      _ ->
-        session
+         {:ok, _wallet} <- Wallets.update(character, currency, cost) do
+      Field.change_field(character, field_id)
     end
   end
 end

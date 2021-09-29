@@ -3,7 +3,7 @@ defmodule Ms2ex.LoginHandlers.ResponseKey do
 
   alias Ms2ex.{Accounts, Net, Packets, SessionManager}
 
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do

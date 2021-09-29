@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.Friend do
   alias Ms2ex.{CharacterManager, Friends, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
   import Ms2ex.GameHandlers.Helper.Friend
 
   def handle(packet, session) do

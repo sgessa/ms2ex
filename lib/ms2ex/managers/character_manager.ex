@@ -4,6 +4,7 @@ defmodule Ms2ex.CharacterManager do
   alias Ms2ex.{Character, Characters, Damage, Field, Packets, PartyServer, SkillCast, SkillStatus}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @regen_stats [:hp, :sp, :sta]
 
@@ -122,8 +123,7 @@ defmodule Ms2ex.CharacterManager do
       Field.broadcast(character, Packets.LevelUp.bytes(character))
     end
 
-    exp_packet = Packets.Experience.bytes(amount, character.exp, character.rest_exp)
-    send(character.session_pid, {:push, exp_packet})
+    push(character, Packets.Experience.bytes(amount, character.exp, character.rest_exp))
 
     {:noreply, character}
   end
@@ -133,7 +133,7 @@ defmodule Ms2ex.CharacterManager do
     dmg = Damage.calculate_fall_dmg(character)
     character = set_stat(character, :hp, max(hp - dmg, 25))
 
-    send(character.session_pid, {:push, Packets.FallDamage.bytes(character, 0)})
+    push(character, Packets.FallDamage.bytes(character, 0))
 
     {:noreply, character}
   end

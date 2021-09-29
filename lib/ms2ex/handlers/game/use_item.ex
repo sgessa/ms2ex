@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
   alias Ms2ex.GameHandlers.Helper.ItemBox
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {item_uid, packet} = get_long(packet)

@@ -9,8 +9,8 @@ defmodule Ms2ex.Net.Session do
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
   alias Ms2ex.Net.{Router, SenderSession}
-  alias Ms2ex.{CharacterManager, GroupChat, Packets, PartyServer}
-  alias Packets.PacketReader
+  alias Ms2ex.Packets
+  alias Ms2ex.Packets.PacketReader
 
   import Ms2ex.Net.Utils
 
@@ -51,20 +51,6 @@ defmodule Ms2ex.Net.Session do
   end
 
   # Client
-
-  def push(state, packet) when is_binary(packet) and byte_size(packet) > 0 do
-    if Process.alive?(state.sender_pid) do
-      SenderSession.push(state.sender_pid, packet)
-    end
-
-    state
-  end
-
-  def push(state, _packet), do: state
-
-  def push_notice(state, character, notice) do
-    push(state, Packets.UserChat.bytes(:notice_alert, character, notice))
-  end
 
   @doc """
   Initiates the handler, acknowledging the connection was accepted.
@@ -143,57 +129,11 @@ defmodule Ms2ex.Net.Session do
     {:stop, :normal, state}
   end
 
-  def handle_info({:join_group_chat, inviter, rcpt, chat}, state) do
-    GroupChat.subscribe(chat)
-    chat = GroupChat.load_members(chat)
+  def handle_info({:update, attrs}, state), do: {:noreply, Map.merge(state, attrs)}
 
-    {:noreply,
-     state
-     |> push(Packets.GroupChat.update(chat))
-     |> push(Packets.GroupChat.join(inviter, rcpt, chat))}
-  end
+  def handle_info({:EXIT, _port, _reason}, state), do: {:noreply, state}
 
-  def handle_info({:subscribe_friend_presence, character_id}, state) do
-    Phoenix.PubSub.subscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
-    {:noreply, state}
-  end
-
-  def handle_info({:unsubscribe_friend_presence, character_id}, state) do
-    Phoenix.PubSub.unsubscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
-    {:noreply, state}
-  end
-
-  def handle_info({:friend_presence, data}, state) do
-    friend = Ms2ex.Friends.get_by_character_and_shared_id(state.character_id, data.shared_id)
-    friend = Map.put(friend, :rcpt, data.character)
-
-    {:noreply,
-     state
-     |> push(Packets.Friend.update(friend))
-     |> push(Packets.Friend.presence_notification(friend))}
-  end
-
-  def handle_info({:summon, character, field_id}, state) do
-    {:noreply, Ms2ex.Field.change_field(character, state, field_id)}
-  end
-
-  def handle_info({:unsubscribe_party, party_id}, state) do
-    PartyServer.unsubscribe(party_id)
-    {:noreply, state}
-  end
-
-  def handle_info({:disband_party, character}, state) do
-    PartyServer.unsubscribe(character.party_id)
-    push(state, Packets.Party.disband())
-
-    character = %{character | party_id: nil}
-    CharacterManager.update(character)
-
-    {:noreply, state}
-  end
-
-  def handle_info({:update, session}, _state), do: {:noreply, session}
-  def handle_info(_data, state), do: {:noreply, state}
+  # def handle_info(_data, state), do: {:noreply, state}
 
   defp shutdown(socket, transport, sender_pid) do
     Ms2ex.Net.SenderSession.stop(sender_pid)

@@ -16,7 +16,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Inventory.Item
 
   import Packets.PacketReader
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
 
   # Login
   def handle(<<0x0, packet::bytes>>, session) do

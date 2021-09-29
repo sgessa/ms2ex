@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {_mode, packet} = get_byte(packet)
@@ -11,7 +11,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {_server_tick, packet} = get_int(packet)
     {segment_length, packet} = get_byte(packet)
 
-    send(self(), {:update, %{session | client_tick: client_tick}})
+    send(self(), {:update, %{client_tick: client_tick}})
 
     process_segments(session, segment_length, packet)
   end

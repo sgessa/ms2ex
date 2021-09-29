@@ -1,10 +1,10 @@
 defmodule Ms2ex.PartyServer do
   use GenServer
 
+  require Logger, as: L
+
   alias Ms2ex.{Packets, Party, PartyManager}
   alias Phoenix.PubSub
-
-  require Logger, as: L
 
   def broadcast(nil, _packet), do: :error
 
@@ -214,7 +214,7 @@ defmodule Ms2ex.PartyServer do
     send(self(), :shutdown)
 
     for m <- party.members, m.online? do
-      send(m.session_pid, {:disband_party, m})
+      send(m.sender_session_pid, {:disband_party, m})
     end
   end
 

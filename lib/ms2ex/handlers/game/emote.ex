@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.Emote do
   alias Ms2ex.{CharacterManager, Emotes, Field, Inventory, Item, Metadata, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)

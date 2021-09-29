@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.KeyTable do
 
   alias Ms2ex.{CharacterManager, HotBar, HotBars, Net, Packets, QuickSlot}
 
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do

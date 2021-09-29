@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
 
   alias Ms2ex.{Characters, CharacterManager, Net, Packets, Skills, Wallets}
 
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do

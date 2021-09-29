@@ -76,16 +76,14 @@ defmodule Ms2ex.Field do
     end
   end
 
-  def change_field(character, session, field_id) do
+  def change_field(character, field_id) do
     with {:ok, map} <- Metadata.MapEntities.lookup(field_id) do
       spawn = List.first(map.character_spawns)
-      change_field(character, session, field_id, spawn.coord, spawn.rotation)
-    else
-      _ -> session
+      change_field(character, field_id, spawn.coord, spawn.rotation)
     end
   end
 
-  def change_field(character, session, field_id, coord, rotation) do
+  def change_field(character, field_id, coord, rotation) do
     with :ok <- leave(character) do
       character =
         character
@@ -94,17 +92,16 @@ defmodule Ms2ex.Field do
 
       CharacterManager.update(character)
 
-      Net.Session.push(session, Packets.RequestFieldEnter.bytes(field_id, coord, rotation))
-    else
-      _ -> session
+      Net.SenderSession.push(
+        character,
+        Packets.RequestFieldEnter.bytes(field_id, coord, rotation)
+      )
     end
   end
 
   def leave(character) do
     call(character.field_pid, {:remove_character, character})
   end
-
-  def push(session_pid, packet), do: send(session_pid, {:push, packet})
 
   def field_name(field_id, channel_id) do
     :"field:#{field_id}:channel:#{channel_id}"

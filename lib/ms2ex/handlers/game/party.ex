@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Party
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -30,7 +30,7 @@ defmodule Ms2ex.GameHandlers.Party do
         push(session, Packets.Party.notice(:invite_self, character))
 
       character.party_id ->
-        invite_to_party(session, character, target)
+        invite_to_party(character, target)
 
       true ->
         create_party(session, character, target)
@@ -80,7 +80,7 @@ defmodule Ms2ex.GameHandlers.Party do
          true <- Party.is_leader?(party, character),
          {:ok, target} <- PartyServer.kick_member(party, target_id) do
       if target.online? do
-        send(target.session_pid, {:unsubscribe_party, party.id})
+        send(target.sender_session_pid, {:unsubscribe_party, party.id})
       end
 
       target = %{target | party_id: nil}
@@ -154,11 +154,10 @@ defmodule Ms2ex.GameHandlers.Party do
 
     cond do
       Party.in_party?(party, character) ->
-        session
+        {:error, :already_in_party}
 
       response != :accepted_invite ->
-        send(leader.session_pid, {:push, Packets.Party.notice(response, character)})
-        session
+        push(leader, Packets.Party.notice(response, character))
 
       Party.full?(party) ->
         push(session, Packets.Party.notice(:full_party, character))

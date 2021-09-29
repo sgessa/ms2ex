@@ -23,10 +23,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
          {:ok, dst_map} <- Metadata.MapEntities.lookup(src_portal.target),
          %Metadata.MapPortal{} = dst_portal <-
            Enum.find(dst_map.portals, &(&1.target == src_field_id)) do
-      Field.change_field(character, session, dst_map.id, dst_portal.coord, dst_portal.rotation)
-    else
-      _ ->
-        session
+      Field.change_field(character, dst_map.id, dst_portal.coord, dst_portal.rotation)
     end
   end
 
