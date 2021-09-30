@@ -43,7 +43,7 @@ defmodule Ms2ex.Net.SenderSession do
   end
 
   def run(%Ms2ex.Net.Session{} = session, fun) when is_function(fun) do
-    GenServer.cast(session.sender_pid, {:run, fun})
+    GenServer.call(session.sender_pid, {:run, fun})
   end
 
   def stop(pid) do
@@ -65,6 +65,11 @@ defmodule Ms2ex.Net.SenderSession do
   end
 
   @impl true
+  def handle_call({:run, fun}, _from, state) do
+    {:reply, fun.(), state}
+  end
+
+  @impl true
   def handle_cast({:handshake, recv_cipher}, state) do
     %{send_cipher: send_cipher, socket: socket} = state
     packet = RequestVersion.build(@version, recv_cipher, send_cipher, @block_iv)
@@ -74,11 +79,6 @@ defmodule Ms2ex.Net.SenderSession do
     state.transport.send(socket, packet)
 
     {:noreply, %{state | send_cipher: send_cipher}}
-  end
-
-  def handle_cast({:run, fun}, state) do
-    fun.()
-    {:noreply, state}
   end
 
   @impl true
@@ -98,10 +98,10 @@ defmodule Ms2ex.Net.SenderSession do
     GroupChat.subscribe(chat)
     chat = GroupChat.load_members(chat)
 
-    {:noreply,
-     state
-     |> push(Packets.GroupChat.update(chat))
-     |> push(Packets.GroupChat.join(inviter, rcpt, chat))}
+    send(self(), {:push, Packets.GroupChat.update(chat)})
+    send(self(), {:push, Packets.GroupChat.join(inviter, rcpt, chat)})
+
+    {:noreply, state}
   end
 
   def handle_info({:subscribe_friend_presence, character_id}, state) do
@@ -118,24 +118,19 @@ defmodule Ms2ex.Net.SenderSession do
     friend = Ms2ex.Friends.get_by_character_and_shared_id(state.character_id, data.shared_id)
     friend = Map.put(friend, :rcpt, data.character)
 
-    {:noreply,
-     state
-     |> push(Packets.Friend.update(friend))
-     |> push(Packets.Friend.presence_notification(friend))}
+    send(self(), {:push, Packets.Friend.update(friend)})
+    send(self(), {:push, Packets.Friend.presence_notification(friend)})
+
+    {:noreply, state}
   end
 
   def handle_info({:summon, character, field_id}, state) do
     {:noreply, Ms2ex.Field.change_field(character, field_id), state}
   end
 
-  def handle_info({:unsubscribe_party, party_id}, state) do
-    PartyServer.unsubscribe(party_id)
-    {:noreply, state}
-  end
-
   def handle_info({:disband_party, character}, state) do
     PartyServer.unsubscribe(character.party_id)
-    push(state, Packets.Party.disband())
+    send(self(), {:push, Packets.Party.disband()})
 
     character = %{character | party_id: nil}
     CharacterManager.update(character)

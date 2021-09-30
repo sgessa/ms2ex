@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
-  alias Ms2ex.{Character, Field, GroupChat, Packets, PartyServer}
+  alias Ms2ex.{Character, Field, GroupChat, Net.SenderSession, Packets, PartyServer}
   alias Phoenix.PubSub
 
   def init_character(%Character{} = character) do
@@ -11,7 +11,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
     if character.party_id do
       notify_party_presence(character)
-      PartyServer.subscribe(character.party_id)
+      SenderSession.run(character, fn -> PartyServer.subscribe(character.party_id) end)
     end
   end
 

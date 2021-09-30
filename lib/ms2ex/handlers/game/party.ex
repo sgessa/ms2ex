@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Party
-  import Ms2ex.Net.SenderSession, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -61,7 +61,8 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x3, _packet, session) do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, _party} <- PartyServer.lookup(character.party_id) do
-      PartyServer.unsubscribe(character.party_id)
+      run(session, fn -> PartyServer.unsubscribe(character.party_id) end)
+
       PartyServer.remove_member(character)
 
       character = %{character | party_id: nil}
@@ -80,7 +81,7 @@ defmodule Ms2ex.GameHandlers.Party do
          true <- Party.is_leader?(party, character),
          {:ok, target} <- PartyServer.kick_member(party, target_id) do
       if target.online? do
-        send(target.sender_session_pid, {:unsubscribe_party, party.id})
+        run(target, fn -> PartyServer.unsubscribe(party.id) end)
       end
 
       target = %{target | party_id: nil}
@@ -169,7 +170,7 @@ defmodule Ms2ex.GameHandlers.Party do
         {:ok, party} = PartyServer.update_member(character)
 
         CharacterManager.update(character)
-        PartyServer.subscribe(party.id)
+        run(session, fn -> PartyServer.subscribe(party.id) end)
 
         session = push(session, Packets.Party.create(party))
 

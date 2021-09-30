@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   alias Ms2ex.{CharacterManager, GroupChat, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.SenderSession, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 
   @max_chats_per_user GroupChat.max_chats_per_user()
   @max_chat_members GroupChat.max_members()
@@ -79,7 +79,8 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   defp maybe_create_chat(session, character) do
     chat = %GroupChat{id: Ms2ex.generate_int(), member_ids: [character.id]}
     {:ok, _} = GroupChat.start(chat)
-    GroupChat.subscribe(chat)
+
+    run(session, fn -> GroupChat.subscribe(chat) end)
 
     ids = [chat.id | character.group_chat_ids]
     CharacterManager.update(%{character | group_chat_ids: ids})

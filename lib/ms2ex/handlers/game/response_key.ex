@@ -133,23 +133,17 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     party = PartyServer.lookup!(character.party_id)
 
     if party do
-      session
-      |> push(Packets.Party.create(party, false))
-      |> create_party(party, character)
-    else
-      session
-    end
-  end
+      push(session, Packets.Party.create(party, false))
 
-  defp create_party(session, party, character) do
-    PartyServer.broadcast_from(self(), party.id, Packets.Party.update_hitpoints(character))
+      PartyServer.broadcast_from(
+        session.sender_pid,
+        party.id,
+        Packets.Party.update_hitpoints(character)
+      )
 
-    Enum.reduce(party.members, session, fn m, session ->
-      if m.id != character.id do
+      for m <- party.members, m.id != character.id do
         push(session, Packets.Party.update_hitpoints(m))
-      else
-        session
       end
-    end)
+    end
   end
 end

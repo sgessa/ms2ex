@@ -1,8 +1,6 @@
 defmodule Ms2ex.PartyServer do
   use GenServer
 
-  require Logger, as: L
-
   alias Ms2ex.{Packets, Party, PartyManager}
   alias Phoenix.PubSub
 
@@ -74,9 +72,6 @@ defmodule Ms2ex.PartyServer do
   def init(leader) do
     party = Party.create(leader)
     Process.register(self(), :"party:#{party.id}")
-
-    L.debug(fn -> "NEW PARTY CREATED WITH ID: #{party.id}" end)
-
     {:ok, party}
   end
 
