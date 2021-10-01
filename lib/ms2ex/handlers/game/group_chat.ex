@@ -47,7 +47,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, chat} <- get_chat(character, chat_id),
          {:ok, chat} <- GroupChat.remove_member(chat, character) do
-      GroupChat.unsubscribe(chat)
+      run(session, fn -> GroupChat.unsubscribe(chat) end)
       GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
 
       chat_ids = Enum.reject(character.group_chat_ids, &(&1 == chat.id))
@@ -67,7 +67,6 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, chat} <- get_chat(character, chat_id) do
       GroupChat.broadcast(chat.id, Packets.GroupChat.chat(chat, character, msg))
-      session
     end
   end
 
