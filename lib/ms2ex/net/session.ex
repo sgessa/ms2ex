@@ -25,7 +25,6 @@ defmodule Ms2ex.Net.Session do
     :channel_id,
     :character_id,
     :client_tick,
-    :dismantle_inventory,
     :yet_to_parse,
     :pid,
     :recv_cipher,

@@ -70,6 +70,7 @@ defmodule Ms2ex.Character do
     field :animation, :integer, virtual: true, default: 0
     field :channel_id, :integer, virtual: true
     field :discovered_maps, {:array, :integer}, default: []
+    field :dismantle_inventory, EctoTypes.Term, virtual: true
     field :exp, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Gender, default: :male
