@@ -15,7 +15,7 @@ defmodule Ms2ex.Friends do
   defp maybe_preload_rcpt(query, _), do: query
 
   def send_request(%Character{} = character, %Character{} = friend, message) do
-    shared_id = Ms2ex.generate_long()
+    shared_id = Ms2ex.generate_id()
 
     src_attrs = %{message: message, shared_id: shared_id, status: :pending}
 
@@ -48,7 +48,7 @@ defmodule Ms2ex.Friends do
   end
 
   def block(%Character{} = character, %Character{} = rcpt, reason) do
-    shared_id = Ms2ex.generate_long()
+    shared_id = Ms2ex.generate_id()
     attrs = %{shared_id: shared_id, block_reason: reason, status: :blocked}
 
     character
@@ -84,4 +84,16 @@ defmodule Ms2ex.Friends do
   end
 
   def delete(friend), do: Repo.delete(friend)
+
+  def subscribe(char, rcpt_id) do
+    Ms2ex.Net.SenderSession.run(char, fn ->
+      Phoenix.PubSub.subscribe(Ms2ex.PubSub, "friend_presence:#{rcpt_id}")
+    end)
+  end
+
+  def unsubscribe(char, rcpt_id) do
+    Ms2ex.Net.SenderSession.run(char, fn ->
+      Phoenix.PubSub.unsubscribe(Ms2ex.PubSub, "friend_presence:#{rcpt_id}")
+    end)
+  end
 end

@@ -42,8 +42,12 @@ defmodule Ms2ex.Net.SenderSession do
     push(session, Packets.UserChat.bytes(:notice_alert, character, notice))
   end
 
-  def run(%Ms2ex.Net.Session{} = session, fun) when is_function(fun) do
-    GenServer.call(session.sender_pid, {:run, fun})
+  def run(%Ms2ex.Net.Session{sender_pid: pid}, fun) when is_function(fun) do
+    GenServer.call(pid, {:run, fun})
+  end
+
+  def run(%Ms2ex.Character{sender_session_pid: pid}, fun) when is_function(fun) do
+    GenServer.call(pid, {:run, fun})
   end
 
   def stop(pid) do
@@ -104,18 +108,8 @@ defmodule Ms2ex.Net.SenderSession do
     {:noreply, state}
   end
 
-  def handle_info({:subscribe_friend_presence, character_id}, state) do
-    Phoenix.PubSub.subscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
-    {:noreply, state}
-  end
-
-  def handle_info({:unsubscribe_friend_presence, character_id}, state) do
-    Phoenix.PubSub.unsubscribe(Ms2ex.PubSub, "friend_presence:#{character_id}")
-    {:noreply, state}
-  end
-
   def handle_info({:friend_presence, data}, state) do
-    friend = Ms2ex.Friends.get_by_character_and_shared_id(state.character_id, data.shared_id)
+    friend = Ms2ex.Friends.get_by_character_and_shared_id(data.character.id, data.shared_id)
     friend = Map.put(friend, :rcpt, data.character)
 
     send(self(), {:push, Packets.Friend.update(friend)})

@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.Friend do
       if Map.get(rcpt, :session_pid) do
         rcpt = Map.put(rcpt, :friends, [dst | rcpt.friends])
         CharacterManager.update(rcpt)
-        send(rcpt.session_pid, {:push, Packets.Friend.add_to_list(dst)})
+        push(rcpt, Packets.Friend.add_to_list(dst))
       end
 
       session
@@ -52,18 +52,18 @@ defmodule Ms2ex.GameHandlers.Friend do
 
       with {:ok, sender_session} <- CharacterManager.lookup_by_name(sender.name) do
         src_req = Map.put(src_req, :rcpt, character)
-        send(sender_session.session_pid, {:subscribe_friend_presence, character.id})
-        send(sender_session.session_pid, {:push, Packets.Friend.update(src_req)})
-        send(sender_session.session_pid, {:push, Packets.Friend.accept_notification(shared_id)})
+
+        Friends.subscribe(sender_session, character.id)
+
+        push(sender_session, Packets.Friend.update(src_req))
+        push(sender_session, Packets.Friend.accept_notification(shared_id))
       end
 
-      send(self(), {:subscribe_friend_presence, sender.id})
+      Friends.subscribe(session, sender.id)
 
       session
       |> push(Packets.Friend.accept(dst_req))
       |> push(Packets.Friend.update(dst_req))
-    else
-      _ -> session
     end
   end
 
@@ -81,13 +81,11 @@ defmodule Ms2ex.GameHandlers.Friend do
       with {:ok, sender_session} <- CharacterManager.lookup_by_name(sender.name) do
         remove_friend_from_session(sender_session, shared_id)
         req = %{shared_id: shared_id, rcpt: character}
-        send(sender_session.session_pid, {:push, Packets.Friend.remove(req)})
+        push(sender_session, Packets.Friend.remove(req))
       end
 
       remove_friend_from_session(character, shared_id)
       push(session, Packets.Friend.decline(shared_id))
-    else
-      _ -> session
     end
   end
 
@@ -136,15 +134,15 @@ defmodule Ms2ex.GameHandlers.Friend do
       with {:ok, rcpt_session} <- CharacterManager.lookup_by_name(rcpt.name) do
         remove_friend_from_session(rcpt_session, shared_id)
         req = %{shared_id: shared_id, rcpt: character}
-        send(rcpt_session.session_pid, {:unsubscribe_friend_presence, character.id})
-        send(rcpt_session.session_pid, {:push, Packets.Friend.remove(req)})
+
+        Friends.unsubscribe(rcpt_session, character.id)
+        push(rcpt_session, Packets.Friend.remove(req))
       end
 
       remove_friend_from_session(character, shared_id)
-      send(self(), {:unsubscribe_friend_presence, rcpt.id})
+
+      Friends.unsubscribe(session, rcpt.id)
       push(session, Packets.Friend.remove(friend))
-    else
-      _ -> session
     end
   end
 
@@ -160,8 +158,6 @@ defmodule Ms2ex.GameHandlers.Friend do
          true <- rcpt_name == friend.rcpt.name,
          {:ok, friend} <- Friends.update(friend, %{block_reason: new_reason}) do
       push(session, Packets.Friend.edit_block_reason(friend))
-    else
-      _ -> session
     end
   end
 
@@ -179,13 +175,11 @@ defmodule Ms2ex.GameHandlers.Friend do
       with {:ok, rcpt_session} <- CharacterManager.lookup_by_name(rcpt.name) do
         remove_friend_from_session(rcpt_session, shared_id)
         dst = Map.put(dst, :rcpt, character)
-        send(rcpt_session.session_pid, {:push, Packets.Friend.remove(dst)})
+        push(rcpt_session, Packets.Friend.remove(dst))
       end
 
       remove_friend_from_session(character, shared_id)
       push(session, Packets.Friend.cancel(shared_id))
-    else
-      _ -> session
     end
   end
 
@@ -199,8 +193,6 @@ defmodule Ms2ex.GameHandlers.Friend do
       session
       |> push(Packets.Friend.add_to_list(block))
       |> push(Packets.Friend.block(block))
-    else
-      _ -> session
     end
   end
 
@@ -215,18 +207,17 @@ defmodule Ms2ex.GameHandlers.Friend do
         remove_friend_from_session(rcpt, shared_id)
         dst = Map.put(dst, :rcpt, character)
 
-        send(rcpt.session_pid, {:unsubscribe_friend_presence, character.id})
+        Friends.unsubscribe(rcpt, character.id)
         send(rcpt.session_pid, {:push, Packets.Friend.remove(dst)})
       end
 
       remove_friend_from_session(character, shared_id)
-      send(self(), {:unsubscribe_friend_presence, rcpt.id})
+
+      Friends.unsubscribe(session, rcpt.id)
 
       session
       |> push(Packets.Friend.update(src))
       |> push(Packets.Friend.block(src))
-    else
-      _ -> session
     end
   end
 end

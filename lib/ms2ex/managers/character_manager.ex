@@ -196,11 +196,26 @@ defmodule Ms2ex.CharacterManager do
     PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
   end
 
-  defp call(%Character{id: id}, msg), do: GenServer.call(process_name(id), msg)
-  defp call(character_id, msg), do: GenServer.call(process_name(character_id), msg)
+  defp call(%Character{id: id}, msg) do
+    if pid = Process.whereis(process_name(id)) do
+      GenServer.call(pid, msg)
+    else
+      :error
+    end
+  end
+
+  defp call(character_id, msg) do
+    if pid = Process.whereis(process_name(character_id)) do
+      GenServer.call(pid, msg)
+    else
+      :error
+    end
+  end
 
   defp cast(%Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
   defp cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
 
-  defp process_name(character_id), do: :"characters:#{character_id}"
+  defp process_name(character_id) do
+    :"characters:#{character_id}"
+  end
 end
