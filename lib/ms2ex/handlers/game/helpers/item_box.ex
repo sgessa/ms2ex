@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   alias Ms2ex.{Inventory, Item, Metadata, Packets, Wallets}
 
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def open(session, _character, []), do: session
 

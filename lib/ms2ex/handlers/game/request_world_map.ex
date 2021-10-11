@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestWorldMap do
   alias Ms2ex.Packets
 
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
   import Ms2ex.Packets.PacketReader
 
   def handle(packet, session) do

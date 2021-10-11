@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   alias Ms2ex.{CharacterManager, ChatStickerGroup, ChatStickers, Metadata, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -10,9 +10,8 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   end
 
   # Open Window
-  defp handle_mode(0x1, _packet, session) do
+  defp handle_mode(0x1, _packet, _session) do
     # TODO check for expired stickers
-    session
   end
 
   # Chat
@@ -24,8 +23,6 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.chat(sticker_id, script))
-    else
-      _ -> session
     end
   end
 
@@ -38,8 +35,6 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
          {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.group_chat(sticker_id, chat_name))
-    else
-      _ -> session
     end
   end
 
@@ -52,8 +47,6 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       ChatStickers.favorite(character, sticker_id, sticker.group_id)
       push(session, Packets.ChatSticker.favorite(sticker_id))
-    else
-      _ -> session
     end
   end
 
@@ -66,8 +59,6 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       ChatStickers.unfavorite(character, sticker_id)
       push(session, Packets.ChatSticker.unfavorite(sticker_id))
-    else
-      _ -> session
     end
   end
 

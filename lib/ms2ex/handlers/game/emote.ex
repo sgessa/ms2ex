@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.Emote do
   alias Ms2ex.{CharacterManager, Emotes, Field, Inventory, Item, Metadata, Packets}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -21,9 +21,6 @@ defmodule Ms2ex.GameHandlers.Emote do
       session
       |> push(Packets.InventoryItem.consume(consumed_item))
       |> push(Packets.Emote.learn(emote_id))
-    else
-      _ ->
-        session
     end
   end
 
@@ -33,7 +30,5 @@ defmodule Ms2ex.GameHandlers.Emote do
 
     {:ok, character} = CharacterManager.lookup(session.character_id)
     Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
-
-    session
   end
 end

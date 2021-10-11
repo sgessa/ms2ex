@@ -4,8 +4,6 @@ defmodule Ms2ex.PartyServer do
   alias Ms2ex.{Packets, Party, PartyManager}
   alias Phoenix.PubSub
 
-  require Logger, as: L
-
   def broadcast(nil, _packet), do: :error
 
   def broadcast(party_id, packet) do
@@ -74,9 +72,6 @@ defmodule Ms2ex.PartyServer do
   def init(leader) do
     party = Party.create(leader)
     Process.register(self(), :"party:#{party.id}")
-
-    L.debug(fn -> "NEW PARTY CREATED WITH ID: #{party.id}" end)
-
     {:ok, party}
   end
 
@@ -214,7 +209,7 @@ defmodule Ms2ex.PartyServer do
     send(self(), :shutdown)
 
     for m <- party.members, m.online? do
-      send(m.session_pid, {:disband_party, m})
+      send(m.sender_session_pid, {:disband_party, m})
     end
   end
 

@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {_mode, packet} = get_byte(packet)
@@ -11,9 +11,9 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {_server_tick, packet} = get_int(packet)
     {segment_length, packet} = get_byte(packet)
 
-    session
-    |> Map.put(:client_tick, client_tick)
-    |> process_segments(segment_length, packet)
+    send(self(), {:update, %{client_tick: client_tick}})
+
+    process_segments(session, segment_length, packet)
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do
@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     states = get_states(segment_length, packet)
 
     sync_packet = Packets.UserSync.bytes(character, states)
-    Field.broadcast_from(character, sync_packet, session.pid)
+    Field.broadcast_from(character, sync_packet, session.sender_pid)
 
     %{animation1: animation, position: new_position} = List.first(states)
     closest_block = MapBlock.closest_block(new_position)
@@ -37,8 +37,6 @@ defmodule Ms2ex.GameHandlers.UserSync do
       character = handle_out_of_bounds(character)
       CharacterManager.receive_fall_dmg(character)
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
-    else
-      session
     end
   end
 

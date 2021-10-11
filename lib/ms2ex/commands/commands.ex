@@ -12,7 +12,7 @@ defmodule Ms2ex.Commands do
     Wallets
   }
 
-  import Net.Session, only: [push: 2, push_notice: 3]
+  import Net.SenderSession, only: [push: 2, push_notice: 3]
 
   def handle(["heal"], character, session) do
     max_hp = character.stats.hp_max
@@ -49,7 +49,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["map", field_id], character, session) do
     with {field_id, _} <- Integer.parse(field_id) do
-      Field.change_field(character, session, field_id)
+      Field.change_field(character, field_id)
     else
       _ ->
         push_notice(session, character, "Invalid Map: #{field_id}")
@@ -101,14 +101,12 @@ defmodule Ms2ex.Commands do
 
           character.field_id == target.field_id ->
             coord = character.position
-            send(target.session_pid, {:push, Packets.MoveCharacter.bytes(target, coord)})
-            session
+            push(target, Packets.MoveCharacter.bytes(target, coord))
 
           true ->
             target = Map.put(target, :update_position, character.position)
             CharacterManager.update(target)
-            send(target.session_pid, {:summon, target, character.field_id})
-            session
+            send(target.sender_session_pid, {:summon, target, character.field_id})
         end
 
       _ ->
@@ -129,7 +127,7 @@ defmodule Ms2ex.Commands do
           true ->
             character = Map.put(character, :update_position, target.position)
             CharacterManager.update(character)
-            Field.change_field(character, session, target.field_id)
+            Field.change_field(character, target.field_id)
         end
 
       _ ->

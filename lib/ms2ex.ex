@@ -9,6 +9,11 @@ defmodule Ms2ex do
     x
   end
 
+  def generate_id() do
+    <<x::integer-size(32)>> = :crypto.strong_rand_bytes(4)
+    x
+  end
+
   # Calculate probability
   def roll(chance_pct) do
     chance_pct <= 0 + 100 * :rand.uniform()
@@ -22,4 +27,7 @@ defmodule Ms2ex do
     |> String.to_float()
     |> trunc()
   end
+
+  def get_env({:system, env}), do: System.get_env(env)
+  def get_env(val), do: val
 end

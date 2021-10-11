@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   alias Ms2ex.{CharacterManager, Chat, Commands, Field, Net, Packets, PartyServer, Wallets, World}
 
   import Packets.PacketReader
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
 
   @world_chat_cost -30
 
@@ -28,19 +28,17 @@ defmodule Ms2ex.GameHandlers.UserChat do
     end
   end
 
-  defp handle_message({:all, msg, _rcpt_name}, character, session) do
+  defp handle_message({:all, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:all, character, msg)
     Field.broadcast(character, packet)
-    session
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
     case CharacterManager.lookup_by_name(rcpt_name) do
       {:ok, rcpt} ->
         # TODO check if rcpt blocked character
-        packet = Packets.UserChat.bytes(:whisper_from, character, msg)
-        send(rcpt.session_pid, {:push, packet})
 
+        push(rcpt, Packets.UserChat.bytes(:whisper_from, character, msg))
         push(session, Packets.UserChat.bytes(:whisper_to, rcpt, msg))
 
       _ ->
@@ -59,18 +57,14 @@ defmodule Ms2ex.GameHandlers.UserChat do
       _ ->
         push(session, Packets.UserChat.error(character, :notice_alert, :insufficient_merets))
     end
-
-    session
   end
 
-  defp handle_message({:party, msg, _rcpt_name}, character, session) do
+  defp handle_message({:party, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:party, character, msg)
 
     if character.party_id do
       PartyServer.broadcast(character.party_id, packet)
     end
-
-    session
   end
 
   defp handle_message(_msg, _character, session), do: session

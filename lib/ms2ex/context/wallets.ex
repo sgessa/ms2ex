@@ -2,6 +2,7 @@ defmodule Ms2ex.Wallets do
   alias Ms2ex.{Character, Packets, Repo, Wallet}
 
   import Ecto.Query, only: [where: 3]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def update(%Character{id: char_id} = char, currency, value) do
     Repo.transaction(fn ->
@@ -10,8 +11,7 @@ defmodule Ms2ex.Wallets do
       |> Repo.update_all(inc: [{currency, value}])
 
       wallet = Repo.get_by(Wallet, character_id: char_id)
-
-      send(char.session_pid, {:push, Packets.Wallet.update(wallet, currency)})
+      push(char, Packets.Wallet.update(wallet, currency))
 
       wallet
     end)

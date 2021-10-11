@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Helper.Party do
   alias Ms2ex.{CharacterManager, Packets, Party, PartyManager, PartyServer}
 
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 
   def create_party(session, character, %{party_id: nil} = target) do
     {:ok, party} = PartyManager.create(character)
@@ -9,13 +9,13 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
     character = %{character | party_id: party.id}
     CharacterManager.update(character)
 
-    PartyServer.subscribe(party.id)
+    run(session, fn -> PartyServer.subscribe(party.id) end)
 
-    send(target.session_pid, {:push, Packets.Party.invite(character)})
+    push(target, Packets.Party.invite(character))
     push(session, Packets.Party.create(party))
   end
 
-  def create_party(session, character, %{party_id: target_party_id} = target) do
+  def create_party(character, %{party_id: target_party_id} = target) do
     {:ok, target_party} = PartyServer.lookup(target_party_id)
 
     if Enum.count(target_party.members) == 1 do
@@ -24,24 +24,23 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
       character = %{character | party_id: party.id}
       CharacterManager.update(character)
 
-      send(target.session_pid, {:push, Packets.Party.invite(character)})
-      push(session, Packets.Party.create(party))
+      push(target, Packets.Party.invite(character))
+      push(character, Packets.Party.create(party))
     else
       leader = Party.get_leader(target_party)
-      send(leader.session_pid, {:push, Packets.Party.join_request(character)})
-      push(session, Packets.Party.notice(:request_to_join, target))
+      push(leader, Packets.Party.join_request(character))
+      push(character, Packets.Party.notice(:request_to_join, target))
     end
   end
 
-  def invite_to_party(session, character, target) do
+  def invite_to_party(character, target) do
     with {:ok, party} <- PartyServer.lookup(character.party_id),
          :ok <- is_leader?(party, character),
          :ok <- target_already_in_party?(character, target) do
-      send(target.session_pid, {:push, Packets.Party.invite(character)})
-      session
+      push(target, Packets.Party.invite(character))
     else
       {:error, notice_packet} ->
-        push(session, notice_packet)
+        push(character, notice_packet)
     end
   end
 

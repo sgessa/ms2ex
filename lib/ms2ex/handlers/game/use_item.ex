@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
   alias Ms2ex.GameHandlers.Helper.ItemBox
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {item_uid, packet} = get_long(packet)
@@ -20,24 +20,18 @@ defmodule Ms2ex.GameHandlers.UseItem do
         "SelectItemBox" -> select_item(session, character, item, packet)
         _ -> session
       end
-    else
-      _ -> session
     end
   end
 
   defp add_emoticon(session, character, item, _packet) do
     sticker_group_id = item.metadata.function_param
 
-    case ChatStickers.add(character, sticker_group_id) do
-      {:ok, _} ->
-        consumed_item = Inventory.consume(item)
+    with {:ok, _} <- ChatStickers.add(character, sticker_group_id) do
+      consumed_item = Inventory.consume(item)
 
-        session
-        |> push(Packets.ChatSticker.add(item.item_id, sticker_group_id))
-        |> push(Packets.InventoryItem.consume(consumed_item))
-
-      _ ->
-        session
+      session
+      |> push(Packets.ChatSticker.add(item.item_id, sticker_group_id))
+      |> push(Packets.InventoryItem.consume(consumed_item))
     end
   end
 
@@ -55,9 +49,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
 
     contents = item.metadata.content
 
-    if index < 0 or Enum.empty?(contents) do
-      session
-    else
+    if not (index < 0 or Enum.empty?(contents)) do
       consumed_item = Inventory.consume(item)
       selected_item = Enum.at(contents, index)
 

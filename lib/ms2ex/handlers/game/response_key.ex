@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     World
   }
 
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2, run: 2]
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Session, only: [init_character: 1]
 
@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
       SessionManager.register(account.id, auth_data)
-      World.subscribe()
+      run(session, fn -> World.subscribe() end)
 
       character =
         auth_data[:character_id]
@@ -36,6 +36,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         |> Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
+        |> Map.put(:sender_session_pid, session.sender_pid)
 
       tick = Ms2ex.sync_ticks()
 
@@ -52,8 +53,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       %{friends: friends, field_id: field_id, position: position, rotation: rotation} = character
 
+      send(self(), {:update, %{character_id: character.id, server_tick: tick}})
+
       session
-      |> Map.put(:character_id, character.id)
       |> push(Packets.MoveResult.bytes())
       |> push(Packets.LoginRequired.bytes(account.id))
       |> push(Packets.Friend.start_list())
@@ -62,7 +64,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ResponseTimeSync.init(0x1, tick))
       |> push(Packets.ResponseTimeSync.init(0x3, tick))
       |> push(Packets.ResponseTimeSync.init(0x2, tick))
-      |> Map.put(:server_tick, tick)
       |> push(Packets.RequestClientSyncTick.bytes(tick))
       |> push(Packets.DynamicChannel.bytes())
       |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
@@ -86,8 +87,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.RequestFieldEnter.bytes(field_id, position, rotation))
       |> push_party(character)
-    else
-      _ -> session
     end
   end
 
@@ -132,23 +131,17 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     party = PartyServer.lookup!(character.party_id)
 
     if party do
-      session
-      |> push(Packets.Party.create(party, false))
-      |> create_party(party, character)
-    else
-      session
-    end
-  end
+      push(session, Packets.Party.create(party, false))
 
-  defp create_party(session, party, character) do
-    PartyServer.broadcast_from(self(), party.id, Packets.Party.update_hitpoints(character))
+      PartyServer.broadcast_from(
+        session.sender_pid,
+        party.id,
+        Packets.Party.update_hitpoints(character)
+      )
 
-    Enum.reduce(party.members, session, fn m, session ->
-      if m.id != character.id do
+      for m <- party.members, m.id != character.id do
         push(session, Packets.Party.update_hitpoints(m))
-      else
-        session
       end
-    end)
+    end
   end
 end

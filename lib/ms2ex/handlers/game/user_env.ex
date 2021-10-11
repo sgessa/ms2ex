@@ -18,8 +18,6 @@ defmodule Ms2ex.GameHandlers.UserEnv do
 
       Field.broadcast(character, Packets.UserEnv.update_title(character))
     end
-
-    session
   end
 
   defp handle_mode(_mode, _packet, session), do: session

@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Party
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -30,7 +30,7 @@ defmodule Ms2ex.GameHandlers.Party do
         push(session, Packets.Party.notice(:invite_self, character))
 
       character.party_id ->
-        invite_to_party(session, character, target)
+        invite_to_party(character, target)
 
       true ->
         create_party(session, character, target)
@@ -61,7 +61,8 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x3, _packet, session) do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, _party} <- PartyServer.lookup(character.party_id) do
-      PartyServer.unsubscribe(character.party_id)
+      run(session, fn -> PartyServer.unsubscribe(character.party_id) end)
+
       PartyServer.remove_member(character)
 
       character = %{character | party_id: nil}
@@ -80,13 +81,10 @@ defmodule Ms2ex.GameHandlers.Party do
          true <- Party.is_leader?(party, character),
          {:ok, target} <- PartyServer.kick_member(party, target_id) do
       if target.online? do
-        send(target.session_pid, {:unsubscribe_party, party.id})
+        run(target, fn -> PartyServer.unsubscribe(party.id) end)
       end
 
-      target = %{target | party_id: nil}
-      CharacterManager.update(target)
-
-      session
+      CharacterManager.update(%{target | party_id: nil})
     end
   end
 
@@ -99,9 +97,6 @@ defmodule Ms2ex.GameHandlers.Party do
          {:ok, party} <- PartyServer.lookup(character.party_id),
          true <- party.leader_id == character.id do
       PartyServer.broadcast(party.id, Packets.Party.set_leader(new_leader))
-      session
-    else
-      _ -> session
     end
   end
 
@@ -115,7 +110,6 @@ defmodule Ms2ex.GameHandlers.Party do
         push(session, Packets.Party.notice(:insufficient_memmber_count_for_kick_vote, character))
       else
         PartyServer.start_vote_kick(party, target_id)
-        session
       end
     end
   end
@@ -127,8 +121,6 @@ defmodule Ms2ex.GameHandlers.Party do
       if Party.is_leader?(party, character) do
         PartyServer.start_ready_check(party)
       end
-
-      session
     end
   end
 
@@ -141,9 +133,6 @@ defmodule Ms2ex.GameHandlers.Party do
          {:ok, party} <- PartyServer.lookup(character.party_id),
          false <- Enum.member?(party.ready_check, character.id) do
       PartyServer.ready_check(party, character, resp)
-      session
-    else
-      _ -> session
     end
   end
 
@@ -154,11 +143,10 @@ defmodule Ms2ex.GameHandlers.Party do
 
     cond do
       Party.in_party?(party, character) ->
-        session
+        {:error, :already_in_party}
 
       response != :accepted_invite ->
-        send(leader.session_pid, {:push, Packets.Party.notice(response, character)})
-        session
+        push(leader, Packets.Party.notice(response, character))
 
       Party.full?(party) ->
         push(session, Packets.Party.notice(:full_party, character))
@@ -170,15 +158,13 @@ defmodule Ms2ex.GameHandlers.Party do
         {:ok, party} = PartyServer.update_member(character)
 
         CharacterManager.update(character)
-        PartyServer.subscribe(party.id)
+        run(session, fn -> PartyServer.subscribe(party.id) end)
 
-        session = push(session, Packets.Party.create(party))
+        push(session, Packets.Party.create(party))
 
         for m <- party.members do
           PartyServer.broadcast(party.id, Packets.Party.update_hitpoints(m))
         end
-
-        session
     end
   end
 end

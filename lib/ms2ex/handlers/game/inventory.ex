@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
 
   alias Ms2ex.{CharacterManager, Field, Inventory, Item, Net, Packets, TransferFlags, Wallets}
 
-  import Net.Session, only: [push: 2]
+  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   def handle(packet, session) do
@@ -20,8 +20,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
          %Item{inventory_slot: src_slot} = src_item <- Inventory.get(character, id),
          {:ok, dst_uid} <- Inventory.swap(src_item, dst_slot) do
       push(session, Packets.InventoryItem.move_item(dst_uid, src_slot, src_item.id, dst_slot))
-    else
-      _ -> session
     end
   end
 
@@ -37,8 +35,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
       consumed_item = Inventory.consume(item, amount)
       Field.drop_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)
-    else
-      _ -> session
     end
   end
 
@@ -49,8 +45,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          %Item{} = item <- Inventory.get(character, id) do
       update_inventory(session, Inventory.delete(item))
-    else
-      _ -> session
     end
   end
 
@@ -63,8 +57,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
       session
       |> push(Packets.InventoryItem.reset_tab(tab))
       |> push(Packets.InventoryItem.load_items(tab, items))
-    else
-      _ -> session
     end
   end
 
@@ -81,8 +73,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.InventoryItem.load_tab(tab, slots))
       |> push(Packets.InventoryItem.expand_tab())
-    else
-      _ -> session
     end
   end
 

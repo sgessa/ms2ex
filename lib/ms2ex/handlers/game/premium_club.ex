@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
   alias Ms2ex.PremiumMemberships, as: Memberships
 
   import Packets.PacketReader
-  import Ms2ex.Net.Session, only: [push: 2]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -48,8 +48,6 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.PremiumClub.purchase_membership(package_id))
       |> push(Packets.PremiumClub.activate(character, membership))
-    else
-      _ -> session
     end
   end
 end
