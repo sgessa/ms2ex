@@ -88,8 +88,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.RequestFieldEnter.bytes(field_id, position, rotation))
       |> push_party(character)
     end
-
-    session
   end
 
   defp maybe_set_party(character) do

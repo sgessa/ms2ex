@@ -31,8 +31,6 @@ defmodule Ms2ex.GameHandlers.RequestRide do
 
     {:ok, mount} = Field.add_object(character, mount)
     Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
-
-    session
   end
 
   # Stop Ride
@@ -41,7 +39,6 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     {forced, _packet} = get_bool(packet)
     {:ok, character} = CharacterManager.lookup(session.character_id)
     Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
-    session
   end
 
   # Change Ride
@@ -51,7 +48,6 @@ defmodule Ms2ex.GameHandlers.RequestRide do
 
     {:ok, character} = CharacterManager.lookup(session.character_id)
     Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
-    session
   end
 
   defp handle_ride(_mode, _packet, session) do

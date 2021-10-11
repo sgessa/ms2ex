@@ -86,8 +86,6 @@ defmodule Ms2ex.GameHandlers.Skill do
         Packets.SkillDamage.sync_damage(skill_cast, coords, character, target_count, projectiles)
       )
     end
-
-    session
   end
 
   # Damage
@@ -132,8 +130,6 @@ defmodule Ms2ex.GameHandlers.Skill do
         )
       end
     end
-
-    session
   end
 
   # AoE Damage
@@ -156,8 +152,6 @@ defmodule Ms2ex.GameHandlers.Skill do
         Field.add_region_skill(character, skill_cast)
       end
     end
-
-    session
   end
 
   defp damage_targets(session, character, crit?, target_count, mobs, packet)

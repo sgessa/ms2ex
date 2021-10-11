@@ -48,8 +48,6 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.PremiumClub.purchase_membership(package_id))
       |> push(Packets.PremiumClub.activate(character, membership))
-    else
-      _ -> session
     end
   end
 end

@@ -11,8 +11,6 @@ defmodule Ms2ex.GameHandlers.PickupMoney do
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
     pickup_items(packet, character, count)
-
-    session
   end
 
   defp pickup_items(_packet, _character, 0), do: :ok

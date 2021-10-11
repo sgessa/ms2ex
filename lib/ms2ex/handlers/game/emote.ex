@@ -21,9 +21,6 @@ defmodule Ms2ex.GameHandlers.Emote do
       session
       |> push(Packets.InventoryItem.consume(consumed_item))
       |> push(Packets.Emote.learn(emote_id))
-    else
-      _ ->
-        session
     end
   end
 
@@ -33,7 +30,5 @@ defmodule Ms2ex.GameHandlers.Emote do
 
     {:ok, character} = CharacterManager.lookup(session.character_id)
     Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
-
-    session
   end
 end

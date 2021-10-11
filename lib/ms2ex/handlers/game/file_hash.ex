@@ -15,7 +15,5 @@ defmodule Ms2ex.GameHandlers.FileHash do
     if md5 != config[:hash] do
       Logger.error("File Hash does not match")
     end
-
-    session
   end
 end

@@ -23,7 +23,5 @@ defmodule Ms2ex.GameHandlers.Vibrate do
       character,
       Packets.Vibrate.bytes(character, entity_id, some_id, obj_id, flag, tick)
     )
-
-    session
   end
 end

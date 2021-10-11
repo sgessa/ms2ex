@@ -12,7 +12,5 @@ defmodule Ms2ex.GameHandlers.PickupItem do
 
     # TODO check that user inventory is not full
     Field.pickup_item(character, object_id)
-
-    session
   end
 end

@@ -28,10 +28,9 @@ defmodule Ms2ex.GameHandlers.UserChat do
     end
   end
 
-  defp handle_message({:all, msg, _rcpt_name}, character, session) do
+  defp handle_message({:all, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:all, character, msg)
     Field.broadcast(character, packet)
-    session
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
@@ -58,18 +57,14 @@ defmodule Ms2ex.GameHandlers.UserChat do
       _ ->
         push(session, Packets.UserChat.error(character, :notice_alert, :insufficient_merets))
     end
-
-    session
   end
 
-  defp handle_message({:party, msg, _rcpt_name}, character, session) do
+  defp handle_message({:party, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:party, character, msg)
 
     if character.party_id do
       PartyServer.broadcast(character.party_id, packet)
     end
-
-    session
   end
 
   defp handle_message(_msg, _character, session), do: session

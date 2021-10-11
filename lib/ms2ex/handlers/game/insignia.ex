@@ -16,8 +16,6 @@ defmodule Ms2ex.GameHandlers.Insignia do
       _ ->
         Field.broadcast(character, Packets.Insignia.update(character, insignia_id, false))
     end
-
-    session
   end
 
   defp can_equip_insignia?(%{is_vip: is_vip}, %{type: "vip"}, _insignia_id), do: is_vip

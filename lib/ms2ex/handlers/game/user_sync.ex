@@ -37,8 +37,6 @@ defmodule Ms2ex.GameHandlers.UserSync do
       character = handle_out_of_bounds(character)
       CharacterManager.receive_fall_dmg(character)
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
-    else
-      session
     end
   end
 
