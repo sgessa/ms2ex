@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Wallet do
-  alias Ms2ex.{Packets, Wallet}
+  alias Ms2ex.{Packets, Wallets}
 
   import Packets.PacketWriter
 
@@ -20,7 +20,7 @@ defmodule Ms2ex.Packets.Wallet do
 
     __MODULE__
     |> build()
-    |> put_byte(Wallet.currency_type(type))
+    |> put_byte(Wallets.currency_type(type))
     |> put_long(amount)
     |> put_long(-1)
     |> put_short(52)
