@@ -12,6 +12,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     PartyManager,
     PartyServer,
     SessionManager,
+    Wallets,
     World
   }
 
@@ -49,7 +50,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       init_character(character)
 
       titles = Characters.list_titles(character)
-      wallet = Characters.get_wallet(character)
+
+      account_wallet = Wallets.find(account)
+      character_wallet = Wallets.find(character)
 
       %{friends: friends, field_id: field_id, position: position, rotation: rotation} = character
 
@@ -66,7 +69,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ResponseTimeSync.init(0x2, tick))
       |> push(Packets.RequestClientSyncTick.bytes(tick))
       |> push(Packets.DynamicChannel.bytes())
-      |> push(Packets.ServerEnter.bytes(session.channel_id, character, wallet))
+      |> push(Packets.ServerEnter.bytes(character, account_wallet, character_wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
       |> push_inventory_tab(Inventory.list_tabs(character))

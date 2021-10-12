@@ -20,6 +20,8 @@ defmodule Ms2ex.Accounts do
   def get(id), do: Repo.get(Account, id)
 
   def create(attrs) do
+    attrs = Account.set_default_assocs(attrs)
+
     %Account{}
     |> Account.changeset(attrs)
     |> Repo.insert()

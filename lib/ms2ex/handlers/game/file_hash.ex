@@ -3,7 +3,7 @@ defmodule Ms2ex.GameHandlers.FileHash do
 
   import Ms2ex.Packets.PacketReader
 
-  def handle(packet, session) do
+  def handle(packet, _session) do
     config = Application.get_env(:ms2ex, Ms2ex)
 
     {_, packet} = get_int(packet)

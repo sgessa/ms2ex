@@ -70,13 +70,6 @@ defmodule Ms2ex.Characters do
     |> Repo.all()
   end
 
-  def get_wallet(%Character{id: character_id}) do
-    Ms2ex.Wallet
-    |> where([w], w.character_id == ^character_id)
-    |> limit(1)
-    |> Repo.one()
-  end
-
   def maybe_discover_map(%Character{discovered_maps: maps} = character, new_map) do
     if Enum.member?(maps, new_map) do
       character
