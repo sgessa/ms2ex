@@ -12,13 +12,14 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.ChatStickers.store()
     Ms2ex.Metadata.ExpTable.store()
     Ms2ex.Metadata.Insignias.store()
-    Ms2ex.Metadata.ItemStats.store()
     Ms2ex.Metadata.Items.store()
     Ms2ex.Metadata.Maps.store()
     Ms2ex.Metadata.MapEntities.store()
     Ms2ex.Metadata.MagicPaths.store()
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
+
+    IO.inspect "Metadata loaded"
 
     children =
       [
