@@ -168,7 +168,7 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   def put_item_stat(packet, stat) do
     packet
-    |> put_short(Ms2ex.Metadata.ItemAttribute.value(stat.type))
+    |> put_short(Ms2ex.StatId.from_name(stat.type))
     |> put_int(stat.value)
     |> put_float(stat.percentage)
   end
@@ -223,7 +223,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
-    |> put_int(Metadata.InventoryTab.value(tab_id))
+    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
     |> put_short(length(items))
     |> reduce(items, fn item, packet ->
       packet
@@ -245,7 +245,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_tab)
-    |> put_byte(Metadata.InventoryTab.value(tab_id))
+    |> put_byte(Metadata.Items.InventoryTab.value(tab_id))
     |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
   end
 
@@ -253,6 +253,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.reset_tab)
-    |> put_int(Metadata.InventoryTab.value(tab_id))
+    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
   end
 end
