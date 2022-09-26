@@ -1,148 +1,46 @@
-defmodule Ms2ex.Metadata.InventoryTab do
-  @moduledoc false
-  use Protobuf, enum: true, syntax: :proto3
-
-  field :gear, 0
-  field :outfit, 1
-  field :mount, 2
-  field :catalyst, 3
-  field :fishing_music, 4
-  field :quest, 5
-  field :gemstone, 6
-  field :misc, 7
-  field :life_skill, 9
-  field :pets, 10
-  field :consumable, 11
-  field :currency, 12
-  field :badge, 13
-  field :lapenshard, 15
-  field :fragment, 16
-end
-
-defmodule Ms2ex.Metadata.GemSlot do
-  @moduledoc false
-  use Protobuf, enum: true, syntax: :proto3
-
-  field :none, 0
-  field :trans, 1
-  field :damage, 2
-  field :chat, 3
-  field :name, 4
-  field :tombstone, 5
-  field :swim, 6
-  field :buddy, 7
-  field :fishing, 8
-  field :gather, 9
-  field :effect, 10
-  field :pet, 11
-  field :unknown, 12
-end
-
-defmodule Ms2ex.Metadata.EquipSlot do
-  @moduledoc false
-  use Protobuf, enum: true, syntax: :proto3
-
-  field :NONE, 0
-  field :HR, 102
-  field :FA, 103
-  field :FD, 104
-  field :ER, 105
-  field :FH, 110
-  field :EY, 111
-  field :EA, 112
-  field :CP, 113
-  field :CL, 114
-  field :PA, 115
-  field :GL, 116
-  field :SH, 117
-  field :MT, 118
-  field :PD, 119
-  field :RI, 120
-  field :BE, 121
-  field :RH, 1
-  field :LH, 2
-  field :OH, 3
-end
-
-defmodule Ms2ex.Metadata.ItemContent do
-  @moduledoc false
-  use Protobuf, syntax: :proto3
-
-  field :id, 1, type: :int32
-  field :id2, 2, type: :int32
-  field :min_amount, 3, type: :int32
-  field :max_amount, 4, type: :int32
-  field :drop_group, 5, type: :int32
-  field :smart_drop_rate, 6, type: :int32
-  field :rarity, 7, type: :int32
-  field :enchant_level, 8, type: :int32
-end
-
-defmodule Ms2ex.Metadata.ItemFunction do
-  @moduledoc false
-  use Protobuf, syntax: :proto3
-
-  field :name, 1, type: :string
-  field :id, 2, type: :int32
-  field :duration, 3, type: :int32
-  field :field_id, 4, type: :int32
-  field :capacity, 5, type: :int32
-  field :target_level, 6, type: :int32
-  field :count, 7, type: :int32
-  field :total_user, 8, type: :int32
-  field :rarity, 9, type: :int32
-end
-
-defmodule Ms2ex.Metadata.DismantleReward do
-  @moduledoc false
-  use Protobuf, syntax: :proto3
-
-  field :item_id, 1, type: :int32
-  field :amount, 2, type: :int32
-end
-
 defmodule Ms2ex.Metadata.Item do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :id,
-    :slot,
-    :gem_slot,
-    :tab,
-    :rarity,
-    :stack_limit,
-    :dismantable?,
-    :is_two_handed?,
-    :is_dress?,
-    :is_template?,
-    :play_count,
-    :skill_id,
-    :jobs,
-    :content
-  ]
-
   field :id, 1, type: :int32
-  field :slot, 2, enum: true, type: Ms2ex.Metadata.EquipSlot
-  field :gem_slot, 3, enum: true, type: Ms2ex.Metadata.GemSlot
-  field :tab, 4, enum: true, type: Ms2ex.Metadata.InventoryTab
-  field :rarity, 5, type: :int32
-  field :stack_limit, 6, type: :int32
-  field :dismantable?, 7, type: :bool
-  field :is_two_handed?, 8, type: :bool
-  field :is_dress?, 9, type: :bool
-  field :is_template?, 10, type: :bool
-  field :gender, 11, type: :int32
-  field :play_count, 12, type: :int32
-  field :custom_score?, 13, type: :bool
-  field :selling_prices, 15, repeated: true, type: :int32
-  field :selling_custom_price, 16, repeated: true, type: :int32
-  field :file_name, 17, type: :string
-  field :skill_id, 18, type: :int32
-  field :jobs, 19, enum: true, repeated: true, type: Ms2ex.Metadata.Job
-  field :content, 20, repeated: true, type: Ms2ex.Metadata.ItemContent
-  field :dismantle_rewards, 21, repeated: true, type: Ms2ex.Metadata.DismantleReward
-  field :function_data, 22, type: Ms2ex.Metadata.ItemFunction
+  field :name, 2, type: :string
+  field :tab, 3, enum: true, type: Ms2ex.Metadata.Items.InventoryTab
+  field :slots, 4, enum: true, repeated: true, type: Ms2ex.Metadata.Items.EquipSlot
+  field :medal_slot, 5, enum: true, type: Ms2ex.Metadata.Items.MedalSlot
+  field :rarity, 8, type: :int32
+  field :gem, 9, type: Ms2ex.Metadata.Items.Gem
+  field :ugc, 10, type: Ms2ex.Metadata.Items.Ugc
+  field :life, 11, type: Ms2ex.Metadata.Items.Life
+  field :pet, 12, type: Ms2ex.Metadata.Items.Pet
+  field :basic, 13, type: Ms2ex.Metadata.Items.Basic
+  field :limit, 14, type: Ms2ex.Metadata.Items.Limit
+  field :skill, 15, type: Ms2ex.Metadata.Items.Skill
+  field :fusion, 16, type: Ms2ex.Metadata.Items.Fusion
+  field :install, 17, type: Ms2ex.Metadata.Items.Install
+  field :property, 18, type: Ms2ex.Metadata.Items.Property
+  field :customize, 19, type: Ms2ex.Metadata.Items.Customize
+  field :function_data, 20, type: Ms2ex.Metadata.Items.Function
+  field :option, 21, type: Ms2ex.Metadata.Items.Option
+  field :music, 22, type: Ms2ex.Metadata.Items.Music
+  field :housing, 23, type: Ms2ex.Metadata.Items.Housing
+  field :shop, 24, type: Ms2ex.Metadata.Items.Shop
+  field :break_rewards, 25, repeated: true, type: Ms2ex.Metadata.Items.BreakReward
+  field :additional_effect, 24, type: Ms2ex.Metadata.Items.AdditionalEffect
+
+  # OLD #
+  # field :stack_limit, 6, type: :int32
+  # field :dismantable?, 7, type: :bool
+  # field :is_template?, 10, type: :bool
+  # field :gender, 11, type: :int32
+  # field :play_count, 12, type: :int32
+  # field :custom_score?, 13, type: :bool
+  # field :selling_prices, 15, repeated: true, type: :int32
+  # field :selling_custom_price, 16, repeated: true, type: :int32
+  # field :file_name, 17, type: :string
+  # field :skill_id, 18, type: :int32
+  # field :jobs, 19, enum: true, repeated: true, type: Ms2ex.Metadata.Job
+  # field :content, 20, repeated: true, type: Ms2ex.Metadata.ItemContent
+  # field :dismantle_rewards, 21, repeated: true, type: Ms2ex.Metadata.DismantleReward
 end
 
 defmodule Ms2ex.Metadata.Items do
@@ -150,8 +48,6 @@ defmodule Ms2ex.Metadata.Items do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.Item
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: Item
 
