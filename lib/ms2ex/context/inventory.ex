@@ -1,6 +1,6 @@
 defmodule Ms2ex.Inventory do
   alias __MODULE__.Tab
-  alias Ms2ex.{Character, Item, ItemStats, Metadata, Repo}
+  alias Ms2ex.{Character, Item, Repo}
 
   import Ecto.Query, except: [update: 2]
 
@@ -110,19 +110,11 @@ defmodule Ms2ex.Inventory do
 
   defp create(_character, _attrs), do: :nothing
 
+  # TODO: generate item stats
   defp set_item_stats(%{inventory_tab: :gear} = attrs) do
-    case Metadata.ItemStats.lookup(attrs.item_id) do
-      {:ok, metadata} ->
-        basic = attrs.basic_attributes || ItemStats.set_basic_attributes(metadata, attrs.rarity)
-        bonus = attrs.bonus_attributes || ItemStats.set_bonus_attributes(metadata, attrs.rarity)
-
-        attrs
-        |> Map.put(:basic_attributes, basic)
-        |> Map.put(:bonus_attributes, bonus)
-
-      _ ->
-        attrs
-    end
+    attrs
+    |> Map.put(:basic_attributes, [])
+    |> Map.put(:bonus_attributes, [])
   end
 
   defp set_item_stats(attrs), do: attrs
