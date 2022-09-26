@@ -23,8 +23,8 @@ defmodule Ms2ex.Item do
   ]
 
   @required [:amount, :item_id, :location]
-  @equip_slots Map.to_list(Metadata.EquipSlot.mapping())
-  @inventory_tabs Map.to_list(Metadata.InventoryTab.mapping())
+  @equip_slots Map.to_list(Metadata.Items.EquipSlot.mapping())
+  @inventory_tabs Map.to_list(Metadata.Items.InventoryTab.mapping())
 
   defenum(EquipSlot, @equip_slots)
   defenum(Location, inventory: 0, equipment: 1)
