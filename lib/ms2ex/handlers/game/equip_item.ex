@@ -40,7 +40,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     equips = Equips.list(character)
 
     # find currently equipped item in the same slot and unequip it
-    old_items = Equips.find_equipped_in_slot(equips, equip_slot, item)
+    old_items = Equips.find_equipped_in_slot(equips, item.metadata.slots)
 
     Enum.each(old_items, fn old_item ->
       unequip_item(character, old_item, session)

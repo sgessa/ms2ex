@@ -12,35 +12,12 @@ defmodule Ms2ex.Equips do
   end
 
   # For suits, check top and pants
-  def find_equipped_in_slot(equips, :CL, %{metadata: %{is_dress?: true}}) do
-    Enum.filter(equips, &(&1.equip_slot == :CL || &1.equip_slot == :PA))
+  def find_equipped_in_slot(equips, slots) do
+    Enum.filter(equips, &(&1.equip_slot in slots))
   end
 
-  # For top or pants, we have to check if a dress is equipped
-  def find_equipped_in_slot(equips, slot, _item) when slot in [:CL, :PA] do
-    Enum.filter(equips, fn e ->
-      (e.metadata.is_dress? && e.equip_slot == :CL) || e.equip_slot == slot
-    end)
-  end
-
-  # For one-hand weapon, check left-hand and right-hand weapons
-  def find_equipped_in_slot(equips, :RH, %{metadata: %{is_two_handed?: true}}) do
-    Enum.filter(equips, &(&1.equip_slot == :LH || &1.equip_slot == :RH))
-  end
-
-  # For left-hand weapon, we have to check if a two-hand weapon is equipped
-  def find_equipped_in_slot(equips, slot, _item) when slot in [:LH, :RH] do
-    Enum.filter(equips, fn e ->
-      (e.metadata.is_two_handed? && e.equip_slot == :RH) || e.equip_slot == slot
-    end)
-  end
-
-  def find_equipped_in_slot(equips, slot, _item) do
-    Enum.filter(equips, &(&1.equip_slot == slot))
-  end
-
-  def equip(equip_slot, %Item{location: :inventory} = item) do
-    update_item(item, %{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
+  def equip(equip_slots, %Item{location: :inventory} = item) do
+    update_item(item, %{equip_slots: equip_slots, inventory_slot: nil, location: :equipment})
   end
 
   def unequip(%Item{} = item) do
@@ -59,7 +36,7 @@ defmodule Ms2ex.Equips do
 
   def valid_slot?(slot_name) do
     slot_name = String.to_existing_atom(slot_name)
-    Map.has_key?(Metadata.EquipSlot.mapping(), slot_name)
+    Map.has_key?(Metadata.Items.EquipSlot.mapping(), slot_name)
   rescue
     _ -> false
   end
