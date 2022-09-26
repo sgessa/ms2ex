@@ -2,8 +2,6 @@ defmodule Ms2ex.Metadata.MobSpawnData do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:difficulty, :min_difficulty, :tags, :spawn_time, :max_population, :pet_spawn?]
-
   field :difficulty, 1, type: :int32
   field :min_difficulty, 2, type: :int32
   field :tags, 3, repeated: true, type: :string

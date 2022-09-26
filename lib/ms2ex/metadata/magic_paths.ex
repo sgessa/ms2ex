@@ -2,15 +2,6 @@ defmodule Ms2ex.Metadata.MagicPathMove do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :rotation,
-    :fire_offset_position,
-    :direction,
-    :control_value_0,
-    :control_value_1,
-    :ignore_adjust
-  ]
-
   field :rotation, 1, type: :int32
   field :fire_offset_position, 2, type: Ms2ex.Metadata.CoordF
   field :direction, 3, type: Ms2ex.Metadata.CoordF
@@ -32,7 +23,6 @@ defmodule Ms2ex.Metadata.MagicPaths do
   use Protobuf, syntax: :proto3
 
   @table :magic_path_metadata
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: Ms2ex.Metadata.MagicPath
 

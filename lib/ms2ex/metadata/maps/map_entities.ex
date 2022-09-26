@@ -2,34 +2,6 @@ defmodule Ms2ex.Metadata.MapEntity do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :id,
-    :npcs,
-    :portals,
-    :character_spawns,
-    :mob_spawns,
-    :objects,
-    :bounding_box_0,
-    :bounding_box_1,
-    :healing_spots,
-    :patrol_data,
-    :way_points,
-    :trigger_meshes,
-    :trigger_effects,
-    :trigger_cameras,
-    :trigger_boxes,
-    :trigger_ladders,
-    :event_npc_spawns,
-    :trigger_actors,
-    :trigger_cubes,
-    :trigger_sounds,
-    :trigger_ropes,
-    :breakable_actors,
-    :brekable_nifs,
-    :vibrate_objects,
-    :interactable_objects
-  ]
-
   field :id, 1, type: :int32
   field :npcs, 2, repeated: true, type: Ms2ex.Metadata.MapNpc
   field :portals, 3, repeated: true, type: Ms2ex.Metadata.MapPortal
@@ -64,8 +36,6 @@ defmodule Ms2ex.Metadata.MapEntities do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.MapEntity
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: MapEntity
 

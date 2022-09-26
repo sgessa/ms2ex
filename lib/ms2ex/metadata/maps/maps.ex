@@ -2,8 +2,6 @@ defmodule Ms2ex.Metadata.MapBlock do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:coord, :attr, :type, :saleable_group]
-
   field :coord, 1, type: Ms2ex.Metadata.Coord
   field :attr, 2, type: :string
   field :type, 3, type: :string
@@ -14,8 +12,6 @@ defmodule Ms2ex.Metadata.Map do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:id, :name, :x_block_name, :blocks]
-
   field :id, 1, type: :int32
   field :name, 2, type: :string
   field :x_block_name, 3, type: :string
@@ -25,8 +21,6 @@ end
 defmodule Ms2ex.Metadata.Maps do
   @moduledoc false
   use Protobuf, syntax: :proto3
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: Ms2ex.Metadata.Map
 

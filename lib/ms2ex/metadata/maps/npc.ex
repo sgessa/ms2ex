@@ -2,18 +2,6 @@ defmodule Ms2ex.Metadata.MapNpc do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :id,
-    :model,
-    :instance,
-    :position,
-    :rotation,
-    :patrol_data_uuid,
-    :spawn_on_field?,
-    :day_die?,
-    :night_die?
-  ]
-
   field :id, 1, type: :int32
   field :model, 2, type: :string
   field :instance, 3, type: :string

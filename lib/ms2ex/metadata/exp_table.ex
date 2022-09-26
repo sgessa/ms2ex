@@ -2,8 +2,6 @@ defmodule Ms2ex.Metadata.ExpTableEntry do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:level, :to_next_level]
-
   field :level, 1, type: :int32
   field :to_next_level, 2, type: :int32
 end
@@ -13,8 +11,6 @@ defmodule Ms2ex.Metadata.ExpTable do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.ExpTableEntry
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: ExpTableEntry
 

@@ -4,8 +4,6 @@ defmodule Ms2ex.Metadata.MobSpawn do
 
   alias Ms2ex.{MapBlock, Metadata}
 
-  defstruct [:id, :position, :npc_count, :npc_ids, :spawn_radius, :data]
-
   field :id, 1, type: :int32
   field :position, 2, type: Metadata.Coord
   field :npc_count, 3, type: :int32

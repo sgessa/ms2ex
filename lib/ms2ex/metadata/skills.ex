@@ -118,19 +118,6 @@ defmodule Ms2ex.Metadata.SkillLevel do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :level,
-    :spirit,
-    :stamina,
-    :damage_rate,
-    :feature,
-    :motion,
-    :attacks,
-    :conditions,
-    :data,
-    :skill_upgrade
-  ]
-
   field :level, 1, type: :int32
   field :spirit, 2, type: :int32
   field :stamina, 3, type: :int32
@@ -146,22 +133,6 @@ end
 defmodule Ms2ex.Metadata.Skill do
   @moduledoc false
   use Protobuf, syntax: :proto3
-
-  defstruct [
-    :id,
-    :skill_levels,
-    :sub_skills,
-    :job,
-    :starting_level,
-    :state,
-    :damage_type,
-    :type,
-    :sub_type,
-    :element,
-    :super_armor,
-    :sp_recovery?,
-    :max_level
-  ]
 
   field :id, 1, type: :int32
   field :skill_levels, 2, repeated: true, type: Ms2ex.Metadata.SkillLevel
@@ -183,8 +154,6 @@ defmodule Ms2ex.Metadata.Skills do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.Skill
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: Skill
 

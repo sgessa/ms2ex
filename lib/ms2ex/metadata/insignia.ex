@@ -2,8 +2,6 @@ defmodule Ms2ex.Metadata.Insignia do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [:id, :type, :title_id]
-
   field :id, 1, type: :int32
   field :type, 2, type: :string
   field :title_id, 3, type: :int32
@@ -14,8 +12,6 @@ defmodule Ms2ex.Metadata.Insignias do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.Insignia
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: Insignia
 

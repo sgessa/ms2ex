@@ -5,31 +5,6 @@ defmodule Ms2ex.Metadata.Npc do
   alias Ms2ex.Metadata
   alias Metadata.Coord
 
-  defstruct [
-    :id,
-    :name,
-    :model,
-    :template_id,
-    :friendly,
-    :level,
-    :skill_ids,
-    :ai_info,
-    :exp,
-    :drop_box_ids,
-    :rotation,
-    :walk_speed,
-    :run_speed,
-    :position,
-    :stats,
-    :basic,
-    :combat,
-    :dead,
-    :distance,
-    :interact,
-    animation: 255,
-    boss?: false
-  ]
-
   field :id, 1, type: :int32
   field :name, 2, type: :string
   field :model, 3, type: :string
@@ -66,8 +41,6 @@ defmodule Ms2ex.Metadata.Npcs do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.Npc
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: Npc
 
