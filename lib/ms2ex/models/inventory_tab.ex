@@ -4,7 +4,7 @@ defmodule Ms2ex.Inventory.Tab do
   import Ecto.Changeset
   import EctoEnum
 
-  @inventory_tabs Map.to_list(Ms2ex.Metadata.InventoryTab.mapping())
+  @inventory_tabs Map.to_list(Ms2ex.Metadata.Items.InventoryTab.mapping())
   defenum(Type, @inventory_tabs)
 
   schema "inventory_tabs" do
@@ -38,7 +38,7 @@ defmodule Ms2ex.Inventory.Tab do
   defp ensure_slots(inventory_tab), do: inventory_tab
 
   def default_slots() do
-    Ms2ex.Metadata.InventoryTab.mapping()
+    Ms2ex.Metadata.Items.InventoryTab.mapping()
     |> Map.keys()
     |> Enum.into(%{}, &{&1, 48})
     |> Map.put(:outfit, 150)
