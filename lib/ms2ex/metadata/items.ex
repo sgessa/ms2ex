@@ -26,21 +26,6 @@ defmodule Ms2ex.Metadata.Item do
   field :shop, 24, type: Ms2ex.Metadata.Items.Shop
   field :break_rewards, 25, repeated: true, type: Ms2ex.Metadata.Items.BreakReward
   field :additional_effect, 24, type: Ms2ex.Metadata.Items.AdditionalEffect
-
-  # OLD #
-  # field :stack_limit, 6, type: :int32
-  # field :dismantable?, 7, type: :bool
-  # field :is_template?, 10, type: :bool
-  # field :gender, 11, type: :int32
-  # field :play_count, 12, type: :int32
-  # field :custom_score?, 13, type: :bool
-  # field :selling_prices, 15, repeated: true, type: :int32
-  # field :selling_custom_price, 16, repeated: true, type: :int32
-  # field :file_name, 17, type: :string
-  # field :skill_id, 18, type: :int32
-  # field :jobs, 19, enum: true, repeated: true, type: Ms2ex.Metadata.Job
-  # field :content, 20, repeated: true, type: Ms2ex.Metadata.ItemContent
-  # field :dismantle_rewards, 21, repeated: true, type: Ms2ex.Metadata.DismantleReward
 end
 
 defmodule Ms2ex.Metadata.Items do

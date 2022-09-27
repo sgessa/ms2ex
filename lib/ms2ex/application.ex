@@ -19,8 +19,6 @@ defmodule Ms2ex.Application do
     Ms2ex.Metadata.Npcs.store()
     Ms2ex.Metadata.Skills.store()
 
-    IO.inspect "Metadata loaded"
-
     children =
       [
         # Start the Ecto repository

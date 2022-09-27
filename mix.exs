@@ -45,10 +45,10 @@ defmodule Ms2ex.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:bcrypt_elixir, "~> 2.2.0"},
       {:protobuf, ">= 0.0.0"},
+      {:google_protos, "~> 0.3.0"},
       {:varint, ">= 0.0.0"},
       {:libgraph, "~> 0.13"},
-      {:ranch, "~> 2.0", override: true},
-      {:google_protos, "~> 0.3.0"}
+      {:ranch, "~> 2.0", override: true}
     ]
   end
 
