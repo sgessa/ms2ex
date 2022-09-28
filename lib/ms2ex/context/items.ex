@@ -45,4 +45,19 @@ defmodule Ms2ex.Items do
   def stamina?(%Item{item_id: @stamina_id}), do: true
   def stamina?(%Item{}), do: false
   def stamina(amount), do: init(@stamina_id, amount)
+
+  @accessory_slots [:FH, :EA, :PD, :BE, :RI]
+  def accessory?(%Item{} = item) do
+    !!Enum.find(item.metadata.slots, &(&1 in @accessory_slots))
+  end
+
+  @armor_slots [:CP, :CL, :GL, :SH, :MT]
+  def armor?(%Item{} = item) do
+    !!Enum.find(item.metadata.slots, &(&1 in @armor_slots))
+  end
+
+  @weapon_slots [:LH, :RH, :OH]
+  def weapon?(%Item{} = item) do
+    !!Enum.find(item.metadata.slots, &(&1 in @weapon_slots))
+  end
 end
