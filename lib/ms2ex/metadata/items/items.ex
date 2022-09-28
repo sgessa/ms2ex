@@ -20,7 +20,7 @@ defmodule Ms2ex.Metadata.Item do
   field :property, 18, type: Ms2ex.Metadata.Items.Property
   field :customize, 19, type: Ms2ex.Metadata.Items.Customize
   field :function_data, 20, type: Ms2ex.Metadata.Items.Function
-  field :option, 21, type: Ms2ex.Metadata.Items.Option
+  field :options, 21, type: Ms2ex.Metadata.Items.Options
   field :music, 22, type: Ms2ex.Metadata.Items.Music
   field :housing, 23, type: Ms2ex.Metadata.Items.Housing
   field :shop, 24, type: Ms2ex.Metadata.Items.Shop

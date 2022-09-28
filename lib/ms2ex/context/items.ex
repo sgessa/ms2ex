@@ -8,6 +8,9 @@ defmodule Ms2ex.Items do
     |> Metadata.Items.load()
   end
 
+  def set_stats(%Item{}) do
+  end
+
   @meso_ids 90_000_001..90_000_003
   def mesos?(%Item{}), do: false
   def mesos?(%Item{item_id: id}) when id in @meso_ids, do: true
