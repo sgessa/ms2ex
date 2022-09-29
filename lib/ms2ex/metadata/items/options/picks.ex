@@ -29,10 +29,12 @@ defmodule Ms2ex.Metadata.Items.Options.Picks do
     end
   end
 
-  def lookup(id) do
+  def lookup(id, rarity) do
     case :ets.lookup(@table, id) do
-      [{_id, %Pick{} = meta}] -> {:ok, meta}
-      _ -> :error
+      [{_id, options}] ->
+        Enum.find(options, &(&1.rarity == rarity))
+      _ ->
+        nil
     end
   end
 end
