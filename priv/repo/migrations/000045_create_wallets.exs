@@ -14,8 +14,11 @@ defmodule Ms2ex.Repo.Migrations.CreateWallets do
 
     create unique_index(:wallets, [:character_id])
 
-    create(constraint(:wallets, :balance_non_negative,
-      check: "havi_fruits >= 0 and mesos >= 0 and rues >= 0 and trevas >= 0 and valor_tokens >= 0")
+    create(
+      constraint(:wallets, :balance_non_negative,
+        check:
+          "havi_fruits >= 0 and mesos >= 0 and rues >= 0 and trevas >= 0 and valor_tokens >= 0"
+      )
     )
   end
 end

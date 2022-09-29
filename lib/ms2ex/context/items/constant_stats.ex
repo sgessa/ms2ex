@@ -23,23 +23,23 @@ defmodule Ms2ex.Items.ConstantStats do
     # TODO Implement Hidden ndd (defense) and wapmax (Max Weapon Attack)
 
     if level_factor > 50 do
-      get_default(item, constant_stats, option_id)
+      get_default(item, constant_stats, option_id, level_factor)
     else
       constant_stats
     end
   end
 
-  defp get_default(item, constant_stats, option_id) do
-    base_options = Storage.Items.PickOptions.lookup(option_id, item.rarity)
+  defp get_default(item, constant_stats, option_id, level_factor) do
+    base_options = Ms2ex.Metadata.Items.Options.Picks.lookup(option_id, item.rarity)
 
     if base_options do
-      process_options(constant_stats, base_options)
+      process_options(item, constant_stats, base_options, level_factor)
     else
       constant_stats
     end
   end
 
-  defp process_options(constant_stats, base_options) do
+  defp process_options(item, constant_stats, base_options, option_level_factor) do
     {:ok, script, []} = :luaport.spawn(:myid, "priv/scripts/Functions/calcItemValues")
 
     Enum.reduce(base_options.constants, constant_stats, fn constant_pick, acc ->
@@ -50,13 +50,22 @@ defmodule Ms2ex.Items.ConstantStats do
           acc
         else
           basic_stat = Items.Stat.build(constant_pick.stat, :flat, 0)
-          Map.put(acc, constant_pick.stat) = basic_stat
+          Map.put(acc, constant_pick.stat, basic_stat)
         end
 
       basic_stat = acc[constant_pick.stat]
       stat_value = Map.get(basic_stat, basic_stat.type)
 
-      {:ok, result} = :luaport.call(script, String.to_atom(calc_script), base_constant.stat)
+      {:ok, result} =
+        :luaport.call(script, String.to_atom(calc_script), [
+          stat_value,
+          constant_pick.deviation_value,
+          item.type,
+          List.first(item.metadata.job_recommendations),
+          option_level_factor,
+          item.rarity,
+          item.level
+        ])
 
       acc =
         if result.number <= 0.0000 do
