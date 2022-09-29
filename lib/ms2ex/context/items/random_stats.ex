@@ -2,7 +2,7 @@ defmodule Ms2ex.Items.RandomStats do
   alias Ms2ex.{Item, Items, Storage}
 
   def get(%Item{} = item) do
-    random_id = item.metadata.option.random_id
+    random_id = item.metadata.options.random_id
     options = Storage.Items.RandomOptions.lookup(random_id, item.rarity)
 
     get_stats(item, options)
@@ -17,7 +17,7 @@ defmodule Ms2ex.Items.RandomStats do
     item_stats = roll_stats(options, item)
     selected_stats = Enum.take_random(item_stats, number_of_slots)
 
-    Enum.into(selected_stats, %{}, &{&1.item_attribute, &1})
+    Enum.into(selected_stats, %{}, &{&1.attribute, &1})
   end
 
   defp roll_stats(options, item) do
@@ -25,16 +25,16 @@ defmodule Ms2ex.Items.RandomStats do
 
     item_stats =
       Enum.reduce(options.stats, [], fn stat, acc ->
-        if Map.has_key?(ranges, stat.attribute) do
-          acc ++ [build_item_stat(item, stat, ranges, options)]
+        if attr_stats = Map.get(ranges, stat.attribute) do
+          acc ++ [build_item_stat(item, attr_stats, options)]
         else
           acc
         end
       end)
 
     Enum.reduce(options.special_stats, item_stats, fn stat, acc ->
-      if Map.has_key?(special_ranges, stat.attribute) do
-        acc ++ [build_item_stat(item, stat, ranges, options)]
+      if attr_stats = Map.get(special_ranges, stat.attribute) do
+        acc ++ [build_item_stat(item, attr_stats, options)]
       else
         acc
       end
@@ -50,9 +50,9 @@ defmodule Ms2ex.Items.RandomStats do
     end
   end
 
-  defp build_item_stat(item, stat, ranges, options) do
+  defp build_item_stat(item, attr_stats, options) do
     idx = roll(item)
-    r = ranges[stat.attribute][idx]
+    r = Enum.at(attr_stats, idx)
 
     item_stat = Items.Stat.build(r)
 
@@ -69,7 +69,7 @@ defmodule Ms2ex.Items.RandomStats do
   # Returns index 0~7 for equip level 70-
   # Returns index 8~15 for equip level 70+
   defp roll(item) do
-    level_factor = item.metadata.option.level_factor
+    level_factor = item.metadata.options.level_factor
     random = :rand.uniform()
 
     if level_factor >= 70 do

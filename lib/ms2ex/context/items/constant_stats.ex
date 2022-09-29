@@ -2,7 +2,7 @@ defmodule Ms2ex.Items.ConstantStats do
   alias Ms2ex.{Item, Items, Storage}
 
   def get(%Item{} = item, option_id, level_factor) do
-    constant_id = item.metadata.option.constant_id
+    constant_id = item.metadata.options.constant_id
     options = Storage.Items.ConstantOptions.lookup(constant_id, item.rarity)
 
     if options do

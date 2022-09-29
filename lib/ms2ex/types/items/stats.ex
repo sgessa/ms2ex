@@ -12,8 +12,8 @@ defmodule Ms2ex.Items.Stats do
   end
 
   def create(%Item{metadata: meta} = item) do
-    option_id = meta.option.id
-    lvl_factor = meta.option.level_factor
+    option_id = meta.options.id
+    lvl_factor = meta.options.level_factor
 
     constants = Items.ConstantStats.get(item, option_id, lvl_factor)
     statics = Items.StaticStats.get(item, option_id, lvl_factor)

@@ -6,7 +6,7 @@ defmodule Ms2ex.Items.StaticStats do
   end
 
   def get(%Item{} = item, option_id, level_factor) do
-    static_id = item.metadata.option.static_id
+    static_id = item.metadata.options.static_id
     options = Storage.Items.StaticOptions.lookup(static_id, item.rarity)
 
     if options do

@@ -17,4 +17,27 @@ defmodule Ms2ex.Metadata.Items.RangeOptions do
   field :type, 1, enum: true, type: Items.RangeOptionType
   field :stats, 2, repeated: true, type: Items.RangeOptions.Stats
   field :special_stats, 3, repeated: true, type: Items.RangeOptions.Stats
+
+  def transform_module(), do: Items.RangeOptions.Transform
+end
+
+defmodule Ms2ex.Metadata.Items.RangeOptions.Transform do
+  @behaviour Protobuf.TransformModule
+
+  alias Ms2ex.Metadata.Items
+
+  @impl true
+  def encode(data, _module), do: data
+
+  @impl true
+  def decode(%Items.RangeOptions{} = options, Items.RangeOptions) do
+    stats = Enum.into(options.stats, %{}, &{&1.key, &1.value})
+    special_stats = Enum.into(options.special_stats, %{}, &{&1.key, &1.value})
+
+    %Items.RangeOptions{
+      type: options.type,
+      stats: stats,
+      special_stats: special_stats
+    }
+  end
 end

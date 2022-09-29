@@ -1,14 +1,15 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.Metadata
-  alias Ms2ex.Item
+  alias Ms2ex.{Item, Items, Metadata}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
     |> Map.merge(attrs)
     |> Metadata.Items.load()
+    |> set_stats()
   end
 
-  def set_stats(%Item{}) do
+  def set_stats(%Item{} = item) do
+    Map.put(item, :stats, Items.Stats.create(item))
   end
 
   @meso_ids 90_000_001..90_000_003
