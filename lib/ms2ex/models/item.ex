@@ -19,6 +19,7 @@ defmodule Ms2ex.Item do
     :inventory_tab,
     :location,
     :rarity,
+    :enchant_level,
     :transfer_flags
   ]
 
@@ -60,6 +61,7 @@ defmodule Ms2ex.Item do
     field :paired_character_name, :string, virtual: true, default: ""
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
+    field :enchant_level, :integer, default: 0
     field :remaining_trades, :integer, virtual: true, default: 0
     field :source_object_id, :integer, virtual: true
     field :target_object_id, :integer, virtual: true

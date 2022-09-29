@@ -20,12 +20,12 @@ defmodule Ms2ex.Items.Stats do
     randoms = Items.RandomStats.get(item)
 
     enchants = %{}
-    # if item.enchant_level > 0 do
-    #   # TODO get enchants
-    #   %{}
-    # else
-    #   %{}
-    # end
+    if item.enchant_level > 0 do
+      # TODO get enchants
+      %{}
+    else
+      %{}
+    end
 
     %__MODULE__{constants: constants, statics: statics, randoms: randoms, enchants: enchants}
   end
