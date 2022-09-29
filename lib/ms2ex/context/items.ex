@@ -6,10 +6,51 @@ defmodule Ms2ex.Items do
     |> Map.merge(attrs)
     |> Metadata.Items.load()
     |> set_stats()
+    |> set_level()
+  end
+
+  def set_level(%Item{metadata: metadata} = item) do
+    Map.put(item, :level, metadata.limit.level_limit_min)
   end
 
   def set_stats(%Item{} = item) do
     Map.put(item, :stats, Items.Stats.create(item))
+  end
+
+  def type(%Item{item_id: item_id}) do
+    case item_id do
+      112 -> :earring
+      113 -> :hat
+      114 -> :clothes
+      115 -> :pants
+      116 -> :gloves
+      117 -> :shoes
+      118 -> :cape
+      119 -> :necklace
+      120 -> :ring
+      121 -> :belt
+      122 -> :overall
+      130 -> :bludgeon
+      131 -> :dagger
+      132 -> :longsword
+      133 -> :scepter
+      134 -> :throwingStar
+      140 -> :spellbook
+      141 -> :shield
+      150 -> :greatsword
+      151 -> :bow
+      152 -> :staff
+      153 -> :cannon
+      154 -> :blade
+      155 -> :knuckle
+      156 -> :orb
+      209 -> :medal
+      id when id in [410, 420, 430] -> :lapenshard
+      id when id in [501, 502, 503, 504, 505] -> :furnishing
+      600 -> :pet
+      900 -> :currency
+      _ -> :none
+    end
   end
 
   @meso_ids 90_000_001..90_000_003

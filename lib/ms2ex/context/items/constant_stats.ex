@@ -52,7 +52,11 @@ defmodule Ms2ex.Items.ConstantStats do
   end
 
   defp process_stat(item, constant_stats, pick, calc_script, level_factor) do
-    {:ok, script, []} = :luaport.spawn(:myid, "priv/scripts/Functions/calcItemValues")
+    script =
+      case :luaport.spawn(:calc_item_values, "priv/scripts/Functions/calcItemValues") do
+        {:ok, script, _args} -> script
+        {:error, {:already_started, script}} -> script
+      end
 
     constant_stats =
       if constant_stats[pick.stat] do
@@ -65,26 +69,29 @@ defmodule Ms2ex.Items.ConstantStats do
     basic_stat = constant_stats[pick.stat]
     stat_value = Map.get(basic_stat, basic_stat.type)
 
-    {:ok, result} =
+    {:ok, [result]} =
       :luaport.call(script, String.to_atom(calc_script), [
         stat_value,
         pick.deviation_value,
-        item.type,
-        List.first(item.metadata.job_recommendations),
+        Items.Type.from_name(Items.type(item)),
+        List.first(item.metadata.limit.job_recommendations),
         level_factor,
         item.rarity,
-        item.level
+        1
       ])
 
+    IO.inspect("Got")
+    IO.inspect(result)
+
     constant_stats =
-      if result.number <= 0.0000 do
+      if result <= 0.0000 do
         Map.delete(constant_stats, pick.stat)
       else
         constant_stats
       end
 
     # TODO make sure result.number is a float
-    basic_stat = Map.put(basic_stat, basic_stat.type, result.number)
+    basic_stat = Map.put(basic_stat, basic_stat.type, result)
 
     Map.put(constant_stats, pick.stat, basic_stat)
   end
