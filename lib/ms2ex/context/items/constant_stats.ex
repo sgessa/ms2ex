@@ -30,7 +30,7 @@ defmodule Ms2ex.Items.ConstantStats do
   end
 
   defp get_default(item, constant_stats, option_id, level_factor) do
-    base_options = Ms2ex.Storage.Items.OptionPicks.lookup(option_id, item.rarity)
+    base_options = Ms2ex.Storage.Items.PickOptions.lookup(option_id, item.rarity)
 
     if base_options do
       process_options(item, constant_stats, base_options, level_factor)
@@ -39,46 +39,54 @@ defmodule Ms2ex.Items.ConstantStats do
     end
   end
 
-  defp process_options(item, constant_stats, base_options, option_level_factor) do
-    {:ok, script, []} = :luaport.spawn(:myid, "priv/scripts/Functions/calcItemValues")
-
+  defp process_options(item, constant_stats, base_options, level_factor) do
     Enum.reduce(base_options.constants, constant_stats, fn constant_pick, acc ->
       calc_script = get_calc_script(constant_pick.stat)
 
-      acc =
-        if acc[constant_pick.stat] do
-          acc
-        else
-          basic_stat = Items.Stat.build(constant_pick.stat, :flat, 0)
-          Map.put(acc, constant_pick.stat, basic_stat)
-        end
-
-      basic_stat = acc[constant_pick.stat]
-      stat_value = Map.get(basic_stat, basic_stat.type)
-
-      {:ok, result} =
-        :luaport.call(script, String.to_atom(calc_script), [
-          stat_value,
-          constant_pick.deviation_value,
-          item.type,
-          List.first(item.metadata.job_recommendations),
-          option_level_factor,
-          item.rarity,
-          item.level
-        ])
-
-      acc =
-        if result.number <= 0.0000 do
-          Map.delete(acc, constant_pick.stat)
-        else
-          acc
-        end
-
-      # TODO make sure result.number is a float
-      basic_stat = Map.put(basic_stat, basic_stat.type, result.number)
-
-      Map.put(acc, constant_pick.stat, basic_stat)
+      if calc_script do
+        process_stat(item, acc, constant_pick, calc_script, level_factor)
+      else
+        acc
+      end
     end)
+  end
+
+  defp process_stat(item, constant_stats, pick, calc_script, level_factor) do
+    {:ok, script, []} = :luaport.spawn(:myid, "priv/scripts/Functions/calcItemValues")
+
+    constant_stats =
+      if constant_stats[pick.stat] do
+        constant_stats
+      else
+        basic_stat = Items.Stat.build(pick.stat, :flat, 0)
+        Map.put(constant_stats, pick.stat, basic_stat)
+      end
+
+    basic_stat = constant_stats[pick.stat]
+    stat_value = Map.get(basic_stat, basic_stat.type)
+
+    {:ok, result} =
+      :luaport.call(script, String.to_atom(calc_script), [
+        stat_value,
+        pick.deviation_value,
+        item.type,
+        List.first(item.metadata.job_recommendations),
+        level_factor,
+        item.rarity,
+        item.level
+      ])
+
+    constant_stats =
+      if result.number <= 0.0000 do
+        Map.delete(constant_stats, pick.stat)
+      else
+        constant_stats
+      end
+
+    # TODO make sure result.number is a float
+    basic_stat = Map.put(basic_stat, basic_stat.type, result.number)
+
+    Map.put(constant_stats, pick.stat, basic_stat)
   end
 
   defp get_calc_script(stat) do

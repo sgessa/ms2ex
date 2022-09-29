@@ -1,4 +1,4 @@
-defmodule Ms2ex.Storage.Items.OptionPicks do
+defmodule Ms2ex.Storage.Items.PickOptions do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
@@ -17,15 +17,15 @@ defmodule Ms2ex.Storage.Items.OptionPicks do
 
     :ets.new(@table, [:protected, :set, :named_table])
 
-    for %{id: id} = meta <- list.items do
-      :ets.insert(@table, {id, meta})
+    for %{id: id, stats: stats} <- list.items do
+      :ets.insert(@table, {id, stats})
     end
   end
 
   def lookup(id, rarity) do
     case :ets.lookup(@table, id) do
-      [{_id, options}] ->
-        Enum.find(options, &(&1.rarity == rarity))
+      [{_id, stats}] ->
+        Enum.find(stats, &(&1.rarity == rarity))
 
       _ ->
         nil
