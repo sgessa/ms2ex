@@ -137,9 +137,9 @@ defmodule Ms2ex.Packets.InventoryItem do
     end
   end
 
-  def put_item_stats(packet, item) do
-    basic_attributes = item.basic_attributes || []
-    bonus_attributes = item.bonus_attributes || []
+  def put_item_stats(packet, _item) do
+    basic_attributes = []
+    bonus_attributes = []
 
     packet
     |> put_byte()

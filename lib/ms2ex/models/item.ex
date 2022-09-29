@@ -8,8 +8,6 @@ defmodule Ms2ex.Item do
 
   @fields [
     :amount,
-    :basic_attributes,
-    :bonus_attributes,
     :color,
     :data,
     :enchants,
@@ -38,8 +36,7 @@ defmodule Ms2ex.Item do
     field :item_id, :integer
     field :amount, :integer, default: 1
 
-    field :basic_attributes, EctoTypes.Term
-    field :bonus_attributes, EctoTypes.Term
+    field :stats, :map
     field :color, EctoTypes.Term
     field :data, EctoTypes.Term
     field :equip_slot, EquipSlot, default: :NONE

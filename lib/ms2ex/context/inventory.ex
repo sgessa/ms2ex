@@ -95,7 +95,6 @@ defmodule Ms2ex.Inventory do
     slot = find_first_available_slot(character.id, meta.tab)
 
     attrs = %{attrs | inventory_tab: meta.tab, rarity: rarity, inventory_slot: slot}
-    attrs = set_item_stats(attrs)
     attrs = Map.from_struct(attrs)
 
     changeset =
@@ -109,15 +108,6 @@ defmodule Ms2ex.Inventory do
   end
 
   defp create(_character, _attrs), do: :nothing
-
-  # TODO: generate item stats
-  defp set_item_stats(%{inventory_tab: :gear} = attrs) do
-    attrs
-    |> Map.put(:basic_attributes, [])
-    |> Map.put(:bonus_attributes, [])
-  end
-
-  defp set_item_stats(attrs), do: attrs
 
   defp update_qty(%{id: id, metadata: meta}, new_amount) do
     Item
