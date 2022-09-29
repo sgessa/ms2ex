@@ -48,8 +48,7 @@ defmodule Ms2ex.MixProject do
       {:google_protos, "~> 0.3.0"},
       {:varint, ">= 0.0.0"},
       {:libgraph, "~> 0.13"},
-      {:ranch, "~> 2.0", override: true},
-      {:luaport, "~> 1.6"}
+      {:ranch, "~> 2.0", override: true}
     ]
   end
 
