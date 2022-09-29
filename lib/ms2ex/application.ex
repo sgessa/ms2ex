@@ -17,7 +17,7 @@ defmodule Ms2ex.Application do
     Ms2ex.Storage.Items.StaticOptions.store()
     Ms2ex.Storage.Items.RandomOptions.store()
     Ms2ex.Storage.Items.RangeOptions.store()
-    Ms2ex.Metadata.Items.Options.Picks.store()
+    Ms2ex.Storage.Items.OptionPicks.store()
     Ms2ex.Metadata.Maps.store()
     Ms2ex.Metadata.MapEntities.store()
     Ms2ex.Metadata.MagicPaths.store()

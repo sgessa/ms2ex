@@ -30,7 +30,7 @@ defmodule Ms2ex.Items.ConstantStats do
   end
 
   defp get_default(item, constant_stats, option_id, level_factor) do
-    base_options = Ms2ex.Metadata.Items.Options.Picks.lookup(option_id, item.rarity)
+    base_options = Ms2ex.Storage.Items.OptionPicks.lookup(option_id, item.rarity)
 
     if base_options do
       process_options(item, constant_stats, base_options, level_factor)
