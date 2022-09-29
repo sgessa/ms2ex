@@ -23,31 +23,56 @@ defmodule Ms2ex.Items.ConstantStats do
     # TODO Implement Hidden ndd (defense) and wapmax (Max Weapon Attack)
 
     if level_factor > 50 do
-      get_default(item, constant_stats, option_id, level_factor)
+      get_default(item, constant_stats, option_id)
     else
       constant_stats
     end
   end
 
-  # TODO get from script
-  defp get_default(item, constant_stats, option_id, _level_factor) do
-    base_options = Ms2ex.Metadata.Items.Options.Picks.lookup(option_id, item.rarity)
+  defp get_default(item, constant_stats, option_id) do
+    base_options = Storage.Items.PickOptions.lookup(option_id, item.rarity)
 
-    {:ok, pid, []} = :luaport.spawn(:myid, "priv/scripts/Functions/calcItemValues")
-
-    Enum.map(base_options.constants, fn base_constant ->
-      case get_base_constant_fun(base_constant.stat) do
-        nil ->
-          base_constant
-        fun ->
-          {:ok, _result} = :luaport.call(pid, String.to_atom(fun), base_constant.stat)
-      end
-    end)
-
-    constant_stats
+    if base_options do
+      process_options(constant_stats, base_options)
+    else
+      constant_stats
+    end
   end
 
-  defp get_base_constant_fun(stat) do
+  defp process_options(constant_stats, base_options) do
+    {:ok, script, []} = :luaport.spawn(:myid, "priv/scripts/Functions/calcItemValues")
+
+    Enum.reduce(base_options.constants, constant_stats, fn constant_pick, acc ->
+      calc_script = get_calc_script(constant_pick.stat)
+
+      acc =
+        if acc[constant_pick.stat] do
+          acc
+        else
+          basic_stat = Items.Stat.build(constant_pick.stat, :flat, 0)
+          Map.put(acc, constant_pick.stat) = basic_stat
+        end
+
+      basic_stat = acc[constant_pick.stat]
+      stat_value = Map.get(basic_stat, basic_stat.type)
+
+      {:ok, result} = :luaport.call(script, String.to_atom(calc_script), base_constant.stat)
+
+      acc =
+        if result.number <= 0.0000 do
+          Map.delete(acc, constant_pick.stat)
+        else
+          acc
+        end
+
+      # TODO make sure result.number is a float
+      basic_stat = Map.put(basic_stat, basic_stat.type, result.number)
+
+      Map.put(acc, constant_pick.stat, basic_stat)
+    end)
+  end
+
+  defp get_calc_script(stat) do
     case stat do
       :hp -> "constant_value_hp"
       :defense -> "constant_value_ndd"
