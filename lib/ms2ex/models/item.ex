@@ -10,14 +10,13 @@ defmodule Ms2ex.Item do
     :amount,
     :color,
     :data,
-    :enchants,
+    :enchant_level,
     :equip_slot,
     :item_id,
     :inventory_slot,
     :inventory_tab,
     :location,
     :rarity,
-    :enchant_level,
     :transfer_flags,
     :level,
     :stats
@@ -45,7 +44,7 @@ defmodule Ms2ex.Item do
     field :appearance_flag, :integer, virtual: true, default: 0
     field :can_repackage, :boolean, virtual: true, default: true
     field :charges, :integer, virtual: true, default: 0
-    field :enchants, :integer, default: 0
+    field :enchant_level, :integer, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
@@ -61,7 +60,6 @@ defmodule Ms2ex.Item do
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
     field :level, :integer, default: 0
-    field :enchant_level, :integer, default: 0
     field :remaining_trades, :integer, virtual: true, default: 0
     field :source_object_id, :integer, virtual: true
     field :target_object_id, :integer, virtual: true
