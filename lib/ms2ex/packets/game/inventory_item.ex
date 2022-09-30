@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Hair, Inventory, Metadata}
+  alias Ms2ex.{Hair, Inventory, Items, Metadata}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -137,26 +137,42 @@ defmodule Ms2ex.Packets.InventoryItem do
     end
   end
 
-  def put_item_stats(packet, _item) do
-    basic_attributes = []
-    bonus_attributes = []
+  def put_item_stats(packet, item) do
+    constant_basic_stats = Enum.filter(item.stats.constants, &(&1.class == :basic))
+    constant_special_stats = Enum.filter(item.stats.constants, &(&1.class == :special))
+    static_basic_stats = Enum.filter(item.stats.statics, &(&1.class == :basic))
+    static_special_stats = Enum.filter(item.stats.statics, &(&1.class == :special))
+    random_basic_stats = Enum.filter(item.stats.randoms, &(&1.class == :basic))
+    random_special_stats = Enum.filter(item.stats.randoms, &(&1.class == :special))
 
     packet
     |> put_byte()
-    |> put_short(length(basic_attributes))
-    |> reduce(basic_attributes, fn stat, packet ->
+    |> put_short(length(constant_basic_stats))
+    |> reduce(constant_basic_stats, fn stat, packet ->
       put_item_stat(packet, stat)
     end)
-    |> put_short()
-    |> put_int()
-    |> put_short()
-    |> put_short()
-    |> put_int()
-    |> put_short(length(bonus_attributes))
-    |> reduce(bonus_attributes, fn stat, packet ->
+    |> put_short(length(constant_special_stats))
+    |> reduce(constant_special_stats, fn stat, packet ->
       put_item_stat(packet, stat)
     end)
-    |> put_short()
+    |> put_int()
+    |> put_short(length(static_basic_stats))
+    |> reduce(static_basic_stats, fn stat, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_short(length(static_special_stats))
+    |> reduce(static_special_stats, fn stat, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_int()
+    |> put_short(length(random_basic_stats))
+    |> reduce(random_basic_stats, fn stat, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_short(length(random_special_stats))
+    |> reduce(random_special_stats, fn stat, packet ->
+      put_item_stat(packet, stat)
+    end)
     |> put_int()
     |> reduce(1..6, fn _, packet ->
       packet
@@ -167,10 +183,19 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_stat(packet, stat) do
-    packet
-    |> put_short(Ms2ex.StatId.from_name(stat.type))
-    |> put_int(stat.value)
-    |> put_float(stat.percentage)
+    case stat.class do
+      :basic ->
+        packet
+        |> put_short(Items.StatAttribute.from_name(stat.attribute))
+        |> put_int(stat.flat)
+        |> put_float(stat.rate)
+
+      :special ->
+        packet
+        |> put_short(Items.StatAttribute.from_name(stat.attribute))
+        |> put_float(stat.rate)
+        |> put_int(stat.flat)
+    end
   end
 
   def put_item_stats_diff(packet, _item) do
