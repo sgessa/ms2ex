@@ -15,10 +15,10 @@ defmodule Ms2ex.Items.ConstantStats do
   defp get_stats(item, options, option_id, level_factor) do
     %{stats: stats, special_stats: special_stats} = options
 
-    constant_stats = Enum.into(stats, %{}, &{&1.attribute, Items.Stat.build(&1)})
+    constant_stats = Enum.into(stats, %{}, &{&1.attribute, Items.Stat.build(&1, :basic)})
 
     constant_stats =
-      Enum.into(special_stats, constant_stats, &{&1.attribute, Items.Stat.build(&1)})
+      Enum.into(special_stats, constant_stats, &{&1.attribute, Items.Stat.build(&1, :special)})
 
     # TODO Implement Hidden ndd (defense) and wapmax (Max Weapon Attack)
 
@@ -62,7 +62,7 @@ defmodule Ms2ex.Items.ConstantStats do
       if constant_stats[pick.stat] do
         constant_stats
       else
-        basic_stat = Items.Stat.build(pick.stat, :flat, 0)
+        basic_stat = Items.Stat.build(pick.stat, :flat, 0, :basic)
         Map.put(constant_stats, pick.stat, basic_stat)
       end
 

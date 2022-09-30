@@ -26,7 +26,7 @@ defmodule Ms2ex.Items.RandomStats do
     item_stats =
       Enum.reduce(options.stats, [], fn stat, acc ->
         if attr_stats = Map.get(ranges, stat.attribute) do
-          acc ++ [build_item_stat(item, attr_stats, options)]
+          acc ++ [build_item_stat(item, attr_stats, options, :basic)]
         else
           acc
         end
@@ -34,7 +34,7 @@ defmodule Ms2ex.Items.RandomStats do
 
     Enum.reduce(options.special_stats, item_stats, fn stat, acc ->
       if attr_stats = Map.get(special_ranges, stat.attribute) do
-        acc ++ [build_item_stat(item, attr_stats, options)]
+        acc ++ [build_item_stat(item, attr_stats, options, :special)]
       else
         acc
       end
@@ -50,11 +50,11 @@ defmodule Ms2ex.Items.RandomStats do
     end
   end
 
-  defp build_item_stat(item, attr_stats, options) do
+  defp build_item_stat(item, attr_stats, options, stat_class) do
     idx = roll(item)
     r = Enum.at(attr_stats, idx)
 
-    item_stat = Items.Stat.build(r)
+    item_stat = Items.Stat.build(r, stat_class)
 
     if options.multiply_factor > 0 do
       value =

@@ -138,39 +138,39 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_stats(packet, item) do
-    constant_basic_stats = Enum.filter(item.stats.constants, &(&1.class == :basic))
-    constant_special_stats = Enum.filter(item.stats.constants, &(&1.class == :special))
-    static_basic_stats = Enum.filter(item.stats.statics, &(&1.class == :basic))
-    static_special_stats = Enum.filter(item.stats.statics, &(&1.class == :special))
-    random_basic_stats = Enum.filter(item.stats.randoms, &(&1.class == :basic))
-    random_special_stats = Enum.filter(item.stats.randoms, &(&1.class == :special))
+    constant_basic_stats = :maps.filter fn _, v -> v.class == :basic end, item.stats.constants
+    constant_special_stats = :maps.filter fn _, v -> v.class == :special end, item.stats.constants
+    static_basic_stats = :maps.filter fn _, v -> v.class == :basic end, item.stats.statics
+    static_special_stats = :maps.filter fn _, v -> v.class == :special end, item.stats.statics
+    random_basic_stats = :maps.filter fn _, v -> v.class == :basic end, item.stats.randoms
+    random_special_stats = :maps.filter fn _, v -> v.class == :special end, item.stats.randoms
 
     packet
     |> put_byte()
-    |> put_short(length(constant_basic_stats))
-    |> reduce(constant_basic_stats, fn stat, packet ->
+    |> put_short(Enum.count(constant_basic_stats))
+    |> reduce(constant_basic_stats, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
-    |> put_short(length(constant_special_stats))
-    |> reduce(constant_special_stats, fn stat, packet ->
-      put_item_stat(packet, stat)
-    end)
-    |> put_int()
-    |> put_short(length(static_basic_stats))
-    |> reduce(static_basic_stats, fn stat, packet ->
-      put_item_stat(packet, stat)
-    end)
-    |> put_short(length(static_special_stats))
-    |> reduce(static_special_stats, fn stat, packet ->
+    |> put_short(Enum.count(constant_special_stats))
+    |> reduce(constant_special_stats, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
     |> put_int()
-    |> put_short(length(random_basic_stats))
-    |> reduce(random_basic_stats, fn stat, packet ->
+    |> put_short(Enum.count(static_basic_stats))
+    |> reduce(static_basic_stats, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
-    |> put_short(length(random_special_stats))
-    |> reduce(random_special_stats, fn stat, packet ->
+    |> put_short(Enum.count(static_special_stats))
+    |> reduce(static_special_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_int()
+    |> put_short(Enum.count(random_basic_stats))
+    |> reduce(random_basic_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_short(Enum.count(random_special_stats))
+    |> reduce(random_special_stats, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
     |> put_int()
@@ -183,18 +183,21 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_stat(packet, stat) do
+    flat_value = floor(stat.value)
+    {float_value, _} = Float.parse("#{stat.value}")
+
     case stat.class do
       :basic ->
         packet
         |> put_short(Items.StatAttribute.from_name(stat.attribute))
-        |> put_int(stat.flat)
-        |> put_float(stat.rate)
-
+        |> put_int(flat_value)
+        |> put_float(float_value)
       :special ->
         packet
         |> put_short(Items.StatAttribute.from_name(stat.attribute))
-        |> put_float(stat.rate)
-        |> put_int(stat.flat)
+        |> put_float(float_value)
+        |> put_float(float_value)
+       _ -> packet
     end
   end
 
