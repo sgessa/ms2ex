@@ -19,7 +19,8 @@ defmodule Ms2ex.Item do
     :rarity,
     :enchant_level,
     :transfer_flags,
-    :level
+    :level,
+    :stats
   ]
 
   @required [:amount, :item_id, :location]
