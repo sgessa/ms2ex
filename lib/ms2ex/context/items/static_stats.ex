@@ -45,23 +45,23 @@ defmodule Ms2ex.Items.StaticStats do
       end
 
     static_stats
-    |> process_values(item, base_options.static_values, level_factor, script)
-    |> process_values(item, base_options.static_rates, level_factor, script)
+    |> set_stats(item, base_options.static_values, level_factor, script)
+    |> set_stats(item, base_options.static_rates, level_factor, script)
   end
 
-  defp process_values(static_stats, item, options, level_factor, script) do
+  defp set_stats(static_stats, item, options, level_factor, script) do
     Enum.reduce(options, static_stats, fn static_pick, acc ->
       calc_script = get_calc_script(static_pick.stat)
 
       if calc_script do
-        process_stat(item, acc, static_pick, calc_script, level_factor, script)
+        set_stat(item, acc, static_pick, calc_script, level_factor, script)
       else
         acc
       end
     end)
   end
 
-  defp process_stat(item, static_stats, pick, calc_script, level_factor, script) do
+  defp set_stat(item, static_stats, pick, calc_script, level_factor, script) do
     static_stats =
       if static_stats[pick.stat] do
         static_stats
