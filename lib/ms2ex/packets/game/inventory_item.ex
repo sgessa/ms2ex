@@ -138,12 +138,15 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_stats(packet, item) do
-    constant_basic_stats = :maps.filter fn _, v -> v.class == :basic end, item.stats.constants
-    constant_special_stats = :maps.filter fn _, v -> v.class == :special end, item.stats.constants
-    static_basic_stats = :maps.filter fn _, v -> v.class == :basic end, item.stats.statics
-    static_special_stats = :maps.filter fn _, v -> v.class == :special end, item.stats.statics
-    random_basic_stats = :maps.filter fn _, v -> v.class == :basic end, item.stats.randoms
-    random_special_stats = :maps.filter fn _, v -> v.class == :special end, item.stats.randoms
+    constant_basic_stats = :maps.filter(fn _, v -> v.class == :basic end, item.stats.constants)
+
+    constant_special_stats =
+      :maps.filter(fn _, v -> v.class == :special end, item.stats.constants)
+
+    static_basic_stats = :maps.filter(fn _, v -> v.class == :basic end, item.stats.statics)
+    static_special_stats = :maps.filter(fn _, v -> v.class == :special end, item.stats.statics)
+    random_basic_stats = :maps.filter(fn _, v -> v.class == :basic end, item.stats.randoms)
+    random_special_stats = :maps.filter(fn _, v -> v.class == :special end, item.stats.randoms)
 
     packet
     |> put_byte()
@@ -192,12 +195,15 @@ defmodule Ms2ex.Packets.InventoryItem do
         |> put_short(Items.StatAttribute.from_name(stat.attribute))
         |> put_int(flat_value)
         |> put_float(float_value)
+
       :special ->
         packet
         |> put_short(Items.StatAttribute.from_name(stat.attribute))
         |> put_float(float_value)
         |> put_float(float_value)
-       _ -> packet
+
+      _ ->
+        packet
     end
   end
 
