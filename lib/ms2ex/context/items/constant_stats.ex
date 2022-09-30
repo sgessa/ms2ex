@@ -86,7 +86,7 @@ defmodule Ms2ex.Items.ConstantStats do
         constant_stats
       end
 
-    # TODO make sure result.number is a float
+    {result, _} = Float.parse("#{result}")
     basic_stat = Map.put(basic_stat, :value, result)
 
     Map.put(constant_stats, pick.stat, basic_stat)
