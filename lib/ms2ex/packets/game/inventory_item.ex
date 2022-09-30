@@ -200,7 +200,7 @@ defmodule Ms2ex.Packets.InventoryItem do
         packet
         |> put_short(Items.StatAttribute.from_name(stat.attribute))
         |> put_float(float_value)
-        |> put_float(float_value)
+        |> put_float(flat_value)
 
       _ ->
         packet

@@ -20,6 +20,8 @@ defmodule Ms2ex.Items.StaticStats do
     %{stats: stats, special_stats: special_stats} = options
 
     static_stats = Enum.into(stats, %{}, &{&1.attribute, Items.Stat.build(&1, :basic)})
+    IO.inspect("building")
+    IO.inspect(static_stats)
 
     static_stats =
       Enum.into(special_stats, static_stats, &{&1.attribute, Items.Stat.build(&1, :special)})
@@ -86,7 +88,7 @@ defmodule Ms2ex.Items.StaticStats do
       ])
 
     random = min + (max - min) * :rand.uniform()
-    basic_stat = Map.put(basic_stat, basic_stat.type, random)
+    basic_stat = Map.put(basic_stat, :value, random)
 
     Map.put(static_stats, pick.stat, basic_stat)
   end
