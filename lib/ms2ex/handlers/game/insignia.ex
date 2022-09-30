@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
 
   defp can_equip_insignia?(character, %{type: "enchant"}, _insignia_id) do
     items = Inventory.all(character)
-    if Enum.find(items, &(&1.enchants >= 12)), do: true, else: false
+    if Enum.find(items, &(&1.enchant_level >= 12)), do: true, else: false
   end
 
   defp can_equip_insignia?(character, %{type: "trophy_point"}, _insignia_id) do

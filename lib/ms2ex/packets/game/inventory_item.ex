@@ -96,7 +96,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_appearance(item)
     |> put_item_stats(item)
-    |> put_int(item.enchants)
+    |> put_int(item.enchant_level)
     |> put_int(item.enchant_exp)
     |> put_bool(true)
     |> put_long()
