@@ -243,4 +243,10 @@ defmodule Ms2ex.Items.StatAttribute do
       true -> id
     end
   end
+
+  def from_int(type_id) do
+    Type.__enum_map__()
+    |> Enum.find(fn {_k, v} -> v == type_id end)
+    |> elem(0)
+  end
 end

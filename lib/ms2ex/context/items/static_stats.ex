@@ -20,8 +20,6 @@ defmodule Ms2ex.Items.StaticStats do
     %{stats: stats, special_stats: special_stats} = options
 
     static_stats = Enum.into(stats, %{}, &{&1.attribute, Items.Stat.build(&1, :basic)})
-    IO.inspect("building")
-    IO.inspect(static_stats)
 
     static_stats =
       Enum.into(special_stats, static_stats, &{&1.attribute, Items.Stat.build(&1, :special)})

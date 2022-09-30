@@ -19,15 +19,22 @@ defmodule Ms2ex.Items.Stats do
     statics = Items.StaticStats.get(item, option_id, lvl_factor)
     randoms = Items.RandomStats.get(item)
 
-    enchants = %{}
+    enchants =
+      if item.enchant_level > 0 do
+        Items.EnchantStats.get(item)
+      else
+        %{}
+      end
 
-    if item.enchant_level > 0 do
-      # TODO get enchants
-      %{}
-    else
-      %{}
-    end
+    # TODO: Implement Limit Break Enchants
+    limit_break_enchants = %{}
 
-    %__MODULE__{constants: constants, statics: statics, randoms: randoms, enchants: enchants}
+    %__MODULE__{
+      constants: constants,
+      statics: statics,
+      randoms: randoms,
+      enchants: enchants,
+      limit_break_enchants: limit_break_enchants
+    }
   end
 end

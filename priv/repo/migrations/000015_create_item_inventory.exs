@@ -18,6 +18,7 @@ defmodule Ms2ex.Repo.Migrations.CreateInventory do
       add :rarity, :integer, null: false
       add :transfer_flags, :integer, null: false
       add :stats, :binary
+      add :limit_break_level, :integer
 
       timestamps(type: :timestamptz)
     end

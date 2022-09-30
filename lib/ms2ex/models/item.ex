@@ -19,7 +19,8 @@ defmodule Ms2ex.Item do
     :rarity,
     :transfer_flags,
     :level,
-    :stats
+    :stats,
+    :limit_break_level
   ]
 
   @required [:amount, :item_id, :location]
@@ -60,6 +61,7 @@ defmodule Ms2ex.Item do
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
     field :level, :integer, default: 0
+    field :limit_break_level, :integer, default: 0
     field :remaining_trades, :integer, virtual: true, default: 0
     field :source_object_id, :integer, virtual: true
     field :target_object_id, :integer, virtual: true

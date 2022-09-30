@@ -12,7 +12,7 @@ defmodule Ms2ex.Equips do
   end
 
   def find_equipped_in_slot(equips, slots) when slots == [:OH] do
-    Enum.filter(equips, &(&1.equip_slot in slots ++ [:RH, :LH]))
+    Enum.filter(equips, &(&1.equip_slot in (slots ++ [:RH, :LH])))
   end
 
   def find_equipped_in_slot(equips, slots) do

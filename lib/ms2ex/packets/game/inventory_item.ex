@@ -104,7 +104,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_bool(item.can_repackage)
     |> put_int(item.charges)
-    |> put_item_stats_diff(item)
+    |> put_item_enchant_stats(item)
     # |> put_template(item)
     # TODO put pets
     # TODO put gem slot
@@ -213,6 +213,30 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_int(0)
     |> put_int(0)
+  end
+
+  def put_item_enchant_stats(packet, item) do
+    enchant_stats = :maps.filter(fn _, v -> v.class == :basic end, item.stats.enchants)
+
+    basic_limit_break_enchants =
+      :maps.filter(fn _, v -> v.class == :basic end, item.stats.limit_break_enchants)
+
+    special_limit_break_enchants =
+      :maps.filter(fn _, v -> v.class == :special end, item.stats.limit_break_enchants)
+
+    packet
+    |> put_byte(Enum.count(enchant_stats))
+    |> reduce(enchant_stats, fn {_, stat}, packet ->
+      packet
+      |> put_int(Items.StatAttribute.from_name(stat.attribute))
+      |> put_int(floor(stat.value))
+      |> put_float(stat.value)
+    end)
+    |> put_int(item.limit_break_level)
+    |> put_int(Enum.count(basic_limit_break_enchants))
+    |> reduce(basic_limit_break_enchants, fn {_, stat}, packet -> put_item_stat(packet, stat) end)
+    |> put_int(Enum.count(special_limit_break_enchants))
+    |> reduce(special_limit_break_enchants, fn {_, stat}, packet -> put_item_stat(packet, stat) end)
   end
 
   # defp put_template(packet, %{metadata: %{is_template?: true}}) do
