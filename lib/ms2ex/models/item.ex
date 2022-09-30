@@ -36,7 +36,7 @@ defmodule Ms2ex.Item do
     field :item_id, :integer
     field :amount, :integer, default: 1
 
-    field :stats, :map
+    field :stats, EctoTypes.Term
     field :color, EctoTypes.Term
     field :data, EctoTypes.Term
     field :equip_slot, EquipSlot, default: :NONE

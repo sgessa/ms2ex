@@ -104,9 +104,9 @@ defmodule Ms2ex.Items.ConstantStats do
       :dex -> "constant_value_dex"
       :int -> "constant_value_int"
       :luk -> "constant_value_luk"
-      :magic_atk -> "constant_value_map"
-      :min_weapon_atk -> "constant_value_wapmin"
-      :max_weapon_atk -> "constant_value_wapmax"
+      :magic_attk -> "constant_value_map"
+      :min_weapon_attk -> "constant_value_wapmin"
+      :max_weapon_attk -> "constant_value_wapmax"
       _ -> nil
     end
   end
