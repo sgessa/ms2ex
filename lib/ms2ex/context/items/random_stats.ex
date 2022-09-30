@@ -57,10 +57,14 @@ defmodule Ms2ex.Items.RandomStats do
     item_stat = Items.Stat.build(r)
 
     if options.multiply_factor > 0 do
-      flat = item_stat.flat * trunc(Float.ceil(options.multiply_factor))
-      rate = item_stat.rate * options.multiply_factor
+      value =
+        if item_stat.type == :flat do
+          item_stat.value * trunc(Float.ceil(options.multiply_factor))
+        else
+          item_stat.value * options.multiply_factor
+        end
 
-      Map.merge(item_stat, %{flat: flat, rate: rate})
+      Map.put(item_stat, :value, value)
     else
       item_stat
     end

@@ -11,13 +11,16 @@ defmodule Ms2ex.Equips do
     |> Enum.map(&Metadata.Items.load(&1))
   end
 
-  # For suits, check top and pants
   def find_equipped_in_slot(equips, slots) do
     Enum.filter(equips, &(&1.equip_slot in slots))
   end
 
-  def equip(equip_slots, %Item{location: :inventory} = item) do
-    update_item(item, %{equip_slots: equip_slots, inventory_slot: nil, location: :equipment})
+  def equip(equip_slots, item) when is_list(equip_slots) do
+    equip(List.first(equip_slots), item)
+  end
+
+  def equip(equip_slot, %Item{location: :inventory} = item) do
+    update_item(item, %{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
   end
 
   def unequip(%Item{} = item) do
