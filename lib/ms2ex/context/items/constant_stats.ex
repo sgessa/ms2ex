@@ -67,11 +67,10 @@ defmodule Ms2ex.Items.ConstantStats do
       end
 
     basic_stat = constant_stats[pick.stat]
-    stat_value = Map.get(basic_stat, basic_stat.type)
 
     {:ok, [result]} =
       :luaport.call(script, String.to_atom(calc_script), [
-        stat_value,
+        basic_stat.value,
         pick.deviation_value,
         Items.Type.from_name(Items.type(item)),
         List.first(item.metadata.limit.job_recommendations),
@@ -88,7 +87,7 @@ defmodule Ms2ex.Items.ConstantStats do
       end
 
     # TODO make sure result.number is a float
-    basic_stat = Map.put(basic_stat, basic_stat.type, result)
+    basic_stat = Map.put(basic_stat, :value, result)
 
     Map.put(constant_stats, pick.stat, basic_stat)
   end
