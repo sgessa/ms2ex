@@ -44,9 +44,13 @@ defmodule Ms2ex.Items.StaticStats do
         {:error, {:already_started, script}} -> script
       end
 
+    static_stats
+    |> process_values(item, base_options.static_values, level_factor, script)
+    |> process_values(item, base_options.static_rates, level_factor, script)
+  end
 
-
-    Enum.reduce(base_options.static_values, static_stats, fn static_pick, acc ->
+  defp process_values(static_stats, item, options, level_factor, script) do
+    Enum.reduce(options, static_stats, fn static_pick, acc ->
       calc_script = get_calc_script(static_pick.stat)
 
       if calc_script do
@@ -55,8 +59,6 @@ defmodule Ms2ex.Items.StaticStats do
         acc
       end
     end)
-
-    # TO DO: Process static rates
   end
 
   defp process_stat(item, static_stats, pick, calc_script, level_factor, script) do
@@ -69,11 +71,10 @@ defmodule Ms2ex.Items.StaticStats do
       end
 
     basic_stat = static_stats[pick.stat]
-    stat_value = Map.get(basic_stat, basic_stat.type)
 
-    {:ok, {min, max}} =
+    {:ok, [min, max]} =
       :luaport.call(script, String.to_atom(calc_script), [
-        stat_value,
+        basic_stat.value,
         pick.deviation_value,
         Items.Type.from_name(Items.type(item)),
         List.first(item.metadata.limit.job_recommendations),
@@ -82,8 +83,8 @@ defmodule Ms2ex.Items.StaticStats do
         item.level
       ])
 
-    result = Enum.random(min..max)
-    basic_stat = Map.put(basic_stat, basic_stat.type, result)
+    random = min + (max - min) * :rand.uniform()
+    basic_stat = Map.put(basic_stat, basic_stat.type, random)
 
     Map.put(static_stats, pick.stat, basic_stat)
   end

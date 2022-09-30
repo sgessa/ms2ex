@@ -25,10 +25,10 @@ defmodule Ms2ex.Metadata.Items.StatAttribute do
   field :defense, 20
   field :perfect_guard, 21
   field :jump_height, 22
-  field :phys_attk, 23
-  field :mag_attk, 24
-  field :phys_res, 25
-  field :mag_res, 26
+  field :physical_attk, 23
+  field :magic_attk, 24
+  field :physical_res, 25
+  field :magic_res, 26
   field :min_weapon_attk, 27
   field :max_weapon_attk, 28
   field :min_damage, 29

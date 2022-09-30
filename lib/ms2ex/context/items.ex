@@ -18,7 +18,7 @@ defmodule Ms2ex.Items do
   end
 
   def type(%Item{item_id: item_id}) do
-    case item_id do
+    case trunc(item_id / 100_000) do
       112 -> :earring
       113 -> :hat
       114 -> :clothes
