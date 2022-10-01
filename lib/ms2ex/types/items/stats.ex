@@ -26,15 +26,12 @@ defmodule Ms2ex.Items.Stats do
         %{}
       end
 
-    # TODO: Implement Limit Break Enchants
-    limit_break_enchants = %{}
-
     %__MODULE__{
       constants: constants,
       statics: statics,
       randoms: randoms,
       enchants: enchants,
-      limit_break_enchants: limit_break_enchants
+      limit_break_enchants: %{}
     }
   end
 end
