@@ -138,12 +138,12 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_stats(packet, item) do
-    constant_basic_stats = Enum.filter(item.stats.constants, &(&1.class == :basic))
-    constant_special_stats = Enum.filter(item.stats.constants, &(&1.class == :special))
-    static_basic_stats = Enum.filter(item.stats.statics, &(&1.class == :basic))
-    static_special_stats = Enum.filter(item.stats.statics, &(&1.class == :special))
-    random_basic_stats = Enum.filter(item.stats.randoms, &(&1.class == :basic))
-    random_special_stats = Enum.filter(item.stats.randoms, &(&1.class == :special))
+    constant_basic_stats = Enum.filter(item.stats.constants, &(elem(&1, 1).class == :basic))
+    constant_special_stats = Enum.filter(item.stats.constants, &(elem(&1, 1) == :special))
+    static_basic_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :basic))
+    static_special_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :special))
+    random_basic_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1) == :basic))
+    random_special_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1) == :special))
 
     packet
     |> put_byte()
@@ -205,13 +205,13 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_enchant_stats(packet, item) do
-    enchant_stats = Enum.filter(item.stats.enchants, &(&1.class == :basic))
+    enchant_stats = Enum.filter(item.stats.enchants, &(elem(&1, 1).class == :basic))
 
     basic_limit_break_enchants =
-      Enum.filter(item.stats.limit_break_enchants, &(&1.class == :basic))
+      Enum.filter(item.stats.limit_break_enchants, &(elem(&1, 1).class == :basic))
 
     special_limit_break_enchants =
-      Enum.filter(item.stats.limit_break_enchants, &(&1.class == :special))
+      Enum.filter(item.stats.limit_break_enchants, &(elem(&1, 1).class == :special))
 
     packet
     |> put_byte(Enum.count(enchant_stats))

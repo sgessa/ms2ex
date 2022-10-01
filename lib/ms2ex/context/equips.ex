@@ -11,16 +11,18 @@ defmodule Ms2ex.Equips do
     |> Enum.map(&Metadata.Items.load(&1))
   end
 
-  def find_equipped_in_slot(equips, slots) when slots == [:OH] do
-    Enum.filter(equips, &(&1.equip_slot in (slots ++ [:RH, :LH])))
+  def find_equipped_in_slot(equips, slots, requested_slot \\ nil)
+
+  def find_equipped_in_slot(equips, slots, requested_slot) when slots == [:OH] do
+    Enum.filter(equips, &(&1.equip_slot == requested_slot))
   end
 
-  def find_equipped_in_slot(equips, slots) do
+  def find_equipped_in_slot(equips, slots, _requested_slot) do
     Enum.filter(equips, &(&1.equip_slot in slots))
   end
 
   def equip(%Item{metadata: meta} = item) do
-    equip(List.first(meta.slots), item)
+    equip(item, List.first(meta.slots))
   end
 
   def equip(%Item{location: :inventory} = item, equip_slot) do

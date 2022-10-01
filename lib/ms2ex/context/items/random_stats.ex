@@ -85,6 +85,7 @@ defmodule Ms2ex.Items.RandomStats do
         n when n >= 0.9 and n < 0.966 -> 12
         n when n >= 0.966 and n < 0.985 -> 13
         n when n >= 0.985 and n < 0.9975 -> 14
+        _ -> 15
       end
     else
       case random do

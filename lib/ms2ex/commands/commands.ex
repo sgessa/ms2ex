@@ -23,10 +23,8 @@ defmodule Ms2ex.Commands do
   def handle(["item" | ids], character, session) do
     Enum.reduce(ids, session, fn item_id, session ->
       with {item_id, _} <- Integer.parse(item_id),
-           {:ok, meta} <- Metadata.Items.lookup(item_id) do
-        flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-        item = %Item{item_id: item_id, transfer_flags: flags, metadata: meta}
-        add_item(character, item, session)
+           {:ok, _meta} <- Metadata.Items.lookup(item_id) do
+        add_item(character, item_id, session)
       else
         _ ->
           push_notice(session, character, "Invalid Item: #{item_id}")
@@ -139,7 +137,10 @@ defmodule Ms2ex.Commands do
     push_notice(session, character, "Command not found")
   end
 
-  defp add_item(character, item, session) do
+  defp add_item(character, item_id, session) do
+    flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
+    item = Ms2ex.Items.init(item_id, %{transfer_flags: flags})
+
     case Inventory.add_item(character, item) do
       {:ok, {_, item} = result} ->
         session

@@ -22,13 +22,13 @@ server_address =
   System.get_env("SERVER_ADDRESS") || raise "SERVER_ADDRESS env variable not configured!"
 
 config :ms2ex, Ms2ex,
-  login: %{host: server_address, port: 20001},
+  login: %{host: server_address, port: 8526},
   world: %{
     name: "Paperwood",
-    login: %{host: server_address, port: 20002},
+    login: %{host: server_address, port: 20001},
     channels: [
-      %{host: server_address, port: 20003},
-      %{host: server_address, port: 20004}
+      %{host: server_address, port: 20002},
+      %{host: server_address, port: 20003}
     ]
   },
   ugc: %{

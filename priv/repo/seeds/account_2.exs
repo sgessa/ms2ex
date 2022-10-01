@@ -65,7 +65,7 @@ dagger = Items.init(13_160_311, %{enchants: 12, rarity: 6})
 {:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, dagger)
-{:ok, _equip} = Equips.equip(:LH, item)
+{:ok, _equip} = Equips.equip(item, :LH)
 
 {:ok, {:create, item}} = Inventory.add_item(char, dagger)
-{:ok, _equip} = Equips.equip(:RH, item)
+{:ok, _equip} = Equips.equip(item, :RH)

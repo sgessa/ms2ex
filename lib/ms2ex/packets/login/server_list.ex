@@ -2,11 +2,10 @@ defmodule Ms2ex.Packets.ServerList do
   import Ms2ex.Packets.PacketWriter
 
   @mod_set 0x1
-  @config Application.get_env(:ms2ex, Ms2ex)
-  @world @config[:world]
 
   def bytes() do
-    worlds = [@world]
+    config = Application.get_env(:ms2ex, Ms2ex)
+    worlds = [config[:world]]
 
     __MODULE__
     |> build()
