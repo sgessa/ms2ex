@@ -1,5 +1,5 @@
 defmodule Ms2ex.Items.EnchantStats do
-  alias Ms2ex.{Item, Items}
+  alias Ms2ex.{Item, Items, Metadata}
 
   def get(%Item{} = item) do
     script =
@@ -11,7 +11,7 @@ defmodule Ms2ex.Items.EnchantStats do
     {:ok, results} =
       :luaport.call(script, String.to_atom("calcEnchantBoostValues"), [
         item.enchant_level,
-        Items.Type.from_name(Items.type(item)),
+        Items.Type.value(Items.type(item)),
         item.level
       ])
 
@@ -21,7 +21,7 @@ defmodule Ms2ex.Items.EnchantStats do
       if attr_nr == 0 do
         acc
       else
-        attr = Items.StatAttribute.from_int(attr_nr)
+        attr = Metadata.Items.StatAttribute.key(attr_nr)
         stat = Items.Stat.build(attr, :value, value, :basic)
         Map.put(acc, attr, stat)
       end

@@ -44,25 +44,25 @@ dagger = Items.init(13_160_311, %{enchants: 12, rarity: 6})
   })
 
 {:ok, {:create, item}} = Inventory.add_item(char, ears)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, hair)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, face)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, face_decor)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, top)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, bottom)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, shoes)
-{:ok, _equip} = Equips.equip(item.metadata.slots, item)
+{:ok, _equip} = Equips.equip(item)
 
 {:ok, {:create, item}} = Inventory.add_item(char, dagger)
 {:ok, _equip} = Equips.equip(:LH, item)

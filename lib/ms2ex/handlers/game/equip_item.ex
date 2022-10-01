@@ -47,7 +47,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     end)
 
     # Equip new item
-    with {:ok, item} <- Equips.equip(equip_slot, item) do
+    with {:ok, item} <- Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Field.broadcast(character, equip_packet)
 

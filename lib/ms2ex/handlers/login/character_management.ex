@@ -84,7 +84,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     with {:ok, character} <- Characters.create(session.account, attrs) do
       Enum.each(equips, fn {equip_slot, item} ->
         {:ok, {:create, item}} = Inventory.add_item(character, item)
-        {:ok, _equip} = Equips.equip(equip_slot, item)
+        {:ok, _equip} = Equips.equip(item, equip_slot)
       end)
 
       equips = Equips.list(character)

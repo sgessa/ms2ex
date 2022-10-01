@@ -15,12 +15,12 @@ defmodule Ms2ex.Item do
     :item_id,
     :inventory_slot,
     :inventory_tab,
+    :level,
+    :limit_break_level,
     :location,
     :rarity,
-    :transfer_flags,
-    :level,
     :stats,
-    :limit_break_level
+    :transfer_flags
   ]
 
   @required [:amount, :item_id, :location]

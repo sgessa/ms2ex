@@ -35,9 +35,9 @@ defmodule Ms2ex.Items.Type do
     orb: 56
   )
 
-  def from_name(name), do: Keyword.get(Type.__enum_map__(), name)
+  def value(name), do: Keyword.get(Type.__enum_map__(), name)
 
-  def type_from_int(type_id) do
+  def key(type_id) do
     Type.__enum_map__()
     |> Enum.find(fn {_k, v} -> v == type_id end)
     |> elem(0)

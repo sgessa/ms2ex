@@ -19,11 +19,11 @@ defmodule Ms2ex.Equips do
     Enum.filter(equips, &(&1.equip_slot in slots))
   end
 
-  def equip(equip_slots, item) when is_list(equip_slots) do
-    equip(List.first(equip_slots), item)
+  def equip(%Item{metadata: meta} = item) do
+    equip(List.first(meta.slots), item)
   end
 
-  def equip(equip_slot, %Item{location: :inventory} = item) do
+  def equip(%Item{location: :inventory} = item, equip_slot) do
     update_item(item, %{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
   end
 
