@@ -37,7 +37,6 @@ defmodule Ms2ex.Item do
     field :item_id, :integer
     field :amount, :integer, default: 1
 
-    field :stats, EctoTypes.Term
     field :color, EctoTypes.Term
     field :data, EctoTypes.Term
     field :equip_slot, EquipSlot, default: :NONE
@@ -52,6 +51,8 @@ defmodule Ms2ex.Item do
     field :is_locked, :boolean, virtual: true, default: false
     field :inventory_slot, :integer
     field :inventory_tab, TabType
+    field :level, :integer, default: 0
+    field :limit_break_level, :integer, default: 0
     field :location, Location, default: :inventory
     field :lock_character_id, :integer, virtual: true
     field :mob_drop?, :boolean, virtual: true, default: false
@@ -60,10 +61,9 @@ defmodule Ms2ex.Item do
     field :paired_character_name, :string, virtual: true, default: ""
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
-    field :level, :integer, default: 0
-    field :limit_break_level, :integer, default: 0
     field :remaining_trades, :integer, virtual: true, default: 0
     field :source_object_id, :integer, virtual: true
+    field :stats, EctoTypes.Term
     field :target_object_id, :integer, virtual: true
     field :times_attr_changed, :integer, virtual: true, default: 0
     field :transfer_flags, :integer, default: 0
