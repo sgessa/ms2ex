@@ -73,7 +73,7 @@ defmodule Ms2ex.Items.ConstantStats do
         basic_stat.value,
         pick.deviation_value,
         Items.Type.value(Items.type(item)),
-        List.first(item.metadata.limit.job_recommendations),
+        List.first(item.metadata.limits.job_recommendations),
         level_factor,
         item.rarity,
         item.level

@@ -10,7 +10,7 @@ defmodule Ms2ex.Items do
   end
 
   def set_level(%Item{metadata: metadata} = item) do
-    Map.put(item, :level, metadata.limit.level_limit_min)
+    Map.put(item, :level, metadata.limits.level_limit_min)
   end
 
   def set_stats(%Item{} = item) do
@@ -34,7 +34,7 @@ defmodule Ms2ex.Items do
       131 -> :dagger
       132 -> :longsword
       133 -> :scepter
-      134 -> :throwingStar
+      134 -> :throwing_star
       140 -> :spellbook
       141 -> :shield
       150 -> :greatsword

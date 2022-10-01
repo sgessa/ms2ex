@@ -13,7 +13,7 @@ defmodule Ms2ex.Metadata.Item do
   field :life, 11, type: Ms2ex.Metadata.Items.Life
   field :pet, 12, type: Ms2ex.Metadata.Items.Pet
   field :basic, 13, type: Ms2ex.Metadata.Items.Basic
-  field :limit, 14, type: Ms2ex.Metadata.Items.Limit
+  field :limits, 14, type: Ms2ex.Metadata.Items.Limit
   field :skill, 15, type: Ms2ex.Metadata.Items.Skill
   field :fusion, 16, type: Ms2ex.Metadata.Items.Fusion
   field :install, 17, type: Ms2ex.Metadata.Items.Install

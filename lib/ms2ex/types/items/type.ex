@@ -23,7 +23,7 @@ defmodule Ms2ex.Items.Type do
     dagger: 31,
     longsword: 32,
     scepter: 33,
-    throwingStar: 34,
+    throwing_star: 34,
     spellbook: 40,
     shield: 41,
     greatsword: 50,

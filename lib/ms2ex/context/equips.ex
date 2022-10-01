@@ -11,14 +11,30 @@ defmodule Ms2ex.Equips do
     |> Enum.map(&Metadata.Items.load(&1))
   end
 
-  def find_equipped_in_slot(equips, slots, requested_slot \\ nil)
+  def find_equipped_in_slots(equips, slots, inventory_tab, requested_slot \\ nil)
 
-  def find_equipped_in_slot(equips, slots, requested_slot) when slots == [:OH] do
-    Enum.filter(equips, &(&1.equip_slot == requested_slot))
+  # When we are equipping pants, we need to check if we have a suit (CL) equipped
+  def find_equipped_in_slots(equips, [:PA], inventory_tab, _requested_slot) do
+    suit =
+      Enum.find(equips, &(&1.metadata.slots == [:CL, :PA] and &1.inventory_tab == inventory_tab))
+
+    slots =
+      if suit do
+        [:CL, :PA]
+      else
+        [:PA]
+      end
+
+    Enum.filter(equips, &(&1.equip_slot in slots and &1.inventory_tab == inventory_tab))
   end
 
-  def find_equipped_in_slot(equips, slots, _requested_slot) do
-    Enum.filter(equips, &(&1.equip_slot in slots))
+  # When we are equipping off-hand weapons, we need to check against the slot requested by the client
+  def find_equipped_in_slots(equips, slots, inventory_tab, requested_slot) when slots == [:OH] do
+    Enum.filter(equips, &(&1.equip_slot == requested_slot and &1.inventory_tab == inventory_tab))
+  end
+
+  def find_equipped_in_slots(equips, slots, inventory_tab, _requested_slot) do
+    Enum.filter(equips, &(&1.equip_slot in slots and &1.inventory_tab == inventory_tab))
   end
 
   def equip(%Item{metadata: meta} = item) do
