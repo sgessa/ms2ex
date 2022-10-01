@@ -5,7 +5,7 @@ defmodule Ms2ex.Commands do
     CharacterManager,
     Field,
     Inventory,
-    Item,
+    Items,
     Metadata,
     Net,
     Packets,
@@ -139,7 +139,7 @@ defmodule Ms2ex.Commands do
 
   defp add_item(character, item_id, session) do
     flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-    item = Ms2ex.Items.init(item_id, %{transfer_flags: flags})
+    item = Items.init(item_id, %{transfer_flags: flags})
 
     case Inventory.add_item(character, item) do
       {:ok, {_, item} = result} ->
