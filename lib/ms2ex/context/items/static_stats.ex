@@ -78,7 +78,7 @@ defmodule Ms2ex.Items.StaticStats do
       :luaport.call(script, String.to_atom(calc_script), [
         basic_stat.value,
         pick.deviation_value,
-        Items.Type.from_name(Items.type(item)),
+        Items.Type.value(Items.type(item)),
         List.first(item.metadata.limit.job_recommendations),
         level_factor,
         item.rarity,
