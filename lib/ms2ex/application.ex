@@ -3,12 +3,8 @@ defmodule Ms2ex.Application do
 
   use Application
 
-  @config Application.get_env(:ms2ex, Ms2ex)
-  @world @config[:world]
-
   def start(_type, _args) do
     Ms2ex.WorldGraph.store()
-
     Ms2ex.Metadata.ChatStickers.store()
     Ms2ex.Metadata.ExpTable.store()
     Ms2ex.Metadata.Insignias.store()
@@ -47,19 +43,24 @@ defmodule Ms2ex.Application do
   end
 
   defp login_server_opts() do
-    Map.merge(@config[:login], %{id: :login_listener, type: :login_server})
+    config = Application.get_env(:ms2ex, Ms2ex)
+    Map.merge(config[:login], %{id: :login_listener, type: :login_server})
   end
 
   defp world_login_opts() do
-    Map.merge(@world[:login], %{
+    config = Application.get_env(:ms2ex, Ms2ex)
+
+    Map.merge(config[:world][:login], %{
       id: :world_listener,
       type: :world_login,
-      world_name: @world[:name]
+      world_name: config[:world][:name]
     })
   end
 
   defp channel_listeners() do
-    Enum.map(Enum.with_index(@world[:channels]), fn {channel, idx} ->
+    config = Application.get_env(:ms2ex, Ms2ex)
+
+    Enum.map(Enum.with_index(config[:world][:channels]), fn {channel, idx} ->
       channel_id = idx + 1
       listener_id = :"channel:#{channel_id}"
 

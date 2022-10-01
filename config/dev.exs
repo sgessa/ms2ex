@@ -34,26 +34,7 @@ config :ms2ex, Ms2ex.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
-server_host = System.get_env("SERVER_HOST") || "127.0.0.1"
-
 config :ms2ex, Ms2ex,
-  login: %{
-    host: server_host,
-    port: 8526
-  },
-  world: %{
-    name: "Paperwood",
-    login: %{host: server_host, port: 20001},
-    channels: [
-      %{host: server_host, port: 20003},
-      %{host: server_host, port: 20004}
-    ]
-  },
-  ugc: %{
-    endpoint: "http://#{server_host}/ws.asmx?wsdl",
-    resource: "http://#{server_host}",
-    locale: "na"
-  },
   skip_packet_logs: [
     "ADD_PORTAL",
     "CHARACTER_LIST",
