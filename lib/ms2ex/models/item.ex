@@ -44,8 +44,8 @@ defmodule Ms2ex.Item do
     field :appearance_flag, :integer, virtual: true, default: 0
     field :can_repackage, :boolean, virtual: true, default: true
     field :charges, :integer, virtual: true, default: 0
-    field :enchant_level, :integer, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
+    field :enchant_level, :integer, default: 0
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
