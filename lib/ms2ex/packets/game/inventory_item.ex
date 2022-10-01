@@ -140,7 +140,6 @@ defmodule Ms2ex.Packets.InventoryItem do
   def put_item_stats(packet, item) do
     constant_basic_stats = Enum.filter(item.stats.constants, &(&1.class == :basic))
     constant_special_stats = Enum.filter(item.stats.constants, &(&1.class == :special))
-
     static_basic_stats = Enum.filter(item.stats.statics, &(&1.class == :basic))
     static_special_stats = Enum.filter(item.stats.statics, &(&1.class == :special))
     random_basic_stats = Enum.filter(item.stats.randoms, &(&1.class == :basic))
