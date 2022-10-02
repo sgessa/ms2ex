@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Hair, Inventory, Metadata}
+  alias Ms2ex.{Hair, Inventory, Items, Metadata}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -96,7 +96,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_appearance(item)
     |> put_item_stats(item)
-    |> put_int(item.enchants)
+    |> put_int(item.enchant_level)
     |> put_int(item.enchant_exp)
     |> put_bool(true)
     |> put_long()
@@ -104,7 +104,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_bool(item.can_repackage)
     |> put_int(item.charges)
-    |> put_item_stats_diff(item)
+    |> put_item_enchant_stats(item)
     # |> put_template(item)
     # TODO put pets
     # TODO put gem slot
@@ -138,25 +138,41 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item_stats(packet, item) do
-    basic_attributes = item.basic_attributes || []
-    bonus_attributes = item.bonus_attributes || []
+    constant_basic_stats = Enum.filter(item.stats.constants, &(elem(&1, 1).class == :basic))
+    constant_special_stats = Enum.filter(item.stats.constants, &(elem(&1, 1) == :special))
+    static_basic_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :basic))
+    static_special_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :special))
+    random_basic_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1) == :basic))
+    random_special_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1) == :special))
 
     packet
     |> put_byte()
-    |> put_short(length(basic_attributes))
-    |> reduce(basic_attributes, fn stat, packet ->
+    |> put_short(Enum.count(constant_basic_stats))
+    |> reduce(constant_basic_stats, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
-    |> put_short()
-    |> put_int()
-    |> put_short()
-    |> put_short()
-    |> put_int()
-    |> put_short(length(bonus_attributes))
-    |> reduce(bonus_attributes, fn stat, packet ->
+    |> put_short(Enum.count(constant_special_stats))
+    |> reduce(constant_special_stats, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
-    |> put_short()
+    |> put_int()
+    |> put_short(Enum.count(static_basic_stats))
+    |> reduce(static_basic_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_short(Enum.count(static_special_stats))
+    |> reduce(static_special_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_int()
+    |> put_short(Enum.count(random_basic_stats))
+    |> reduce(random_basic_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_short(Enum.count(random_special_stats))
+    |> reduce(random_special_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
     |> put_int()
     |> reduce(1..6, fn _, packet ->
       packet
@@ -166,11 +182,18 @@ defmodule Ms2ex.Packets.InventoryItem do
     end)
   end
 
-  def put_item_stat(packet, stat) do
+  def put_item_stat(packet, %{class: :basic} = stat) do
     packet
-    |> put_short(Ms2ex.Metadata.ItemAttribute.value(stat.type))
-    |> put_int(stat.value)
-    |> put_float(stat.percentage)
+    |> put_short(Metadata.Items.StatAttribute.value(stat.attribute))
+    |> put_int(Items.Stat.flat_value(stat))
+    |> put_float(Items.Stat.rate_value(stat))
+  end
+
+  def put_item_stat(packet, %{class: :special} = stat) do
+    packet
+    |> put_short(Metadata.Items.StatAttribute.value(stat.attribute))
+    |> put_float(Items.Stat.rate_value(stat))
+    |> put_float(Items.Stat.flat_value(stat))
   end
 
   def put_item_stats_diff(packet, _item) do
@@ -179,6 +202,29 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_int(0)
     |> put_int(0)
+  end
+
+  def put_item_enchant_stats(packet, item) do
+    enchant_stats = Enum.filter(item.stats.enchants, &(elem(&1, 1).class == :basic))
+
+    basic_limit_break_enchants =
+      Enum.filter(item.stats.limit_break_enchants, &(elem(&1, 1).class == :basic))
+
+    special_limit_break_enchants =
+      Enum.filter(item.stats.limit_break_enchants, &(elem(&1, 1).class == :special))
+
+    packet
+    |> put_byte(Enum.count(enchant_stats))
+    |> reduce(enchant_stats, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
+    |> put_int(item.limit_break_level)
+    |> put_int(Enum.count(basic_limit_break_enchants))
+    |> reduce(basic_limit_break_enchants, fn {_, stat}, packet -> put_item_stat(packet, stat) end)
+    |> put_int(Enum.count(special_limit_break_enchants))
+    |> reduce(special_limit_break_enchants, fn {_, stat}, packet ->
+      put_item_stat(packet, stat)
+    end)
   end
 
   # defp put_template(packet, %{metadata: %{is_template?: true}}) do
@@ -223,7 +269,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
-    |> put_int(Metadata.InventoryTab.value(tab_id))
+    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
     |> put_short(length(items))
     |> reduce(items, fn item, packet ->
       packet
@@ -245,7 +291,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_tab)
-    |> put_byte(Metadata.InventoryTab.value(tab_id))
+    |> put_byte(Metadata.Items.InventoryTab.value(tab_id))
     |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
   end
 
@@ -253,6 +299,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.reset_tab)
-    |> put_int(Metadata.InventoryTab.value(tab_id))
+    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
   end
 end

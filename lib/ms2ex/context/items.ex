@@ -1,11 +1,56 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.Metadata
-  alias Ms2ex.Item
+  alias Ms2ex.{Item, Items, Metadata}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
     |> Map.merge(attrs)
     |> Metadata.Items.load()
+    |> set_stats()
+    |> set_level()
+  end
+
+  def set_level(%Item{metadata: metadata} = item) do
+    Map.put(item, :level, metadata.limits.level_limit_min)
+  end
+
+  def set_stats(%Item{} = item) do
+    Map.put(item, :stats, Items.Stats.create(item))
+  end
+
+  def type(%Item{item_id: item_id}) do
+    case trunc(item_id / 100_000) do
+      112 -> :earring
+      113 -> :hat
+      114 -> :clothes
+      115 -> :pants
+      116 -> :gloves
+      117 -> :shoes
+      118 -> :cape
+      119 -> :necklace
+      120 -> :ring
+      121 -> :belt
+      122 -> :overall
+      130 -> :bludgeon
+      131 -> :dagger
+      132 -> :longsword
+      133 -> :scepter
+      134 -> :throwing_star
+      140 -> :spellbook
+      141 -> :shield
+      150 -> :greatsword
+      151 -> :bow
+      152 -> :staff
+      153 -> :cannon
+      154 -> :blade
+      155 -> :knuckle
+      156 -> :orb
+      209 -> :medal
+      id when id in [410, 420, 430] -> :lapenshard
+      id when id in [501, 502, 503, 504, 505] -> :furnishing
+      600 -> :pet
+      900 -> :currency
+      _ -> :none
+    end
   end
 
   @meso_ids 90_000_001..90_000_003
@@ -42,4 +87,19 @@ defmodule Ms2ex.Items do
   def stamina?(%Item{item_id: @stamina_id}), do: true
   def stamina?(%Item{}), do: false
   def stamina(amount), do: init(@stamina_id, amount)
+
+  @accessory_slots [:FH, :EA, :PD, :BE, :RI]
+  def accessory?(%Item{} = item) do
+    !!Enum.find(item.metadata.slots, &(&1 in @accessory_slots))
+  end
+
+  @armor_slots [:CP, :CL, :GL, :SH, :MT]
+  def armor?(%Item{} = item) do
+    !!Enum.find(item.metadata.slots, &(&1 in @armor_slots))
+  end
+
+  @weapon_slots [:LH, :RH, :OH]
+  def weapon?(%Item{} = item) do
+    !!Enum.find(item.metadata.slots, &(&1 in @weapon_slots))
+  end
 end

@@ -1,19 +1,19 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
-  alias Ms2ex.{Character, Characters}
-
   alias Ms2ex.{
+    Character,
+    Characters,
     Equips,
     Hair,
     Inventory,
+    Items,
     ItemColor,
     Metadata,
     Net,
     Packets,
+    Repo,
     SessionManager,
     SkinColor
   }
-
-  alias Inventory.Item
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -75,28 +75,35 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     attrs = %{
       gender: gender,
-      job: Ms2ex.Metadata.Job.key(job),
+      job: Metadata.Job.key(job),
       field_id: 2_000_023,
       name: name,
       skin_color: skin_color
     }
 
-    with {:ok, character} <- Characters.create(session.account, attrs) do
-      Enum.each(equips, fn {equip_slot, item} ->
-        {:ok, {:create, item}} = Inventory.add_item(character, item)
-        {:ok, _equip} = Equips.equip(equip_slot, item)
+    result =
+      Repo.transaction(fn ->
+        with {:ok, character} <- Characters.create(session.account, attrs) do
+          Enum.each(equips, fn {equip_slot, item} ->
+            {:ok, {:create, item}} = Inventory.add_item(character, item)
+            {:ok, _equip} = Equips.equip(item, equip_slot)
+          end)
+
+          equips = Equips.list(character)
+          %{character | equips: equips}
+        else
+          error -> Repo.rollback(error)
+        end
       end)
 
-      equips = Equips.list(character)
-      character = %{character | equips: equips}
-
-      session
-      |> push(Packets.CharacterMaxCount.set_max(4, 6))
-      |> push(Packets.CharacterList.append(character))
-    else
-      _error ->
+    case result do
+      {:ok, character} ->
         session
-        |> push(Packets.CharacterCreate.name_taken())
+        |> push(Packets.CharacterMaxCount.set_max(4, 6))
+        |> push(Packets.CharacterList.append(character))
+
+      _error ->
+        push(session, Packets.CharacterCreate.name_taken())
     end
   end
 
@@ -107,8 +114,9 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     {_color_idx, packet} = get_int(packet)
     {attrs, packet} = get_item_attributes(packet, slot_name)
 
-    attrs = Map.merge(attrs, %{color: color, item_id: id})
-    item = Item |> struct(attrs) |> Metadata.Items.load()
+    attrs = Map.put(attrs, :color, color)
+    item = Items.init(id, attrs)
+
     {{String.to_existing_atom(slot_name), item}, packet}
   end
 

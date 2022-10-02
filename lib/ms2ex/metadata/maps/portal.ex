@@ -2,20 +2,6 @@ defmodule Ms2ex.Metadata.MapPortal do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :id,
-    :name,
-    :enabled?,
-    :visible?,
-    :mini_map_visible?,
-    :target,
-    :coord,
-    :rotation,
-    :target_portal_id,
-    :portal_type,
-    :trigger_id
-  ]
-
   field :id, 1, type: :int32
   field :name, 2, type: :string
   field :enabled?, 3, type: :bool

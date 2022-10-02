@@ -117,9 +117,9 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   defp handle_items(session, character, id, content) do
     amount = Enum.random(content.min_amount..content.max_amount)
     rarity = content.rarity
-    enchants = content.enchant_level
+    enchant_lvl = content.enchant_level
 
-    item = %Item{item_id: id, rarity: rarity, amount: amount, enchants: enchants}
+    item = %Item{item_id: id, rarity: rarity, amount: amount, enchant_level: enchant_lvl}
     item = Metadata.Items.load(item)
 
     case Inventory.add_item(character, item) do

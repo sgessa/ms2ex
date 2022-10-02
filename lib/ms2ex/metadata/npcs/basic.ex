@@ -2,26 +2,6 @@ defmodule Ms2ex.Metadata.NpcBasic do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  defstruct [
-    :attack_group,
-    :defense_group,
-    :attack_dmg,
-    :hit_immune,
-    :abnormal_immune,
-    :class,
-    :kind,
-    :hp_bar,
-    :rotation_disabled,
-    :care_path_to_enemy,
-    :max_spawn_count,
-    :group_spawn_count,
-    :rare_degree,
-    :difficulty,
-    :race,
-    property_tags: [],
-    event_tags: []
-  ]
-
   field :attack_group, 1, type: :int32
   field :defense_group, 2, type: :int32
   field :attack_dmg, 3, type: :bool

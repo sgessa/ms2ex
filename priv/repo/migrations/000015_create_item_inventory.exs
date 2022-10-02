@@ -7,16 +7,17 @@ defmodule Ms2ex.Repo.Migrations.CreateInventory do
       add :item_id, :bigint, null: false
 
       add :amount, :integer, null: false
-      add :basic_attributes, :binary
-      add :bonus_attributes, :binary
       add :color, :binary
       add :data, :binary
-      add :enchants, :integer, null: false
+      add :enchant_level, :integer, null: false
       add :equip_slot, :integer, null: false
       add :inventory_slot, :integer
       add :inventory_tab, :integer, null: false
+      add :level, :integer, null: false
+      add :limit_break_level, :integer
       add :location, :integer, null: false
       add :rarity, :integer, null: false
+      add :stats, :binary
       add :transfer_flags, :integer, null: false
 
       timestamps(type: :timestamptz)

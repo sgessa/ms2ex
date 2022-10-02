@@ -8,23 +8,24 @@ defmodule Ms2ex.Item do
 
   @fields [
     :amount,
-    :basic_attributes,
-    :bonus_attributes,
     :color,
     :data,
-    :enchants,
+    :enchant_level,
     :equip_slot,
     :item_id,
     :inventory_slot,
     :inventory_tab,
+    :level,
+    :limit_break_level,
     :location,
     :rarity,
+    :stats,
     :transfer_flags
   ]
 
   @required [:amount, :item_id, :location]
-  @equip_slots Map.to_list(Metadata.EquipSlot.mapping())
-  @inventory_tabs Map.to_list(Metadata.InventoryTab.mapping())
+  @equip_slots Map.to_list(Metadata.Items.EquipSlot.mapping())
+  @inventory_tabs Map.to_list(Metadata.Items.InventoryTab.mapping())
 
   defenum(EquipSlot, @equip_slots)
   defenum(Location, inventory: 0, equipment: 1)
@@ -36,8 +37,6 @@ defmodule Ms2ex.Item do
     field :item_id, :integer
     field :amount, :integer, default: 1
 
-    field :basic_attributes, EctoTypes.Term
-    field :bonus_attributes, EctoTypes.Term
     field :color, EctoTypes.Term
     field :data, EctoTypes.Term
     field :equip_slot, EquipSlot, default: :NONE
@@ -45,13 +44,15 @@ defmodule Ms2ex.Item do
     field :appearance_flag, :integer, virtual: true, default: 0
     field :can_repackage, :boolean, virtual: true, default: true
     field :charges, :integer, virtual: true, default: 0
-    field :enchants, :integer, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
+    field :enchant_level, :integer, default: 0
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
     field :inventory_slot, :integer
     field :inventory_tab, TabType
+    field :level, :integer, default: 0
+    field :limit_break_level, :integer, default: 0
     field :location, Location, default: :inventory
     field :lock_character_id, :integer, virtual: true
     field :mob_drop?, :boolean, virtual: true, default: false
@@ -62,6 +63,7 @@ defmodule Ms2ex.Item do
     field :rarity, :integer
     field :remaining_trades, :integer, virtual: true, default: 0
     field :source_object_id, :integer, virtual: true
+    field :stats, EctoTypes.Term
     field :target_object_id, :integer, virtual: true
     field :times_attr_changed, :integer, virtual: true, default: 0
     field :transfer_flags, :integer, default: 0

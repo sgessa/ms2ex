@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :ms2ex, Ms2exWeb.Endpoint,
   url: [host: "example.com", port: 80],
@@ -6,4 +6,15 @@ config :ms2ex, Ms2exWeb.Endpoint,
 
 config :logger, level: :info
 
-import_config "prod.secret.exs"
+config :ms2ex, Ms2ex,
+  skip_packet_logs: [
+    "CHARACTER_LIST",
+    "EMOTION",
+    "FIELD_ADD_USER",
+    "KEY_TABLE",
+    "PLAYER_STAT",
+    "PROXY_GAME_OBJ",
+    "SEND_LOG",
+    "USER_CHAT",
+    "USER_SYNC"
+  ]

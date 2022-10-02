@@ -40,14 +40,15 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     equips = Equips.list(character)
 
     # find currently equipped item in the same slot and unequip it
-    old_items = Equips.find_equipped_in_slot(equips, equip_slot, item)
+    equipped_items =
+      Equips.find_equipped_in_slots(equips, item.metadata.slots, item.inventory_tab, equip_slot)
 
-    Enum.each(old_items, fn old_item ->
-      unequip_item(character, old_item, session)
+    Enum.each(equipped_items, fn item ->
+      unequip_item(character, item, session)
     end)
 
     # Equip new item
-    with {:ok, item} <- Equips.equip(equip_slot, item) do
+    with {:ok, item} <- Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Field.broadcast(character, equip_packet)
 

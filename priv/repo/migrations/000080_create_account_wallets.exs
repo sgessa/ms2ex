@@ -13,8 +13,10 @@ defmodule Ms2ex.Repo.Migrations.CreateAccountWallets do
 
     create unique_index(:account_wallets, [:account_id])
 
-    create(constraint(:account_wallets, :balance_non_negative,
-      check: "event_merets >= 0 and game_merets >= 0 and merets >= 0 and meso_tokens >= 0")
+    create(
+      constraint(:account_wallets, :balance_non_negative,
+        check: "event_merets >= 0 and game_merets >= 0 and merets >= 0 and meso_tokens >= 0"
+      )
     )
   end
 end

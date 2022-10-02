@@ -1,6 +1,6 @@
 defmodule Ms2ex.Inventory do
   alias __MODULE__.Tab
-  alias Ms2ex.{Character, Item, ItemStats, Metadata, Repo}
+  alias Ms2ex.{Character, Item, Repo}
 
   import Ecto.Query, except: [update: 2]
 
@@ -95,7 +95,6 @@ defmodule Ms2ex.Inventory do
     slot = find_first_available_slot(character.id, meta.tab)
 
     attrs = %{attrs | inventory_tab: meta.tab, rarity: rarity, inventory_slot: slot}
-    attrs = set_item_stats(attrs)
     attrs = Map.from_struct(attrs)
 
     changeset =
@@ -109,23 +108,6 @@ defmodule Ms2ex.Inventory do
   end
 
   defp create(_character, _attrs), do: :nothing
-
-  defp set_item_stats(%{inventory_tab: :gear} = attrs) do
-    case Metadata.ItemStats.lookup(attrs.item_id) do
-      {:ok, metadata} ->
-        basic = attrs.basic_attributes || ItemStats.set_basic_attributes(metadata, attrs.rarity)
-        bonus = attrs.bonus_attributes || ItemStats.set_bonus_attributes(metadata, attrs.rarity)
-
-        attrs
-        |> Map.put(:basic_attributes, basic)
-        |> Map.put(:bonus_attributes, bonus)
-
-      _ ->
-        attrs
-    end
-  end
-
-  defp set_item_stats(attrs), do: attrs
 
   defp update_qty(%{id: id, metadata: meta}, new_amount) do
     Item

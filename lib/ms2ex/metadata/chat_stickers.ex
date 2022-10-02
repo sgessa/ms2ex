@@ -1,8 +1,6 @@
 defmodule Ms2ex.Metadata.ChatSticker do
   use Protobuf, syntax: :proto3
 
-  defstruct [:sticker_id, :group_id, :category_id]
-
   field :sticker_id, 1, type: :int32
   field :group_id, 2, type: :int32
   field :category_id, 3, type: :int32
@@ -13,8 +11,6 @@ defmodule Ms2ex.Metadata.ChatStickers do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.Metadata.ChatSticker
-
-  defstruct [:items]
 
   field :items, 1, repeated: true, type: ChatSticker
 

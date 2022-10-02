@@ -5,7 +5,7 @@ defmodule Ms2ex.Metadata.Job do
   field :none, 0
   field :unknown, 1
   field :knight, 10
-  field :berseker, 20
+  field :berserker, 20
   field :wizard, 30
   field :priest, 40
   field :archer, 50
