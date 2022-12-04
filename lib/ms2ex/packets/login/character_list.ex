@@ -58,7 +58,7 @@ defmodule Ms2ex.Packets.CharacterList do
 
   def put_character(packet, character) do
     real_job_id = Character.real_job_id(character)
-    gender = Keyword.get(Character.Gender.__enum_map__(), character.gender)
+    gender = Keyword.get(Character.genders(), character.gender)
 
     packet
     |> put_long(character.account_id)

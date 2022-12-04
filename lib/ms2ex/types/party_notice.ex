@@ -1,7 +1,5 @@
 defmodule Ms2ex.PartyNotice do
-  import EctoEnum
-
-  defenum(Notice,
+  @notices [
     accepted_invite: 0x1,
     not_leader: 0x4,
     party_already_made: 0x5,
@@ -35,13 +33,13 @@ defmodule Ms2ex.PartyNotice do
     member_offline: 0x2D,
     member_in_mushking_royale: 0x30,
     mushking_royale_max_squad: 0x31
-  )
+  ]
 
   def from_int(type_id) do
-    Notice.__enum_map__()
+    @notices
     |> Enum.find(fn {_k, v} -> v == type_id end)
     |> elem(0)
   end
 
-  def from_name(name), do: Notice.__enum_map__()[name]
+  def from_name(name), do: Keyword.get(@notices, name)
 end

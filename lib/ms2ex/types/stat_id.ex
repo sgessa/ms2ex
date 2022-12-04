@@ -1,7 +1,5 @@
 defmodule Ms2ex.StatId do
-  import EctoEnum
-
-  defenum(Type,
+  @ids [
     str: 0x00,
     dex: 0x01,
     int: 0x02,
@@ -37,17 +35,17 @@ defmodule Ms2ex.StatId do
     mount_speed: 0x20,
     bonus_attk: 0x21,
     pet_bonus_attk: 0x22
-  )
+  ]
 
   def list() do
-    Keyword.keys(Type.__enum_map__())
+    Keyword.keys(@ids)
   end
 
   def from_id(id) do
-    Type.__enum_map__()
+    @ids
     |> Enum.find(fn {_k, v} -> v == id end)
     |> elem(0)
   end
 
-  def from_name(name), do: Type.__enum_map__()[name]
+  def from_name(name), do: Keyword.get(@ids, name)
 end

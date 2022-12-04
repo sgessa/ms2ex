@@ -2,16 +2,14 @@ defmodule Ms2ex.Inventory.Tab do
   use Ecto.Schema
 
   import Ecto.Changeset
-  import EctoEnum
 
   @inventory_tabs Map.to_list(Ms2ex.Metadata.Items.InventoryTab.mapping())
-  defenum(Type, @inventory_tabs)
 
   schema "inventory_tabs" do
     belongs_to :character, Ms2ex.Character
 
     field :slots, :integer
-    field :tab, Type
+    field :tab, Ecto.Enum, values: @inventory_tabs
   end
 
   @doc false

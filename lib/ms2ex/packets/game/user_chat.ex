@@ -4,7 +4,7 @@ defmodule Ms2ex.Packets.UserChat do
   import Packets.PacketWriter
 
   def bytes(type, character, msg) do
-    type_id = Keyword.get(Chat.Type.__enum_map__(), type)
+    type_id = Chat.from_name(type)
 
     __MODULE__
     |> build()
@@ -21,7 +21,7 @@ defmodule Ms2ex.Packets.UserChat do
   end
 
   def error(character, type, error) do
-    type_id = Keyword.get(Chat.Type.__enum_map__(), type)
+    type_id = Chat.from_name(type)
     error_id = SystemNotice.from_name(error)
 
     __MODULE__

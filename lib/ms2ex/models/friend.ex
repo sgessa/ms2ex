@@ -2,9 +2,6 @@ defmodule Ms2ex.Friend do
   use Ecto.Schema
 
   import Ecto.Changeset
-  import EctoEnum
-
-  defenum(Status, pending: 0, accepted: 1, blocked: 2)
 
   schema "friends" do
     belongs_to :character, Ms2ex.Character
@@ -14,7 +11,7 @@ defmodule Ms2ex.Friend do
     field :message, :string, default: ""
     field :is_request, :boolean, default: false
     field :shared_id, :integer
-    field :status, Status
+    field :status, Ecto.Enum, values: [pending: 0, accepted: 1, blocked: 2]
 
     timestamps(type: :utc_datetime)
   end

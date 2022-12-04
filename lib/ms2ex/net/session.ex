@@ -15,7 +15,7 @@ defmodule Ms2ex.Net.Session do
   import Ms2ex.Net.Utils
 
   @behaviour :ranch_protocol
-  @conf Application.get_env(:ms2ex, Ms2ex)
+  @conf Application.compile_env(:ms2ex, Ms2ex)
   @skip_packet_logs @conf[:skip_packet_logs] || []
   @version @conf[:version] || 12
   @block_iv @conf[:initial_block_iv] || @version

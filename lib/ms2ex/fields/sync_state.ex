@@ -5,12 +5,10 @@ defmodule Ms2ex.SyncState do
   alias Ms2ex.Metadata.Coord
 
   import Bitwise
-  import EctoEnum
   import Packets.PacketReader
   import Packets.PacketWriter
 
-  defenum(Flag, none: 0, flag1: 1, flag2: 2, flag3: 4, flag4: 8, flag5: 16, flag6: 32)
-
+  @flags [none: 0, flag1: 1, flag2: 2, flag3: 4, flag4: 8, flag5: 16, flag6: 32]
   @default_coord %Coord{x: 0, y: 0, z: 0}
 
   schema "virtual: sync_states" do
@@ -237,5 +235,5 @@ defmodule Ms2ex.SyncState do
 
   def has_bit?(flag, bit), do: (flag &&& flag(bit)) != 0
 
-  defp flag(flag), do: Keyword.get(Flag.__enum_map__(), flag)
+  defp flag(flag), do: Keyword.get(@flags, flag)
 end
