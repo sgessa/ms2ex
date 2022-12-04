@@ -12,7 +12,6 @@ if config_env() == :prod do
     password: db_pass,
     database: db_name,
     hostname: db_host,
-    show_sensitive_data_on_connection_error: true,
     pool_size: 10
 
   config :ms2ex, Ms2exWeb.Endpoint, server: true
