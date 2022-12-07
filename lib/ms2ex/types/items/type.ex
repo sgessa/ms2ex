@@ -1,7 +1,5 @@
 defmodule Ms2ex.Items.Type do
-  import EctoEnum
-
-  defenum(Type,
+  @types [
     none: 0,
     currency: 1,
     furnishing: 2,
@@ -33,12 +31,14 @@ defmodule Ms2ex.Items.Type do
     blade: 54,
     knuckle: 55,
     orb: 56
-  )
+  ]
 
-  def value(name), do: Keyword.get(Type.__enum_map__(), name)
+  def values(), do: @types
+
+  def value(name), do: Keyword.get(@types, name)
 
   def key(type_id) do
-    Type.__enum_map__()
+    @types
     |> Enum.find(fn {_k, v} -> v == type_id end)
     |> elem(0)
   end

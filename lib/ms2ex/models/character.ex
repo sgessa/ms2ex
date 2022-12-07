@@ -4,8 +4,9 @@ defmodule Ms2ex.Character do
   alias Ms2ex.EctoTypes
 
   import Ecto.Changeset
-  import EctoEnum
 
+  @genders [male: 0, female: 1]
+  @jobs Map.to_list(Ms2ex.Metadata.Job.mapping())
   @max_level 70
 
   @fields [
@@ -30,11 +31,6 @@ defmodule Ms2ex.Character do
   @optional_fields [
     :active_skill_tab_id
   ]
-
-  defenum(Gender, male: 0, female: 1)
-
-  @jobs Map.to_list(Ms2ex.Metadata.Job.mapping())
-  defenum(Job, @jobs)
 
   schema "characters" do
     belongs_to :account, Ms2ex.Account
@@ -73,13 +69,13 @@ defmodule Ms2ex.Character do
     field :dismantle_inventory, EctoTypes.Term, virtual: true
     field :exp, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
-    field :gender, Gender, default: :male
+    field :gender, Ecto.Enum, values: @genders, default: :male
     field :group_chat_ids, {:array, :integer}, virtual: true, default: []
     field :guild_name, :string, virtual: true, default: "h4x0rzz"
     field :home_name, :string, virtual: true, default: ""
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
-    field :job, Job
+    field :job, Ecto.Enum, values: @jobs
     field :field_id, :integer
     field :motto, :string, default: "Let's Maple!"
     field :mount, :map, virtual: true
@@ -127,10 +123,12 @@ defmodule Ms2ex.Character do
   def job_id(char), do: real_job_id(char) * 10
 
   def real_job_id(character) do
-    Keyword.get(Job.__enum_map__(), character.job)
+    Keyword.get(@jobs, character.job)
   end
 
   def max_level(), do: @max_level
+
+  def genders(), do: @genders
 
   def set_default_assocs(attrs) do
     job = Map.get(attrs, :job)
