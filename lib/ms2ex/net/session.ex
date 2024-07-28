@@ -141,7 +141,7 @@ defmodule Ms2ex.Net.Session do
       {:EXIT, _responder_pid, :normal} -> :ok
     end
 
-    L.warn("Closing socket!!")
+    L.warning("Closing socket!!")
 
     :ok = transport.close(socket)
   end

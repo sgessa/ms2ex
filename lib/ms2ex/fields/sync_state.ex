@@ -2,7 +2,7 @@ defmodule Ms2ex.SyncState do
   use Ecto.Schema
 
   alias Ms2ex.{EctoTypes, Packets}
-  alias Ms2ex.Metadata.Coord
+  alias Ms2ex.ProtoMetadata.Coord
 
   import Bitwise
   import Packets.PacketReader

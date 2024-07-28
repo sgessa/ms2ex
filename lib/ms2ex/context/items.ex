@@ -1,10 +1,10 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.{Item, Items, Metadata}
+  alias Ms2ex.{Item, Items, ProtoMetadata}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
     |> Map.merge(attrs)
-    |> Metadata.Items.load()
+    |> ProtoMetadata.Items.load()
     |> set_stats()
     |> set_level()
   end

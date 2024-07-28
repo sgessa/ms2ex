@@ -1,7 +1,7 @@
 defmodule Ms2ex.Item do
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, Metadata}
+  alias Ms2ex.{EctoTypes, ProtoMetadata}
 
   import Ecto.Changeset
 
@@ -23,8 +23,8 @@ defmodule Ms2ex.Item do
   ]
 
   @required [:amount, :item_id, :location]
-  @equip_slots Map.to_list(Metadata.Items.EquipSlot.mapping())
-  @inventory_tabs Map.to_list(Metadata.Items.InventoryTab.mapping())
+  @equip_slots Map.to_list(ProtoMetadata.Items.EquipSlot.mapping())
+  @inventory_tabs Map.to_list(ProtoMetadata.Items.InventoryTab.mapping())
 
   schema "inventory_items" do
     belongs_to :character, Ms2ex.Character

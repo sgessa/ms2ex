@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Hair, Inventory, Items, Metadata}
+  alias Ms2ex.{Hair, Inventory, Items, ProtoMetadata}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -184,14 +184,14 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   def put_item_stat(packet, %{class: :basic} = stat) do
     packet
-    |> put_short(Metadata.Items.StatAttribute.value(stat.attribute))
+    |> put_short(ProtoMetadata.Items.StatAttribute.value(stat.attribute))
     |> put_int(Items.Stat.flat_value(stat))
     |> put_float(Items.Stat.rate_value(stat))
   end
 
   def put_item_stat(packet, %{class: :special} = stat) do
     packet
-    |> put_short(Metadata.Items.StatAttribute.value(stat.attribute))
+    |> put_short(ProtoMetadata.Items.StatAttribute.value(stat.attribute))
     |> put_float(Items.Stat.rate_value(stat))
     |> put_float(Items.Stat.flat_value(stat))
   end
@@ -269,7 +269,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
-    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
+    |> put_int(ProtoMetadata.Items.InventoryTab.value(tab_id))
     |> put_short(length(items))
     |> reduce(items, fn item, packet ->
       packet
@@ -291,7 +291,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_tab)
-    |> put_byte(Metadata.Items.InventoryTab.value(tab_id))
+    |> put_byte(ProtoMetadata.Items.InventoryTab.value(tab_id))
     |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
   end
 
@@ -299,6 +299,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.reset_tab)
-    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
+    |> put_int(ProtoMetadata.Items.InventoryTab.value(tab_id))
   end
 end

@@ -31,6 +31,7 @@ ms2ex-*.tar
 
 # Ignore Game Metadata
 /priv/resources/
+/priv/metadata.rdb
 
 # MapleShark dump files
 /dumps/

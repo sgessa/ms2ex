@@ -13,7 +13,7 @@ defmodule Ms2ex.Handlers.SendLog do
 
   def handle_mod(<<_mode, packet::bytes>>) do
     msg = read_msg(packet)
-    if byte_size(msg) > 0, do: Logger.warn("[CLIENT] #{msg}")
+    if byte_size(msg) > 0, do: Logger.warning("[CLIENT] #{msg}")
   end
 
   def read_msg(packet, builder \\ "")

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.PacketReader do
-  alias Ms2ex.Metadata.Coord
+  alias Ms2ex.ProtoMetadata.Coord
 
   def get_bool(packet) do
     <<bool, packet::bytes>> = packet

@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.RequestCube do
-  alias Ms2ex.{CharacterManager, Field, Metadata, Packets}
+  alias Ms2ex.{CharacterManager, Field, ProtoMetadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -14,7 +14,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
     {coord, _packet} = get_sbyte_coord(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, map} <- Metadata.MapEntities.lookup(character.field_id),
+         {:ok, map} <- ProtoMetadata.MapEntities.lookup(character.field_id),
          {:ok, object} <- find_object(map, coord) do
       Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
       push(session, Packets.ResponseCube.pickup(character, object.weapon_id, coord))

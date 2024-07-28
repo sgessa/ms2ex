@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
+  alias Ms2ex.{CharacterManager, Field, MapBlock, ProtoMetadata, Packets, SyncState}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -69,7 +69,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp is_out_of_bounds?(field_id, coord) do
-    {:ok, map} = Metadata.MapEntities.lookup(field_id)
+    {:ok, map} = ProtoMetadata.MapEntities.lookup(field_id)
     %{bounding_box_0: box0, bounding_box_1: box1} = map
 
     {high_z, low_z} = find_high_low_bounds(box0.z, box1.z)

@@ -2,7 +2,7 @@ defmodule Ms2ex.Storage.Items.ConstantOptions do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  alias Ms2ex.Metadata.Items
+  alias Ms2ex.ProtoMetadata.Items
 
   field :items, 1, repeated: true, type: Items.ConstantOptionId
 

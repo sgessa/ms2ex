@@ -1,5 +1,15 @@
 defmodule Ms2ex.Field do
-  alias Ms2ex.{Character, Characters, CharacterManager, FieldServer, Metadata, Mob, Net, Packets}
+  alias Ms2ex.{
+    Character,
+    Characters,
+    CharacterManager,
+    FieldServer,
+    ProtoMetadata,
+    Mob,
+    Net,
+    Packets
+  }
+
   alias Phoenix.PubSub
 
   def add_mob_drop(%Mob{} = mob, item) do
@@ -22,7 +32,7 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:add_status, status})
   end
 
-  def add_mob(%Character{} = character, %Metadata.Npc{} = npc) do
+  def add_mob(%Character{} = character, %ProtoMetadata.Npc{} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
 
@@ -77,7 +87,7 @@ defmodule Ms2ex.Field do
   end
 
   def change_field(character, field_id) do
-    with {:ok, map} <- Metadata.MapEntities.lookup(field_id) do
+    with {:ok, map} <- ProtoMetadata.MapEntities.lookup(field_id) do
       spawn = List.first(map.character_spawns)
       change_field(character, field_id, spawn.coord, spawn.rotation)
     end

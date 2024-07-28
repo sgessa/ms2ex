@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Insignia do
-  alias Ms2ex.{Characters, CharacterManager, Field, Inventory, Metadata, Packets}
+  alias Ms2ex.{Characters, CharacterManager, Field, Inventory, ProtoMetadata, Packets}
 
   import Packets.PacketReader
 
@@ -7,7 +7,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
     {insignia_id, _packet} = get_short(packet)
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
-    with {:ok, metadata} <- Metadata.Insignias.lookup(insignia_id),
+    with {:ok, metadata} <- ProtoMetadata.Insignias.lookup(insignia_id),
          true <- can_equip_insignia?(character, metadata, insignia_id) do
       {:ok, character} = Characters.update(character, %{insignia_id: insignia_id})
       CharacterManager.update(character)

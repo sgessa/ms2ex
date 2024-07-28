@@ -28,7 +28,7 @@ defmodule Ms2ex.Net.Router do
     String.to_existing_atom(prefix <> handler)
   rescue
     _ ->
-      Logger.warn("UNKNOWN HANDLER FOR PACKET #{handler_name}")
+      Logger.warning("UNKNOWN HANDLER FOR PACKET #{handler_name}")
       false
   end
 

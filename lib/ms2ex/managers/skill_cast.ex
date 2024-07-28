@@ -1,5 +1,5 @@
 defmodule Ms2ex.SkillCast do
-  alias Ms2ex.Metadata
+  alias Ms2ex.ProtoMetadata
 
   defstruct [
     :attack_point,
@@ -21,7 +21,7 @@ defmodule Ms2ex.SkillCast do
       server_tick: srv_tick,
       skill_id: skill_id,
       skill_level: skill_lvl,
-      meta: Metadata.Skills.get(skill_id)
+      meta: ProtoMetadata.Skills.get(skill_id)
     }
   end
 
@@ -34,42 +34,42 @@ defmodule Ms2ex.SkillCast do
       attack_point: attack_pt,
       server_tick: srv_tick,
       client_tick: client_tick,
-      meta: Metadata.Skills.get(skill_id)
+      meta: ProtoMetadata.Skills.get(skill_id)
     }
   end
 
   def get(skill_cast_id), do: Agent.get(process_name(skill_cast_id), & &1)
 
   def duration(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case Metadata.Skills.get_level(meta, lvl) do
+    case ProtoMetadata.Skills.get_level(meta, lvl) do
       %{data: %{duration: duration}} -> duration
       _ -> 5_000
     end
   end
 
   def max_stacks(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case Metadata.Skills.get_level(meta, lvl) do
+    case ProtoMetadata.Skills.get_level(meta, lvl) do
       %{data: %{max_stacks: max_stacks}} -> max_stacks
       _ -> 1
     end
   end
 
   def sp_cost(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case Metadata.Skills.get_level(meta, lvl) do
+    case ProtoMetadata.Skills.get_level(meta, lvl) do
       %{spirit: sp} -> sp
       _ -> 15
     end
   end
 
   def stamina_cost(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case Metadata.Skills.get_level(meta, lvl) do
+    case ProtoMetadata.Skills.get_level(meta, lvl) do
       %{stamina: stamina} -> stamina
       _ -> 10
     end
   end
 
   def damage_rate(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case Metadata.Skills.get_level(meta, lvl) do
+    case ProtoMetadata.Skills.get_level(meta, lvl) do
       %{damage_rate: dmg_rate} -> dmg_rate
       _ -> 0.1
     end
@@ -92,7 +92,7 @@ defmodule Ms2ex.SkillCast do
   end
 
   def condition_skills(%__MODULE__{skill_level: lvl, meta: meta}) do
-    if skill_lvl = Metadata.Skills.get_level(meta, lvl) do
+    if skill_lvl = ProtoMetadata.Skills.get_level(meta, lvl) do
       skill_lvl.conditions
     else
       []
@@ -101,15 +101,15 @@ defmodule Ms2ex.SkillCast do
 
   def magic_path(%__MODULE__{skill_level: lvl, meta: meta}) do
     cube_magic_path_id =
-      case Metadata.Skills.get_level(meta, lvl) do
-        %Metadata.SkillLevel{attacks: [attack | _]} ->
+      case ProtoMetadata.Skills.get_level(meta, lvl) do
+        %ProtoMetadata.SkillLevel{attacks: [attack | _]} ->
           attack.cube_magic_path_id
 
         _ ->
           0
       end
 
-    Metadata.MagicPaths.get(cube_magic_path_id)
+    ProtoMetadata.MagicPaths.get(cube_magic_path_id)
   end
 
   def owner_buff?(%__MODULE__{} = cast) do
@@ -143,7 +143,7 @@ defmodule Ms2ex.SkillCast do
 
   defp verify_skill_type(cast, type, sub_type, buff_type, sub_buff_type) do
     meta = cast.meta
-    skill_lvl = Metadata.Skills.get_level(meta, cast.skill_level)
+    skill_lvl = ProtoMetadata.Skills.get_level(meta, cast.skill_level)
 
     meta && type == meta.type && sub_type == meta.sub_type && skill_lvl &&
       skill_lvl.data.buff_type == buff_type && skill_lvl.data.sub_buff_type == sub_buff_type
@@ -155,7 +155,7 @@ defmodule Ms2ex.SkillCast do
   end
 
   defp verify_buff_type(cast, buff_type, sub_buff_type) do
-    skill_lvl = Metadata.Skills.get_level(cast.meta, cast.skill_level)
+    skill_lvl = ProtoMetadata.Skills.get_level(cast.meta, cast.skill_level)
 
     skill_lvl && skill_lvl.data.buff_type == buff_type &&
       skill_lvl.data.sub_buff_type == sub_buff_type

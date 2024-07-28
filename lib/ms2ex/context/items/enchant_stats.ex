@@ -1,5 +1,5 @@
 defmodule Ms2ex.Items.EnchantStats do
-  alias Ms2ex.{Item, Items, Metadata}
+  alias Ms2ex.{Item, Items, ProtoMetadata}
 
   def get(%Item{} = item) do
     script =
@@ -21,7 +21,7 @@ defmodule Ms2ex.Items.EnchantStats do
       if attr_nr == 0 do
         acc
       else
-        attr = Metadata.Items.StatAttribute.key(attr_nr)
+        attr = ProtoMetadata.Items.StatAttribute.key(attr_nr)
         stat = Items.Stat.build(attr, :value, value, :basic)
         Map.put(acc, attr, stat)
       end

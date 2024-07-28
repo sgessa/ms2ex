@@ -1,5 +1,5 @@
 defmodule Ms2ex.Skills do
-  alias Ms2ex.{Character, Metadata, Repo, Skill, SkillTab}
+  alias Ms2ex.{Character, ProtoMetadata, Repo, Skill, SkillTab}
 
   import Ecto.Query, except: [update: 2]
 
@@ -9,7 +9,7 @@ defmodule Ms2ex.Skills do
 
   def metadata(skill_id) do
     case :ets.lookup(@metadata_table, skill_id) do
-      [{_id, %Metadata.Skill{} = meta}] -> meta
+      [{_id, %ProtoMetadata.Skill{} = meta}] -> meta
       _ -> nil
     end
   end

@@ -2,7 +2,7 @@ defmodule Ms2ex.Storage.Items.PickOptions do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  alias Ms2ex.Metadata.Items.Options.Pick
+  alias Ms2ex.ProtoMetadata.Items.Options.Pick
 
   field :items, 1, repeated: true, type: Pick
 

@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.ChatSticker do
-  alias Ms2ex.{CharacterManager, ChatStickerGroup, ChatStickers, Metadata, Packets}
+  alias Ms2ex.{CharacterManager, ChatStickerGroup, ChatStickers, ProtoMetadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {script, _packet} = get_ustring(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         {:ok, sticker} <- ProtoMetadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.chat(sticker_id, script))
     end
@@ -32,7 +32,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {chat_name, _packet} = get_ustring(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         {:ok, sticker} <- ProtoMetadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.group_chat(sticker_id, chat_name))
     end
@@ -43,7 +43,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {sticker_id, _packet} = get_int(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         {:ok, sticker} <- ProtoMetadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       ChatStickers.favorite(character, sticker_id, sticker.group_id)
       push(session, Packets.ChatSticker.favorite(sticker_id))
@@ -55,7 +55,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {sticker_id, _packet} = get_int(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, sticker} <- Metadata.ChatStickers.lookup(sticker_id),
+         {:ok, sticker} <- ProtoMetadata.ChatStickers.lookup(sticker_id),
          %ChatStickerGroup{} <- ChatStickers.get(character, sticker.group_id) do
       ChatStickers.unfavorite(character, sticker_id)
       push(session, Packets.ChatSticker.unfavorite(sticker_id))

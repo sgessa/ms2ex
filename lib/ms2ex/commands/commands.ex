@@ -6,7 +6,7 @@ defmodule Ms2ex.Commands do
     Field,
     Inventory,
     Items,
-    Metadata,
+    ProtoMetadata,
     Net,
     Packets,
     Wallets
@@ -23,7 +23,7 @@ defmodule Ms2ex.Commands do
   def handle(["item" | ids], character, session) do
     Enum.reduce(ids, session, fn item_id, session ->
       with {item_id, _} <- Integer.parse(item_id),
-           {:ok, _meta} <- Metadata.Items.lookup(item_id) do
+           {:ok, _meta} <- ProtoMetadata.Items.lookup(item_id) do
         add_item(character, item_id, session)
       else
         _ ->
@@ -56,7 +56,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
-         {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
+         {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
       npc = Map.merge(npc, %{boss?: true, respawnable?: false})
       Field.add_mob(character, npc)
       session
@@ -68,7 +68,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["mob", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
-         {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
+         {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
       npc = Map.merge(npc, %{respawnable?: false})
       Field.add_mob(character, npc)
       session

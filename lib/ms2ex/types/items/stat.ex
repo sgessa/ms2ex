@@ -1,5 +1,5 @@
 defmodule Ms2ex.Items.Stat do
-  alias Ms2ex.Metadata.Items
+  alias Ms2ex.ProtoMetadata.Items
 
   defstruct [:attribute, :type, :class, value: 0]
 

@@ -1,6 +1,6 @@
 defmodule Ms2ex.MapBlock do
-  alias Ms2ex.Metadata
-  alias Metadata.Coord
+  alias Ms2ex.ProtoMetadata
+  alias ProtoMetadata.Coord
 
   @block_size 150
   def block_size(), do: @block_size
@@ -13,7 +13,7 @@ defmodule Ms2ex.MapBlock do
   end
 
   def exists?(field_id, block) do
-    map = Metadata.Maps.lookup(field_id)
+    map = ProtoMetadata.Maps.lookup(field_id)
 
     if Enum.find(map.blocks, &(block == &1)) do
       true
@@ -39,6 +39,6 @@ defmodule Ms2ex.MapBlock do
   end
 
   def to_float(%{x: x, y: y, z: z}) do
-    Coord.new(x: x + 0.0, y: y + 0.0, z: z + 0.0)
+    %Coord{x: x + 0.0, y: y + 0.0, z: z + 0.0}
   end
 end

@@ -4,26 +4,28 @@ defmodule Ms2ex.Application do
   use Application
 
   def start(_type, _args) do
-    Ms2ex.WorldGraph.store()
-    Ms2ex.Metadata.ChatStickers.store()
-    Ms2ex.Metadata.ExpTable.store()
-    Ms2ex.Metadata.Insignias.store()
-    Ms2ex.Metadata.Items.store()
-    Ms2ex.Storage.Items.ConstantOptions.store()
-    Ms2ex.Storage.Items.StaticOptions.store()
-    Ms2ex.Storage.Items.RandomOptions.store()
-    Ms2ex.Storage.Items.RangeOptions.store()
-    Ms2ex.Storage.Items.PickOptions.store()
-    Ms2ex.Metadata.Maps.store()
-    Ms2ex.Metadata.MapEntities.store()
-    Ms2ex.Metadata.MagicPaths.store()
-    Ms2ex.Metadata.Npcs.store()
-    Ms2ex.Metadata.Skills.store()
+    # Ms2ex.WorldGraph.store()
+    # Ms2ex.ProtoMetadata.ChatStickers.store()
+    # Ms2ex.ProtoMetadata.ExpTable.store()
+    # Ms2ex.ProtoMetadata.Insignias.store()
+    # Ms2ex.ProtoMetadata.Items.store()
+    # Ms2ex.Storage.Items.ConstantOptions.store()
+    # Ms2ex.Storage.Items.StaticOptions.store()
+    # Ms2ex.Storage.Items.RandomOptions.store()
+    # Ms2ex.Storage.Items.RangeOptions.store()
+    # Ms2ex.Storage.Items.PickOptions.store()
+    # Ms2ex.ProtoMetadata.Maps.store()
+    # Ms2ex.ProtoMetadata.MapEntities.store()
+    # Ms2ex.ProtoMetadata.MagicPaths.store()
+    # Ms2ex.ProtoMetadata.Npcs.store()
+    # Ms2ex.ProtoMetadata.Skills.store()
 
     children =
       [
         # Start the Ecto repository
         Ms2ex.Repo,
+        # Start Redis cache server
+        {Redix, [port: 5556, name: Ms2ex.Redix]},
         # Start the Telemetry supervisor
         Ms2exWeb.Telemetry,
         # Start the PubSub system

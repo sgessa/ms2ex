@@ -6,7 +6,7 @@ defmodule Ms2ex.Character do
   import Ecto.Changeset
 
   @genders [male: 0, female: 1]
-  @jobs Map.to_list(Ms2ex.Metadata.Job.mapping())
+  @jobs Map.to_list(Ms2ex.ProtoMetadata.Job.mapping())
   @max_level 70
 
   @fields [

@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
-  alias Ms2ex.{Characters, CharacterManager, Equips, Field, Inventory, Metadata, Packets}
+  alias Ms2ex.{Characters, CharacterManager, Equips, Field, Inventory, ProtoMetadata, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -17,7 +17,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     with true <- Equips.valid_slot?(slot_name),
          {:ok, character} <- CharacterManager.lookup(session.character_id),
          %{location: :inventory} = item <- Inventory.get_by(character_id: character.id, id: id) do
-      item = Metadata.Items.load(item)
+      item = ProtoMetadata.Items.load(item)
       equip_slot = String.to_existing_atom(slot_name)
       equip_item(character, equip_slot, item, session)
     end
@@ -61,7 +61,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     with {:ok, item} <- Equips.unequip(item) do
       CharacterManager.update(Characters.load_equips(character))
 
-      item = Metadata.Items.load(item)
+      item = ProtoMetadata.Items.load(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
       Field.broadcast(character, unequip_packet)
 

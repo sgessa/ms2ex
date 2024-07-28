@@ -8,7 +8,7 @@ defmodule Ms2ex.FieldHelper do
     Inventory,
     Items,
     MapBlock,
-    Metadata,
+    ProtoMetadata,
     Mob,
     Packets,
     Wallets
@@ -131,7 +131,7 @@ defmodule Ms2ex.FieldHelper do
         CharacterManager.increase_stat(character, :sta, item.amount)
 
       true ->
-        item = Metadata.Items.load(item)
+        item = ProtoMetadata.Items.load(item)
 
         with {:ok, result} <- Inventory.add_item(character, item) do
           {_status, item} = result
@@ -178,27 +178,27 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(%Metadata.Npc{} = npc, position, state) do
+  def add_mob(%ProtoMetadata.Npc{} = npc, position, state) do
     mob = Mob.build(state, npc, position)
     {:ok, _pid} = Mob.start(mob)
     %{state | counter: state.counter + 1}
   end
 
-  def add_mob(%Metadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
-    case Metadata.Npcs.lookup(mob.id) do
+  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
+    case ProtoMetadata.Npcs.lookup(mob.id) do
       {:ok, npc} -> add_mob(spawn_group, npc, state)
       _ -> state
     end
   end
 
-  def add_mob(%Metadata.MobSpawn{} = spawn_group, %Metadata.Npc{} = npc, state) do
+  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %ProtoMetadata.Npc{} = npc, state) do
     population = state.mobs[spawn_group.id] || []
     group_spawn_count = npc.basic.group_spawn_count
 
     if length(population) + group_spawn_count > spawn_group.data.max_population do
       state
     else
-      spawn_points = Metadata.MobSpawn.select_points(spawn_group.spawn_radius)
+      spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
       spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
       spawn_position = MapBlock.add(spawn_group.position, spawn_point)
 
@@ -218,7 +218,7 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_001
   def initialize_state(field_id, channel_id) do
-    {:ok, map} = Metadata.MapEntities.lookup(field_id)
+    {:ok, map} = ProtoMetadata.MapEntities.lookup(field_id)
 
     load_mobs(map)
 
@@ -243,7 +243,7 @@ defmodule Ms2ex.FieldHelper do
 
   defp load_npcs(map, counter) do
     map.npcs
-    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
+    |> Enum.map(&Map.merge(ProtoMetadata.Npcs.get(&1.id), &1))
     |> Enum.filter(&(&1.friendly == 2))
     |> Enum.map(&Map.put(&1, :spawn, &1.position))
     |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
@@ -261,7 +261,7 @@ defmodule Ms2ex.FieldHelper do
   end
 
   defp spawn_mob_group(%{data: data} = spawn_group) do
-    mobs = Metadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
+    mobs = ProtoMetadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
     Enum.each(mobs, &send(self(), {:add_mob, spawn_group, &1}))
   end
 

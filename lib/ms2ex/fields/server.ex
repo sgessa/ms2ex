@@ -8,7 +8,7 @@ defmodule Ms2ex.FieldServer do
     Field,
     FieldHelper,
     Item,
-    Metadata,
+    ProtoMetadata,
     Mob,
     Packets,
     SkillCast
@@ -102,11 +102,14 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, %Metadata.Npc{} = npc, position}, state) do
+  def handle_info({:add_mob, %ProtoMetadata.Npc{} = npc, position}, state) do
     {:noreply, add_mob(npc, position, state)}
   end
 
-  def handle_info({:add_mob, %Metadata.MobSpawn{} = spawn_group, %Metadata.Npc{} = npc}, state) do
+  def handle_info(
+        {:add_mob, %ProtoMetadata.MobSpawn{} = spawn_group, %ProtoMetadata.Npc{} = npc},
+        state
+      ) do
     {:noreply, add_mob(spawn_group, npc, state)}
   end
 
@@ -149,7 +152,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_info(data, state) do
-    Logger.warn("[Field] Unknown message: #{inspect(data)}")
+    Logger.warning("[Field] Unknown message: #{inspect(data)}")
     {:noreply, state}
   end
 end
