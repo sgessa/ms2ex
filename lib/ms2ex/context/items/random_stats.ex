@@ -1,14 +1,18 @@
 defmodule Ms2ex.Items.RandomStats do
-  alias Ms2ex.{Item, Items, Storage}
+  alias Ms2ex.{Item, Items, Tables, Storage}
 
   def get(%Item{} = item) do
-    random_id = item.metadata.options.random_id
-    options = Storage.Items.RandomOptions.lookup(random_id, item.rarity)
+    random_id = item.metadata.option.random_id
+    options = Tables.ItemRandomOption.lookup(random_id, item.rarity)
 
     get_stats(item, options)
   end
 
   defp get_stats(_item, nil), do: %{}
+
+  # TODO: Rewrite
+  # Data structure changed
+  # iex> Ms2ex.Metadata.get(Ms2ex.Metadata.Table, "itemoptionrandom.xml") |> Map.get(:table) |> Map.get(:options) |> Map.get("11300011") |> Map.get("5")
 
   defp get_stats(item, options) do
     [min_slots, max_slots] = options.slots
@@ -73,7 +77,7 @@ defmodule Ms2ex.Items.RandomStats do
   # Returns index 0~7 for equip level 70-
   # Returns index 8~15 for equip level 70+
   defp roll(item) do
-    level_factor = item.metadata.options.level_factor
+    level_factor = item.metadata.option.level_factor
     random = :rand.uniform()
 
     if level_factor >= 70 do

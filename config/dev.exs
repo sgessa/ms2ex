@@ -31,7 +31,6 @@ config :ms2ex, Ms2ex.Repo,
   password: "postgres",
   database: "ms2ex_dev",
   hostname: "localhost",
-  port: 5555,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 

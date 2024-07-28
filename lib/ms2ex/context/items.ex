@@ -1,16 +1,16 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.{Item, Items, ProtoMetadata}
+  alias Ms2ex.{Item, Items, Metadata}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
     |> Map.merge(attrs)
-    |> ProtoMetadata.Items.load()
+    |> Map.put(:metadata, Metadata.get(Metadata.Item, id))
     |> set_stats()
     |> set_level()
   end
 
   def set_level(%Item{metadata: metadata} = item) do
-    Map.put(item, :level, metadata.limits.level_limit_min)
+    Map.put(item, :level, metadata.limit.level)
   end
 
   def set_stats(%Item{} = item) do
@@ -88,18 +88,18 @@ defmodule Ms2ex.Items do
   def stamina?(%Item{}), do: false
   def stamina(amount), do: init(@stamina_id, amount)
 
-  @accessory_slots [:FH, :EA, :PD, :BE, :RI]
+  @accessory_slots [12, 14, 15, 17, 16]
   def accessory?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @accessory_slots))
+    !!Enum.find(item.metadata.slot_names, &(&1 in @accessory_slots))
   end
 
-  @armor_slots [:CP, :CL, :GL, :SH, :MT]
+  @armor_slots [6, 8, 10, 11, 7]
   def armor?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @armor_slots))
+    !!Enum.find(item.metadata.slot_names, &(&1 in @armor_slots))
   end
 
-  @weapon_slots [:LH, :RH, :OH]
+  @weapon_slots [4, 5, 19]
   def weapon?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @weapon_slots))
+    !!Enum.find(item.metadata.slot_names, &(&1 in @weapon_slots))
   end
 end

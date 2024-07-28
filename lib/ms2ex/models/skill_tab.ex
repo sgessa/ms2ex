@@ -642,15 +642,21 @@ defmodule Ms2ex.SkillTab do
   def ordered_skill_ids(job), do: Map.get(@orders, job)
 
   def set_skills(job, attrs \\ %{}) do
-    job_skills = Ms2ex.Skills.by_job(job)
+    job_skills =
+      Ms2ex.Skills.by_job(job)
 
     skills =
-      Enum.map(job_skills, fn {id, meta} -> %{skill_id: id, level: meta.starting_level} end)
+      Enum.map(job_skills, fn {id, skill} ->
+        %{
+          skill_id: id,
+          level: skill.levels |> Enum.at(0) |> elem(1) |> Map.get(:condition) |> Map.get(:level)
+        }
+      end)
 
     # Reorder skills according to the character job
     ordered_ids = ordered_skill_ids(job)
     tmp = Enum.into(skills, %{}, &{&1.skill_id, &1})
-    skills = Enum.map(ordered_ids, &Map.get(tmp, &1))
+    skills = Enum.map(ordered_ids, &Map.get(tmp, &1)) |> Enum.reject(&is_nil(&1))
 
     Map.put(attrs, :skills, skills)
   end

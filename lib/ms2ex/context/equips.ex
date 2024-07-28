@@ -38,7 +38,7 @@ defmodule Ms2ex.Equips do
   end
 
   def equip(%Item{metadata: meta} = item) do
-    equip(item, List.first(meta.slots))
+    equip(item, List.first(meta.slot_names))
   end
 
   def equip(%Item{location: :inventory} = item, equip_slot) do

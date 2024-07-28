@@ -1,4 +1,6 @@
 defmodule Ms2ex.Storage.Items.RangeOptions do
+  # TODO: rewrite with redis & delete this
+
   @moduledoc false
   use Protobuf, syntax: :proto3
 

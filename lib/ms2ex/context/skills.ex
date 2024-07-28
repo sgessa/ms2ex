@@ -1,29 +1,23 @@
 defmodule Ms2ex.Skills do
-  alias Ms2ex.{Character, ProtoMetadata, Repo, Skill, SkillTab}
+  alias Ms2ex.{Character, Metadata, Repo, Skill, SkillTab}
 
   import Ecto.Query, except: [update: 2]
 
   @climbing_id 20_000_011
   @swimming_id 20_000_001
-  @metadata_table :skill_metadata
-
-  def metadata(skill_id) do
-    case :ets.lookup(@metadata_table, skill_id) do
-      [{_id, %ProtoMetadata.Skill{} = meta}] -> meta
-      _ -> nil
-    end
-  end
+  @common_skills [@climbing_id, @swimming_id]
 
   def by_job(job) do
-    skills = :ets.tab2list(@metadata_table)
+    skills = Metadata.all(Ms2ex.Metadata.Skill)
 
-    Enum.reduce(skills, %{}, fn {id, meta}, acc ->
+    Enum.reduce(skills, %{}, fn skill, acc ->
+      level = skill.levels |> Enum.at(0) |> elem(1)
+
+      # TODO: job_code is always [], probably not the right field
+
       cond do
-        meta.job == job ->
-          Map.put(acc, id, meta)
-
-        meta.id == @swimming_id or meta.id == @climbing_id ->
-          Map.put(acc, id, %{meta | starting_level: 1})
+        job in level.condition.job_code or skill.id in @common_skills ->
+          Map.put(acc, skill.id, skill)
 
         true ->
           acc

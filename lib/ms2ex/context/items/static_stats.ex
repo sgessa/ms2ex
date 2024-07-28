@@ -1,13 +1,13 @@
 defmodule Ms2ex.Items.StaticStats do
-  alias Ms2ex.{Item, Items, Storage}
+  alias Ms2ex.{Item, Items, Tables}
 
   def get(_item, _option_id, level_factor) when level_factor < 50 do
     %{}
   end
 
   def get(%Item{} = item, option_id, level_factor) do
-    static_id = item.metadata.options.static_id
-    options = Storage.Items.StaticOptions.lookup(static_id, item.rarity)
+    static_id = item.metadata.option.static_id
+    options = Tables.ItemStaticOption.lookup(static_id, item.rarity)
 
     if options do
       get_stats(item, options, option_id, level_factor)
@@ -15,6 +15,10 @@ defmodule Ms2ex.Items.StaticStats do
       get_default(item, %{}, option_id, level_factor)
     end
   end
+
+  # TODO: Rewrite (similar to RandomOption)
+  # Data structure changed
+  # iex> Ms2ex.Metadata.get(Ms2ex.Metadata.Table, "itemoptionstatic.xml") |> Map.get(:table) |> Map.get(:options) |> Map.get("11300011") |> Map.get("5")
 
   defp get_stats(item, options, option_id, level_factor) do
     %{stats: stats, special_stats: special_stats} = options
@@ -30,7 +34,7 @@ defmodule Ms2ex.Items.StaticStats do
   end
 
   defp get_default(item, static_stats, option_id, level_factor) do
-    base_options = Ms2ex.Storage.Items.PickOptions.lookup(option_id, item.rarity)
+    base_options = Tables.ItemPickOption.lookup(option_id, item.rarity)
 
     if base_options do
       process_options(item, static_stats, base_options, level_factor)
@@ -47,37 +51,37 @@ defmodule Ms2ex.Items.StaticStats do
       end
 
     static_stats
-    |> set_stats(item, base_options.static_values, level_factor, script)
-    |> set_stats(item, base_options.static_rates, level_factor, script)
+    |> set_stats(item, base_options.static_value, level_factor, script)
+    |> set_stats(item, base_options.static_rate, level_factor, script)
   end
 
   defp set_stats(static_stats, item, options, level_factor, script) do
-    Enum.reduce(options, static_stats, fn static_pick, acc ->
-      calc_script = get_calc_script(static_pick.stat)
+    Enum.reduce(options, static_stats, fn {p_name, _val} = pick, acc ->
+      calc_script = get_calc_script(p_name)
 
       if calc_script do
-        set_stat(item, acc, static_pick, calc_script, level_factor, script)
+        set_stat(item, acc, pick, calc_script, level_factor, script)
       else
         acc
       end
     end)
   end
 
-  defp set_stat(item, static_stats, pick, calc_script, level_factor, script) do
+  defp set_stat(item, static_stats, {p_name, p_value}, calc_script, level_factor, script) do
     static_stats =
-      if static_stats[pick.stat] do
+      if static_stats[p_name] do
         static_stats
       else
-        basic_stat = Items.Stat.build(pick.stat, :flat, 0, :basic)
-        Map.put(static_stats, pick.stat, basic_stat)
+        basic_stat = Items.Stat.build(p_name, :flat, 0, :basic)
+        Map.put(static_stats, p_name, basic_stat)
       end
 
-    basic_stat = static_stats[pick.stat]
+    basic_stat = static_stats[p_name]
 
     {:ok, [min, max]} =
       :luaport.call(script, String.to_atom(calc_script), [
         basic_stat.value,
-        pick.deviation_value,
+        p_value,
         Items.Type.value(Items.type(item)),
         List.first(item.metadata.limits.job_recommendations),
         level_factor,
@@ -88,7 +92,7 @@ defmodule Ms2ex.Items.StaticStats do
     random = min + (max - min) * :rand.uniform()
     basic_stat = Map.put(basic_stat, :value, random)
 
-    Map.put(static_stats, pick.stat, basic_stat)
+    Map.put(static_stats, p_name, basic_stat)
   end
 
   defp get_calc_script(stat) do
