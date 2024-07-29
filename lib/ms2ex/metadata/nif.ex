@@ -1,5 +1,5 @@
 defmodule Ms2ex.Metadata.Nif do
   defstruct [:llid, :blocks]
 
-  def id(), do: :llid
+  def ids(), do: [:llid]
 end

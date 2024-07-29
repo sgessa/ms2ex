@@ -1,5 +1,5 @@
 defmodule Ms2ex.Metadata.ServerTable do
   defstruct [:name, :table]
 
-  def id(), do: :name
+  def ids(), do: [:name]
 end
