@@ -15,9 +15,9 @@ defmodule Ms2ex.Metadata do
     |> :erlang.binary_to_term()
   end
 
-  def all(module) do
+  def filter(module, key) do
     prefix = Macro.underscore(module)
-    key = "#{prefix}:*"
+    key = "#{prefix}:#{key}"
 
     Ms2ex.Redix
     |> Redix.command!(["KEYS", key])
@@ -25,4 +25,6 @@ defmodule Ms2ex.Metadata do
     |> then(&Redix.pipeline!(Ms2ex.Redix, &1))
     |> Enum.map(&:erlang.binary_to_term/1)
   end
+
+  def all(module), do: filter(module, "*")
 end
