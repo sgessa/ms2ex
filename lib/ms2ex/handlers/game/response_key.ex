@@ -6,7 +6,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     CharacterManager,
     Inventory,
     LoginHandlers,
-    ProtoMetadata,
+    Metadata,
     Net,
     Packets,
     PartyManager,
@@ -106,14 +106,21 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp set_spawn_position(character) do
-    {:ok, map} = ProtoMetadata.MapEntities.lookup(character.field_id)
-    spawn = List.first(map.character_spawns)
+    %{x_block: xblock} = Metadata.get(Metadata.Map, character.field_id)
+    entities = Metadata.filter(Metadata.MapEntity, "#{xblock}*")
+
+    # TODO: Use atom SpawnPointPC instead of magic number
+    spawn_points = Enum.filter(entities, fn e -> e.block[:!] == 476_587_788 end)
+    spawn_point = Enum.random(spawn_points)
+
+    # TODO: Set rotation from spawn_point
+    player_rotation = Map.get(spawn_point, :rotation, %{x: 0, y: 0, z: 0})
 
     %{
       character
-      | position: spawn.coord,
-        rotation: spawn.rotation,
-        safe_position: spawn.coord,
+      | position: spawn_point.block.position,
+        safe_position: spawn_point.block.position,
+        rotation: player_rotation,
         online?: true
     }
   end

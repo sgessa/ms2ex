@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Job do
-  alias Ms2ex.{Character, ProtoMetadata, Skills}
+  alias Ms2ex.{Character, Skills}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -43,8 +43,8 @@ defmodule Ms2ex.Packets.Job do
 
     skills =
       skill_tab.skills
-      |> Enum.map(&Map.put(&1, :metadata, ProtoMetadata.Skills.get(&1.skill_id)))
-      |> Enum.filter(&(&1.metadata.type == 1 and &1.metadata.starting_level == 1))
+      |> Enum.map(&Skills.load_metadata(&1))
+      |> Enum.filter(&(&1.metadata.type == 1 && &1.metadata.starting_level == 1))
 
     packet
     |> put_short(length(skills))
@@ -65,12 +65,7 @@ defmodule Ms2ex.Packets.Job do
 
   def put_skills(packet, character) do
     skill_tab = Skills.get_active_tab(character)
-
-    skills =
-      Enum.map(skill_tab.skills, fn s ->
-        meta = ProtoMetadata.Skills.get(s.skill_id)
-        Map.put(s, :meta, meta)
-      end)
+    skills = Enum.map(skill_tab.skills, &Skills.load_metadata(&1))
 
     split = Map.get(@job_skill_splits, character.job)
     split_skill = Enum.at(skills, length(skills) - split)

@@ -86,4 +86,9 @@ defmodule Ms2ex.Skills do
       end
     end)
   end
+
+  def load_metadata(%Skill{skill_id: skill_id} = skill) do
+    metadata = Metadata.get(Metadata.Skill, skill_id)
+    Map.put(skill, :metadata, metadata)
+  end
 end
