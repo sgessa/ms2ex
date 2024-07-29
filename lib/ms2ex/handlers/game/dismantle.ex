@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Dismantle do
-  alias Ms2ex.{CharacterManager, Dismantle, Inventory, Item, Items, ProtoMetadata, Packets}
+  alias Ms2ex.{CharacterManager, Dismantle, Inventory, Item, Items, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -85,7 +85,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   defp auto_add(session, character, max_rarity, items) do
     items
     |> Enum.take(Dismantle.max_slots())
-    |> Enum.map(&ProtoMetadata.Items.load/1)
+    |> Enum.map(&Items.load_metadata/1)
     |> Enum.filter(&(&1.rarity <= max_rarity && &1.metadata.dismantable?))
     |> Enum.reduce(character.inventory, fn item, inventory ->
       {slot, inventory} = Dismantle.append(inventory, item.id, item.amount)

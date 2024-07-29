@@ -1,5 +1,5 @@
 defmodule Ms2ex.Equips do
-  alias Ms2ex.{Character, Inventory, Item, ProtoMetadata, Repo}
+  alias Ms2ex.{Character, Inventory, Item, Items, ProtoMetadata, Repo}
 
   import Ecto.Query, except: [update: 2]
   import Inventory, only: [update_item: 2, find_first_available_slot: 2]
@@ -8,7 +8,7 @@ defmodule Ms2ex.Equips do
     Item
     |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
     |> Repo.all()
-    |> Enum.map(&ProtoMetadata.Items.load(&1))
+    |> Enum.map(&Items.load_metadata(&1))
   end
 
   def find_equipped_in_slots(equips, slots, inventory_tab, requested_slot \\ nil)

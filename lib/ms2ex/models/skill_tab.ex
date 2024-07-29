@@ -642,8 +642,7 @@ defmodule Ms2ex.SkillTab do
   def ordered_skill_ids(job), do: Map.get(@orders, job)
 
   def set_skills(job, attrs \\ %{}) do
-    job_skills =
-      Ms2ex.Skills.by_job(job)
+    job_skills = Ms2ex.Skills.by_job(job)
 
     skills =
       Enum.map(job_skills, fn {id, skill} ->

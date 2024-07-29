@@ -4,7 +4,7 @@ defmodule Ms2ex.Items do
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
     |> Map.merge(attrs)
-    |> Map.put(:metadata, Metadata.get(Metadata.Item, id))
+    |> load_metadata()
     |> set_stats()
     |> set_level()
   end
@@ -101,5 +101,9 @@ defmodule Ms2ex.Items do
   @weapon_slots [4, 5, 19]
   def weapon?(%Item{} = item) do
     !!Enum.find(item.metadata.slot_names, &(&1 in @weapon_slots))
+  end
+
+  def load_metadata(%Item{item_id: id} = item) do
+    Map.put(item, :metadata, Metadata.get(Metadata.Item, id))
   end
 end

@@ -1,5 +1,6 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
-  alias Ms2ex.{Inventory, Item, ProtoMetadata, Packets, Wallets}
+  alias Ms2ex.{Item, Items}
+  alias Ms2ex.{Inventory, Packets, Wallets}
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
@@ -13,7 +14,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
       handle_one_group(session, character, contents)
     else
       Enum.reduce(contents, session, fn content, session ->
-        %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> ProtoMetadata.Items.load()
+        %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> Items.load_metadata()
 
         if character.job in jobs or :none in jobs do
           add_item(session, character, content)
@@ -35,7 +36,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
 
   defp handle_smart_drop_rate(session, 100, character, contents) do
     Enum.reduce(contents, session, fn content, session ->
-      %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> ProtoMetadata.Items.load()
+      %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> Items.load_metadata()
 
       if character.job in jobs or :none in jobs do
         add_item(session, character, content)
@@ -50,7 +51,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
 
     contents =
       Enum.filter(contents, fn content ->
-        %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> ProtoMetadata.Items.load()
+        %{metadata: %{jobs: jobs}} = %Item{item_id: content.id} |> Items.load_metadata()
 
         if success do
           character.job in jobs or :none in jobs
@@ -120,7 +121,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     enchant_lvl = content.enchant_level
 
     item = %Item{item_id: id, rarity: rarity, amount: amount, enchant_level: enchant_lvl}
-    item = ProtoMetadata.Items.load(item)
+    item = Items.load_metadata(item)
 
     case Inventory.add_item(character, item) do
       {:ok, result} -> push(session, Packets.InventoryItem.add_item(result))

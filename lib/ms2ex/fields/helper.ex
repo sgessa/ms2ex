@@ -131,7 +131,7 @@ defmodule Ms2ex.FieldHelper do
         CharacterManager.increase_stat(character, :sta, item.amount)
 
       true ->
-        item = ProtoMetadata.Items.load(item)
+        item = Items.load_metadata(item)
 
         with {:ok, result} <- Inventory.add_item(character, item) do
           {_status, item} = result
