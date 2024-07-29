@@ -90,17 +90,17 @@ defmodule Ms2ex.Items do
 
   @accessory_slots [:FH, :EA, :PD, :BE, :RI]
   def accessory?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @accessory_slots))
+    Enum.any?(item.metadata.slots, &(&1 in @accessory_slots))
   end
 
   @armor_slots [:CP, :CL, :GL, :SH, :MT]
   def armor?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @armor_slots))
+    Enum.any?(item.metadata.slots, &(&1 in @armor_slots))
   end
 
   @weapon_slots [:LH, :RH, :OH]
   def weapon?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @weapon_slots))
+    Enum.any?(item.metadata.slots, &(&1 in @weapon_slots))
   end
 
   def load_metadata(%Item{item_id: id} = item) do
