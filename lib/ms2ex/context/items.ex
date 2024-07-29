@@ -1,5 +1,5 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.{Item, Items, Metadata}
+  alias Ms2ex.{Item, Items, Metadata, Enums}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
@@ -90,23 +90,27 @@ defmodule Ms2ex.Items do
 
   @accessory_slots [:FH, :EA, :PD, :BE, :RI]
   def accessory?(%Item{} = item) do
-    slots = Enum.map(@accessory_slots, &Ms2ex.Enum.EquipSlot.get_value(&1))
-    !!Enum.find(item.metadata.slot_names, &(&1 in slots))
+    !!Enum.find(item.metadata.slots, &(&1 in @accessory_slots))
   end
 
   @armor_slots [:CP, :CL, :GL, :SH, :MT]
   def armor?(%Item{} = item) do
-    slots = Enum.map(@armor_slots, &Ms2ex.Enum.EquipSlot.get_value(&1))
-    !!Enum.find(item.metadata.slot_names, &(&1 in slots))
+    !!Enum.find(item.metadata.slots, &(&1 in @armor_slots))
   end
 
   @weapon_slots [:LH, :RH, :OH]
   def weapon?(%Item{} = item) do
-    slots = Enum.map(@weapon_slots, &Ms2ex.Enum.EquipSlot.get_value(&1))
-    !!Enum.find(item.metadata.slot_names, &(&1 in slots))
+    !!Enum.find(item.metadata.slots, &(&1 in @weapon_slots))
   end
 
   def load_metadata(%Item{item_id: id} = item) do
-    Map.put(item, :metadata, Metadata.get(Metadata.Item, id))
+    meta = Metadata.get(Metadata.Item, id) |> load_metadata_slots()
+
+    Map.put(item, :metadata, meta)
+  end
+
+  defp load_metadata_slots(%{slot_names: slots} = metadata) do
+    slots = Enum.map(slots, &Enums.EquipSlot.get_value(&1))
+    Map.put(metadata, :slots, slots)
   end
 end

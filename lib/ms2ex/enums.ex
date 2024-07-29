@@ -1,4 +1,4 @@
-defmodule Ms2ex.Enum do
+defmodule Ms2ex.Enums do
   defmacro __using__(_opts) do
     quote do
       def mapping, do: @mapping
