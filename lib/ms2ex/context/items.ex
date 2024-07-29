@@ -88,19 +88,22 @@ defmodule Ms2ex.Items do
   def stamina?(%Item{}), do: false
   def stamina(amount), do: init(@stamina_id, amount)
 
-  @accessory_slots [12, 14, 15, 17, 16]
+  @accessory_slots [:FH, :EA, :PD, :BE, :RI]
   def accessory?(%Item{} = item) do
-    !!Enum.find(item.metadata.slot_names, &(&1 in @accessory_slots))
+    slots = Enum.map(@accessory_slots, &Ms2ex.Enum.EquipSlot.get_value(&1))
+    !!Enum.find(item.metadata.slot_names, &(&1 in slots))
   end
 
-  @armor_slots [6, 8, 10, 11, 7]
+  @armor_slots [:CP, :CL, :GL, :SH, :MT]
   def armor?(%Item{} = item) do
-    !!Enum.find(item.metadata.slot_names, &(&1 in @armor_slots))
+    slots = Enum.map(@armor_slots, &Ms2ex.Enum.EquipSlot.get_value(&1))
+    !!Enum.find(item.metadata.slot_names, &(&1 in slots))
   end
 
-  @weapon_slots [4, 5, 19]
+  @weapon_slots [:LH, :RH, :OH]
   def weapon?(%Item{} = item) do
-    !!Enum.find(item.metadata.slot_names, &(&1 in @weapon_slots))
+    slots = Enum.map(@weapon_slots, &Ms2ex.Enum.EquipSlot.get_value(&1))
+    !!Enum.find(item.metadata.slot_names, &(&1 in slots))
   end
 
   def load_metadata(%Item{item_id: id} = item) do

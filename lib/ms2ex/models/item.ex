@@ -23,7 +23,7 @@ defmodule Ms2ex.Item do
   ]
 
   @required [:amount, :item_id, :location]
-  @equip_slots Map.to_list(ProtoMetadata.Items.EquipSlot.mapping())
+  @equip_slots Map.to_list(Ms2ex.Enum.EquipSlot.mapping())
   @inventory_tabs Map.to_list(ProtoMetadata.Items.InventoryTab.mapping())
 
   schema "inventory_items" do

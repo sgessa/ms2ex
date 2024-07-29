@@ -1,5 +1,5 @@
 defmodule Ms2ex.Equips do
-  alias Ms2ex.{Character, Inventory, Item, Items, ProtoMetadata, Repo}
+  alias Ms2ex.{Character, Inventory, Item, Items, Repo}
 
   import Ecto.Query, except: [update: 2]
   import Inventory, only: [update_item: 2, find_first_available_slot: 2]
@@ -61,7 +61,7 @@ defmodule Ms2ex.Equips do
 
   def valid_slot?(slot_name) do
     slot_name = String.to_existing_atom(slot_name)
-    Map.has_key?(ProtoMetadata.Items.EquipSlot.mapping(), slot_name)
+    !!Ms2ex.Enum.EquipSlot.get_value(slot_name)
   rescue
     _ -> false
   end
