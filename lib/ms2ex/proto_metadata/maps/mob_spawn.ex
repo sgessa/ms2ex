@@ -3,9 +3,10 @@ defmodule Ms2ex.ProtoMetadata.MobSpawn do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.{MapBlock, ProtoMetadata}
+  alias Ms2ex.Structs.Coord
 
   field :id, 1, type: :int32
-  field :position, 2, type: ProtoMetadata.Coord
+  field :position, 2, type: Coord
   field :npc_count, 3, type: :int32
   field :npc_ids, 4, repeated: true, type: :int32
   field :spawn_radius, 5, type: :int32
@@ -35,7 +36,7 @@ defmodule Ms2ex.ProtoMetadata.MobSpawn do
             j, offsets ->
               x = i * MapBlock.block_size() - spawn_radius
               y = j * MapBlock.block_size() - spawn_radius
-              offsets ++ [%ProtoMetadata.Coord{x: x, y: y, z: 0}]
+              offsets ++ [%Coord{x: x, y: y, z: 0}]
           end)
       end)
 

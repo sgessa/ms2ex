@@ -2,7 +2,7 @@ defmodule Ms2ex.ProtoMetadata.MapBlock do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  field :coord, 1, type: Ms2ex.ProtoMetadata.Coord
+  field :coord, 1, type: Ms2ex.Metadata.Coord
   field :attr, 2, type: :string
   field :type, 3, type: :string
   field :saleable_group, 4, type: :int32

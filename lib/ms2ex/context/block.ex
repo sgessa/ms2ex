@@ -1,5 +1,4 @@
 defmodule Ms2ex.MapBlock do
-  alias Ms2ex.Metadata
   alias Ms2ex.Structs.Coord
 
   @block_size 150

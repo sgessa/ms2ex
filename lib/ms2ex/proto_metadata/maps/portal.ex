@@ -8,8 +8,8 @@ defmodule Ms2ex.ProtoMetadata.MapPortal do
   field :visible?, 4, type: :bool
   field :mini_map_visible?, 5, type: :bool
   field :target, 6, type: :int32
-  field :coord, 7, type: Ms2ex.ProtoMetadata.Coord
-  field :rotation, 8, type: Ms2ex.ProtoMetadata.Coord
+  field :coord, 7, type: Ms2ex.Metadata.Coord
+  field :rotation, 8, type: Ms2ex.Metadata.Coord
   field :target_portal_id, 9, type: :int32
   field :portal_type, 10, type: :int32
   field :trigger_id, 11, type: :int32

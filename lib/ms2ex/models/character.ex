@@ -1,6 +1,7 @@
 defmodule Ms2ex.Character do
   use Ecto.Schema
 
+  alias Ms2ex.Context.SkillTabs
   alias Ms2ex.EctoTypes
 
   import Ecto.Changeset
@@ -155,6 +156,6 @@ defmodule Ms2ex.Character do
   end
 
   defp default_skill_tabs(job) do
-    [Ms2ex.SkillTab.set_skills(job, %{name: "Build 1"})]
+    [SkillTabs.set_skills(job, %{name: "Build 1"})]
   end
 end
