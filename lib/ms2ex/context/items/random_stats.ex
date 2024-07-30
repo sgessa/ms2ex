@@ -4,7 +4,7 @@ defmodule Ms2ex.Items.RandomStats do
 
   def get(%Item{} = item) do
     random_id = item.metadata.option.random_id
-    options = Storage.Tables.Items.Options.find_random(random_id, item.rarity)
+    options = Storage.Tables.ItemOptions.find_random(random_id, item.rarity)
 
     get_stats(item, options)
   end

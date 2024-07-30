@@ -1,5 +1,5 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.{Item, Items, Metadata, Enums}
+  alias Ms2ex.{Item, Items, Storage}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
@@ -104,13 +104,8 @@ defmodule Ms2ex.Items do
   end
 
   def load_metadata(%Item{item_id: id} = item) do
-    meta = Metadata.get(Metadata.Item, id) |> load_metadata_slots()
+    meta = Storage.Items.get_meta(id)
 
     Map.put(item, :metadata, meta)
-  end
-
-  defp load_metadata_slots(%{slot_names: slots} = metadata) do
-    slots = Enum.map(slots, &Enums.EquipSlot.get_value(&1))
-    Map.put(metadata, :slots, slots)
   end
 end

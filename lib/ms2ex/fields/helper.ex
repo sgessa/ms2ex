@@ -8,7 +8,7 @@ defmodule Ms2ex.FieldHelper do
     Inventory,
     Items,
     MapBlock,
-    Metadata,
+    Storage,
     ProtoMetadata,
     Mob,
     Packets,
@@ -219,7 +219,7 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_001
   def initialize_state(field_id, channel_id) do
-    _map = Metadata.get(Metadata.Map, field_id)
+    _map = Storage.Maps.get_meta(field_id)
 
     # load_mobs(map)
 

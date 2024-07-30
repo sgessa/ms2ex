@@ -108,7 +108,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp set_spawn_position(character) do
-    spawn_point = Storage.MapEntity.Maps.get_spawn(character.field_id)
+    spawn_point = Storage.Maps.get_spawn(character.field_id)
 
     spawn_point = %{
       position: struct(Coord, Map.get(spawn_point, :position, %{})),

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Context.SkillTabs do
-  alias Ms2ex.Metadata
+  alias Ms2ex.Storage
 
   @orders %{
     knight: [
@@ -620,7 +620,7 @@ defmodule Ms2ex.Context.SkillTabs do
 
     skills =
       Enum.map(ordered_ids, fn skill_id ->
-        metadata = Metadata.get(Metadata.Skill, skill_id)
+        metadata = Storage.Skills.get_meta(skill_id)
         level = metadata.levels["1"].condition.level
         %{skill_id: skill_id, level: level}
       end)

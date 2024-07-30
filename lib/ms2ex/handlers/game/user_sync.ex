@@ -72,7 +72,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp is_out_of_bounds?(field_id, coord) do
-    %{position1: min, position2: max} = Storage.MapEntity.Maps.get_bounds(field_id)
+    %{position1: min, position2: max} = Storage.Maps.get_bounds(field_id)
 
     {high_z, low_z} = find_high_low_bounds(min.z, max.z)
     {high_y, low_y} = find_high_low_bounds(min.y, max.y)

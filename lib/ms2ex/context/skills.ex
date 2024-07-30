@@ -1,11 +1,11 @@
 defmodule Ms2ex.Skills do
-  alias Ms2ex.{Character, Metadata, Repo, Skill, SkillTab}
+  alias Ms2ex.{Character, Storage, Repo, Skill, SkillTab}
   alias Ms2ex.Context.SkillTabs
 
   import Ecto.Query, except: [update: 2]
 
   def by_job(job) do
-    jobs = Metadata.get(Metadata.Table, "job.xml").table.entries
+    jobs = Storage.Tables.Jobs.all()
 
     basic_skills = get_in(jobs, [job, :skills, :basic]) || []
     awakening_skills = get_in(jobs, [job, :skills, :awakening]) || []
@@ -76,7 +76,7 @@ defmodule Ms2ex.Skills do
   end
 
   def load_metadata(%Skill{skill_id: skill_id} = skill) do
-    metadata = Metadata.get(Metadata.Skill, skill_id)
+    metadata = Storage.Skills.get_meta(skill_id)
     Map.put(skill, :metadata, metadata)
   end
 end

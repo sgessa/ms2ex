@@ -4,7 +4,7 @@ defmodule Ms2ex.Items.ConstantStats do
 
   def get(%Item{} = item, option_id, level_factor) do
     constant_id = item.metadata.option.constant_id
-    options = Storage.Tables.Items.Options.find_constant(constant_id, item.rarity)
+    options = Storage.Tables.ItemOptions.find_constant(constant_id, item.rarity)
 
     if options do
       get_stats(item, options, option_id, level_factor)
@@ -31,7 +31,7 @@ defmodule Ms2ex.Items.ConstantStats do
   end
 
   defp get_default(item, constant_stats, option_id, level_factor) do
-    base_options = Storage.Tables.Items.Options.find_pick(option_id, item.rarity)
+    base_options = Storage.Tables.ItemOptions.find_pick(option_id, item.rarity)
 
     if base_options do
       process_options(item, constant_stats, base_options, level_factor)
