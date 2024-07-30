@@ -1,5 +1,6 @@
 defmodule Ms2ex.Items.StaticStats do
-  alias Ms2ex.{Item, Items, Tables}
+  alias Ms2ex.{Item, Items}
+  alias Ms2ex.Storage
 
   def get(_item, _option_id, level_factor) when level_factor < 50 do
     %{}
@@ -7,7 +8,7 @@ defmodule Ms2ex.Items.StaticStats do
 
   def get(%Item{} = item, option_id, level_factor) do
     static_id = item.metadata.option.static_id
-    options = Tables.ItemStaticOption.lookup(static_id, item.rarity)
+    options = Storage.Tables.Items.Options.find_static(static_id, item.rarity)
 
     if options do
       get_stats(item, options, option_id, level_factor)
@@ -34,7 +35,7 @@ defmodule Ms2ex.Items.StaticStats do
   end
 
   defp get_default(item, static_stats, option_id, level_factor) do
-    base_options = Tables.ItemPickOption.lookup(option_id, item.rarity)
+    base_options = Storage.Tables.Items.Options.find_pick(option_id, item.rarity)
 
     if base_options do
       process_options(item, static_stats, base_options, level_factor)

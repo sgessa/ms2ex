@@ -1,9 +1,10 @@
 defmodule Ms2ex.Items.RandomStats do
-  alias Ms2ex.{Item, Items, Tables, Storage}
+  alias Ms2ex.{Item, Items}
+  alias Ms2ex.Storage
 
   def get(%Item{} = item) do
     random_id = item.metadata.option.random_id
-    options = Tables.ItemRandomOption.lookup(random_id, item.rarity)
+    options = Storage.Tables.Items.Options.find_random(random_id, item.rarity)
 
     get_stats(item, options)
   end
