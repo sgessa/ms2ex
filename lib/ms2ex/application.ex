@@ -4,6 +4,8 @@ defmodule Ms2ex.Application do
   use Application
 
   def start(_type, _args) do
+    :ets.new(:metadata, [:named_table, :set, :public, read_concurrency: true])
+
     children =
       [
         # Start the Ecto repository
