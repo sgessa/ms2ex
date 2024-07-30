@@ -62,6 +62,10 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp is_coord_safe?(character, current_position, closest_block) do
     block_diff = MapBlock.subtract(character.safe_position, closest_block)
 
+    # TODO
+    # Maybe not necessary
+    # MapBlock.exists?(character.field_id, closest_block)
+
     MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
 
     # && !character.on_air_mount?
