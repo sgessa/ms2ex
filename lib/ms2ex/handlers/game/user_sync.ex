@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{CharacterManager, Field, MapBlock, ProtoMetadata, Packets, SyncState}
+  alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -69,12 +69,17 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp is_out_of_bounds?(field_id, coord) do
-    {:ok, map} = ProtoMetadata.MapEntities.lookup(field_id)
-    %{bounding_box_0: box0, bounding_box_1: box1} = map
+    map = Metadata.get(Metadata.Map, field_id)
 
-    {high_z, low_z} = find_high_low_bounds(box0.z, box1.z)
-    {high_y, low_y} = find_high_low_bounds(box0.y, box1.y)
-    {high_x, low_x} = find_high_low_bounds(box0.x, box1.x)
+    %{block: %{position1: min, position2: max}} =
+      Metadata.MapEntity
+      |> Metadata.filter("#{map.x_block}_*")
+      |> Enum.filter(&(&1.block[:!] == 1_539_875_768))
+      |> hd()
+
+    {high_z, low_z} = find_high_low_bounds(min.z, max.z)
+    {high_y, low_y} = find_high_low_bounds(min.y, max.y)
+    {high_x, low_x} = find_high_low_bounds(min.x, max.x)
 
     coord.z > high_z || coord.z < low_z ||
       coord.y > high_y || coord.y < low_y ||

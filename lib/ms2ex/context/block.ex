@@ -1,6 +1,6 @@
 defmodule Ms2ex.MapBlock do
-  alias Ms2ex.ProtoMetadata
-  alias ProtoMetadata.Coord
+  alias Ms2ex.Metadata
+  alias Ms2ex.Structs.Coord
 
   @block_size 150
   def block_size(), do: @block_size
@@ -13,13 +13,11 @@ defmodule Ms2ex.MapBlock do
   end
 
   def exists?(field_id, block) do
-    map = ProtoMetadata.Maps.lookup(field_id)
+    map = Metadata.get(Metadata.Map, field_id)
 
-    if Enum.find(map.blocks, &(block == &1)) do
-      true
-    else
-      false
-    end
+    Metadata.MapEntity
+    |> Metadata.filter("#{map.x_block}_*")
+    |> Enum.any?(&(Map.get(&1.block, :position) == block))
   end
 
   def length(%Coord{x: x, y: y, z: z}) do

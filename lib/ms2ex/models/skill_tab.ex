@@ -644,19 +644,16 @@ defmodule Ms2ex.SkillTab do
 
   def set_skills(job, attrs \\ %{}) do
     job_skills = Ms2ex.Skills.by_job(job)
-    IO.inspect(job_skills, label: "#{job} SKILL IDS")
 
     # Reorder skills according to the character job
     ordered_ids = ordered_skill_ids(job)
-    IO.inspect(ordered_ids, label: "ORDERED IDS")
 
     skills =
       Enum.map(ordered_ids, fn skill_id ->
         metadata = Metadata.get(Metadata.Skill, skill_id)
-        level = metadata.levels |> Enum.at(0) |> elem(1) |> Map.get(:condition) |> Map.get(:level)
+        level = metadata.levels["1"].condition.level
         %{skill_id: skill_id, level: level}
       end)
-      |> IO.inspect(label: "ORDERED SKILLS")
 
     Map.put(attrs, :skills, skills)
   end
