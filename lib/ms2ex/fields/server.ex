@@ -61,7 +61,7 @@ defmodule Ms2ex.FieldServer do
       Packets.RegionSkill.add(source_id, position, skill)
     )
 
-    duration = SkillCast.duration(skill)
+    duration = SkillCast.duration(skill, state.field_id)
     Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
     {:reply, :ok, state}
   end

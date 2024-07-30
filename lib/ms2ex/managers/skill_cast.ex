@@ -1,4 +1,6 @@
 defmodule Ms2ex.SkillCast do
+  alias Ms2ex.Metadata
+  alias Ms2ex.Storage
   alias Ms2ex.ProtoMetadata
 
   defstruct [
@@ -21,7 +23,7 @@ defmodule Ms2ex.SkillCast do
       server_tick: srv_tick,
       skill_id: skill_id,
       skill_level: skill_lvl,
-      meta: ProtoMetadata.Skills.get(skill_id)
+      meta: Metadata.get(Metadata.Skill, skill_id)
     }
   end
 
@@ -34,15 +36,15 @@ defmodule Ms2ex.SkillCast do
       attack_point: attack_pt,
       server_tick: srv_tick,
       client_tick: client_tick,
-      meta: ProtoMetadata.Skills.get(skill_id)
+      meta: Metadata.get(Metadata.Skill, skill_id)
     }
   end
 
   def get(skill_cast_id), do: Agent.get(process_name(skill_cast_id), & &1)
 
-  def duration(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case ProtoMetadata.Skills.get_level(meta, lvl) do
-      %{data: %{duration: duration}} -> duration
+  def duration(%__MODULE__{skill_id: skill_id}, field_id) do
+    case Storage.MapEntity.Skills.get_region_skill(field_id, skill_id) do
+      %{interval: interval} -> interval
       _ -> 5_000
     end
   end
