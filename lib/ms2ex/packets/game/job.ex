@@ -74,8 +74,7 @@ defmodule Ms2ex.Packets.Job do
     packet
     |> put_byte(length(skills) - split)
     |> reduce(skills, fn skill, packet ->
-      %{level: max_level} = List.last(skill.meta.skill_levels)
-      skill_level = 1 |> max(skill.level) |> min(max_level)
+      skill_level = 1 |> max(skill.level) |> min(skill.metadata.property.max_level)
 
       packet
       |> maybe_split(skill.skill_id, split_skill.skill_id, split)

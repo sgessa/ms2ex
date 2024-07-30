@@ -3,31 +3,18 @@ defmodule Ms2ex.Skills do
 
   import Ecto.Query, except: [update: 2]
 
-  @climbing_id 20_000_011
-  @swimming_id 20_000_001
-  @common_skills [@climbing_id, @swimming_id]
-
   def by_job(job) do
-    skills = Metadata.all(Ms2ex.Metadata.Skill)
+    jobs = Metadata.get(Metadata.Table, "job.xml").table.entries
 
-    Enum.reduce(skills, %{}, fn skill, acc ->
-      level = skill.levels |> Enum.at(0) |> elem(1)
+    basic_skills = get_in(jobs, [job, :skills, :basic]) || []
+    awakening_skills = get_in(jobs, [job, :skills, :awakening]) || []
+    skills = basic_skills ++ awakening_skills
 
-      # TODO: job_code is always [], probably not the right field
-
-      cond do
-        job in level.condition.job_code or skill.id in @common_skills ->
-          Map.put(acc, skill.id, skill)
-
-        true ->
-          acc
-      end
-    end)
+    Enum.into(skills, [], & &1.main)
   end
 
-  def get_active_tab(%Character{skill_tabs: tabs} = character) do
-    %{active_skill_tab_id: tab_id} = character
-    Enum.find(tabs, &(&1.id == tab_id))
+  def get_active_tab(%Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do
+    Enum.find(tabs, &(&1.id == active_tab_id))
   end
 
   def find_in_tab(%SkillTab{skills: skills}, skill_id) do
