@@ -8,8 +8,8 @@ defmodule Ms2ex.ProtoMetadata.MapEntity do
   field :character_spawns, 4, repeated: true, type: Ms2ex.ProtoMetadata.CharacterSpawn
   field :mob_spawns, 5, repeated: true, type: Ms2ex.ProtoMetadata.MobSpawn
   field :objects, 6, repeated: true, type: Ms2ex.ProtoMetadata.MapObject
-  field :bounding_box_0, 7, type: Ms2ex.ProtoMetadata.Coord
-  field :bounding_box_1, 8, type: Ms2ex.ProtoMetadata.Coord
+  field :bounding_box_0, 7, type: Ms2ex.Metadata.Coord
+  field :bounding_box_1, 8, type: Ms2ex.Metadata.Coord
 
   # field :healing_spots, 9, repeated: true, type: Ms2ex.ProtoMetadata.HealingSpot
   # field :patrol_data, 10, repeated: true, type: Ms2ex.ProtoMetadata.PatrolData

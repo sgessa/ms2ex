@@ -3,10 +3,10 @@ defmodule Ms2ex.ProtoMetadata.MagicPathMove do
   use Protobuf, syntax: :proto3
 
   field :rotation, 1, type: :int32
-  field :fire_offset_position, 2, type: Ms2ex.ProtoMetadata.CoordF
-  field :direction, 3, type: Ms2ex.ProtoMetadata.CoordF
-  field :control_value_0, 4, type: Ms2ex.ProtoMetadata.CoordF
-  field :control_value_1, 5, type: Ms2ex.ProtoMetadata.CoordF
+  field :fire_offset_position, 2, type: Ms2ex.Metadata.CoordF
+  field :direction, 3, type: Ms2ex.Metadata.CoordF
+  field :control_value_0, 4, type: Ms2ex.Metadata.CoordF
+  field :control_value_1, 5, type: Ms2ex.Metadata.CoordF
   field :ignore_adjust, 6, type: :bool
 end
 

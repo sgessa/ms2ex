@@ -2,7 +2,7 @@ defmodule Ms2ex.ProtoMetadata.Npc do
   @moduledoc false
   use Protobuf, syntax: :proto3
 
-  alias ProtoMetadata.Coord
+  alias Metadata.Coord
 
   field :id, 1, type: :int32
   field :name, 2, type: :string

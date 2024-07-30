@@ -1,5 +1,6 @@
 defmodule Ms2ex.Skills do
   alias Ms2ex.{Character, Metadata, Repo, Skill, SkillTab}
+  alias Ms2ex.Context.SkillTabs
 
   import Ecto.Query, except: [update: 2]
 
@@ -22,7 +23,7 @@ defmodule Ms2ex.Skills do
   end
 
   def add_tab(%Character{} = character, attrs) do
-    attrs = SkillTab.set_skills(character.job, attrs)
+    attrs = SkillTabs.set_skills(character.job, attrs)
 
     character
     |> SkillTab.add(attrs)
@@ -47,7 +48,7 @@ defmodule Ms2ex.Skills do
       |> Enum.into(%{}, &{&1.skill_id, &1})
 
     # Return skills ordered according to the character job
-    ordered_ids = SkillTab.ordered_skill_ids(job)
+    ordered_ids = SkillTabs.ordered_skill_ids(job)
     Enum.map(ordered_ids, &Map.get(skills, &1))
   end
 
