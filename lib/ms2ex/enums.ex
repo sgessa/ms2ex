@@ -7,6 +7,12 @@ defmodule Ms2ex.Enums do
         Map.get(@mapping, key)
       end
 
+      def get_key(value) do
+        @mapping
+        |> Map.new(fn {key, val} -> {val, key} end)
+        |> Map.get(value)
+      end
+
       def values(module) do
         Map.values(@mapping)
       end
