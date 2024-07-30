@@ -644,9 +644,11 @@ defmodule Ms2ex.SkillTab do
 
   def set_skills(job, attrs \\ %{}) do
     job_skills = Ms2ex.Skills.by_job(job)
+    IO.inspect(job_skills, label: "#{job} SKILL IDS")
 
     # Reorder skills according to the character job
     ordered_ids = ordered_skill_ids(job)
+    IO.inspect(ordered_ids, label: "ORDERED IDS")
 
     skills =
       Enum.map(ordered_ids, fn skill_id ->

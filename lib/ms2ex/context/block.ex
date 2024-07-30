@@ -12,13 +12,17 @@ defmodule Ms2ex.MapBlock do
     %Coord{x: x, y: y, z: z}
   end
 
-  def exists?(field_id, block) do
-    map = Metadata.get(Metadata.Map, field_id)
+  # TODO
+  # Maybe not necessary
+  # def exists?(field_id, block) do
+  #   map = Metadata.get(Metadata.Map, field_id)
 
-    Metadata.MapEntity
-    |> Metadata.filter("#{map.x_block}_*")
-    |> Enum.any?(&(Map.get(&1.block, :position) == block))
-  end
+  #   Metadata.MapEntity
+  #   |> Metadata.filter("#{map.x_block}_*")
+  #   |> IO.inspect(label: "BLOCKS FOR #{map.x_block}")
+  #   |> Enum.any?(&(Map.get(&1.block, :position) == Map.from_struct(block)))
+  #   |> IO.inspect(label: "Exists?")
+  # end
 
   def length(%Coord{x: x, y: y, z: z}) do
     :math.sqrt(x * x + y * y + z * z)
