@@ -65,6 +65,7 @@ defmodule Ms2ex.Packets.Job do
 
   def put_skills(packet, character) do
     skill_tab = Skills.get_active_tab(character)
+    IO.inspect(skill_tab, label: "GOT SKILL TAB")
     skills = Enum.map(skill_tab.skills, &Skills.load_metadata(&1))
 
     split = Map.get(@job_skill_splits, character.job)

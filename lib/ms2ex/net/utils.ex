@@ -13,4 +13,15 @@ defmodule Ms2ex.Net.Utils do
     |> Enum.map(&Enum.join/1)
     |> Enum.join(" ")
   end
+
+  def conf() do
+    conf = Application.fetch_env!(:ms2ex, Ms2ex)
+    version = conf[:version] || 12
+
+    %{
+      skip_packet_logs: conf[:skip_packet_logs] || [],
+      version: version,
+      block_iv: conf[:initial_block_iv] || version
+    }
+  end
 end

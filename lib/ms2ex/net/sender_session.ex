@@ -9,11 +9,6 @@ defmodule Ms2ex.Net.SenderSession do
 
   import Ms2ex.Net.Utils
 
-  @conf Application.compile_env(:ms2ex, Ms2ex)
-  @skip_packet_logs @conf[:skip_packet_logs] || []
-  @version @conf[:version] || 12
-  @block_iv @conf[:initial_block_iv] || @version
-
   def start_link(socket, transport, send_cipher, parent_pid) do
     {:ok, pid} = GenServer.start_link(__MODULE__, [socket, transport, send_cipher, parent_pid])
     pid
@@ -76,7 +71,7 @@ defmodule Ms2ex.Net.SenderSession do
   @impl true
   def handle_cast({:handshake, recv_cipher}, state) do
     %{send_cipher: send_cipher, socket: socket} = state
-    packet = RequestVersion.build(@version, recv_cipher, send_cipher, @block_iv)
+    packet = RequestVersion.build(conf()[:version], recv_cipher, send_cipher, conf()[:block_iv])
     {send_cipher, packet} = SendCipher.write_header(send_cipher, packet)
 
     log_sent_packet(:handshake, packet)
@@ -135,7 +130,7 @@ defmodule Ms2ex.Net.SenderSession do
   defp log_sent_packet(opcode, packet) do
     name = Packets.opcode_to_name(:send, opcode)
 
-    unless name in @skip_packet_logs do
+    unless name in conf()[:skip_packet_logs] do
       L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{stringify_packet(packet)}"]))
     end
   end
