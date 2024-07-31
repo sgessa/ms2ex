@@ -9,6 +9,7 @@ defmodule Ms2ex.Commands do
     ProtoMetadata,
     Net,
     Packets,
+    Storage,
     Wallets
   }
 
@@ -20,11 +21,14 @@ defmodule Ms2ex.Commands do
     session
   end
 
-  def handle(["item" | ids], character, session) do
+  # !item 5 13160311
+  def handle(["item" | args], character, session) do
+    [rarity | ids] = args
+
     Enum.reduce(ids, session, fn item_id, session ->
       with {item_id, _} <- Integer.parse(item_id),
-           {:ok, _meta} <- ProtoMetadata.Items.lookup(item_id) do
-        add_item(character, item_id, session)
+           meta when not is_nil(meta) <- Storage.get(:item, item_id) do
+        add_item(character, item_id, rarity, session)
       else
         _ ->
           push_notice(session, character, "Invalid Item: #{item_id}")
@@ -137,18 +141,15 @@ defmodule Ms2ex.Commands do
     push_notice(session, character, "Command not found")
   end
 
-  defp add_item(character, item_id, session) do
+  defp add_item(character, item_id, rarity, session) do
     flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-    item = Items.init(item_id, %{transfer_flags: flags})
 
-    case Inventory.add_item(character, item) do
-      {:ok, {_, item} = result} ->
-        session
-        |> push(Packets.InventoryItem.add_item(result))
-        |> push(Packets.InventoryItem.mark_item_new(item))
-
-      _ ->
-        session
+    with {rarity, _} <- Integer.parse(rarity),
+         item = Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
+         {:ok, {_, item} = result} <- Inventory.add_item(character, item) do
+      session
+      |> push(Packets.InventoryItem.add_item(result))
+      |> push(Packets.InventoryItem.mark_item_new(item))
     end
   end
 end
