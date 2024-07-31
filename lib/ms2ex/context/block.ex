@@ -11,7 +11,6 @@ defmodule Ms2ex.MapBlock do
     %Coord{x: x, y: y, z: z}
   end
 
-  # TODO
   # Maybe not necessary
   # def exists?(field_id, block) do
   #   map = Metadata.get(Metadata.Map, field_id)

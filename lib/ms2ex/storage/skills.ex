@@ -1,5 +1,5 @@
 defmodule Ms2ex.Storage.Skills do
-  alias Ms2ex.Storage.Metadata
+  alias Ms2ex.Storage
 
   def get_region_skill(skill_id) do
     skill_id
@@ -20,6 +20,6 @@ defmodule Ms2ex.Storage.Skills do
   end
 
   def get_meta(skill_id) do
-    Metadata.get(:skill, skill_id)
+    Storage.get(:skill, skill_id)
   end
 end

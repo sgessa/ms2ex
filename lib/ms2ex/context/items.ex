@@ -105,7 +105,6 @@ defmodule Ms2ex.Items do
 
   def load_metadata(%Item{item_id: id} = item) do
     meta = Storage.Items.get_meta(id)
-
     Map.put(item, :metadata, meta)
   end
 end

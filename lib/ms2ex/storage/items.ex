@@ -1,9 +1,8 @@
 defmodule Ms2ex.Storage.Items do
-  alias Ms2ex.Storage.Metadata
-  alias Ms2ex.Enums
+  alias Ms2ex.{Enums, Storage}
 
   def get_meta(item_id) do
-    Metadata.get(:item, item_id)
+    Storage.get(:item, item_id)
     |> load_slots()
   end
 

@@ -1,9 +1,9 @@
 defmodule Ms2ex.Storage.Tables.Jobs do
-  alias Ms2ex.Storage.Metadata
+  alias Ms2ex.Storage
 
   def all() do
     :table
-    |> Metadata.get("job.xml")
+    |> Storage.get("job.xml")
     |> get_in([:table, :entries])
   end
 end

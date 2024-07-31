@@ -1,5 +1,5 @@
 defmodule Ms2ex.Storage.Maps do
-  alias Ms2ex.Storage.Metadata
+  alias Ms2ex.Storage
 
   def get_bounds(field_id) do
     field_id
@@ -19,6 +19,6 @@ defmodule Ms2ex.Storage.Maps do
   end
 
   def get_meta(field_id) do
-    Metadata.get(:map, field_id)
+    Storage.get(:map, field_id)
   end
 end

@@ -15,7 +15,6 @@ defmodule Ms2ex.Crypto.Rand32 do
     }
   end
 
-  # TODO maybe?
   def crt_rand(seed) do
     Cipher.mask(214_013 * seed + 2_531_011) >>> 0
   end
