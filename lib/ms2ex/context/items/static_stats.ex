@@ -1,5 +1,5 @@
 defmodule Ms2ex.Items.StaticStats do
-  alias Ms2ex.{Item, Items}
+  alias Ms2ex.{Item, Items, Enums}
   alias Ms2ex.Storage
 
   def get(_item, _option_id, level_factor) when level_factor < 50 do
@@ -17,30 +17,43 @@ defmodule Ms2ex.Items.StaticStats do
     end
   end
 
-  # TODO: Rewrite (similar to RandomOption)
+  defp get_stats(item, static_options, option_id, level_factor) do
+    %{num_pick: picks, entries: entries} = static_options
 
-  # options: %{
-  #   "11300011" => %{
-  #     "1" => %{
-  #       entries: [%{values: %{max: 1, min: 1}, basic_attribute: 20}],
-  #       num_pick: %{max: 1, min: 1}
-  #     },
-
-  defp get_stats(item, options, option_id, level_factor) do
-    %{stats: stats, special_stats: special_stats} = options
-
-    static_stats = Enum.into(stats, %{}, &{&1.attribute, Items.Stat.build(&1, :basic)})
+    pick_count = Enum.random(picks.min..picks.max)
 
     static_stats =
-      Enum.into(special_stats, static_stats, &{&1.attribute, Items.Stat.build(&1, :special)})
-
-    # TODO: Implement Hidden ndd (defense) and wapmax (Max Weapon Attack)
+      Enum.map(entries, &process_stat(&1))
+      |> Enum.take_random(pick_count)
+      |> Enum.map(&{&1.attribute, &1})
+      |> Map.new()
 
     get_default(item, static_stats, option_id, level_factor)
   end
 
+  defp process_stat(%{values: values, basic_attribute: attr}) do
+    value = Enum.random(values.min..values.max)
+    Items.Stat.build(Enums.BasicStatType.get_key(attr), :basic, value, :flat)
+  end
+
+  defp process_stat(%{rates: values, basic_attribute: attr}) do
+    value = :rand.uniform() * (values.max - values.min) + values.max
+    Items.Stat.build(Enums.BasicStatType.get_key(attr), :basic, value, :rate)
+  end
+
+  defp process_stat(%{values: values, special_attribute: attr}) do
+    value = Enum.random(values.min..values.max)
+    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :special, value, :flat)
+  end
+
+  defp process_stat(%{rates: values, special_attribute: attr}) do
+    value = :rand.uniform() * (values.max - values.min) + values.max
+    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :special, value, :rate)
+  end
+
   defp get_default(item, static_stats, option_id, level_factor) do
-    base_options = Storage.Tables.ItemOptions.find_pick(option_id, item.rarity)
+    base_options =
+      Storage.Tables.ItemOptions.find_pick(option_id, item.rarity)
 
     if base_options do
       process_options(item, static_stats, base_options, level_factor)

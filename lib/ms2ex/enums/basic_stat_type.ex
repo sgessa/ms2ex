@@ -1,0 +1,41 @@
+defmodule Ms2ex.Enums.BasicStatType do
+  @mapping %{
+    magical_res: 26,
+    critical_rate: 17,
+    strength: 0,
+    defense: 20,
+    critical_evasion: 19,
+    damage: 29,
+    evasion: 16,
+    spirit: 7,
+    max_weapon_atk: 28,
+    attack_speed: 13,
+    pet_bonus_atk: 34,
+    mount_speed: 32,
+    health: 4,
+    min_weapon_atk: 27,
+    luck: 3,
+    hp_regen_interval: 6,
+    sp_regen_interval: 9,
+    dexterity: 1,
+    jump_height: 22,
+    accuracy: 15,
+    hp_regen: 5,
+    stamina: 10,
+    critical_damage: 18,
+    movement_speed: 14,
+    stamina_regen: 11,
+    piercing: 31,
+    magical_atk: 24,
+    intelligence: 2,
+    stamina_regen_interval: 12,
+    physical_res: 25,
+    physical_atk: 23,
+    bonus_atk: 33,
+    unknown: 30,
+    perfect_guard: 21,
+    sp_regen: 8
+  }
+
+  use Ms2ex.Enums
+end
