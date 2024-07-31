@@ -102,7 +102,7 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, %ProtoMetadata.Npc{} = npc, position}, state) do
+  def handle_info({:add_mob, %{type: :npc} = npc, position}, state) do
     {:noreply, add_mob(npc, position, state)}
   end
 

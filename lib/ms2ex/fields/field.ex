@@ -32,7 +32,7 @@ defmodule Ms2ex.Field do
     call(character.field_pid, {:add_status, status})
   end
 
-  def add_mob(%Character{} = character, %ProtoMetadata.Npc{} = npc) do
+  def add_mob(%Character{} = character, %{type: :npc} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
 

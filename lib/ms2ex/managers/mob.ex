@@ -36,13 +36,13 @@ defmodule Ms2ex.Mob do
       exp: npc.exp,
       field: Field.field_name(field.field_id, field.channel_id),
       id: npc.id,
-      model: npc.model,
+      model: npc.metadata.model,
       object_id: field.counter,
       position: spawn_position,
       respawnable?: respawnable?,
       rotation: npc.rotation,
       spawn_group: spawn_group,
-      stats: npc.stats
+      stats: npc.stat.stats
     }
   end
 

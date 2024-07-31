@@ -22,6 +22,9 @@ defmodule Ms2ex.Storage do
 
   def cache_value(key) do
     case get_from_redis(key) do
+      {:ok, nil} ->
+        nil
+
       {:ok, value} ->
         value
         |> :erlang.binary_to_term()

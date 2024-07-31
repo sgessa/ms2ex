@@ -179,7 +179,7 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(%ProtoMetadata.Npc{} = npc, position, state) do
+  def add_mob(%{type: :npc} = npc, position, state) do
     mob = Mob.build(state, npc, position)
     {:ok, _pid} = Mob.start(mob)
     %{state | counter: state.counter + 1}
@@ -219,11 +219,9 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_001
   def initialize_state(field_id, channel_id) do
-    _map = Storage.Maps.get_meta(field_id)
-
     # load_mobs(map)
 
-    # {counter, npcs} = load_npcs(map, @object_counter)
+    {_counter, npcs} = load_npcs(field_id, @object_counter)
     # {counter, portals} = load_portals(map, counter)
     # {counter, interactable} = load_interactable(map, counter)
 
@@ -235,25 +233,25 @@ defmodule Ms2ex.FieldHelper do
       items: %{},
       mobs: %{},
       mounts: %{},
-      npcs: %{},
+      npcs: npcs,
       portals: %{},
       sessions: %{},
       topic: "field:#{field_id}:channel:#{channel_id}"
     }
   end
 
-  # defp load_npcs(map, counter) do
-  #   map.npcs
-  #   |> Enum.map(&Map.merge(ProtoMetadata.Npcs.get(&1.id), &1))
-  #   |> Enum.filter(&(&1.friendly == 2))
-  #   |> Enum.map(&Map.put(&1, :spawn, &1.position))
-  #   |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
-  #     npc = Map.put(npc, :direction, npc.rotation.z * 10)
-  #     npc = Map.put(npc, :object_id, counter)
-  #
-  #     {counter + 1, Map.put(npcs, npc.id, npc)}
-  #   end)
-  # end
+  defp load_npcs(field_id, counter) do
+    field_id
+    |> Storage.Maps.get_npcs()
+    |> Enum.filter(&(&1.metadata.basic.friendly > 0))
+    |> Enum.map(&Map.put(&1, :spawn, &1.position))
+    |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
+      npc = Map.put(npc, :direction, npc.rotation.z * 10)
+      npc = Map.put(npc, :object_id, counter)
+
+      {counter + 1, Map.put(npcs, npc.id, npc)}
+    end)
+  end
 
   # defp load_mobs(map) do
   #   map.mob_spawns
