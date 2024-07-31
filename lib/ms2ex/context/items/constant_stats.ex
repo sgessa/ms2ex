@@ -2,26 +2,40 @@ defmodule Ms2ex.Items.ConstantStats do
   alias Ms2ex.{Item, Items}
   alias Ms2ex.Storage
 
-  def get(%Item{} = item, option_id, level_factor) do
+  def get(%Item{} = item, pick_id, level_factor) do
     constant_id = item.metadata.option.constant_id
     options = Storage.Tables.ItemOptions.find_constant(constant_id, item.rarity)
+    IO.inspect(options, label: "OPTIONS")
 
     if options do
-      get_stats(item, options, option_id, level_factor)
+      get_stats(item, options, pick_id, level_factor)
     else
-      get_default(item, %{}, option_id, level_factor)
+      get_default(item, %{}, pick_id, level_factor)
     end
   end
 
   defp get_stats(item, options, option_id, level_factor) do
-    %{values: stats, special_values: special_stats} = options
+    values =
+      Enum.into(options.values, [], fn {name, value} ->
+        {name, Items.Stat.build(name, :flat, value, :basic)}
+      end)
 
-    constant_stats = Enum.into(stats, %{}, &{&1.attribute, Items.Stat.build(&1, :basic)})
+    rates =
+      Enum.into(options.rates, [], fn {name, value} ->
+        {name, Items.Stat.build(name, :rate, value, :basic)}
+      end)
 
-    constant_stats =
-      Enum.into(special_stats, constant_stats, &{&1.attribute, Items.Stat.build(&1, :special)})
+    special_values =
+      Enum.into(options.special_values, [], fn {name, value} ->
+        {name, Items.Stat.build(name, :flat, value, :special)}
+      end)
 
-    # TODO Implement Hidden ndd (defense) and wapmax (Max Weapon Attack)
+    special_rates =
+      Enum.into(options.special_rates, [], fn {name, value} ->
+        {name, Items.Stat.build(name, :rate, value, :special)}
+      end)
+
+    constant_stats = Map.new(values ++ rates ++ special_values ++ special_rates)
 
     if level_factor > 50 do
       get_default(item, constant_stats, option_id, level_factor)

@@ -1,11 +1,5 @@
 defmodule Ms2ex.Items.Stat do
-  alias Ms2ex.ProtoMetadata.Items
-
   defstruct [:attribute, :type, :class, value: 0]
-
-  def build(%Items.Stat{} = stat, stat_class) do
-    build(stat.attribute, stat.type, stat.value, stat_class)
-  end
 
   def build(attr, type, val, stat_class) do
     val = if type == :flat, do: trunc(val), else: val

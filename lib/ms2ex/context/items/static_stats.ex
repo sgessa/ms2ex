@@ -18,8 +18,13 @@ defmodule Ms2ex.Items.StaticStats do
   end
 
   # TODO: Rewrite (similar to RandomOption)
-  # Data structure changed
-  # iex> Ms2ex.Metadata.get(Ms2ex.Metadata.Table, "itemoptionstatic.xml") |> Map.get(:table) |> Map.get(:options) |> Map.get("11300011") |> Map.get("5")
+
+  # options: %{
+  #   "11300011" => %{
+  #     "1" => %{
+  #       entries: [%{values: %{max: 1, min: 1}, basic_attribute: 20}],
+  #       num_pick: %{max: 1, min: 1}
+  #     },
 
   defp get_stats(item, options, option_id, level_factor) do
     %{stats: stats, special_stats: special_stats} = options
@@ -84,7 +89,7 @@ defmodule Ms2ex.Items.StaticStats do
         basic_stat.value,
         p_value,
         Items.Type.value(Items.type(item)),
-        List.first(item.metadata.limits.job_recommendations),
+        List.first(item.metadata.limit.job_recommends),
         level_factor,
         item.rarity,
         item.level

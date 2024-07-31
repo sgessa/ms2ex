@@ -7,16 +7,16 @@ defmodule Ms2ex.Items.Stats do
             enchants: %{},
             limit_break_enchants: %{}
 
-  def create(%Item{rarity: rarity}) when rarity == 0 or rarity > 6 do
+  def create(%Item{rarity: rarity}) when is_nil(rarity) or rarity == 0 or rarity > 6 do
     %__MODULE__{}
   end
 
   def create(%Item{metadata: meta} = item) do
-    option_id = Map.get(meta.option, :pick_id)
+    pick_id = meta.option.pick_id
     lvl_factor = meta.option.level_factor
 
-    constants = Items.ConstantStats.get(item, option_id, lvl_factor)
-    statics = Items.StaticStats.get(item, option_id, lvl_factor)
+    constants = Items.ConstantStats.get(item, pick_id, lvl_factor)
+    statics = Items.StaticStats.get(item, pick_id, lvl_factor)
     randoms = Items.RandomStats.get(item)
 
     enchants =
