@@ -32,7 +32,7 @@ bottom = Items.init(11_500_538, %{color: bottom_color})
 shoes_color = ItemColor.build(Color.build(51, 59, 63, -1), Color.build(27, 32, 35, -1), Color.build(15, 18, 20, -1), 0)
 shoes = Items.init(11_700_709, %{color: shoes_color})
 
-dagger = Items.init(13_160_311, %{enchants: 12, rarity: 6})
+dagger = Items.init(13_160_311, %{enchants: 12, rarity: 5})
 
 {:ok, char} =
   Characters.create(account, %{

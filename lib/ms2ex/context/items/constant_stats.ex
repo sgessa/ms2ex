@@ -5,7 +5,6 @@ defmodule Ms2ex.Items.ConstantStats do
   def get(%Item{} = item, pick_id, level_factor) do
     constant_id = item.metadata.option.constant_id
     options = Storage.Tables.ItemOptions.find_constant(constant_id, item.rarity)
-    IO.inspect(options, label: "OPTIONS")
 
     if options do
       get_stats(item, options, pick_id, level_factor)
@@ -88,7 +87,7 @@ defmodule Ms2ex.Items.ConstantStats do
         basic_stat.value,
         p_value,
         Items.Type.value(Items.type(item)),
-        List.first(item.metadata.limits.job_recommendations),
+        List.first(item.metadata.limits.job_recommends),
         level_factor,
         item.rarity,
         item.level

@@ -24,21 +24,21 @@ defmodule Ms2ex.Items.RandomStats do
 
   defp process_stat(%{values: values, basic_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :basic, value, :flat)
+    Items.Stat.build(Enums.BasicStatType.get_key(attr), :flat, value, :basic)
   end
 
   defp process_stat(%{rates: values, basic_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :basic, value, :rate)
+    Items.Stat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
   end
 
   defp process_stat(%{values: values, special_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :special, value, :flat)
+    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :flat, value, :special)
   end
 
   defp process_stat(%{rates: values, special_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :special, value, :rate)
+    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :rate, value, :special)
   end
 end
