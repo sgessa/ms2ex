@@ -18,7 +18,7 @@ defmodule Ms2ex.Character do
     :insignia_id,
     :level,
     :job,
-    :field_id,
+    :map_id,
     :motto,
     :name,
     :prestige_exp,
@@ -77,7 +77,7 @@ defmodule Ms2ex.Character do
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
     field :job, Ecto.Enum, values: @jobs
-    field :field_id, :integer
+    field :map_id, :integer
     field :motto, :string, default: "Let's Maple!"
     field :mount, :map, virtual: true
     field :name, :string

@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
 
     {current_map_id, packet} = get_int(packet)
 
-    with true <- current_map_id == character.field_id,
+    with true <- current_map_id == character.map_id,
          portals <- Storage.Maps.get_portals(current_map_id),
          {src_portal_id, _packet} = get_int(packet),
          %{target_map_id: dst_map_id} <- find_portal(portals, src_portal_id),

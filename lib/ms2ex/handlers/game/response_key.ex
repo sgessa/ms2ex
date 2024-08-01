@@ -54,7 +54,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       account_wallet = Wallets.find(account)
       character_wallet = Wallets.find(character)
 
-      %{friends: friends, field_id: field_id, position: position, rotation: rotation} = character
+      %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
 
       send(self(), {:update, %{character_id: character.id, server_tick: tick}})
 
@@ -88,7 +88,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Fishing.load_log())
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
-      |> push(Packets.RequestFieldEnter.bytes(field_id, position, rotation))
+      |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
       |> push_party(character)
     end
   end
@@ -106,7 +106,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp set_spawn_position(character) do
-    spawn_point = Storage.Maps.get_spawn(character.field_id)
+    spawn_point = Storage.Maps.get_spawn(character.map_id)
 
     %{
       character

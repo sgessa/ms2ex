@@ -19,13 +19,13 @@ defmodule Ms2ex.FieldServer do
   @updates_intval 1000
 
   def init(character) do
-    Logger.info("Start Field #{character.field_id} @ Channel #{character.channel_id}")
+    Logger.info("Start Field #{character.map_id} @ Channel #{character.channel_id}")
 
     send(self(), :send_updates)
 
     {
       :ok,
-      initialize_state(character.field_id, character.channel_id),
+      initialize_state(character.map_id, character.channel_id),
       {:continue, {:add_character, character}}
     }
   end
@@ -144,7 +144,7 @@ defmodule Ms2ex.FieldServer do
 
   def handle_info(:maybe_stop, state) do
     if Enum.empty?(state.sessions) do
-      Logger.info("Field #{state.field_id} @ Channel #{state.channel_id} is empty. Stopping.")
+      Logger.info("Field #{state.map_id} @ Channel #{state.channel_id} is empty. Stopping.")
       {:stop, :normal, state}
     else
       {:noreply, state}
