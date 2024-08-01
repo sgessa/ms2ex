@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{CharacterManager, Field, MapBlock, Metadata, Packets, SyncState}
+  alias Ms2ex.{CharacterManager, Field, MapBlock, Storage, Packets, SyncState}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -62,19 +62,21 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp is_coord_safe?(character, current_position, closest_block) do
     block_diff = MapBlock.subtract(character.safe_position, closest_block)
 
-    MapBlock.exists?(character.field_id, closest_block) &&
-      MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
+    # TODO
+    # Maybe not necessary
+    # MapBlock.exists?(character.field_id, closest_block)
+
+    MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
 
     # && !character.on_air_mount?
   end
 
   defp is_out_of_bounds?(field_id, coord) do
-    {:ok, map} = Metadata.MapEntities.lookup(field_id)
-    %{bounding_box_0: box0, bounding_box_1: box1} = map
+    %{position1: min, position2: max} = Storage.Maps.get_bounds(field_id)
 
-    {high_z, low_z} = find_high_low_bounds(box0.z, box1.z)
-    {high_y, low_y} = find_high_low_bounds(box0.y, box1.y)
-    {high_x, low_x} = find_high_low_bounds(box0.x, box1.x)
+    {high_z, low_z} = find_high_low_bounds(min.z, max.z)
+    {high_y, low_y} = find_high_low_bounds(min.y, max.y)
+    {high_x, low_x} = find_high_low_bounds(min.x, max.x)
 
     coord.z > high_z || coord.z < low_z ||
       coord.y > high_y || coord.y < low_y ||

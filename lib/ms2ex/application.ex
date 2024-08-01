@@ -4,26 +4,14 @@ defmodule Ms2ex.Application do
   use Application
 
   def start(_type, _args) do
-    Ms2ex.WorldGraph.store()
-    Ms2ex.Metadata.ChatStickers.store()
-    Ms2ex.Metadata.ExpTable.store()
-    Ms2ex.Metadata.Insignias.store()
-    Ms2ex.Metadata.Items.store()
-    Ms2ex.Storage.Items.ConstantOptions.store()
-    Ms2ex.Storage.Items.StaticOptions.store()
-    Ms2ex.Storage.Items.RandomOptions.store()
-    Ms2ex.Storage.Items.RangeOptions.store()
-    Ms2ex.Storage.Items.PickOptions.store()
-    Ms2ex.Metadata.Maps.store()
-    Ms2ex.Metadata.MapEntities.store()
-    Ms2ex.Metadata.MagicPaths.store()
-    Ms2ex.Metadata.Npcs.store()
-    Ms2ex.Metadata.Skills.store()
+    :ets.new(:metadata, [:named_table, :set, :public, read_concurrency: true])
 
     children =
       [
         # Start the Ecto repository
         Ms2ex.Repo,
+        # Start Redis cache server
+        {Redix, name: Ms2ex.Redix},
         # Start the Telemetry supervisor
         Ms2exWeb.Telemetry,
         # Start the PubSub system

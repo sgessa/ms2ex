@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Job do
-  alias Ms2ex.{Character, Metadata, Skills}
+  alias Ms2ex.{Character, Skills}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -43,8 +43,11 @@ defmodule Ms2ex.Packets.Job do
 
     skills =
       skill_tab.skills
-      |> Enum.map(&Map.put(&1, :metadata, Metadata.Skills.get(&1.skill_id)))
-      |> Enum.filter(&(&1.metadata.type == 1 and &1.metadata.starting_level == 1))
+      |> Enum.map(&Skills.load_metadata(&1))
+      |> Enum.filter(fn skill ->
+        Map.get(skill.metadata.property, :type) == 1 &&
+          Map.get(skill.metadata.levels, "1") == 1
+      end)
 
     packet
     |> put_short(length(skills))
@@ -65,12 +68,7 @@ defmodule Ms2ex.Packets.Job do
 
   def put_skills(packet, character) do
     skill_tab = Skills.get_active_tab(character)
-
-    skills =
-      Enum.map(skill_tab.skills, fn s ->
-        meta = Metadata.Skills.get(s.skill_id)
-        Map.put(s, :meta, meta)
-      end)
+    skills = Enum.map(skill_tab.skills, &Skills.load_metadata(&1))
 
     split = Map.get(@job_skill_splits, character.job)
     split_skill = Enum.at(skills, length(skills) - split)
@@ -78,8 +76,7 @@ defmodule Ms2ex.Packets.Job do
     packet
     |> put_byte(length(skills) - split)
     |> reduce(skills, fn skill, packet ->
-      %{level: max_level} = List.last(skill.meta.skill_levels)
-      skill_level = 1 |> max(skill.level) |> min(max_level)
+      skill_level = 1 |> max(skill.level) |> min(skill.metadata.property.max_level)
 
       packet
       |> maybe_split(skill.skill_id, split_skill.skill_id, split)

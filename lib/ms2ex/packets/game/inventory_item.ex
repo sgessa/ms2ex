@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Hair, Inventory, Items, Metadata}
+  alias Ms2ex.{Enums, Hair, Inventory, Items}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -123,7 +123,44 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_ustring("")
   end
 
-  def put_appearance(packet, item) do
+  def load_items(tab_id, items) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.load_items)
+    |> put_int(Enums.InventoryTab.get_value(tab_id))
+    |> put_short(length(items))
+    |> reduce(items, fn item, packet ->
+      packet
+      |> put_int(item.item_id)
+      |> put_long(item.id)
+      |> put_short(item.inventory_slot)
+      |> put_int(item.rarity)
+      |> put_item(item)
+    end)
+  end
+
+  def expand_tab() do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.expand_tab)
+  end
+
+  def load_tab(tab_id, total_slots) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.load_tab)
+    |> put_byte(Enums.InventoryTab.get_value(tab_id))
+    |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
+  end
+
+  def reset_tab(tab_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.reset_tab)
+    |> put_int(Enums.InventoryTab.get_value(tab_id))
+  end
+
+  defp put_appearance(packet, item) do
     packet =
       packet
       |> Ms2ex.ItemColor.put_item_color(item.color)
@@ -137,7 +174,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     end
   end
 
-  def put_item_stats(packet, item) do
+  defp put_item_stats(packet, item) do
     constant_basic_stats = Enum.filter(item.stats.constants, &(elem(&1, 1).class == :basic))
     constant_special_stats = Enum.filter(item.stats.constants, &(elem(&1, 1) == :special))
     static_basic_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :basic))
@@ -182,29 +219,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     end)
   end
 
-  def put_item_stat(packet, %{class: :basic} = stat) do
-    packet
-    |> put_short(Metadata.Items.StatAttribute.value(stat.attribute))
-    |> put_int(Items.Stat.flat_value(stat))
-    |> put_float(Items.Stat.rate_value(stat))
-  end
-
-  def put_item_stat(packet, %{class: :special} = stat) do
-    packet
-    |> put_short(Metadata.Items.StatAttribute.value(stat.attribute))
-    |> put_float(Items.Stat.rate_value(stat))
-    |> put_float(Items.Stat.flat_value(stat))
-  end
-
-  def put_item_stats_diff(packet, _item) do
-    packet
-    |> put_byte(0)
-    |> put_int()
-    |> put_int(0)
-    |> put_int(0)
-  end
-
-  def put_item_enchant_stats(packet, item) do
+  defp put_item_enchant_stats(packet, item) do
     enchant_stats = Enum.filter(item.stats.enchants, &(elem(&1, 1).class == :basic))
 
     basic_limit_break_enchants =
@@ -227,78 +242,25 @@ defmodule Ms2ex.Packets.InventoryItem do
     end)
   end
 
-  # defp put_template(packet, %{metadata: %{is_template?: true}}) do
-  #   packet
-  #   |> put_ugc()
-  #   |> put_long()
-  #   |> put_int()
-  #   |> put_int()
-  #   |> put_int()
-  #   |> put_long()
-  #   |> put_int()
-  #   |> put_long()
-  #   |> put_long()
-  #   |> put_ustring()
-  # end
+  defp put_item_stat(packet, %{class: :basic} = stat) do
+    packet
+    |> put_short(Enums.BasicStatType.get_value(stat.attribute))
+    |> put_int(Items.Stat.flat_value(stat))
+    |> put_float(Items.Stat.rate_value(stat))
+  end
 
-  # defp put_template(packet, _item), do: packet
+  defp put_item_stat(packet, %{class: :special} = stat) do
+    packet
+    |> put_short(Enums.SpecialStatType.get_value(stat.attribute))
+    |> put_float(Items.Stat.rate_value(stat))
+    |> put_float(Items.Stat.flat_value(stat))
+  end
 
-  # defp put_ugc(packet) do
-  #   packet
-  #   |> put_ustring()
-  #   |> put_ustring()
-  #   |> put_byte()
-  #   |> put_int()
-  #   |> put_long()
-  #   |> put_long()
-  #   |> put_ustring()
-  #   |> put_long()
-  #   |> put_ustring()
-  #   |> put_byte()
-  # end
-
-  def put_sockets(packet) do
+  defp put_sockets(packet) do
     sockets_length = 0
 
     packet
     |> put_byte()
     |> put_byte(sockets_length)
-  end
-
-  def load_items(tab_id, items) do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.load_items)
-    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
-    |> put_short(length(items))
-    |> reduce(items, fn item, packet ->
-      packet
-      |> put_int(item.item_id)
-      |> put_long(item.id)
-      |> put_short(item.inventory_slot)
-      |> put_int(item.rarity)
-      |> put_item(item)
-    end)
-  end
-
-  def expand_tab() do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.expand_tab)
-  end
-
-  def load_tab(tab_id, total_slots) do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.load_tab)
-    |> put_byte(Metadata.Items.InventoryTab.value(tab_id))
-    |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
-  end
-
-  def reset_tab(tab_id) do
-    __MODULE__
-    |> build()
-    |> put_byte(@modes.reset_tab)
-    |> put_int(Metadata.Items.InventoryTab.value(tab_id))
   end
 end

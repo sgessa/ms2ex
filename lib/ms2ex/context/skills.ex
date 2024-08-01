@@ -1,39 +1,21 @@
 defmodule Ms2ex.Skills do
-  alias Ms2ex.{Character, Metadata, Repo, Skill, SkillTab}
+  alias Ms2ex.{Character, Storage, Repo, Skill, SkillTab}
+  alias Ms2ex.Context.SkillTabs
 
   import Ecto.Query, except: [update: 2]
 
-  @climbing_id 20_000_011
-  @swimming_id 20_000_001
-  @metadata_table :skill_metadata
-
-  def metadata(skill_id) do
-    case :ets.lookup(@metadata_table, skill_id) do
-      [{_id, %Metadata.Skill{} = meta}] -> meta
-      _ -> nil
-    end
-  end
-
   def by_job(job) do
-    skills = :ets.tab2list(@metadata_table)
+    jobs = Storage.Tables.Jobs.all()
 
-    Enum.reduce(skills, %{}, fn {id, meta}, acc ->
-      cond do
-        meta.job == job ->
-          Map.put(acc, id, meta)
+    basic_skills = get_in(jobs, [job, :skills, :basic]) || []
+    awakening_skills = get_in(jobs, [job, :skills, :awakening]) || []
+    skills = basic_skills ++ awakening_skills
 
-        meta.id == @swimming_id or meta.id == @climbing_id ->
-          Map.put(acc, id, %{meta | starting_level: 1})
-
-        true ->
-          acc
-      end
-    end)
+    Enum.into(skills, [], & &1.main)
   end
 
-  def get_active_tab(%Character{skill_tabs: tabs} = character) do
-    %{active_skill_tab_id: tab_id} = character
-    Enum.find(tabs, &(&1.id == tab_id))
+  def get_active_tab(%Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do
+    Enum.find(tabs, &(&1.id == active_tab_id))
   end
 
   def find_in_tab(%SkillTab{skills: skills}, skill_id) do
@@ -41,7 +23,7 @@ defmodule Ms2ex.Skills do
   end
 
   def add_tab(%Character{} = character, attrs) do
-    attrs = SkillTab.set_skills(character.job, attrs)
+    attrs = SkillTabs.set_skills(character.job, attrs)
 
     character
     |> SkillTab.add(attrs)
@@ -66,7 +48,7 @@ defmodule Ms2ex.Skills do
       |> Enum.into(%{}, &{&1.skill_id, &1})
 
     # Return skills ordered according to the character job
-    ordered_ids = SkillTab.ordered_skill_ids(job)
+    ordered_ids = SkillTabs.ordered_skill_ids(job)
     Enum.map(ordered_ids, &Map.get(skills, &1))
   end
 
@@ -91,5 +73,10 @@ defmodule Ms2ex.Skills do
         {:ok, _sub} = update(sub, %{level: parent.level})
       end
     end)
+  end
+
+  def load_metadata(%Skill{skill_id: skill_id} = skill) do
+    metadata = Storage.Skills.get_meta(skill_id)
+    Map.put(skill, :metadata, metadata)
   end
 end

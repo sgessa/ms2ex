@@ -6,9 +6,10 @@ defmodule Ms2ex.Commands do
     Field,
     Inventory,
     Items,
-    Metadata,
+    ProtoMetadata,
     Net,
     Packets,
+    Storage,
     Wallets
   }
 
@@ -20,14 +21,14 @@ defmodule Ms2ex.Commands do
     session
   end
 
-  def handle(["item" | ids], character, session) do
+  # !item 5 13160311
+  def handle(["item" | args], character, session) do
+    [rarity | ids] = args
+
     Enum.reduce(ids, session, fn item_id, session ->
-      with {item_id, _} <- Integer.parse(item_id),
-           {:ok, _meta} <- Metadata.Items.lookup(item_id) do
-        add_item(character, item_id, session)
-      else
-        _ ->
-          push_notice(session, character, "Invalid Item: #{item_id}")
+      case Storage.get(:item, item_id) do
+        nil -> push_notice(session, character, "Invalid Item: #{item_id}")
+        _metadata -> add_item(character, item_id, rarity, session)
       end
     end)
   end
@@ -56,7 +57,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
-         {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
+         {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
       npc = Map.merge(npc, %{boss?: true, respawnable?: false})
       Field.add_mob(character, npc)
       session
@@ -68,7 +69,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["mob", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
-         {:ok, npc} <- Metadata.Npcs.lookup(mob_id) do
+         {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
       npc = Map.merge(npc, %{respawnable?: false})
       Field.add_mob(character, npc)
       session
@@ -137,18 +138,16 @@ defmodule Ms2ex.Commands do
     push_notice(session, character, "Command not found")
   end
 
-  defp add_item(character, item_id, session) do
+  defp add_item(character, item_id, rarity, session) do
     flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-    item = Items.init(item_id, %{transfer_flags: flags})
 
-    case Inventory.add_item(character, item) do
-      {:ok, {_, item} = result} ->
-        session
-        |> push(Packets.InventoryItem.add_item(result))
-        |> push(Packets.InventoryItem.mark_item_new(item))
-
-      _ ->
-        session
+    with {item_id, _} <- Integer.parse(item_id),
+         {rarity, _} <- Integer.parse(rarity),
+         item = Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
+         {:ok, {_, item} = result} <- Inventory.add_item(character, item) do
+      session
+      |> push(Packets.InventoryItem.add_item(result))
+      |> push(Packets.InventoryItem.mark_item_new(item))
     end
   end
 end

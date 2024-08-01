@@ -1,16 +1,16 @@
 defmodule Ms2ex.Items do
-  alias Ms2ex.{Item, Items, Metadata}
+  alias Ms2ex.{Item, Items, Storage}
 
   def init(id, attrs \\ %{}) do
     %Item{item_id: id}
     |> Map.merge(attrs)
-    |> Metadata.Items.load()
+    |> load_metadata()
     |> set_stats()
     |> set_level()
   end
 
   def set_level(%Item{metadata: metadata} = item) do
-    Map.put(item, :level, metadata.limits.level_limit_min)
+    Map.put(item, :level, metadata.limit.level)
   end
 
   def set_stats(%Item{} = item) do
@@ -90,16 +90,21 @@ defmodule Ms2ex.Items do
 
   @accessory_slots [:FH, :EA, :PD, :BE, :RI]
   def accessory?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @accessory_slots))
+    Enum.any?(item.metadata.slots, &(&1 in @accessory_slots))
   end
 
   @armor_slots [:CP, :CL, :GL, :SH, :MT]
   def armor?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @armor_slots))
+    Enum.any?(item.metadata.slots, &(&1 in @armor_slots))
   end
 
   @weapon_slots [:LH, :RH, :OH]
   def weapon?(%Item{} = item) do
-    !!Enum.find(item.metadata.slots, &(&1 in @weapon_slots))
+    Enum.any?(item.metadata.slots, &(&1 in @weapon_slots))
+  end
+
+  def load_metadata(%Item{item_id: id} = item) do
+    meta = Storage.Items.get_meta(id)
+    Map.put(item, :metadata, meta)
   end
 end

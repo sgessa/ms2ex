@@ -1,6 +1,5 @@
 defmodule Ms2ex.MapBlock do
-  alias Ms2ex.Metadata
-  alias Metadata.Coord
+  alias Ms2ex.Structs.Coord
 
   @block_size 150
   def block_size(), do: @block_size
@@ -12,15 +11,17 @@ defmodule Ms2ex.MapBlock do
     %Coord{x: x, y: y, z: z}
   end
 
-  def exists?(field_id, block) do
-    map = Metadata.Maps.lookup(field_id)
+  # TODO delete me
+  # Maybe not necessary
+  # def exists?(field_id, block) do
+  #   map = Metadata.get(Metadata.Map, field_id)
 
-    if Enum.find(map.blocks, &(block == &1)) do
-      true
-    else
-      false
-    end
-  end
+  #   Metadata.MapEntity
+  #   |> Metadata.filter("#{map.x_block}_*")
+  #   |> IO.inspect(label: "BLOCKS FOR #{map.x_block}")
+  #   |> Enum.any?(&(Map.get(&1.block, :position) == Map.from_struct(block)))
+  #   |> IO.inspect(label: "Exists?")
+  # end
 
   def length(%Coord{x: x, y: y, z: z}) do
     :math.sqrt(x * x + y * y + z * z)
@@ -39,6 +40,6 @@ defmodule Ms2ex.MapBlock do
   end
 
   def to_float(%{x: x, y: y, z: z}) do
-    Coord.new(x: x + 0.0, y: y + 0.0, z: z + 0.0)
+    %Coord{x: x + 0.0, y: y + 0.0, z: z + 0.0}
   end
 end

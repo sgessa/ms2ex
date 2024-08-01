@@ -8,7 +8,8 @@ defmodule Ms2ex.FieldHelper do
     Inventory,
     Items,
     MapBlock,
-    Metadata,
+    Storage,
+    ProtoMetadata,
     Mob,
     Packets,
     Wallets
@@ -131,7 +132,7 @@ defmodule Ms2ex.FieldHelper do
         CharacterManager.increase_stat(character, :sta, item.amount)
 
       true ->
-        item = Metadata.Items.load(item)
+        item = Items.load_metadata(item)
 
         with {:ok, result} <- Inventory.add_item(character, item) do
           {_status, item} = result
@@ -178,27 +179,27 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(%Metadata.Npc{} = npc, position, state) do
+  def add_mob(%{type: :npc} = npc, position, state) do
     mob = Mob.build(state, npc, position)
     {:ok, _pid} = Mob.start(mob)
     %{state | counter: state.counter + 1}
   end
 
-  def add_mob(%Metadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
-    case Metadata.Npcs.lookup(mob.id) do
+  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
+    case ProtoMetadata.Npcs.lookup(mob.id) do
       {:ok, npc} -> add_mob(spawn_group, npc, state)
       _ -> state
     end
   end
 
-  def add_mob(%Metadata.MobSpawn{} = spawn_group, %Metadata.Npc{} = npc, state) do
+  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %ProtoMetadata.Npc{} = npc, state) do
     population = state.mobs[spawn_group.id] || []
     group_spawn_count = npc.basic.group_spawn_count
 
     if length(population) + group_spawn_count > spawn_group.data.max_population do
       state
     else
-      spawn_points = Metadata.MobSpawn.select_points(spawn_group.spawn_radius)
+      spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
       spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
       spawn_position = MapBlock.add(spawn_group.position, spawn_point)
 
@@ -218,67 +219,65 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_001
   def initialize_state(field_id, channel_id) do
-    {:ok, map} = Metadata.MapEntities.lookup(field_id)
+    # load_mobs(map)
 
-    load_mobs(map)
-
-    {counter, npcs} = load_npcs(map, @object_counter)
-    {counter, portals} = load_portals(map, counter)
-    {counter, interactable} = load_interactable(map, counter)
+    {_counter, npcs} = load_npcs(field_id, @object_counter)
+    # {counter, portals} = load_portals(map, counter)
+    # {counter, interactable} = load_interactable(map, counter)
 
     %{
       channel_id: channel_id,
-      counter: counter,
+      counter: @object_counter,
       field_id: field_id,
-      interactable: interactable,
+      interactable: %{},
       items: %{},
       mobs: %{},
       mounts: %{},
       npcs: npcs,
-      portals: portals,
+      portals: %{},
       sessions: %{},
       topic: "field:#{field_id}:channel:#{channel_id}"
     }
   end
 
-  defp load_npcs(map, counter) do
-    map.npcs
-    |> Enum.map(&Map.merge(Metadata.Npcs.get(&1.id), &1))
-    |> Enum.filter(&(&1.friendly == 2))
+  defp load_npcs(field_id, counter) do
+    field_id
+    |> Storage.Maps.get_npcs()
+    |> Enum.filter(&(&1.metadata.basic.friendly > 0))
     |> Enum.map(&Map.put(&1, :spawn, &1.position))
     |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
-      npc = Map.put(npc, :direction, npc.rotation.z * 10)
+      npc = Map.put(npc, :direction, trunc(npc.rotation.z * 10))
       npc = Map.put(npc, :object_id, counter)
 
       {counter + 1, Map.put(npcs, npc.id, npc)}
     end)
   end
 
-  defp load_mobs(map) do
-    map.mob_spawns
-    |> Enum.filter(& &1.data)
-    |> Enum.each(&spawn_mob_group(&1))
-  end
+  # defp load_mobs(map) do
+  #   map.mob_spawns
+  #   |> Enum.filter(& &1.data)
+  #   |> Enum.each(&spawn_mob_group(&1))
+  # end
 
-  defp spawn_mob_group(%{data: data} = spawn_group) do
-    mobs = Metadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
-    Enum.each(mobs, &send(self(), {:add_mob, spawn_group, &1}))
-  end
+  # defp spawn_mob_group(%{data: data} = spawn_group) do
+  #   mobs = ProtoMetadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
+  #   Enum.each(mobs, &send(self(), {:add_mob, spawn_group, &1}))
+  # end
 
-  defp load_portals(map, counter) do
-    Enum.reduce(map.portals, {counter, %{}}, fn portal, {counter, portals} ->
-      portal = Map.put(portal, :object_id, counter)
-      {counter + 1, Map.put(portals, portal.id, portal)}
-    end)
-  end
+  # defp load_portals(map, counter) do
+  #   Enum.reduce(map.portals, {counter, %{}}, fn portal, {counter, portals} ->
+  #     portal = Map.put(portal, :object_id, counter)
+  #     {counter + 1, Map.put(portals, portal.id, portal)}
+  #   end)
+  # end
 
-  defp load_interactable(map, counter) do
-    # TODO group these objects by their correct packet type
-    Enum.reduce(map.interactable_objects, {counter, %{}}, fn object, {counter, objects} ->
-      object = Map.put(object, :object_id, counter)
-      {counter + 1, Map.put(objects, object.uuid, object)}
-    end)
-  end
+  # defp load_interactable(map, counter) do
+  #   # TODO group these objects by their correct packet type
+  #   Enum.reduce(map.interactable_objects, {counter, %{}}, fn object, {counter, objects} ->
+  #     object = Map.put(object, :object_id, counter)
+  #     {counter + 1, Map.put(objects, object.uuid, object)}
+  #   end)
+  # end
 
   defp maybe_teleport_character(%{update_position: coord} = character) do
     character = Map.delete(character, :update_position)

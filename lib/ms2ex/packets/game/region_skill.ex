@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.RegionSkill do
-  alias Ms2ex.{MapBlock, Metadata, Packets, SkillCast}
+  alias Ms2ex.{MapBlock, ProtoMetadata, Packets, SkillCast}
 
   import Packets.PacketWriter
 
@@ -10,7 +10,7 @@ defmodule Ms2ex.Packets.RegionSkill do
     moves =
       if length(magic_path.moves) > 0,
         do: magic_path.moves,
-        else: [%Metadata.MagicPathMove{}]
+        else: [%ProtoMetadata.MagicPathMove{}]
 
     __MODULE__
     |> build()

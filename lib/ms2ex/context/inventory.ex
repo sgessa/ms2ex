@@ -91,10 +91,13 @@ defmodule Ms2ex.Inventory do
   end
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
-    rarity = attrs.rarity || meta.rarity
-    slot = find_first_available_slot(character.id, meta.tab)
+    # TODO: fetch item rarities (probably in table > individualItemDrop.xml)
+    #  rarity = attrs.rarity || meta.rarity
 
-    attrs = %{attrs | inventory_tab: meta.tab, rarity: rarity, inventory_slot: slot}
+    rarity = attrs.rarity || 1
+    slot = find_first_available_slot(character.id, meta.property.type)
+
+    attrs = %{attrs | inventory_tab: meta.property.type, rarity: rarity, inventory_slot: slot}
     attrs = Map.from_struct(attrs)
 
     changeset =

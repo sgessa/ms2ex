@@ -1,5 +1,5 @@
 defmodule Ms2ex.Experience do
-  alias Ms2ex.{Character, Characters, Metadata.ExpTable}
+  alias Ms2ex.{Character, Characters, ProtoMetadata.ExpTable}
 
   @max_level Character.max_level()
   def maybe_add_exp(%Character{level: lvl} = char, _exp) when lvl >= @max_level do

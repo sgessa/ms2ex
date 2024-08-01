@@ -5,9 +5,9 @@ defmodule Ms2ex.MixProject do
     [
       app: :ms2ex,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -37,6 +37,7 @@ defmodule Ms2ex.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.9"},
       {:postgrex, "~> 0.16"},
+      {:redix, "~> 1.1"},
       {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},

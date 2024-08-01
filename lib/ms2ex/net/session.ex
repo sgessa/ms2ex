@@ -15,10 +15,6 @@ defmodule Ms2ex.Net.Session do
   import Ms2ex.Net.Utils
 
   @behaviour :ranch_protocol
-  @conf Application.compile_env(:ms2ex, Ms2ex)
-  @skip_packet_logs @conf[:skip_packet_logs] || []
-  @version @conf[:version] || 12
-  @block_iv @conf[:initial_block_iv] || @version
 
   defstruct [
     :account,
@@ -79,8 +75,8 @@ defmodule Ms2ex.Net.Session do
     recv_iv = Cipher.iv_to_int(Cipher.generate_iv())
     send_iv = Cipher.iv_to_int(Cipher.generate_iv())
 
-    recv_cipher = RecvCipher.build(@version, recv_iv, @block_iv)
-    send_cipher = SendCipher.build(@version, send_iv, @block_iv)
+    recv_cipher = RecvCipher.build(conf()[:version], recv_iv, conf()[:block_iv])
+    send_cipher = SendCipher.build(conf()[:version], send_iv, conf()[:block_iv])
 
     sender_pid = SenderSession.start_link(socket, transport, send_cipher, self())
 
@@ -141,7 +137,7 @@ defmodule Ms2ex.Net.Session do
       {:EXIT, _responder_pid, :normal} -> :ok
     end
 
-    L.warn("Closing socket!!")
+    L.warning("Closing socket!!")
 
     :ok = transport.close(socket)
   end
@@ -201,7 +197,7 @@ defmodule Ms2ex.Net.Session do
   defp log_incoming_packet(opcode, packet) do
     name = Packets.opcode_to_name(:recv, opcode)
 
-    unless name in @skip_packet_logs do
+    unless name in conf()[:skip_packet_logs] do
       L.debug("[RECV] #{name}: #{stringify_packet(packet)}")
     end
   end
