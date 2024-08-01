@@ -113,8 +113,8 @@ defmodule Ms2ex.Net.SenderSession do
     {:noreply, state}
   end
 
-  def handle_info({:summon, character, field_id}, state) do
-    {:noreply, Ms2ex.Field.change_field(character, field_id), state}
+  def handle_info({:summon, character, map_id}, state) do
+    {:noreply, Ms2ex.Field.change_field(character, map_id), state}
   end
 
   def handle_info({:disband_party, character}, state) do

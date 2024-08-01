@@ -14,7 +14,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
     {coord, _packet} = get_sbyte_coord(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, map} <- ProtoMetadata.MapEntities.lookup(character.field_id),
+         {:ok, map} <- ProtoMetadata.MapEntities.lookup(character.map_id),
          {:ok, object} <- find_object(map, coord) do
       Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
       push(session, Packets.ResponseCube.pickup(character, object.weapon_id, coord))

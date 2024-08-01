@@ -13,8 +13,8 @@ defmodule Ms2ex.MapBlock do
 
   # TODO delete me
   # Maybe not necessary
-  # def exists?(field_id, block) do
-  #   map = Metadata.get(Metadata.Map, field_id)
+  # def exists?(map_id, block) do
+  #   map = Metadata.get(Metadata.Map, map_id)
 
   #   Metadata.MapEntity
   #   |> Metadata.filter("#{map.x_block}_*")

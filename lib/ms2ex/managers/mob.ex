@@ -34,7 +34,7 @@ defmodule Ms2ex.Mob do
       dead_animation_duration: trunc(npc.dead.time + 3) * 1000,
       direction: npc.rotation.z * 10,
       exp: npc.exp,
-      field: Field.field_name(field.field_id, field.channel_id),
+      field: Field.field_name(field.map_id, field.channel_id),
       id: npc.id,
       model: npc.metadata.model,
       object_id: field.counter,
@@ -157,7 +157,7 @@ defmodule Ms2ex.Mob do
   end
 
   defp process_name(%Character{} = char, object_id) do
-    field_name = Field.field_name(char.field_id, char.channel_id)
+    field_name = Field.field_name(char.map_id, char.channel_id)
     :"#{field_name}:mob:#{object_id}"
   end
 end
