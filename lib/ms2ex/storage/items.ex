@@ -7,7 +7,7 @@ defmodule Ms2ex.Storage.Items do
   end
 
   defp load_slots(%{slot_names: slots} = metadata) do
-    slots = Enum.map(slots, &Enums.EquipSlot.get_value(&1))
+    slots = Enum.map(slots, &Enums.EquipSlot.get_key(&1))
     Map.put(metadata, :slots, slots)
   end
 end
