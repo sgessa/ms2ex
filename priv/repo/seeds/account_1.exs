@@ -34,7 +34,7 @@ staff = Items.init(15260305, %{enchants: 12, rarity: 6})
   Characters.create(account, %{
     name: "steve1337",
     level: 70,
-    field_id: 2_000_023,
+    map_id: 2_000_023,
     title_id: 10000503,
     insignia_id: 33,
     job: :wizard,

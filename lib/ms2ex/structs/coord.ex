@@ -3,5 +3,5 @@ defmodule Ms2ex.Structs.Coord do
 end
 
 defmodule Ms2ex.Structs.CoordF do
-  defstruct x: 0.0, y: 0.00, z: 0.0
+  defstruct x: 0.0, y: 0.0, z: 0.0
 end

@@ -76,7 +76,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     attrs = %{
       gender: gender,
       job: ProtoMetadata.Job.key(job),
-      field_id: 2_000_023,
+      map_id: 2_000_023,
       name: name,
       skin_color: skin_color
     }
