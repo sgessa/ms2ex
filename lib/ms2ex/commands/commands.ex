@@ -26,12 +26,9 @@ defmodule Ms2ex.Commands do
     [rarity | ids] = args
 
     Enum.reduce(ids, session, fn item_id, session ->
-      with {item_id, _} <- Integer.parse(item_id),
-           meta when not is_nil(meta) <- Storage.get(:item, item_id) do
-        add_item(character, item_id, rarity, session)
-      else
-        _ ->
-          push_notice(session, character, "Invalid Item: #{item_id}")
+      case Storage.get(:item, item_id) do
+        nil -> push_notice(session, character, "Invalid Item: #{item_id}")
+        _metadata -> add_item(character, item_id, rarity, session)
       end
     end)
   end
@@ -144,7 +141,8 @@ defmodule Ms2ex.Commands do
   defp add_item(character, item_id, rarity, session) do
     flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
 
-    with {rarity, _} <- Integer.parse(rarity),
+    with {item_id, _} <- Integer.parse(item_id),
+         {rarity, _} <- Integer.parse(rarity),
          item = Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
          {:ok, {_, item} = result} <- Inventory.add_item(character, item) do
       session

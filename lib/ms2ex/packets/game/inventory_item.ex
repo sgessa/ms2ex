@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Enums, Hair, Inventory, Items, ProtoMetadata}
+  alias Ms2ex.{Enums, Hair, Inventory, Items}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -127,7 +127,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
-    |> put_int(ProtoMetadata.Items.InventoryTab.value(tab_id))
+    |> put_int(Enums.InventoryTab.get_value(tab_id))
     |> put_short(length(items))
     |> reduce(items, fn item, packet ->
       packet
@@ -149,7 +149,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_tab)
-    |> put_byte(ProtoMetadata.Items.InventoryTab.value(tab_id))
+    |> put_byte(Enums.InventoryTab.get_value(tab_id))
     |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
   end
 
@@ -157,7 +157,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     __MODULE__
     |> build()
     |> put_byte(@modes.reset_tab)
-    |> put_int(ProtoMetadata.Items.InventoryTab.value(tab_id))
+    |> put_int(Enums.InventoryTab.get_value(tab_id))
   end
 
   defp put_appearance(packet, item) do

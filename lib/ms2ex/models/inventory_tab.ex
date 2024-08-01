@@ -3,10 +3,12 @@ defmodule Ms2ex.Inventory.Tab do
 
   import Ecto.Changeset
 
-  @inventory_tabs Map.to_list(Ms2ex.ProtoMetadata.Items.InventoryTab.mapping())
+  alias Ms2ex.{Character, Enums}
+
+  @inventory_tabs Map.to_list(Enums.InventoryTab.mapping())
 
   schema "inventory_tabs" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Character
 
     field :slots, :integer
     field :tab, Ecto.Enum, values: @inventory_tabs
@@ -36,8 +38,7 @@ defmodule Ms2ex.Inventory.Tab do
   defp ensure_slots(inventory_tab), do: inventory_tab
 
   def default_slots() do
-    Ms2ex.ProtoMetadata.Items.InventoryTab.mapping()
-    |> Map.keys()
+    Enums.InventoryTab.keys()
     |> Enum.into(%{}, &{&1, 48})
     |> Map.put(:outfit, 150)
     |> Map.put(:life_skill, 126)

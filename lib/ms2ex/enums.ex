@@ -13,11 +13,11 @@ defmodule Ms2ex.Enums do
         |> Map.get(value)
       end
 
-      def values(module) do
+      def values do
         Map.values(@mapping)
       end
 
-      def keys(module) do
+      def keys do
         Map.keys(@mapping)
       end
     end
