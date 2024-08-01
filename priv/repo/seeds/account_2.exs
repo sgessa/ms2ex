@@ -38,7 +38,7 @@ dagger = Items.init(13_160_311, %{enchants: 12, rarity: 5})
   Characters.create(account, %{
     name: "icra1337",
     level: 70,
-    field_id: 2_000_023,
+    map_id: 2_000_023,
     job: :thief,
     skin_color: skin_color
   })

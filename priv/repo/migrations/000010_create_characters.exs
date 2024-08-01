@@ -12,7 +12,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacters do
       add :insignia_id, :integer, null: false
       add :level, :integer, null: false
       add :job, :integer, null: false
-      add :field_id, :integer, null: false
+      add :map_id, :integer, null: false
       add :motto, :string, null: false
       add :name, :citext, null: false
       add :prestige_exp, :bigint
