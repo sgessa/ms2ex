@@ -2,10 +2,6 @@ defmodule Ms2ex.Items.StaticStats do
   alias Ms2ex.{Item, Items, Enums}
   alias Ms2ex.Storage
 
-  def get(_item, _option_id, level_factor) when level_factor < 50 do
-    %{}
-  end
-
   def get(%Item{} = item, option_id, level_factor) do
     static_id = item.metadata.option.static_id
     options = Storage.Tables.ItemOptions.find_static(static_id, item.rarity)
@@ -27,6 +23,7 @@ defmodule Ms2ex.Items.StaticStats do
       |> Enum.take_random(pick_count)
       |> Enum.map(&{&1.attribute, &1})
       |> Map.new()
+      |> IO.inspect(label: "DA STAT")
 
     get_default(item, static_stats, option_id, level_factor)
   end
