@@ -6,12 +6,12 @@ defmodule Ms2ex.Items.RandomStats do
     random_id = item.metadata.option.random_id
     options = Storage.Tables.ItemOptions.find_random(random_id, item.rarity)
 
-    get_stats(item, options)
+    get_random_stats(item, options)
   end
 
-  defp get_stats(_item, nil), do: %{}
+  defp get_random_stats(_item, nil), do: %{}
 
-  defp get_stats(_item, random_options) do
+  defp get_random_stats(_item, random_options) do
     %{num_pick: picks, entries: entries} = random_options
 
     pick_count = Enum.random(picks.min..picks.max)
