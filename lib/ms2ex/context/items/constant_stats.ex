@@ -61,17 +61,17 @@ defmodule Ms2ex.Items.ConstantStats do
       end
 
     Enum.reduce(base_options.constant_value, constant_stats, fn {stat, _v} = pick, acc ->
-      calc_script = get_calc_script(stat)
+      const_value = get_constant_value(stat)
 
-      if calc_script do
-        process_stat(item, acc, pick, calc_script, level_factor, script)
+      if const_value do
+        process_stat(item, acc, pick, const_value, level_factor, script)
       else
         acc
       end
     end)
   end
 
-  defp process_stat(item, constant_stats, {p_stat, p_value}, calc_script, level_factor, script) do
+  defp process_stat(item, constant_stats, {p_stat, p_value}, const_value, level_factor, script) do
     constant_stats =
       if constant_stats[p_stat] do
         constant_stats
@@ -83,7 +83,7 @@ defmodule Ms2ex.Items.ConstantStats do
     basic_stat = constant_stats[p_stat]
 
     {:ok, [result]} =
-      :luaport.call(script, String.to_atom(calc_script), [
+      :luaport.call(script, String.to_atom(const_value), [
         basic_stat.value,
         p_value,
         Items.Type.value(Items.type(item)),
@@ -106,20 +106,20 @@ defmodule Ms2ex.Items.ConstantStats do
     Map.put(constant_stats, p_stat, basic_stat)
   end
 
-  defp get_calc_script(stat) do
+  defp get_constant_value(stat) do
     case stat do
-      :hp -> "constant_value_hp"
+      :health -> "constant_value_hp"
       :defense -> "constant_value_ndd"
-      :magic_res -> "constant_value_mar"
+      :magical_res -> "constant_value_mar"
       :physical_res -> "constant_value_par"
-      :crit_rate -> "constant_value_cap"
-      :str -> "constant_value_str"
-      :dex -> "constant_value_dex"
-      :int -> "constant_value_int"
-      :luk -> "constant_value_luk"
-      :magic_attk -> "constant_value_map"
-      :min_weapon_attk -> "constant_value_wapmin"
-      :max_weapon_attk -> "constant_value_wapmax"
+      :critical_rate -> "constant_value_cap"
+      :strength -> "constant_value_str"
+      :dexterity -> "constant_value_dex"
+      :intelligence -> "constant_value_int"
+      :luck -> "constant_value_luk"
+      :magical_atk -> "constant_value_map"
+      :min_weapon_atk -> "constant_value_wapmin"
+      :max_weapon_atk -> "constant_value_wapmax"
       _ -> nil
     end
   end

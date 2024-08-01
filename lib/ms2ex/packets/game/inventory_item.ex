@@ -92,7 +92,8 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_bool(item.is_locked)
     |> put_time(item.unlocks_at)
     |> put_short(item.glamor_forges_left)
-    |> put_byte()
+    |> put_bool(false)
+    # TODO gacha dismantle id
     |> put_int()
     |> put_appearance(item)
     |> put_item_stats(item)

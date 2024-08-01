@@ -112,14 +112,13 @@ defmodule Ms2ex.Items.StaticStats do
 
   defp get_calc_script(stat) do
     case stat do
-      :hp -> "static_value_hp"
+      :health -> "static_value_hp"
       :defense -> "static_value_ndd"
-      :magic_res -> "static_value_mar"
+      :magical_res -> "static_value_mar"
       :physical_res -> "static_value_par"
-      :physical_attk -> "static_value_pap"
-      :magic_attk -> "static_value_map"
-      :perfect_guard -> "static_rate_abp"
-      :max_weapon_attk -> "static_value_wapmax"
+      :physical_atk -> "static_value_pap"
+      :magical_attk -> "static_value_map"
+      :max_weapon_atk -> "static_value_wapmax"
       _ -> nil
     end
   end
