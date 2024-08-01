@@ -18,9 +18,7 @@ defmodule Ms2ex.MapBlock do
 
   #   Metadata.MapEntity
   #   |> Metadata.filter("#{map.x_block}_*")
-  #   |> IO.inspect(label: "BLOCKS FOR #{map.x_block}")
   #   |> Enum.any?(&(Map.get(&1.block, :position) == Map.from_struct(block)))
-  #   |> IO.inspect(label: "Exists?")
   # end
 
   def length(%Coord{x: x, y: y, z: z}) do

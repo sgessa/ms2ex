@@ -23,7 +23,6 @@ defmodule Ms2ex.Items.StaticStats do
       |> Enum.take_random(pick_count)
       |> Enum.map(&{&1.attribute, &1})
       |> Map.new()
-      |> IO.inspect(label: "DA STAT")
 
     get_default(item, static_stats, option_id, level_factor)
   end
