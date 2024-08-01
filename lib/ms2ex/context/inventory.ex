@@ -91,9 +91,6 @@ defmodule Ms2ex.Inventory do
   end
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
-    # TODO: fetch item rarities (probably in table > individualItemDrop.xml)
-    #  rarity = attrs.rarity || meta.rarity
-
     rarity = attrs.rarity || 1
     slot = find_first_available_slot(character.id, meta.property.type)
 
