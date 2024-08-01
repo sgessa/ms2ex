@@ -246,7 +246,7 @@ defmodule Ms2ex.FieldHelper do
     |> Enum.filter(&(&1.metadata.basic.friendly > 0))
     |> Enum.map(&Map.put(&1, :spawn, &1.position))
     |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
-      npc = Map.put(npc, :direction, npc.rotation.z * 10)
+      npc = Map.put(npc, :direction, trunc(npc.rotation.z * 10))
       npc = Map.put(npc, :object_id, counter)
 
       {counter + 1, Map.put(npcs, npc.id, npc)}

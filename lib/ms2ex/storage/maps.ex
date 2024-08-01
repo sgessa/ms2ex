@@ -45,7 +45,7 @@ defmodule Ms2ex.Storage.Maps do
             |> Map.put_new(:rotation, %Structs.Coord{})
 
           npc
-          |> Map.put(:animation, "123")
+          |> Map.put(:animation, 123)
         end)
       end)
     end)
