@@ -246,7 +246,7 @@ defmodule Ms2ex.FieldHelper do
     |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
       npc =
         npc
-        |> Map.put(:current_animation, npc[:animation][:id] || 255)
+        |> Map.put(:current_animation, get_in(npc, [:animation, :id]) || 255)
         |> Map.put(:position, npc.spawn.position)
         |> Map.put(:rotation, npc.spawn.rotation)
         |> Map.put(:direction, trunc(npc.spawn.rotation.z * 10))
