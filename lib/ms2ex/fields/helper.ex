@@ -221,20 +221,20 @@ defmodule Ms2ex.FieldHelper do
   def initialize_state(field_id, channel_id) do
     # load_mobs(map)
 
-    {_counter, npcs} = load_npcs(field_id, @object_counter)
-    # {counter, portals} = load_portals(map, counter)
+    {counter, npcs} = load_npcs(field_id, @object_counter)
+    {counter, portals} = load_portals(field_id, counter)
     # {counter, interactable} = load_interactable(map, counter)
 
     %{
       channel_id: channel_id,
-      counter: @object_counter,
+      counter: counter,
       field_id: field_id,
       interactable: %{},
       items: %{},
       mobs: %{},
       mounts: %{},
       npcs: npcs,
-      portals: %{},
+      portals: portals,
       sessions: %{},
       topic: "field:#{field_id}:channel:#{channel_id}"
     }
@@ -256,6 +256,15 @@ defmodule Ms2ex.FieldHelper do
     end)
   end
 
+  defp load_portals(field_id, counter) do
+    field_id
+    |> Storage.Maps.get_portals()
+    |> Enum.reduce({counter, %{}}, fn portal, {counter, portals} ->
+      portal = Map.put(portal, :object_id, counter)
+      {counter + 1, Map.put(portals, portal.id, portal)}
+    end)
+  end
+
   # defp load_mobs(map) do
   #   map.mob_spawns
   #   |> Enum.filter(& &1.data)
@@ -265,13 +274,6 @@ defmodule Ms2ex.FieldHelper do
   # defp spawn_mob_group(%{data: data} = spawn_group) do
   #   mobs = ProtoMetadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
   #   Enum.each(mobs, &send(self(), {:add_mob, spawn_group, &1}))
-  # end
-
-  # defp load_portals(map, counter) do
-  #   Enum.reduce(map.portals, {counter, %{}}, fn portal, {counter, portals} ->
-  #     portal = Map.put(portal, :object_id, counter)
-  #     {counter + 1, Map.put(portals, portal.id, portal)}
-  #   end)
   # end
 
   # defp load_interactable(map, counter) do

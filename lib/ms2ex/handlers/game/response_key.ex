@@ -16,8 +16,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     Storage
   }
 
-  alias Ms2ex.Structs.Coord
-
   import Net.SenderSession, only: [push: 2, run: 2]
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Session, only: [init_character: 1]
@@ -109,11 +107,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   defp set_spawn_position(character) do
     spawn_point = Storage.Maps.get_spawn(character.field_id)
-
-    spawn_point = %{
-      position: struct(Coord, Map.get(spawn_point, :position, %{})),
-      rotation: struct(Coord, Map.get(spawn_point, :rotation, %{}))
-    }
 
     %{
       character

@@ -4,10 +4,10 @@ defmodule Ms2ex.Field do
     Characters,
     CharacterManager,
     FieldServer,
-    ProtoMetadata,
     Mob,
     Net,
-    Packets
+    Packets,
+    Storage
   }
 
   alias Phoenix.PubSub
@@ -87,24 +87,23 @@ defmodule Ms2ex.Field do
   end
 
   def change_field(character, field_id) do
-    with {:ok, map} <- ProtoMetadata.MapEntities.lookup(field_id) do
-      spawn = List.first(map.character_spawns)
-      change_field(character, field_id, spawn.coord, spawn.rotation)
+    with %{} = spawn_point <- Storage.Maps.get_spawn(field_id) do
+      change_field(character, field_id, spawn_point.position, spawn_point.rotation)
     end
   end
 
-  def change_field(character, field_id, coord, rotation) do
+  def change_field(character, field_id, position, rotation) do
     with :ok <- leave(character) do
       character =
         character
         |> Characters.maybe_discover_map(field_id)
-        |> Map.put(:change_map, %{id: field_id, position: coord, rotation: rotation})
+        |> Map.put(:change_map, %{id: field_id, position: position, rotation: rotation})
 
       CharacterManager.update(character)
 
       Net.SenderSession.push(
         character,
-        Packets.RequestFieldEnter.bytes(field_id, coord, rotation)
+        Packets.RequestFieldEnter.bytes(field_id, position, rotation)
       )
     end
   end
