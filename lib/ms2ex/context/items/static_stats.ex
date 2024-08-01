@@ -72,7 +72,7 @@ defmodule Ms2ex.Items.StaticStats do
 
   defp set_stats(static_stats, item, options, level_factor, script) do
     Enum.reduce(options, static_stats, fn {p_name, _val} = pick, acc ->
-      calc_script = get_calc_script(p_name)
+      calc_script = get_static_value(p_name)
 
       if calc_script do
         set_stat(item, acc, pick, calc_script, level_factor, script)
@@ -110,7 +110,7 @@ defmodule Ms2ex.Items.StaticStats do
     Map.put(static_stats, p_name, basic_stat)
   end
 
-  defp get_calc_script(stat) do
+  defp get_static_value(stat) do
     case stat do
       :health -> "static_value_hp"
       :defense -> "static_value_ndd"
@@ -119,6 +119,7 @@ defmodule Ms2ex.Items.StaticStats do
       :physical_atk -> "static_value_pap"
       :magical_attk -> "static_value_map"
       :max_weapon_atk -> "static_value_wapmax"
+      # :perfect_guard -> "static_rate_abp"
       _ -> nil
     end
   end
