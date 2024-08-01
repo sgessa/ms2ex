@@ -1,5 +1,5 @@
 defmodule Ms2ex.MapBlock do
-  alias Ms2ex.Structs.Coord
+  alias Ms2ex.Types.Coord
 
   @block_size 150
   def block_size(), do: @block_size

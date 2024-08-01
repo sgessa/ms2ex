@@ -1,6 +1,6 @@
 defmodule Ms2ex.Storage.Maps do
   alias Ms2ex.Storage
-  alias Ms2ex.Structs.Coord
+  alias Ms2ex.Types.Coord
 
   def get_bounds(map_id) do
     map_id
