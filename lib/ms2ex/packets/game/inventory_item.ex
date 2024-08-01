@@ -177,11 +177,11 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   defp put_item_stats(packet, item) do
     constant_basic_stats = Enum.filter(item.stats.constants, &(elem(&1, 1).class == :basic))
-    constant_special_stats = Enum.filter(item.stats.constants, &(elem(&1, 1) == :special))
-    static_basic_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :basic))
-    static_special_stats = Enum.filter(item.stats.statics, &(elem(&1, 1) == :special))
-    random_basic_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1) == :basic))
-    random_special_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1) == :special))
+    constant_special_stats = Enum.filter(item.stats.constants, &(elem(&1, 1).class == :special))
+    static_basic_stats = Enum.filter(item.stats.statics, &(elem(&1, 1).class == :basic))
+    static_special_stats = Enum.filter(item.stats.statics, &(elem(&1, 1).class == :special))
+    random_basic_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1).class == :basic))
+    random_special_stats = Enum.filter(item.stats.randoms, &(elem(&1, 1).class == :special))
 
     packet
     |> put_byte()
