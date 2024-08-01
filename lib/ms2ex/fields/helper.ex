@@ -243,11 +243,14 @@ defmodule Ms2ex.FieldHelper do
   defp load_npcs(field_id, counter) do
     field_id
     |> Storage.Maps.get_npcs()
-    |> Enum.filter(&(&1.metadata.basic.friendly > 0))
-    |> Enum.map(&Map.put(&1, :spawn, &1.position))
     |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
-      npc = Map.put(npc, :direction, trunc(npc.rotation.z * 10))
-      npc = Map.put(npc, :object_id, counter)
+      npc =
+        npc
+        |> Map.put(:current_animation, npc[:animation][:id] || 255)
+        |> Map.put(:position, npc.spawn.position)
+        |> Map.put(:rotation, npc.spawn.rotation)
+        |> Map.put(:direction, trunc(npc.spawn.rotation.z * 10))
+        |> Map.put(:object_id, counter)
 
       {counter + 1, Map.put(npcs, npc.id, npc)}
     end)
