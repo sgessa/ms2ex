@@ -7,7 +7,6 @@ defmodule Ms2ex.FieldHelper do
     Field,
     Mob,
     Packets,
-    ProtoMetadata,
     Schema,
     Storage
   }
@@ -174,37 +173,10 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(%{type: :npc} = npc, position, state) do
-    mob = Mob.build(state, npc, position)
+  def add_mob(%{type: :npc} = npc, state) do
+    mob = Mob.build(state, npc)
     {:ok, _pid} = Mob.start(mob)
     %{state | counter: state.counter + 1}
-  end
-
-  def add_mob(%{} = spawn_group, %Mob{} = mob, state) do
-    case ProtoMetadata.Npcs.lookup(mob.id) do
-      {:ok, npc} -> add_mob(spawn_group, npc, state)
-      _ -> state
-    end
-  end
-
-  def add_mob(_spawn_group, _npc, state) do
-    # population = state.mobs[spawn_group.id] || []
-    # group_spawn_count = npc.basic.group_spawn_count
-
-    # if length(population) + group_spawn_count > spawn_group.data.max_population do
-    #   state
-    # else
-    #   spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
-    #   spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
-    #   spawn_position = Context.MapBlock.add(spawn_group.position, spawn_point)
-
-    #   mob = Mob.build(state, npc, spawn_position, spawn_group)
-    #   {:ok, _pid} = Mob.start(mob)
-
-    #   population = Map.put(state.mobs, spawn_group.id, [state.counter | population])
-    #   %{state | counter: state.counter + 1, mobs: population}
-    # end
-    state
   end
 
   def remove_mob(spawn_group_id, object_id, state) do
@@ -215,7 +187,7 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_001
   def initialize_state(map_id, channel_id) do
-    # load_mobs(map)
+    add_mob_groups(map_id)
 
     {counter, npcs} = load_npcs(map_id, @object_counter)
     {counter, portals} = load_portals(map_id, counter)
@@ -261,16 +233,11 @@ defmodule Ms2ex.FieldHelper do
     end)
   end
 
-  # defp load_mobs(map) do
-  #   map.mob_spawns
-  #   |> Enum.filter(& &1.data)
-  #   |> Enum.each(&spawn_mob_group(&1))
-  # end
-
-  # defp spawn_mob_group(%{data: data} = spawn_group) do
-  #   mobs = ProtoMetadata.MobSpawn.select_mobs(data.difficulty, data.min_difficulty, data.tags)
-  #   Enum.each(mobs, &send(self(), {:add_mob, spawn_group, &1}))
-  # end
+  defp add_mob_groups(map_id) do
+    map_id
+    |> Storage.Maps.get_npcs()
+    |> Enum.each(&send(self(), {:add_mob, &1}))
+  end
 
   # defp load_interactable(map, counter) do
   #   # TODO group these objects by their correct packet type

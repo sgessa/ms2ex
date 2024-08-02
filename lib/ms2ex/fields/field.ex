@@ -13,7 +13,7 @@ defmodule Ms2ex.Field do
   alias Phoenix.PubSub
 
   def add_mob_drop(%Mob{} = mob, item) do
-    cast(mob.field, {:add_mob_drop, mob, item})
+    cast(mob.map, {:add_mob_drop, mob, item})
   end
 
   def drop_item(%Schema.Character{} = character, item) do

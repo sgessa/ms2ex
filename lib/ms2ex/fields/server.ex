@@ -7,7 +7,6 @@ defmodule Ms2ex.FieldServer do
     CharacterManager,
     Field,
     FieldHelper,
-    ProtoMetadata,
     Mob,
     Schema,
     Packets,
@@ -102,19 +101,8 @@ defmodule Ms2ex.FieldServer do
     {:noreply, state}
   end
 
-  def handle_info({:add_mob, %{type: :npc} = npc, position}, state) do
-    {:noreply, add_mob(npc, position, state)}
-  end
-
-  def handle_info(
-        {:add_mob, %{} = spawn_group, %ProtoMetadata.Npc{} = npc},
-        state
-      ) do
-    {:noreply, add_mob(spawn_group, npc, state)}
-  end
-
-  def handle_info({:add_mob, %Mob{} = mob}, state) do
-    {:noreply, add_mob(mob.spawn_group, mob, state)}
+  def handle_info({:add_mob, %{type: :npc} = npc}, state) do
+    {:noreply, add_mob(npc, state)}
   end
 
   def handle_info({:remove_mob, spawn_group_id, object_id}, state) do

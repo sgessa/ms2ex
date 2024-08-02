@@ -1,48 +1,33 @@
 defmodule Ms2ex.Mob do
   use GenServer
 
-  alias Ms2ex.{Context, Field, Packets, Schema}
+  alias Ms2ex.{Context, Field, Packets, Schema, Types}
 
   defstruct [
     :animation,
-    :dead_animation_duration,
-    :direction,
-    :exp,
-    :field,
     :id,
     :last_attacker,
+    :map,
     :model,
     :object_id,
     :position,
-    :respawnable?,
     :rotation,
-    :spawn_group,
-    :speed,
     :stats,
     boss?: false
   ]
 
   @updates_intval 1_000
 
-  def build(field, npc, spawn_position, spawn_group \\ nil) do
-    # TODO get animation sequence from metadata
-
-    respawnable? = if Map.has_key?(npc, :respawnable?), do: npc.respawnable?, else: true
-
+  def build(field, npc) do
     %__MODULE__{
       animation: npc.animation || 255,
-      dead_animation_duration: trunc(npc.dead.time + 3) * 1000,
-      direction: npc.rotation.z * 10,
-      exp: npc.exp,
-      field: Field.field_name(field.map_id, field.channel_id),
       id: npc.id,
-      model: npc.metadata.model,
+      map: Field.field_name(field.map_id, field.channel_id),
+      model: npc.metadata.model.name,
       object_id: field.counter,
-      position: spawn_position,
-      respawnable?: respawnable?,
-      rotation: npc.rotation,
-      spawn_group: spawn_group,
-      stats: npc.stat.stats
+      position: npc.spawn.position,
+      rotation: struct(Types.Coord, %{z: npc.spawn.rotation.z * 10}),
+      stats: npc.metadata.stat.stats
     }
   end
 
@@ -55,14 +40,14 @@ defmodule Ms2ex.Mob do
   end
 
   def start(%__MODULE__{} = mob) do
-    GenServer.start(__MODULE__, {mob, self()}, name: :"#{mob.field}:mob:#{mob.object_id}")
+    GenServer.start(__MODULE__, {mob, self()}, name: :"#{mob.map}:mob:#{mob.object_id}")
   end
 
   def init({mob, field_pid}) do
     Process.monitor(field_pid)
 
-    Field.broadcast(mob.field, Packets.FieldAddNpc.add_mob(mob))
-    Field.broadcast(mob.field, Packets.ProxyGameObj.load_npc(mob))
+    Field.broadcast(mob.map, Packets.FieldAddNpc.add_mob(mob))
+    Field.broadcast(mob.map, Packets.ProxyGameObj.load_npc(mob))
 
     send(self(), :send_updates)
 
@@ -96,14 +81,14 @@ defmodule Ms2ex.Mob do
     Field.broadcast(mob.field, Packets.FieldRemoveNpc.bytes(mob.object_id))
     Field.broadcast(mob.field, Packets.ProxyGameObj.remove_npc(mob))
 
-    if mob.spawn_group do
-      send(mob.field, {:remove_mob, mob.spawn_group.id, mob.object_id})
-    end
+    # if mob.spawn_group do
+    #   send(mob.field, {:remove_mob, mob.spawn_group.id, mob.object_id})
+    # end
 
-    if mob.respawnable? do
-      respawn_time = mob.spawn_group.data.spawn_time * 1000
-      Process.send_after(mob.field, {:add_mob, mob}, respawn_time)
-    end
+    # if mob.respawnable? do
+    #   respawn_time = mob.spawn_group.data.spawn_time * 1000
+    #   Process.send_after(mob.field, {:add_mob, mob}, respawn_time)
+    # end
 
     {:stop, :normal, mob}
   end
@@ -120,7 +105,7 @@ defmodule Ms2ex.Mob do
   end
 
   defp kill_mob(mob) do
-    Process.send_after(self(), :stop, mob.dead_animation_duration)
+    Process.send_after(self(), :stop, :timer.seconds(5))
 
     Context.Mobs.drop_rewards(mob)
     Context.Mobs.reward_exp(mob)
@@ -153,7 +138,7 @@ defmodule Ms2ex.Mob do
   end
 
   defp process_name(%__MODULE__{} = mob) do
-    :"#{mob.field}:mob:#{mob.object_id}"
+    :"#{mob.map}:mob:#{mob.object_id}"
   end
 
   defp process_name(%Schema.Character{} = char, object_id) do
