@@ -107,7 +107,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_info(
-        {:add_mob, %ProtoMetadata.MobSpawn{} = spawn_group, %ProtoMetadata.Npc{} = npc},
+        {:add_mob, %{} = spawn_group, %ProtoMetadata.Npc{} = npc},
         state
       ) do
     {:noreply, add_mob(spawn_group, npc, state)}

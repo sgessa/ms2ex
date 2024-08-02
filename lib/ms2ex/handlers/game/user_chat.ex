@@ -7,8 +7,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
     Field,
     Net,
     Packets,
-    PartyServer,
-    World
+    PartyServer
   }
 
   import Packets.PacketReader
@@ -61,7 +60,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
     case Context.Wallets.update(character, :merets, @world_chat_cost) do
       {:ok, wallet} ->
-        World.broadcast(Packets.UserChat.bytes(:world, character, msg))
+        Context.World.broadcast(Packets.UserChat.bytes(:world, character, msg))
         push(session, Packets.Wallet.update(wallet, :merets))
 
       _ ->

@@ -1,4 +1,4 @@
-defmodule Ms2ex.Damage do
+defmodule Ms2ex.Context.Damage do
   alias Ms2ex.{Mob, Schema, SkillCast}
 
   def roll_crit(%Schema.Character{} = character) do

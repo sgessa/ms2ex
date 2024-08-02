@@ -1,4 +1,4 @@
-defmodule Ms2ex.MapBlock do
+defmodule Ms2ex.Context.MapBlock do
   alias Ms2ex.Types.Coord
 
   @block_size 150

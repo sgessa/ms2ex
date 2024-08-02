@@ -5,7 +5,7 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacterStats do
     create table(:character_stats) do
       add :character_id, references(:characters, on_delete: :delete_all), null: false
 
-      Enum.each(Ms2ex.CharacterStats.fields(), fn field ->
+      Enum.each(Ms2ex.Schema.CharacterStats.fields(), fn field ->
         add field, :integer, null: false
       end)
     end

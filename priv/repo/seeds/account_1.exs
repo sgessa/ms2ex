@@ -1,4 +1,5 @@
-alias Ms2ex.{Context, Color, Equips, Hair, Inventory, ItemColor, SkinColor}
+alias Ms2ex.{Context, Schema}
+alias Ms2ex.Types.{Color, Hair, ItemColor, SkinColor}
 
 {:ok, account} =  Context.Accounts.create(%{username: "steve", password: "123"})
 
@@ -41,32 +42,32 @@ staff = Context.Items.init(15260305, %{enchants: 12, rarity: 6})
     skin_color: skin_color
   })
 
-{:ok, {:create, item}} = Inventory.add_item(char, ears)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, hair)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, hair)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, face)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, face)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, face_decor)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, face_decor)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, top)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, top)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, bottom)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, bottom)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, shoes)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, shoes)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, staff)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, staff)
+{:ok, _equip} = Context.Equips.equip(item)
 
 titles = [10000569, 10000152, 10000570, 10000171, 10000196, 10000195, 10000571, 10000331, 10000190,
 10000458, 10000465, 10000503, 10000512, 10000513, 10000514, 10000537, 10000565, 10000602,
 10000603, 10000638, 10000644]
 
-Enum.each(titles, &Ms2ex.Repo.insert(%Ms2ex.CharacterTitle{character_id: char.id, title_id: &1}))
+Enum.each(titles, &Ms2ex.Repo.insert(%Schema.CharacterTitle{character_id: char.id, title_id: &1}))

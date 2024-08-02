@@ -161,4 +161,14 @@ defmodule Ms2ex.Schema.CharacterStats do
     |> Enum.map(&[:"#{&1}_min", :"#{&1}_cur", :"#{&1}_max"])
     |> List.flatten()
   end
+
+  # def ordered_fields() do
+  #   Enums.StatId.values()
+  #   |> Enum.sort()
+  #   |> Enum.map(fn stat_value ->
+  #     stat_name = Enums.StatId.get_key(stat_value)
+  #     [:"#{stat_name}_min", :"#{stat_name}_cur", :"#{stat_name}_max"]
+  #   end)
+  #   |> List.flatten()
+  # end
 end

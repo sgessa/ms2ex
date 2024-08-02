@@ -1,4 +1,4 @@
-defmodule Ms2ex.Dismantle do
+defmodule Ms2ex.Context.Dismantle do
   alias Ms2ex.Context
 
   @max_slots 100

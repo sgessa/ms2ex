@@ -42,7 +42,7 @@ defmodule Ms2ex.Schema.Character do
 
     has_many :equips, Schema.Item
     has_many :inventory_items, Schema.Item
-    has_many :inventory_tabs, Schema.Inventory.Tab
+    has_many :inventory_tabs, Schema.InventoryTab
 
     has_many :hot_bars, Schema.HotBar
     has_many :skill_tabs, Schema.SkillTab

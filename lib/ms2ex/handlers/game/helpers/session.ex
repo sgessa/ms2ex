@@ -1,10 +1,10 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
-  alias Ms2ex.{Field, Friends, GroupChat, Net.SenderSession, Packets, PartyServer, Schema}
+  alias Ms2ex.{Context, Field, GroupChat, Net.SenderSession, Packets, PartyServer, Schema}
   alias Phoenix.PubSub
 
   def init_character(%Schema.Character{} = character) do
     for %{status: :accepted, is_request: false, rcpt_id: rcpt_id} <- character.friends do
-      Friends.subscribe(character, rcpt_id)
+      Context.Friends.subscribe(character, rcpt_id)
     end
 
     notify_friend_presence(character)

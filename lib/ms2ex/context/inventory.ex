@@ -1,5 +1,4 @@
 defmodule Ms2ex.Context.Inventory do
-  alias __MODULE__.Tab
   alias Ms2ex.{Schema, Repo}
 
   import Ecto.Query, except: [update: 2]
@@ -20,7 +19,7 @@ defmodule Ms2ex.Context.Inventory do
   end
 
   def list_tabs(%Schema.Character{id: character_id}) do
-    Tab
+    Schema.InventoryTab
     |> where([i], i.character_id == ^character_id)
     |> order_by(asc: :tab)
     |> Repo.all()
@@ -181,11 +180,11 @@ defmodule Ms2ex.Context.Inventory do
   def expand_tab(%Schema.Character{id: character_id}, tab) do
     extra_slots = 6
 
-    Tab
+    Schema.InventoryTab
     |> where([i], i.character_id == ^character_id and i.tab == ^tab)
     |> Repo.update_all(inc: [slots: extra_slots])
 
-    Repo.get_by(Tab, character_id: character_id, tab: tab)
+    Repo.get_by(Schema.InventoryTab, character_id: character_id, tab: tab)
   end
 
   def sort_tab(%Schema.Character{id: character_id}, inventory_tab) do

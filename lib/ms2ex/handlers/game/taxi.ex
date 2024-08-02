@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Taxi do
-  alias Ms2ex.{CharacterManager, Context, Field, Packets, Taxi, WorldGraph}
+  alias Ms2ex.{CharacterManager, Context, Field, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -14,9 +14,9 @@ defmodule Ms2ex.GameHandlers.Taxi do
     {map_id, _packet} = get_int(packet)
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
-    case WorldGraph.get_shortest_path(character.map_id, map_id) do
+    case Context.WorldGraph.get_shortest_path(character.map_id, map_id) do
       {:ok, _path, map_count} ->
-        cost = Taxi.calc_taxi_cost(map_count, character.level)
+        cost = Context.Taxi.calc_taxi_cost(map_count, character.level)
         ride_taxi(map_id, :mesos, cost, session)
 
       :error ->
@@ -28,7 +28,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
   def handle_mode(0x3, packet, session) do
     {map_id, _packet} = get_int(packet)
     {:ok, character} = CharacterManager.lookup(session.character_id)
-    cost = Taxi.calc_rotor_cost(character.level)
+    cost = Context.Taxi.calc_rotor_cost(character.level)
     ride_taxi(map_id, :mesos, cost, session)
   end
 

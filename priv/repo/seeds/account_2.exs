@@ -1,4 +1,5 @@
-alias Ms2ex.{Color, Context, Equips, Hair, Inventory, ItemColor, SkinColor}
+alias Ms2ex.Context
+alias Ms2ex.Types.{Color, Hair, ItemColor, SkinColor}
 
 {:ok, account} =
   Context.Accounts.create(%{
@@ -43,29 +44,29 @@ dagger = Context.Items.init(13_160_311, %{enchants: 12, rarity: 5})
     skin_color: skin_color
   })
 
-{:ok, {:create, item}} = Inventory.add_item(char, ears)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, hair)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, hair)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, face)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, face)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, face_decor)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, face_decor)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, top)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, top)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, bottom)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, bottom)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, shoes)
-{:ok, _equip} = Equips.equip(item)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, shoes)
+{:ok, _equip} = Context.Equips.equip(item)
 
-{:ok, {:create, item}} = Inventory.add_item(char, dagger)
-{:ok, _equip} = Equips.equip(item, :LH)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, dagger)
+{:ok, _equip} = Context.Equips.equip(item, :LH)
 
-{:ok, {:create, item}} = Inventory.add_item(char, dagger)
-{:ok, _equip} = Equips.equip(item, :RH)
+{:ok, {:create, item}} = Context.Inventory.add_item(char, dagger)
+{:ok, _equip} = Context.Equips.equip(item, :RH)

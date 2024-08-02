@@ -5,7 +5,6 @@ defmodule Ms2ex.FieldHelper do
     CharacterManager,
     Context,
     Field,
-    MapBlock,
     Mob,
     Packets,
     ProtoMetadata,
@@ -181,30 +180,31 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1}
   end
 
-  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
+  def add_mob(%{} = spawn_group, %Mob{} = mob, state) do
     case ProtoMetadata.Npcs.lookup(mob.id) do
       {:ok, npc} -> add_mob(spawn_group, npc, state)
       _ -> state
     end
   end
 
-  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %ProtoMetadata.Npc{} = npc, state) do
-    population = state.mobs[spawn_group.id] || []
-    group_spawn_count = npc.basic.group_spawn_count
+  def add_mob(_spawn_group, _npc, state) do
+    # population = state.mobs[spawn_group.id] || []
+    # group_spawn_count = npc.basic.group_spawn_count
 
-    if length(population) + group_spawn_count > spawn_group.data.max_population do
-      state
-    else
-      spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
-      spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
-      spawn_position = MapBlock.add(spawn_group.position, spawn_point)
+    # if length(population) + group_spawn_count > spawn_group.data.max_population do
+    #   state
+    # else
+    #   spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
+    #   spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
+    #   spawn_position = Context.MapBlock.add(spawn_group.position, spawn_point)
 
-      mob = Mob.build(state, npc, spawn_position, spawn_group)
-      {:ok, _pid} = Mob.start(mob)
+    #   mob = Mob.build(state, npc, spawn_position, spawn_group)
+    #   {:ok, _pid} = Mob.start(mob)
 
-      population = Map.put(state.mobs, spawn_group.id, [state.counter | population])
-      %{state | counter: state.counter + 1, mobs: population}
-    end
+    #   population = Map.put(state.mobs, spawn_group.id, [state.counter | population])
+    #   %{state | counter: state.counter + 1, mobs: population}
+    # end
+    state
   end
 
   def remove_mob(spawn_group_id, object_id, state) do

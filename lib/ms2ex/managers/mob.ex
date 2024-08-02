@@ -1,7 +1,7 @@
 defmodule Ms2ex.Mob do
   use GenServer
 
-  alias Ms2ex.{Field, Mobs, Packets, Schema}
+  alias Ms2ex.{Context, Field, Packets, Schema}
 
   defstruct [
     :animation,
@@ -122,8 +122,8 @@ defmodule Ms2ex.Mob do
   defp kill_mob(mob) do
     Process.send_after(self(), :stop, mob.dead_animation_duration)
 
-    Mobs.drop_rewards(mob)
-    Mobs.reward_exp(mob)
+    Context.Mobs.drop_rewards(mob)
+    Context.Mobs.reward_exp(mob)
     # TODO send achievements
     # TODO check quest
   end

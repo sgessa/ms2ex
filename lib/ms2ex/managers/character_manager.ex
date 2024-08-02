@@ -1,7 +1,7 @@
 defmodule Ms2ex.CharacterManager do
   use GenServer
 
-  alias Ms2ex.{Context, Damage, Field, Packets, PartyServer, Schema, SkillCast, Types}
+  alias Ms2ex.{Context, Field, Packets, PartyServer, Schema, SkillCast, Types}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -117,7 +117,7 @@ defmodule Ms2ex.CharacterManager do
 
   def handle_cast({:earn_exp, amount}, character) do
     old_lvl = character.level
-    {:ok, character} = Ms2ex.Experience.maybe_add_exp(character, amount)
+    {:ok, character} = Context.Experience.maybe_add_exp(character, amount)
 
     if old_lvl != character.level do
       Field.broadcast(character, Packets.LevelUp.bytes(character))
@@ -130,7 +130,7 @@ defmodule Ms2ex.CharacterManager do
 
   def handle_cast(:receive_fall_dmg, character) do
     hp = Map.get(character.stats, :hp_cur)
-    dmg = Damage.calculate_fall_dmg(character)
+    dmg = Context.Damage.calculate_fall_dmg(character)
     character = set_stat(character, :hp, max(hp - dmg, 25))
 
     push(character, Packets.FallDamage.bytes(character, 0))

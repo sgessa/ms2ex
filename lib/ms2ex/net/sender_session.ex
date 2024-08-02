@@ -4,7 +4,7 @@ defmodule Ms2ex.Net.SenderSession do
   require Logger, as: L
 
   alias Ms2ex.Crypto.SendCipher
-  alias Ms2ex.{CharacterManager, GroupChat, Net, Packets, PartyServer, Schema}
+  alias Ms2ex.{CharacterManager, Context, GroupChat, Net, Packets, PartyServer, Schema}
   alias Ms2ex.Packets.{PacketReader, RequestVersion}
 
   import Net.Utils
@@ -104,7 +104,7 @@ defmodule Ms2ex.Net.SenderSession do
   end
 
   def handle_info({:friend_presence, data}, state) do
-    friend = Ms2ex.Friends.get_by_character_and_shared_id(data.character.id, data.shared_id)
+    friend = Context.Friends.get_by_character_and_shared_id(data.character.id, data.shared_id)
     friend = Map.put(friend, :rcpt, data.character)
 
     send(self(), {:push, Packets.Friend.update(friend)})

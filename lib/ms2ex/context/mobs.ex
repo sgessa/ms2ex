@@ -1,4 +1,4 @@
-defmodule Ms2ex.Mobs do
+defmodule Ms2ex.Context.Mobs do
   alias Ms2ex.{CharacterManager, Context, Field}
 
   def drop_rewards(mob) do

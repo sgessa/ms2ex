@@ -1,4 +1,4 @@
-defmodule Ms2ex.Experience do
+defmodule Ms2ex.Context.Experience do
   alias Ms2ex.{Context, ProtoMetadata.ExpTable, Schema}
 
   @max_level Schema.Character.max_level()

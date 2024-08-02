@@ -1,4 +1,4 @@
-defmodule Ms2ex.Friends do
+defmodule Ms2ex.Context.Friends do
   alias Ms2ex.{Repo, Schema}
 
   import Ecto.Query

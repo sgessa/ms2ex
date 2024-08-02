@@ -1,4 +1,4 @@
-defmodule Ms2ex.Taxi do
+defmodule Ms2ex.Context.Taxi do
   def calc_taxi_cost(map_count, char_level) do
     map_count = if map_count > 1, do: map_count - 1, else: 1
 

@@ -6,7 +6,7 @@ defmodule Ms2ex.Context.HotBars do
   def get_by(attrs), do: Repo.get_by(Schema.HotBar, attrs)
 
   def list(%Schema.Character{id: character_id}) do
-    HotBar
+    Schema.HotBar
     |> where([hb], hb.character_id == ^character_id)
     |> order_by(asc: :id)
     |> Repo.all()

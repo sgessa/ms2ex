@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Damage, Field, Mob, Net, Packets, SkillCast, Types}
+  alias Ms2ex.{CharacterManager, Context, Field, Mob, Net, Packets, SkillCast, Types}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -105,7 +105,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
     if character.skill_cast.id == cast_id do
-      crit? = Damage.roll_crit(character)
+      crit? = Context.Damage.roll_crit(character)
       mobs = damage_targets(session, character, crit?, target_count, [], packet)
 
       # TODO check whether it's a player or an ally
@@ -177,7 +177,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
   defp damage_mob(character, mob, crit?) do
     skill_cast = character.skill_cast
-    dmg = Damage.calculate(character, mob, crit?)
+    dmg = Context.Damage.calculate(character, mob, crit?)
     {:ok, mob} = Mob.inflict_dmg(character, mob, dmg)
 
     if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
