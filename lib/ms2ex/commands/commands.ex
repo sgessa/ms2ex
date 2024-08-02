@@ -1,8 +1,8 @@
 defmodule Ms2ex.Commands do
   alias Ms2ex.{
     Character,
-    Characters,
     CharacterManager,
+    Context,
     Field,
     Inventory,
     Items,
@@ -36,7 +36,7 @@ defmodule Ms2ex.Commands do
   def handle(["level", level], character, session) do
     with {level, _} <- Integer.parse(level) do
       level = if level > Character.max_level(), do: Character.max_level(), else: level
-      {:ok, character} = Characters.update(character, %{exp: 0, level: level})
+      {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
       CharacterManager.update(character)
       Field.broadcast(character, Packets.LevelUp.bytes(character))
       push(session, Packets.Experience.bytes(0, 0, 0))

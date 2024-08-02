@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
-  alias Ms2ex.{Characters, CharacterManager, Equips, Field, Inventory, Items, Packets}
+  alias Ms2ex.{CharacterManager, Context, Equips, Field, Inventory, Items, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -52,14 +52,14 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Field.broadcast(character, equip_packet)
 
-      CharacterManager.update(Characters.load_equips(character))
+      CharacterManager.update(Context.Characters.load_equips(character))
       push(session, Packets.InventoryItem.remove_item(item.id))
     end
   end
 
   defp unequip_item(character, item, session) do
     with {:ok, item} <- Equips.unequip(item) do
-      CharacterManager.update(Characters.load_equips(character))
+      CharacterManager.update(Context.Characters.load_equips(character))
 
       item = Items.load_metadata(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)

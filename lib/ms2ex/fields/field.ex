@@ -1,8 +1,8 @@
 defmodule Ms2ex.Field do
   alias Ms2ex.{
     Character,
-    Characters,
     CharacterManager,
+    Context,
     FieldServer,
     Mob,
     Net,
@@ -96,7 +96,7 @@ defmodule Ms2ex.Field do
     with :ok <- leave(character) do
       character =
         character
-        |> Characters.maybe_discover_map(map_id)
+        |> Context.Characters.maybe_discover_map(map_id)
         |> Map.put(:change_map, %{id: map_id, position: position, rotation: rotation})
 
       CharacterManager.update(character)

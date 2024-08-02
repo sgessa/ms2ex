@@ -2,8 +2,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
   alias Ms2ex.{
-    Characters,
     CharacterManager,
+    Context,
     Inventory,
     LoginHandlers,
     Net,
@@ -31,10 +31,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character =
         auth_data[:character_id]
-        |> Characters.get()
-        |> Characters.load_equips()
-        |> Characters.preload([:friends, :stats])
-        |> Characters.load_skills()
+        |> Context.Characters.get()
+        |> Context.Characters.load_equips()
+        |> Context.Characters.preload([:friends, :stats])
+        |> Context.Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
         |> Map.put(:sender_session_pid, session.sender_pid)
@@ -46,10 +46,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       CharacterManager.start(character)
       CharacterManager.monitor(character)
 
-      character = Characters.preload(character, friends: :rcpt)
+      character = Context.Characters.preload(character, friends: :rcpt)
       init_character(character)
 
-      titles = Characters.list_titles(character)
+      titles = Context.Characters.list_titles(character)
 
       account_wallet = Wallets.find(account)
       character_wallet = Wallets.find(character)

@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Job do
   require Logger
 
-  alias Ms2ex.{Characters, CharacterManager, HotBars, Net, Packets, Skills}
+  alias Ms2ex.{CharacterManager, Context, HotBars, Net, Packets, Skills}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -59,7 +59,7 @@ defmodule Ms2ex.GameHandlers.Job do
   defp handle_mode(_mode, _character, session), do: session
 
   defp save_skills(character, _tab, len, _packet) when len < 1 do
-    Characters.load_skills(character, force: true)
+    Context.Characters.load_skills(character, force: true)
   end
 
   defp save_skills(character, tab, len, packet) do

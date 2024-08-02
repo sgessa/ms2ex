@@ -1,7 +1,7 @@
 defmodule Ms2ex.CharacterManager do
   use GenServer
 
-  alias Ms2ex.{Character, Characters, Damage, Field, Packets, PartyServer, SkillCast, SkillStatus}
+  alias Ms2ex.{Character, Context, Damage, Field, Packets, PartyServer, SkillCast, SkillStatus}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -12,7 +12,7 @@ defmodule Ms2ex.CharacterManager do
 
   # TODO avoid SQL
   def lookup_by_name(character_name) do
-    case Characters.get_by(name: character_name) do
+    case Context.Characters.get_by(name: character_name) do
       nil -> :error
       %Character{id: char_id} -> lookup(char_id)
     end

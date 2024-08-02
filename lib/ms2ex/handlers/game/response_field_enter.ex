@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   require Logger
 
-  alias Ms2ex.{Characters, CharacterManager, ChatStickers, Field, HotBars, Net, Packets}
+  alias Ms2ex.{CharacterManager, Context, ChatStickers, Field, HotBars, Net, Packets}
 
   import Net.SenderSession, only: [push: 2, run: 2]
 
@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   defp maybe_change_map(%{change_map: new_map} = character) do
     run(character, fn -> Field.unsubscribe(character) end)
 
-    {:ok, character} = Characters.update(character, %{map_id: new_map.id})
+    {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
 
     character
     |> Map.delete(:change_map)

@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Friend do
-  alias Ms2ex.{Characters, CharacterManager, Packets}
+  alias Ms2ex.{CharacterManager, Context, Packets}
 
   @friend_list_max_size 100
 
@@ -14,8 +14,8 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   end
 
   defp find_from_db(char_name) do
-    Characters.get_by(name: char_name)
-    |> Characters.preload(:friends)
+    Context.Characters.get_by(name: char_name)
+    |> Context.Characters.preload(:friends)
   end
 
   defp find_from_world(char_name) do

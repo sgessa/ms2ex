@@ -1,5 +1,5 @@
 defmodule Ms2ex.Experience do
-  alias Ms2ex.{Character, Characters, ProtoMetadata.ExpTable}
+  alias Ms2ex.{Character, Context, ProtoMetadata.ExpTable}
 
   @max_level Character.max_level()
   def maybe_add_exp(%Character{level: lvl} = char, _exp) when lvl >= @max_level do
@@ -12,10 +12,10 @@ defmodule Ms2ex.Experience do
 
     if total_exp >= tnl do
       diff = total_exp - tnl
-      {:ok, character} = Characters.update(character, %{level: level + 1, exp: 0})
+      {:ok, character} = Context.Characters.update(character, %{level: level + 1, exp: 0})
       maybe_add_exp(character, diff)
     else
-      Characters.update(character, %{exp: total_exp})
+      Context.Characters.update(character, %{exp: total_exp})
     end
   end
 end

@@ -1,7 +1,7 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
     Character,
-    Characters,
+    Context,
     Equips,
     Hair,
     Inventory,
@@ -36,7 +36,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp handle_login(packet, %{account: account} = session) do
     {char_id, _packet} = get_long(packet)
 
-    case Characters.get(account, char_id) do
+    case Context.Characters.get(account, char_id) do
       %Character{} ->
         auth_data = %{token_a: Ms2ex.generate_int(), token_b: Ms2ex.generate_int()}
         register_session(account.id, char_id, auth_data)
@@ -83,7 +83,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     result =
       Repo.transaction(fn ->
-        with {:ok, character} <- Characters.create(session.account, attrs) do
+        with {:ok, character} <- Context.Characters.create(session.account, attrs) do
           Enum.each(equips, fn {equip_slot, item} ->
             {:ok, {:create, item}} = Inventory.add_item(character, item)
             {:ok, _equip} = Equips.equip(item, equip_slot)
@@ -135,9 +135,9 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp handle_delete(packet, session) do
     {char_id, _packet} = get_long(packet)
 
-    with %Character{} = character <- Characters.get(session.account, char_id),
-         {:ok, _} <- Characters.delete(character) do
-      characters = Characters.list(session.account)
+    with %Character{} = character <- Context.Characters.get(session.account, char_id),
+         {:ok, _} <- Context.Characters.delete(character) do
+      characters = Context.Characters.list(session.account)
 
       session
       |> push(Packets.CharacterMaxCount.set_max(4, 6))

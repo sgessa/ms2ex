@@ -1,4 +1,4 @@
-defmodule Ms2ex.Characters do
+defmodule Ms2ex.Context.Characters do
   alias Ms2ex.{Account, Character, Repo, Skills}
 
   import Ecto.Query, except: [update: 2]

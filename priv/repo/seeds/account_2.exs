@@ -1,7 +1,7 @@
-alias Ms2ex.{Characters, Color, Equips, Hair, Inventory, Items, ItemColor, SkinColor, Accounts}
+alias Ms2ex.{Color, Context, Equips, Hair, Inventory, Items, ItemColor, SkinColor}
 
 {:ok, account} =
-  Accounts.create(%{
+  Context.Accounts.create(%{
     username: "icra",
     password: "123"
   })
@@ -35,7 +35,7 @@ shoes = Items.init(11_700_709, %{color: shoes_color})
 dagger = Items.init(13_160_311, %{enchants: 12, rarity: 5})
 
 {:ok, char} =
-  Characters.create(account, %{
+  Context.Characters.create(account, %{
     name: "icra1337",
     level: 70,
     map_id: 2_000_023,

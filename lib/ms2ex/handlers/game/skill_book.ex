@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.SkillBook do
   require Logger
 
-  alias Ms2ex.{Characters, CharacterManager, Net, Packets, Skills, Wallets}
+  alias Ms2ex.{CharacterManager, Context, Net, Packets, Skills, Wallets}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -38,8 +38,8 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     end)
 
     # TODO avoid SQL query
-    character = Characters.load_skills(character, force: true)
-    {:ok, character} = Characters.update(character, %{active_skill_tab_id: active_tab_id})
+    character = Context.Characters.load_skills(character, force: true)
+    {:ok, character} = Context.Characters.update(character, %{active_skill_tab_id: active_tab_id})
     CharacterManager.update(character)
 
     push(session, Packets.SkillBook.save(character, selected_tab_id))

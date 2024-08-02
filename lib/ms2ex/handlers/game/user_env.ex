@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserEnv do
-  alias Ms2ex.{Characters, CharacterManager, Field, Packets}
+  alias Ms2ex.{CharacterManager, Context, Field, Packets}
 
   import Packets.PacketReader
 
@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.UserEnv do
 
     if title_id >= 0 do
       {:ok, character} = CharacterManager.lookup(session.character_id)
-      {:ok, character} = Characters.update(character, %{title_id: title_id})
+      {:ok, character} = Context.Characters.update(character, %{title_id: title_id})
       CharacterManager.update(character)
 
       Field.broadcast(character, Packets.UserEnv.update_title(character))

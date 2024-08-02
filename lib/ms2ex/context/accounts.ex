@@ -1,4 +1,4 @@
-defmodule Ms2ex.Accounts do
+defmodule Ms2ex.Context.Accounts do
   alias Ms2ex.{Repo, Account}
 
   def authenticate(username, password) do
