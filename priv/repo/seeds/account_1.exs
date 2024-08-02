@@ -29,7 +29,7 @@ bottom = Context.Items.init(11_500_538, %{color: bottom_color})
 shoes_color = ItemColor.build(Color.build(51, 59, 63, -1), Color.build(27, 32, 35, -1), Color.build(15, 18, 20, -1), 0)
 shoes = Context.Items.init(11_700_709, %{color: shoes_color})
 
-staff = Context.Items.init(15260305, %{enchants: 12, rarity: 6})
+staff = Context.Items.init(15260310, %{rarity: 5})
 
 {:ok, char} =
   Context.Characters.create(account, %{

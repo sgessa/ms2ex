@@ -1,18 +1,16 @@
 defmodule Ms2ex.Context.ItemConstantStats do
   alias Ms2ex.{Lua, Schema, Storage, Types}
 
-  def get(%Schema.Item{} = item, pick_id, level_factor) do
-    constant_id = item.metadata.option.constant_id
-    options = Storage.Tables.ItemOptions.find_constant(constant_id, item.rarity)
-
-    if options do
-      get_constant_stats(item, options, pick_id, level_factor)
-    else
-      get_pick_stats(item, %{}, pick_id, level_factor)
-    end
+  def get(%Schema.Item{} = item, pick_options) do
+    item.metadata.option.constant_id
+    |> Storage.Tables.ItemOptions.find_constant(item.rarity)
+    |> get_constant_stats()
+    |> get_pick_stats(item, pick_options)
   end
 
-  defp get_constant_stats(item, options, pick_id, level_factor) do
+  defp get_constant_stats(nil), do: %{}
+
+  defp get_constant_stats(options) do
     values =
       Enum.into(options.values, [], fn {name, value} ->
         {name, Types.ItemStat.build(name, :flat, value, :basic)}
@@ -33,34 +31,18 @@ defmodule Ms2ex.Context.ItemConstantStats do
         {name, Types.ItemStat.build(name, :rate, value, :special)}
       end)
 
-    constant_stats = Map.new(values ++ rates ++ special_values ++ special_rates)
-
-    if level_factor > 50 do
-      get_pick_stats(item, constant_stats, pick_id, level_factor)
-    else
-      constant_stats
-    end
-
-    constant_stats
+    Map.new(values ++ rates ++ special_values ++ special_rates)
   end
 
-  defp get_pick_stats(item, constant_stats, pick_id, level_factor) do
-    pick_options = Storage.Tables.ItemOptions.find_pick(pick_id, item.rarity)
+  defp get_pick_stats(constant_stats, _item, nil), do: constant_stats
 
-    if pick_options do
-      process_pick_options(item, constant_stats, pick_options, level_factor)
-    else
-      constant_stats
-    end
-  end
-
-  defp process_pick_options(item, constant_stats, pick_options, level_factor) do
+  defp get_pick_stats(constant_stats, item, pick_options) do
     Enum.reduce(pick_options.constant_value, constant_stats, fn pick, acc ->
-      process_pick_stat(item, acc, pick, level_factor)
+      process_pick_stat(item, acc, pick)
     end)
   end
 
-  defp process_pick_stat(item, constant_stats, {pick_stat, pick_value}, level_factor) do
+  defp process_pick_stat(item, constant_stats, {pick_stat, pick_value}) do
     # Initialize empty stat if not already present from constant options (always flat)
     constant_stats =
       Map.put_new(constant_stats, pick_stat, Types.ItemStat.build(pick_stat, :flat, 0, :basic))
@@ -72,15 +54,12 @@ defmodule Ms2ex.Context.ItemConstantStats do
         pick_stat,
         constant_stat.value,
         pick_value,
-        item,
-        level_factor
+        item
       )
 
-    {result, _} = Float.parse("#{value}")
-
     # Put / update constant stat (if valid value)
-    if result <= 0.0,
+    if value <= 0.0,
       do: Map.delete(constant_stats, pick_stat),
-      else: Map.put(constant_stats, pick_stat, %{constant_stat | value: result})
+      else: Map.put(constant_stats, pick_stat, %{constant_stat | value: value})
   end
 end
