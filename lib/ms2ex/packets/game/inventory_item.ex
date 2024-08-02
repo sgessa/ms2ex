@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Enums, Hair, Inventory, Items}
+  alias Ms2ex.{Enums, Hair, Inventory, Types}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -246,15 +246,15 @@ defmodule Ms2ex.Packets.InventoryItem do
   defp put_item_stat(packet, %{class: :basic} = stat) do
     packet
     |> put_short(Enums.BasicStatType.get_value(stat.attribute))
-    |> put_int(Items.Stat.flat_value(stat))
-    |> put_float(Items.Stat.rate_value(stat))
+    |> put_int(Types.ItemStat.flat_value(stat))
+    |> put_float(Types.ItemStat.rate_value(stat))
   end
 
   defp put_item_stat(packet, %{class: :special} = stat) do
     packet
     |> put_short(Enums.SpecialStatType.get_value(stat.attribute))
-    |> put_float(Items.Stat.rate_value(stat))
-    |> put_float(Items.Stat.flat_value(stat))
+    |> put_float(Types.ItemStat.rate_value(stat))
+    |> put_float(Types.ItemStat.flat_value(stat))
   end
 
   defp put_sockets(packet) do

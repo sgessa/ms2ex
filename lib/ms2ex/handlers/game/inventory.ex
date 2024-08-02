@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Inventory do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, Inventory, Item, Net, Packets, TransferFlags, Wallets}
+  alias Ms2ex.{CharacterManager, Field, Inventory, Net, Packets, Schema, TransferFlags, Wallets}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -17,7 +17,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {dst_slot, _packet} = get_short(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Item{inventory_slot: src_slot} = src_item <- Inventory.get(character, id),
+         %Schema.Item{inventory_slot: src_slot} = src_item <- Inventory.get(character, id),
          {:ok, dst_uid} <- Inventory.swap(src_item, dst_slot) do
       push(session, Packets.InventoryItem.move_item(dst_uid, src_slot, src_item.id, dst_slot))
     end
@@ -29,7 +29,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {amount, _packet} = get_int(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Item{} = item <- Inventory.get(character, id),
+         %Schema.Item{} = item <- Inventory.get(character, id),
          true <- TransferFlags.has_flag?(item.transfer_flags, :tradeable),
          true <- TransferFlags.has_flag?(item.transfer_flags, :splittable) do
       consumed_item = Inventory.consume(item, amount)
@@ -43,7 +43,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {id, _packet} = get_long(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Item{} = item <- Inventory.get(character, id) do
+         %Schema.Item{} = item <- Inventory.get(character, id) do
       update_inventory(session, Inventory.delete(item))
     end
   end

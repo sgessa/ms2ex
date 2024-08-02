@@ -1,5 +1,5 @@
-defmodule Ms2ex.Items.Lua do
-  alias Ms2ex.Items
+defmodule Ms2ex.Lua.Items do
+  alias Ms2ex.{Context, Enums}
 
   def get_enchant_values(item) do
     script = get_script("calcEnchantValues")
@@ -7,7 +7,7 @@ defmodule Ms2ex.Items.Lua do
     {:ok, results} =
       :luaport.call(script, :calcEnchantBoostValues, [
         item.enchant_level,
-        Items.Type.value(Items.type(item)),
+        Enums.ItemType.get_value(Context.Items.type(item)),
         item.level
       ])
 
@@ -21,7 +21,7 @@ defmodule Ms2ex.Items.Lua do
       :luaport.call(script, get_pick_attribute(:static, pick_attr), [
         stat_value,
         deviation,
-        Items.Type.value(Items.type(item)),
+        Enums.ItemType.get_value(Context.Items.type(item)),
         List.first(item.metadata.limit.job_recommends),
         lvl_factor,
         item.rarity,
@@ -38,7 +38,7 @@ defmodule Ms2ex.Items.Lua do
       :luaport.call(script, get_pick_attribute(:constant, pick_attr), [
         stat_value,
         deviation,
-        Items.Type.value(Items.type(item)),
+        Enums.ItemType.get_value(Context.Items.type(item)),
         List.first(item.metadata.limit.job_recommends),
         lvl_factor,
         item.rarity,

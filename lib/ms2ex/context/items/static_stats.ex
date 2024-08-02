@@ -1,8 +1,7 @@
-defmodule Ms2ex.Items.StaticStats do
-  alias Ms2ex.{Item, Items, Enums}
-  alias Ms2ex.Storage
+defmodule Ms2ex.Context.ItemStaticStats do
+  alias Ms2ex.{Enums, Lua, Schema, Storage, Types}
 
-  def get(%Item{} = item, pick_id, level_factor) do
+  def get(%Schema.Item{} = item, pick_id, level_factor) do
     static_id = item.metadata.option.static_id
     options = Storage.Tables.ItemOptions.find_static(static_id, item.rarity)
 
@@ -30,25 +29,25 @@ defmodule Ms2ex.Items.StaticStats do
   # Flat Basic
   defp process_static_stat(%{values: values, basic_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :basic, value, :flat)
+    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :basic, value, :flat)
   end
 
   # Rates Basic
   defp process_static_stat(%{rates: values, basic_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :basic, value, :rate)
+    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :basic, value, :rate)
   end
 
   # Flat Special
   defp process_static_stat(%{values: values, special_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :special, value, :flat)
+    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :special, value, :flat)
   end
 
   # Rate Special
   defp process_static_stat(%{rates: values, special_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :special, value, :rate)
+    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :special, value, :rate)
   end
 
   defp get_pick_stats(item, static_stats, pick_id, level_factor) do
@@ -76,12 +75,12 @@ defmodule Ms2ex.Items.StaticStats do
   defp process_pick_stat(item, static_stats, type, {pick_stat, pick_value}, level_factor) do
     # Initialize empty stat if not already present from static options
     static_stats =
-      Map.put_new(static_stats, pick_stat, Items.Stat.build(pick_stat, type, 0, :basic))
+      Map.put_new(static_stats, pick_stat, Types.ItemStat.build(pick_stat, type, 0, :basic))
 
     static_stat = static_stats[pick_stat]
 
     value =
-      Items.Lua.get_stat_static_value(
+      Lua.Items.get_stat_static_value(
         pick_stat,
         static_stat.value,
         pick_value,

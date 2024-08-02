@@ -5,7 +5,6 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     Equips,
     Hair,
     Inventory,
-    Items,
     ItemColor,
     ProtoMetadata,
     Net,
@@ -115,7 +114,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     {attrs, packet} = get_item_attributes(packet, slot_name)
 
     attrs = Map.put(attrs, :color, color)
-    item = Items.init(id, attrs)
+    item = Context.Items.init(id, attrs)
 
     {{String.to_existing_atom(slot_name), item}, packet}
   end

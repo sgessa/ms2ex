@@ -1,8 +1,8 @@
-defmodule Ms2ex.Items.RandomStats do
-  alias Ms2ex.{Item, Items, Enums}
+defmodule Ms2ex.Context.ItemRandomStats do
+  alias Ms2ex.{Enums, Schema, Types}
   alias Ms2ex.Storage
 
-  def get(%Item{} = item) do
+  def get(%Schema.Item{} = item) do
     random_id = item.metadata.option.random_id
     options = Storage.Tables.ItemOptions.find_random(random_id, item.rarity)
 
@@ -24,21 +24,21 @@ defmodule Ms2ex.Items.RandomStats do
 
   defp process_stat(%{values: values, basic_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :flat, value, :basic)
+    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :flat, value, :basic)
   end
 
   defp process_stat(%{values: values, special_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :flat, value, :special)
+    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :flat, value, :special)
   end
 
   defp process_stat(%{rates: values, basic_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
+    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
   end
 
   defp process_stat(%{rates: values, special_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.SpecialStatType.get_key(attr), :rate, value, :special)
+    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :rate, value, :special)
   end
 end

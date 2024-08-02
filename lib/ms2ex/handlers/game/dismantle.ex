@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Dismantle do
-  alias Ms2ex.{CharacterManager, Dismantle, Inventory, Item, Items, Packets}
+  alias Ms2ex.{CharacterManager, Context, Dismantle, Inventory, Packets, Schema}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -85,7 +85,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   defp auto_add(session, character, max_rarity, items) do
     items
     |> Enum.take(Dismantle.max_slots())
-    |> Enum.map(&Items.load_metadata/1)
+    |> Enum.map(&Context.Items.load_metadata/1)
     |> Enum.filter(&(&1.rarity <= max_rarity && &1.metadata.dismantable?))
     |> Enum.reduce(character.inventory, fn item, inventory ->
       {slot, inventory} = Dismantle.append(inventory, item.id, item.amount)
@@ -103,7 +103,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     inventory = character.dismantle_inventory
 
     Enum.each(inventory.slots, fn {_slot, {id, amount}} ->
-      with %Item{} = item <- Inventory.get(character, id) do
+      with %Schema.Item{} = item <- Inventory.get(character, id) do
         consumed_item = Inventory.consume(item, amount)
         push(session, Packets.InventoryItem.consume(consumed_item))
       end
@@ -114,7 +114,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     inventory = character.dismantle_inventory
 
     Enum.each(inventory.rewards, fn {item_id, amount} ->
-      item = Items.init(item_id, %{amount: amount})
+      item = Context.Items.init(item_id, %{amount: amount})
 
       with {:ok, result} <- Inventory.add_item(character, item) do
         push(session, Packets.InventoryItem.add_item(result))

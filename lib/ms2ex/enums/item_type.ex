@@ -1,5 +1,5 @@
-defmodule Ms2ex.Items.Type do
-  @types [
+defmodule Ms2ex.Enums.ItemType do
+  @mapping [
     none: 0,
     currency: 1,
     furnishing: 2,
@@ -33,13 +33,5 @@ defmodule Ms2ex.Items.Type do
     orb: 56
   ]
 
-  def values(), do: @types
-
-  def value(name), do: Keyword.get(@types, name)
-
-  def key(type_id) do
-    @types
-    |> Enum.find(fn {_k, v} -> v == type_id end)
-    |> elem(0)
-  end
+  use Ms2ex.Enums
 end

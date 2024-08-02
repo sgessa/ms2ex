@@ -1,15 +1,16 @@
-defmodule Ms2ex.Items.EnchantStats do
-  alias Ms2ex.{Item, Items, Enums}
+defmodule Ms2ex.Context.ItemEnchantStats do
+  alias Ms2ex.{Enums, Lua, Schema, Types}
 
-  def get(%Item{} = item) do
-    Items.Lua.get_enchant_values(item)
+  def get(%Schema.Item{} = item) do
+    item
+    |> Lua.Items.get_enchant_values()
     |> Enum.chunk_every(2)
     |> Enum.reduce(%{}, fn [attr_nr, value], acc ->
       if attr_nr == 0 do
         acc
       else
         attr = Enums.BasicStatType.get_key(attr_nr)
-        stat = Items.Stat.build(attr, :rate, value, :basic)
+        stat = Types.ItemStat.build(attr, :rate, value, :basic)
         Map.put(acc, attr, stat)
       end
     end)

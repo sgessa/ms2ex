@@ -7,9 +7,9 @@ defmodule Ms2ex.FieldServer do
     CharacterManager,
     Field,
     FieldHelper,
-    Item,
     ProtoMetadata,
     Mob,
+    Schema,
     Packets,
     SkillCast
   }
@@ -82,7 +82,7 @@ defmodule Ms2ex.FieldServer do
     {:noreply, drop_item(source, item, state)}
   end
 
-  def handle_cast({:add_mob_drop, %Mob{} = mob, %Item{} = item}, state) do
+  def handle_cast({:add_mob_drop, %Mob{} = mob, %Schema.Item{} = item}, state) do
     {:noreply, add_mob_drop(mob, item, state)}
   end
 

@@ -1,4 +1,4 @@
-defmodule Ms2ex.Items.Stat do
+defmodule Ms2ex.Types.ItemStat do
   defstruct [:attribute, :type, :class, value: 0]
 
   def build(attr, type, val, stat_class) do

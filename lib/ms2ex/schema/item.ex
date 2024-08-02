@@ -1,4 +1,4 @@
-defmodule Ms2ex.Item do
+defmodule Ms2ex.Schema.Item do
   use Ecto.Schema
 
   alias Ms2ex.{EctoTypes, Enums}

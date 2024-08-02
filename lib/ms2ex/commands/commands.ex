@@ -5,7 +5,6 @@ defmodule Ms2ex.Commands do
     Context,
     Field,
     Inventory,
-    Items,
     ProtoMetadata,
     Net,
     Packets,
@@ -143,7 +142,7 @@ defmodule Ms2ex.Commands do
 
     with {item_id, _} <- Integer.parse(item_id),
          {rarity, _} <- Integer.parse(rarity),
-         item = Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
+         item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
          {:ok, {_, item} = result} <- Inventory.add_item(character, item) do
       session
       |> push(Packets.InventoryItem.add_item(result))

@@ -1,7 +1,7 @@
-defmodule Ms2ex.Items.ConstantStats do
-  alias Ms2ex.{Item, Items, Storage}
+defmodule Ms2ex.Context.ItemConstantStats do
+  alias Ms2ex.{Lua, Schema, Storage, Types}
 
-  def get(%Item{} = item, pick_id, level_factor) do
+  def get(%Schema.Item{} = item, pick_id, level_factor) do
     constant_id = item.metadata.option.constant_id
     options = Storage.Tables.ItemOptions.find_constant(constant_id, item.rarity)
 
@@ -15,22 +15,22 @@ defmodule Ms2ex.Items.ConstantStats do
   defp get_constant_stats(item, options, pick_id, level_factor) do
     values =
       Enum.into(options.values, [], fn {name, value} ->
-        {name, Items.Stat.build(name, :flat, value, :basic)}
+        {name, Types.ItemStat.build(name, :flat, value, :basic)}
       end)
 
     rates =
       Enum.into(options.rates, [], fn {name, value} ->
-        {name, Items.Stat.build(name, :rate, value, :basic)}
+        {name, Types.ItemStat.build(name, :rate, value, :basic)}
       end)
 
     special_values =
       Enum.into(options.special_values, [], fn {name, value} ->
-        {name, Items.Stat.build(name, :flat, value, :special)}
+        {name, Types.ItemStat.build(name, :flat, value, :special)}
       end)
 
     special_rates =
       Enum.into(options.special_rates, [], fn {name, value} ->
-        {name, Items.Stat.build(name, :rate, value, :special)}
+        {name, Types.ItemStat.build(name, :rate, value, :special)}
       end)
 
     constant_stats = Map.new(values ++ rates ++ special_values ++ special_rates)
@@ -63,12 +63,12 @@ defmodule Ms2ex.Items.ConstantStats do
   defp process_pick_stat(item, constant_stats, {pick_stat, pick_value}, level_factor) do
     # Initialize empty stat if not already present from constant options (always flat)
     constant_stats =
-      Map.put_new(constant_stats, pick_stat, Items.Stat.build(pick_stat, :flat, 0, :basic))
+      Map.put_new(constant_stats, pick_stat, Types.ItemStat.build(pick_stat, :flat, 0, :basic))
 
     constant_stat = constant_stats[pick_stat]
 
     value =
-      Items.Lua.get_stat_constant_value(
+      Lua.Items.get_stat_constant_value(
         pick_stat,
         constant_stat.value,
         pick_value,

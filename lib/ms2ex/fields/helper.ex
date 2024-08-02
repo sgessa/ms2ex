@@ -3,10 +3,10 @@ defmodule Ms2ex.FieldHelper do
 
   alias Ms2ex.{
     CharacterManager,
+    Context,
     Emotes,
     Field,
     Inventory,
-    Items,
     MapBlock,
     Storage,
     ProtoMetadata,
@@ -110,29 +110,29 @@ defmodule Ms2ex.FieldHelper do
 
   def pickup_item(character, item, state) do
     cond do
-      Items.mesos?(item) ->
+      Context.Items.mesos?(item) ->
         Wallets.update(character, :mesos, item.amount)
 
-      Items.valor_token?(item) ->
+      Context.Items.valor_token?(item) ->
         Wallets.update(character, :valor_tokens, item.amount)
 
-      Items.merets?(item) ->
+      Context.Items.merets?(item) ->
         Wallets.update(character, :merets, item.amount)
 
-      Items.rue?(item) ->
+      Context.Items.rue?(item) ->
         Wallets.update(character, :rues, item.amount)
 
-      Items.havi_fruit?(item) ->
+      Context.Items.havi_fruit?(item) ->
         Wallets.update(character, :havi_fruits, item.amount)
 
-      Items.sp?(item) ->
+      Context.Items.sp?(item) ->
         CharacterManager.increase_stat(character, :sp, item.amount)
 
-      Items.stamina?(item) ->
+      Context.Items.stamina?(item) ->
         CharacterManager.increase_stat(character, :sta, item.amount)
 
       true ->
-        item = Items.load_metadata(item)
+        item = Context.Items.load_metadata(item)
 
         with {:ok, result} <- Inventory.add_item(character, item) do
           {_status, item} = result
