@@ -1,7 +1,7 @@
 defmodule Ms2ex.Schema.Item do
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, Enums}
+  alias Ms2ex.{EctoTypes, Enums, Schema}
 
   import Ecto.Changeset
 
@@ -14,7 +14,6 @@ defmodule Ms2ex.Schema.Item do
     :item_id,
     :inventory_slot,
     :inventory_tab,
-    :level,
     :limit_break_level,
     :location,
     :rarity,
@@ -27,7 +26,7 @@ defmodule Ms2ex.Schema.Item do
   @inventory_tabs Map.to_list(Enums.InventoryTab.mapping())
 
   schema "inventory_items" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Schema.Character
 
     field :item_id, :integer
     field :amount, :integer, default: 1
@@ -46,7 +45,6 @@ defmodule Ms2ex.Schema.Item do
     field :is_locked, :boolean, virtual: true, default: false
     field :inventory_slot, :integer
     field :inventory_tab, Ecto.Enum, values: @inventory_tabs
-    field :level, :integer, default: 0
     field :limit_break_level, :integer, default: 0
     field :location, Ecto.Enum, values: [inventory: 0, equipment: 1], default: :inventory
     field :lock_character_id, :integer, virtual: true

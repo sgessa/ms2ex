@@ -1,29 +1,23 @@
 defmodule Ms2ex.Context.ItemStaticStats do
   alias Ms2ex.{Enums, Lua, Schema, Storage, Types}
 
-  def get(%Schema.Item{} = item, pick_id, level_factor) do
-    static_id = item.metadata.option.static_id
-    options = Storage.Tables.ItemOptions.find_static(static_id, item.rarity)
-
-    if options do
-      get_static_stats(item, options, pick_id, level_factor)
-    else
-      get_pick_stats(item, %{}, pick_id, level_factor)
-    end
+  def get(%Schema.Item{} = item, pick_options) do
+    item.metadata.option.static_id
+    |> Storage.Tables.ItemOptions.find_static(item.rarity)
+    |> get_static_stats()
+    |> get_pick_stats(item, pick_options)
   end
 
-  defp get_static_stats(item, static_options, pick_id, level_factor) do
-    %{num_pick: picks, entries: entries} = static_options
+  defp get_static_stats(nil), do: %{}
 
+  defp get_static_stats(options) do
+    %{num_pick: picks, entries: entries} = options
     pick_count = Enum.random(picks.min..picks.max)
 
-    static_stats =
-      Enum.map(entries, &process_static_stat(&1))
-      |> Enum.take_random(pick_count)
-      |> Enum.map(&{&1.attribute, &1})
-      |> Map.new()
-
-    get_pick_stats(item, static_stats, pick_id, level_factor)
+    Enum.map(entries, &process_static_stat(&1))
+    |> Enum.take_random(pick_count)
+    |> Enum.map(&{&1.attribute, &1})
+    |> Map.new()
   end
 
   # Flat Basic
@@ -50,29 +44,20 @@ defmodule Ms2ex.Context.ItemStaticStats do
     Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :special, value, :rate)
   end
 
-  defp get_pick_stats(item, static_stats, pick_id, level_factor) do
-    pick_options =
-      Storage.Tables.ItemOptions.find_pick(pick_id, item.rarity)
+  defp get_pick_stats(static_stats, _item, nil), do: static_stats
 
-    if pick_options do
-      process_pick_options(item, static_stats, pick_options, level_factor)
-    else
-      static_stats
-    end
-  end
-
-  defp process_pick_options(item, static_stats, pick_options, level_factor) do
+  defp get_pick_stats(static_stats, item, pick_options) do
     static_stats =
       Enum.reduce(pick_options.static_value, static_stats, fn pick, acc ->
-        process_pick_stat(item, acc, :flat, pick, level_factor)
+        process_pick_stat(item, acc, :flat, pick)
       end)
 
     Enum.reduce(pick_options.static_rate, static_stats, fn pick, acc ->
-      process_pick_stat(item, acc, :rate, pick, level_factor)
+      process_pick_stat(item, acc, :rate, pick)
     end)
   end
 
-  defp process_pick_stat(item, static_stats, type, {pick_stat, pick_value}, level_factor) do
+  defp process_pick_stat(item, static_stats, type, {pick_stat, pick_value}) do
     # Initialize empty stat if not already present from static options
     static_stats =
       Map.put_new(static_stats, pick_stat, Types.ItemStat.build(pick_stat, type, 0, :basic))
@@ -84,8 +69,7 @@ defmodule Ms2ex.Context.ItemStaticStats do
         pick_stat,
         static_stat.value,
         pick_value,
-        item,
-        level_factor
+        item
       )
 
     # Put / update static stat

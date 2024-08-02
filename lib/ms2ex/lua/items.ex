@@ -8,13 +8,13 @@ defmodule Ms2ex.Lua.Items do
       :luaport.call(script, :calcEnchantBoostValues, [
         item.enchant_level,
         Enums.ItemType.get_value(Context.Items.type(item)),
-        item.level
+        item.metadata.limit.level
       ])
 
     results
   end
 
-  def get_stat_static_value(pick_attr, stat_value, deviation, item, lvl_factor) do
+  def get_stat_static_value(pick_attr, stat_value, deviation, item) do
     script = get_script("calcItemValues")
 
     {:ok, [min, max]} =
@@ -23,26 +23,27 @@ defmodule Ms2ex.Lua.Items do
         deviation,
         Enums.ItemType.get_value(Context.Items.type(item)),
         List.first(item.metadata.limit.job_recommends),
-        lvl_factor,
+        item.metadata.option.level_factor,
         item.rarity,
-        item.level
+        item.metadata.limit.level
       ])
 
     min + (max + 1 - min) * :rand.uniform()
   end
 
-  def get_stat_constant_value(pick_attr, stat_value, deviation, item, lvl_factor) do
+  def get_stat_constant_value(pick_attr, stat_value, deviation, item) do
     script = get_script("calcItemValues")
+    item_type = Enums.ItemType.get_value(Context.Items.type(item))
 
     {:ok, [value]} =
       :luaport.call(script, get_pick_attribute(:constant, pick_attr), [
         stat_value,
         deviation,
-        Enums.ItemType.get_value(Context.Items.type(item)),
+        item_type,
         List.first(item.metadata.limit.job_recommends),
-        lvl_factor,
+        item.metadata.option.level_factor,
         item.rarity,
-        item.level
+        item.metadata.limit.level
       ])
 
     value

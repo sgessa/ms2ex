@@ -15,6 +15,7 @@ defmodule Ms2ex.Packets do
     0x16 => "EQUIP_ITEM",
     0x17 => "INVENTORY",
     0x19 => "USE_ITEM",
+    0x22 => "NPC_TALK",
     0x1C => "PICKUP_ITEM",
     0x1D => "PICKUP_MONEY",
     0x20 => "SKILL",

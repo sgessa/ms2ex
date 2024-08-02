@@ -1,5 +1,5 @@
 defmodule Ms2ex.Types.ItemStats do
-  alias Ms2ex.{Context, Schema}
+  alias Ms2ex.{Context, Schema, Storage}
 
   defstruct constants: %{},
             statics: %{},
@@ -13,10 +13,10 @@ defmodule Ms2ex.Types.ItemStats do
 
   def create(%Schema.Item{metadata: meta} = item) do
     pick_id = meta.option.pick_id
-    lvl_factor = meta.option.level_factor
+    pick_options = Storage.Tables.ItemOptions.find_pick(pick_id, item.rarity)
 
-    constants = Context.ItemConstantStats.get(item, pick_id, lvl_factor)
-    statics = Context.ItemStaticStats.get(item, pick_id, lvl_factor)
+    constants = Context.ItemConstantStats.get(item, pick_options)
+    statics = Context.ItemStaticStats.get(item, pick_options)
     randoms = Context.ItemRandomStats.get(item)
 
     enchants =
