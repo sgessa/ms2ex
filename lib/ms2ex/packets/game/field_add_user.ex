@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.FieldAddUser do
-  alias Ms2ex.{Packets, Schema}
+  alias Ms2ex.{Packets, Schema, Types}
   import Packets.PacketWriter
 
   def bytes(character) do
@@ -27,7 +27,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_long()
     |> put_bool(flag_a)
     |> put_int(0x1)
-    |> Ms2ex.SkinColor.put_skin_color(character.skin_color)
+    |> Types.SkinColor.put_skin_color(character.skin_color)
     |> put_ustring(character.profile_url)
     |> put_bool(character.mount != nil)
     # TODO put_mount()

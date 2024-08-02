@@ -1,5 +1,15 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{CharacterManager, Chat, Commands, Context, Field, Net, Packets, PartyServer, World}
+  alias Ms2ex.{
+    CharacterManager,
+    Commands,
+    Context,
+    Enums,
+    Field,
+    Net,
+    Packets,
+    PartyServer,
+    World
+  }
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -8,7 +18,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
   def handle(packet, session) do
     {type_id, packet} = get_int(packet)
-    type = Chat.type_from_int(type_id)
+    type = Enums.ChatType.get_key(type_id)
 
     {msg, packet} = get_ustring(packet)
     {rcpt, packet} = get_ustring(packet)

@@ -1,10 +1,10 @@
 defmodule Ms2ex.Packets.Party do
   import Ms2ex.Packets.PacketWriter
 
-  alias Ms2ex.{Packets, PartyNotice}
+  alias Ms2ex.{Enums, Packets}
 
   def notice(notice_name, character) do
-    notice_code = PartyNotice.from_name(notice_name)
+    notice_code = Enums.PartyNotice.get_value(notice_name)
 
     __MODULE__
     |> build()

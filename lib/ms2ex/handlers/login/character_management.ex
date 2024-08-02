@@ -1,15 +1,13 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
     Context,
-    Hair,
-    ItemColor,
     ProtoMetadata,
     Net,
     Packets,
     Repo,
     Schema,
     SessionManager,
-    SkinColor
+    Types
   }
 
   import Packets.PacketReader
@@ -56,7 +54,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     {gender, packet} = get_byte(packet)
     {job, packet} = get_short(packet)
     {name, packet} = get_ustring(packet)
-    {skin_color, packet} = SkinColor.get_skin_color(packet)
+    {skin_color, packet} = Types.SkinColor.get_skin_color(packet)
     {_, packet} = get_short(packet)
     {equip_count, packet} = get_byte(packet)
 
@@ -107,7 +105,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp get_equip(packet) do
     {id, packet} = get_int(packet)
     {slot_name, packet} = get_ustring(packet)
-    {color, packet} = ItemColor.get_item_color(packet)
+    {color, packet} = Types.ItemColor.get_item_color(packet)
     {_color_idx, packet} = get_int(packet)
     {attrs, packet} = get_item_attributes(packet, slot_name)
 
@@ -118,7 +116,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   end
 
   defp get_item_attributes(packet, "HR") do
-    {hair, packet} = Hair.get_hair(packet)
+    {hair, packet} = Types.Hair.get_hair(packet)
     {%{data: hair}, packet}
   end
 

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.CharacterList do
-  alias Ms2ex.{Packets, Schema}
+  alias Ms2ex.{Packets, Schema, Types}
 
   import Packets.PacketWriter
 
@@ -84,7 +84,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_int()
     |> put_coord()
     |> put_int()
-    |> Ms2ex.SkinColor.put_skin_color(character.skin_color)
+    |> Types.SkinColor.put_skin_color(character.skin_color)
     |> put_time(character.inserted_at)
     |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
     |> put_long()

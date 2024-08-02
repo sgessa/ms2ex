@@ -1,7 +1,7 @@
 defmodule Ms2ex.CharacterManager do
   use GenServer
 
-  alias Ms2ex.{Context, Damage, Field, Packets, PartyServer, Schema, SkillCast, SkillStatus}
+  alias Ms2ex.{Context, Damage, Field, Packets, PartyServer, Schema, SkillCast, Types}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -85,7 +85,7 @@ defmodule Ms2ex.CharacterManager do
 
       if SkillCast.owner_buff?(skill_cast) or SkillCast.entity_buff?(skill_cast) or
            SkillCast.shield_buff?(skill_cast) or SkillCast.owner_debuff?(skill_cast) do
-        status = SkillStatus.new(skill_cast, character.object_id, character.object_id, 1)
+        status = Types.SkillStatus.new(skill_cast, character.object_id, character.object_id, 1)
         Field.add_status(character, status)
       end
 

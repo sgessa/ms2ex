@@ -1,5 +1,5 @@
-defmodule Ms2ex.Chat do
-  @types [
+defmodule Ms2ex.Enums.ChatType do
+  @mapping %{
     all: 0,
     whisper_from: 3,
     whisper_to: 4,
@@ -18,15 +18,7 @@ defmodule Ms2ex.Chat do
     guild_notice: 18,
     guild_notice_noprefix: 19,
     unknown_purple: 20
-  ]
+  }
 
-  def from_name(name) do
-    Keyword.get(@types, name)
-  end
-
-  def type_from_int(type_id) do
-    @types
-    |> Enum.find(fn {_k, v} -> v == type_id end)
-    |> elem(0)
-  end
+  use Ms2ex.Enums
 end

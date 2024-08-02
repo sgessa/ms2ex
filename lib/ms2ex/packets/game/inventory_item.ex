@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Enums, Hair, Schema, Types}
+  alias Ms2ex.{Enums, Schema, Types}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -164,13 +164,13 @@ defmodule Ms2ex.Packets.InventoryItem do
   defp put_appearance(packet, item) do
     packet =
       packet
-      |> Ms2ex.ItemColor.put_item_color(item.color)
+      |> Types.ItemColor.put_item_color(item.color)
       |> put_int(item.appearance_flag)
 
     case item.equip_slot do
       :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13))
       :FD -> put_bytes(packet, item.data)
-      :HR -> Hair.put_hair(packet, item.data)
+      :HR -> Types.Hair.put_hair(packet, item.data)
       _ -> packet
     end
   end

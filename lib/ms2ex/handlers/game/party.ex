@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Party do
-  alias Ms2ex.{CharacterManager, Packets, Party, PartyNotice, PartyServer}
+  alias Ms2ex.{CharacterManager, Enums, Packets, PartyServer, Types}
 
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Party
@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.Party do
     {_target_name, packet} = get_ustring(packet)
 
     {resp_code, packet} = get_byte(packet)
-    response = PartyNotice.from_int(resp_code)
+    response = Enums.PartyNotice.get_key(resp_code)
 
     {party_id, _packet} = get_int(packet)
 
@@ -78,7 +78,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, party} <- PartyServer.lookup(character.party_id),
-         true <- Party.is_leader?(party, character),
+         true <- Types.Party.is_leader?(party, character),
          {:ok, target} <- PartyServer.kick_member(party, target_id) do
       if target.online? do
         run(target, fn -> PartyServer.unsubscribe(party.id) end)
@@ -118,7 +118,7 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x2E, _packet, session) do
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
          {:ok, party} <- PartyServer.lookup(character.party_id) do
-      if Party.is_leader?(party, character) do
+      if Types.Party.is_leader?(party, character) do
         PartyServer.start_ready_check(party)
       end
     end
@@ -139,16 +139,16 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(_, _packet, session), do: session
 
   defp handle_invitation(session, response, party, character) do
-    leader = Party.get_leader(party)
+    leader = Types.Party.get_leader(party)
 
     cond do
-      Party.in_party?(party, character) ->
+      Types.Party.in_party?(party, character) ->
         {:error, :already_in_party}
 
       response != :accepted_invite ->
         push(leader, Packets.Party.notice(response, character))
 
-      Party.full?(party) ->
+      Types.Party.full?(party) ->
         push(session, Packets.Party.notice(:full_party, character))
 
       true ->

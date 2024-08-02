@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Party do
-  alias Ms2ex.{CharacterManager, Packets, Party, PartyManager, PartyServer}
+  alias Ms2ex.{CharacterManager, Packets, PartyManager, PartyServer, Types}
 
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 
@@ -27,7 +27,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
       push(target, Packets.Party.invite(character))
       push(character, Packets.Party.create(party))
     else
-      leader = Party.get_leader(target_party)
+      leader = Types.Party.get_leader(target_party)
       push(leader, Packets.Party.join_request(character))
       push(character, Packets.Party.notice(:request_to_join, target))
     end
