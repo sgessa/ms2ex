@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Insignia do
-  alias Ms2ex.{CharacterManager, Context, Field, Inventory, Storage, Packets}
+  alias Ms2ex.{CharacterManager, Context, Field, Storage, Packets}
 
   import Packets.PacketReader
 
@@ -25,7 +25,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
   end
 
   defp can_equip_insignia?(character, %{type: :enchant}, _insignia_id) do
-    items = Inventory.all(character)
+    items = Context.Inventory.all(character)
     if Enum.find(items, &(&1.enchant_level >= 12)), do: true, else: false
   end
 

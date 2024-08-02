@@ -1,5 +1,5 @@
-defmodule Ms2ex.StatId do
-  @ids [
+defmodule Ms2ex.Enums.StatId do
+  @mapping [
     str: 0x00,
     dex: 0x01,
     int: 0x02,
@@ -37,15 +37,5 @@ defmodule Ms2ex.StatId do
     pet_bonus_attk: 0x22
   ]
 
-  def list() do
-    Keyword.keys(@ids)
-  end
-
-  def from_id(id) do
-    @ids
-    |> Enum.find(fn {_k, v} -> v == id end)
-    |> elem(0)
-  end
-
-  def from_name(name), do: Keyword.get(@ids, name)
+  use Ms2ex.Enums
 end

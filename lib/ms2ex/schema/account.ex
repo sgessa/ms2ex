@@ -1,12 +1,14 @@
-defmodule Ms2ex.Account do
+defmodule Ms2ex.Schema.Account do
   use Ecto.Schema
 
   import Ecto.Changeset
 
-  schema "accounts" do
-    has_many :characters, Ms2ex.Character
+  alias Ms2ex.Schema
 
-    has_one :wallet, Ms2ex.AccountWallet
+  schema "accounts" do
+    has_many :characters, Schema.Character
+
+    has_one :wallet, Schema.AccountWallet
 
     field :password, :string, virtual: true
     field :password_hash, :string
@@ -19,7 +21,7 @@ defmodule Ms2ex.Account do
   def changeset(account, attrs) do
     account
     |> cast(attrs, [:username, :password])
-    |> cast_assoc(:wallet, with: &Ms2ex.AccountWallet.changeset/2)
+    |> cast_assoc(:wallet, with: &Schema.AccountWallet.changeset/2)
     |> maybe_encrypt_password()
     |> validate_required([:username, :password_hash])
     |> unique_constraint(:username)

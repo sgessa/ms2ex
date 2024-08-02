@@ -1,13 +1,12 @@
 defmodule Ms2ex.Commands do
   alias Ms2ex.{
-    Character,
     CharacterManager,
     Context,
     Field,
-    Inventory,
     ProtoMetadata,
     Net,
     Packets,
+    Schema,
     Storage,
     Wallets
   }
@@ -34,9 +33,10 @@ defmodule Ms2ex.Commands do
 
   def handle(["level", level], character, session) do
     with {level, _} <- Integer.parse(level) do
-      level = if level > Character.max_level(), do: Character.max_level(), else: level
+      level = min(level, Schema.Character.max_level())
       {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
       CharacterManager.update(character)
+
       Field.broadcast(character, Packets.LevelUp.bytes(character))
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
@@ -143,7 +143,7 @@ defmodule Ms2ex.Commands do
     with {item_id, _} <- Integer.parse(item_id),
          {rarity, _} <- Integer.parse(rarity),
          item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
-         {:ok, {_, item} = result} <- Inventory.add_item(character, item) do
+         {:ok, {_, item} = result} <- Context.Inventory.add_item(character, item) do
       session
       |> push(Packets.InventoryItem.add_item(result))
       |> push(Packets.InventoryItem.mark_item_new(item))

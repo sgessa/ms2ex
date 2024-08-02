@@ -1,5 +1,5 @@
 defmodule Ms2ex.Skills do
-  alias Ms2ex.{Character, Storage, Repo, Skill, SkillTab}
+  alias Ms2ex.{Storage, Repo, Schema, Skill, SkillTab}
   alias Ms2ex.Context.SkillTabs
 
   import Ecto.Query, except: [update: 2]
@@ -14,7 +14,7 @@ defmodule Ms2ex.Skills do
     Enum.into(skills, [], & &1.main)
   end
 
-  def get_active_tab(%Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do
+  def get_active_tab(%Schema.Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do
     Enum.find(tabs, &(&1.id == active_tab_id))
   end
 
@@ -22,7 +22,7 @@ defmodule Ms2ex.Skills do
     Enum.find(skills, &(&1.skill_id == skill_id))
   end
 
-  def add_tab(%Character{} = character, attrs) do
+  def add_tab(%Schema.Character{} = character, attrs) do
     attrs = SkillTabs.set_skills(character.job, attrs)
 
     character
@@ -36,11 +36,11 @@ defmodule Ms2ex.Skills do
     |> Repo.update()
   end
 
-  def get_tab(%Character{skill_tabs: tabs}, tab_id) do
+  def get_tab(%Schema.Character{skill_tabs: tabs}, tab_id) do
     Enum.find(tabs, &(&1.id == tab_id))
   end
 
-  def load_tab_skills(%Character{job: job}, %SkillTab{id: tab_id}) do
+  def load_tab_skills(%Schema.Character{job: job}, %SkillTab{id: tab_id}) do
     skills =
       Skill
       |> where([s], s.skill_tab_id == ^tab_id)
@@ -65,7 +65,7 @@ defmodule Ms2ex.Skills do
     |> Repo.update()
   end
 
-  def update_subskills(%Character{job: job}, %SkillTab{} = tab, %Skill{} = parent) do
+  def update_subskills(%Schema.Character{job: job}, %SkillTab{} = tab, %Skill{} = parent) do
     job_skill = Map.get(by_job(job), parent.skill_id)
 
     Enum.each(job_skill.sub_skills, fn sub_id ->

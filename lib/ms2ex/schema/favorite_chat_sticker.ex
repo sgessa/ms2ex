@@ -1,11 +1,13 @@
-defmodule Ms2ex.FavoriteChatSticker do
+defmodule Ms2ex.Schema.FavoriteChatSticker do
   use Ecto.Schema
+
+  alias Ms2ex.Schema
 
   import Ecto.Changeset
 
   schema "favorite_chat_stickers" do
-    belongs_to :character, Ms2ex.Character
-    belongs_to :group, Ms2ex.ChatStickerGroup
+    belongs_to :character, Schema.Character
+    belongs_to :group, Schema.ChatStickerGroup
 
     field :sticker_id, :integer
   end

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Wallets do
-  alias Ms2ex.{Account, AccountWallet, Character, Packets, Repo, Wallet}
+  alias Ms2ex.{Packets, Repo, Schema}
 
   import Ecto.Query, except: [update: 2]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -18,28 +18,28 @@ defmodule Ms2ex.Wallets do
     valor_tokens: 0x3
   }
 
-  def find(%Account{id: account_id}) do
-    AccountWallet
+  def find(%Schema.Account{id: account_id}) do
+    Schema.AccountWallet
     |> where([w], w.account_id == ^account_id)
     |> limit(1)
     |> Repo.one()
   end
 
-  def find(%Character{id: character_id}) do
-    Wallet
+  def find(%Schema.Character{id: character_id}) do
+    Schema.Wallet
     |> where([w], w.character_id == ^character_id)
     |> limit(1)
     |> Repo.one()
   end
 
-  def update(%Character{account_id: account_id} = char, currency, value)
+  def update(%Schema.Character{account_id: account_id} = char, currency, value)
       when currency in @account_currencies do
     Repo.transaction(fn ->
-      AccountWallet
+      Schema.AccountWallet
       |> where([w], w.account_id == ^account_id)
       |> Repo.update_all(inc: [{currency, value}])
 
-      wallet = Repo.get_by(AccountWallet, account_id: account_id)
+      wallet = Repo.get_by(Schema.AccountWallet, account_id: account_id)
       push(char, Packets.Wallet.update(wallet, currency))
 
       wallet
@@ -49,13 +49,13 @@ defmodule Ms2ex.Wallets do
       :error
   end
 
-  def update(%Character{id: char_id} = char, currency, value) do
+  def update(%Schema.Character{id: char_id} = char, currency, value) do
     Repo.transaction(fn ->
-      Wallet
+      Schema.Wallet
       |> where([w], w.character_id == ^char_id)
       |> Repo.update_all(inc: [{currency, value}])
 
-      wallet = Repo.get_by(Wallet, character_id: char_id)
+      wallet = Repo.get_by(Schema.Wallet, character_id: char_id)
       push(char, Packets.Wallet.update(wallet, currency))
 
       wallet

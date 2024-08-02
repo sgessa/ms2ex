@@ -4,9 +4,7 @@ defmodule Ms2ex.FieldHelper do
   alias Ms2ex.{
     CharacterManager,
     Context,
-    Emotes,
     Field,
-    Inventory,
     MapBlock,
     Storage,
     ProtoMetadata,
@@ -82,7 +80,7 @@ defmodule Ms2ex.FieldHelper do
     # Load Emotes and Player Stats after Player Object is loaded
     push(character, Packets.Stats.set_character_stats(character))
 
-    emotes = Emotes.list(character)
+    emotes = Context.Emotes.list(character)
     push(character, Packets.Emote.load(emotes))
 
     # Load Premium membership if active
@@ -134,7 +132,7 @@ defmodule Ms2ex.FieldHelper do
       true ->
         item = Context.Items.load_metadata(item)
 
-        with {:ok, result} <- Inventory.add_item(character, item) do
+        with {:ok, result} <- Context.Inventory.add_item(character, item) do
           {_status, item} = result
           push(character, Packets.InventoryItem.add_item(result))
           push(character, Packets.InventoryItem.mark_item_new(item))

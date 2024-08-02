@@ -1,10 +1,9 @@
-defmodule Ms2ex.Character do
+defmodule Ms2ex.Schema.Character do
   use Ecto.Schema
 
-  alias Ms2ex.Context.SkillTabs
-  alias Ms2ex.EctoTypes
-
   import Ecto.Changeset
+
+  alias Ms2ex.{Context, EctoTypes, Schema}
 
   @genders [male: 0, female: 1]
   @jobs Map.to_list(Ms2ex.ProtoMetadata.Job.mapping())
@@ -34,23 +33,23 @@ defmodule Ms2ex.Character do
   ]
 
   schema "characters" do
-    belongs_to :account, Ms2ex.Account
+    belongs_to :account, Schema.Account
 
-    has_many :emotes, Ms2ex.Emote
-    has_many :favorite_stickers, Ms2ex.FavoriteChatSticker
-    has_many :friends, Ms2ex.Friend
-    has_many :stickers, Ms2ex.ChatStickerGroup
+    has_many :emotes, Schema.Emote
+    has_many :favorite_stickers, Schema.FavoriteChatSticker
+    has_many :friends, Schema.Friend
+    has_many :stickers, Schema.ChatStickerGroup
 
-    has_many :equips, Ms2ex.Item
-    has_many :inventory_items, Ms2ex.Item
-    has_many :inventory_tabs, Ms2ex.Inventory.Tab
+    has_many :equips, Schema.Item
+    has_many :inventory_items, Schema.Item
+    has_many :inventory_tabs, Schema.Inventory.Tab
 
-    has_many :hot_bars, Ms2ex.HotBar
-    has_many :skill_tabs, Ms2ex.SkillTab
-    has_many :titles, Ms2ex.CharacterTitle
+    has_many :hot_bars, Schema.HotBar
+    has_many :skill_tabs, Schema.SkillTab
+    has_many :titles, Schema.CharacterTitle
 
-    has_one :stats, Ms2ex.CharacterStats
-    has_one :wallet, Ms2ex.Wallet
+    has_one :stats, Schema.CharacterStats
+    has_one :wallet, Schema.Wallet
 
     field :awakened, :boolean, default: false
 
@@ -108,13 +107,13 @@ defmodule Ms2ex.Character do
   def changeset(character, attrs) do
     character
     |> cast(attrs, @fields ++ @optional_fields)
-    |> cast_assoc(:emotes, with: &Ms2ex.Emote.changeset/2)
-    |> cast_assoc(:inventory_tabs, with: &Ms2ex.Inventory.Tab.changeset/2)
-    |> cast_assoc(:hot_bars, with: &Ms2ex.HotBar.changeset/2)
-    |> cast_assoc(:skill_tabs, with: &Ms2ex.SkillTab.changeset/2)
-    |> cast_assoc(:stats, with: &Ms2ex.CharacterStats.changeset/2)
-    |> cast_assoc(:stickers, with: &Ms2ex.ChatStickerGroup.changeset/2)
-    |> cast_assoc(:wallet, with: &Ms2ex.Wallet.changeset/2)
+    |> cast_assoc(:emotes, with: &Schema.Emote.changeset/2)
+    |> cast_assoc(:inventory_tabs, with: &Schema.Inventory.Tab.changeset/2)
+    |> cast_assoc(:hot_bars, with: &Schema.HotBar.changeset/2)
+    |> cast_assoc(:skill_tabs, with: &Schema.SkillTab.changeset/2)
+    |> cast_assoc(:stats, with: &Schema.CharacterStats.changeset/2)
+    |> cast_assoc(:stickers, with: &Schema.ChatStickerGroup.changeset/2)
+    |> cast_assoc(:wallet, with: &Schema.Wallet.changeset/2)
     |> validate_required(@fields)
     |> unique_constraint(:name)
   end
@@ -136,7 +135,7 @@ defmodule Ms2ex.Character do
 
     attrs
     |> Map.put(:stickers, default_stickers())
-    |> Map.put(:emotes, Enum.map(Ms2ex.Emotes.default_emotes(), &%{emote_id: &1}))
+    |> Map.put(:emotes, Enum.map(Context.Emotes.default_emotes(), &%{emote_id: &1}))
     |> Map.put(:hot_bars, [%{active: true}, %{}])
     |> Map.put(:inventory_tabs, default_inventory_tabs())
     |> Map.put(:skill_tabs, default_skill_tabs(job))
@@ -145,7 +144,7 @@ defmodule Ms2ex.Character do
   end
 
   defp default_stickers() do
-    Enum.map(Ms2ex.ChatStickers.default_stickers(), &%{group_id: &1})
+    Enum.map(Context.ChatStickers.default_stickers(), &%{group_id: &1})
   end
 
   defp default_inventory_tabs() do
@@ -156,6 +155,6 @@ defmodule Ms2ex.Character do
   end
 
   defp default_skill_tabs(job) do
-    [SkillTabs.set_skills(job, %{name: "Build 1"})]
+    [Context.SkillTabs.set_skills(job, %{name: "Build 1"})]
   end
 end

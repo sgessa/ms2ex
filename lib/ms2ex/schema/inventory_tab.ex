@@ -1,14 +1,14 @@
-defmodule Ms2ex.Inventory.Tab do
+defmodule Ms2ex.Schema.InventoryTab do
   use Ecto.Schema
 
   import Ecto.Changeset
 
-  alias Ms2ex.{Character, Enums}
+  alias Ms2ex.{Enums, Schema}
 
   @inventory_tabs Map.to_list(Enums.InventoryTab.mapping())
 
   schema "inventory_tabs" do
-    belongs_to :character, Character
+    belongs_to :character, Schema.Character
 
     field :slots, :integer
     field :tab, Ecto.Enum, values: @inventory_tabs

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Friends do
-  alias Ms2ex.{Character, Friend, Repo}
+  alias Ms2ex.{Friend, Repo, Schema}
 
   import Ecto.Query
 
@@ -14,7 +14,7 @@ defmodule Ms2ex.Friends do
   defp maybe_preload_rcpt(query, true), do: preload(query, [_f], [:rcpt])
   defp maybe_preload_rcpt(query, _), do: query
 
-  def send_request(%Character{} = character, %Character{} = friend, message) do
+  def send_request(%Schema.Character{} = character, %Schema.Character{} = friend, message) do
     shared_id = Ms2ex.generate_id()
 
     src_attrs = %{message: message, shared_id: shared_id, status: :pending}
@@ -47,7 +47,7 @@ defmodule Ms2ex.Friends do
     end)
   end
 
-  def block(%Character{} = character, %Character{} = rcpt, reason) do
+  def block(%Schema.Character{} = character, %Schema.Character{} = rcpt, reason) do
     shared_id = Ms2ex.generate_id()
     attrs = %{shared_id: shared_id, block_reason: reason, status: :blocked}
 

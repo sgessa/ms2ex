@@ -1,10 +1,12 @@
-defmodule Ms2ex.CharacterStats do
+defmodule Ms2ex.Schema.CharacterStats do
   use Ecto.Schema
 
   import Ecto.Changeset
 
+  alias Ms2ex.{Enums, Schema}
+
   schema "character_stats" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Schema.Character
 
     field :str_min, :integer, default: 10
     field :str_cur, :integer, default: 10
@@ -155,7 +157,7 @@ defmodule Ms2ex.CharacterStats do
   end
 
   def fields() do
-    Ms2ex.StatId.list()
+    Enums.StatId.keys()
     |> Enum.map(&[:"#{&1}_min", :"#{&1}_cur", :"#{&1}_max"])
     |> List.flatten()
   end

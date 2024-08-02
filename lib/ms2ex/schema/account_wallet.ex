@@ -1,10 +1,10 @@
-defmodule Ms2ex.AccountWallet do
+defmodule Ms2ex.Schema.AccountWallet do
   use Ecto.Schema
 
   import Ecto.Changeset
 
   schema "account_wallets" do
-    belongs_to :account, Ms2ex.Account
+    belongs_to :account, Schema.Account
 
     field :event_merets, :integer, default: 0
     field :game_merets, :integer, default: 0

@@ -1,10 +1,10 @@
-defmodule Ms2ex.Equips do
-  alias Ms2ex.{Character, Context, Inventory, Schema, Repo, Enums}
+defmodule Ms2ex.Context.Equips do
+  alias Ms2ex.{Context, Schema, Repo, Enums}
 
   import Ecto.Query, except: [update: 2]
-  import Inventory, only: [update_item: 2, find_first_available_slot: 2]
+  import Context.Inventory, only: [update_item: 2, find_first_available_slot: 2]
 
-  def list(%Character{id: char_id}) do
+  def list(%Schema.Character{id: char_id}) do
     Schema.Item
     |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
     |> Repo.all()

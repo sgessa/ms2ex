@@ -1,6 +1,5 @@
 defmodule Ms2ex.Dismantle do
   alias Ms2ex.Context
-  alias Ms2ex.Inventory
 
   @max_slots 100
   def max_slots(), do: @max_slots
@@ -32,7 +31,7 @@ defmodule Ms2ex.Dismantle do
   def update_rewards(character, inventory) do
     rewards =
       Enum.reduce(inventory.slots, %{}, fn {_slot, {item_uid, amount}}, total_rewards ->
-        item = character |> Inventory.get(item_uid) |> Context.Items.load_metadata()
+        item = character |> Context.Inventory.get(item_uid) |> Context.Items.load_metadata()
         rewards = Map.get(item.metadata, :dismantle_rewards, [])
 
         Enum.reduce(rewards, total_rewards, fn reward, total_rewards ->

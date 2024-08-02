@@ -1,7 +1,7 @@
 defmodule Ms2ex.CharacterManager do
   use GenServer
 
-  alias Ms2ex.{Character, Context, Damage, Field, Packets, PartyServer, SkillCast, SkillStatus}
+  alias Ms2ex.{Context, Damage, Field, Packets, PartyServer, Schema, SkillCast, SkillStatus}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -14,41 +14,41 @@ defmodule Ms2ex.CharacterManager do
   def lookup_by_name(character_name) do
     case Context.Characters.get_by(name: character_name) do
       nil -> :error
-      %Character{id: char_id} -> lookup(char_id)
+      %Schema.Character{id: char_id} -> lookup(char_id)
     end
   end
 
-  def update(%Character{} = character), do: call(character, {:update, character})
+  def update(%Schema.Character{} = character), do: call(character, {:update, character})
 
-  def monitor(%Character{} = character), do: call(character, :monitor)
+  def monitor(%Schema.Character{} = character), do: call(character, :monitor)
 
-  def cast_skill(%Character{} = character, %SkillCast{} = skill_cast) do
+  def cast_skill(%Schema.Character{} = character, %SkillCast{} = skill_cast) do
     call(character, {:cast_skill, skill_cast})
   end
 
-  def receive_fall_dmg(%Character{} = character) do
+  def receive_fall_dmg(%Schema.Character{} = character) do
     cast(character, :receive_fall_dmg)
   end
 
   def consume_stat(_character, _stat, amount) when amount <= 0, do: :error
 
-  def consume_stat(%Character{} = character, stat, amount) do
+  def consume_stat(%Schema.Character{} = character, stat, amount) do
     cast(character, {:consume_stat, stat, amount})
   end
 
   def increase_stat(_character, _stat, amount) when amount <= 0, do: :error
 
-  def increase_stat(%Character{} = character, stat, amount) do
+  def increase_stat(%Schema.Character{} = character, stat, amount) do
     cast(character, {:increase_stat, stat, amount})
   end
 
   def earn_exp(_character, amount) when amount <= 0, do: :error
 
-  def earn_exp(%Character{} = character, amount) do
+  def earn_exp(%Schema.Character{} = character, amount) do
     cast(character, {:earn_exp, amount})
   end
 
-  def start(%Character{} = character) do
+  def start(%Schema.Character{} = character) do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
 
@@ -196,7 +196,7 @@ defmodule Ms2ex.CharacterManager do
     PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
   end
 
-  defp call(%Character{id: id}, msg) do
+  defp call(%Schema.Character{id: id}, msg) do
     if pid = Process.whereis(process_name(id)) do
       GenServer.call(pid, msg)
     else
@@ -212,7 +212,7 @@ defmodule Ms2ex.CharacterManager do
     end
   end
 
-  defp cast(%Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
+  defp cast(%Schema.Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
   defp cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
 
   defp process_name(character_id) do

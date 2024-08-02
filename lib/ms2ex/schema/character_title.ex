@@ -1,9 +1,10 @@
-defmodule Ms2ex.CharacterTitle do
+defmodule Ms2ex.Schema.CharacterTitle do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Ms2ex.Schema
 
   schema "character_titles" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Schema.Character
 
     field :title_id, :integer
 

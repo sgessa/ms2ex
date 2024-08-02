@@ -1,25 +1,25 @@
-defmodule Ms2ex.Inventory do
+defmodule Ms2ex.Context.Inventory do
   alias __MODULE__.Tab
-  alias Ms2ex.{Character, Schema, Repo}
+  alias Ms2ex.{Schema, Repo}
 
   import Ecto.Query, except: [update: 2]
 
   def get_by(attrs), do: Repo.get_by(Schema.Item, attrs)
 
-  def all(%Character{id: character_id}) do
+  def all(%Schema.Character{id: character_id}) do
     Schema.Item
     |> where([i], i.character_id == ^character_id)
     |> Repo.all()
   end
 
-  def list_items(%Character{id: character_id}) do
+  def list_items(%Schema.Character{id: character_id}) do
     Schema.Item
     |> where([i], i.character_id == ^character_id and i.location == ^:inventory)
     |> order_by(asc: :inventory_slot)
     |> Repo.all()
   end
 
-  def list_tabs(%Character{id: character_id}) do
+  def list_tabs(%Schema.Character{id: character_id}) do
     Tab
     |> where([i], i.character_id == ^character_id)
     |> order_by(asc: :tab)
@@ -39,7 +39,7 @@ defmodule Ms2ex.Inventory do
   end
 
   # Item is stackable
-  def add_item(%Character{} = character, %Schema.Item{metadata: %{stack_limit: n}} = attrs)
+  def add_item(%Schema.Character{} = character, %Schema.Item{metadata: %{stack_limit: n}} = attrs)
       when n > 1 do
     Repo.transaction(fn ->
       case find_stack(character, attrs) do
@@ -53,7 +53,7 @@ defmodule Ms2ex.Inventory do
   end
 
   # Item is not stackable
-  def add_item(%Character{} = character, %Schema.Item{} = attrs) do
+  def add_item(%Schema.Character{} = character, %Schema.Item{} = attrs) do
     with {:create, item} <- create(character, attrs) do
       {:ok, {:create, item}}
     end
@@ -178,7 +178,7 @@ defmodule Ms2ex.Inventory do
     end)
   end
 
-  def expand_tab(%Character{id: character_id}, tab) do
+  def expand_tab(%Schema.Character{id: character_id}, tab) do
     extra_slots = 6
 
     Tab
@@ -188,7 +188,7 @@ defmodule Ms2ex.Inventory do
     Repo.get_by(Tab, character_id: character_id, tab: tab)
   end
 
-  def sort_tab(%Character{id: character_id}, inventory_tab) do
+  def sort_tab(%Schema.Character{id: character_id}, inventory_tab) do
     Repo.transaction(fn ->
       Schema.Item
       |> where([i], i.character_id == ^character_id)

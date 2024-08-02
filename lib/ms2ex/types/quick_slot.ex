@@ -1,4 +1,4 @@
-defmodule Ms2ex.QuickSlot do
+defmodule Ms2ex.Types.QuickSlot do
   import Ms2ex.Packets.{PacketReader, PacketWriter}
 
   defstruct skill_id: 0x0, item_id: 0x0, item_uid: 0x0

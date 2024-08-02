@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Dismantle do
-  alias Ms2ex.{CharacterManager, Context, Dismantle, Inventory, Packets, Schema}
+  alias Ms2ex.{CharacterManager, Context, Dismantle, Packets, Schema}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -75,7 +75,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
-    items = Inventory.list_tab_items(character.id, inv_tab)
+    items = Context.Inventory.list_tab_items(character.id, inv_tab)
     inventory = auto_add(session, character, max_rarity, items)
     CharacterManager.update(%{character | dismantle_inventory: inventory})
   end
@@ -103,8 +103,8 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     inventory = character.dismantle_inventory
 
     Enum.each(inventory.slots, fn {_slot, {id, amount}} ->
-      with %Schema.Item{} = item <- Inventory.get(character, id) do
-        consumed_item = Inventory.consume(item, amount)
+      with %Schema.Item{} = item <- Context.Inventory.get(character, id) do
+        consumed_item = Context.Inventory.consume(item, amount)
         push(session, Packets.InventoryItem.consume(consumed_item))
       end
     end)
@@ -116,7 +116,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     Enum.each(inventory.rewards, fn {item_id, amount} ->
       item = Context.Items.init(item_id, %{amount: amount})
 
-      with {:ok, result} <- Inventory.add_item(character, item) do
+      with {:ok, result} <- Context.Inventory.add_item(character, item) do
         push(session, Packets.InventoryItem.add_item(result))
       end
     end)

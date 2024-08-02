@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
-  alias Ms2ex.{Context, Inventory, Packets, Schema, Wallets}
+  alias Ms2ex.{Context, Packets, Schema, Wallets}
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
@@ -124,7 +124,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     item = %Schema.Item{item_id: id, rarity: rarity, amount: amount, enchant_level: enchant_lvl}
     item = Context.Items.load_metadata(item)
 
-    case Inventory.add_item(character, item) do
+    case Context.Inventory.add_item(character, item) do
       {:ok, result} -> push(session, Packets.InventoryItem.add_item(result))
       _ -> session
     end

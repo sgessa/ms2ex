@@ -1,9 +1,10 @@
-defmodule Ms2ex.Emote do
+defmodule Ms2ex.Schema.Emote do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Ms2ex.Schema
 
   schema "emotes" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Schema.Character
 
     field :emote_id, :integer
 

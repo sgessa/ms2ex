@@ -1,11 +1,11 @@
-defmodule Ms2ex.HotBars do
-  alias Ms2ex.{Character, HotBar, QuickSlot, Repo}
+defmodule Ms2ex.Context.HotBars do
+  alias Ms2ex.{Repo, Schema, Types}
 
   import Ecto.Query, except: [update: 2]
 
-  def get_by(attrs), do: Repo.get_by(HotBar, attrs)
+  def get_by(attrs), do: Repo.get_by(Schema.HotBar, attrs)
 
-  def list(%Character{id: character_id}) do
+  def list(%Schema.Character{id: character_id}) do
     HotBar
     |> where([hb], hb.character_id == ^character_id)
     |> order_by(asc: :id)
@@ -24,10 +24,10 @@ defmodule Ms2ex.HotBars do
     target_idx = find_quick_slot_index(hot_bar, skill_id, item_uid)
 
     if valid_target_slot?(target_idx) do
-      slots = List.update_at(hot_bar.quick_slots, target_idx, fn _ -> %QuickSlot{} end)
+      slots = List.update_at(hot_bar.quick_slots, target_idx, fn _ -> %Types.QuickSlot{} end)
 
       hot_bar
-      |> HotBar.changeset(%{quick_slots: slots})
+      |> Schema.HotBar.changeset(%{quick_slots: slots})
       |> Repo.update()
     else
       :error
@@ -46,7 +46,7 @@ defmodule Ms2ex.HotBars do
     slots = List.update_at(slots, target, fn _ -> quick_slot end)
 
     hot_bar
-    |> HotBar.changeset(%{quick_slots: slots})
+    |> Schema.HotBar.changeset(%{quick_slots: slots})
     |> Repo.update()
   end
 
@@ -55,6 +55,6 @@ defmodule Ms2ex.HotBars do
   end
 
   defp valid_target_slot?(target) do
-    !(target < 0 or target >= HotBar.max_quick_slots())
+    !(target < 0 or target >= Schema.HotBar.max_quick_slots())
   end
 end

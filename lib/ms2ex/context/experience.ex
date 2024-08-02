@@ -1,12 +1,12 @@
 defmodule Ms2ex.Experience do
-  alias Ms2ex.{Character, Context, ProtoMetadata.ExpTable}
+  alias Ms2ex.{Context, ProtoMetadata.ExpTable, Schema}
 
-  @max_level Character.max_level()
-  def maybe_add_exp(%Character{level: lvl} = char, _exp) when lvl >= @max_level do
+  @max_level Schema.Character.max_level()
+  def maybe_add_exp(%Schema.Character{level: lvl} = char, _exp) when lvl >= @max_level do
     {:ok, char}
   end
 
-  def maybe_add_exp(%Character{level: level, exp: current_exp} = character, exp_gained) do
+  def maybe_add_exp(%Schema.Character{level: level, exp: current_exp} = character, exp_gained) do
     {:ok, tnl} = ExpTable.to_next_level(level)
     total_exp = current_exp + exp_gained
 

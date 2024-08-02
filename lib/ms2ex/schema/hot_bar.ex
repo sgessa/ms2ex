@@ -1,16 +1,18 @@
-defmodule Ms2ex.HotBar do
+defmodule Ms2ex.Schema.HotBar do
   use Ecto.Schema
 
   import Ecto.Changeset
 
+  alias Ms2ex.{EctoTypes, Schema, Types}
+
   @max_slots 25
-  @default_slots Enum.map(1..@max_slots, fn _ -> %Ms2ex.QuickSlot{} end)
+  @default_slots Enum.map(1..@max_slots, fn _ -> %Types.QuickSlot{} end)
 
   schema "hot_bars" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Schema.Character
 
     field :active, :boolean, default: false
-    field :quick_slots, Ms2ex.EctoTypes.Term, default: @default_slots
+    field :quick_slots, EctoTypes.Term, default: @default_slots
   end
 
   @doc false
