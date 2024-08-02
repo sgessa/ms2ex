@@ -1,11 +1,13 @@
-defmodule Ms2ex.SkillTab do
+defmodule Ms2ex.Schema.SkillTab do
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "skill_tabs" do
-    belongs_to :character, Ms2ex.Character
+  alias Ms2ex.Schema
 
-    has_many :skills, Ms2ex.Skill, on_replace: :delete
+  schema "skill_tabs" do
+    belongs_to :character, Schema.Character
+
+    has_many :skills, Schema.Skill, on_replace: :delete
 
     field :name, :string
   end
@@ -14,7 +16,7 @@ defmodule Ms2ex.SkillTab do
   def changeset(skill_tab, attrs) do
     skill_tab
     |> cast(attrs, [:name])
-    |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
+    |> cast_assoc(:skills, with: &Schema.Skill.changeset/2)
     |> validate_required([:name])
   end
 
@@ -22,7 +24,7 @@ defmodule Ms2ex.SkillTab do
   def add(character, attrs) do
     %__MODULE__{}
     |> cast(attrs, [:id, :name])
-    |> cast_assoc(:skills, with: &Ms2ex.Skill.changeset/2)
+    |> cast_assoc(:skills, with: &Schema.Skill.changeset/2)
     |> put_assoc(:character, character)
     |> validate_required([:name])
   end

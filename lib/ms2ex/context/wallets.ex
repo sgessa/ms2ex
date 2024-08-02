@@ -1,4 +1,4 @@
-defmodule Ms2ex.Wallets do
+defmodule Ms2ex.Context.Wallets do
   alias Ms2ex.{Packets, Repo, Schema}
 
   import Ecto.Query, except: [update: 2]

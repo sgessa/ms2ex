@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
-  alias Ms2ex.{Context, Packets, Schema, Wallets}
+  alias Ms2ex.{Context, Packets, Schema}
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
@@ -107,7 +107,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   defp add_currency(session, character, currency, content) do
     amount = Enum.random(content.min_amount..content.max_amount)
 
-    case Wallets.update(character, currency, amount) do
+    case Context.Wallets.update(character, currency, amount) do
       {:ok, wallet} ->
         push(session, Packets.Wallet.update(wallet, currency))
 

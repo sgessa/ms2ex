@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
   defp add_emoticon(session, character, item, _packet) do
     sticker_group_id = item.metadata.function_param
 
-    with {:ok, _} <- ChatStickers.add(character, sticker_group_id) do
+    with {:ok, _} <- Context.ChatStickers.add(character, sticker_group_id) do
       consumed_item = Context.Inventory.consume(item)
 
       session

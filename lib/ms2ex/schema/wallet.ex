@@ -1,10 +1,10 @@
-defmodule Ms2ex.Wallet do
+defmodule Ms2ex.Schema.Wallet do
   use Ecto.Schema
 
   import Ecto.Changeset
 
   schema "wallets" do
-    belongs_to :character, Ms2ex.Character
+    belongs_to :character, Ms2ex.Schema.Character
 
     field :havi_fruits, :integer, default: 0
     field :mesos, :integer, default: 10_000

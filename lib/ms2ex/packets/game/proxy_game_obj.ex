@@ -1,6 +1,5 @@
 defmodule Ms2ex.Packets.ProxyGameObj do
-  alias Ms2ex.Packets
-  alias Ms2ex.Character
+  alias Ms2ex.{Schema, Packets}
 
   import Bitwise
   import Packets.PacketWriter
@@ -24,7 +23,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
   }
 
   def load_player(character) do
-    real_job_id = Character.real_job_id(character)
+    real_job_id = Schema.Character.real_job_id(character)
 
     __MODULE__
     |> build()
@@ -39,7 +38,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_coord(character.position)
     |> put_short(character.level)
     |> put_short(real_job_id)
-    |> put_int(Character.job_id(character))
+    |> put_int(Schema.Character.job_id(character))
     |> put_int()
     |> put_int()
     |> put_int()

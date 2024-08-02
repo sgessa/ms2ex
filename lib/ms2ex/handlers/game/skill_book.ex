@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.SkillBook do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Context, Net, Packets, Skills, Wallets}
+  alias Ms2ex.{CharacterManager, Context, Net, Packets}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -28,7 +28,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
       {tab_id, packet} = get_long(packet)
       {tab_name, packet} = get_ustring(packet)
 
-      tab = Skills.get_tab(character, tab_id)
+      tab = Context.Skills.get_tab(character, tab_id)
       {:ok, tab} = add_or_update_tab(tab, character, %{id: tab_id, name: tab_name})
 
       {skill_count, packet} = get_int(packet)
@@ -50,8 +50,8 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     {tab_id, packet} = get_long(packet)
     {new_name, _packet} = get_ustring(packet)
 
-    tab = Skills.get_tab(character, tab_id)
-    {:ok, tab} = Skills.update_tab(tab, %{name: new_name})
+    tab = Context.Skills.get_tab(character, tab_id)
+    {:ok, tab} = Context.Skills.update_tab(tab, %{name: new_name})
 
     idx = Enum.find_index(character.skill_tabs, &(&1.id == tab_id))
     tabs = List.update_at(character.skill_tabs, idx, fn _ -> tab end)
@@ -64,7 +64,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
   # Add Tab
   @add_tab_cost -990
   defp handle_mode(0x4, _packet, character, session) do
-    with {:ok, wallet} <- Wallets.update(character, :merets, @add_tab_cost) do
+    with {:ok, wallet} <- Context.Wallets.update(character, :merets, @add_tab_cost) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.SkillBook.add_tab(character))
@@ -74,11 +74,11 @@ defmodule Ms2ex.GameHandlers.SkillBook do
   defp handle_mode(_mode, _packet, _character, session), do: session
 
   defp add_or_update_tab(nil, character, attrs) do
-    Skills.add_tab(character, attrs)
+    Context.Skills.add_tab(character, attrs)
   end
 
   defp add_or_update_tab(tab, _character, attrs) do
-    Skills.update_tab(tab, attrs)
+    Context.Skills.update_tab(tab, attrs)
   end
 
   defp save_skills(skill_count, character, tab, packet) when skill_count > 0 do
@@ -88,10 +88,10 @@ defmodule Ms2ex.GameHandlers.SkillBook do
       {skill_level, packet} = get_int(packet)
       skill_level = max(skill_level, 0)
 
-      skill = Skills.find_in_tab(tab, skill_id)
-      {:ok, skill} = Skills.update(skill, %{level: skill_level})
+      skill = Context.Skills.find_in_tab(tab, skill_id)
+      {:ok, skill} = Context.Skills.update(skill, %{level: skill_level})
 
-      Skills.update_subskills(character, tab, skill)
+      Context.Skills.update_subskills(character, tab, skill)
 
       packet
     end)

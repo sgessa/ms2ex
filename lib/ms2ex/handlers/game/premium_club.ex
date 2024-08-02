@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.PremiumClub do
-  alias Ms2ex.{CharacterManager, Packets, Wallets}
+  alias Ms2ex.{CharacterManager, Context, Packets}
   alias Ms2ex.PremiumMemberships, as: Memberships
 
   import Packets.PacketReader
@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
 
     with true <- is_map(pkg),
          {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, wallet} <- Wallets.update(character, :merets, -pkg.cost),
+         {:ok, wallet} <- Context.Wallets.update(character, :merets, -pkg.cost),
          {:ok, membership} <- Memberships.create_or_extend(account_id, pkg.expiration) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))

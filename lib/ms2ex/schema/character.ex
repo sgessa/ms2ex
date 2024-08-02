@@ -108,7 +108,7 @@ defmodule Ms2ex.Schema.Character do
     character
     |> cast(attrs, @fields ++ @optional_fields)
     |> cast_assoc(:emotes, with: &Schema.Emote.changeset/2)
-    |> cast_assoc(:inventory_tabs, with: &Schema.Inventory.Tab.changeset/2)
+    |> cast_assoc(:inventory_tabs, with: &Schema.InventoryTab.changeset/2)
     |> cast_assoc(:hot_bars, with: &Schema.HotBar.changeset/2)
     |> cast_assoc(:skill_tabs, with: &Schema.SkillTab.changeset/2)
     |> cast_assoc(:stats, with: &Schema.CharacterStats.changeset/2)
@@ -148,7 +148,7 @@ defmodule Ms2ex.Schema.Character do
   end
 
   defp default_inventory_tabs() do
-    Ms2ex.Inventory.Tab.default_slots()
+    Schema.InventoryTab.default_slots()
     |> Enum.map(fn {tab, slots} ->
       %{tab: tab, slots: slots}
     end)

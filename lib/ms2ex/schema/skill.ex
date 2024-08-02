@@ -1,9 +1,9 @@
-defmodule Ms2ex.Skill do
+defmodule Ms2ex.Schema.Skill do
   use Ecto.Schema
   import Ecto.Changeset
 
   schema "skills" do
-    belongs_to :skill_tab, Ms2ex.SkillTab
+    belongs_to :skill_tab, Ms2ex.Schema.SkillTab
 
     field :level, :integer
     field :skill_id, :integer

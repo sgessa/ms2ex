@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{Mob, Packets, StatId}
+  alias Ms2ex.{Enums, Mob, Packets}
 
   import Packets.PacketWriter
 
@@ -27,12 +27,12 @@ defmodule Ms2ex.Packets.Stats do
     |> reduce(updated_stats, fn
       :hp, packet ->
         packet
-        |> put_byte(StatId.from_name(:hp))
+        |> put_byte(Enums.StatId.get_value(:hp))
         |> put_hp(character.stats)
 
       s, packet ->
         packet
-        |> put_byte(StatId.from_name(s))
+        |> put_byte(Enums.StatId.get_value(s))
         |> put_stat(character.stats, s)
     end)
   end
@@ -50,7 +50,7 @@ defmodule Ms2ex.Packets.Stats do
   end
 
   def put_stats(packet, stats) do
-    reduce(packet, StatId.list(), fn
+    reduce(packet, Enums.StatId.keys(), fn
       :hp, packet ->
         put_hp(packet, stats)
 

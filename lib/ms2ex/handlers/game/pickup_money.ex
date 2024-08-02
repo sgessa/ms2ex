@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.PickupMoney do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Context, Field, Packets, Wallets}
+  alias Ms2ex.{CharacterManager, Context, Field, Packets}
 
   import Packets.PacketReader
 
@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.PickupMoney do
 
     with {:ok, item} <- Field.pickup_item(character, object_id),
          true <- Context.Items.mesos?(item) do
-      Wallets.update(character, :mesos, item.amount)
+      Context.Wallets.update(character, :mesos, item.amount)
     end
 
     pickup_items(packet, character, count - 1)

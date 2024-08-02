@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Inventory do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, Net, Packets, Schema, TransferFlags, Wallets}
+  alias Ms2ex.{CharacterManager, Context, Field, Net, Packets, Schema, TransferFlags}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -68,7 +68,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     meret_price = -390
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, wallet} <- Wallets.update(character, :merets, meret_price),
+         {:ok, wallet} <- Context.Wallets.update(character, :merets, meret_price),
          %Schema.InventoryTab{tab: tab, slots: slots} <-
            Context.Inventory.expand_tab(character, tab) do
       session

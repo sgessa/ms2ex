@@ -7,8 +7,7 @@ defmodule Ms2ex.Commands do
     Net,
     Packets,
     Schema,
-    Storage,
-    Wallets
+    Storage
   }
 
   import Net.SenderSession, only: [push: 2, push_notice: 3]
@@ -82,7 +81,7 @@ defmodule Ms2ex.Commands do
     currency = String.to_existing_atom(currency)
 
     with {amount, _} <- Integer.parse(amount),
-         {:ok, wallet} <- Wallets.update(character, currency, amount) do
+         {:ok, wallet} <- Context.Wallets.update(character, currency, amount) do
       push(session, Packets.Wallet.update(wallet, currency))
     else
       _ ->

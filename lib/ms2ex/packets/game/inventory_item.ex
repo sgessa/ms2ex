@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Enums, Hair, Inventory, Types}
+  alias Ms2ex.{Enums, Hair, Schema, Types}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -151,7 +151,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> build()
     |> put_byte(@modes.load_tab)
     |> put_byte(Enums.InventoryTab.get_value(tab_id))
-    |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
+    |> put_int(Schema.InventoryTab.extra_slots(tab_id, total_slots))
   end
 
   def reset_tab(tab_id) do

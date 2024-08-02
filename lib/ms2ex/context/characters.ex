@@ -1,5 +1,5 @@
 defmodule Ms2ex.Context.Characters do
-  alias Ms2ex.{Context, Repo, Schema, Skills}
+  alias Ms2ex.{Context, Repo, Schema}
 
   import Ecto.Query, except: [update: 2]
 
@@ -57,7 +57,7 @@ defmodule Ms2ex.Context.Characters do
 
     tabs =
       Enum.map(tabs, fn t ->
-        %{t | skills: Skills.load_tab_skills(character, t)}
+        %{t | skills: Context.Skills.load_tab_skills(character, t)}
       end)
 
     %{character | skill_tabs: tabs}

@@ -1,7 +1,7 @@
 defmodule Ms2ex.Packets.Job do
-  alias Ms2ex.{Character, Skills}
-
   import Ms2ex.Packets.PacketWriter
+
+  alias Ms2ex.{Context, Schema}
 
   @job_skill_splits %{
     none: 0,
@@ -20,13 +20,13 @@ defmodule Ms2ex.Packets.Job do
   }
 
   def save(character) do
-    real_job_id = Character.real_job_id(character)
+    real_job_id = Schema.Character.real_job_id(character)
 
     __MODULE__
     |> build()
     |> put_int(character.object_id)
     |> put_byte(0x9)
-    |> put_int(Character.job_id(character))
+    |> put_int(Schema.Character.job_id(character))
     |> put_byte(0x1)
     |> put_int(real_job_id)
     |> put_skills(character)
@@ -39,11 +39,11 @@ defmodule Ms2ex.Packets.Job do
   end
 
   def put_passive_skills(packet, character) do
-    skill_tab = Skills.get_active_tab(character)
+    skill_tab = Context.Skills.get_active_tab(character)
 
     skills =
       skill_tab.skills
-      |> Enum.map(&Skills.load_metadata(&1))
+      |> Enum.map(&Context.Skills.load_metadata(&1))
       |> Enum.filter(fn skill ->
         Map.get(skill.metadata.property, :type) == 1 &&
           Map.get(skill.metadata.levels, "1") == 1
@@ -67,8 +67,8 @@ defmodule Ms2ex.Packets.Job do
   end
 
   def put_skills(packet, character) do
-    skill_tab = Skills.get_active_tab(character)
-    skills = Enum.map(skill_tab.skills, &Skills.load_metadata(&1))
+    skill_tab = Context.Skills.get_active_tab(character)
+    skills = Enum.map(skill_tab.skills, &Context.Skills.load_metadata(&1))
 
     split = Map.get(@job_skill_splits, character.job)
     split_skill = Enum.at(skills, length(skills) - split)

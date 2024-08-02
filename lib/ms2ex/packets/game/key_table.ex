@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.KeyTable do
-  alias Ms2ex.QuickSlot
+  alias Ms2ex.Types
 
   import Ms2ex.Packets.PacketWriter
 
@@ -37,7 +37,7 @@ defmodule Ms2ex.Packets.KeyTable do
       |> reduce(slots, fn {slot, idx}, packet ->
         packet
         |> put_int(idx)
-        |> QuickSlot.put_quick_slot(slot)
+        |> Types.QuickSlot.put_quick_slot(slot)
       end)
     end)
   end

@@ -9,8 +9,7 @@ defmodule Ms2ex.FieldHelper do
     Storage,
     ProtoMetadata,
     Mob,
-    Packets,
-    Wallets
+    Packets
   }
 
   alias Ms2ex.PremiumMembership, as: Membership
@@ -109,19 +108,19 @@ defmodule Ms2ex.FieldHelper do
   def pickup_item(character, item, state) do
     cond do
       Context.Items.mesos?(item) ->
-        Wallets.update(character, :mesos, item.amount)
+        Context.Wallets.update(character, :mesos, item.amount)
 
       Context.Items.valor_token?(item) ->
-        Wallets.update(character, :valor_tokens, item.amount)
+        Context.Wallets.update(character, :valor_tokens, item.amount)
 
       Context.Items.merets?(item) ->
-        Wallets.update(character, :merets, item.amount)
+        Context.Wallets.update(character, :merets, item.amount)
 
       Context.Items.rue?(item) ->
-        Wallets.update(character, :rues, item.amount)
+        Context.Wallets.update(character, :rues, item.amount)
 
       Context.Items.havi_fruit?(item) ->
-        Wallets.update(character, :havi_fruits, item.amount)
+        Context.Wallets.update(character, :havi_fruits, item.amount)
 
       Context.Items.sp?(item) ->
         CharacterManager.increase_stat(character, :sp, item.amount)

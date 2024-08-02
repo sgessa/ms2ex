@@ -2,7 +2,6 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
     Context,
     Hair,
-    Inventory,
     ItemColor,
     ProtoMetadata,
     Net,
@@ -83,7 +82,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       Repo.transaction(fn ->
         with {:ok, character} <- Context.Characters.create(session.account, attrs) do
           Enum.each(equips, fn {equip_slot, item} ->
-            {:ok, {:create, item}} = Inventory.add_item(character, item)
+            {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
             {:ok, _equip} = Context.Equips.equip(item, equip_slot)
           end)
 
