@@ -39,7 +39,7 @@ defmodule Ms2ex.Enums.StatId do
 
   use Ms2ex.Enums
 
-  def ordered() do
+  def ordered_keys() do
     values()
     |> Enum.sort()
     |> Enum.map(&get_key(&1))

@@ -50,7 +50,7 @@ defmodule Ms2ex.Packets.Stats do
   end
 
   def put_stats(packet, stats) do
-    reduce(packet, Enums.StatId.ordered(), fn
+    reduce(packet, Enums.StatId.ordered_keys(), fn
       :hp, packet ->
         put_hp(packet, stats)
 
