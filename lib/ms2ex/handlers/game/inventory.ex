@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Inventory do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, Inventory, Item, Net, Packets, TransferFlags, Wallets}
+  alias Ms2ex.{CharacterManager, Context, Field, Net, Packets, Schema, TransferFlags}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -17,8 +17,9 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {dst_slot, _packet} = get_short(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Item{inventory_slot: src_slot} = src_item <- Inventory.get(character, id),
-         {:ok, dst_uid} <- Inventory.swap(src_item, dst_slot) do
+         %Schema.Item{inventory_slot: src_slot} = src_item <-
+           Context.Inventory.get(character, id),
+         {:ok, dst_uid} <- Context.Inventory.swap(src_item, dst_slot) do
       push(session, Packets.InventoryItem.move_item(dst_uid, src_slot, src_item.id, dst_slot))
     end
   end
@@ -29,10 +30,10 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {amount, _packet} = get_int(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Item{} = item <- Inventory.get(character, id),
+         %Schema.Item{} = item <- Context.Inventory.get(character, id),
          true <- TransferFlags.has_flag?(item.transfer_flags, :tradeable),
          true <- TransferFlags.has_flag?(item.transfer_flags, :splittable) do
-      consumed_item = Inventory.consume(item, amount)
+      consumed_item = Context.Inventory.consume(item, amount)
       Field.drop_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)
     end
@@ -43,8 +44,8 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {id, _packet} = get_long(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         %Item{} = item <- Inventory.get(character, id) do
-      update_inventory(session, Inventory.delete(item))
+         %Schema.Item{} = item <- Context.Inventory.get(character, id) do
+      update_inventory(session, Context.Inventory.delete(item))
     end
   end
 
@@ -53,7 +54,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {tab, _packet} = get_short(packet)
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, items} <- Inventory.sort_tab(character, tab) do
+         {:ok, items} <- Context.Inventory.sort_tab(character, tab) do
       session
       |> push(Packets.InventoryItem.reset_tab(tab))
       |> push(Packets.InventoryItem.load_items(tab, items))
@@ -67,8 +68,9 @@ defmodule Ms2ex.GameHandlers.Inventory do
     meret_price = -390
 
     with {:ok, character} <- CharacterManager.lookup(session.character_id),
-         {:ok, wallet} <- Wallets.update(character, :merets, meret_price),
-         %Inventory.Tab{tab: tab, slots: slots} <- Inventory.expand_tab(character, tab) do
+         {:ok, wallet} <- Context.Wallets.update(character, :merets, meret_price),
+         %Schema.InventoryTab{tab: tab, slots: slots} <-
+           Context.Inventory.expand_tab(character, tab) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.InventoryItem.load_tab(tab, slots))

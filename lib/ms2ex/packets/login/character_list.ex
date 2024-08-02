@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.CharacterList do
-  alias Ms2ex.{Character, Packets}
+  alias Ms2ex.{Packets, Schema, Types}
 
   import Packets.PacketWriter
 
@@ -57,8 +57,8 @@ defmodule Ms2ex.Packets.CharacterList do
   end
 
   def put_character(packet, character) do
-    real_job_id = Character.real_job_id(character)
-    gender = Keyword.get(Character.genders(), character.gender)
+    real_job_id = Schema.Character.real_job_id(character)
+    gender = Keyword.get(Schema.Character.genders(), character.gender)
 
     packet
     |> put_long(character.account_id)
@@ -74,7 +74,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_short(character.level)
     |> put_short()
     |> put_int(real_job_id)
-    |> put_int(Character.job_id(character))
+    |> put_int(Schema.Character.job_id(character))
     |> put_int()
     |> put_int()
     |> put_short()
@@ -84,7 +84,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_int()
     |> put_coord()
     |> put_int()
-    |> Ms2ex.SkinColor.put_skin_color(character.skin_color)
+    |> Types.SkinColor.put_skin_color(character.skin_color)
     |> put_time(character.inserted_at)
     |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
     |> put_long()

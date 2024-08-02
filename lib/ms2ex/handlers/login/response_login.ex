@@ -1,7 +1,7 @@
 defmodule Ms2ex.LoginHandlers.ResponseLogin do
   require Logger
 
-  alias Ms2ex.{Accounts, Characters, Net, Packets, SessionManager}
+  alias Ms2ex.{Context, Net, Packets, SessionManager}
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -11,14 +11,14 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
     {username, packet} = get_ustring(packet)
     {password, _packet} = get_ustring(packet)
 
-    with {:ok, account} <- Accounts.authenticate(username, password),
+    with {:ok, account} <- Context.Accounts.authenticate(username, password),
          :ok <- check_if_already_logged_in(account.id) do
       Logger.info("Account #{username} logged in")
 
       SessionManager.register(account.id, %{})
       send(self(), {:update, %{account: account}})
 
-      account = %{account | characters: Characters.list(account)}
+      account = %{account | characters: Context.Characters.list(account)}
       handle_login(mode, account, session)
     else
       {:error, :invalid_credentials} -> push(session, Packets.LoginResult.error(:incorrect_id))

@@ -1,5 +1,14 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{CharacterManager, Chat, Commands, Field, Net, Packets, PartyServer, Wallets, World}
+  alias Ms2ex.{
+    CharacterManager,
+    Commands,
+    Context,
+    Enums,
+    Field,
+    Net,
+    Packets,
+    PartyServer
+  }
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -8,7 +17,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
   def handle(packet, session) do
     {type_id, packet} = get_int(packet)
-    type = Chat.type_from_int(type_id)
+    type = Enums.ChatType.get_key(type_id)
 
     {msg, packet} = get_ustring(packet)
     {rcpt, packet} = get_ustring(packet)
@@ -49,9 +58,9 @@ defmodule Ms2ex.GameHandlers.UserChat do
   defp handle_message({:world, msg, _rcpt_name}, character, session) do
     # TODO check if user has a voucher
 
-    case Wallets.update(character, :merets, @world_chat_cost) do
+    case Context.Wallets.update(character, :merets, @world_chat_cost) do
       {:ok, wallet} ->
-        World.broadcast(Packets.UserChat.bytes(:world, character, msg))
+        Context.World.broadcast(Packets.UserChat.bytes(:world, character, msg))
         push(session, Packets.Wallet.update(wallet, :merets))
 
       _ ->

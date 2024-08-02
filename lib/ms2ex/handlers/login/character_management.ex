@@ -1,18 +1,13 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
-    Character,
-    Characters,
-    Equips,
-    Hair,
-    Inventory,
-    Items,
-    ItemColor,
+    Context,
     ProtoMetadata,
     Net,
     Packets,
     Repo,
+    Schema,
     SessionManager,
-    SkinColor
+    Types
   }
 
   import Packets.PacketReader
@@ -36,8 +31,8 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp handle_login(packet, %{account: account} = session) do
     {char_id, _packet} = get_long(packet)
 
-    case Characters.get(account, char_id) do
-      %Character{} ->
+    case Context.Characters.get(account, char_id) do
+      %Schema.Character{} ->
         auth_data = %{token_a: Ms2ex.generate_int(), token_b: Ms2ex.generate_int()}
         register_session(account.id, char_id, auth_data)
         push(session, Packets.LoginToGame.login(auth_data))
@@ -59,7 +54,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     {gender, packet} = get_byte(packet)
     {job, packet} = get_short(packet)
     {name, packet} = get_ustring(packet)
-    {skin_color, packet} = SkinColor.get_skin_color(packet)
+    {skin_color, packet} = Types.SkinColor.get_skin_color(packet)
     {_, packet} = get_short(packet)
     {equip_count, packet} = get_byte(packet)
 
@@ -83,13 +78,13 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     result =
       Repo.transaction(fn ->
-        with {:ok, character} <- Characters.create(session.account, attrs) do
+        with {:ok, character} <- Context.Characters.create(session.account, attrs) do
           Enum.each(equips, fn {equip_slot, item} ->
-            {:ok, {:create, item}} = Inventory.add_item(character, item)
-            {:ok, _equip} = Equips.equip(item, equip_slot)
+            {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
+            {:ok, _equip} = Context.Equips.equip(item, equip_slot)
           end)
 
-          equips = Equips.list(character)
+          equips = Context.Equips.list(character)
           %{character | equips: equips}
         else
           error -> Repo.rollback(error)
@@ -110,18 +105,18 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp get_equip(packet) do
     {id, packet} = get_int(packet)
     {slot_name, packet} = get_ustring(packet)
-    {color, packet} = ItemColor.get_item_color(packet)
+    {color, packet} = Types.ItemColor.get_item_color(packet)
     {_color_idx, packet} = get_int(packet)
     {attrs, packet} = get_item_attributes(packet, slot_name)
 
     attrs = Map.put(attrs, :color, color)
-    item = Items.init(id, attrs)
+    item = Context.Items.init(id, attrs)
 
     {{String.to_existing_atom(slot_name), item}, packet}
   end
 
   defp get_item_attributes(packet, "HR") do
-    {hair, packet} = Hair.get_hair(packet)
+    {hair, packet} = Types.Hair.get_hair(packet)
     {%{data: hair}, packet}
   end
 
@@ -135,9 +130,9 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp handle_delete(packet, session) do
     {char_id, _packet} = get_long(packet)
 
-    with %Character{} = character <- Characters.get(session.account, char_id),
-         {:ok, _} <- Characters.delete(character) do
-      characters = Characters.list(session.account)
+    with %Schema.Character{} = character <- Context.Characters.get(session.account, char_id),
+         {:ok, _} <- Context.Characters.delete(character) do
+      characters = Context.Characters.list(session.account)
 
       session
       |> push(Packets.CharacterMaxCount.set_max(4, 6))

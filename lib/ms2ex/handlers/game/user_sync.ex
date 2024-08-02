@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{CharacterManager, Field, MapBlock, Storage, Packets, SyncState}
+  alias Ms2ex.{CharacterManager, Context, Field, Storage, Packets, SyncState}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -25,9 +25,9 @@ defmodule Ms2ex.GameHandlers.UserSync do
     Field.broadcast_from(character, sync_packet, session.sender_pid)
 
     %{animation1: animation, position: new_position} = List.first(states)
-    closest_block = MapBlock.closest_block(new_position)
+    closest_block = Context.MapBlock.closest_block(new_position)
     # Get the block under the character
-    closest_block = %{closest_block | z: closest_block.z - MapBlock.block_size()}
+    closest_block = %{closest_block | z: closest_block.z - Context.MapBlock.block_size()}
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: animation, position: new_position}
@@ -60,13 +60,13 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp is_coord_safe?(character, current_position, closest_block) do
-    block_diff = MapBlock.subtract(character.safe_position, closest_block)
+    block_diff = Context.MapBlock.subtract(character.safe_position, closest_block)
 
     # TODO
     # Maybe not necessary
     # MapBlock.exists?(character.map_id, closest_block)
 
-    MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
+    Context.MapBlock.length(block_diff) > 350 && character.position.z == current_position.z
 
     # && !character.on_air_mount?
   end
@@ -90,13 +90,21 @@ defmodule Ms2ex.GameHandlers.UserSync do
     # Without this player will spawn inside the block
     # for some reason if coord is negative player is teleported one block over,
     # which can result player being stuck inside a block
-    safe_pos = %{safe_pos | z: safe_pos.z + MapBlock.block_size() + 1}
+    safe_pos = %{safe_pos | z: safe_pos.z + Context.MapBlock.block_size() + 1}
 
     safe_pos =
-      if pos.x < 0, do: %{safe_pos | x: safe_pos.x - MapBlock.block_size()}, else: safe_pos
+      if pos.x < 0 do
+        %{safe_pos | x: safe_pos.x - Context.MapBlock.block_size()}
+      else
+        safe_pos
+      end
 
     safe_pos =
-      if pos.y < 0, do: %{safe_pos | y: safe_pos.y - MapBlock.block_size()}, else: safe_pos
+      if pos.y < 0 do
+        %{safe_pos | y: safe_pos.y - Context.MapBlock.block_size()}
+      else
+        safe_pos
+      end
 
     %{character | safe_position: safe_pos}
   end

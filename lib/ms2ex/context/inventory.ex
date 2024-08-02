@@ -1,33 +1,32 @@
-defmodule Ms2ex.Inventory do
-  alias __MODULE__.Tab
-  alias Ms2ex.{Character, Item, Repo}
+defmodule Ms2ex.Context.Inventory do
+  alias Ms2ex.{Schema, Repo}
 
   import Ecto.Query, except: [update: 2]
 
-  def get_by(attrs), do: Repo.get_by(Item, attrs)
+  def get_by(attrs), do: Repo.get_by(Schema.Item, attrs)
 
-  def all(%Character{id: character_id}) do
-    Item
+  def all(%Schema.Character{id: character_id}) do
+    Schema.Item
     |> where([i], i.character_id == ^character_id)
     |> Repo.all()
   end
 
-  def list_items(%Character{id: character_id}) do
-    Item
+  def list_items(%Schema.Character{id: character_id}) do
+    Schema.Item
     |> where([i], i.character_id == ^character_id and i.location == ^:inventory)
     |> order_by(asc: :inventory_slot)
     |> Repo.all()
   end
 
-  def list_tabs(%Character{id: character_id}) do
-    Tab
+  def list_tabs(%Schema.Character{id: character_id}) do
+    Schema.InventoryTab
     |> where([i], i.character_id == ^character_id)
     |> order_by(asc: :tab)
     |> Repo.all()
   end
 
   def list_tab_items(character_id, tab) do
-    Item
+    Schema.Item
     |> where([i], i.character_id == ^character_id)
     |> where([i], i.location == ^:inventory and i.inventory_tab == ^tab)
     |> order_by(asc: :inventory_slot)
@@ -39,11 +38,11 @@ defmodule Ms2ex.Inventory do
   end
 
   # Item is stackable
-  def add_item(%Character{} = character, %Item{metadata: %{stack_limit: n}} = attrs)
+  def add_item(%Schema.Character{} = character, %Schema.Item{metadata: %{stack_limit: n}} = attrs)
       when n > 1 do
     Repo.transaction(fn ->
       case find_stack(character, attrs) do
-        %Item{} = item ->
+        %Schema.Item{} = item ->
           update_or_create(character, item, attrs)
 
         nil ->
@@ -53,7 +52,7 @@ defmodule Ms2ex.Inventory do
   end
 
   # Item is not stackable
-  def add_item(%Character{} = character, %Item{} = attrs) do
+  def add_item(%Schema.Character{} = character, %Schema.Item{} = attrs) do
     with {:create, item} <- create(character, attrs) do
       {:ok, {:create, item}}
     end
@@ -62,7 +61,7 @@ defmodule Ms2ex.Inventory do
   def find_stack(%{id: char_id}, %{item_id: item_id, metadata: meta}) do
     stack_limit = Map.get(meta, :stack_limit) || 1
 
-    Item
+    Schema.Item
     |> where([i], i.character_id == ^char_id)
     |> where([i], i.item_id == ^item_id and i.amount < ^stack_limit)
     |> order_by(desc: :amount)
@@ -100,7 +99,7 @@ defmodule Ms2ex.Inventory do
     changeset =
       character
       |> Ecto.build_assoc(:inventory_items)
-      |> Item.changeset(attrs)
+      |> Schema.Item.changeset(attrs)
 
     with {:ok, item} <- Repo.insert(changeset) do
       {:create, %{item | metadata: meta}}
@@ -110,29 +109,29 @@ defmodule Ms2ex.Inventory do
   defp create(_character, _attrs), do: :nothing
 
   defp update_qty(%{id: id, metadata: meta}, new_amount) do
-    Item
+    Schema.Item
     |> where([i], i.id == ^id)
     |> Repo.update_all(inc: [amount: new_amount])
 
-    item = Item |> Repo.get(id) |> Map.put(:metadata, meta)
+    item = Schema.Item |> Repo.get(id) |> Map.put(:metadata, meta)
     {:update, item}
   end
 
-  def update_item(%Item{} = item, attrs) do
+  def update_item(%Schema.Item{} = item, attrs) do
     item
-    |> Item.changeset(attrs)
+    |> Schema.Item.changeset(attrs)
     |> Repo.update()
   end
 
   def consume(item, consumed \\ 1)
 
-  def consume(%Item{amount: amount} = item, consumed) when amount > consumed do
+  def consume(%Schema.Item{amount: amount} = item, consumed) when amount > consumed do
     update_qty(item, -consumed)
   end
 
-  def consume(%Item{} = item, _consumed), do: delete(item)
+  def consume(%Schema.Item{} = item, _consumed), do: delete(item)
 
-  def delete(%Item{} = item) do
+  def delete(%Schema.Item{} = item) do
     with {:ok, item} <- Repo.delete(item) do
       {:delete, item}
     end
@@ -140,7 +139,7 @@ defmodule Ms2ex.Inventory do
 
   def find_first_available_slot(character_id, inventory_tab) do
     slots =
-      Item
+      Schema.Item
       |> select([i], i.inventory_slot)
       |> where([i], i.character_id == ^character_id)
       |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
@@ -152,17 +151,17 @@ defmodule Ms2ex.Inventory do
   end
 
   def item_in_slot(char_id, tab, slot) do
-    Item
+    Schema.Item
     |> where([i], i.character_id == ^char_id)
     |> where([i], i.inventory_tab == ^tab and i.inventory_slot == ^slot)
     |> limit(1)
     |> Repo.one()
   end
 
-  def swap(%Item{} = src_item, dst_slot) do
+  def swap(%Schema.Item{} = src_item, dst_slot) do
     Repo.transaction(fn ->
       case item_in_slot(src_item.character_id, src_item.inventory_tab, dst_slot) do
-        %Item{} = dst_item ->
+        %Schema.Item{} = dst_item ->
           src_slot = src_item.inventory_slot
 
           {:ok, src_item} = update_item(src_item, %{inventory_slot: nil})
@@ -178,24 +177,24 @@ defmodule Ms2ex.Inventory do
     end)
   end
 
-  def expand_tab(%Character{id: character_id}, tab) do
+  def expand_tab(%Schema.Character{id: character_id}, tab) do
     extra_slots = 6
 
-    Tab
+    Schema.InventoryTab
     |> where([i], i.character_id == ^character_id and i.tab == ^tab)
     |> Repo.update_all(inc: [slots: extra_slots])
 
-    Repo.get_by(Tab, character_id: character_id, tab: tab)
+    Repo.get_by(Schema.InventoryTab, character_id: character_id, tab: tab)
   end
 
-  def sort_tab(%Character{id: character_id}, inventory_tab) do
+  def sort_tab(%Schema.Character{id: character_id}, inventory_tab) do
     Repo.transaction(fn ->
-      Item
+      Schema.Item
       |> where([i], i.character_id == ^character_id)
       |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
       |> Repo.update_all(set: [inventory_slot: nil])
 
-      Item
+      Schema.Item
       |> where([i], i.character_id == ^character_id)
       |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
       |> order_by(asc: :item_id)

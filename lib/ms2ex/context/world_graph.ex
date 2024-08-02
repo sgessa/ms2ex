@@ -1,4 +1,4 @@
-defmodule Ms2ex.WorldGraph do
+defmodule Ms2ex.Context.WorldGraph do
   @table :world_graph
 
   def get_shortest_path(src_id, dst_id) do

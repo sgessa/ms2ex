@@ -1,5 +1,5 @@
-defmodule Ms2ex.ItemColor do
-  alias Ms2ex.Color
+defmodule Ms2ex.Types.ItemColor do
+  alias Ms2ex.Types.Color
 
   import Ms2ex.Packets.{PacketReader, PacketWriter}
 
@@ -32,8 +32,8 @@ defmodule Ms2ex.ItemColor do
   end
 end
 
-defmodule Ms2ex.SkinColor do
-  alias Ms2ex.Color
+defmodule Ms2ex.Types.SkinColor do
+  alias Ms2ex.Types.Color
 
   def build(primary, secondary), do: {primary, secondary}
 
@@ -50,7 +50,7 @@ defmodule Ms2ex.SkinColor do
   end
 end
 
-defmodule Ms2ex.Color do
+defmodule Ms2ex.Types.Color do
   def build(blue, green, red, alpha), do: {blue, green, red, alpha}
 
   import Ms2ex.Packets.{PacketReader, PacketWriter}

@@ -1,4 +1,4 @@
-defmodule Ms2ex.SkillStatus do
+defmodule Ms2ex.Types.SkillStatus do
   alias Ms2ex.SkillCast
 
   defstruct [

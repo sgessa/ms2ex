@@ -1,7 +1,7 @@
 defmodule Ms2ex.Packets.Friend do
-  alias Ms2ex.Character
-
   import Ms2ex.Packets.PacketWriter
+
+  alias Ms2ex.Schema
 
   @notices %{
     request_sent: 0x0,
@@ -147,7 +147,7 @@ defmodule Ms2ex.Packets.Friend do
   end
 
   defp put_friend(packet, friend) do
-    real_job_id = Character.real_job_id(friend.rcpt)
+    real_job_id = Schema.Character.real_job_id(friend.rcpt)
 
     friend_online? =
       case Ms2ex.CharacterManager.lookup_by_name(friend.rcpt.name) do
@@ -165,7 +165,7 @@ defmodule Ms2ex.Packets.Friend do
     # rcpt home map id
     |> put_int(0)
     |> put_int(real_job_id)
-    |> put_int(Character.job_id(friend.rcpt))
+    |> put_int(Schema.Character.job_id(friend.rcpt))
     |> put_short(friend.rcpt.level)
     |> put_bool(friend.is_request)
     |> put_bool(friend.status == :pending)

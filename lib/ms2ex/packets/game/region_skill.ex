@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.RegionSkill do
-  alias Ms2ex.{MapBlock, ProtoMetadata, Packets, SkillCast}
+  alias Ms2ex.{Context, ProtoMetadata, Packets, SkillCast}
 
   import Packets.PacketWriter
 
@@ -28,10 +28,10 @@ defmodule Ms2ex.Packets.RegionSkill do
   defp put_moves(packet, [], _effect_position), do: packet
 
   defp put_moves(packet, [move | moves], effect_position) do
-    cast_position = MapBlock.add(move.fire_offset_position, effect_position)
+    cast_position = Context.MapBlock.add(move.fire_offset_position, effect_position)
 
     packet
-    |> put_coord(MapBlock.closest_block(cast_position))
+    |> put_coord(Context.MapBlock.closest_block(cast_position))
     |> put_moves(moves, effect_position)
   end
 

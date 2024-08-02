@@ -2,17 +2,14 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
   alias Ms2ex.{
-    Characters,
     CharacterManager,
-    Inventory,
+    Context,
     LoginHandlers,
     Net,
     Packets,
     PartyManager,
     PartyServer,
     SessionManager,
-    Wallets,
-    World,
     Storage
   }
 
@@ -27,14 +24,14 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
       SessionManager.register(account.id, auth_data)
-      run(session, fn -> World.subscribe() end)
+      run(session, fn -> Context.World.subscribe() end)
 
       character =
         auth_data[:character_id]
-        |> Characters.get()
-        |> Characters.load_equips()
-        |> Characters.preload([:friends, :stats])
-        |> Characters.load_skills()
+        |> Context.Characters.get()
+        |> Context.Characters.load_equips()
+        |> Context.Characters.preload([:friends, :stats])
+        |> Context.Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
         |> Map.put(:sender_session_pid, session.sender_pid)
@@ -46,13 +43,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       CharacterManager.start(character)
       CharacterManager.monitor(character)
 
-      character = Characters.preload(character, friends: :rcpt)
+      character = Context.Characters.preload(character, friends: :rcpt)
       init_character(character)
 
-      titles = Characters.list_titles(character)
+      titles = Context.Characters.list_titles(character)
 
-      account_wallet = Wallets.find(account)
-      character_wallet = Wallets.find(character)
+      account_wallet = Context.Wallets.find(account)
+      character_wallet = Context.Wallets.find(character)
 
       %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
 
@@ -72,7 +69,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(character, account_wallet, character_wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(Inventory.list_tabs(character))
+      |> push_inventory_tab(Context.Inventory.list_tabs(character))
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -120,7 +117,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   defp push_inventory_tab(session, []), do: session
 
   defp push_inventory_tab(session, [inventory_tab | tabs]) do
-    items = Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
+    items = Context.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
 
     session
     |> push(Packets.InventoryItem.reset_tab(inventory_tab.tab))

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Enums, Hair, Inventory, Items}
+  alias Ms2ex.{Enums, Schema, Types}
 
   import Ms2ex.Packets.PacketWriter
 
@@ -151,7 +151,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> build()
     |> put_byte(@modes.load_tab)
     |> put_byte(Enums.InventoryTab.get_value(tab_id))
-    |> put_int(Inventory.Tab.extra_slots(tab_id, total_slots))
+    |> put_int(Schema.InventoryTab.extra_slots(tab_id, total_slots))
   end
 
   def reset_tab(tab_id) do
@@ -164,13 +164,13 @@ defmodule Ms2ex.Packets.InventoryItem do
   defp put_appearance(packet, item) do
     packet =
       packet
-      |> Ms2ex.ItemColor.put_item_color(item.color)
+      |> Types.ItemColor.put_item_color(item.color)
       |> put_int(item.appearance_flag)
 
     case item.equip_slot do
       :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13))
       :FD -> put_bytes(packet, item.data)
-      :HR -> Hair.put_hair(packet, item.data)
+      :HR -> Types.Hair.put_hair(packet, item.data)
       _ -> packet
     end
   end
@@ -246,15 +246,15 @@ defmodule Ms2ex.Packets.InventoryItem do
   defp put_item_stat(packet, %{class: :basic} = stat) do
     packet
     |> put_short(Enums.BasicStatType.get_value(stat.attribute))
-    |> put_int(Items.Stat.flat_value(stat))
-    |> put_float(Items.Stat.rate_value(stat))
+    |> put_int(Types.ItemStat.flat_value(stat))
+    |> put_float(Types.ItemStat.rate_value(stat))
   end
 
   defp put_item_stat(packet, %{class: :special} = stat) do
     packet
     |> put_short(Enums.SpecialStatType.get_value(stat.attribute))
-    |> put_float(Items.Stat.rate_value(stat))
-    |> put_float(Items.Stat.flat_value(stat))
+    |> put_float(Types.ItemStat.rate_value(stat))
+    |> put_float(Types.ItemStat.flat_value(stat))
   end
 
   defp put_sockets(packet) do

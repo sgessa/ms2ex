@@ -1,4 +1,4 @@
-defmodule Ms2ex.Hair do
+defmodule Ms2ex.Types.Hair do
   import Ms2ex.Packets.{PacketReader, PacketWriter}
 
   @position_length 24

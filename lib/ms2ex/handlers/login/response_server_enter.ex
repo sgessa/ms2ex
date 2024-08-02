@@ -1,7 +1,7 @@
 defmodule Ms2ex.LoginHandlers.ResponseServerEnter do
   require Logger
 
-  alias Ms2ex.{Characters, Net, Packets}
+  alias Ms2ex.{Context, Net, Packets}
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -9,7 +9,7 @@ defmodule Ms2ex.LoginHandlers.ResponseServerEnter do
   def handle(packet, session) do
     {0x2, _packet} = get_byte(packet)
 
-    characters = Characters.list(session.account)
+    characters = Context.Characters.list(session.account)
 
     session
     |> push(Packets.BannerList.bytes())

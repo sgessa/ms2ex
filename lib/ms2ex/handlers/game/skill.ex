@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Damage, Field, Mob, Net, Packets, SkillCast, SkillStatus}
+  alias Ms2ex.{CharacterManager, Context, Field, Mob, Net, Packets, SkillCast, Types}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -105,13 +105,13 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = CharacterManager.lookup(session.character_id)
 
     if character.skill_cast.id == cast_id do
-      crit? = Damage.roll_crit(character)
+      crit? = Context.Damage.roll_crit(character)
       mobs = damage_targets(session, character, crit?, target_count, [], packet)
 
       # TODO check whether it's a player or an ally
       if SkillCast.heal?(character.skill_cast) do
         status =
-          SkillStatus.new(character.skill_cast, character.object_id, character.object_id, 1)
+          Types.SkillStatus.new(character.skill_cast, character.object_id, character.object_id, 1)
 
         Field.add_status(character, status)
 
@@ -177,11 +177,11 @@ defmodule Ms2ex.GameHandlers.Skill do
 
   defp damage_mob(character, mob, crit?) do
     skill_cast = character.skill_cast
-    dmg = Damage.calculate(character, mob, crit?)
+    dmg = Context.Damage.calculate(character, mob, crit?)
     {:ok, mob} = Mob.inflict_dmg(character, mob, dmg)
 
     if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
-      status = SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
+      status = Types.SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
       Field.add_status(character, status)
     end
 

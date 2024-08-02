@@ -3,20 +3,14 @@ defmodule Ms2ex.FieldHelper do
 
   alias Ms2ex.{
     CharacterManager,
-    Emotes,
+    Context,
     Field,
-    Inventory,
-    Items,
-    MapBlock,
-    Storage,
-    ProtoMetadata,
     Mob,
     Packets,
-    Wallets
+    ProtoMetadata,
+    Schema,
+    Storage
   }
-
-  alias Ms2ex.PremiumMembership, as: Membership
-  alias Ms2ex.PremiumMemberships, as: Memberships
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
@@ -82,12 +76,13 @@ defmodule Ms2ex.FieldHelper do
     # Load Emotes and Player Stats after Player Object is loaded
     push(character, Packets.Stats.set_character_stats(character))
 
-    emotes = Emotes.list(character)
+    emotes = Context.Emotes.list(character)
     push(character, Packets.Emote.load(emotes))
 
     # Load Premium membership if active
-    with %Membership{} = membership <- Memberships.get(character.account_id),
-         false <- Memberships.expired?(membership) do
+    with %Schema.PremiumMembership{} = membership <-
+           Context.PremiumMemberships.get(character.account_id),
+         false <- Context.PremiumMemberships.expired?(membership) do
       push(character, Packets.PremiumClub.activate(character, membership))
     end
 
@@ -110,31 +105,31 @@ defmodule Ms2ex.FieldHelper do
 
   def pickup_item(character, item, state) do
     cond do
-      Items.mesos?(item) ->
-        Wallets.update(character, :mesos, item.amount)
+      Context.Items.mesos?(item) ->
+        Context.Wallets.update(character, :mesos, item.amount)
 
-      Items.valor_token?(item) ->
-        Wallets.update(character, :valor_tokens, item.amount)
+      Context.Items.valor_token?(item) ->
+        Context.Wallets.update(character, :valor_tokens, item.amount)
 
-      Items.merets?(item) ->
-        Wallets.update(character, :merets, item.amount)
+      Context.Items.merets?(item) ->
+        Context.Wallets.update(character, :merets, item.amount)
 
-      Items.rue?(item) ->
-        Wallets.update(character, :rues, item.amount)
+      Context.Items.rue?(item) ->
+        Context.Wallets.update(character, :rues, item.amount)
 
-      Items.havi_fruit?(item) ->
-        Wallets.update(character, :havi_fruits, item.amount)
+      Context.Items.havi_fruit?(item) ->
+        Context.Wallets.update(character, :havi_fruits, item.amount)
 
-      Items.sp?(item) ->
+      Context.Items.sp?(item) ->
         CharacterManager.increase_stat(character, :sp, item.amount)
 
-      Items.stamina?(item) ->
+      Context.Items.stamina?(item) ->
         CharacterManager.increase_stat(character, :sta, item.amount)
 
       true ->
-        item = Items.load_metadata(item)
+        item = Context.Items.load_metadata(item)
 
-        with {:ok, result} <- Inventory.add_item(character, item) do
+        with {:ok, result} <- Context.Inventory.add_item(character, item) do
           {_status, item} = result
           push(character, Packets.InventoryItem.add_item(result))
           push(character, Packets.InventoryItem.mark_item_new(item))
@@ -185,30 +180,31 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1}
   end
 
-  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %Mob{} = mob, state) do
+  def add_mob(%{} = spawn_group, %Mob{} = mob, state) do
     case ProtoMetadata.Npcs.lookup(mob.id) do
       {:ok, npc} -> add_mob(spawn_group, npc, state)
       _ -> state
     end
   end
 
-  def add_mob(%ProtoMetadata.MobSpawn{} = spawn_group, %ProtoMetadata.Npc{} = npc, state) do
-    population = state.mobs[spawn_group.id] || []
-    group_spawn_count = npc.basic.group_spawn_count
+  def add_mob(_spawn_group, _npc, state) do
+    # population = state.mobs[spawn_group.id] || []
+    # group_spawn_count = npc.basic.group_spawn_count
 
-    if length(population) + group_spawn_count > spawn_group.data.max_population do
-      state
-    else
-      spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
-      spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
-      spawn_position = MapBlock.add(spawn_group.position, spawn_point)
+    # if length(population) + group_spawn_count > spawn_group.data.max_population do
+    #   state
+    # else
+    #   spawn_points = ProtoMetadata.MobSpawn.select_points(spawn_group.spawn_radius)
+    #   spawn_point = Enum.at(spawn_points, rem(length(population), length(spawn_points)))
+    #   spawn_position = Context.MapBlock.add(spawn_group.position, spawn_point)
 
-      mob = Mob.build(state, npc, spawn_position, spawn_group)
-      {:ok, _pid} = Mob.start(mob)
+    #   mob = Mob.build(state, npc, spawn_position, spawn_group)
+    #   {:ok, _pid} = Mob.start(mob)
 
-      population = Map.put(state.mobs, spawn_group.id, [state.counter | population])
-      %{state | counter: state.counter + 1, mobs: population}
-    end
+    #   population = Map.put(state.mobs, spawn_group.id, [state.counter | population])
+    #   %{state | counter: state.counter + 1, mobs: population}
+    # end
+    state
   end
 
   def remove_mob(spawn_group_id, object_id, state) do

@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Insignia do
-  alias Ms2ex.{Characters, CharacterManager, Field, Inventory, Storage, Packets}
+  alias Ms2ex.{CharacterManager, Context, Field, Storage, Packets}
 
   import Packets.PacketReader
 
@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
 
     with {:ok, metadata} <- Storage.Tables.Insignias.get(insignia_id),
          true <- can_equip_insignia?(character, metadata, insignia_id) do
-      {:ok, character} = Characters.update(character, %{insignia_id: insignia_id})
+      {:ok, character} = Context.Characters.update(character, %{insignia_id: insignia_id})
       CharacterManager.update(character)
       Field.broadcast(character, Packets.Insignia.update(character, insignia_id, true))
     else
@@ -25,7 +25,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
   end
 
   defp can_equip_insignia?(character, %{type: :enchant}, _insignia_id) do
-    items = Inventory.all(character)
+    items = Context.Inventory.all(character)
     if Enum.find(items, &(&1.enchant_level >= 12)), do: true, else: false
   end
 
@@ -34,7 +34,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
   end
 
   defp can_equip_insignia?(character, %{type: :title, title_id: title_id}, _insignia_id) do
-    titles = Characters.list_titles(character)
+    titles = Context.Characters.list_titles(character)
     Enum.member?(titles, title_id)
   end
 

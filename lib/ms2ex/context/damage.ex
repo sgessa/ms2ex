@@ -1,13 +1,13 @@
-defmodule Ms2ex.Damage do
-  alias Ms2ex.{Character, Mob, SkillCast}
+defmodule Ms2ex.Context.Damage do
+  alias Ms2ex.{Mob, Schema, SkillCast}
 
-  def roll_crit(%Character{} = character) do
+  def roll_crit(%Schema.Character{} = character) do
     crit_rate = character.stats.crit_rate_cur + 50
     crit_rate = crit_rate |> max(0) |> min(400)
     Enum.random(1..1000) <= crit_rate
   end
 
-  def calculate(%Character{} = caster, %Mob{} = mob, crit? \\ false) do
+  def calculate(%Schema.Character{} = caster, %Mob{} = mob, crit? \\ false) do
     skill_cast = caster.skill_cast
 
     # TODO calculate from character stats
@@ -53,7 +53,7 @@ defmodule Ms2ex.Damage do
   end
 
   @fall_dmg 150
-  def calculate_fall_dmg(%Character{}) do
+  def calculate_fall_dmg(%Schema.Character{}) do
     @fall_dmg
   end
 end

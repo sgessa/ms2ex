@@ -1,14 +1,14 @@
-defmodule Ms2ex.Equips do
-  alias Ms2ex.{Character, Inventory, Item, Items, Repo, Enums}
+defmodule Ms2ex.Context.Equips do
+  alias Ms2ex.{Context, Schema, Repo, Enums}
 
   import Ecto.Query, except: [update: 2]
-  import Inventory, only: [update_item: 2, find_first_available_slot: 2]
+  import Context.Inventory, only: [update_item: 2, find_first_available_slot: 2]
 
-  def list(%Character{id: char_id}) do
-    Item
+  def list(%Schema.Character{id: char_id}) do
+    Schema.Item
     |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
     |> Repo.all()
-    |> Enum.map(&Items.load_metadata(&1))
+    |> Enum.map(&Context.Items.load_metadata(&1))
   end
 
   def find_equipped_in_slots(equips, slots, inventory_tab, requested_slot \\ nil)
@@ -37,21 +37,21 @@ defmodule Ms2ex.Equips do
     Enum.filter(equips, &(&1.equip_slot in slots and &1.inventory_tab == inventory_tab))
   end
 
-  def equip(%Item{metadata: meta} = item) do
+  def equip(%Schema.Item{metadata: meta} = item) do
     equip(item, List.first(meta.slot_names))
   end
 
-  def equip(%Item{location: :inventory} = item, equip_slot) do
+  def equip(%Schema.Item{location: :inventory} = item, equip_slot) do
     update_item(item, %{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
   end
 
-  def unequip(%Item{} = item) do
+  def unequip(%Schema.Item{} = item) do
     with slot <- find_first_available_slot(item.character_id, item.inventory_tab),
          {:ok, item} <-
            update_item(item, %{equip_slot: :NONE, inventory_slot: slot, location: :inventory}) do
       {:ok, item}
     else
-      %Item{location: :inventory} ->
+      %Schema.Item{location: :inventory} ->
         {:error, :item_not_equipped}
 
       nil ->

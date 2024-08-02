@@ -1,4 +1,4 @@
-defmodule Ms2ex.World do
+defmodule Ms2ex.Context.World do
   def broadcast(packet) do
     Phoenix.PubSub.broadcast(Ms2ex.PubSub, "world", {:push, packet})
   end

@@ -1,4 +1,4 @@
-defmodule Ms2ex.Party do
+defmodule Ms2ex.Types.Party do
   @max_members 10
 
   defstruct [

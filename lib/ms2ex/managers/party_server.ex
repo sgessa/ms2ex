@@ -1,7 +1,7 @@
 defmodule Ms2ex.PartyServer do
   use GenServer
 
-  alias Ms2ex.{Packets, Party, PartyManager}
+  alias Ms2ex.{Packets, PartyManager, Types}
   alias Phoenix.PubSub
 
   def broadcast(nil, _packet), do: :error
@@ -70,7 +70,7 @@ defmodule Ms2ex.PartyServer do
   end
 
   def init(leader) do
-    party = Party.create(leader)
+    party = Types.Party.create(leader)
     Process.register(self(), :"party:#{party.id}")
     {:ok, party}
   end
@@ -96,7 +96,7 @@ defmodule Ms2ex.PartyServer do
   def handle_call({:update_member, character}, _from, state) do
     state = update_member(state, character)
 
-    unless Party.new?(state) do
+    unless Types.Party.new?(state) do
       broadcast(state.id, Packets.Party.update_member(character))
     end
 
@@ -105,11 +105,11 @@ defmodule Ms2ex.PartyServer do
 
   def handle_call({:remove_member, character}, _from, state) do
     broadcast(state.id, Packets.Party.member_left(character))
-    state = Party.remove_member(state, character)
+    state = Types.Party.remove_member(state, character)
 
     member_online = Enum.find(state.members, & &1.online?)
 
-    if Party.new?(state) or !member_online do
+    if Types.Party.new?(state) or !member_online do
       disband(state)
       {:reply, :ok, state}
     else
@@ -118,16 +118,16 @@ defmodule Ms2ex.PartyServer do
   end
 
   def handle_call({:kick_member, character_id}, _from, state) do
-    case Party.get_member(state, character_id) do
+    case Types.Party.get_member(state, character_id) do
       nil ->
         {:reply, :error, state}
 
       character ->
         broadcast(state.id, Packets.Party.kick(character))
 
-        state = Party.remove_member(state, character)
+        state = Types.Party.remove_member(state, character)
 
-        if Party.new?(state) do
+        if Types.Party.new?(state) do
           disband(state)
           {:reply, {:ok, character}, state}
         else
@@ -137,7 +137,7 @@ defmodule Ms2ex.PartyServer do
   end
 
   def handle_cast({:start_vote_kick, character_id}, state) do
-    case Party.get_member(state, character_id) do
+    case Types.Party.get_member(state, character_id) do
       nil ->
         {:reply, :error, state}
 
@@ -148,7 +148,7 @@ defmodule Ms2ex.PartyServer do
   end
 
   def handle_cast(:start_ready_check, state) do
-    if Party.ready_check_in_progress?(state) do
+    if Types.Party.ready_check_in_progress?(state) do
       {:noreply, state}
     else
       broadcast(state.id, Packets.Party.start_ready_check(state))
@@ -188,11 +188,11 @@ defmodule Ms2ex.PartyServer do
   end
 
   defp update_member(party, member) do
-    if Party.in_party?(party, member) do
-      Party.update_member(party, member)
+    if Types.Party.in_party?(party, member) do
+      Types.Party.update_member(party, member)
     else
       PartyManager.register(party, member)
-      Party.add_member(party, member)
+      Types.Party.add_member(party, member)
     end
   end
 

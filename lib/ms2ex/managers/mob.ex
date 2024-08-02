@@ -1,7 +1,7 @@
 defmodule Ms2ex.Mob do
   use GenServer
 
-  alias Ms2ex.{Character, Field, Mobs, Packets}
+  alias Ms2ex.{Context, Field, Packets, Schema}
 
   defstruct [
     :animation,
@@ -46,11 +46,11 @@ defmodule Ms2ex.Mob do
     }
   end
 
-  def inflict_dmg(%Character{} = attacker, %__MODULE__{} = mob, dmg) do
+  def inflict_dmg(%Schema.Character{} = attacker, %__MODULE__{} = mob, dmg) do
     call(mob, {:inflict_dmg, attacker, dmg})
   end
 
-  def lookup(%Character{} = character, object_id) do
+  def lookup(%Schema.Character{} = character, object_id) do
     call(character, object_id, :lookup)
   end
 
@@ -122,13 +122,13 @@ defmodule Ms2ex.Mob do
   defp kill_mob(mob) do
     Process.send_after(self(), :stop, mob.dead_animation_duration)
 
-    Mobs.drop_rewards(mob)
-    Mobs.reward_exp(mob)
+    Context.Mobs.drop_rewards(mob)
+    Context.Mobs.reward_exp(mob)
     # TODO send achievements
     # TODO check quest
   end
 
-  defp call(%Character{} = char, mob_object_id, msg) do
+  defp call(%Schema.Character{} = char, mob_object_id, msg) do
     process = process_name(char, mob_object_id)
 
     if pid = Process.whereis(process) do
@@ -156,7 +156,7 @@ defmodule Ms2ex.Mob do
     :"#{mob.field}:mob:#{mob.object_id}"
   end
 
-  defp process_name(%Character{} = char, object_id) do
+  defp process_name(%Schema.Character{} = char, object_id) do
     field_name = Field.field_name(char.map_id, char.channel_id)
     :"#{field_name}:mob:#{object_id}"
   end

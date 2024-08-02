@@ -1,10 +1,10 @@
 defmodule Ms2ex.Packets.UserChat do
-  alias Ms2ex.{Chat, Packets, SystemNotice}
+  alias Ms2ex.{Enums, Packets}
 
   import Packets.PacketWriter
 
   def bytes(type, character, msg) do
-    type_id = Chat.from_name(type)
+    type_id = Enums.ChatType.get_value(type)
 
     __MODULE__
     |> build()
@@ -21,8 +21,8 @@ defmodule Ms2ex.Packets.UserChat do
   end
 
   def error(character, type, error) do
-    type_id = Chat.from_name(type)
-    error_id = SystemNotice.from_name(error)
+    type_id = Enums.ChatType.get_value(type)
+    error_id = Enums.SystemNotice.get_value(error)
 
     __MODULE__
     |> build()

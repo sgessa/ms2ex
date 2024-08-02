@@ -4,10 +4,10 @@ defmodule Ms2ex.Net.SenderSession do
   require Logger, as: L
 
   alias Ms2ex.Crypto.SendCipher
-  alias Ms2ex.{CharacterManager, GroupChat, Packets, PartyServer}
+  alias Ms2ex.{CharacterManager, Context, GroupChat, Net, Packets, PartyServer, Schema}
   alias Ms2ex.Packets.{PacketReader, RequestVersion}
 
-  import Ms2ex.Net.Utils
+  import Net.Utils
 
   def start_link(socket, transport, send_cipher, parent_pid) do
     {:ok, pid} = GenServer.start_link(__MODULE__, [socket, transport, send_cipher, parent_pid])
@@ -20,11 +20,11 @@ defmodule Ms2ex.Net.SenderSession do
     GenServer.cast(pid, {:handshake, recv_cipher})
   end
 
-  def push(%Ms2ex.Character{} = character, packet) when is_binary(packet) do
+  def push(%Schema.Character{} = character, packet) when is_binary(packet) do
     push(character.sender_session_pid, packet)
   end
 
-  def push(%Ms2ex.Net.Session{} = session, packet) when is_binary(packet) do
+  def push(%Net.Session{} = session, packet) when is_binary(packet) do
     push(session.sender_pid, packet)
     session
   end
@@ -37,11 +37,11 @@ defmodule Ms2ex.Net.SenderSession do
     push(session, Packets.UserChat.bytes(:notice_alert, character, notice))
   end
 
-  def run(%Ms2ex.Net.Session{sender_pid: pid}, fun) when is_function(fun) do
+  def run(%Net.Session{sender_pid: pid}, fun) when is_function(fun) do
     GenServer.call(pid, {:run, fun})
   end
 
-  def run(%Ms2ex.Character{sender_session_pid: pid}, fun) when is_function(fun) do
+  def run(%Schema.Character{sender_session_pid: pid}, fun) when is_function(fun) do
     GenServer.call(pid, {:run, fun})
   end
 
@@ -104,7 +104,7 @@ defmodule Ms2ex.Net.SenderSession do
   end
 
   def handle_info({:friend_presence, data}, state) do
-    friend = Ms2ex.Friends.get_by_character_and_shared_id(data.character.id, data.shared_id)
+    friend = Context.Friends.get_by_character_and_shared_id(data.character.id, data.shared_id)
     friend = Map.put(friend, :rcpt, data.character)
 
     send(self(), {:push, Packets.Friend.update(friend)})
