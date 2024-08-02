@@ -1,7 +1,7 @@
-defmodule Ms2ex.Structs.Coord do
+defmodule Ms2ex.Types.Coord do
   defstruct x: 0, y: 0, z: 0
 end
 
-defmodule Ms2ex.Structs.CoordF do
+defmodule Ms2ex.Types.CoordF do
   defstruct x: 0.0, y: 0.0, z: 0.0
 end

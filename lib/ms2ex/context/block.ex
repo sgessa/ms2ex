@@ -1,5 +1,5 @@
 defmodule Ms2ex.MapBlock do
-  alias Ms2ex.Structs.Coord
+  alias Ms2ex.Types.Coord
 
   @block_size 150
   def block_size(), do: @block_size
@@ -18,9 +18,7 @@ defmodule Ms2ex.MapBlock do
 
   #   Metadata.MapEntity
   #   |> Metadata.filter("#{map.x_block}_*")
-  #   |> IO.inspect(label: "BLOCKS FOR #{map.x_block}")
   #   |> Enum.any?(&(Map.get(&1.block, :position) == Map.from_struct(block)))
-  #   |> IO.inspect(label: "Exists?")
   # end
 
   def length(%Coord{x: x, y: y, z: z}) do

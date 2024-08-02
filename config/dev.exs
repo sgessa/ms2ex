@@ -52,5 +52,6 @@ config :ms2ex, Ms2ex,
     "USER_BATTLE",
     # "USER_CHAT",
     "USER_SYNC",
-    "VIBRATE"
+    "VIBRATE",
+    "INSIGNIA"
   ]

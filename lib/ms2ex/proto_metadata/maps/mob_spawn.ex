@@ -3,7 +3,7 @@ defmodule Ms2ex.ProtoMetadata.MobSpawn do
   use Protobuf, syntax: :proto3
 
   alias Ms2ex.{MapBlock, ProtoMetadata}
-  alias Ms2ex.Structs.Coord
+  alias Ms2ex.Types.Coord
 
   field :id, 1, type: :int32
   field :position, 2, type: Coord

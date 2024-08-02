@@ -7,8 +7,8 @@ defmodule Ms2ex.Items.Stat do
   end
 
   def flat_value(%__MODULE__{type: :flat, value: val}), do: trunc(val)
-  def flat_value(%__MODULE__{type: :rate}), do: 0.0
+  def flat_value(%__MODULE__{type: :rate}), do: 0
 
   def rate_value(%__MODULE__{type: :rate, value: val}), do: val / 1
-  def rate_value(%__MODULE__{type: :flat}), do: 0
+  def rate_value(%__MODULE__{type: :flat}), do: 0.0
 end

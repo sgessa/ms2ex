@@ -1,19 +1,18 @@
 defmodule Ms2ex.Items.ConstantStats do
-  alias Ms2ex.{Item, Items}
-  alias Ms2ex.Storage
+  alias Ms2ex.{Item, Items, Storage}
 
   def get(%Item{} = item, pick_id, level_factor) do
     constant_id = item.metadata.option.constant_id
     options = Storage.Tables.ItemOptions.find_constant(constant_id, item.rarity)
 
     if options do
-      get_stats(item, options, pick_id, level_factor)
+      get_constant_stats(item, options, pick_id, level_factor)
     else
-      get_default(item, %{}, pick_id, level_factor)
+      get_pick_stats(item, %{}, pick_id, level_factor)
     end
   end
 
-  defp get_stats(item, options, option_id, level_factor) do
+  defp get_constant_stats(item, options, pick_id, level_factor) do
     values =
       Enum.into(options.values, [], fn {name, value} ->
         {name, Items.Stat.build(name, :flat, value, :basic)}
@@ -37,90 +36,51 @@ defmodule Ms2ex.Items.ConstantStats do
     constant_stats = Map.new(values ++ rates ++ special_values ++ special_rates)
 
     if level_factor > 50 do
-      get_default(item, constant_stats, option_id, level_factor)
+      get_pick_stats(item, constant_stats, pick_id, level_factor)
+    else
+      constant_stats
+    end
+
+    constant_stats
+  end
+
+  defp get_pick_stats(item, constant_stats, pick_id, level_factor) do
+    pick_options = Storage.Tables.ItemOptions.find_pick(pick_id, item.rarity)
+
+    if pick_options do
+      process_pick_options(item, constant_stats, pick_options, level_factor)
     else
       constant_stats
     end
   end
 
-  defp get_default(item, constant_stats, option_id, level_factor) do
-    base_options = Storage.Tables.ItemOptions.find_pick(option_id, item.rarity)
-
-    if base_options do
-      process_options(item, constant_stats, base_options, level_factor)
-    else
-      constant_stats
-    end
-  end
-
-  defp process_options(item, constant_stats, base_options, level_factor) do
-    script =
-      case :luaport.spawn(:calc_item_values, "priv/scripts/Functions/calcItemValues") do
-        {:ok, script, _args} -> script
-        {:error, {:already_started, script}} -> script
-      end
-
-    Enum.reduce(base_options.constant_value, constant_stats, fn {stat, _v} = pick, acc ->
-      calc_script = get_calc_script(stat)
-
-      if calc_script do
-        process_stat(item, acc, pick, calc_script, level_factor, script)
-      else
-        acc
-      end
+  defp process_pick_options(item, constant_stats, pick_options, level_factor) do
+    Enum.reduce(pick_options.constant_value, constant_stats, fn pick, acc ->
+      process_pick_stat(item, acc, pick, level_factor)
     end)
   end
 
-  defp process_stat(item, constant_stats, {p_stat, p_value}, calc_script, level_factor, script) do
+  defp process_pick_stat(item, constant_stats, {pick_stat, pick_value}, level_factor) do
+    # Initialize empty stat if not already present from constant options (always flat)
     constant_stats =
-      if constant_stats[p_stat] do
-        constant_stats
-      else
-        basic_stat = Items.Stat.build(p_stat, :flat, 0, :basic)
-        Map.put(constant_stats, p_stat, basic_stat)
-      end
+      Map.put_new(constant_stats, pick_stat, Items.Stat.build(pick_stat, :flat, 0, :basic))
 
-    basic_stat = constant_stats[p_stat]
+    constant_stat = constant_stats[pick_stat]
 
-    {:ok, [result]} =
-      :luaport.call(script, String.to_atom(calc_script), [
-        basic_stat.value,
-        p_value,
-        Items.Type.value(Items.type(item)),
-        List.first(item.metadata.limits.job_recommends),
-        level_factor,
-        item.rarity,
-        item.level
-      ])
+    value =
+      Items.Lua.get_stat_constant_value(
+        pick_stat,
+        constant_stat.value,
+        pick_value,
+        item,
+        level_factor
+      )
 
-    constant_stats =
-      if result <= 0.0000 do
-        Map.delete(constant_stats, p_stat)
-      else
-        constant_stats
-      end
+    {result, _} = Float.parse("#{value}")
 
-    {result, _} = Float.parse("#{result}")
-    basic_stat = Map.put(basic_stat, :value, result)
-
-    Map.put(constant_stats, p_stat, basic_stat)
-  end
-
-  defp get_calc_script(stat) do
-    case stat do
-      :hp -> "constant_value_hp"
-      :defense -> "constant_value_ndd"
-      :magic_res -> "constant_value_mar"
-      :physical_res -> "constant_value_par"
-      :crit_rate -> "constant_value_cap"
-      :str -> "constant_value_str"
-      :dex -> "constant_value_dex"
-      :int -> "constant_value_int"
-      :luk -> "constant_value_luk"
-      :magic_attk -> "constant_value_map"
-      :min_weapon_attk -> "constant_value_wapmin"
-      :max_weapon_attk -> "constant_value_wapmax"
-      _ -> nil
-    end
+    # Put / update constant stat (if valid value)
+    if result <= 0.0,
+      do: Map.delete(constant_stats, pick_stat),
+      else: Map.put(constant_stats, pick_stat, %{constant_stat | value: result})
   end
 end

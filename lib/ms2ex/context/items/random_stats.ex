@@ -6,12 +6,12 @@ defmodule Ms2ex.Items.RandomStats do
     random_id = item.metadata.option.random_id
     options = Storage.Tables.ItemOptions.find_random(random_id, item.rarity)
 
-    get_stats(item, options)
+    get_random_stats(item, options)
   end
 
-  defp get_stats(_item, nil), do: %{}
+  defp get_random_stats(_item, nil), do: %{}
 
-  defp get_stats(_item, random_options) do
+  defp get_random_stats(_item, random_options) do
     %{num_pick: picks, entries: entries} = random_options
 
     pick_count = Enum.random(picks.min..picks.max)
@@ -27,14 +27,14 @@ defmodule Ms2ex.Items.RandomStats do
     Items.Stat.build(Enums.BasicStatType.get_key(attr), :flat, value, :basic)
   end
 
-  defp process_stat(%{rates: values, basic_attribute: attr}) do
-    value = :rand.uniform() * (values.max - values.min) + values.max
-    Items.Stat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
-  end
-
   defp process_stat(%{values: values, special_attribute: attr}) do
     value = Enum.random(values.min..values.max)
     Items.Stat.build(Enums.SpecialStatType.get_key(attr), :flat, value, :special)
+  end
+
+  defp process_stat(%{rates: values, basic_attribute: attr}) do
+    value = :rand.uniform() * (values.max - values.min) + values.max
+    Items.Stat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
   end
 
   defp process_stat(%{rates: values, special_attribute: attr}) do
