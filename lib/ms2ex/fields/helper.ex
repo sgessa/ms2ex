@@ -6,14 +6,12 @@ defmodule Ms2ex.FieldHelper do
     Context,
     Field,
     MapBlock,
-    Storage,
-    ProtoMetadata,
     Mob,
-    Packets
+    Packets,
+    ProtoMetadata,
+    Schema,
+    Storage
   }
-
-  alias Ms2ex.PremiumMembership, as: Membership
-  alias Ms2ex.PremiumMemberships, as: Memberships
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
@@ -83,8 +81,9 @@ defmodule Ms2ex.FieldHelper do
     push(character, Packets.Emote.load(emotes))
 
     # Load Premium membership if active
-    with %Membership{} = membership <- Memberships.get(character.account_id),
-         false <- Memberships.expired?(membership) do
+    with %Schema.PremiumMembership{} = membership <-
+           Context.PremiumMemberships.get(character.account_id),
+         false <- Context.PremiumMemberships.expired?(membership) do
       push(character, Packets.PremiumClub.activate(character, membership))
     end
 

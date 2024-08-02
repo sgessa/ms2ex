@@ -1,5 +1,5 @@
-defmodule Ms2ex.PremiumMemberships do
-  alias Ms2ex.{PremiumMembership, Repo}
+defmodule Ms2ex.Context.PremiumMemberships do
+  alias Ms2ex.{Repo, Schema}
 
   def create_or_extend(account_id, expiration) do
     Repo.transaction(fn ->
@@ -12,7 +12,7 @@ defmodule Ms2ex.PremiumMemberships do
 
   defp create_or_update(account_id, expiration) do
     case get(account_id) do
-      %PremiumMembership{expires_at: current_expiration} = membership ->
+      %Schema.PremiumMembership{expires_at: current_expiration} = membership ->
         new_expiration = DateTime.add(current_expiration, expiration, :second)
         update(membership, %{expires_at: new_expiration})
 
@@ -23,18 +23,18 @@ defmodule Ms2ex.PremiumMemberships do
   end
 
   def get(account_id) do
-    Repo.get_by(PremiumMembership, account_id: account_id)
+    Repo.get_by(Schema.PremiumMembership, account_id: account_id)
   end
 
   defp create(attrs) do
-    %PremiumMembership{}
-    |> PremiumMembership.changeset(attrs)
+    %Schema.PremiumMembership{}
+    |> Schema.PremiumMembership.changeset(attrs)
     |> Repo.insert()
   end
 
   defp update(membership, attrs) do
     membership
-    |> PremiumMembership.changeset(attrs)
+    |> Schema.PremiumMembership.changeset(attrs)
     |> Repo.update()
   end
 

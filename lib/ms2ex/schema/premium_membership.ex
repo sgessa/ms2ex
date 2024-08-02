@@ -1,10 +1,10 @@
-defmodule Ms2ex.PremiumMembership do
+defmodule Ms2ex.Schema.PremiumMembership do
   use Ecto.Schema
 
   import Ecto.Changeset
 
   schema "premium_memberships" do
-    belongs_to :account, Ms2ex.Account
+    belongs_to :account, Ms2ex.Schema.Account
 
     field :expires_at, :utc_datetime
 

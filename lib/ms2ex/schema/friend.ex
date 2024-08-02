@@ -1,11 +1,13 @@
-defmodule Ms2ex.Friend do
+defmodule Ms2ex.Schema.Friend do
   use Ecto.Schema
+
+  alias Ms2ex.Schema
 
   import Ecto.Changeset
 
   schema "friends" do
-    belongs_to :character, Ms2ex.Character
-    belongs_to :rcpt, Ms2ex.Character
+    belongs_to :character, Schema.Character
+    belongs_to :rcpt, Schema.Character
 
     field :block_reason, :string, default: ""
     field :message, :string, default: ""

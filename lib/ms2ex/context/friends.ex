@@ -1,10 +1,10 @@
 defmodule Ms2ex.Friends do
-  alias Ms2ex.{Friend, Repo, Schema}
+  alias Ms2ex.{Repo, Schema}
 
   import Ecto.Query
 
   def get_by_character_and_shared_id(char_id, shared_id, preload_rcpt? \\ false) do
-    Friend
+    Schema.Friend
     |> where([f], f.shared_id == ^shared_id and f.rcpt_id != ^char_id)
     |> maybe_preload_rcpt(preload_rcpt?)
     |> limit(1)
@@ -29,12 +29,12 @@ defmodule Ms2ex.Friends do
     src =
       character
       |> Ecto.build_assoc(:friends)
-      |> Friend.add(friend, src_attrs)
+      |> Schema.Friend.add(friend, src_attrs)
 
     dst =
       friend
       |> Ecto.build_assoc(:friends)
-      |> Friend.add(character, dst_attrs)
+      |> Schema.Friend.add(character, dst_attrs)
 
     Repo.transaction(fn ->
       with {:ok, src} <- Repo.insert(src),
@@ -53,12 +53,12 @@ defmodule Ms2ex.Friends do
 
     character
     |> Ecto.build_assoc(:friends)
-    |> Friend.block(rcpt, attrs)
+    |> Schema.Friend.block(rcpt, attrs)
     |> Repo.insert()
   end
 
   def block_friend(src, dst, reason) do
-    change = Friend.block_friend(src, reason)
+    change = Schema.Friend.block_friend(src, reason)
 
     Repo.transaction(fn ->
       with {:ok, src} <- Repo.update(change),
@@ -71,14 +71,14 @@ defmodule Ms2ex.Friends do
     end)
   end
 
-  def update(%Friend{} = friend, attrs) do
+  def update(%Schema.Friend{} = friend, attrs) do
     friend
-    |> Friend.changeset(attrs)
+    |> Schema.Friend.changeset(attrs)
     |> Repo.update()
   end
 
   def delete_all(shared_id) do
-    Friend
+    Schema.Friend
     |> where([f], f.shared_id == ^shared_id)
     |> Repo.delete_all()
   end
