@@ -16,14 +16,17 @@ defmodule Ms2ex.Packets.ControlNpc do
   defp npc_data(:npc, npc) do
     ""
     |> put_int(npc.object_id)
-    |> put_byte()
+    # Flags bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated)
+    |> put_byte(2)
     |> put_short_coord(npc.position)
-    |> put_short(npc.direction)
+    # TODO convert Z to degree
+    |> put_short(trunc(npc.rotation.z * 10))
     # speed
     |> put_short_coord()
     |> put_short(100)
+    # TODO write battle state if boss
     |> put_byte(0x1)
-    |> put_short(npc.current_animation)
+    |> put_short(npc.animation)
     |> put_short(0x1)
   end
 

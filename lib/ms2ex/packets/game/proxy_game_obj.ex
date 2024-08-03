@@ -109,15 +109,15 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     end
   end
 
-  def load_npc(npc) do
+  def load_npc(field_npc) do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_npc)
-    |> put_int(npc.object_id)
-    |> put_int(npc.id)
-    |> put_byte()
-    |> put_int(200)
-    |> put_coord(npc.position)
+    |> put_int(field_npc.object_id)
+    |> put_int(field_npc.npc.id)
+    |> put_bool(field_npc.dead?)
+    |> put_int(field_npc.spawn_point_id)
+    |> put_coord(field_npc.position)
   end
 
   def remove_npc(npc) do

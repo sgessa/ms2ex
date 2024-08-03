@@ -5,10 +5,10 @@ defmodule Ms2ex.FieldHelper do
     CharacterManager,
     Context,
     Field,
-    Mob,
     Packets,
     Schema,
-    Storage
+    Storage,
+    Types
   }
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -35,16 +35,6 @@ defmodule Ms2ex.FieldHelper do
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
     state = %{state | counter: state.counter + 1, sessions: sessions}
-
-    # Load Mobs
-    mobs = state.mobs |> Map.values() |> List.flatten()
-
-    for obj_id <- mobs do
-      with {:ok, mob} <- Mob.lookup(character, obj_id) do
-        push(character, Packets.FieldAddNpc.add_mob(mob))
-        push(character, Packets.ProxyGameObj.load_npc(mob))
-      end
-    end
 
     # Load NPCs
     for {_id, npc} <- state.npcs do
@@ -173,35 +163,22 @@ defmodule Ms2ex.FieldHelper do
     %{state | counter: state.counter + 1, items: items}
   end
 
-  def add_mob(%{type: :npc} = npc, state) do
-    mob = Mob.build(state, npc)
-    {:ok, _pid} = Mob.start(mob)
-    %{state | counter: state.counter + 1}
-  end
-
-  def remove_mob(spawn_group_id, object_id, state) do
-    population = state.mobs[spawn_group_id] || []
-    population = List.delete(population, object_id)
-    %{state | mobs: Map.put(state.mobs, spawn_group_id, population)}
-  end
-
-  @object_counter 10_000_001
+  @object_counter 10_000_000
   def initialize_state(map_id, channel_id) do
-    add_mob_groups(map_id)
-
-    {counter, npcs} = load_npcs(map_id, @object_counter)
+    {counter, npc_spawns, npcs, mobs} = load_npcs(map_id, @object_counter)
     {counter, portals} = load_portals(map_id, counter)
     # {counter, interactable} = load_interactable(map, counter)
 
     %{
       channel_id: channel_id,
       counter: counter,
-      map_id: map_id,
       interactable: %{},
       items: %{},
-      mobs: %{},
+      map_id: map_id,
+      mobs: mobs,
       mounts: %{},
       npcs: npcs,
+      npc_spawns: npc_spawns,
       portals: portals,
       sessions: %{},
       topic: "field:#{map_id}:channel:#{channel_id}"
@@ -211,16 +188,36 @@ defmodule Ms2ex.FieldHelper do
   defp load_npcs(map_id, counter) do
     map_id
     |> Storage.Maps.get_npcs()
-    |> Enum.reduce({counter, %{}}, fn npc, {counter, npcs} ->
-      npc =
-        npc
-        |> Map.put(:current_animation, get_in(npc, [:animation, :id]) || 255)
-        |> Map.put(:position, npc.spawn.position)
-        |> Map.put(:rotation, npc.spawn.rotation)
-        |> Map.put(:direction, trunc(npc.spawn.rotation.z * 10))
+    |> Enum.reduce({counter, %{}, %{}, %{}}, fn npc, {counter, npc_spawns, npcs, mobs} ->
+      regen_check_time = get_in(npc, [:spawn, :regen_check_time])
+
+      {counter, npc_spawns} =
+        if regen_check_time && regen_check_time > 0 do
+          counter = counter + 1
+          {counter, Map.put(npc_spawns, counter, npc.spawn)}
+        else
+          {counter, npc_spawns}
+        end
+
+      spawn_point_id = counter
+      counter = counter + 1
+
+      field_npc =
+        %Types.FieldNpc{}
+        |> Map.put(:spawn_point_id, spawn_point_id)
+        |> Map.put(:npc, Types.Npc.new(%{id: npc.id, metadata: npc.metadata}))
+        |> Map.put(:animation, get_in(npc, [:animation, :id]) || 255)
+        |> Map.put(:position, struct(Types.Coord, npc.spawn.position))
+        |> Map.put(:rotation, struct(Types.Coord, npc.spawn.rotation))
         |> Map.put(:object_id, counter)
 
-      {counter + 1, Map.put(npcs, npc.id, npc)}
+      friendly = get_in(npc, [:metadata, :basic, :friendly]) || 0
+
+      if friendly > 0 do
+        {counter + 1, npc_spawns, Map.put(npcs, field_npc.object_id, field_npc), mobs}
+      else
+        {counter + 1, npc_spawns, npcs, Map.put(mobs, field_npc.object_id, npc)}
+      end
     end)
   end
 
@@ -231,12 +228,6 @@ defmodule Ms2ex.FieldHelper do
       portal = Map.put(portal, :object_id, counter)
       {counter + 1, Map.put(portals, portal.id, portal)}
     end)
-  end
-
-  defp add_mob_groups(map_id) do
-    map_id
-    |> Storage.Maps.get_npcs()
-    |> Enum.each(&send(self(), {:add_mob, &1}))
   end
 
   # defp load_interactable(map, counter) do
