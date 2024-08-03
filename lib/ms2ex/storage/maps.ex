@@ -27,16 +27,10 @@ defmodule Ms2ex.Storage.Maps do
     |> Enum.random()
   end
 
-  def get_npcs(map_id) do
+  def get_npc_spawns(map_id) do
     map_id
     |> get_meta()
-    |> Map.get(:npcs)
-    |> Enum.filter(
-      &(&1.type == :npc &&
-          get_in(&1, [:spawn, :visible]) &&
-          get_in(&1, [:spawn, :spawn_on_field_create]) &&
-          !is_nil(&1.metadata))
-    )
+    |> Map.get(:npc_spawns)
   end
 
   def get_portals(map_id) do

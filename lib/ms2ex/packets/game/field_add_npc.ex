@@ -6,8 +6,6 @@ defmodule Ms2ex.Packets.FieldAddNpc do
   def add_npc(field_npc) do
     npc = field_npc.npc
 
-    IO.inspect(field_npc.position, label: "NPC #{npc.id} Position")
-
     __MODULE__
     |> build()
     |> put_int(field_npc.object_id)

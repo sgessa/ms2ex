@@ -187,37 +187,65 @@ defmodule Ms2ex.FieldHelper do
 
   defp load_npcs(map_id, counter) do
     map_id
-    |> Storage.Maps.get_npcs()
-    |> Enum.reduce({counter, %{}, %{}, %{}}, fn npc, {counter, npc_spawns, npcs, mobs} ->
-      regen_check_time = get_in(npc, [:spawn, :regen_check_time])
+    |> Storage.Maps.get_npc_spawns()
+    |> Enum.reduce({counter, %{}, %{}}, fn npc_spawn, {counter, npc_spawns, npcs} ->
+      regen_check_time = Map.get(npc_spawn, :regen_check_time, 0)
 
       {counter, npc_spawns} =
         if regen_check_time && regen_check_time > 0 do
           counter = counter + 1
-          {counter, Map.put(npc_spawns, counter, npc.spawn)}
+          {counter, Map.put(npc_spawns, counter, npc_spawn)}
         else
           {counter, npc_spawns}
         end
 
-      spawn_point_id = counter
-      counter = counter + 1
+      {counter, group_npcs} = build_npcs_from_spawn_group(npc_spawn, counter)
+      npcs = Map.merge(npcs, group_npcs)
+
+      {counter, npc_spawns, select_friendly_npcs(npcs), select_mob_npcs(npcs)}
+    end)
+  end
+
+  defp build_npcs_from_spawn_group(group, object_counter) do
+    spawn_point_id = object_counter
+
+    Enum.reduce(group.npc_list, {object_counter, %{}}, fn npc_entry, {counter, npc_group_list} ->
+      {counter, npcs} = clone_npcs(counter, spawn_point_id, group, npc_entry)
+      {counter, Map.merge(npc_group_list, npcs)}
+    end)
+  end
+
+  defp clone_npcs(object_counter, spawn_point_id, spawn_group, npc_entry) do
+    metadata = Storage.Npcs.get_meta(npc_entry.npc_id)
+
+    Enum.reduce(1..npc_entry.count, {object_counter, %{}}, fn _, {object_counter, npcs} ->
+      npc = Types.Npc.new(%{id: npc_entry.npc_id, metadata: metadata})
+      object_counter = object_counter + 1
 
       field_npc =
         %Types.FieldNpc{}
         |> Map.put(:spawn_point_id, spawn_point_id)
-        |> Map.put(:npc, Types.Npc.new(%{id: npc.id, metadata: npc.metadata}))
+        |> Map.put(:npc, npc)
         |> Map.put(:animation, get_in(npc, [:animation, :id]) || 255)
-        |> Map.put(:position, struct(Types.Coord, npc.spawn.position))
-        |> Map.put(:rotation, struct(Types.Coord, npc.spawn.rotation))
-        |> Map.put(:object_id, counter)
+        |> Map.put(:position, struct(Types.Coord, spawn_group.position))
+        |> Map.put(:rotation, struct(Types.Coord, spawn_group.rotation))
+        |> Map.put(:object_id, object_counter)
 
-      friendly = get_in(npc, [:metadata, :basic, :friendly]) || 0
+      {object_counter, Map.put(npcs, object_counter, field_npc)}
+    end)
+  end
 
-      if friendly > 0 do
-        {counter + 1, npc_spawns, Map.put(npcs, field_npc.object_id, field_npc), mobs}
-      else
-        {counter + 1, npc_spawns, npcs, Map.put(mobs, field_npc.object_id, npc)}
-      end
+  defp select_friendly_npcs(npcs) do
+    Enum.filter(npcs, fn {_, npc} ->
+      friendly = get_in(npc, [:npc, :metadata, :basic, :friendly]) || 0
+      friendly > 0
+    end)
+  end
+
+  defp select_mob_npcs(npcs) do
+    Enum.filter(npcs, fn {_, npc} ->
+      friendly = get_in(npc, [:npc, :metadata, :basic, :friendly])
+      !friendly || friendly == 0
     end)
   end
 
