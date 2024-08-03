@@ -220,15 +220,17 @@ defmodule Ms2ex.FieldHelper do
 
     Enum.reduce(1..npc_entry.count, {object_counter, %{}}, fn _, {object_counter, npcs} ->
       npc = Types.Npc.new(%{id: npc_entry.npc_id, metadata: metadata})
+      position = struct(Types.Coord, Map.get(spawn_group, :position, %{}))
+      rotation = struct(Types.Coord, Map.get(spawn_group, :rotation, %{}))
       object_counter = object_counter + 1
 
       field_npc =
         %Types.FieldNpc{}
         |> Map.put(:spawn_point_id, spawn_point_id)
         |> Map.put(:npc, npc)
-        |> Map.put(:animation, get_in(npc, [:animation, :id]) || 255)
-        |> Map.put(:position, struct(Types.Coord, spawn_group.position))
-        |> Map.put(:rotation, struct(Types.Coord, spawn_group.rotation))
+        |> Map.put(:animation, 255)
+        |> Map.put(:position, position)
+        |> Map.put(:rotation, rotation)
         |> Map.put(:object_id, object_counter)
 
       {object_counter, Map.put(npcs, object_counter, field_npc)}
@@ -236,15 +238,15 @@ defmodule Ms2ex.FieldHelper do
   end
 
   defp select_friendly_npcs(npcs) do
-    Enum.filter(npcs, fn {_, npc} ->
-      friendly = get_in(npc, [:npc, :metadata, :basic, :friendly]) || 0
+    Enum.filter(npcs, fn {_, field_npc} ->
+      friendly = field_npc.npc.metadata.basic.friendly || 0
       friendly > 0
     end)
   end
 
   defp select_mob_npcs(npcs) do
-    Enum.filter(npcs, fn {_, npc} ->
-      friendly = get_in(npc, [:npc, :metadata, :basic, :friendly])
+    Enum.filter(npcs, fn {_, field_npc} ->
+      friendly = field_npc.npc.metadata.basic.friendly || 0
       !friendly || friendly == 0
     end)
   end
