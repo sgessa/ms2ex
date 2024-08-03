@@ -7,8 +7,9 @@ defmodule Ms2ex.FieldServer do
     CharacterManager,
     Field,
     FieldHelper,
-    Schema,
+    Managers,
     Packets,
+    Schema,
     SkillCast
   }
 
@@ -89,6 +90,11 @@ defmodule Ms2ex.FieldServer do
   def handle_cast({:enter_battle_stance, character}, state) do
     Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
     Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
+    {:noreply, state}
+  end
+
+  def handle_info({:add_npc, field_npc}, state) do
+    Managers.FieldNpc.start(field_npc)
     {:noreply, state}
   end
 

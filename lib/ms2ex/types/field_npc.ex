@@ -2,7 +2,6 @@ defmodule Ms2ex.Types.FieldNpc do
   alias Ms2ex.Types.Coord
 
   defstruct [
-    :id,
     :npc,
     :field,
     :object_id,
@@ -31,6 +30,6 @@ defmodule Ms2ex.Types.FieldNpc do
   def get_type(npc) do
     friendly = get_in(npc.metadata, [:basic, :friendly]) || 0
 
-    if !friendly, do: :mob, else: :npc
+    if friendly > 0, do: :npc, else: :mob
   end
 end

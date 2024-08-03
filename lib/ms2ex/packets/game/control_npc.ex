@@ -35,7 +35,8 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_int(npc.object_id)
     |> put_byte()
     |> put_short_coord(npc.position)
-    |> put_short(npc.rotation.z)
+    # TODO convert Z to degree
+    |> put_short(trunc(npc.rotation.z * 10))
     |> put_short_coord()
     |> put_short(100)
     |> put_int()
@@ -49,7 +50,8 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_int(npc.object_id)
     |> put_byte()
     |> put_short_coord(npc.position)
-    |> put_short(npc.rotation.z)
+    # TODO convert Z to degree
+    |> put_short(trunc(npc.rotation.z * 10))
     |> put_short_coord()
     |> put_short(100)
     |> put_byte(0x1)

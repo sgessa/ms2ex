@@ -1,7 +1,6 @@
 defmodule Ms2ex.Fields.Helpers.Npc do
   alias Ms2ex.Storage
   alias Ms2ex.Types
-  alias Ms2ex.Managers
 
   def load(map_id, counter, field) do
     {counter, npc_spawns, npcs} =
@@ -50,7 +49,6 @@ defmodule Ms2ex.Fields.Helpers.Npc do
 
       field_npc =
         Types.FieldNpc.new(%{
-          id: object_counter,
           object_id: object_counter,
           spawn_point_id: spawn_point_id,
           npc: npc,
@@ -59,7 +57,7 @@ defmodule Ms2ex.Fields.Helpers.Npc do
           field: field
         })
 
-      Managers.FieldNpc.start(field_npc)
+      send(self(), {:add_npc, field_npc})
 
       {object_counter, Map.put(npcs, object_counter, field_npc)}
     end)
