@@ -8,7 +8,8 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     load_player: 0x3,
     update_player: 0x5,
     load_npc: 0x6,
-    remove_npc: 0x7
+    remove_npc: 0x7,
+    update_npc: 0x8
   }
 
   @updates %{
@@ -120,11 +121,20 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_coord(field_npc.position)
   end
 
-  def remove_npc(npc) do
+  def remove_npc(field_npc) do
     __MODULE__
     |> build()
     |> put_byte(@modes.remove_npc)
-    |> put_int(npc.object_id)
+    |> put_int(field_npc.object_id)
+  end
+
+  def update_npc(field_npc) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_npc)
+    |> put_int(field_npc.object_id)
+    |> put_bool(field_npc.dead?)
+    |> put_coord(field_npc.position)
   end
 
   defp has_bit?(flag, bit), do: (flag &&& flag(bit)) != 0

@@ -23,13 +23,15 @@ defmodule Ms2ex.Managers.FieldNpc do
 
   def handle_info(:send_updates, field_npc) do
     Field.broadcast(field_npc.field, Packets.ControlNpc.bytes(field_npc))
+    Field.broadcast(field_npc.field, Packets.ProxyGameObj.update_npc(field_npc))
+
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, field_npc}
   end
 
   def handle_info(:stop, field_npc) do
-    Field.broadcast(field_npc.field_id, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
-    Field.broadcast(field_npc.field_id, Packets.ProxyGameObj.remove_npc(field_npc))
+    Field.broadcast(field_npc.field, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
+    Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
     # TODO
     # We should tell FieldServer
@@ -57,11 +59,14 @@ defmodule Ms2ex.Managers.FieldNpc do
     if hp == 0 do
       # TODO
       # Death animation
-
-      Process.send_after(self(), :stop, :timer.seconds(5))
+      field_npc = Map.put(field_npc, :dead?, true)
+      Process.send_after(self(), :stop, :timer.seconds(field_npc.npc.metadata.dead.time))
 
       Context.Mobs.drop_rewards(field_npc)
       Context.Mobs.reward_exp(field_npc)
+
+      # TODO
+      # Player Condition update (quest, achievemnts...)
 
       {:reply, {:ok, field_npc}, field_npc}
     else
