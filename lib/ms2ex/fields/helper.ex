@@ -42,6 +42,12 @@ defmodule Ms2ex.FieldHelper do
       push(character, Packets.ProxyGameObj.load_npc(npc))
     end
 
+    # Load Mobs
+    for {_id, mob} <- state.mobs do
+      push(character, Packets.FieldAddNpc.add_npc(mob))
+      push(character, Packets.ProxyGameObj.load_npc(mob))
+    end
+
     # Load portals
     for {_id, portal} <- state.portals do
       push(character, Packets.AddPortal.bytes(portal))

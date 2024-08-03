@@ -49,6 +49,7 @@ defmodule Ms2ex.Fields.Helpers.Npc do
 
       field_npc =
         %Types.FieldNpc{}
+        |> Map.put(:id, object_counter)
         |> Map.put(:spawn_point_id, spawn_point_id)
         |> Map.put(:npc, npc)
         |> Map.put(:animation, 255)
@@ -62,14 +63,14 @@ defmodule Ms2ex.Fields.Helpers.Npc do
 
   defp select_friendly_npcs(npcs) do
     Enum.filter(npcs, fn {_, field_npc} ->
-      friendly = field_npc.npc.metadata.basic.friendly || 0
+      friendly = field_npc.npc.metadata.basic[:friendly] || 0
       friendly > 0
     end)
   end
 
   defp select_mob_npcs(npcs) do
     Enum.filter(npcs, fn {_, field_npc} ->
-      friendly = field_npc.npc.metadata.basic.friendly || 0
+      friendly = field_npc.npc.metadata.basic[:friendly] || 0
       !friendly || friendly == 0
     end)
   end
