@@ -3,17 +3,18 @@ defmodule Ms2ex.Field do
     CharacterManager,
     Context,
     FieldServer,
-    Mob,
     Net,
     Packets,
     Schema,
     Storage
   }
 
+  alias Ms2ex.Types.FieldNpc
+
   alias Phoenix.PubSub
 
-  def add_mob_drop(%Mob{} = mob, item) do
-    cast(mob.map, {:add_mob_drop, mob, item})
+  def add_mob_drop(%FieldNpc{} = field_npc, item) do
+    cast(field_npc.field, {:add_mob_drop, field_npc, item})
   end
 
   def drop_item(%Schema.Character{} = character, item) do
@@ -50,7 +51,12 @@ defmodule Ms2ex.Field do
 
   def broadcast(%Schema.Character{} = character, packet) do
     topic = field_name(character.map_id, character.channel_id)
-    PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
+    broadcast(topic, packet)
+  end
+
+  def broadcast(pid, packet) when is_pid(pid) do
+    topic = Process.info(pid).registered_name
+    broadcast(topic, packet)
   end
 
   def broadcast(topic, packet) do

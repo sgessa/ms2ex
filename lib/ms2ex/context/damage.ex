@@ -1,5 +1,6 @@
 defmodule Ms2ex.Context.Damage do
-  alias Ms2ex.{Mob, Schema, SkillCast}
+  alias Ms2ex.{Schema, SkillCast}
+  alias Ms2ex.Types.FieldNpc
 
   def roll_crit(%Schema.Character{} = character) do
     crit_rate = character.stats.crit_rate_cur + 50
@@ -7,7 +8,7 @@ defmodule Ms2ex.Context.Damage do
     Enum.random(1..1000) <= crit_rate
   end
 
-  def calculate(%Schema.Character{} = caster, %Mob{} = mob, crit? \\ false) do
+  def calculate(%Schema.Character{} = caster, %FieldNpc{} = mob, crit? \\ false) do
     skill_cast = caster.skill_cast
 
     # TODO calculate from character stats
@@ -30,7 +31,7 @@ defmodule Ms2ex.Context.Damage do
     pierce_coeff = 1 - caster.stats.pierce_cur
 
     # TODO find correct enemy def stats
-    denominator = mob.stats.cad.total * pierce_coeff * 15
+    denominator = mob.stats.defense * pierce_coeff * 15
 
     dmg = trunc(numerator / denominator)
     %{dmg: dmg, crit?: crit?}
@@ -38,9 +39,9 @@ defmodule Ms2ex.Context.Damage do
 
   defp calc_enemy_res(skill_cast, mob) do
     if SkillCast.physical?(skill_cast) do
-      mob.stats.phys_res.total
+      mob.stats.physical_res
     else
-      mob.stats.mag_res.total
+      mob.stats.magical_res
     end
   end
 

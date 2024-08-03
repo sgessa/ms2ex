@@ -1,10 +1,10 @@
 defmodule Ms2ex.Packets.ControlNpc do
-  alias Ms2ex.Mob
+  alias Ms2ex.Types.FieldNpc
 
   import Ms2ex.Packets.PacketWriter
 
-  def bytes(type, npc) do
-    data = npc_data(type, npc)
+  def bytes(npc) do
+    data = npc_data(npc)
 
     __MODULE__
     |> build()
@@ -13,7 +13,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_bytes(data)
   end
 
-  defp npc_data(:npc, npc) do
+  defp npc_data(%FieldNpc{type: :npc} = npc) do
     ""
     |> put_int(npc.object_id)
     # Flags bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated)
@@ -30,7 +30,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
-  defp npc_data(:mob, %Mob{boss?: true} = npc) do
+  defp npc_data(%FieldNpc{npc: %{boss?: true}, type: :mob} = npc) do
     ""
     |> put_int(npc.object_id)
     |> put_byte()
@@ -44,7 +44,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
-  defp npc_data(:mob, %Mob{} = npc) do
+  defp npc_data(%FieldNpc{} = npc) do
     ""
     |> put_int(npc.object_id)
     |> put_byte()

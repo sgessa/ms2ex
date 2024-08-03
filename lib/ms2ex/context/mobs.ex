@@ -24,6 +24,7 @@ defmodule Ms2ex.Context.Mobs do
 
   def reward_exp(mob) do
     # TODO party exp
-    CharacterManager.earn_exp(mob.last_attacker, mob.exp)
+    # TODO get mob exp (instead of hardcoded 10)
+    CharacterManager.earn_exp(mob.last_attacker, 10)
   end
 end

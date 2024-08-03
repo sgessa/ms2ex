@@ -171,7 +171,9 @@ defmodule Ms2ex.FieldHelper do
 
   @object_counter 10_000_000
   def initialize_state(map_id, channel_id) do
-    {counter, npc_spawns, npcs, mobs} = Helpers.Npc.load(map_id, @object_counter)
+    field_name = Field.field_name(map_id, channel_id)
+    {counter, npc_spawns, npcs, mobs} = Helpers.Npc.load(map_id, @object_counter, field_name)
+
     {counter, portals} = Helpers.Portal.load(map_id, counter)
     # {counter, interactable} = load_interactable(map, counter)
 

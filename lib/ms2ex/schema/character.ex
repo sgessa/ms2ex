@@ -1,6 +1,5 @@
 defmodule Ms2ex.Schema.Character do
   use Ecto.Schema
-
   import Ecto.Changeset
 
   alias Ms2ex.{Context, EctoTypes, Schema}

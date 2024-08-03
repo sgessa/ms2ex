@@ -1,7 +1,8 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Context, Field, Mob, Net, Packets, SkillCast, Types}
+  alias Ms2ex.{CharacterManager, Context, Field, Net, Packets, SkillCast, Types}
+  alias Ms2ex.Managers
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -160,13 +161,13 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_byte(packet)
 
     mobs =
-      case Mob.lookup(character, obj_id) do
+      case Managers.FieldNpc.call(:lookup, character, obj_id) do
         {:ok, mob} ->
           {mob, dmg} = damage_mob(character, mob, crit?)
           Field.broadcast(character, Packets.Stats.update_mob_health(mob))
           mobs ++ [{mob, dmg}]
 
-        _ ->
+        _any ->
           mobs
       end
 
@@ -178,7 +179,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   defp damage_mob(character, mob, crit?) do
     skill_cast = character.skill_cast
     dmg = Context.Damage.calculate(character, mob, crit?)
-    {:ok, mob} = Mob.inflict_dmg(character, mob, dmg)
+    {:ok, mob} = Managers.FieldNpc.call({:inflict_dmg, character, dmg}, character, mob)
 
     if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
       status = Types.SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)

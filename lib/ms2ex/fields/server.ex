@@ -7,11 +7,12 @@ defmodule Ms2ex.FieldServer do
     CharacterManager,
     Field,
     FieldHelper,
-    Mob,
     Schema,
     Packets,
     SkillCast
   }
+
+  alias Ms2ex.Types.FieldNpc
 
   import FieldHelper
 
@@ -81,7 +82,7 @@ defmodule Ms2ex.FieldServer do
     {:noreply, drop_item(source, item, state)}
   end
 
-  def handle_cast({:add_mob_drop, %Mob{} = mob, %Schema.Item{} = item}, state) do
+  def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item}, state) do
     {:noreply, add_mob_drop(mob, item, state)}
   end
 
@@ -114,7 +115,7 @@ defmodule Ms2ex.FieldServer do
     end
 
     for {_id, npc} <- state.npcs do
-      Field.broadcast(state.topic, Packets.ControlNpc.bytes(:npc, npc))
+      Field.broadcast(state.topic, Packets.ControlNpc.bytes(npc))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)
