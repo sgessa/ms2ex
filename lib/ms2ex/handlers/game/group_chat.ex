@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.GroupChat do
-  alias Ms2ex.{CharacterManager, GroupChat, Packets}
+  alias Ms2ex.{Managers, GroupChat, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
 
   # Create
   def handle_mode(0x1, _packet, session) do
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
     maybe_create_chat(session, character)
   end
 
@@ -24,13 +24,13 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     {rcpt_name, packet} = get_ustring(packet)
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- CharacterManager.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, rcpt} <- get_rcpt(character, rcpt_name),
          :ok <- validate_rcpt(character, rcpt),
          {:ok, chat} <- get_chat(character, chat_id),
          :ok <- validate_chat(chat) do
       ids = [chat.id | rcpt.group_chat_ids]
-      CharacterManager.update(%{rcpt | group_chat_ids: ids})
+      Managers.Character.update(%{rcpt | group_chat_ids: ids})
 
       {:ok, chat} = GroupChat.add_member(chat, rcpt)
       GroupChat.broadcast(chat.id, Packets.GroupChat.update_members(chat, rcpt))
@@ -44,14 +44,14 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   def handle_mode(0x4, packet, session) do
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- CharacterManager.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, chat} <- get_chat(character, chat_id),
          {:ok, chat} <- GroupChat.remove_member(chat, character) do
       run(session, fn -> GroupChat.unsubscribe(chat) end)
       GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
 
       chat_ids = Enum.reject(character.group_chat_ids, &(&1 == chat.id))
-      CharacterManager.update(%{character | group_chat_ids: chat_ids})
+      Managers.Character.update(%{character | group_chat_ids: chat_ids})
 
       push(session, Packets.GroupChat.leave(chat))
     end
@@ -64,7 +64,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
 
     if msg == "boom", do: raise(msg)
 
-    with {:ok, character} <- CharacterManager.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, chat} <- get_chat(character, chat_id) do
       GroupChat.broadcast(chat.id, Packets.GroupChat.chat(chat, character, msg))
     end
@@ -82,7 +82,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     run(session, fn -> GroupChat.subscribe(chat) end)
 
     ids = [chat.id | character.group_chat_ids]
-    CharacterManager.update(%{character | group_chat_ids: ids})
+    Managers.Character.update(%{character | group_chat_ids: ids})
 
     session
     |> push(Packets.GroupChat.update(%{chat | members: [character]}))
@@ -103,7 +103,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   defp validate_chat(_chat), do: :ok
 
   defp get_rcpt(character, rcpt_name) do
-    case CharacterManager.lookup_by_name(rcpt_name) do
+    case Managers.Character.lookup_by_name(rcpt_name) do
       {:ok, rcpt} ->
         {:ok, rcpt}
 

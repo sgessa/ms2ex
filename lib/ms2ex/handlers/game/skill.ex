@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Context, Field, Net, Packets, SkillCast, Types}
+  alias Ms2ex.{Managers, Context, Net, Packets, SkillCast, Types}
   alias Ms2ex.Managers
 
   import Net.SenderSession, only: [push: 2]
@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     #   string unkString = packet.ReadUnicodeString()
     # }
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     skill_cast =
       SkillCast.build(
@@ -52,10 +52,10 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     SkillCast.start(skill_cast)
 
-    {:ok, character} = CharacterManager.cast_skill(character, skill_cast)
+    {:ok, character} = Managers.Character.cast_skill(character, skill_cast)
 
     coords = {position, direction, rotation}
-    Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
+    Context.Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
 
     push(session, Packets.Stats.set_character_stats(character))
   end
@@ -78,11 +78,11 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_int(packet)
     {projectiles, _packet} = get_projectiles(packet, target_count)
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
     coords = {position, rotation}
 
     if skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1) do
-      Field.broadcast(
+      Context.Field.broadcast(
         character,
         Packets.SkillDamage.sync_damage(skill_cast, coords, character, target_count, projectiles)
       )
@@ -103,7 +103,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if character.skill_cast.id == cast_id do
       crit? = Context.Damage.roll_crit(character)
@@ -114,18 +114,18 @@ defmodule Ms2ex.GameHandlers.Skill do
         status =
           Types.SkillStatus.new(character.skill_cast, character.object_id, character.object_id, 1)
 
-        Field.add_status(character, status)
+        Context.Field.add_status(character, status)
 
         # TODO heal based on stats
         heal = 50
-        Field.broadcast(character, Packets.SkillDamage.heal(status, heal))
+        Context.Field.broadcast(character, Packets.SkillDamage.heal(status, heal))
 
-        {:ok, character} = CharacterManager.increase_stat(character, :hp, heal)
+        {:ok, character} = Managers.Character.increase_stat(character, :hp, heal)
         push(session, Packets.Stats.update_char_stats(character, :hp))
       else
         coords = {position, rotation}
 
-        Field.broadcast(
+        Context.Field.broadcast(
           character,
           Packets.SkillDamage.damage(character, mobs, coords, attack_counter)
         )
@@ -142,7 +142,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_position, packet} = get_coord(packet)
     {_rotation, _packet} = get_coord(packet)
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if character.skill_cast.id == cast_id do
       conditions =
@@ -150,7 +150,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       for s <- conditions do
         skill_cast = SkillCast.build(s.id, s.level, character.skill_cast, session.server_tick)
-        Field.add_region_skill(character, skill_cast)
+        Context.Field.add_region_skill(character, skill_cast)
       end
     end
   end
@@ -164,7 +164,7 @@ defmodule Ms2ex.GameHandlers.Skill do
       case Managers.FieldNpc.call(:lookup, character, obj_id) do
         {:ok, mob} ->
           {mob, dmg} = damage_mob(character, mob, crit?)
-          Field.broadcast(character, Packets.Stats.update_mob_health(mob))
+          Context.Field.broadcast(character, Packets.Stats.update_mob_health(mob))
           mobs ++ [{mob, dmg}]
 
         _any ->
@@ -183,7 +183,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
       status = Types.SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
-      Field.add_status(character, status)
+      Context.Field.add_status(character, status)
     end
 
     {mob, dmg}

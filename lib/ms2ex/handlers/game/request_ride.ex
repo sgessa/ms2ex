@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestRide do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, Packets}
+  alias Ms2ex.{Managers, Context, Packets}
 
   import Packets.PacketReader
 
@@ -19,7 +19,7 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     # TODO check if the user owns this mount
     {id, _packet} = get_long(packet)
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     mount = %{
       character_id: character.id,
@@ -29,16 +29,16 @@ defmodule Ms2ex.GameHandlers.RequestRide do
       object_type: :mount
     }
 
-    {:ok, mount} = Field.add_object(character, mount)
-    Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
+    {:ok, mount} = Context.Field.add_object(character, mount)
+    Context.Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
   end
 
   # Stop Ride
   defp handle_ride(0x1, packet, session) do
     {_, packet} = get_byte(packet)
     {forced, _packet} = get_bool(packet)
-    {:ok, character} = CharacterManager.lookup(session.character_id)
-    Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+    Context.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
   end
 
   # Change Ride
@@ -46,8 +46,8 @@ defmodule Ms2ex.GameHandlers.RequestRide do
     {item_id, packet} = get_int(packet)
     {id, _packet} = get_long(packet)
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
-    Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+    Context.Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
   end
 
   defp handle_ride(_mode, _packet, session) do

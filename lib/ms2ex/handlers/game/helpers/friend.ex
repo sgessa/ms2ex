@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Friend do
-  alias Ms2ex.{CharacterManager, Context, Packets}
+  alias Ms2ex.{Managers, Context, Packets}
 
   @friend_list_max_size 100
 
@@ -19,7 +19,7 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   end
 
   defp find_from_world(char_name) do
-    case CharacterManager.lookup_by_name(char_name) do
+    case Managers.Character.lookup_by_name(char_name) do
       {:ok, char} -> char
       _ -> nil
     end
@@ -73,6 +73,6 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   def remove_friend_from_session(character, shared_id) do
     new_friends = Enum.reject(character.friends, &(&1.shared_id == shared_id))
     character = Map.put(character, :friends, new_friends)
-    CharacterManager.update(character)
+    Managers.Character.update(character)
   end
 end

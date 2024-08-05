@@ -1,4 +1,4 @@
-defmodule Ms2ex.Fields.Helpers.Portal do
+defmodule Ms2ex.Managers.Field.Portal do
   alias Ms2ex.Storage
 
   def load(map_id, counter) do

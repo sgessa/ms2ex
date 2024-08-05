@@ -1,8 +1,8 @@
 defmodule Ms2ex.Commands do
   alias Ms2ex.{
-    CharacterManager,
+    Managers,
     Context,
-    Field,
+    Context,
     Net,
     Packets,
     Schema,
@@ -13,7 +13,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["heal"], character, session) do
     max_hp = character.stats.hp_max
-    CharacterManager.increase_stat(character, :hp, max_hp)
+    Managers.Character.increase_stat(character, :hp, max_hp)
     session
   end
 
@@ -33,9 +33,9 @@ defmodule Ms2ex.Commands do
     with {level, _} <- Integer.parse(level) do
       level = min(level, Schema.Character.max_level())
       {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
-      CharacterManager.update(character)
+      Managers.Character.update(character)
 
-      Field.broadcast(character, Packets.LevelUp.bytes(character))
+      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
       push(session, Packets.Experience.bytes(0, 0, 0))
     else
       _ ->
@@ -45,7 +45,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["map", map_id], character, session) do
     with {map_id, _} <- Integer.parse(map_id) do
-      Field.change_field(character, map_id)
+      Context.Field.change_field(character, map_id)
     else
       _ ->
         push_notice(session, character, "Invalid Map: #{map_id}")
@@ -56,7 +56,7 @@ defmodule Ms2ex.Commands do
   #   with {mob_id, _} <- Integer.parse(mob_id),
   #        {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
   #     npc = Map.merge(npc, %{boss?: true, respawnable?: false})
-  #     Field.add_mob(character, npc)
+  #     Context.Field.add_mob(character, npc)
   #     session
   #   else
   #     _ ->
@@ -68,7 +68,7 @@ defmodule Ms2ex.Commands do
   #   with {mob_id, _} <- Integer.parse(mob_id),
   #        {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
   #     npc = Map.merge(npc, %{respawnable?: false})
-  #     Field.add_mob(character, npc)
+  #     Context.Field.add_mob(character, npc)
   #     session
   #   else
   #     _ ->
@@ -89,7 +89,7 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["summon", target_name], character, session) do
-    case CharacterManager.lookup_by_name(target_name) do
+    case Managers.Character.lookup_by_name(target_name) do
       {:ok, target} ->
         cond do
           character.channel_id != target.channel_id ->
@@ -101,7 +101,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             target = Map.put(target, :update_position, character.position)
-            CharacterManager.update(target)
+            Managers.Character.update(target)
             send(target.sender_session_pid, {:summon, target, character.map_id})
         end
 
@@ -111,7 +111,7 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["teleport", target_name], character, session) do
-    case CharacterManager.lookup_by_name(target_name) do
+    case Managers.Character.lookup_by_name(target_name) do
       {:ok, target} ->
         cond do
           character.channel_id != target.channel_id ->
@@ -122,8 +122,8 @@ defmodule Ms2ex.Commands do
 
           true ->
             character = Map.put(character, :update_position, target.position)
-            CharacterManager.update(character)
-            Field.change_field(character, target.map_id)
+            Managers.Character.update(character)
+            Context.Field.change_field(character, target.map_id)
         end
 
       _ ->

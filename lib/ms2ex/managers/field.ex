@@ -1,47 +1,69 @@
-defmodule Ms2ex.FieldServer do
+defmodule Ms2ex.Managers.Field do
   use GenServer
 
   require Logger
 
   alias Ms2ex.{
-    CharacterManager,
-    Field,
-    FieldHelper,
     Managers,
+    Context,
     Packets,
     Schema,
     SkillCast
   }
 
   alias Ms2ex.Types.FieldNpc
-
-  import FieldHelper
+  alias Ms2ex.Managers.Field
 
   @updates_intval 1000
 
-  def init(character) do
-    Logger.info("Start Field #{character.map_id} @ Channel #{character.channel_id}")
+  @object_counter 10_000_000
+  def init(%{map_id: map_id, channel_id: channel_id} = character) do
+    Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
     send(self(), :send_updates)
 
-    {
-      :ok,
-      initialize_state(character.map_id, character.channel_id),
-      {:continue, {:add_character, character}}
+    field_name = Context.Field.field_name(map_id, channel_id)
+
+    {counter, npc_spawns, npcs} = Field.Npc.load(map_id, @object_counter, field_name)
+    {counter, portals} = Field.Portal.load(map_id, counter)
+    # {counter, interactable} = load_interactable(map, counter)
+
+    state = %{
+      channel_id: channel_id,
+      counter: counter,
+      interactable: %{},
+      items: %{},
+      map_id: map_id,
+      mounts: %{},
+      npcs: npcs,
+      npc_spawns: npc_spawns,
+      portals: portals,
+      sessions: %{},
+      topic: "field:#{map_id}:channel:#{channel_id}"
     }
+
+    {:ok, state, {:continue, {:add_character, character}}}
   end
 
+  # defp load_interactable(map, counter) do
+  #   # TODO group these objects by their correct packet type
+  #   Enum.reduce(map.interactable_objects, {counter, %{}}, fn object, {counter, objects} ->
+  #     object = Map.put(object, :object_id, counter)
+  #     {counter + 1, Map.put(objects, object.uuid, object)}
+  #   end)
+  # end
+
   def handle_continue({:add_character, character}, state) do
-    {:noreply, add_character(character, state)}
+    {:noreply, Field.Character.add_character(character, state)}
   end
 
   def handle_call({:add_character, character}, _from, state) do
-    {:reply, {:ok, self()}, add_character(character, state)}
+    {:reply, {:ok, self()}, Field.Character.add_character(character, state)}
   end
 
   def handle_call({:remove_character, character}, _from, state) do
     send(self(), :maybe_stop)
-    {:reply, :ok, remove_character(character, state)}
+    {:reply, :ok, Field.Character.remove_character(character, state)}
   end
 
   def handle_call({:pickup_item, character, object_id}, _from, state) do
@@ -50,14 +72,14 @@ defmodule Ms2ex.FieldServer do
         {:reply, :error, state}
 
       item ->
-        {:reply, {:ok, item}, pickup_item(character, item, state)}
+        {:reply, {:ok, item}, Field.Item.pickup_item(character, item, state)}
     end
   end
 
   def handle_call({:add_region_skill, position, skill}, _from, state) do
     source_id = Ms2ex.generate_int()
 
-    Field.broadcast(
+    Context.Field.broadcast(
       state.topic,
       Packets.RegionSkill.add(source_id, position, skill)
     )
@@ -68,7 +90,7 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_call({:add_status, status}, _from, state) do
-    Field.broadcast(state.topic, Packets.Buff.send(:add, status))
+    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, status))
     Process.send_after(self(), {:remove_status, status}, status.duration)
     {:reply, :ok, state}
   end
@@ -80,17 +102,32 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_cast({:drop_item, source, item}, state) do
-    {:noreply, drop_item(source, item, state)}
+    {:noreply, Field.Item.drop_item(source, item, state)}
   end
 
   def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item}, state) do
-    {:noreply, add_mob_drop(mob, item, state)}
+    {:noreply, Field.Item.add_mob_drop(mob, item, state)}
   end
 
   def handle_cast({:enter_battle_stance, character}, state) do
-    Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
+    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
     Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
     {:noreply, state}
+  end
+
+  #
+  # NPCs
+  #
+
+  def handle_info({:remove_npc, field_npc}, state) do
+    Context.Field.broadcast(field_npc.field, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
+    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
+
+    Logger.info("Removing #{field_npc.object_id} on #{state.topic}")
+
+    IO.inspect("Removing npc from #{field_npc.field}")
+
+    {:noreply, Field.Npc.remove_npc(field_npc, state)}
   end
 
   def handle_info({:add_npc, field_npc}, state) do
@@ -99,29 +136,25 @@ defmodule Ms2ex.FieldServer do
   end
 
   def handle_info({:remove_region_skill, source_id}, state) do
-    Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    Context.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
     {:noreply, state}
   end
 
   def handle_info({:remove_status, status}, state) do
-    Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
+    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
     {:noreply, state}
   end
 
   def handle_info({:leave_battle_stance, character}, state) do
-    Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
     {:noreply, state}
   end
 
   def handle_info(:send_updates, state) do
     for char_id <- Map.keys(state.sessions) do
-      with {:ok, char} <- CharacterManager.lookup(char_id) do
-        Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+      with {:ok, char} <- Managers.Character.lookup(char_id) do
+        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
       end
-    end
-
-    for {_id, npc} <- state.npcs do
-      Field.broadcast(state.topic, Packets.ControlNpc.bytes(npc))
     end
 
     Process.send_after(self(), :send_updates, @updates_intval)

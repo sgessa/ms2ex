@@ -1,7 +1,7 @@
 defmodule Ms2ex.Managers.FieldNpc do
   use GenServer
 
-  alias Ms2ex.{Field, Schema, Packets, Context}
+  alias Ms2ex.{Context, Schema, Packets}
   alias Ms2ex.Types.FieldNpc
 
   @updates_intval 1_000
@@ -13,8 +13,8 @@ defmodule Ms2ex.Managers.FieldNpc do
   def init({field_npc, field_pid}) do
     Process.monitor(field_pid)
 
-    Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
-    Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
+    Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
+    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
 
     send(self(), :send_updates)
 
@@ -22,19 +22,15 @@ defmodule Ms2ex.Managers.FieldNpc do
   end
 
   def handle_info(:send_updates, field_npc) do
-    Field.broadcast(field_npc.field, Packets.ControlNpc.bytes(field_npc))
-    Field.broadcast(field_npc.field, Packets.ProxyGameObj.update_npc(field_npc))
+    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes(field_npc))
+    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.update_npc(field_npc))
 
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, field_npc}
   end
 
   def handle_info(:stop, field_npc) do
-    Field.broadcast(field_npc.field, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
-    Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
-
-    # TODO
-    # We should tell FieldServer
+    Context.Field.remove_npc(field_npc)
 
     {:stop, :normal, field_npc}
   end
@@ -102,7 +98,7 @@ defmodule Ms2ex.Managers.FieldNpc do
   end
 
   defp process_name(%Schema.Character{} = character, object_id) do
-    field_name = Field.field_name(character.map_id, character.channel_id)
+    field_name = Context.Field.field_name(character.map_id, character.channel_id)
     :"#{field_name}:field_npc:#{object_id}"
   end
 

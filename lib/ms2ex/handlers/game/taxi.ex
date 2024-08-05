@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Taxi do
-  alias Ms2ex.{CharacterManager, Context, Field, Packets}
+  alias Ms2ex.{Managers, Context, Context, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
   # Car
   def handle_mode(0x1, packet, session) do
     {map_id, _packet} = get_int(packet)
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     case Context.WorldGraph.get_shortest_path(character.map_id, map_id) do
       {:ok, _path, map_count} ->
@@ -27,7 +27,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
   # Rotors Mesos
   def handle_mode(0x3, packet, session) do
     {map_id, _packet} = get_int(packet)
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
     cost = Context.Taxi.calc_rotor_cost(character.level)
     ride_taxi(map_id, :mesos, cost, session)
   end
@@ -41,14 +41,14 @@ defmodule Ms2ex.GameHandlers.Taxi do
 
   # Discover Taxi
   def handle_mode(0x5, _packet, session) do
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if Enum.member?(character.taxis, character.map_id) do
       session
     else
       taxis = [character.map_id | character.taxis]
       {:ok, character} = Context.Characters.update(character, %{taxis: taxis})
-      CharacterManager.update(character)
+      Managers.Character.update(character)
       push(session, Packets.Taxi.discover(character.map_id))
     end
   end
@@ -56,9 +56,9 @@ defmodule Ms2ex.GameHandlers.Taxi do
   def handle_mode(_mode, _packet, session), do: session
 
   defp ride_taxi(map_id, currency, cost, session) do
-    with {:ok, character} <- CharacterManager.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, _wallet} <- Context.Wallets.update(character, currency, cost) do
-      Field.change_field(character, map_id)
+      Context.Field.change_field(character, map_id)
     end
   end
 end

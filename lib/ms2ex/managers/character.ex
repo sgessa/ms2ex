@@ -1,7 +1,7 @@
-defmodule Ms2ex.CharacterManager do
+defmodule Ms2ex.Managers.Character do
   use GenServer
 
-  alias Ms2ex.{Context, Field, Packets, PartyServer, Schema, SkillCast, Types}
+  alias Ms2ex.{Context, Packets, PartyServer, Schema, SkillCast, Types}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -86,10 +86,10 @@ defmodule Ms2ex.CharacterManager do
       if SkillCast.owner_buff?(skill_cast) or SkillCast.entity_buff?(skill_cast) or
            SkillCast.shield_buff?(skill_cast) or SkillCast.owner_debuff?(skill_cast) do
         status = Types.SkillStatus.new(skill_cast, character.object_id, character.object_id, 1)
-        Field.add_status(character, status)
+        Context.Field.add_status(character, status)
       end
 
-      Field.enter_battle_stance(character)
+      Context.Field.enter_battle_stance(character)
 
       character = %{character | skill_cast: skill_cast}
       {:reply, {:ok, character}, character}
@@ -120,7 +120,7 @@ defmodule Ms2ex.CharacterManager do
     {:ok, character} = Context.Experience.maybe_add_exp(character, amount)
 
     if old_lvl != character.level do
-      Field.broadcast(character, Packets.LevelUp.bytes(character))
+      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
     end
 
     push(character, Packets.Experience.bytes(amount, character.exp, character.rest_exp))
@@ -192,7 +192,7 @@ defmodule Ms2ex.CharacterManager do
   end
 
   defp broadcast_new_stats(character, stat_id) do
-    Field.broadcast(character, Packets.Stats.update_char_stats(character, [stat_id]))
+    Context.Field.broadcast(character, Packets.Stats.update_char_stats(character, [stat_id]))
     PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
   end
 

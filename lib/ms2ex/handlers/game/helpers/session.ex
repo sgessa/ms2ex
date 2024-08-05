@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
-  alias Ms2ex.{Context, Field, GroupChat, Net.SenderSession, Packets, PartyServer, Schema}
+  alias Ms2ex.{Context, Context, GroupChat, Net.SenderSession, Packets, PartyServer, Schema}
   alias Phoenix.PubSub
 
   def init_character(%Schema.Character{} = character) do
@@ -17,7 +17,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
   def cleanup(character) do
     character = %{character | online?: false}
-    Field.leave(character)
+    Context.Field.leave(character)
     notify_party_presence(character)
     notify_friend_presence(character)
     leave_group_chats(character)

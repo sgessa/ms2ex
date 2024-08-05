@@ -4,7 +4,7 @@ defmodule Ms2ex.Net.SenderSession do
   require Logger, as: L
 
   alias Ms2ex.Crypto.SendCipher
-  alias Ms2ex.{CharacterManager, Context, GroupChat, Net, Packets, PartyServer, Schema}
+  alias Ms2ex.{Managers, Context, GroupChat, Net, Packets, PartyServer, Schema}
   alias Ms2ex.Packets.{PacketReader, RequestVersion}
 
   import Net.Utils
@@ -114,7 +114,7 @@ defmodule Ms2ex.Net.SenderSession do
   end
 
   def handle_info({:summon, character, map_id}, state) do
-    {:noreply, Ms2ex.Field.change_field(character, map_id), state}
+    {:noreply, Context.Field.change_field(character, map_id), state}
   end
 
   def handle_info({:disband_party, character}, state) do
@@ -122,7 +122,7 @@ defmodule Ms2ex.Net.SenderSession do
     send(self(), {:push, Packets.Party.disband()})
 
     character = %{character | party_id: nil}
-    CharacterManager.update(character)
+    Managers.Character.update(character)
 
     {:noreply, state}
   end

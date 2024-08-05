@@ -1,4 +1,4 @@
-defmodule Ms2ex.Fields.Helpers.Npc do
+defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -21,7 +21,7 @@ defmodule Ms2ex.Fields.Helpers.Npc do
         {counter, npc_spawns, npcs}
       end)
 
-    {counter, npc_spawns, select_friendly_npcs(npcs), select_mob_npcs(npcs)}
+    {counter, npc_spawns, npcs}
   end
 
   defp build_npcs_from_spawn_group(group, object_counter, field) do
@@ -63,11 +63,8 @@ defmodule Ms2ex.Fields.Helpers.Npc do
     end)
   end
 
-  defp select_friendly_npcs(npcs) do
-    Enum.filter(npcs, fn {_, field_npc} -> field_npc.type == :npc end)
-  end
-
-  defp select_mob_npcs(npcs) do
-    Enum.filter(npcs, fn {_, field_npc} -> field_npc.type == :mob end)
+  def remove_npc(field_npc, state) do
+    npcs = Map.delete(state.npcs, field_npc.object_id)
+    %{state | npcs: npcs}
   end
 end

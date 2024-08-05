@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{CharacterManager, Context, Field, Storage, Packets, SyncState}
+  alias Ms2ex.{Managers, Context, Types, Storage, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -17,12 +17,12 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     states = get_states(segment_length, packet)
 
     sync_packet = Packets.UserSync.bytes(character, states)
-    Field.broadcast_from(character, sync_packet, session.sender_pid)
+    Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
 
     %{animation1: animation, position: new_position} = List.first(states)
     closest_block = Context.MapBlock.closest_block(new_position)
@@ -31,11 +31,11 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: animation, position: new_position}
-    CharacterManager.update(character)
+    Managers.Character.update(character)
 
     if is_out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
-      CharacterManager.receive_fall_dmg(character)
+      Managers.Character.receive_fall_dmg(character)
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     end
   end
@@ -43,7 +43,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp get_states(segments, packet, state \\ [])
 
   defp get_states(segments, packet, states) when segments > 0 do
-    {sync_state, packet} = SyncState.from_packet(packet)
+    {sync_state, packet} = Types.SyncState.from_packet(packet)
     {_client_tick, packet} = get_int(packet)
     {_server_tick, packet} = get_int(packet)
     get_states(segments - 1, packet, states ++ [sync_state])

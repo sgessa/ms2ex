@@ -2,9 +2,9 @@ defmodule Ms2ex.Types.FieldNpc do
   alias Ms2ex.Types.Coord
 
   defstruct [
+    :object_id,
     :npc,
     :field,
-    :object_id,
     :position,
     :rotation,
     :spawn_point_id,
