@@ -43,7 +43,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   defp clone_npcs(object_counter, spawn_point_id, spawn_group, npc_entry, field, metadata) do
-    Enum.reduce(1..1, {object_counter, %{}}, fn _, {object_counter, npcs} ->
+    Enum.reduce(1..npc_entry.count, {object_counter, %{}}, fn _, {object_counter, npcs} ->
       npc = Types.Npc.new(%{id: npc_entry.npc_id, metadata: metadata})
       object_counter = object_counter + 1
 

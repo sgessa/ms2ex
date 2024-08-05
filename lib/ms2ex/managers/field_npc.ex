@@ -13,8 +13,10 @@ defmodule Ms2ex.Managers.FieldNpc do
   def init({field_npc, field_pid}) do
     Process.monitor(field_pid)
 
-    Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
-    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
+    # TODO: remove this
+    # should not be done here
+    # Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
+    # Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
 
     send(self(), :send_updates)
 
@@ -22,9 +24,7 @@ defmodule Ms2ex.Managers.FieldNpc do
   end
 
   def handle_info(:send_updates, field_npc) do
-    unless field_npc.dead? do
-      Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes(field_npc))
-    end
+    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
 
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, field_npc}
@@ -46,21 +46,15 @@ defmodule Ms2ex.Managers.FieldNpc do
   end
 
   def handle_call({:inflict_dmg, attacker, %{dmg: dmg}}, _from, field_npc) do
-    # TODO
-    # Ensure can be hitted (field_npc.type == :mob)
-
     field_npc = Map.put(field_npc, :last_attacker, attacker)
     hp = max(0, field_npc.stats.health - dmg)
     field_npc = update_stat(field_npc, :hp, hp)
 
     if hp == 0 do
       # TODO
-      # Death animation
-      field_npc = Map.put(field_npc, :dead?, true)
+      # Death animation (see metadata `ai` and `animation` to build sequences & triggers)
+      field_npc = field_npc |> Map.put(:dead?, true) |> Map.put(:animation, 8)
 
-      IO.inspect(field_npc, label: "KILLED")
-
-      Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.update_npc(field_npc))
       Process.send_after(self(), :stop, :timer.seconds(field_npc.npc.metadata.dead.time))
 
       Context.Mobs.drop_rewards(field_npc)

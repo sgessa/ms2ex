@@ -162,7 +162,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     mobs =
       case Managers.FieldNpc.call(:lookup, character, obj_id) do
-        {:ok, mob} ->
+        {:ok, %{dead?: false, type: :mob} = mob} ->
           {mob, dmg} = damage_mob(character, mob, crit?)
           Context.Field.broadcast(character, Packets.Stats.update_mob_health(mob))
           mobs ++ [{mob, dmg}]
