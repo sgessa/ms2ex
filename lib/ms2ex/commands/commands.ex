@@ -17,6 +17,16 @@ defmodule Ms2ex.Commands do
     session
   end
 
+  def handle(["freecam" | args], _character, session) do
+    toggled = List.first(args) != "off"
+
+    if toggled do
+      push(session, Packets.FieldProperty.add(:photo_studio))
+    else
+      push(session, Packets.FieldProperty.remove(:photo_studio))
+    end
+  end
+
   # !item 5 13160311
   def handle(["item" | args], character, session) do
     [rarity | ids] = args
