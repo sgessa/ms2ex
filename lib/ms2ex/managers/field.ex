@@ -123,10 +123,6 @@ defmodule Ms2ex.Managers.Field do
     Context.Field.broadcast(field_npc.field, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
-    Logger.info("Removing #{field_npc.object_id} on #{state.topic}")
-
-    IO.inspect("Removing npc from #{field_npc.field}")
-
     {:noreply, Field.Npc.remove_npc(field_npc, state)}
   end
 

@@ -82,6 +82,7 @@ defmodule Ms2ex.Managers.Field.Character do
     sessions = Map.delete(state.sessions, character.id)
 
     Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
+    Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
 
     %{state | mounts: mounts, sessions: sessions}
   end

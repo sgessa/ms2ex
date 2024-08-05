@@ -4,7 +4,7 @@ defmodule Ms2ex.Managers.FieldNpc do
   alias Ms2ex.{Context, Schema, Packets}
   alias Ms2ex.Types.FieldNpc
 
-  @updates_intval 1_000
+  @updates_intval 500
 
   def start(%FieldNpc{} = field_npc) do
     GenServer.start(__MODULE__, {field_npc, self()}, name: process_name(field_npc))
@@ -22,8 +22,9 @@ defmodule Ms2ex.Managers.FieldNpc do
   end
 
   def handle_info(:send_updates, field_npc) do
-    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes(field_npc))
-    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.update_npc(field_npc))
+    unless field_npc.dead? do
+      Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes(field_npc))
+    end
 
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, field_npc}
@@ -56,6 +57,10 @@ defmodule Ms2ex.Managers.FieldNpc do
       # TODO
       # Death animation
       field_npc = Map.put(field_npc, :dead?, true)
+
+      IO.inspect(field_npc, label: "KILLED")
+
+      Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.update_npc(field_npc))
       Process.send_after(self(), :stop, :timer.seconds(field_npc.npc.metadata.dead.time))
 
       Context.Mobs.drop_rewards(field_npc)

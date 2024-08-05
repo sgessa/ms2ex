@@ -6,6 +6,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
 
   @modes %{
     load_player: 0x3,
+    remove_player: 0x4,
     update_player: 0x5,
     load_npc: 0x6,
     remove_npc: 0x7,
@@ -108,6 +109,13 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     else
       packet
     end
+  end
+
+  def remove_player(object_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.remove_player)
+    |> put_int(object_id)
   end
 
   def load_npc(field_npc) do
