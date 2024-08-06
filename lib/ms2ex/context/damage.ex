@@ -31,7 +31,7 @@ defmodule Ms2ex.Context.Damage do
     pierce_coeff = 1 - caster.stats.pierce_cur
 
     # TODO find correct enemy def stats
-    denominator = mob.stats.defense * pierce_coeff * 15
+    denominator = mob.stats.defense.total * pierce_coeff * 15
 
     dmg = trunc(numerator / denominator)
     %{dmg: dmg, crit?: crit?}
@@ -39,9 +39,9 @@ defmodule Ms2ex.Context.Damage do
 
   defp calc_enemy_res(skill_cast, mob) do
     if SkillCast.physical?(skill_cast) do
-      mob.stats.physical_res
+      mob.stats.physical_res.total
     else
-      mob.stats.magical_res
+      mob.stats.magical_res.total
     end
   end
 

@@ -38,18 +38,16 @@ defmodule Ms2ex.Packets.Stats do
     end)
   end
 
-  def update_mob_health(%FieldNpc{} = mob) do
+  def update_mob_stat(%FieldNpc{} = mob, stat) do
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
     |> put_byte()
     |> put_byte(0x1)
-    |> put_byte(@mode.update_mob_health)
-    |> put_long(mob.stats.health)
-    |> put_long(mob.stats.health)
-    |> put_long(mob.stats.health)
-
-    # TODO Understand mob hp stats
+    |> put_byte(Enums.BasicStatType.get_value(stat))
+    |> reduce(mob.stats[stat], fn {_stat, value}, packet ->
+      put_long(packet, value)
+    end)
   end
 
   def put_stats(packet, stats) do

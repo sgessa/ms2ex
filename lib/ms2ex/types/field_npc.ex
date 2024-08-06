@@ -1,5 +1,6 @@
 defmodule Ms2ex.Types.FieldNpc do
   alias Ms2ex.Types.Coord
+  alias Ms2ex.Enums
   alias Ms2ex.Context
 
   defstruct [
@@ -24,7 +25,7 @@ defmodule Ms2ex.Types.FieldNpc do
       |> Map.put(:rotation, struct(Coord, attrs.rotation || %{}))
       |> Map.put(:type, get_type(attrs.npc))
       |> Map.put(:animation, 255)
-      |> Map.put(:stats, attrs.npc.metadata.stat.stats)
+      |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
 
     struct(__MODULE__, attrs)
   end
@@ -49,5 +50,26 @@ defmodule Ms2ex.Types.FieldNpc do
     y = Context.Utils.rand_float(min_y, max_y)
 
     %{position | x: x, y: y}
+  end
+
+  defp build_stats(stats) do
+    base_stats =
+      Enums.BasicStatType.keys()
+      |> Enum.map(fn stat -> {stat, 0} end)
+      |> Map.new()
+
+    npc_stats =
+      stats
+      |> Enum.map(fn {stat, value} ->
+        {stat,
+         %{
+           total: value,
+           base: value,
+           current: value
+         }}
+      end)
+      |> Map.new()
+
+    Map.merge(base_stats, npc_stats)
   end
 end

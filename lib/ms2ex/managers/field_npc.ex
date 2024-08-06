@@ -74,8 +74,8 @@ defmodule Ms2ex.Managers.FieldNpc do
 
   def handle_call({:inflict_dmg, attacker, %{dmg: dmg}}, _from, field_npc) do
     field_npc = Map.put(field_npc, :last_attacker, attacker)
-    hp = max(0, field_npc.stats.health - dmg)
-    field_npc = update_stat(field_npc, :hp, hp)
+    hp = max(0, field_npc.stats.health.current - dmg)
+    field_npc = update_stat(field_npc, :health, :current, hp)
 
     if hp == 0 do
       # TODO
@@ -98,8 +98,8 @@ defmodule Ms2ex.Managers.FieldNpc do
 
   # Utils
 
-  defp update_stat(field_npc, stat_id, val) do
-    stats = Map.put(field_npc.stats, stat_id, val)
+  defp update_stat(field_npc, stat_id, stat_class, val) do
+    stats = put_in(field_npc.stats, [stat_id, stat_class], val)
     Map.put(field_npc, :stats, stats)
   end
 
