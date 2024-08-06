@@ -1,8 +1,8 @@
 defmodule Ms2ex.Types.Npc do
   defstruct [
     :id,
-    :boss?,
     :metadata,
+    boss?: false,
     animations: %{}
   ]
 

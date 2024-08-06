@@ -81,7 +81,6 @@ defmodule Ms2ex.Managers.FieldNpc do
       # TODO
       # Death animation (see metadata `ai` and `animation` to build sequences & triggers)
       field_npc = field_npc |> Map.put(:dead?, true) |> Map.put(:animation, 8)
-      Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
 
       Process.send_after(self(), :stop, :timer.seconds(field_npc.npc.metadata.dead.time))
 

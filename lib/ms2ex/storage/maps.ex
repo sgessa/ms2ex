@@ -33,6 +33,12 @@ defmodule Ms2ex.Storage.Maps do
     |> Map.get(:npc_spawns)
   end
 
+  def get_mob_spawns(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:mob_spawns)
+  end
+
   def get_portals(map_id) do
     map_id
     |> get_meta()

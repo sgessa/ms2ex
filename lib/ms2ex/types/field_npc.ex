@@ -1,5 +1,6 @@
 defmodule Ms2ex.Types.FieldNpc do
   alias Ms2ex.Types.Coord
+  alias Ms2ex.Context
 
   defstruct [
     :object_id,
@@ -19,7 +20,7 @@ defmodule Ms2ex.Types.FieldNpc do
   def new(attrs) do
     attrs =
       attrs
-      |> Map.put(:position, struct(Coord, attrs.position || %{}))
+      |> Map.put(:position, randomize_pos(attrs.position))
       |> Map.put(:rotation, struct(Coord, attrs.rotation || %{}))
       |> Map.put(:type, get_type(attrs.npc))
       |> Map.put(:animation, 255)
@@ -32,5 +33,21 @@ defmodule Ms2ex.Types.FieldNpc do
     friendly = get_in(npc.metadata, [:basic, :friendly]) || 0
 
     if friendly > 0, do: :npc, else: :mob
+  end
+
+  @spawn_distance 250
+  defp randomize_pos(position) do
+    position = struct(Coord, position || %{})
+
+    min_x = position.x - @spawn_distance
+    max_x = position.x + @spawn_distance
+
+    min_y = position.y - @spawn_distance
+    max_y = position.y + @spawn_distance
+
+    x = Context.Utils.rand_float(min_x, max_x)
+    y = Context.Utils.rand_float(min_y, max_y)
+
+    %{position | x: x, y: y}
   end
 end
