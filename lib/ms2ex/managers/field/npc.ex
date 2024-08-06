@@ -42,9 +42,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     %{state | counter: spawn_point_id}
   end
 
-  def load_npc(state, npc_id, npc_spawn) do
-    metadata = Storage.Npcs.get_meta(npc_id)
-    npc = Types.Npc.new(%{id: npc_id, metadata: metadata})
+  def load_npc(state, %Types.Npc{} = npc, npc_spawn) do
     object_id = state.counter + 1
 
     field_npc =
@@ -62,6 +60,15 @@ defmodule Ms2ex.Managers.Field.Npc do
     state
     |> Map.put(:counter, object_id)
     |> put_in([:npcs, object_id], pid)
+  end
+
+  def load_npc(state, npc_id, npc_spawn) do
+    with %{} = metadata <- Storage.Npcs.get_meta(npc_id),
+         npc <- Types.Npc.new(%{id: npc_id, metadata: metadata}) do
+      load_npc(state, npc, npc_spawn)
+    else
+      _ -> state
+    end
   end
 
   def remove_npc(field_npc, state) do
