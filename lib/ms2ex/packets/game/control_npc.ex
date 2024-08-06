@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.ControlNpc do
-  alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types
 
   import Ms2ex.Packets.PacketWriter
 
@@ -16,7 +16,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     end)
   end
 
-  defp npc_data(%FieldNpc{} = npc) do
+  defp npc_data(%Types.FieldNpc{} = npc) do
     ""
     |> put_int(npc.object_id)
     # Flags bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated)
@@ -27,9 +27,16 @@ defmodule Ms2ex.Packets.ControlNpc do
     # speed
     |> put_short_coord()
     |> put_short(100)
-    # TODO write battle state if boss
+    |> put_target_id(npc)
     |> put_byte(0x1)
     |> put_short(npc.animation)
     |> put_short(0x1)
   end
+
+  defp put_target_id(packet, %Types.Npc{boss?: true}) do
+    # ObjectId of Player being targeted?
+    put_int(packet)
+  end
+
+  defp put_target_id(packet, _npc), do: packet
 end

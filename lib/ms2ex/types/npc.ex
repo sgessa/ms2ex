@@ -11,6 +11,6 @@ defmodule Ms2ex.Types.Npc do
     class = get_in(attrs, [:metadata, :basic, :class]) || 0
 
     is_boss? = friendly == 0 && class >= 3
-    struct(__MODULE__, Map.put(attrs, :boss, is_boss?))
+    struct(__MODULE__, Map.put(attrs, :boss?, is_boss?))
   end
 end
