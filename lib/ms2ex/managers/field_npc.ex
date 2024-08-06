@@ -4,7 +4,7 @@ defmodule Ms2ex.Managers.FieldNpc do
   alias Ms2ex.{Context, Schema, Packets}
   alias Ms2ex.Types.FieldNpc
 
-  @updates_intval 500
+  @updates_intval 100
 
   def start(%FieldNpc{} = field_npc) do
     GenServer.start(__MODULE__, {field_npc, self()}, name: process_name(field_npc))
@@ -13,21 +13,44 @@ defmodule Ms2ex.Managers.FieldNpc do
   def init({field_npc, field_pid}) do
     Process.monitor(field_pid)
 
-    # TODO: remove this
-    # should not be done here
-    # Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
-    # Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
+    Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
+    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
 
+    # send(self(), :test_move)
     send(self(), :send_updates)
 
     {:ok, field_npc}
   end
 
+  # TODO remove me
+  def handle_info(:test_move, %{dead?: false, type: :mob} = field_npc) do
+    new_x = Enum.random(-300..300)
+    new_y = Enum.random(-300..300)
+    new_position = %{field_npc.position | x: new_x, y: new_y}
+
+    Process.send_after(self(), :test_move, :timer.seconds(1))
+
+    {:noreply, %{field_npc | position: new_position, send_control?: true}}
+  end
+
+  def handle_info(:test_move, %{dead?: false, type: :npc} = field_npc) do
+    new_x = Enum.random(-100..100)
+    new_y = Enum.random(-100..100)
+    new_position = %{field_npc.position | x: new_x, y: new_y}
+
+    Process.send_after(self(), :test_move, :timer.seconds(1))
+
+    {:noreply, %{field_npc | position: new_position, send_control?: true}}
+  end
+
   def handle_info(:send_updates, field_npc) do
+    # if field_npc.send_control? do
     Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
+    # end
 
     Process.send_after(self(), :send_updates, @updates_intval)
-    {:noreply, field_npc}
+
+    {:noreply, %{field_npc | send_control?: false}}
   end
 
   def handle_info(:stop, field_npc) do
@@ -39,6 +62,10 @@ defmodule Ms2ex.Managers.FieldNpc do
   # Field Server stopped
   def handle_info({:DOWN, _, _, _pid, _reason}, field_npc) do
     {:stop, :normal, field_npc}
+  end
+
+  def handle_info(_, field_npc) do
+    {:noreply, field_npc}
   end
 
   def handle_call(:lookup, _from, field_npc) do
@@ -54,6 +81,7 @@ defmodule Ms2ex.Managers.FieldNpc do
       # TODO
       # Death animation (see metadata `ai` and `animation` to build sequences & triggers)
       field_npc = field_npc |> Map.put(:dead?, true) |> Map.put(:animation, 8)
+      Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
 
       Process.send_after(self(), :stop, :timer.seconds(field_npc.npc.metadata.dead.time))
 

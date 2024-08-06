@@ -8,7 +8,9 @@ defmodule Ms2ex.Managers.Field do
     Context,
     Packets,
     Schema,
-    SkillCast
+    SkillCast,
+    Storage,
+    Types
   }
 
   alias Ms2ex.Types.FieldNpc
@@ -20,12 +22,9 @@ defmodule Ms2ex.Managers.Field do
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
-    send(self(), :send_updates)
-
     field_name = Context.Field.field_name(map_id, channel_id)
 
-    {counter, npc_spawns, npcs} = Field.Npc.load(map_id, @object_counter, field_name)
-    {counter, portals} = Field.Portal.load(map_id, counter)
+    {counter, portals} = Field.Portal.load(map_id, @object_counter)
     # {counter, interactable} = load_interactable(map, counter)
 
     state = %{
@@ -35,12 +34,15 @@ defmodule Ms2ex.Managers.Field do
       items: %{},
       map_id: map_id,
       mounts: %{},
-      npcs: npcs,
-      npc_spawns: npc_spawns,
+      npcs: %{},
+      npc_spawns: %{},
       portals: portals,
       sessions: %{},
-      topic: "field:#{map_id}:channel:#{channel_id}"
+      topic: field_name
     }
+
+    send(self(), :load_npc_spawns)
+    send(self(), :send_updates)
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
@@ -119,16 +121,63 @@ defmodule Ms2ex.Managers.Field do
   # NPCs
   #
 
+  def handle_info(:load_npc_spawns, state) do
+    Field.Npc.load_npc_spawns(state)
+
+    {:noreply, state}
+  end
+
+  def handle_info({:add_npc_spawn, npc_spawn}, state) do
+    spawn_point_id = state.counter + 1
+    npc_spawn = Map.put(npc_spawn, :id, spawn_point_id)
+
+    state =
+      if Map.get(npc_spawn, :regen_check_time, 0) > 0 do
+        put_in(state, [:npc_spawns, spawn_point_id], npc_spawn)
+      else
+        state
+      end
+
+    npc_ids =
+      Enum.map(npc_spawn.npc_list, &List.duplicate([&1.npc_id], &1.count)) |> List.flatten()
+
+    Enum.each(npc_ids, fn npc_id ->
+      send(self(), {:add_npc, npc_id, npc_spawn})
+    end)
+
+    {:noreply, %{state | counter: spawn_point_id}}
+  end
+
+  def handle_info({:add_npc, npc_id, npc_spawn}, state) do
+    metadata = Storage.Npcs.get_meta(npc_id)
+    npc = Types.Npc.new(%{id: npc_id, metadata: metadata})
+    object_id = state.counter + 1
+
+    field_npc =
+      Types.FieldNpc.new(%{
+        object_id: object_id,
+        spawn_point_id: npc_spawn[:id],
+        npc: npc,
+        position: npc_spawn[:position],
+        rotation: npc_spawn[:rotation],
+        field: state.topic
+      })
+
+    {:ok, pid} = Managers.FieldNpc.start(field_npc)
+
+    state =
+      state
+      |> Map.put(:counter, object_id)
+      |> put_in([:npcs, object_id], pid)
+
+    {:noreply, state}
+  end
+
   def handle_info({:remove_npc, field_npc}, state) do
     Context.Field.broadcast(field_npc.field, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
     {:noreply, Field.Npc.remove_npc(field_npc, state)}
-  end
-
-  def handle_info({:add_npc, field_npc}, state) do
-    Managers.FieldNpc.start(field_npc)
-    {:noreply, state}
   end
 
   def handle_info({:remove_region_skill, source_id}, state) do

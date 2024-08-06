@@ -57,11 +57,6 @@ defmodule Ms2ex.Context.Field do
     broadcast(topic, packet)
   end
 
-  def broadcast(pid, packet) when is_pid(pid) do
-    topic = Process.info(pid).registered_name
-    broadcast(topic, packet)
-  end
-
   def broadcast(topic, packet) do
     PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
   end
