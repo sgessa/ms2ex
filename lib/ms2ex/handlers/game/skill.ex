@@ -105,6 +105,9 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
+    # TODO: skill_cast.id == cast_id doesn't always matches
+    # targeting won't work randomly
+
     if character.skill_cast.id == cast_id do
       crit? = Context.Damage.roll_crit(character)
       mobs = damage_targets(session, character, crit?, target_count, [], packet)
