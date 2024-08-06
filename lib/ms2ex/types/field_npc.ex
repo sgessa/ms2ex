@@ -21,11 +21,11 @@ defmodule Ms2ex.Types.FieldNpc do
   def new(attrs) do
     attrs =
       attrs
-      |> Map.put(:position, randomize_pos(attrs.position))
       |> Map.put(:rotation, struct(Coord, attrs.rotation || %{}))
       |> Map.put(:type, get_type(attrs.npc))
       |> Map.put(:animation, 255)
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
+      |> randomize_pos()
 
     struct(__MODULE__, attrs)
   end
@@ -37,8 +37,8 @@ defmodule Ms2ex.Types.FieldNpc do
   end
 
   @spawn_distance 250
-  defp randomize_pos(position) do
-    position = struct(Coord, position || %{})
+  defp randomize_pos(%{type: :mob} = attrs) do
+    position = struct(Coord, attrs.position || %{})
 
     min_x = position.x - @spawn_distance
     max_x = position.x + @spawn_distance
@@ -49,27 +49,28 @@ defmodule Ms2ex.Types.FieldNpc do
     x = Context.Utils.rand_float(min_x, max_x)
     y = Context.Utils.rand_float(min_y, max_y)
 
-    %{position | x: x, y: y}
+    Map.put(attrs, :position, %{position | x: x, y: y})
+  end
+
+  defp randomize_pos(attrs) do
+    position = struct(Coord, attrs.position || %{})
+
+    Map.put(attrs, :position, position)
   end
 
   defp build_stats(stats) do
-    base_stats =
-      Enums.BasicStatType.keys()
-      |> Enum.map(fn stat -> {stat, 0} end)
-      |> Map.new()
-
-    npc_stats =
-      stats
-      |> Enum.map(fn {stat, value} ->
-        {stat,
-         %{
-           total: value,
-           base: value,
-           current: value
-         }}
-      end)
-      |> Map.new()
-
-    Map.merge(base_stats, npc_stats)
+    Enums.BasicStatType.keys()
+    |> Enum.map(fn stat -> {stat, 0} end)
+    |> Map.new()
+    |> Map.merge(stats)
+    |> Enum.map(fn {stat, value} ->
+      {stat,
+       %{
+         total: value,
+         base: value,
+         current: value
+       }}
+    end)
+    |> Map.new()
   end
 end
