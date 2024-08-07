@@ -85,7 +85,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     Context.Skills.update_tab(tab, attrs)
   end
 
-  defp save_skills(skill_count, character, tab, packet) when skill_count > 0 do
+  defp save_skills(skill_count, _character, tab, packet) when skill_count > 0 do
     Enum.reduce(1..skill_count, packet, fn _, packet ->
       {skill_id, packet} = get_int(packet)
 
@@ -93,9 +93,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
       skill_level = max(skill_level, 0)
 
       skill = Context.Skills.find_in_tab(tab, skill_id)
-      {:ok, skill} = Context.Skills.update(skill, %{level: skill_level})
-
-      Context.Skills.update_subskills(character, tab, skill)
+      {:ok, _skill} = Context.Skills.update(skill, %{level: skill_level})
 
       packet
     end)

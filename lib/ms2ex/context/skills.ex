@@ -57,17 +57,6 @@ defmodule Ms2ex.Context.Skills do
     |> Repo.update()
   end
 
-  def update_subskills(character, skill_tab, parent_skill) do
-    %Schema.Character{job: job} = character
-    job_skill = Enum.find(by_job(job), &(&1.main == parent_skill.skill_id))
-
-    Enum.each(job_skill.sub, fn sub_skill_id ->
-      if sub_skill = find_in_tab(skill_tab, sub_skill_id) do
-        {:ok, _sub} = update(sub_skill, %{level: parent_skill.level})
-      end
-    end)
-  end
-
   def load_metadata(%Schema.Skill{skill_id: skill_id} = skill) do
     metadata = Storage.Skills.get_meta(skill_id)
     Map.put(skill, :metadata, metadata)
