@@ -59,7 +59,7 @@ defmodule Ms2ex.SkillCast do
   def spirit_cost(%__MODULE__{skill_level: lvl, meta: meta}) do
     case meta.levels["#{lvl}"] do
       %{consume: %{stat: %{spirit: sp}}} -> sp
-      _ -> 15
+      _ -> 0
     end
   end
 
