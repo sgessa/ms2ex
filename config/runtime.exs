@@ -37,4 +37,6 @@ config :ms2ex, Ms2ex,
   }
 
 # Imports server constants
-config :ms2ex, :constants, expand_skill_tab_cost: -990
+config :ms2ex, :constants,
+  character_max_level: 70,
+  expand_skill_tab_cost: -990

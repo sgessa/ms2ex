@@ -1,13 +1,12 @@
 defmodule Ms2ex.Context.SkillTabs do
   alias Ms2ex.Storage
-  alias Ms2ex.Context
 
-  def set_skills(job, attrs \\ %{}) do
+  def set_skills(job, attrs \\ %{}, awakened \\ false) do
     job = Storage.Tables.Jobs.get(job)
 
     skills =
       job.skills
-      |> Enum.reject(fn {rank, _skills} -> rank == :awakening && !Context.Jobs.awakening?(job) end)
+      |> Enum.reject(fn {rank, _skills} -> rank == :awakening && !awakened end)
       |> Enum.flat_map(fn {rank, skills} ->
         skills
         |> Enum.map(&{&1, Storage.Skills.get_meta(&1.main)})

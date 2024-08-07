@@ -1,9 +1,9 @@
 defmodule Ms2ex.Packets.FieldAddUser do
-  alias Ms2ex.{Packets, Schema, Types}
+  alias Ms2ex.{Packets, Schema, Types, Enums}
   import Packets.PacketWriter
 
   def bytes(character) do
-    real_job_id = Schema.Character.real_job_id(character)
+    real_job_id = Enums.Job.get_value(character.job)
     flag_a = false
 
     __MODULE__

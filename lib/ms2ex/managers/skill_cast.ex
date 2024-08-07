@@ -4,7 +4,7 @@ defmodule Ms2ex.SkillCast do
   alias Ms2ex.ProtoMetadata
 
   defstruct [
-    :attack_point,
+    :motion_point,
     :character_object_id,
     :client_tick,
     :id,
@@ -27,13 +27,13 @@ defmodule Ms2ex.SkillCast do
     }
   end
 
-  def build(id, char_obj_id, skill_id, skill_lvl, attack_pt, srv_tick, client_tick) do
+  def build(id, char_obj_id, skill_id, skill_lvl, motion_point, srv_tick, client_tick) do
     %__MODULE__{
       id: id,
       character_object_id: char_obj_id,
       skill_id: skill_id,
       skill_level: skill_lvl,
-      attack_point: attack_pt,
+      motion_point: motion_point,
       server_tick: srv_tick,
       client_tick: client_tick,
       meta: Storage.Skills.get_meta(skill_id)
@@ -50,6 +50,7 @@ defmodule Ms2ex.SkillCast do
   end
 
   def max_stacks(%__MODULE__{skill_level: lvl, meta: meta}) do
+    # TODO: get max_stacks from additional-effect table (maybe update ms2ex_file)
     case ProtoMetadata.Skills.get_level(meta, lvl) do
       %{data: %{max_stacks: max_stacks}} -> max_stacks
       _ -> 1
@@ -105,17 +106,20 @@ defmodule Ms2ex.SkillCast do
     end
   end
 
-  def magic_path(%__MODULE__{skill_level: lvl, meta: meta}) do
-    cube_magic_path_id =
-      case ProtoMetadata.Skills.get_level(meta, lvl) do
-        %ProtoMetadata.SkillLevel{attacks: [attack | _]} ->
-          attack.cube_magic_path_id
+  def magic_path(%__MODULE__{skill_level: lvl, meta: meta, motion_point: motion_point}) do
+    # TODO: Find motion point
+    raise motion_point
+    # TODO
+    # cube_magic_path_id =
+    #   case ProtoMetadata.Skills.get_level(meta, lvl) do
+    #     %ProtoMetadata.SkillLevel{attacks: [attack | _]} ->
+    #       attack.cube_magic_path_id
 
-        _ ->
-          0
-      end
+    #     _ ->
+    #       0
+    #   end
 
-    ProtoMetadata.MagicPaths.get(cube_magic_path_id)
+    # ProtoMetadata.MagicPaths.get(cube_magic_path_id)
   end
 
   def owner_buff?(%__MODULE__{} = cast) do

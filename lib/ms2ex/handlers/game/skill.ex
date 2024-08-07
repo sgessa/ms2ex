@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {server_tick, packet} = get_int(packet)
     {skill_id, packet} = get_int(packet)
     {skill_lvl, packet} = get_short(packet)
-    {attack_point, packet} = get_byte(packet)
+    {motion_point, packet} = get_byte(packet)
 
     {position, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
@@ -54,7 +54,7 @@ defmodule Ms2ex.GameHandlers.Skill do
         character.object_id,
         skill_id,
         skill_lvl,
-        attack_point,
+        motion_point,
         server_tick,
         client_tick
       )
@@ -114,7 +114,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   # Sync Damage
   defp handle_damage(0x0, packet, session) do
     {cast_id, packet} = get_long(packet)
-    {_attack_point, packet} = get_byte(packet)
+    {_motion_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
     {target_count, packet} = get_byte(packet)
@@ -141,7 +141,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {position, packet} = get_coord(packet)
     {_impact_pos, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
-    {_attack_point, packet} = get_byte(packet)
+    {_motion_point, packet} = get_byte(packet)
 
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)

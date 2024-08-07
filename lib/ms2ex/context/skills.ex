@@ -21,7 +21,7 @@ defmodule Ms2ex.Context.Skills do
   end
 
   def add_tab(%Schema.Character{} = character, attrs) do
-    attrs = Context.SkillTabs.set_skills(character.job, attrs)
+    attrs = Context.SkillTabs.set_skills(character.job, attrs, character.awakened)
 
     character
     |> Schema.SkillTab.add(attrs)

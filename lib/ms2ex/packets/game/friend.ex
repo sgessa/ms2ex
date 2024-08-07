@@ -2,6 +2,7 @@ defmodule Ms2ex.Packets.Friend do
   import Ms2ex.Packets.PacketWriter
 
   alias Ms2ex.Schema
+  alias Ms2ex.Enums
 
   @notices %{
     request_sent: 0x0,
@@ -147,7 +148,7 @@ defmodule Ms2ex.Packets.Friend do
   end
 
   defp put_friend(packet, friend) do
-    real_job_id = Schema.Character.real_job_id(friend.rcpt)
+    real_job_id = Enums.Job.get_value(friend.rcpt.job)
 
     friend_online? =
       case Ms2ex.Managers.Character.lookup_by_name(friend.rcpt.name) do

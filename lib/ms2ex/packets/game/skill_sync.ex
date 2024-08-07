@@ -12,7 +12,7 @@ defmodule Ms2ex.Packets.SkillSync do
         position,
         direction,
         rotation,
-        attack_point
+        motion_point
       ) do
     __MODULE__
     |> build()
@@ -26,7 +26,7 @@ defmodule Ms2ex.Packets.SkillSync do
     |> put_coord(rotation)
     |> put_coord()
     |> put_byte()
-    |> put_byte(attack_point)
+    |> put_byte(motion_point)
     |> put_int()
   end
 end
