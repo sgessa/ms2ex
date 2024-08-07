@@ -1,7 +1,7 @@
 defmodule Ms2ex.Managers.Character do
   use GenServer
 
-  alias Ms2ex.{Context, Packets, PartyServer, Schema, SkillCast, Types}
+  alias Ms2ex.{Context, Packets, PartyServer, Schema, Managers, Types}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -22,7 +22,7 @@ defmodule Ms2ex.Managers.Character do
 
   def monitor(%Schema.Character{} = character), do: call(character, :monitor)
 
-  def cast_skill(%Schema.Character{} = character, %SkillCast{} = skill_cast) do
+  def cast_skill(%Schema.Character{} = character, %Managers.SkillCast{} = skill_cast) do
     call(character, {:cast_skill, skill_cast})
   end
 
@@ -74,8 +74,8 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_call({:cast_skill, skill_cast}, _from, %{stats: stats} = character) do
-    spirit_cost = SkillCast.spirit_cost(skill_cast)
-    stamina_cost = SkillCast.stamina_cost(skill_cast)
+    spirit_cost = Managers.SkillCast.spirit_cost(skill_cast)
+    stamina_cost = Managers.SkillCast.stamina_cost(skill_cast)
 
     if stats.spirit_cur >= spirit_cost and stats.stamina_cur >= stamina_cost do
       character =
@@ -83,8 +83,9 @@ defmodule Ms2ex.Managers.Character do
         |> decrease_stat(:spirit, spirit_cost)
         |> decrease_stat(:stamina, stamina_cost)
 
-      if SkillCast.owner_buff?(skill_cast) or SkillCast.entity_buff?(skill_cast) or
-           SkillCast.shield_buff?(skill_cast) or SkillCast.owner_debuff?(skill_cast) do
+      if Managers.SkillCast.owner_buff?(skill_cast) or Managers.SkillCast.entity_buff?(skill_cast) or
+           Managers.SkillCast.shield_buff?(skill_cast) or
+           Managers.SkillCast.owner_debuff?(skill_cast) do
         status = Types.SkillStatus.new(skill_cast, character.object_id, character.object_id, 1)
         Context.Field.add_status(character, status)
       end

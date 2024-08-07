@@ -7,8 +7,7 @@ defmodule Ms2ex.Managers.Field do
     Managers,
     Context,
     Packets,
-    Schema,
-    SkillCast
+    Schema
   }
 
   alias Ms2ex.Types.FieldNpc
@@ -84,7 +83,7 @@ defmodule Ms2ex.Managers.Field do
       Packets.RegionSkill.add(source_id, position, skill)
     )
 
-    duration = SkillCast.duration(skill)
+    duration = Managers.SkillCast.duration(skill)
     Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
     {:reply, :ok, state}
   end

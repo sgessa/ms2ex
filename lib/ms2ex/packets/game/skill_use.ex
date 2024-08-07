@@ -3,11 +3,7 @@ defmodule Ms2ex.Packets.SkillUse do
 
   import Packets.PacketWriter
 
-  def bytes(
-        skill_cast,
-        {position, direction, rotation, rotate2z},
-        {unknown, is_hold, hold_int, hold_string}
-      ) do
+  def bytes(skill_cast, {unknown, is_hold, hold_int, hold_string}) do
     packet =
       __MODULE__
       |> build()
@@ -17,10 +13,10 @@ defmodule Ms2ex.Packets.SkillUse do
       |> put_int(skill_cast.skill_id)
       |> put_short(skill_cast.skill_level)
       |> put_byte()
-      |> put_short_coord(position)
-      |> put_coord(direction)
-      |> put_coord(rotation)
-      |> put_short(trunc(rotate2z) * 10)
+      |> put_short_coord(skill_cast.position)
+      |> put_coord(skill_cast.direction)
+      |> put_coord(skill_cast.rotation)
+      |> put_short(trunc(skill_cast.rotate2z) * 10)
       |> put_bool(unknown)
       |> put_bool(is_hold)
 

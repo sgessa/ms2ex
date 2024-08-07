@@ -3,30 +3,20 @@ defmodule Ms2ex.Packets.SkillSync do
 
   import Packets.PacketWriter
 
-  def bytes(
-        character,
-        cast_id,
-        skill_id,
-        skill_level,
-        motion_point,
-        position,
-        direction,
-        rotation,
-        motion_point
-      ) do
+  def bytes(skill_cast) do
     __MODULE__
     |> build()
-    |> put_long(cast_id)
-    |> put_int(character.object_id)
-    |> put_int(skill_id)
-    |> put_short(skill_level)
-    |> put_byte(motion_point)
-    |> put_coord(position)
-    |> put_coord(direction)
-    |> put_coord(rotation)
+    |> put_long(skill_cast.cast_id)
+    |> put_int(skill_cast.character_object_id)
+    |> put_int(skill_cast.skill_id)
+    |> put_short(skill_cast.skill_level)
+    |> put_byte(skill_cast.motion_point)
+    |> put_coord(skill_cast.position)
+    |> put_coord(skill_cast.direction)
+    |> put_coord(skill_cast.rotation)
     |> put_coord()
     |> put_byte()
-    |> put_byte(motion_point)
+    |> put_byte(skill_cast.attack_point)
     |> put_int()
   end
 end

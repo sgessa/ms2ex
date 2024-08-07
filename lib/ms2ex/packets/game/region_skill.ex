@@ -1,16 +1,16 @@
 defmodule Ms2ex.Packets.RegionSkill do
-  alias Ms2ex.{Context, ProtoMetadata, Packets, SkillCast}
+  alias Ms2ex.{Context, Packets, Managers}
 
   import Packets.PacketWriter
 
   def add(source_id, effect_position, skill_cast) do
     parent = skill_cast.parent_skill
-    magic_path = SkillCast.magic_path(parent)
+    magic_path = Managers.SkillCast.magic_path(parent)
 
     moves =
       if length(magic_path.moves) > 0,
         do: magic_path.moves,
-        else: [%ProtoMetadata.MagicPathMove{}]
+        else: [%{}]
 
     __MODULE__
     |> build()

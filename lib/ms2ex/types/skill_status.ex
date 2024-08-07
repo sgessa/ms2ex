@@ -1,5 +1,5 @@
 defmodule Ms2ex.Types.SkillStatus do
-  alias Ms2ex.SkillCast
+  alias Ms2ex.Managers
 
   defstruct [
     :id,
@@ -12,10 +12,10 @@ defmodule Ms2ex.Types.SkillStatus do
     :duration
   ]
 
-  def new(%SkillCast{} = skill_cast, target, source, stacks) do
+  def new(%Managers.SkillCast{} = skill_cast, target, source, stacks) do
     start = Ms2ex.sync_ticks()
-    duration = SkillCast.duration(skill_cast)
-    stacks = stacks |> min(SkillCast.max_stacks(skill_cast)) |> max(0)
+    duration = Managers.SkillCast.duration(skill_cast)
+    stacks = stacks |> min(Managers.SkillCast.max_stacks(skill_cast)) |> max(0)
 
     %__MODULE__{
       id: Ms2ex.generate_long(),
