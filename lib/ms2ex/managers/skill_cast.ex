@@ -66,7 +66,7 @@ defmodule Ms2ex.SkillCast do
   def stamina_cost(%__MODULE__{skill_level: lvl, meta: meta}) do
     case meta.levels["#{lvl}"] do
       %{consume: %{stat: %{stamina: stamina}}} -> stamina
-      _ -> 10
+      _ -> 0
     end
   end
 
