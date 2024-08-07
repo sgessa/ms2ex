@@ -6,7 +6,7 @@ defmodule Ms2ex.Managers.Character do
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  @regen_stats [:hp, :sp, :sta]
+  @regen_stats %{health: :hp, spirit: :sp, stamina: :stamina}
 
   def lookup(character_id), do: call(character_id, :lookup)
 
@@ -74,14 +74,14 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_call({:cast_skill, skill_cast}, _from, %{stats: stats} = character) do
-    sp_cost = SkillCast.sp_cost(skill_cast)
+    spirit_cost = SkillCast.spirit_cost(skill_cast)
     stamina_cost = SkillCast.stamina_cost(skill_cast)
 
-    if stats.sp_cur >= sp_cost and stats.sta_cur >= stamina_cost do
+    if stats.spirit_cur >= spirit_cost and stats.stamina_cur >= stamina_cost do
       character =
         character
-        |> decrease_stat(:sp, sp_cost)
-        |> decrease_stat(:sta, stamina_cost)
+        |> decrease_stat(:spirit, spirit_cost)
+        |> decrease_stat(:stamina, stamina_cost)
 
       if SkillCast.owner_buff?(skill_cast) or SkillCast.entity_buff?(skill_cast) or
            SkillCast.shield_buff?(skill_cast) or SkillCast.owner_debuff?(skill_cast) do
@@ -129,9 +129,9 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_cast(:receive_fall_dmg, character) do
-    hp = Map.get(character.stats, :hp_cur)
+    hp = Map.get(character.stats, :health_cur)
     dmg = Context.Damage.calculate_fall_dmg(character)
-    character = set_stat(character, :hp, max(hp - dmg, 25))
+    character = set_stat(character, :health, max(hp - dmg, 25))
 
     push(character, Packets.FallDamage.bytes(character, 0))
 
@@ -139,7 +139,7 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_info({:regen, stat_id}, character) do
-    intval = Map.get(character.stats, :"#{stat_id}_regen_time_cur")
+    intval = Map.get(character.stats, :"#{@regen_stats[stat_id]}_regen_interval_cur")
     cur = Map.get(character.stats, :"#{stat_id}_cur")
     max = Map.get(character.stats, :"#{stat_id}_max")
 
@@ -171,8 +171,10 @@ defmodule Ms2ex.Managers.Character do
     amount = amount |> max(0) |> min(total)
     stats = Map.put(character.stats, :"#{stat_id}_cur", amount)
 
-    if stat_id in @regen_stats && !Map.get(character, :"regen_#{stat_id}?") && amount < total do
-      intval = Map.get(character.stats, :"#{stat_id}_regen_time_cur")
+    if (regen_stat =
+          Map.get(@regen_stats, stat_id)) && !Map.get(character, :"regen_#{stat_id}?") &&
+         amount < total do
+      intval = Map.get(character.stats, :"#{regen_stat}_regen_interval_cur")
       Process.send_after(self(), {:regen, stat_id}, intval)
     end
 
@@ -183,9 +185,11 @@ defmodule Ms2ex.Managers.Character do
   end
 
   defp regen(stats, stat_id) do
+    regen_stat = @regen_stats[stat_id]
+
     stat_cur = Map.get(stats, :"#{stat_id}_cur")
     stat_max = Map.get(stats, :"#{stat_id}_max")
-    regen = Map.get(stats, :"#{stat_id}_regen_cur")
+    regen = Map.get(stats, :"#{regen_stat}_regen_cur")
 
     post_regen = stat_max |> min(stat_cur + regen) |> max(0)
     Map.put(stats, :"#{stat_id}_cur", post_regen)

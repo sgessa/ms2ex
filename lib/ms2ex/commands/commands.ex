@@ -12,8 +12,8 @@ defmodule Ms2ex.Commands do
   import Net.SenderSession, only: [push: 2, push_notice: 3]
 
   def handle(["heal"], character, session) do
-    max_hp = character.stats.hp_max
-    Managers.Character.increase_stat(character, :hp, max_hp)
+    max_hp = character.stats.health_max
+    Managers.Character.increase_stat(character, :health, max_hp)
     session
   end
 

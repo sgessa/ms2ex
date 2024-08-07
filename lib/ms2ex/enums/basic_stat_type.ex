@@ -36,4 +36,10 @@ defmodule Ms2ex.Enums.BasicStatType do
     bonus_atk: 33,
     pet_bonus_atk: 34
   }
+
+  def ordered_keys() do
+    values()
+    |> Enum.sort()
+    |> Enum.map(&get_key(&1))
+  end
 end

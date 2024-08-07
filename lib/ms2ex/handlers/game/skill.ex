@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     handle_mode(mode, packet, session)
   end
 
-  # Cast
+  # Use
   def handle_mode(0x0, packet, session) do
     {cast_id, packet} = get_long(packet)
     {server_tick, packet} = get_int(packet)
@@ -23,14 +23,23 @@ defmodule Ms2ex.GameHandlers.Skill do
     {position, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
-
-    {_, packet} = get_float(packet)
+    {rotate2z, packet} = get_float(packet)
 
     {client_tick, packet} = get_int(packet)
 
-    {_, packet} = get_bool(packet)
-    {_, packet} = get_bool(packet)
-    {_flag, _packet} = get_bool(packet)
+    {unkown, packet} = get_bool(packet)
+    {_item_uid, packet} = get_long(packet)
+    {is_hold, _packet} = get_bool(packet)
+
+    {hold_int, hold_string, _packet} =
+      if is_hold do
+        {hold_int, packet} = get_int(packet)
+        {hold_string, packet} = get_ustring(packet)
+
+        {hold_int, hold_string, packet}
+      else
+        {nil, nil, packet}
+      end
 
     # if (flag) {
     #   packet.ReadInt()
@@ -54,16 +63,50 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {:ok, character} = Managers.Character.cast_skill(character, skill_cast)
 
-    coords = {position, direction, rotation}
-    Context.Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
+    coords = {position, direction, rotation, rotate2z}
+    state = {unkown, is_hold, hold_int, hold_string}
+    Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, coords, state))
 
     push(session, Packets.Stats.set_character_stats(character))
   end
 
-  # Damage Mode
+  # Attack
   def handle_mode(0x1, packet, session) do
     {damage_type, packet} = get_byte(packet)
     handle_damage(damage_type, packet, session)
+  end
+
+  # Sync
+  def handle_mode(0x2, packet, session) do
+    {cast_id, packet} = get_long(packet)
+    {skill_id, packet} = get_int(packet)
+    {skill_level, packet} = get_int(packet)
+    {motion_point, packet} = get_byte(packet)
+
+    {position, packet} = get_coord(packet)
+    {direction, packet} = get_coord(packet)
+    {rotation, packet} = get_coord(packet)
+    {_input, packet} = get_coord(packet)
+    {_toggle, packet} = get_byte(packet)
+    {_unk3, packet} = get_int(packet)
+    {_unk4, _packet} = get_byte(packet)
+
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+
+    Context.Field.broadcast(
+      character,
+      Packets.SkillSync.bytes(
+        character,
+        cast_id,
+        skill_id,
+        skill_level,
+        motion_point,
+        position,
+        direction,
+        rotation,
+        motion_point
+      )
+    )
   end
 
   def handle_mode(_mode, _packet, session), do: session
@@ -123,8 +166,8 @@ defmodule Ms2ex.GameHandlers.Skill do
         heal = 50
         Context.Field.broadcast(character, Packets.SkillDamage.heal(status, heal))
 
-        {:ok, character} = Managers.Character.increase_stat(character, :hp, heal)
-        push(session, Packets.Stats.update_char_stats(character, :hp))
+        {:ok, character} = Managers.Character.increase_stat(character, :health, heal)
+        push(session, Packets.Stats.update_char_stats(character, :health))
       else
         coords = {position, rotation}
 

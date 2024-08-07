@@ -3,7 +3,7 @@ defmodule Ms2ex.Context.Damage do
   alias Ms2ex.Types.FieldNpc
 
   def roll_crit(%Schema.Character{} = character) do
-    crit_rate = character.stats.crit_rate_cur + 50
+    crit_rate = character.stats.critical_rate_cur + 50
     crit_rate = crit_rate |> max(0) |> min(400)
     Enum.random(1..1000) <= crit_rate
   end
@@ -26,9 +26,9 @@ defmodule Ms2ex.Context.Damage do
 
     # TODO fix dmg multiplier
     numerator =
-      skill_dmg * (1 + caster.stats.bonus_attk_cur) * (1500 - (enemy_res - pierce_res * 15))
+      skill_dmg * (1 + caster.stats.bonus_atk_cur) * (1500 - (enemy_res - pierce_res * 15))
 
-    pierce_coeff = 1 - caster.stats.pierce_cur
+    pierce_coeff = 1 - caster.stats.piercing_cur
 
     # TODO find correct enemy def stats
     denominator = mob.stats.defense.total * pierce_coeff * 15
@@ -47,9 +47,9 @@ defmodule Ms2ex.Context.Damage do
 
   defp calc_pierce_res(skill_cast, caster) do
     if SkillCast.physical?(skill_cast) do
-      caster.stats.phys_attk_cur
+      caster.stats.physical_atk_cur
     else
-      caster.stats.magic_attk_cur
+      caster.stats.magical_atk_cur
     end
   end
 
