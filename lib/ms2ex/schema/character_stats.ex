@@ -157,7 +157,7 @@ defmodule Ms2ex.Schema.CharacterStats do
   end
 
   def fields() do
-    Enums.StatId.keys()
+    Enums.StatId.all()
     |> Enum.map(&[:"#{&1}_min", :"#{&1}_cur", :"#{&1}_max"])
     |> List.flatten()
   end

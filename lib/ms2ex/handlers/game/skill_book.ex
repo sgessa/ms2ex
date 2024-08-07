@@ -21,8 +21,12 @@ defmodule Ms2ex.GameHandlers.SkillBook do
   defp handle_mode(0x1, packet, character, session) do
     {active_tab_id, packet} = get_long(packet)
     {selected_tab_id, packet} = get_long(packet)
-    {_, packet} = get_int(packet)
+    {_rank, packet} = get_int(packet)
     {tab_count, packet} = get_int(packet)
+
+    # TODO
+    # Handle selected_tab_id == 0 (switching active tab)
+    # Handle rank
 
     Enum.reduce(1..tab_count, packet, fn _, packet ->
       {tab_id, packet} = get_long(packet)

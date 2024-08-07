@@ -1,7 +1,5 @@
 defmodule Ms2ex.Enums.EquipSlot do
-  @moduledoc false
-
-  @mapping %{
+  use Ms2ex.Enum, %{
     :NONE => 0,
     :HR => 1,
     :FA => 2,
@@ -23,6 +21,4 @@ defmodule Ms2ex.Enums.EquipSlot do
     :ER => 18,
     :OH => 19
   }
-
-  use Ms2ex.Enums
 end

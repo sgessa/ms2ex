@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.ChatType do
-  @mapping %{
+  use Ms2ex.Enum, %{
     all: 0,
     whisper_from: 3,
     whisper_to: 4,
@@ -19,6 +19,4 @@ defmodule Ms2ex.Enums.ChatType do
     guild_notice_noprefix: 19,
     unknown_purple: 20
   }
-
-  use Ms2ex.Enums
 end

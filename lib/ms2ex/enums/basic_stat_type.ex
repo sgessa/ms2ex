@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.BasicStatType do
-  @mapping %{
+  use Ms2ex.Enum, %{
     strength: 0,
     dexterity: 1,
     intelligence: 2,
@@ -36,6 +36,4 @@ defmodule Ms2ex.Enums.BasicStatType do
     bonus_atk: 33,
     pet_bonus_atk: 34
   }
-
-  use Ms2ex.Enums
 end

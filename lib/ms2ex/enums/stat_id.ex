@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.StatId do
-  @mapping %{
+  use Ms2ex.Enum, %{
     str: 0x00,
     dex: 0x01,
     int: 0x02,
@@ -36,8 +36,6 @@ defmodule Ms2ex.Enums.StatId do
     bonus_attk: 0x21,
     pet_bonus_attk: 0x22
   }
-
-  use Ms2ex.Enums
 
   def ordered_keys() do
     values()

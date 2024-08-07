@@ -5,13 +5,11 @@ defmodule Ms2ex.Schema.InventoryTab do
 
   alias Ms2ex.{Enums, Schema}
 
-  @inventory_tabs Map.to_list(Enums.InventoryTab.mapping())
-
   schema "inventory_tabs" do
     belongs_to :character, Schema.Character
 
     field :slots, :integer
-    field :tab, Ecto.Enum, values: @inventory_tabs
+    field :tab, Ms2ex.Enums.InventoryTab
   end
 
   @doc false
@@ -38,7 +36,7 @@ defmodule Ms2ex.Schema.InventoryTab do
   defp ensure_slots(inventory_tab), do: inventory_tab
 
   def default_slots() do
-    Enums.InventoryTab.keys()
+    Enums.InventoryTab.all()
     |> Enum.into(%{}, &{&1, 48})
     |> Map.put(:outfit, 150)
     |> Map.put(:life_skill, 126)
