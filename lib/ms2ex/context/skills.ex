@@ -8,9 +8,8 @@ defmodule Ms2ex.Context.Skills do
 
     basic_skills = get_in(jobs, [job, :skills, :basic]) || []
     awakening_skills = get_in(jobs, [job, :skills, :awakening]) || []
-    skills = basic_skills ++ awakening_skills
 
-    Enum.into(skills, [], & &1.main)
+    basic_skills ++ awakening_skills
   end
 
   def get_active_tab(%Schema.Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do
@@ -66,9 +65,9 @@ defmodule Ms2ex.Context.Skills do
 
   def update_subskills(character, skill_tab, parent_skill) do
     %Schema.Character{job: job} = character
-    job_skill = Map.get(by_job(job), parent_skill.skill_id)
+    job_skill = Enum.find(by_job(job), &(&1.main == parent_skill.skill_id))
 
-    Enum.each(job_skill.sub_skills, fn sub_skill_id ->
+    Enum.each(job_skill.sub, fn sub_skill_id ->
       if sub_skill = find_in_tab(skill_tab, sub_skill_id) do
         {:ok, _sub} = update(sub_skill, %{level: parent_skill.level})
       end

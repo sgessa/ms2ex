@@ -1,7 +1,7 @@
 defmodule Ms2ex.GroupChat do
   use GenServer
 
-  alias Ms2ex.CharacterManager
+  alias Ms2ex.Managers
   alias Phoenix.PubSub
 
   defstruct [:id, members: [], member_ids: []]
@@ -26,7 +26,7 @@ defmodule Ms2ex.GroupChat do
   def load_members(%__MODULE__{} = chat) do
     members =
       Enum.reduce(chat.member_ids, [], fn id, members ->
-        case CharacterManager.lookup(id) do
+        case Managers.Character.lookup(id) do
           {:ok, member} -> [member | members]
           _ -> members
         end

@@ -1,4 +1,4 @@
-defmodule Ms2ex.SyncState do
+defmodule Ms2ex.Types.SyncState do
   use Ecto.Schema
 
   alias Ms2ex.{EctoTypes, Packets}

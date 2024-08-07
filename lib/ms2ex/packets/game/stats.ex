@@ -1,6 +1,7 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{Enums, Mob, Packets}
+  alias Ms2ex.{Enums, Packets}
 
+  alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter
 
   @mode %{update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
@@ -37,16 +38,16 @@ defmodule Ms2ex.Packets.Stats do
     end)
   end
 
-  def update_mob_health(%Mob{} = mob) do
+  def update_mob_stat(%FieldNpc{} = mob, stat) do
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
     |> put_byte()
     |> put_byte(0x1)
-    |> put_byte(@mode.update_mob_health)
-    |> put_long(mob.stats.hp.bonus)
-    |> put_long(mob.stats.hp.base)
-    |> put_long(mob.stats.hp.total)
+    |> put_byte(Enums.BasicStatType.get_value(stat))
+    |> reduce(mob.stats[stat], fn {_stat, value}, packet ->
+      put_long(packet, value)
+    end)
   end
 
   def put_stats(packet, stats) do
@@ -59,15 +60,17 @@ defmodule Ms2ex.Packets.Stats do
     end)
   end
 
-  def put_default_mob_stats(packet, %Mob{} = mob) do
+  def put_default_mob_stats(packet, %FieldNpc{} = mob) do
     packet
     |> put_byte(@mode.send_stats)
-    |> put_long(mob.stats.hp.bonus)
+    |> put_long(mob.stats.health)
     |> put_int(100)
-    |> put_long(mob.stats.hp.base)
+    |> put_long(mob.stats.health)
     |> put_int(100)
-    |> put_long(mob.stats.hp.total)
+    |> put_long(mob.stats.health)
     |> put_int(100)
+
+    # TODO Understand mob hp stats
   end
 
   defp put_hp(packet, stats) do

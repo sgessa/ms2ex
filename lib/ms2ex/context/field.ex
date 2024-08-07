@@ -1,19 +1,18 @@
-defmodule Ms2ex.Field do
+defmodule Ms2ex.Context.Field do
   alias Ms2ex.{
-    CharacterManager,
     Context,
-    FieldServer,
-    Mob,
     Net,
     Packets,
     Schema,
-    Storage
+    Storage,
+    Managers
   }
 
+  alias Ms2ex.Types.FieldNpc
   alias Phoenix.PubSub
 
-  def add_mob_drop(%Mob{} = mob, item) do
-    cast(mob.field, {:add_mob_drop, mob, item})
+  def add_mob_drop(%FieldNpc{} = field_npc, item) do
+    cast(field_npc.field, {:add_mob_drop, field_npc, item})
   end
 
   def drop_item(%Schema.Character{} = character, item) do
@@ -36,6 +35,11 @@ defmodule Ms2ex.Field do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
 
+  def remove_npc(%FieldNpc{} = field_npc) do
+    field_pid = Process.whereis(field_npc.field)
+    send(field_pid, {:remove_npc, field_npc})
+  end
+
   def add_object(%Schema.Character{} = character, object) do
     call(character.field_pid, {:add_object, object.object_type, object})
   end
@@ -50,7 +54,7 @@ defmodule Ms2ex.Field do
 
   def broadcast(%Schema.Character{} = character, packet) do
     topic = field_name(character.map_id, character.channel_id)
-    PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
+    broadcast(topic, packet)
   end
 
   def broadcast(topic, packet) do
@@ -79,7 +83,7 @@ defmodule Ms2ex.Field do
       call(pid, {:add_character, character})
     else
       GenServer.start(
-        FieldServer,
+        Managers.Field,
         character,
         name: field_name(character.map_id, character.channel_id)
       )
@@ -99,7 +103,7 @@ defmodule Ms2ex.Field do
         |> Context.Characters.maybe_discover_map(map_id)
         |> Map.put(:change_map, %{id: map_id, position: position, rotation: rotation})
 
-      CharacterManager.update(character)
+      Managers.Character.update(character)
 
       Net.SenderSession.push(
         character,

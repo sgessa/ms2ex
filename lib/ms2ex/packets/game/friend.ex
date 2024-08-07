@@ -150,7 +150,7 @@ defmodule Ms2ex.Packets.Friend do
     real_job_id = Schema.Character.real_job_id(friend.rcpt)
 
     friend_online? =
-      case Ms2ex.CharacterManager.lookup_by_name(friend.rcpt.name) do
+      case Ms2ex.Managers.Character.lookup_by_name(friend.rcpt.name) do
         {:ok, _} -> true
         _ -> false
       end

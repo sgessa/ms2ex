@@ -1,12 +1,12 @@
 defmodule Ms2ex.GameHandlers.Vibrate do
   require Logger
 
-  alias Ms2ex.{CharacterManager, Field, Packets}
+  alias Ms2ex.{Managers, Context, Packets}
 
   import Packets.PacketReader
 
   def handle(packet, session) do
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     {entity_id, packet} = get_string(packet)
     {some_id, packet} = get_long(packet)
@@ -19,7 +19,7 @@ defmodule Ms2ex.GameHandlers.Vibrate do
 
     tick = session.client_tick
 
-    Field.broadcast(
+    Context.Field.broadcast(
       character,
       Packets.Vibrate.bytes(character, entity_id, some_id, obj_id, flag, tick)
     )

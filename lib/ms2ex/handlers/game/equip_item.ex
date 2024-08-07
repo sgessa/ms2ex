@@ -1,5 +1,5 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
-  alias Ms2ex.{CharacterManager, Context, Field, Packets}
+  alias Ms2ex.{Managers, Context, Context, Packets}
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {slot_name, _packet} = get_ustring(packet)
 
     with true <- Context.Equips.valid_slot?(slot_name),
-         {:ok, character} <- CharacterManager.lookup(session.character_id),
+         {:ok, character} <- Managers.Character.lookup(session.character_id),
          %{location: :inventory} = item <-
            Context.Inventory.get_by(character_id: character.id, id: id) do
       item = Context.Items.load_metadata(item)
@@ -28,7 +28,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp handle_mode(0x1, packet, session) do
     {id, _packet} = get_long(packet)
 
-    with {:ok, character} <- CharacterManager.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
          %{location: :equipment} = item <-
            Context.Inventory.get_by(character_id: character.id, id: id) do
       unequip_item(character, item, session)
@@ -57,20 +57,20 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     # Equip new item
     with {:ok, item} <- Context.Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
-      Field.broadcast(character, equip_packet)
+      Context.Field.broadcast(character, equip_packet)
 
-      CharacterManager.update(Context.Characters.load_equips(character))
+      Managers.Character.update(Context.Characters.load_equips(character))
       push(session, Packets.InventoryItem.remove_item(item.id))
     end
   end
 
   defp unequip_item(character, item, session) do
     with {:ok, item} <- Context.Equips.unequip(item) do
-      CharacterManager.update(Context.Characters.load_equips(character))
+      Managers.Character.update(Context.Characters.load_equips(character))
 
       item = Context.Items.load_metadata(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
-      Field.broadcast(character, unequip_packet)
+      Context.Field.broadcast(character, unequip_packet)
 
       push(session, Packets.InventoryItem.add_item({:create, item}))
     end

@@ -2,7 +2,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
   alias Ms2ex.{
-    CharacterManager,
+    Managers,
     Context,
     LoginHandlers,
     Net,
@@ -40,8 +40,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character = character |> set_spawn_position() |> maybe_set_party()
 
-      CharacterManager.start(character)
-      CharacterManager.monitor(character)
+      Managers.Character.start(character)
+      Managers.Character.monitor(character)
 
       character = Context.Characters.preload(character, friends: :rcpt)
       init_character(character)

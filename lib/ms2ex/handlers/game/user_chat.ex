@@ -1,10 +1,10 @@
 defmodule Ms2ex.GameHandlers.UserChat do
   alias Ms2ex.{
-    CharacterManager,
+    Managers,
     Commands,
     Context,
     Enums,
-    Field,
+    Context,
     Net,
     Packets,
     PartyServer
@@ -23,7 +23,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
     {rcpt, packet} = get_ustring(packet)
     {_, _packet} = get_long(packet)
 
-    {:ok, character} = CharacterManager.lookup(session.character_id)
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
     case msg do
       "!" <> cmd ->
@@ -39,11 +39,11 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
   defp handle_message({:all, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:all, character, msg)
-    Field.broadcast(character, packet)
+    Context.Field.broadcast(character, packet)
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do
-    case CharacterManager.lookup_by_name(rcpt_name) do
+    case Managers.Character.lookup_by_name(rcpt_name) do
       {:ok, rcpt} ->
         # TODO check if rcpt blocked character
 

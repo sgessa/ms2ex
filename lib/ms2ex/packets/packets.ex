@@ -117,6 +117,7 @@ defmodule Ms2ex.Packets do
     0xC6 => "FISHING",
     0xC8 => "NPS_INFO",
     0xED => "PREMIUM_CLUB",
+    0xCC => "FIELD_PROPERTY",
     0x10E => "SKILL_BOOK",
     0x11B => "LOGIN_REQUIRED",
     0x11E => "PRESTIGE",
