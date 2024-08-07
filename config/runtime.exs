@@ -35,3 +35,6 @@ config :ms2ex, Ms2ex,
     resource: "http://#{server_address}",
     locale: "na"
   }
+
+# Imports server constants
+config :ms2ex, :constants, expand_skill_tab_cost: -990

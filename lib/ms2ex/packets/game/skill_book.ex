@@ -1,12 +1,19 @@
 defmodule Ms2ex.Packets.SkillBook do
   import Ms2ex.Packets.PacketWriter
 
+  @modes %{
+    load: 0x0,
+    save: 0x1,
+    rename: 0x2,
+    expand: 0x4
+  }
+
   def open(character) do
     skill_tabs = character.skill_tabs
 
     __MODULE__
     |> build()
-    |> put_byte(0x0)
+    |> put_byte(@modes.load)
     |> put_int(length(skill_tabs))
     |> put_long(character.active_skill_tab_id)
     |> put_int(length(skill_tabs))
@@ -25,20 +32,19 @@ defmodule Ms2ex.Packets.SkillBook do
     end)
   end
 
-  def save(character, selected_tab_id) do
+  def save(character, selected_tab_id, rank) do
     __MODULE__
     |> build()
-    |> put_byte(0x1)
+    |> put_byte(@modes.save)
     |> put_long(character.active_skill_tab_id)
     |> put_long(selected_tab_id)
-    # 0x1 = unsaved points, 0x2 = no unsaved points
-    |> put_int(0x2)
+    |> put_int(rank)
   end
 
   def rename(tab_id, new_name) do
     __MODULE__
     |> build()
-    |> put_byte(0x2)
+    |> put_byte(@modes.rename)
     |> put_long(tab_id)
     |> put_ustring(new_name)
     |> put_byte()
@@ -47,7 +53,7 @@ defmodule Ms2ex.Packets.SkillBook do
   def add_tab(character) do
     __MODULE__
     |> build()
-    |> put_byte(0x4)
+    |> put_byte(@modes.expand)
     |> put_int(0x2)
     |> put_long(character.active_skill_tab_id)
   end

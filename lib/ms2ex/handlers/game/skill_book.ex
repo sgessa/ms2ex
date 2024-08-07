@@ -1,10 +1,15 @@
 defmodule Ms2ex.GameHandlers.SkillBook do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets}
+  alias Ms2ex.{Managers, Context, Net, Packets, Constants}
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
+
+  @load 0x0
+  @save 0x1
+  @rename 0x2
+  @expand 0x4
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -13,20 +18,16 @@ defmodule Ms2ex.GameHandlers.SkillBook do
   end
 
   # Open
-  defp handle_mode(0x0, _packet, character, session) do
+  defp handle_mode(@load, _packet, character, session) do
     push(session, Packets.SkillBook.open(character))
   end
 
   # Save
-  defp handle_mode(0x1, packet, character, session) do
+  defp handle_mode(@save, packet, character, session) do
     {active_tab_id, packet} = get_long(packet)
     {selected_tab_id, packet} = get_long(packet)
-    {_rank, packet} = get_int(packet)
+    {rank, packet} = get_int(packet)
     {tab_count, packet} = get_int(packet)
-
-    # TODO
-    # Handle selected_tab_id == 0 (switching active tab)
-    # Handle rank
 
     Enum.reduce(1..tab_count, packet, fn _, packet ->
       {tab_id, packet} = get_long(packet)
@@ -46,11 +47,11 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     {:ok, character} = Context.Characters.update(character, %{active_skill_tab_id: active_tab_id})
     Managers.Character.update(character)
 
-    push(session, Packets.SkillBook.save(character, selected_tab_id))
+    push(session, Packets.SkillBook.save(character, selected_tab_id, rank))
   end
 
   # Rename Tab
-  defp handle_mode(0x2, packet, character, session) do
+  defp handle_mode(@rename, packet, character, session) do
     {tab_id, packet} = get_long(packet)
     {new_name, _packet} = get_ustring(packet)
 
@@ -66,9 +67,10 @@ defmodule Ms2ex.GameHandlers.SkillBook do
   end
 
   # Add Tab
-  @add_tab_cost -990
-  defp handle_mode(0x4, _packet, character, session) do
-    with {:ok, wallet} <- Context.Wallets.update(character, :merets, @add_tab_cost) do
+  defp handle_mode(@expand, _packet, character, session) do
+    expand_skill_tab_cost = Constants.get(:expand_skill_tab_cost)
+
+    with {:ok, wallet} <- Context.Wallets.update(character, :merets, expand_skill_tab_cost) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.SkillBook.add_tab(character))
