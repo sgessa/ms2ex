@@ -107,33 +107,43 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  def handle_mode(mode, _packet, session) do
-    Logger.warning("Unhandled Skill Mode: #{inspect(mode)}")
-    session
+  def handle_mode(@tick_sync, packet, _session) do
+    {cast_id, packet} = get_long(packet)
+    {server_tick, _packet} = get_int(packet)
+
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Managers.SkillCast.update(skill_cast, %{
+        server_tick: server_tick
+      })
+    end
+  end
+
+  def handle_mode(@cancel, packet, _session) do
+    {cast_id, _packet} = get_long(packet)
+
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Context.Field.broadcast(skill_cast.caster, Packets.SkillCancel.bytes(skill_cast))
+    end
   end
 
   defp handle_damage(@point, packet, _session) do
     {cast_id, packet} = get_long(packet)
-    {_motion_point, packet} = get_byte(packet)
+    {attack_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
-    {rotation, packet} = get_coord(packet)
+    {direction, packet} = get_coord(packet)
     {target_count, packet} = get_byte(packet)
-    {_, packet} = get_int(packet)
-    {projectiles, _packet} = get_projectiles(packet, target_count)
+    {_iterations, packet} = get_int(packet)
 
     if skill_cast = Managers.SkillCast.get(cast_id) do
       # TODO calc next_tick
       skill_cast =
-        Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
+        Managers.SkillCast.update(skill_cast, %{
+          position: position,
+          direction: direction,
+          attack_point: attack_point
+        })
 
-      Context.Field.broadcast(
-        skill_cast.caster,
-        Packets.SkillDamage.sync_damage(
-          skill_cast,
-          target_count,
-          projectiles
-        )
-      )
+      damage_targets(packet, target_count, skill_cast)
     end
   end
 
@@ -240,32 +250,63 @@ defmodule Ms2ex.GameHandlers.Skill do
     {mob, dmg}
   end
 
-  defp get_projectiles(packet, target_count) do
-    projectiles = %{
-      attk_count: [],
-      source_ids: [],
-      target_ids: [],
-      animations: []
-    }
+  defp damage_targets(packet, 0, _skill_cast), do: packet
 
-    Enum.reduce(0..target_count, {projectiles, packet}, fn
-      0, acc ->
-        acc
-
-      _, {projectiles, packet} ->
-        {attk_count, packet} = get_int(packet)
-        {source_id, packet} = get_int(packet)
+  defp damage_targets(packet, target_count, skill_cast) do
+    Enum.reduce(1..target_count, {[], packet}, fn
+      _, {targets, packet} ->
+        {uid, packet} = get_long(packet)
         {target_id, packet} = get_int(packet)
-        {animation, packet} = get_short(packet)
+        {unknown, packet} = get_byte(packet)
 
-        projectiles = %{
-          attk_count: projectiles.attk_count ++ [attk_count],
-          source_ids: projectiles.source_ids ++ [source_id],
-          target_ids: projectiles.target_ids ++ [target_id],
-          animations: projectiles.animations ++ [animation]
-        }
+        targets =
+          targets ++
+            [
+              %{
+                prev_uid: 0x0,
+                uid: uid,
+                target_id: target_id,
+                unknown: unknown,
+                index: 0x0
+              }
+            ]
 
-        {projectiles, packet}
+        {more, packet} = get_bool(packet)
+        {targets, packet} = get_subtargets(packet, more, targets)
+
+        Context.Field.broadcast(
+          skill_cast.caster,
+          Packets.SkillDamage.target(skill_cast, targets)
+        )
+
+        {[], packet}
     end)
+  end
+
+  defp get_subtargets(packet, false, targets) do
+    {targets, packet}
+  end
+
+  defp get_subtargets(packet, true, targets) do
+    last = List.last(targets)
+    {uid, packet} = get_long(packet)
+    {target_id, packet} = get_int(packet)
+    {unknown, packet} = get_byte(packet)
+    {index, packet} = get_byte(packet)
+
+    targets =
+      targets ++
+        [
+          %{
+            prev_uid: last.uid,
+            uid: uid,
+            target_id: target_id,
+            unknown: unknown,
+            index: index
+          }
+        ]
+
+    {more, packet} = get_bool(packet)
+    get_subtargets(packet, more, targets)
   end
 end

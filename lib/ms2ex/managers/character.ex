@@ -92,7 +92,6 @@ defmodule Ms2ex.Managers.Character do
 
       Context.Field.enter_battle_stance(character)
 
-      character = %{character | skill_cast: skill_cast}
       {:reply, {:ok, character}, character}
     else
       {:reply, {:ok, character}, character}
