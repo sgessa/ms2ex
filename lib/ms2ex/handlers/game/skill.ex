@@ -97,7 +97,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {rotation, packet} = get_coord(packet)
     {_input, packet} = get_coord(packet)
     {_toggle, packet} = get_byte(packet)
-    {_unk3, packet} = get_int(packet)
+    {_unk3, packet} = get_byte(packet)
     {_unk4, _packet} = get_byte(packet)
 
     {:ok, character} = Managers.Character.lookup(session.character_id)
