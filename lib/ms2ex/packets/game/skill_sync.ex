@@ -7,7 +7,7 @@ defmodule Ms2ex.Packets.SkillSync do
     __MODULE__
     |> build()
     |> put_long(skill_cast.cast_id)
-    |> put_int(skill_cast.character_object_id)
+    |> put_int(skill_cast.caster.object_id)
     |> put_int(skill_cast.skill_id)
     |> put_short(skill_cast.skill_level)
     |> put_byte(skill_cast.motion_point)

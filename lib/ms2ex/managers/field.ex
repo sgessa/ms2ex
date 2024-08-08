@@ -75,15 +75,15 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  def handle_call({:add_region_skill, position, skill}, _from, state) do
+  def handle_call({:add_region_skill, skill_cast}, _from, state) do
     source_id = Ms2ex.generate_int()
 
     Context.Field.broadcast(
       state.topic,
-      Packets.RegionSkill.add(source_id, position, skill)
+      Packets.RegionSkill.add(source_id, skill_cast)
     )
 
-    duration = Managers.SkillCast.duration(skill)
+    duration = Managers.SkillCast.duration(skill_cast)
     Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
     {:reply, :ok, state}
   end

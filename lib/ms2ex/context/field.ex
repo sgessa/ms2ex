@@ -24,7 +24,7 @@ defmodule Ms2ex.Context.Field do
   end
 
   def add_region_skill(%Schema.Character{} = character, region_skill) do
-    call(character.field_pid, {:add_region_skill, character.position, region_skill})
+    call(character.field_pid, {:add_region_skill, region_skill})
   end
 
   def add_status(%Schema.Character{} = character, status) do

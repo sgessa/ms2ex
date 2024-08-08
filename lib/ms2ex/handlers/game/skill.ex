@@ -7,13 +7,22 @@ defmodule Ms2ex.GameHandlers.Skill do
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
+  @use 0x0
+  @attack 0x1
+  @sync 0x2
+  @tick_sync 0x3
+  @cancel 0x4
+
+  @point 0x0
+  @target 0x1
+  @splash 0x2
+
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
     handle_mode(mode, packet, session)
   end
 
-  # Use
-  def handle_mode(0x0, packet, session) do
+  def handle_mode(@use, packet, session) do
     {cast_id, packet} = get_long(packet)
     {server_tick, packet} = get_int(packet)
     {skill_id, packet} = get_int(packet)
@@ -50,7 +59,6 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     attrs = %{
       id: cast_id,
-      character_object_id: character.object_id,
       skill_id: skill_id,
       skill_level: skill_level,
       position: position,
@@ -62,7 +70,7 @@ defmodule Ms2ex.GameHandlers.Skill do
       client_tick: client_tick
     }
 
-    skill_cast = Managers.SkillCast.build(attrs)
+    skill_cast = Managers.SkillCast.build(character, attrs)
     Managers.SkillCast.start(skill_cast)
 
     {:ok, character} = Managers.Character.cast_skill(character, skill_cast)
@@ -73,14 +81,12 @@ defmodule Ms2ex.GameHandlers.Skill do
     push(session, Packets.Stats.set_character_stats(character))
   end
 
-  # Attack
-  def handle_mode(0x1, packet, session) do
+  def handle_mode(@attack, packet, session) do
     {damage_type, packet} = get_byte(packet)
     handle_damage(damage_type, packet, session)
   end
 
-  # Sync
-  def handle_mode(0x2, packet, session) do
+  def handle_mode(@sync, packet, session) do
     {_cast_id, packet} = get_long(packet)
     {_skill_id, packet} = get_int(packet)
     {_skill_level, packet} = get_int(packet)
@@ -115,8 +121,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
   def handle_mode(_mode, _packet, session), do: session
 
-  # Sync Damage
-  defp handle_damage(0x0, packet, session) do
+  defp handle_damage(@point, packet, session) do
     {cast_id, packet} = get_long(packet)
     {_motion_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
@@ -136,8 +141,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  # Damage
-  defp handle_damage(0x1, packet, session) do
+  defp handle_damage(@target, packet, session) do
     {cast_id, packet} = get_long(packet)
     {attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
@@ -151,9 +155,6 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_int(packet)
 
     {:ok, character} = Managers.Character.lookup(session.character_id)
-
-    # TODO: skill_cast.id == cast_id doesn't always matches
-    # targeting won't work randomly
 
     if character.skill_cast.id == cast_id do
       crit? = Context.Damage.roll_crit(character)
@@ -184,26 +185,28 @@ defmodule Ms2ex.GameHandlers.Skill do
   end
 
   # AoE Damage
-  defp handle_damage(0x2, packet, session) do
+  defp handle_damage(@splash, packet, session) do
     {cast_id, packet} = get_long(packet)
-    {_mode, packet} = get_byte(packet)
+    {attack_point, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
     {_, packet} = get_int(packet)
-    {_position, packet} = get_coord(packet)
-    {_rotation, _packet} = get_coord(packet)
+    {position, packet} = get_coord(packet)
+    {rotation, _packet} = get_coord(packet)
 
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if character.skill_cast.id == cast_id do
-      conditions =
-        character.skill_cast |> Managers.SkillCast.condition_skills() |> Enum.filter(& &1.splash)
+      skill_cast =
+        Map.merge(character.skill_cast, %{
+          attack_point: attack_point,
+          position: position,
+          rotation: rotation
+        })
 
-      for s <- conditions do
-        skill_cast =
-          Managers.SkillCast.build(s.id, s.level, character.skill_cast, session.server_tick)
+      character = Map.put(character, :skill_cast, skill_cast)
+      Managers.Character.update(character)
 
-        Context.Field.add_region_skill(character, skill_cast)
-      end
+      Context.Field.add_region_skill(character, skill_cast)
     end
   end
 

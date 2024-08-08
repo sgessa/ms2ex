@@ -1,53 +1,41 @@
 defmodule Ms2ex.Managers.SkillCast do
   alias Ms2ex.Storage
   alias Ms2ex.Enums
+  alias Ms2ex.Types.Coord
 
   defstruct [
-    :character_object_id,
     :client_tick,
+    :server_tick,
+    :next_tick,
     :id,
     :meta,
     :effect,
-    :parent_skill,
-    :server_tick,
+    :points,
     :skill_id,
     :skill_level,
     :position,
     :rotation,
     :direction,
     :rotate2z,
+    :caster,
     motion_point: 0,
     attack_point: 0
   ]
 
-  def build(skill_id, skill_level, parent_skill, srv_tick) do
-    meta = Storage.Skills.get_meta(skill_id)
-
-    %__MODULE__{
-      id: Ms2ex.generate_long(),
-      parent_skill: parent_skill,
-      server_tick: srv_tick,
-      skill_id: skill_id,
-      skill_level: skill_level,
-      meta: meta,
-      effect: List.first(meta.additional_effects)
-    }
-  end
-
-  def build(attrs) do
+  def build(caster, attrs) do
     meta = Storage.Skills.get_meta(attrs[:skill_id])
     effect = List.first(meta.additional_effects)
-    attrs = attrs |> Map.put(:meta, meta) |> Map.put(:effect, effect)
+    attrs = attrs |> Map.put(:meta, meta) |> Map.put(:effect, effect) |> Map.put(:caster, caster)
 
     struct(__MODULE__, attrs)
   end
 
   def get(skill_cast_id), do: Agent.get(process_name(skill_cast_id), & &1)
 
-  def duration(%__MODULE__{skill_id: skill_id}) do
-    case Storage.Skills.get_region_skill(skill_id) do
+  def duration(%__MODULE__{} = skill_cast) do
+    case __MODULE__.splash(skill_cast) do
       %{interval: interval} -> interval
-      _ -> 5_000
+      _ -> 0
     end
   end
 
@@ -102,12 +90,33 @@ defmodule Ms2ex.Managers.SkillCast do
     end
   end
 
-  def magic_path(%__MODULE__{meta: meta, motion_point: motion_point, attack_point: attack_point}) do
-    motion = meta[:motions] |> Enum.at(motion_point)
-    attack = motion[:attacks] |> Enum.at(attack_point)
-    cube_magic_path_id = attack[:cube_magic_path_id] || 0
+  def attack_point(%__MODULE__{motion_point: motion, attack_point: attack} = skill_cast) do
+    level = skill_cast.meta[:levels]["#{skill_cast.skill_level}"]
+    motion = level[:motions] |> Enum.at(motion)
+    motion[:attacks] |> Enum.at(attack)
+  end
 
-    Storage.Table.MagicPaths.get(cube_magic_path_id)
+  def splash(%__MODULE__{} = skill_cast) do
+    attack_skill = __MODULE__.attack_point(skill_cast)[:skills] |> List.first()
+    attack_skill[:splash]
+  end
+
+  def magic_path(%__MODULE__{} = skill_cast) do
+    cube_magic_path_id = __MODULE__.attack_point(skill_cast)[:cube_magic_path_id] || 0
+
+    case Storage.Table.MagicPaths.get(cube_magic_path_id) do
+      paths when is_list(paths) and length(paths) > 0 ->
+        Enum.map(paths, fn path ->
+          # TODO fire_offset rotate if path.rotate?
+          fire_offset = struct(Coord, path[:fire_offset] || %{})
+          Coord.sum(skill_cast.position, fire_offset)
+
+          # TODO align position unless path.ignoreAdjust
+        end)
+
+      _ ->
+        [skill_cast.position]
+    end
   end
 
   def owner_buff?(%__MODULE__{effect: effect}) do
@@ -148,6 +157,10 @@ defmodule Ms2ex.Managers.SkillCast do
 
   def start(%__MODULE__{} = skill_cast) do
     Agent.start(fn -> skill_cast end, name: process_name(skill_cast.id))
+  end
+
+  def update(%__MODULE__{} = skill_cast) do
+    Agent.update(process_name(skill_cast.id), skill_cast)
   end
 
   defp process_name(skill_cast_id), do: :"skill_cast:#{skill_cast_id}"
