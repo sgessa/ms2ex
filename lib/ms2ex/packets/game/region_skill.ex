@@ -1,12 +1,13 @@
 defmodule Ms2ex.Packets.RegionSkill do
-  alias Ms2ex.{Packets, Managers}
+  alias Ms2ex.Packets
+  alias Ms2ex.Types.SkillCast
 
   import Packets.PacketWriter
 
   @modes %{add: 0x0, remove: 0x1}
 
   def add(source_id, skill_cast) do
-    points = Managers.SkillCast.magic_path(skill_cast)
+    points = SkillCast.magic_path(skill_cast)
 
     __MODULE__
     |> build()

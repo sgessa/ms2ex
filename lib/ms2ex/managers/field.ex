@@ -11,6 +11,8 @@ defmodule Ms2ex.Managers.Field do
   }
 
   alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types.SkillCast
+
   alias Ms2ex.Managers.Field
 
   @updates_intval 1000
@@ -83,7 +85,7 @@ defmodule Ms2ex.Managers.Field do
       Packets.RegionSkill.add(source_id, skill_cast)
     )
 
-    duration = Managers.SkillCast.duration(skill_cast)
+    duration = SkillCast.duration(skill_cast)
     Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
     {:reply, :ok, state}
   end

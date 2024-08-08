@@ -50,27 +50,22 @@ defmodule Ms2ex.GameHandlers.Skill do
         {nil, nil, packet}
       end
 
-    # if (flag) {
-    #   packet.ReadInt()
-    #   string unkString = packet.ReadUnicodeString()
-    # }
-
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
-    attrs = %{
-      id: cast_id,
-      skill_id: skill_id,
-      skill_level: skill_level,
-      position: position,
-      direction: direction,
-      rotation: rotation,
-      rotate2z: rotate2z,
-      motion_point: motion_point,
-      server_tick: server_tick,
-      client_tick: client_tick
-    }
+    skill_cast =
+      Types.SkillCast.build(character, %{
+        id: cast_id,
+        skill_id: skill_id,
+        skill_level: skill_level,
+        position: position,
+        direction: direction,
+        rotation: rotation,
+        rotate2z: rotate2z,
+        motion_point: motion_point,
+        server_tick: server_tick,
+        client_tick: client_tick
+      })
 
-    skill_cast = Managers.SkillCast.build(character, attrs)
     Managers.SkillCast.start(skill_cast)
 
     {:ok, character} = Managers.Character.cast_skill(character, skill_cast)
@@ -86,8 +81,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     handle_damage(damage_type, packet, session)
   end
 
-  def handle_mode(@sync, packet, session) do
-    {_cast_id, packet} = get_long(packet)
+  def handle_mode(@sync, packet, _session) do
+    {cast_id, packet} = get_long(packet)
     {_skill_id, packet} = get_int(packet)
     {_skill_level, packet} = get_int(packet)
     {motion_point, packet} = get_byte(packet)
@@ -100,28 +95,24 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_unk3, packet} = get_byte(packet)
     {_unk4, _packet} = get_byte(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
-
-    # TODO
-    # Ensure cast_id == character.skill_cast.cast_id
-
-    skill_cast =
-      Map.merge(character.skill_cast, %{
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Managers.SkillCast.update(skill_cast, %{
         motion_point: motion_point,
         position: position,
         direction: direction,
         rotation: rotation
       })
 
-    character = Map.put(character, :skill_cast, skill_cast)
-    Managers.Character.update(character)
-
-    Context.Field.broadcast(character, Packets.SkillSync.bytes(skill_cast))
+      Context.Field.broadcast(skill_cast.caster, Packets.SkillSync.bytes(skill_cast))
+    end
   end
 
-  def handle_mode(_mode, _packet, session), do: session
+  def handle_mode(mode, _packet, session) do
+    Logger.warning("Unhandled Skill Mode: #{inspect(mode)}")
+    session
+  end
 
-  defp handle_damage(@point, packet, session) do
+  defp handle_damage(@point, packet, _session) do
     {cast_id, packet} = get_long(packet)
     {_motion_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
@@ -130,13 +121,18 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_int(packet)
     {projectiles, _packet} = get_projectiles(packet, target_count)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
-    coords = {position, rotation}
-
     if skill_cast = Managers.SkillCast.get(cast_id) do
+      # TODO calc next_tick
+      skill_cast =
+        Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
+
       Context.Field.broadcast(
-        character,
-        Packets.SkillDamage.sync_damage(skill_cast, coords, character, target_count, projectiles)
+        skill_cast.caster,
+        Packets.SkillDamage.sync_damage(
+          skill_cast,
+          target_count,
+          projectiles
+        )
       )
     end
   end
@@ -154,38 +150,42 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      skill_cast =
+        Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
 
-    if character.skill_cast.id == cast_id do
-      crit? = Context.Damage.roll_crit(character)
-      mobs = damage_targets(session, character, crit?, target_count, [], packet)
+      crit? = Context.Damage.roll_crit(skill_cast.caster)
+      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
 
       # TODO check whether it's a player or an ally
-      if Managers.SkillCast.heal?(character.skill_cast) do
+      if Types.SkillCast.heal?(skill_cast) do
         status =
-          Types.SkillStatus.new(character.skill_cast, character.object_id, character.object_id, 1)
+          Types.SkillStatus.new(
+            skill_cast,
+            skill_cast.caster.object_id,
+            skill_cast.caster.object_id,
+            1
+          )
 
-        Context.Field.add_status(character, status)
+        Context.Field.add_status(skill_cast.caster, status)
 
         # TODO heal based on stats
         heal = 50
-        Context.Field.broadcast(character, Packets.SkillDamage.heal(status, heal))
+        Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
 
-        {:ok, character} = Managers.Character.increase_stat(character, :health, heal)
+        {:ok, character} = Managers.Character.increase_stat(skill_cast.caster, :health, heal)
         push(session, Packets.Stats.update_char_stats(character, :health))
       else
-        coords = {position, rotation}
-
         Context.Field.broadcast(
-          character,
-          Packets.SkillDamage.damage(character, mobs, coords, attack_counter)
+          skill_cast.caster,
+          Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
         )
       end
     end
   end
 
   # AoE Damage
-  defp handle_damage(@splash, packet, session) do
+  defp handle_damage(@splash, packet, _session) do
     {cast_id, packet} = get_long(packet)
     {attack_point, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
@@ -193,53 +193,48 @@ defmodule Ms2ex.GameHandlers.Skill do
     {position, packet} = get_coord(packet)
     {rotation, _packet} = get_coord(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Managers.SkillCast.update(skill_cast, %{
+        attack_point: attack_point,
+        position: position,
+        rotation: rotation
+      })
 
-    if character.skill_cast.id == cast_id do
-      skill_cast =
-        Map.merge(character.skill_cast, %{
-          attack_point: attack_point,
-          position: position,
-          rotation: rotation
-        })
-
-      character = Map.put(character, :skill_cast, skill_cast)
-      Managers.Character.update(character)
-
-      Context.Field.add_region_skill(character, skill_cast)
+      Context.Field.add_region_skill(skill_cast.caster, skill_cast)
     end
   end
 
-  defp damage_targets(session, character, crit?, target_count, mobs, packet)
+  defp damage_targets(skill_cast, crit?, target_count, mobs, packet)
        when target_count > 0 do
     {obj_id, packet} = get_int(packet)
     {_, packet} = get_byte(packet)
 
     mobs =
-      case Managers.FieldNpc.call(:lookup, character, obj_id) do
+      case Managers.FieldNpc.call(:lookup, skill_cast.caster, obj_id) do
         {:ok, %{dead?: false, type: :mob} = mob} ->
-          {mob, dmg} = damage_mob(character, mob, crit?)
-          Context.Field.broadcast(character, Packets.Stats.update_mob_stat(mob, :health))
+          {mob, dmg} = damage_mob(skill_cast, mob, crit?)
+          Context.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
           mobs ++ [{mob, dmg}]
 
         _any ->
           mobs
       end
 
-    damage_targets(session, character, crit?, target_count - 1, mobs, packet)
+    damage_targets(skill_cast, crit?, target_count - 1, mobs, packet)
   end
 
-  defp damage_targets(_session, _char, _crit?, _target_count, mobs, _packet), do: mobs
+  defp damage_targets(_skill_cast, _crit?, _target_count, mobs, _packet), do: mobs
 
-  defp damage_mob(character, mob, crit?) do
-    skill_cast = character.skill_cast
-    dmg = Context.Damage.calculate(character, mob, crit?)
-    {:ok, mob} = Managers.FieldNpc.call({:inflict_dmg, character, dmg}, character, mob)
+  defp damage_mob(skill_cast, mob, crit?) do
+    dmg = Context.Damage.calculate(skill_cast, mob, crit?)
 
-    if Managers.SkillCast.element_debuff?(skill_cast) or
-         Managers.SkillCast.entity_debuff?(skill_cast) do
-      status = Types.SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
-      Context.Field.add_status(character, status)
+    {:ok, mob} =
+      Managers.FieldNpc.call({:inflict_dmg, skill_cast.caster, dmg}, skill_cast.caster, mob)
+
+    if Types.SkillCast.element_debuff?(skill_cast) or
+         Types.SkillCast.entity_debuff?(skill_cast) do
+      status = Types.SkillStatus.new(skill_cast, mob.object_id, skill_cast.caster.object_id, 1)
+      Context.Field.add_status(skill_cast.caster, status)
     end
 
     {mob, dmg}

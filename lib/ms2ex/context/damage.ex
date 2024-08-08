@@ -1,6 +1,7 @@
 defmodule Ms2ex.Context.Damage do
-  alias Ms2ex.{Schema, Managers}
+  alias Ms2ex.Schema
   alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types.SkillCast
 
   def roll_crit(%Schema.Character{} = character) do
     crit_rate = character.stats.critical_rate_cur + 50
@@ -8,16 +9,16 @@ defmodule Ms2ex.Context.Damage do
     Enum.random(1..1000) <= crit_rate
   end
 
-  def calculate(%Schema.Character{} = caster, %FieldNpc{} = mob, crit? \\ false) do
-    skill_cast = caster.skill_cast
+  def calculate(%SkillCast{} = skill_cast, %FieldNpc{} = mob, crit? \\ false) do
+    caster = skill_cast.caster
 
     # TODO calculate from character stats
     attk_dmg = 300
 
     skill_dmg_rate =
       if crit?,
-        do: Managers.SkillCast.crit_damage_rate(skill_cast),
-        else: Managers.SkillCast.damage_rate(skill_cast)
+        do: SkillCast.crit_damage_rate(skill_cast),
+        else: SkillCast.damage_rate(skill_cast)
 
     skill_dmg = skill_dmg_rate * attk_dmg
 
@@ -37,16 +38,16 @@ defmodule Ms2ex.Context.Damage do
     %{dmg: dmg, crit?: crit?}
   end
 
-  defp calc_enemy_res(skill_cast, mob) do
-    if Managers.SkillCast.physical?(skill_cast) do
+  defp calc_enemy_res(%SkillCast{} = skill_cast, mob) do
+    if SkillCast.physical?(skill_cast) do
       mob.stats.physical_res.total
     else
       mob.stats.magical_res.total
     end
   end
 
-  defp calc_pierce_res(skill_cast, caster) do
-    if Managers.SkillCast.physical?(skill_cast) do
+  defp calc_pierce_res(%SkillCast{} = skill_cast, caster) do
+    if SkillCast.physical?(skill_cast) do
       caster.stats.physical_atk_cur
     else
       caster.stats.magical_atk_cur
