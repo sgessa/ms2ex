@@ -17,7 +17,8 @@ defmodule Ms2ex.Packets.SkillDamage do
     |> put_byte(skill_cast.attack_point)
     |> put_short_coord(skill_cast.position)
     |> put_coord(skill_cast.direction)
-    |> put_bool(true)
+    # TODO: FIXME ??? should be bool
+    |> put_byte()
     |> put_int(skill_cast.server_tick)
     |> put_byte(length(targets))
     |> reduce(targets, fn
