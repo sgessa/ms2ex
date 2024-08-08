@@ -2,11 +2,7 @@ defmodule Ms2ex.Schema.Character do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ms2ex.{Context, EctoTypes, Schema}
-
-  @genders [male: 0, female: 1]
-  @jobs Map.to_list(Ms2ex.ProtoMetadata.Job.mapping())
-  @max_level 70
+  alias Ms2ex.{Enums, Context, EctoTypes, Schema}
 
   @fields [
     :awakened,
@@ -52,51 +48,49 @@ defmodule Ms2ex.Schema.Character do
 
     field :awakened, :boolean, default: false
 
-    # TODO
-    field :badges, {:array, :map}, virtual: true, default: []
-
-    # TODO
-    field :clubs, {:array, :map}, virtual: true, default: []
-
-    # TODO
-    field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
-
     field :active_skill_tab_id, :integer
-    field :animation, :integer, virtual: true, default: 0
-    field :channel_id, :integer, virtual: true
     field :discovered_maps, {:array, :integer}, default: []
-    field :dismantle_inventory, EctoTypes.Term, virtual: true
     field :exp, :integer, default: 0
-    field :field_pid, EctoTypes.Term, virtual: true
-    field :gender, Ecto.Enum, values: @genders, default: :male
-    field :group_chat_ids, {:array, :integer}, virtual: true, default: []
-    field :guild_name, :string, virtual: true, default: "h4x0rzz"
-    field :home_name, :string, virtual: true, default: ""
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
-    field :job, Ecto.Enum, values: @jobs
+    field :job, Enums.Job, default: :newbie
     field :map_id, :integer
     field :motto, :string, default: "Let's Maple!"
-    field :mount, :map, virtual: true
     field :name, :string
-    field :object_id, :integer, virtual: true, default: 0
-    field :online?, :boolean, default: false, virtual: true
-    field :party_id, :integer, virtual: true
-    field :position, EctoTypes.Term, virtual: true
+
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1
     field :profile_url, :string, default: ""
     field :rest_exp, :integer, default: 0
+    field :skin_color, EctoTypes.Term
+    field :taxis, {:array, :integer}, default: []
+    field :title_id, :integer, default: 0
+
+    # Virtuals
+
+    # TODO
+    field :badges, {:array, :map}, virtual: true, default: []
+    field :clubs, {:array, :map}, virtual: true, default: []
+    field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
+
+    field :animation, :integer, virtual: true, default: 0
+    field :channel_id, :integer, virtual: true
+    field :field_pid, EctoTypes.Term, virtual: true
+    field :gender, Ms2ex.Enums.Gender, default: :male
+    field :guild_name, :string, virtual: true, default: ""
+    field :home_name, :string, virtual: true, default: ""
+    field :object_id, :integer, virtual: true, default: 0
+    field :online?, :boolean, default: false, virtual: true
+    field :group_chat_ids, {:array, :integer}, virtual: true, default: []
+    field :dismantle_inventory, EctoTypes.Term, virtual: true
+    field :mount, :map, virtual: true
+    field :party_id, :integer, virtual: true
+    field :position, EctoTypes.Term, virtual: true
     field :rotation, EctoTypes.Term, virtual: true
     field :safe_position, EctoTypes.Term, virtual: true
     field :session_pid, EctoTypes.Term, virtual: true
     field :sender_session_pid, EctoTypes.Term, virtual: true
     field :skill_cast, EctoTypes.Term, virtual: true
-    field :skin_color, EctoTypes.Term
-    field :taxis, {:array, :integer}, default: []
-    field :title_id, :integer, default: 0
-
-    # TODO
     field :unknown_id, :integer, virtual: true, default: 0x01EF80C2
 
     timestamps(type: :utc_datetime)
@@ -117,17 +111,8 @@ defmodule Ms2ex.Schema.Character do
     |> unique_constraint(:name)
   end
 
-  def job_id(%{awakened: true} = char), do: real_job_id(char) * 10 + 1
-
-  def job_id(char), do: real_job_id(char) * 10
-
-  def real_job_id(character) do
-    Keyword.get(@jobs, character.job)
-  end
-
-  def max_level(), do: @max_level
-
-  def genders(), do: @genders
+  def job_id(%{awakened: true} = char), do: Enums.Job.get_value(char.job) * 10 + 1
+  def job_id(char), do: Enums.Job.get_value(char.job) * 10
 
   def set_default_assocs(attrs) do
     job = Map.get(attrs, :job)

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.InventoryTab do
-  @mapping %{
+  use Ms2ex.Enum, %{
     gear: 0,
     outfit: 1,
     mount: 2,
@@ -16,6 +16,4 @@ defmodule Ms2ex.Enums.InventoryTab do
     lapenshard: 15,
     fragment: 16
   }
-
-  use Ms2ex.Enums
 end

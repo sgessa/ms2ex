@@ -123,8 +123,8 @@ defmodule Ms2ex.Packets.Party do
     |> put_byte(0x13)
     |> put_long(character.id)
     |> put_long(character.account_id)
-    |> put_int(character.stats.hp_max)
-    |> put_int(character.stats.hp_cur)
+    |> put_int(character.stats.health_max)
+    |> put_int(character.stats.health_cur)
     |> put_short()
   end
 

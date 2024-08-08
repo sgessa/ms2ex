@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.InsigniaType do
-  @mapping %{
+  use Ms2ex.Enum, %{
     :none => 1,
     :level => 2,
     :enchant => 3,
@@ -13,6 +13,4 @@ defmodule Ms2ex.Enums.InsigniaType do
     :burning => 11,
     :survival_level => 12
   }
-
-  use Ms2ex.Enums
 end

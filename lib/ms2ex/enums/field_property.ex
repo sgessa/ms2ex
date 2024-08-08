@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.FieldProperty do
-  @mapping %{
+  use Ms2ex.Enum, %{
     gravity: 1,
     music_concert: 2,
     hide_player: 3,
@@ -12,6 +12,4 @@ defmodule Ms2ex.Enums.FieldProperty do
     local_camera: 10,
     photo_studio: 11
   }
-
-  use Ms2ex.Enums
 end

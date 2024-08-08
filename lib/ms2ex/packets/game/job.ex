@@ -1,7 +1,7 @@
 defmodule Ms2ex.Packets.Job do
   import Ms2ex.Packets.PacketWriter
 
-  alias Ms2ex.{Context, Schema}
+  alias Ms2ex.{Context, Schema, Enums}
 
   @job_skill_splits %{
     none: 0,
@@ -20,7 +20,7 @@ defmodule Ms2ex.Packets.Job do
   }
 
   def save(character) do
-    real_job_id = Schema.Character.real_job_id(character)
+    real_job_id = Enums.Job.get_value(character.job)
 
     __MODULE__
     |> build()

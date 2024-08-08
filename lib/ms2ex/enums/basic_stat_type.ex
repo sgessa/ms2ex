@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.BasicStatType do
-  @mapping %{
+  use Ms2ex.Enum, %{
     strength: 0,
     dexterity: 1,
     intelligence: 2,
@@ -37,5 +37,9 @@ defmodule Ms2ex.Enums.BasicStatType do
     pet_bonus_atk: 34
   }
 
-  use Ms2ex.Enums
+  def ordered_keys() do
+    values()
+    |> Enum.sort()
+    |> Enum.map(&get_key(&1))
+  end
 end

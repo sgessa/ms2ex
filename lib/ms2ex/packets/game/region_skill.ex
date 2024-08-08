@@ -1,44 +1,36 @@
 defmodule Ms2ex.Packets.RegionSkill do
-  alias Ms2ex.{Context, ProtoMetadata, Packets, SkillCast}
+  alias Ms2ex.Packets
+  alias Ms2ex.Types.SkillCast
 
   import Packets.PacketWriter
 
-  def add(source_id, effect_position, skill_cast) do
-    parent = skill_cast.parent_skill
-    magic_path = SkillCast.magic_path(parent)
+  @modes %{add: 0x0, remove: 0x1}
 
-    moves =
-      if length(magic_path.moves) > 0,
-        do: magic_path.moves,
-        else: [%ProtoMetadata.MagicPathMove{}]
+  def add(source_id, skill_cast) do
+    points = SkillCast.magic_path(skill_cast)
 
     __MODULE__
     |> build()
-    |> put_byte(0x0)
+    |> put_byte(@modes.add)
     |> put_int(source_id)
-    |> put_int(source_id)
-    |> put_int()
-    |> put_byte(length(moves))
-    |> put_moves(moves, effect_position)
+    |> put_int(skill_cast.caster.object_id)
+    |> put_int(skill_cast.next_tick)
+    |> put_byte(length(points))
+    |> reduce(points, fn point, packet ->
+      put_coord(packet, point)
+    end)
     |> put_int(skill_cast.skill_id)
     |> put_short(skill_cast.skill_level)
-    |> put_long()
-  end
-
-  defp put_moves(packet, [], _effect_position), do: packet
-
-  defp put_moves(packet, [move | moves], effect_position) do
-    cast_position = Context.MapBlock.add(move.fire_offset_position, effect_position)
-
-    packet
-    |> put_coord(Context.MapBlock.closest_block(cast_position))
-    |> put_moves(moves, effect_position)
+    # RotationH
+    |> put_float(skill_cast.rotation.z)
+    # RotationV / 100
+    |> put_float()
   end
 
   def remove(source_id) do
     __MODULE__
     |> build()
-    |> put_byte(0x1)
+    |> put_byte(@modes.remove)
     |> put_int(source_id)
   end
 end

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.ProxyGameObj do
-  alias Ms2ex.{Schema, Packets}
+  alias Ms2ex.{Schema, Packets, Enums}
 
   import Bitwise
   import Packets.PacketWriter
@@ -25,7 +25,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
   }
 
   def load_player(character) do
-    real_job_id = Schema.Character.real_job_id(character)
+    real_job_id = Enums.Job.get_value(character.job)
 
     __MODULE__
     |> build()

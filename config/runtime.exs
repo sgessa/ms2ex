@@ -35,3 +35,8 @@ config :ms2ex, Ms2ex,
     resource: "http://#{server_address}",
     locale: "na"
   }
+
+# Imports server constants
+config :ms2ex, :constants,
+  character_max_level: 70,
+  expand_skill_tab_cost: -990

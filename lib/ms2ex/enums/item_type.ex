@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.ItemType do
-  @mapping %{
+  use Ms2ex.Enum, %{
     none: 0,
     currency: 1,
     furnishing: 2,
@@ -32,6 +32,4 @@ defmodule Ms2ex.Enums.ItemType do
     knuckle: 55,
     orb: 56
   }
-
-  use Ms2ex.Enums
 end

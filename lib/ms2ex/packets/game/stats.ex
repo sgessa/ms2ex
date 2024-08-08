@@ -26,14 +26,14 @@ defmodule Ms2ex.Packets.Stats do
     |> put_byte(@mode.update_char_stats)
     |> put_byte(0x1)
     |> reduce(updated_stats, fn
-      :hp, packet ->
+      :health, packet ->
         packet
-        |> put_byte(Enums.StatId.get_value(:hp))
+        |> put_byte(Enums.BasicStatType.get_value(:health))
         |> put_hp(character.stats)
 
       s, packet ->
         packet
-        |> put_byte(Enums.StatId.get_value(s))
+        |> put_byte(Enums.BasicStatType.get_value(s))
         |> put_stat(character.stats, s)
     end)
   end
@@ -51,8 +51,8 @@ defmodule Ms2ex.Packets.Stats do
   end
 
   def put_stats(packet, stats) do
-    reduce(packet, Enums.StatId.ordered_keys(), fn
-      :hp, packet ->
+    reduce(packet, Enums.BasicStatType.ordered_keys(), fn
+      :health, packet ->
         put_hp(packet, stats)
 
       stat, packet ->
@@ -75,9 +75,9 @@ defmodule Ms2ex.Packets.Stats do
 
   defp put_hp(packet, stats) do
     packet
-    |> put_long(Map.get(stats, :hp_max))
-    |> put_long(Map.get(stats, :hp_min))
-    |> put_long(Map.get(stats, :hp_cur))
+    |> put_long(Map.get(stats, :health_max))
+    |> put_long(Map.get(stats, :health_min))
+    |> put_long(Map.get(stats, :health_cur))
   end
 
   defp put_stat(packet, stats, stat) do

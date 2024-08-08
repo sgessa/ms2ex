@@ -1,13 +1,13 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.{
     Context,
-    ProtoMetadata,
     Net,
     Packets,
     Repo,
     Schema,
     SessionManager,
-    Types
+    Types,
+    Enums
   }
 
   import Packets.PacketReader
@@ -70,7 +70,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     attrs = %{
       gender: gender,
-      job: ProtoMetadata.Job.key(job),
+      job: Enums.Job.get_value(job),
       map_id: 2_000_023,
       name: name,
       skin_color: skin_color

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.SpecialStatType do
-  @mapping %{
+  use Ms2ex.Enum, %{
     none: 0,
     experience: 1,
     meso: 2,
@@ -181,6 +181,4 @@ defmodule Ms2ex.Enums.SpecialStatType do
     offensive_magical_damage: 178,
     reduce_game_item_socket_unlock_fee: 179
   }
-
-  use Ms2ex.Enums
 end
