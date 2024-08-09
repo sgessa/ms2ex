@@ -27,10 +27,6 @@ defmodule Ms2ex.Context.Field do
     call(character.field_pid, {:add_region_skill, region_skill})
   end
 
-  def add_status(%Schema.Character{} = character, status) do
-    call(character.field_pid, {:add_status, status})
-  end
-
   def add_mob(%Schema.Character{} = character, %{type: :npc} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
@@ -124,9 +120,11 @@ defmodule Ms2ex.Context.Field do
     Process.whereis(field_name(map_id, channel_id))
   end
 
-  defp call(nil, _args), do: :error
-  defp call(pid, args), do: GenServer.call(pid, args)
+  def call(%Schema.Character{field_pid: field_pid}, args), do: GenServer.call(field_pid, args)
+  def call(nil, _args), do: :error
+  def call(pid, args), do: GenServer.call(pid, args)
 
-  defp cast(nil, _args), do: :error
-  defp cast(pid, args), do: GenServer.cast(pid, args)
+  def cast(%Schema.Character{field_pid: field_pid}, args), do: GenServer.cast(field_pid, args)
+  def cast(nil, _args), do: :error
+  def cast(pid, args), do: GenServer.cast(pid, args)
 end

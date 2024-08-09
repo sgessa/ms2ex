@@ -66,9 +66,7 @@ defmodule Ms2ex.GameHandlers.Skill do
         client_tick: client_tick
       })
 
-    Managers.SkillCast.start(skill_cast)
-
-    {:ok, character} = Managers.Character.cast_skill(character, skill_cast)
+    {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
 
     state = {unkown, is_hold, hold_int, hold_string}
     Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, state))
@@ -168,22 +166,26 @@ defmodule Ms2ex.GameHandlers.Skill do
       mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
 
       # TODO check whether it's a player or an ally
-      if Types.SkillCast.heal?(skill_cast) do
-        status =
-          Types.SkillStatus.new(
-            skill_cast,
-            skill_cast.caster.object_id,
-            skill_cast.caster.object_id,
-            1
-          )
+      # Types.SkillCast.heal?(skill_cast)
+      if false do
+        # TODO BUFF
+        # status =
+        #   Types.SkillStatus.new(
+        #     skill_cast,
+        #     skill_cast.caster.object_id,
+        #     skill_cast.caster.object_id,
+        #     1
+        #   )
 
-        Context.Field.add_status(skill_cast.caster, status)
+        # Context.Field.add_status(skill_cast.caster, status)
 
         # TODO heal based on stats
         heal = 50
-        Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
+        # Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
 
-        {:ok, character} = Managers.Character.increase_stat(skill_cast.caster, :health, heal)
+        {:ok, character} =
+          Managers.Character.cast(skill_cast.caster, {:increase_stat, :health, heal})
+
         push(session, Packets.Stats.update_char_stats(character, :health))
       else
         Context.Field.broadcast(
@@ -241,11 +243,12 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, mob} =
       Managers.FieldNpc.call({:inflict_dmg, skill_cast.caster, dmg}, skill_cast.caster, mob)
 
-    if Types.SkillCast.element_debuff?(skill_cast) or
-         Types.SkillCast.entity_debuff?(skill_cast) do
-      status = Types.SkillStatus.new(skill_cast, mob.object_id, skill_cast.caster.object_id, 1)
-      Context.Field.add_status(skill_cast.caster, status)
-    end
+    # TODO Buff
+    # if Types.SkillCast.element_debuff?(skill_cast) or
+    #      Types.SkillCast.entity_debuff?(skill_cast) do
+    #   status = Types.SkillStatus.new(skill_cast, mob.object_id, skill_cast.caster.object_id, 1)
+    #   Context.Field.add_status(skill_cast.caster, status)
+    # end
 
     {mob, dmg}
   end

@@ -12,7 +12,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["heal"], character, session) do
     max_hp = character.stats.health_max
-    Managers.Character.increase_stat(character, :health, max_hp)
+    Managers.Character.cast(character, {:increase_stat, :health, max_hp})
     session
   end
 

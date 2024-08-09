@@ -14,7 +14,7 @@ defmodule Ms2ex.Managers.SkillCast do
   end
 
   def start(%SkillCast{} = skill_cast) do
-    Agent.start(fn -> skill_cast end, name: process_name(skill_cast.id))
+    Agent.start_link(fn -> skill_cast end, name: process_name(skill_cast.id))
   end
 
   def update(%SkillCast{} = skill_cast, attrs) do

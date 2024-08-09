@@ -26,6 +26,6 @@ defmodule Ms2ex.Context.Mobs do
   def reward_exp(mob) do
     # TODO party exp
     # TODO get mob exp (instead of hardcoded 10)
-    Managers.Character.earn_exp(mob.last_attacker, 10)
+    Managers.Character.cast(mob.last_attacker, {:earn_exp, 10})
   end
 end

@@ -10,7 +10,7 @@ defmodule Ms2ex.Storage.Skills do
   end
 
   def get_effect(skill_id, skill_level) do
-    Storage.get(:additional_effect, "#{skill_id}_#{skill_level}")
+    Storage.get("additional-effect", "#{skill_id}_#{skill_level}")
   end
 
   def get_meta(skill_id) do

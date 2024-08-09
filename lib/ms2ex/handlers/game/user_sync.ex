@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     if is_out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
-      Managers.Character.receive_fall_dmg(character)
+      Managers.Character.cast(character, {:receive_fall_dmg})
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     end
   end

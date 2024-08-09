@@ -90,10 +90,8 @@ defmodule Ms2ex.Managers.Field do
     {:reply, :ok, state}
   end
 
-  def handle_call({:add_status, status}, _from, state) do
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, status))
-    Process.send_after(self(), {:remove_status, status}, status.duration)
-    {:reply, :ok, state}
+  def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
+    {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do
