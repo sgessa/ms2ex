@@ -7,25 +7,25 @@ defmodule Ms2ex.Packets.Buff do
     update: 2
   }
 
-  def send(mode, status) do
+  def send(mode, buff) do
     __MODULE__
     |> build()
     |> put_byte(Map.get(@modes, mode))
-    |> put_int(status.target)
-    |> put_int(status.id)
-    |> put_int(status.source)
-    |> handle_mode(mode, status)
+    |> put_int(buff.owner.object_id)
+    |> put_int(buff.object_id)
+    |> put_int(buff.caster.object_id)
+    |> handle_mode(mode, buff)
   end
 
-  defp handle_mode(packet, :add, status) do
+  defp handle_mode(packet, :add, buff) do
     packet
-    |> put_int(status.start)
-    |> put_int(status.end)
-    |> put_int(status.skill_cast.skill_id)
-    |> put_short(status.skill_cast.skill_level)
-    |> put_int(status.stacks)
-    |> put_byte(0x1)
-    |> put_long()
+    |> put_int(buff.start_tick)
+    |> put_int(buff.end_tick)
+    |> put_int(buff.skill[:id])
+    |> put_short(buff.skill[:level])
+    |> put_int(buff.stacks)
+    |> put_bool(buff.enabled)
+    |> put_long(trunc(buff.shield_health))
   end
 
   defp handle_mode(packet, :remove, _status), do: packet

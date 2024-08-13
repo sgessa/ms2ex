@@ -7,11 +7,12 @@ defmodule Ms2ex.Managers.Field do
     Managers,
     Context,
     Packets,
-    Schema,
-    SkillCast
+    Schema
   }
 
   alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types.SkillCast
+
   alias Ms2ex.Managers.Field
 
   @updates_intval 1000
@@ -76,23 +77,21 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  def handle_call({:add_region_skill, position, skill}, _from, state) do
+  def handle_call({:add_region_skill, skill_cast}, _from, state) do
     source_id = Ms2ex.generate_int()
 
     Context.Field.broadcast(
       state.topic,
-      Packets.RegionSkill.add(source_id, position, skill)
+      Packets.RegionSkill.add(source_id, skill_cast)
     )
 
-    duration = SkillCast.duration(skill)
+    duration = SkillCast.duration(skill_cast)
     Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
     {:reply, :ok, state}
   end
 
-  def handle_call({:add_status, status}, _from, state) do
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, status))
-    Process.send_after(self(), {:remove_status, status}, status.duration)
-    {:reply, :ok, state}
+  def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
+    {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do

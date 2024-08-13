@@ -22,8 +22,6 @@ defmodule Ms2ex.Schema.Item do
   ]
 
   @required [:amount, :item_id, :location]
-  @equip_slots Map.to_list(Enums.EquipSlot.mapping())
-  @inventory_tabs Map.to_list(Enums.InventoryTab.mapping())
 
   schema "inventory_items" do
     belongs_to :character, Schema.Character
@@ -33,7 +31,7 @@ defmodule Ms2ex.Schema.Item do
 
     field :color, EctoTypes.Term
     field :data, EctoTypes.Term
-    field :equip_slot, Ecto.Enum, values: @equip_slots, default: :NONE
+    field :equip_slot, Enums.EquipSlot, default: :NONE
     field :metadata, :map, virtual: true
     field :appearance_flag, :integer, virtual: true, default: 0
     field :can_repackage, :boolean, virtual: true, default: true
@@ -44,7 +42,7 @@ defmodule Ms2ex.Schema.Item do
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, virtual: true, default: false
     field :inventory_slot, :integer
-    field :inventory_tab, Ecto.Enum, values: @inventory_tabs
+    field :inventory_tab, Enums.InventoryTab
     field :limit_break_level, :integer, default: 0
     field :location, Ecto.Enum, values: [inventory: 0, equipment: 1], default: :inventory
     field :lock_character_id, :integer, virtual: true

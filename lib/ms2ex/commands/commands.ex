@@ -2,18 +2,17 @@ defmodule Ms2ex.Commands do
   alias Ms2ex.{
     Managers,
     Context,
-    Context,
     Net,
     Packets,
-    Schema,
-    Storage
+    Storage,
+    Constants
   }
 
   import Net.SenderSession, only: [push: 2, push_notice: 3]
 
   def handle(["heal"], character, session) do
-    max_hp = character.stats.hp_max
-    Managers.Character.increase_stat(character, :hp, max_hp)
+    max_hp = character.stats.health_max
+    Managers.Character.cast(character, {:increase_stat, :health, max_hp})
     session
   end
 
@@ -41,7 +40,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["level", level], character, session) do
     with {level, _} <- Integer.parse(level) do
-      level = min(level, Schema.Character.max_level())
+      level = min(level, Constants.get(:character_max_level))
       {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
       Managers.Character.update(character)
 

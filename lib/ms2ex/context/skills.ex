@@ -21,7 +21,7 @@ defmodule Ms2ex.Context.Skills do
   end
 
   def add_tab(%Schema.Character{} = character, attrs) do
-    attrs = Context.SkillTabs.set_skills(character.job, attrs)
+    attrs = Context.SkillTabs.set_skills(character.job, attrs, character.awakened)
 
     character
     |> Schema.SkillTab.add(attrs)
@@ -38,16 +38,10 @@ defmodule Ms2ex.Context.Skills do
     Enum.find(tabs, &(&1.id == tab_id))
   end
 
-  def load_tab_skills(%Schema.Character{job: job}, %Schema.SkillTab{id: tab_id}) do
-    skills =
-      Schema.Skill
-      |> where([s], s.skill_tab_id == ^tab_id)
-      |> Repo.all()
-      |> Enum.into(%{}, &{&1.skill_id, &1})
-
-    # Return skills ordered according to the character job
-    ordered_ids = Context.SkillTabs.ordered_skill_ids(job)
-    Enum.map(ordered_ids, &Map.get(skills, &1))
+  def load_tab_skills(%Schema.Character{job: _job}, %Schema.SkillTab{id: tab_id}) do
+    Schema.Skill
+    |> where([s], s.skill_tab_id == ^tab_id)
+    |> Repo.all()
   end
 
   def find_and_update(%Schema.SkillTab{} = tab, skill_id, attrs) do
@@ -61,17 +55,6 @@ defmodule Ms2ex.Context.Skills do
     skill
     |> Schema.Skill.changeset(attrs)
     |> Repo.update()
-  end
-
-  def update_subskills(character, skill_tab, parent_skill) do
-    %Schema.Character{job: job} = character
-    job_skill = Enum.find(by_job(job), &(&1.main == parent_skill.skill_id))
-
-    Enum.each(job_skill.sub, fn sub_skill_id ->
-      if sub_skill = find_in_tab(skill_tab, sub_skill_id) do
-        {:ok, _sub} = update(sub_skill, %{level: parent_skill.level})
-      end
-    end)
   end
 
   def load_metadata(%Schema.Skill{skill_id: skill_id} = skill) do

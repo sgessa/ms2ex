@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.CharacterList do
-  alias Ms2ex.{Packets, Schema, Types}
+  alias Ms2ex.{Packets, Schema, Enums, Types}
 
   import Packets.PacketWriter
 
@@ -57,8 +57,8 @@ defmodule Ms2ex.Packets.CharacterList do
   end
 
   def put_character(packet, character) do
-    real_job_id = Schema.Character.real_job_id(character)
-    gender = Keyword.get(Schema.Character.genders(), character.gender)
+    real_job_id = Enums.Job.get_value(character.job)
+    gender = Enums.Gender.get_value(character.gender)
 
     packet
     |> put_long(character.account_id)

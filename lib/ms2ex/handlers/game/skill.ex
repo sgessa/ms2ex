@@ -1,96 +1,149 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets, SkillCast, Types}
+  alias Ms2ex.{Managers, Context, Net, Packets, Types}
   alias Ms2ex.Managers
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
+
+  @use 0x0
+  @attack 0x1
+  @sync 0x2
+  @tick_sync 0x3
+  @cancel 0x4
+
+  @point 0x0
+  @target 0x1
+  @splash 0x2
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
     handle_mode(mode, packet, session)
   end
 
-  # Cast
-  def handle_mode(0x0, packet, session) do
+  def handle_mode(@use, packet, session) do
     {cast_id, packet} = get_long(packet)
     {server_tick, packet} = get_int(packet)
     {skill_id, packet} = get_int(packet)
-    {skill_lvl, packet} = get_short(packet)
-    {attack_point, packet} = get_byte(packet)
+    {skill_level, packet} = get_short(packet)
+    {motion_point, packet} = get_byte(packet)
 
     {position, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
-
-    {_, packet} = get_float(packet)
+    {rotate2z, packet} = get_float(packet)
 
     {client_tick, packet} = get_int(packet)
 
-    {_, packet} = get_bool(packet)
-    {_, packet} = get_bool(packet)
-    {_flag, _packet} = get_bool(packet)
+    {unknown, packet} = get_bool(packet)
+    {_item_uid, packet} = get_long(packet)
+    {is_hold, _packet} = get_bool(packet)
 
-    # if (flag) {
-    #   packet.ReadInt()
-    #   string unkString = packet.ReadUnicodeString()
-    # }
+    {hold_int, hold_string, _packet} =
+      if is_hold do
+        {hold_int, packet} = get_int(packet)
+        {hold_string, packet} = get_ustring(packet)
+
+        {hold_int, hold_string, packet}
+      else
+        {nil, nil, packet}
+      end
 
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     skill_cast =
-      SkillCast.build(
-        cast_id,
-        character.object_id,
-        skill_id,
-        skill_lvl,
-        attack_point,
-        server_tick,
-        client_tick
-      )
+      Types.SkillCast.build(character, %{
+        id: cast_id,
+        skill_id: skill_id,
+        skill_level: skill_level,
+        position: position,
+        direction: direction,
+        rotation: rotation,
+        rotate2z: rotate2z,
+        motion_point: motion_point,
+        server_tick: server_tick,
+        client_tick: client_tick
+      })
 
-    SkillCast.start(skill_cast)
+    {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
 
-    {:ok, character} = Managers.Character.cast_skill(character, skill_cast)
-
-    coords = {position, direction, rotation}
-    Context.Field.broadcast(character, Packets.Skill.use_skill(skill_cast, coords))
-
-    push(session, Packets.Stats.set_character_stats(character))
+    state = {unknown, is_hold, hold_int, hold_string}
+    Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, state))
   end
 
-  # Damage Mode
-  def handle_mode(0x1, packet, session) do
+  def handle_mode(@attack, packet, session) do
     {damage_type, packet} = get_byte(packet)
     handle_damage(damage_type, packet, session)
   end
 
-  def handle_mode(_mode, _packet, session), do: session
-
-  # Sync Damage
-  defp handle_damage(0x0, packet, session) do
+  def handle_mode(@sync, packet, _session) do
     {cast_id, packet} = get_long(packet)
-    {_attack_point, packet} = get_byte(packet)
+    {_skill_id, packet} = get_int(packet)
+    {_skill_level, packet} = get_int(packet)
+    {motion_point, packet} = get_byte(packet)
+
     {position, packet} = get_coord(packet)
+    {direction, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
-    {target_count, packet} = get_byte(packet)
-    {_, packet} = get_int(packet)
-    {projectiles, _packet} = get_projectiles(packet, target_count)
+    {_input, packet} = get_coord(packet)
+    {_toggle, packet} = get_byte(packet)
+    {_unk3, packet} = get_byte(packet)
+    {_unk4, _packet} = get_byte(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
-    coords = {position, rotation}
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Managers.SkillCast.update(skill_cast, %{
+        motion_point: motion_point,
+        position: position,
+        direction: direction,
+        rotation: rotation
+      })
 
-    if skill_cast = Agent.get(:"skill_cast:#{cast_id}", & &1) do
-      Context.Field.broadcast(
-        character,
-        Packets.SkillDamage.sync_damage(skill_cast, coords, character, target_count, projectiles)
-      )
+      Context.Field.broadcast(skill_cast.caster, Packets.SkillSync.bytes(skill_cast))
     end
   end
 
-  # Damage
-  defp handle_damage(0x1, packet, session) do
+  def handle_mode(@tick_sync, packet, _session) do
+    {cast_id, packet} = get_long(packet)
+    {server_tick, _packet} = get_int(packet)
+
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Managers.SkillCast.update(skill_cast, %{
+        server_tick: server_tick
+      })
+    end
+  end
+
+  def handle_mode(@cancel, packet, _session) do
+    {cast_id, _packet} = get_long(packet)
+
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Context.Field.broadcast(skill_cast.caster, Packets.SkillCancel.bytes(skill_cast))
+    end
+  end
+
+  defp handle_damage(@point, packet, _session) do
+    {cast_id, packet} = get_long(packet)
+    {attack_point, packet} = get_byte(packet)
+    {position, packet} = get_coord(packet)
+    {direction, packet} = get_coord(packet)
+    {target_count, packet} = get_byte(packet)
+    {_iterations, packet} = get_int(packet)
+
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      # TODO calc next_tick
+      skill_cast =
+        Managers.SkillCast.update(skill_cast, %{
+          position: position,
+          direction: direction,
+          attack_point: attack_point
+        })
+
+      damage_targets(packet, target_count, skill_cast)
+    end
+  end
+
+  defp handle_damage(@target, packet, session) do
     {cast_id, packet} = get_long(packet)
     {attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
@@ -98,126 +151,163 @@ defmodule Ms2ex.GameHandlers.Skill do
     {position, packet} = get_coord(packet)
     {_impact_pos, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
-    {_attack_point, packet} = get_byte(packet)
+    {_motion_point, packet} = get_byte(packet)
 
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      skill_cast =
+        Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
 
-    # TODO: skill_cast.id == cast_id doesn't always matches
-    # targeting won't work randomly
-
-    if character.skill_cast.id == cast_id do
-      crit? = Context.Damage.roll_crit(character)
-      mobs = damage_targets(session, character, crit?, target_count, [], packet)
+      crit? = Context.Damage.roll_crit(skill_cast.caster)
+      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
 
       # TODO check whether it's a player or an ally
-      if SkillCast.heal?(character.skill_cast) do
-        status =
-          Types.SkillStatus.new(character.skill_cast, character.object_id, character.object_id, 1)
+      # Types.SkillCast.heal?(skill_cast)
+      if false do
+        # TODO BUFF
+        # status =
+        #   Types.SkillStatus.new(
+        #     skill_cast,
+        #     skill_cast.caster.object_id,
+        #     skill_cast.caster.object_id,
+        #     1
+        #   )
 
-        Context.Field.add_status(character, status)
+        # Context.Field.add_status(skill_cast.caster, status)
 
         # TODO heal based on stats
         heal = 50
-        Context.Field.broadcast(character, Packets.SkillDamage.heal(status, heal))
+        # Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
 
-        {:ok, character} = Managers.Character.increase_stat(character, :hp, heal)
-        push(session, Packets.Stats.update_char_stats(character, :hp))
+        {:ok, character} =
+          Managers.Character.cast(skill_cast.caster, {:increase_stat, :health, heal})
+
+        push(session, Packets.Stats.update_char_stats(character, :health))
       else
-        coords = {position, rotation}
-
         Context.Field.broadcast(
-          character,
-          Packets.SkillDamage.damage(character, mobs, coords, attack_counter)
+          skill_cast.caster,
+          Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
         )
       end
     end
   end
 
   # AoE Damage
-  defp handle_damage(0x2, packet, session) do
+  defp handle_damage(@splash, packet, _session) do
     {cast_id, packet} = get_long(packet)
-    {_mode, packet} = get_byte(packet)
+    {attack_point, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
     {_, packet} = get_int(packet)
-    {_position, packet} = get_coord(packet)
-    {_rotation, _packet} = get_coord(packet)
+    {position, packet} = get_coord(packet)
+    {rotation, _packet} = get_coord(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    if skill_cast = Managers.SkillCast.get(cast_id) do
+      Managers.SkillCast.update(skill_cast, %{
+        attack_point: attack_point,
+        position: position,
+        rotation: rotation
+      })
 
-    if character.skill_cast.id == cast_id do
-      conditions =
-        character.skill_cast |> SkillCast.condition_skills() |> Enum.filter(& &1.splash)
-
-      for s <- conditions do
-        skill_cast = SkillCast.build(s.id, s.level, character.skill_cast, session.server_tick)
-        Context.Field.add_region_skill(character, skill_cast)
-      end
+      Context.Field.add_region_skill(skill_cast.caster, skill_cast)
     end
   end
 
-  defp damage_targets(session, character, crit?, target_count, mobs, packet)
+  defp damage_targets(skill_cast, crit?, target_count, mobs, packet)
        when target_count > 0 do
     {obj_id, packet} = get_int(packet)
     {_, packet} = get_byte(packet)
 
     mobs =
-      case Managers.FieldNpc.call(:lookup, character, obj_id) do
+      case Managers.FieldNpc.call(:lookup, skill_cast.caster, obj_id) do
         {:ok, %{dead?: false, type: :mob} = mob} ->
-          {mob, dmg} = damage_mob(character, mob, crit?)
-          Context.Field.broadcast(character, Packets.Stats.update_mob_stat(mob, :health))
+          {mob, dmg} = damage_mob(skill_cast, mob, crit?)
+          Context.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
           mobs ++ [{mob, dmg}]
 
         _any ->
           mobs
       end
 
-    damage_targets(session, character, crit?, target_count - 1, mobs, packet)
+    damage_targets(skill_cast, crit?, target_count - 1, mobs, packet)
   end
 
-  defp damage_targets(_session, _char, _crit?, _target_count, mobs, _packet), do: mobs
+  defp damage_targets(_skill_cast, _crit?, _target_count, mobs, _packet), do: mobs
 
-  defp damage_mob(character, mob, crit?) do
-    skill_cast = character.skill_cast
-    dmg = Context.Damage.calculate(character, mob, crit?)
-    {:ok, mob} = Managers.FieldNpc.call({:inflict_dmg, character, dmg}, character, mob)
+  defp damage_mob(skill_cast, mob, crit?) do
+    dmg = Context.Damage.calculate(skill_cast, mob, crit?)
 
-    if SkillCast.element_debuff?(skill_cast) or SkillCast.entity_debuff?(skill_cast) do
-      status = Types.SkillStatus.new(skill_cast, mob.object_id, character.object_id, 1)
-      Context.Field.add_status(character, status)
-    end
+    {:ok, mob} =
+      Managers.FieldNpc.call({:inflict_dmg, skill_cast.caster, dmg}, skill_cast.caster, mob)
+
+    # TODO Buff
+    # if Types.SkillCast.element_debuff?(skill_cast) or
+    #      Types.SkillCast.entity_debuff?(skill_cast) do
+    #   status = Types.SkillStatus.new(skill_cast, mob.object_id, skill_cast.caster.object_id, 1)
+    #   Context.Field.add_status(skill_cast.caster, status)
+    # end
 
     {mob, dmg}
   end
 
-  defp get_projectiles(packet, target_count) do
-    projectiles = %{
-      attk_count: [],
-      source_ids: [],
-      target_ids: [],
-      animations: []
-    }
+  defp damage_targets(packet, 0, _skill_cast), do: packet
 
-    Enum.reduce(0..target_count, {projectiles, packet}, fn
-      0, acc ->
-        acc
-
-      _, {projectiles, packet} ->
-        {attk_count, packet} = get_int(packet)
-        {source_id, packet} = get_int(packet)
+  defp damage_targets(packet, target_count, skill_cast) do
+    Enum.reduce(1..target_count, {[], packet}, fn
+      _, {targets, packet} ->
+        {uid, packet} = get_long(packet)
         {target_id, packet} = get_int(packet)
-        {animation, packet} = get_short(packet)
+        {unknown, packet} = get_byte(packet)
 
-        projectiles = %{
-          attk_count: projectiles.attk_count ++ [attk_count],
-          source_ids: projectiles.source_ids ++ [source_id],
-          target_ids: projectiles.target_ids ++ [target_id],
-          animations: projectiles.animations ++ [animation]
-        }
+        targets =
+          targets ++
+            [
+              %{
+                prev_uid: 0x0,
+                uid: uid,
+                target_id: target_id,
+                unknown: unknown,
+                index: 0x0
+              }
+            ]
 
-        {projectiles, packet}
+        {more, packet} = get_bool(packet)
+        {targets, packet} = get_subtargets(packet, more, targets)
+
+        Context.Field.broadcast(
+          skill_cast.caster,
+          Packets.SkillDamage.target(skill_cast, targets)
+        )
+
+        {[], packet}
     end)
+  end
+
+  defp get_subtargets(packet, false, targets) do
+    {targets, packet}
+  end
+
+  defp get_subtargets(packet, true, targets) do
+    last = List.last(targets)
+    {uid, packet} = get_long(packet)
+    {target_id, packet} = get_int(packet)
+    {unknown, packet} = get_byte(packet)
+    {index, packet} = get_byte(packet)
+
+    targets =
+      targets ++
+        [
+          %{
+            prev_uid: last.uid,
+            uid: uid,
+            target_id: target_id,
+            unknown: unknown,
+            index: index
+          }
+        ]
+
+    {more, packet} = get_bool(packet)
+    get_subtargets(packet, more, targets)
   end
 end

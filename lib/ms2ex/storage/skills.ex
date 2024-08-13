@@ -9,14 +9,8 @@ defmodule Ms2ex.Storage.Skills do
     |> Map.get(:block)
   end
 
-  def get_duration(skill_id) do
-    skill_id
-    |> get_meta()
-    |> Map.get(:additional_effects)
-    |> case do
-      nil -> 5_000
-      ae -> Map.get(hd(ae), :interval)
-    end
+  def get_effect(skill_id, skill_level) do
+    Storage.get("additional-effect", "#{skill_id}_#{skill_level}")
   end
 
   def get_meta(skill_id) do

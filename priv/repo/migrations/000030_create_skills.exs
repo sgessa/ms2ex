@@ -7,6 +7,9 @@ defmodule Ms2ex.Repo.Migrations.CreateSkills do
 
       add :skill_id, :integer, null: false
       add :level, :integer, null: false
+      add :max_level, :integer, null: false
+      add :sub_skills, :binary
+      add :rank, :integer, null: false
     end
 
     create index(:skills, [:skill_tab_id])

@@ -59,7 +59,7 @@ defmodule Ms2ex.Types.FieldNpc do
   end
 
   defp build_stats(stats) do
-    Enums.BasicStatType.keys()
+    Enums.BasicStatType.all()
     |> Enum.map(fn stat -> {stat, 0} end)
     |> Map.new()
     |> Map.merge(stats)

@@ -1,5 +1,5 @@
 defmodule Ms2ex.Enums.PartyNotice do
-  @mapping %{
+  use Ms2ex.Enum, %{
     accepted_invite: 0x1,
     not_leader: 0x4,
     party_already_made: 0x5,
@@ -34,6 +34,4 @@ defmodule Ms2ex.Enums.PartyNotice do
     member_in_mushking_royale: 0x30,
     mushking_royale_max_squad: 0x31
   }
-
-  use Ms2ex.Enums
 end

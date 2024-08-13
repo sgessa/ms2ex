@@ -3,22 +3,51 @@ defmodule Ms2ex.Packets.SkillDamage do
 
   import Packets.PacketWriter
 
-  def damage(character, mobs, {position, rotation}, attk_counter) do
-    skill_cast = character.skill_cast
+  @modes %{target: 0x0, damage: 0x1}
 
+  def target(skill_cast, targets) do
     __MODULE__
     |> build()
-    |> put_byte(0x1)
+    |> put_byte(@modes.target)
     |> put_long(skill_cast.id)
-    |> put_int(attk_counter)
-    |> put_int(character.object_id)
-    |> put_int(character.object_id)
+    |> put_int(skill_cast.caster.object_id)
     |> put_int(skill_cast.skill_id)
     |> put_short(skill_cast.skill_level)
     |> put_byte(skill_cast.motion_point)
     |> put_byte(skill_cast.attack_point)
-    |> put_short_coord(position)
-    |> put_short_coord(rotation)
+    |> put_short_coord(skill_cast.position)
+    |> put_coord(skill_cast.direction)
+    # TODO: FIXME ??? should be bool
+    |> put_byte()
+    |> put_int(skill_cast.server_tick)
+    |> put_byte(length(targets))
+    |> reduce(targets, fn
+      target, packet ->
+        packet
+        |> put_long(target.prev_uid)
+        |> put_long(target.uid)
+        |> put_int(target.target_id)
+        |> put_byte(target.unknown)
+        |> put_byte(target.index)
+    end)
+  end
+
+  def damage(skill_cast, mobs, attk_counter) do
+    caster = skill_cast.caster
+
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.damage)
+    |> put_long(skill_cast.id)
+    |> put_int(attk_counter)
+    |> put_int(caster.object_id)
+    |> put_int(caster.object_id)
+    |> put_int(skill_cast.skill_id)
+    |> put_short(skill_cast.skill_level)
+    |> put_byte(skill_cast.motion_point)
+    |> put_byte(skill_cast.motion_point)
+    |> put_short_coord(skill_cast.position)
+    |> put_short_coord(skill_cast.rotation)
     |> put_byte(length(mobs))
     |> reduce(mobs, fn {mob, effect}, packet ->
       packet
@@ -34,37 +63,6 @@ defmodule Ms2ex.Packets.SkillDamage do
   end
 
   defp maybe_put_dmg(packet, _dmg), do: packet
-
-  def sync_damage(skill_cast, {position, rotation}, character, target_count, projectiles) do
-    __MODULE__
-    |> build()
-    |> put_byte(0x0)
-    |> put_long(skill_cast.id)
-    |> put_int(character.object_id)
-    |> put_int(skill_cast.skill_id)
-    |> put_short(skill_cast.skill_level)
-    |> put_byte(skill_cast.motion_point)
-    |> put_byte(skill_cast.attack_point)
-    |> put_short_coord(position)
-    |> put_coord(rotation)
-    |> put_byte()
-    |> put_int(skill_cast.server_tick)
-    |> put_byte(target_count)
-    |> reduce(0..target_count, fn
-      0, packet ->
-        packet
-
-      idx, packet ->
-        packet
-        |> put_long()
-        |> put_int(Enum.at(projectiles.attk_count, idx - 1))
-        |> put_int(Enum.at(projectiles.source_ids, idx - 1))
-        |> put_int(Enum.at(projectiles.target_ids, idx - 1))
-        |> put_short(Enum.at(projectiles.animations, idx - 1))
-        |> put_byte()
-        |> put_byte()
-    end)
-  end
 
   def heal(status, heal_amount) do
     __MODULE__
