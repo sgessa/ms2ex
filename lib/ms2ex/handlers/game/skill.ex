@@ -36,7 +36,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {client_tick, packet} = get_int(packet)
 
-    {unkown, packet} = get_bool(packet)
+    {unknown, packet} = get_bool(packet)
     {_item_uid, packet} = get_long(packet)
     {is_hold, _packet} = get_bool(packet)
 
@@ -68,7 +68,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
 
-    state = {unkown, is_hold, hold_int, hold_string}
+    state = {unknown, is_hold, hold_int, hold_string}
     Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, state))
 
     push(session, Packets.Stats.set_character_stats(character))
