@@ -70,8 +70,6 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     state = {unknown, is_hold, hold_int, hold_string}
     Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, state))
-
-    push(session, Packets.Stats.set_character_stats(character))
   end
 
   def handle_mode(@attack, packet, session) do

@@ -13,7 +13,7 @@ defmodule Ms2ex.Managers.SkillCast do
     Map.put(skill_cast, :caster, caster)
   end
 
-  def start(%SkillCast{} = skill_cast) do
+  def start_link(%SkillCast{} = skill_cast) do
     Agent.start_link(fn -> skill_cast end, name: process_name(skill_cast.id))
   end
 

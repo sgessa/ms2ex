@@ -51,7 +51,7 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:cast_skill, skill_cast}, _from, character) do
-    Character.Skill.cast_skill(character, skill_cast)
+    character = Character.Skill.cast_skill(character, skill_cast)
     {:reply, {:ok, character}, character}
   end
 
@@ -64,7 +64,6 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_cast({:increase_stat, stat_id, amount}, character) do
-    IO.inspect(stat_id, label: "STAT ID")
     {:noreply, Character.Stats.increase(character, stat_id, amount)}
   end
 

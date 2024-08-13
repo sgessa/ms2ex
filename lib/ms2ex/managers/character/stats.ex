@@ -7,11 +7,7 @@ defmodule Ms2ex.Managers.Character.Stats do
 
   def decrease(character, stat_id, amount) do
     cur = Map.get(character.stats, :"#{stat_id}_cur")
-    character = set(character, stat_id, cur - amount)
-
-    broadcast_new_stats(character, stat_id)
-
-    character
+    set(character, stat_id, cur - amount)
   end
 
   def increase(character, stat_id, amount) do
