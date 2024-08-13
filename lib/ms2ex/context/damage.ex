@@ -13,7 +13,7 @@ defmodule Ms2ex.Context.Damage do
     caster = skill_cast.caster
 
     # TODO calculate from character stats
-    attk_dmg = 300
+    attk_dmg = 1_000_000
 
     skill_dmg_rate =
       if crit?,
