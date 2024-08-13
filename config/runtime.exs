@@ -17,8 +17,7 @@ if config_env() == :prod do
   config :ms2ex, Ms2exWeb.Endpoint, server: true
 end
 
-server_address =
-  System.get_env("SERVER_ADDRESS") || raise "SERVER_ADDRESS env variable not configured!"
+server_address = System.get_env("SERVER_ADDRESS", "127.0.0.1")
 
 config :ms2ex, Ms2ex,
   login: %{host: server_address, port: 8526},

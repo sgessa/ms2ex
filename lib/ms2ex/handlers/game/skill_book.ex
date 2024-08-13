@@ -34,10 +34,10 @@ defmodule Ms2ex.GameHandlers.SkillBook do
       {tab_name, packet} = get_ustring(packet)
 
       tab = Context.Skills.get_tab(character, tab_id)
-      {:ok, tab} = add_or_update_tab(tab, character, %{id: tab_id, name: tab_name})
+      {:ok, tab} = add_or_update_tab(character, tab, %{id: tab_id, name: tab_name})
 
       {skill_count, packet} = get_int(packet)
-      packet = save_skills(skill_count, character, tab, packet)
+      packet = save_skills(skill_count, tab, packet)
 
       packet
     end)
@@ -79,15 +79,15 @@ defmodule Ms2ex.GameHandlers.SkillBook do
 
   defp handle_mode(_mode, _packet, _character, session), do: session
 
-  defp add_or_update_tab(nil, character, attrs) do
+  defp add_or_update_tab(character, nil, attrs) do
     Context.Skills.add_tab(character, attrs)
   end
 
-  defp add_or_update_tab(tab, _character, attrs) do
+  defp add_or_update_tab(_character, tab, attrs) do
     Context.Skills.update_tab(tab, attrs)
   end
 
-  defp save_skills(skill_count, _character, tab, packet) when skill_count > 0 do
+  defp save_skills(skill_count, tab, packet) when skill_count > 0 do
     Enum.reduce(1..skill_count, packet, fn _, packet ->
       {skill_id, packet} = get_int(packet)
 
@@ -101,5 +101,5 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     end)
   end
 
-  defp save_skills(_skill_count, _char, _tab, packet), do: packet
+  defp save_skills(_skill_count, _tab, packet), do: packet
 end
