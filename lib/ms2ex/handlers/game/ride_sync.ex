@@ -19,7 +19,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
     {sync_states, _packet} = get_sync_states(segment_length, packet)
 
     sync_packet = Packets.RideSync.bytes(character, sync_states)
-    Context.Field.broadcast_from(character, sync_packet, session.pid)
+    Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
   end
 
   defp process_segments(_session, _segment_length, packet), do: packet

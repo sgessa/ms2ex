@@ -21,7 +21,6 @@ defmodule Ms2ex.Packets do
     0x20 => "SKILL",
     0x25 => "JOB",
     0x26 => "VIBRATE",
-    0x29 => "QUEST",
     0x2C => "PARTY",
     0x30 => "FRIEND",
     0x37 => "REQUEST_CUBE",
