@@ -94,7 +94,7 @@ defmodule Ms2ex.Managers.Field do
     {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
   end
 
-  def handle_call({:add_object, :mount, mount}, _from, state) do
+  def handle_call({:add_mount, mount}, _from, state) do
     mount = Map.put(mount, :object_id, state.counter)
     mounts = Map.put(state.mounts, mount.character_id, mount)
     {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}

@@ -12,7 +12,7 @@ defmodule Ms2ex.Types.ItemStats do
   end
 
   def create(%Schema.Item{metadata: meta} = item) do
-    pick_id = meta.option.pick_id
+    pick_id = get_in(meta, [:option, :pick_id])
     pick_options = Storage.Tables.ItemOptions.find_pick(pick_id, item.rarity)
 
     constants = Context.ItemConstantStats.get(item, pick_options)

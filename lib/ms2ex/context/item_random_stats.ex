@@ -3,10 +3,14 @@ defmodule Ms2ex.Context.ItemRandomStats do
   alias Ms2ex.Storage
 
   def get(%Schema.Item{} = item) do
-    random_id = item.metadata.option.random_id
-    options = Storage.Tables.ItemOptions.find_random(random_id, item.rarity)
+    random_id = get_in(item.metadata, [:option, :random_id])
 
-    get_random_stats(item, options)
+    if random_id do
+      options = Storage.Tables.ItemOptions.find_random(random_id, item.rarity)
+      get_random_stats(item, options)
+    else
+      %{}
+    end
   end
 
   defp get_random_stats(_item, nil), do: %{}
