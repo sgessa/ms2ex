@@ -99,6 +99,15 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, character}
   end
 
+  def handle_info({:update, tick}, character) do
+    character =
+      Enum.reduce(character.buffs, character, fn {_id, buff}, character ->
+        Character.Buff.update(character, buff, tick)
+      end)
+
+    {:noreply, character}
+  end
+
   def handle_info({:regen, stat_id}, character) do
     {:noreply, Character.Stats.regen(character, stat_id)}
   end

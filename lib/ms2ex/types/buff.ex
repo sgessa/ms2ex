@@ -13,7 +13,8 @@ defmodule Ms2ex.Types.Buff do
     :stacks,
     :enabled,
     :effect,
-    :shield_health
+    :shield_health,
+    activated: false
   ]
 
   def build(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do

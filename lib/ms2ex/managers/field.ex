@@ -142,9 +142,10 @@ defmodule Ms2ex.Managers.Field do
       end
     end
 
-    Enum.reduce(state.skills, state, fn {_id, field_skill}, state ->
-      Managers.Field.Skill.update(state, field_skill, tick)
-    end)
+    state =
+      Enum.reduce(state.skills, state, fn {_id, field_skill}, state ->
+        Managers.Field.Skill.update(state, field_skill, tick)
+      end)
 
     Process.send_after(self(), :send_updates, @updates_intval)
 
