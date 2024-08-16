@@ -16,31 +16,9 @@ defmodule Ms2ex.Managers.FieldNpc do
     Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
 
-    # send(self(), :test_move)
     send(self(), :send_updates)
 
     {:ok, field_npc}
-  end
-
-  # TODO remove me
-  def handle_info(:test_move, %{dead?: false, type: :mob} = field_npc) do
-    new_x = Enum.random(-300..300)
-    new_y = Enum.random(-300..300)
-    new_position = %{field_npc.position | x: new_x, y: new_y}
-
-    Process.send_after(self(), :test_move, :timer.seconds(1))
-
-    {:noreply, %{field_npc | position: new_position, send_control?: true}}
-  end
-
-  def handle_info(:test_move, %{dead?: false, type: :npc} = field_npc) do
-    new_x = Enum.random(-100..100)
-    new_y = Enum.random(-100..100)
-    new_position = %{field_npc.position | x: new_x, y: new_y}
-
-    Process.send_after(self(), :test_move, :timer.seconds(1))
-
-    {:noreply, %{field_npc | position: new_position, send_control?: true}}
   end
 
   def handle_info(:send_updates, field_npc) do

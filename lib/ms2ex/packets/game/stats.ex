@@ -60,19 +60,6 @@ defmodule Ms2ex.Packets.Stats do
     end)
   end
 
-  def put_default_mob_stats(packet, %FieldNpc{} = mob) do
-    packet
-    |> put_byte(@mode.send_stats)
-    |> put_long(mob.stats.health)
-    |> put_int(100)
-    |> put_long(mob.stats.health)
-    |> put_int(100)
-    |> put_long(mob.stats.health)
-    |> put_int(100)
-
-    # TODO Understand mob hp stats
-  end
-
   defp put_hp(packet, stats) do
     packet
     |> put_long(Map.get(stats, :health_max))

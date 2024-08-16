@@ -128,16 +128,6 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, Field.Npc.remove_npc(field_npc, state)}
   end
 
-  def handle_info({:remove_region_skill, source_id}, state) do
-    Context.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
-    {:noreply, state}
-  end
-
-  def handle_info({:remove_status, status}, state) do
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
-    {:noreply, state}
-  end
-
   def handle_info({:leave_battle_stance, character}, state) do
     Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
     {:noreply, state}

@@ -11,16 +11,6 @@ defmodule Ms2ex.Context.MapBlock do
     %Coord{x: x, y: y, z: z}
   end
 
-  # TODO delete me
-  # Maybe not necessary
-  # def exists?(map_id, block) do
-  #   map = Metadata.get(Metadata.Map, map_id)
-
-  #   Metadata.MapEntity
-  #   |> Metadata.filter("#{map.x_block}_*")
-  #   |> Enum.any?(&(Map.get(&1.block, :position) == Map.from_struct(block)))
-  # end
-
   def length(%Coord{x: x, y: y, z: z}) do
     :math.sqrt(x * x + y * y + z * z)
   end

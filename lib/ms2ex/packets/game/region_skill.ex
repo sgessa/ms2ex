@@ -24,10 +24,10 @@ defmodule Ms2ex.Packets.RegionSkill do
     |> put_float()
   end
 
-  def remove(field_skill) do
+  def remove(object_id) do
     __MODULE__
     |> build()
     |> put_byte(@modes.remove)
-    |> put_int(field_skill.object_id)
+    |> put_int(object_id)
   end
 end

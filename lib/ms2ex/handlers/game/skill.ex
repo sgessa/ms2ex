@@ -141,8 +141,6 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if skill_cast = character.skill_casts[cast_id] do
-      # TODO calc next_tick (for field skill)
-
       Managers.Character.Skill.update(character, skill_cast, %{
         position: position,
         direction: direction,
@@ -177,34 +175,13 @@ defmodule Ms2ex.GameHandlers.Skill do
       crit? = Context.Damage.roll_crit(skill_cast.caster)
       mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
 
-      # TODO check whether it's a player or an ally
-      # Types.SkillCast.heal?(skill_cast)
-      if false do
-        # TODO BUFF
-        # status =
-        #   Types.SkillStatus.new(
-        #     skill_cast,
-        #     skill_cast.caster.object_id,
-        #     skill_cast.caster.object_id,
-        #     1
-        #   )
+      # TODO
+      # handle splash and/or conditions
 
-        # Context.Field.add_status(skill_cast.caster, status)
-
-        # TODO heal based on stats
-        heal = 50
-        # Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
-
-        {:ok, character} =
-          Managers.Character.cast(skill_cast.caster, {:increase_stat, :health, heal})
-
-        push(session, Packets.Stats.update_char_stats(character, :health))
-      else
-        Context.Field.broadcast(
-          skill_cast.caster,
-          Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
-        )
-      end
+      Context.Field.broadcast(
+        skill_cast.caster,
+        Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
+      )
     end
   end
 

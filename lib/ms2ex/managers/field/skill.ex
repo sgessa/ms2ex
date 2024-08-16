@@ -1,5 +1,7 @@
 defmodule Ms2ex.Managers.Field.Skill do
   alias Ms2ex.Types
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   # -------------------------------
   # Skills
@@ -13,6 +15,8 @@ defmodule Ms2ex.Managers.Field.Skill do
       |> Enum.reduce({counter, state.skills}, fn field_skill, {counter, skills} ->
         object_id = counter + 1
         field_skill = Map.put(field_skill, :object_id, object_id)
+        Context.Field.broadcast(state.topic, Packets.RegionSkill.add(field_skill))
+
         skills = Map.put(skills, object_id, field_skill)
 
         {object_id, skills}
@@ -22,6 +26,7 @@ defmodule Ms2ex.Managers.Field.Skill do
   end
 
   def remove_field_skill(state, object_id) do
+    Context.Field.broadcast(state.topic, Packets.RegionSkill.remove(object_id))
     pop_in(state, [:skills, object_id])
   end
 
