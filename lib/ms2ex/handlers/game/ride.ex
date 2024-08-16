@@ -44,7 +44,10 @@ defmodule Ms2ex.GameHandlers.Ride do
   defp handle_mode(@stop, packet, session) do
     {_, packet} = get_byte(packet)
     {forced, _packet} = get_bool(packet)
+
     {:ok, character} = Managers.Character.lookup(session.character_id)
+    Managers.Character.update(%{character | mount: nil})
+
     Context.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
   end
 
