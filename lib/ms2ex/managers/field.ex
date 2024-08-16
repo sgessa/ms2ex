@@ -81,12 +81,6 @@ defmodule Ms2ex.Managers.Field do
     {:reply, :ok, Field.Skill.add_field_skill(state, attrs)}
   end
 
-  def handle_call({:add_object, :mount, mount}, _from, state) do
-    mount = Map.put(mount, :object_id, state.counter)
-    mounts = Map.put(state.mounts, mount.character_id, mount)
-    {:reply, {:ok, mount}, %{state | counter: state.counter + 1, mounts: mounts}}
-  end
-
   def handle_cast({:drop_item, source, item}, state) do
     {:noreply, Field.Item.drop_item(source, item, state)}
   end

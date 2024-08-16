@@ -2,10 +2,16 @@ defmodule Ms2ex.Context.ItemStaticStats do
   alias Ms2ex.{Enums, Lua, Schema, Storage, Types}
 
   def get(%Schema.Item{} = item, pick_options) do
-    item.metadata.option.static_id
-    |> Storage.Tables.ItemOptions.find_static(item.rarity)
-    |> get_static_stats()
-    |> get_pick_stats(item, pick_options)
+    static_id = get_in(item.metadata, [:option, :static_id])
+
+    if static_id do
+      static_id
+      |> Storage.Tables.ItemOptions.find_static(item.rarity)
+      |> get_static_stats()
+      |> get_pick_stats(item, pick_options)
+    else
+      %{}
+    end
   end
 
   defp get_static_stats(nil), do: %{}

@@ -3,12 +3,10 @@ defmodule Ms2ex.TransferFlags do
 
   @flags %{
     none: 0,
-    unknown1: 1,
     splittable: 2,
     tradeable: 4,
-    binds: 8,
-    unknown2: 16,
-    unknown3: 32
+    bind: 8,
+    limit_trade: 16
   }
 
   def set(flags) when is_list(flags) do

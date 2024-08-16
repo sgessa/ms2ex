@@ -10,10 +10,7 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> build()
     |> put_byte(@modes.start)
     |> put_int(character.object_id)
-    |> put_byte(mount.mount_type)
-    |> put_int(mount.item_id)
-    |> put_int(mount.object_id)
-    |> put_mount(mount)
+    |> put_action(mount)
   end
 
   def stop_ride(character, forced) do
@@ -34,16 +31,13 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> put_long(id)
   end
 
-  defp put_mount(packet, %{mount_type: 0x1} = mount) do
+  def put_action(packet, mount) do
     packet
+    |> put_byte(mount.mount_type)
+    |> put_int(mount.ride_id)
+    |> put_int(mount.object_id)
     |> put_int(mount.item_id)
-    |> put_long(mount.id)
+    |> put_long(mount.item_uid)
     |> Packets.UGC.put_ugc()
-  end
-
-  defp put_mount(packet, %{mount_type: 0x2}) do
-    packet
-    |> put_int()
-    |> put_short()
   end
 end

@@ -3,32 +3,34 @@ defmodule Ms2ex.GameHandlers.RideSync do
 
   import Packets.PacketReader
 
-  def handle(packet, %{character_id: character_id} = session) do
+  def handle(packet, session) do
     {_mode, packet} = get_byte(packet)
 
-    {_client_tick, packet} = get_int(packet)
     {_server_tick, packet} = get_int(packet)
-    {segments, packet} = get_byte(packet)
+    {_client_tick, packet} = get_int(packet)
+    {segment_length, packet} = get_byte(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(character_id),
-         true <- segments > 0 do
-      states = get_states(segments, packet)
-
-      sync_packet = Packets.RideSync.bytes(character, states)
-      Context.Field.broadcast_from(character, sync_packet, session.pid)
-    end
-
-    session
+    process_segments(session, segment_length, packet)
   end
 
-  defp get_states(segments, packet, state \\ [])
+  defp process_segments(session, segment_length, packet) when segment_length > 0 do
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
-  defp get_states(segments, packet, states) when segments > 0 do
-    {sync_state, packet} = Types.SyncState.from_packet(packet)
-    {_client_tick, packet} = get_int(packet)
-    {_server_tick, packet} = get_int(packet)
-    get_states(segments - 1, packet, states ++ [sync_state])
+    {sync_states, _packet} = get_sync_states(segment_length, packet)
+
+    sync_packet = Packets.RideSync.bytes(character, sync_states)
+    Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
   end
 
-  defp get_states(_segments, _packet, states), do: states
+  defp process_segments(_session, _segment_length, packet), do: packet
+
+  defp get_sync_states(segment_count, packet) do
+    Enum.reduce(1..segment_count, {[], packet}, fn _, {sync_states, packet} ->
+      {sync_state, packet} = Types.SyncState.from_packet(packet)
+      {_client_tick, packet} = get_int(packet)
+      {_server_tick, packet} = get_int(packet)
+
+      {sync_states ++ [sync_state], packet}
+    end)
+  end
 end
