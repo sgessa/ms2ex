@@ -137,6 +137,12 @@ defmodule Ms2ex.Context.Inventory do
     end
   end
 
+  def expired?(%Schema.Item{expires_at: nil}), do: false
+
+  def expired?(%Schema.Item{expires_at: expires_at}) do
+    DateTime.compare(expires_at, DateTime.utc_now()) == :lt
+  end
+
   def find_first_available_slot(character_id, inventory_tab) do
     slots =
       Schema.Item
@@ -205,5 +211,10 @@ defmodule Ms2ex.Context.Inventory do
         item
       end)
     end)
+  end
+
+  # TODO
+  def bind(%Schema.Item{} = item) do
+    item
   end
 end
