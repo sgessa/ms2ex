@@ -102,6 +102,7 @@ defmodule Ms2ex.Packets do
     0x6B => "RESPONSE_CUBE",
     0x6D => "UGC",
     0x71 => "KEY_TABLE",
+    0x73 => "NOTICE",
     0x77 => "VIBRATE",
     0x7B => "RESPONSE_RIDE",
     0x7C => "RIDE_SYNC",

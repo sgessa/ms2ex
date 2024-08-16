@@ -1,8 +1,9 @@
 defmodule Ms2ex.GameHandlers.Ride do
   require Logger
 
-  alias Ms2ex.{Enums, Managers, Context, Packets}
+  alias Ms2ex.{Enums, Managers, Context, Net, Packets}
 
+  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   @start 0x00
@@ -31,8 +32,13 @@ defmodule Ms2ex.GameHandlers.Ride do
       item = maybe_bind_on_use(item)
       start_ride(character, item, ride_id, type)
     else
-      {:error, :item_not_found} -> Logger.error("Item not found")
-      {:error, :invalid_item} -> Logger.error("Invalid item")
+      {:error, :item_not_found} ->
+        code = Enums.StringCode.get_value(:s_item_invalid_do_not_have)
+        push(session, Packets.Notice.message_box(code))
+
+      {:error, :invalid_item} ->
+        code = Enums.StringCode.get_value(:s_item_invalid_function_item)
+        push(session, Packets.Notice.message_box(code))
     end
   end
 
