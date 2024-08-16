@@ -19,6 +19,7 @@ defmodule Ms2ex.Application do
         # Start the Endpoint (http/https)
         Ms2exWeb.Endpoint,
         # Start Managers
+        Ms2ex.Managers.GlobalCounter,
         {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
         {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]},
         # Start TCP Listeners
