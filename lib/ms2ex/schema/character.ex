@@ -90,7 +90,8 @@ defmodule Ms2ex.Schema.Character do
     field :safe_position, EctoTypes.Term, virtual: true
     field :session_pid, EctoTypes.Term, virtual: true
     field :sender_session_pid, EctoTypes.Term, virtual: true
-    field :skill_cast, EctoTypes.Term, virtual: true
+    field :skill_casts, :map, virtual: true, default: %{}
+    field :buffs, :map, virtual: true, default: %{}
     field :unknown_id, :integer, virtual: true, default: 0x01EF80C2
 
     timestamps(type: :utc_datetime)

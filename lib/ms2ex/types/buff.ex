@@ -16,7 +16,7 @@ defmodule Ms2ex.Types.Buff do
     :shield_health
   ]
 
-  def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
+  def build(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
     effect =
       Storage.Skills.get_effect(skill[:id], skill[:level])
 

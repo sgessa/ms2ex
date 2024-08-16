@@ -23,10 +23,6 @@ defmodule Ms2ex.Context.Field do
     call(character.field_pid, {:pickup_item, character, object_id})
   end
 
-  def add_region_skill(%Schema.Character{} = character, region_skill) do
-    call(character.field_pid, {:add_region_skill, region_skill})
-  end
-
   def add_mob(%Schema.Character{} = character, %{type: :npc} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end

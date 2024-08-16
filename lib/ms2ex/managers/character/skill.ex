@@ -18,11 +18,9 @@ defmodule Ms2ex.Managers.Character.Skill do
   end
 
   def cast_skill(character, skill_cast, spirit_cost, stamina_cost) do
-    Managers.SkillCast.start_link(skill_cast)
-
     for effect <- Types.SkillCast.skill_level(skill_cast).skills do
       for skill <- effect.skills do
-        Context.Field.call(character, {:add_buff, skill_cast, skill, character})
+        send(character.field_pid, {:add_buff, skill_cast, skill, character})
       end
     end
 
@@ -31,5 +29,19 @@ defmodule Ms2ex.Managers.Character.Skill do
     character
     |> Character.Stats.decrease(:spirit, spirit_cost)
     |> Character.Stats.decrease(:stamina, stamina_cost)
+    |> add(skill_cast)
+  end
+
+  def add(character, skill_cast) do
+    skill_casts = Map.put(character.skill_casts, skill_cast.id, skill_cast)
+    %{character | skill_casts: skill_casts}
+  end
+
+  def update(character, skill_cast, attrs) do
+    skill_cast = character.skill_casts |> Map.get(skill_cast.id) |> Map.merge(attrs)
+    character = add(character, skill_cast)
+    Managers.Character.update(character)
+
+    {:ok, character, skill_cast}
   end
 end

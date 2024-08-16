@@ -1,22 +1,23 @@
 defmodule Ms2ex.Types.SkillCast do
   alias Ms2ex.Storage
   alias Ms2ex.Enums
-  alias Ms2ex.Types.Coord
 
   defstruct [
-    :client_tick,
-    :server_tick,
-    :next_tick,
     :id,
     :meta,
-    :points,
     :skill_id,
     :skill_level,
     :position,
+    :impact_position,
     :rotation,
     :direction,
     :rotate2z,
+    :unknown,
+    :hold_int,
+    :hold_string,
     :caster,
+    :server_tick,
+    is_hold: false,
     motion_point: 0,
     attack_point: 0
   ]
@@ -89,23 +90,5 @@ defmodule Ms2ex.Types.SkillCast do
   def splash(%__MODULE__{} = skill_cast) do
     attack_skill = attack_point(skill_cast)[:skills] |> List.first()
     attack_skill[:splash]
-  end
-
-  def magic_path(%__MODULE__{} = skill_cast) do
-    cube_magic_path_id = attack_point(skill_cast)[:cube_magic_path_id] || 0
-
-    case Storage.Table.MagicPaths.get(cube_magic_path_id) do
-      paths when is_list(paths) and length(paths) > 0 ->
-        Enum.map(paths, fn path ->
-          # TODO fire_offset rotate if path.rotate?
-          fire_offset = struct(Coord, path[:fire_offset] || %{})
-          Coord.sum(skill_cast.position, fire_offset)
-
-          # TODO align position unless path.ignoreAdjust
-        end)
-
-      _ ->
-        [skill_cast.position]
-    end
   end
 end

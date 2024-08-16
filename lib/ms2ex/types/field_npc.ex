@@ -18,7 +18,7 @@ defmodule Ms2ex.Types.FieldNpc do
     send_control?: true
   ]
 
-  def new(attrs) do
+  def build(attrs) do
     attrs =
       attrs
       |> Map.put(:rotation, struct(Coord, attrs.rotation || %{}))

@@ -11,7 +11,6 @@ defmodule Ms2ex.Managers.Field do
   }
 
   alias Ms2ex.Types.FieldNpc
-  alias Ms2ex.Types.SkillCast
 
   alias Ms2ex.Managers.Field
 
@@ -33,6 +32,7 @@ defmodule Ms2ex.Managers.Field do
       items: %{},
       map_id: map_id,
       mounts: %{},
+      skills: %{},
       npcs: %{},
       npc_spawns: %{},
       portals: portals,
@@ -77,21 +77,8 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  def handle_call({:add_region_skill, skill_cast}, _from, state) do
-    source_id = Ms2ex.generate_int()
-
-    Context.Field.broadcast(
-      state.topic,
-      Packets.RegionSkill.add(source_id, skill_cast)
-    )
-
-    duration = SkillCast.duration(skill_cast)
-    Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
-    {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
+  def handle_call({:add_field_skill, attrs}, _from, state) do
+    {:reply, :ok, Field.Skill.add_field_skill(state, attrs)}
   end
 
   def handle_call({:add_object, :mount, mount}, _from, state) do
@@ -117,6 +104,14 @@ defmodule Ms2ex.Managers.Field do
   #
   # NPCs
   #
+
+  def handle_info({:add_buff, skill_cast, skill, character}, state) do
+    object_id = state.counter + 1
+
+    Managers.Character.call(character, {:add_buff, object_id, skill_cast, skill})
+
+    {:noreply, %{state | counter: object_id}}
+  end
 
   def handle_info(:load_npc_spawns, state) do
     Field.Npc.load_npc_spawns(state)
@@ -155,11 +150,17 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_info(:send_updates, state) do
+    tick = Ms2ex.sync_ticks()
+
     for char_id <- Map.keys(state.sessions) do
       with {:ok, char} <- Managers.Character.lookup(char_id) do
         Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
       end
     end
+
+    Enum.reduce(state.skills, state, fn {_id, field_skill}, state ->
+      Managers.Field.Skill.update(state, field_skill, tick)
+    end)
 
     Process.send_after(self(), :send_updates, @updates_intval)
 

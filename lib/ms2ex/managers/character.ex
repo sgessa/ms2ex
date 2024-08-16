@@ -55,6 +55,11 @@ defmodule Ms2ex.Managers.Character do
     {:reply, {:ok, character}, character}
   end
 
+  def handle_call({:add_buff, object_id, skill_cast, skill}, _from, character) do
+    character = Character.Buff.add_buff(character, object_id, skill_cast, skill)
+    {:reply, {:ok, character}, character}
+  end
+
   # --------------------------------
   # Stats
   # --------------------------------
