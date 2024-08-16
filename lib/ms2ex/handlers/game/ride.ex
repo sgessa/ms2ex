@@ -22,7 +22,6 @@ defmodule Ms2ex.GameHandlers.Ride do
     {ride_id, packet} = get_int(packet)
     {_object_id, packet} = get_int(packet)
     {_item_id, packet} = get_int(packet)
-
     {item_uid, _packet} = get_long(packet)
 
     {:ok, character} = Managers.Character.lookup(session.character_id)
@@ -90,16 +89,18 @@ defmodule Ms2ex.GameHandlers.Ride do
   end
 
   defp start_ride(character, item, ride_id, type) do
+    object_id = Managers.GlobalCounter.get_and_increment()
+
     mount = %{
       character_id: character.id,
       item_id: item.item_id,
       item_uid: item.id,
       mount_type: type,
+      object_id: object_id,
       ride_id: ride_id
     }
 
-    # TODO: We don't need to add mount to the field, we can use a global object id
-    {:ok, mount} = Context.Field.call(character.field_pid, {:add_mount, mount})
+    Managers.Character.update(%{character | mount: mount})
 
     Context.Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
   end

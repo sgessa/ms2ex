@@ -10,9 +10,6 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> build()
     |> put_byte(@modes.start)
     |> put_int(character.object_id)
-    |> put_byte(mount.mount_type)
-    |> put_int(mount.ride_id)
-    |> put_int(mount.object_id)
     |> put_action(mount)
   end
 
@@ -34,8 +31,11 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> put_long(id)
   end
 
-  defp put_action(packet, mount) do
+  def put_action(packet, mount) do
     packet
+    |> put_byte(mount.mount_type)
+    |> put_int(mount.ride_id)
+    |> put_int(mount.object_id)
     |> put_int(mount.item_id)
     |> put_long(mount.item_uid)
     |> Packets.UGC.put_ugc()
