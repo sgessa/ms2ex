@@ -105,6 +105,8 @@ defmodule Ms2ex.Managers.Character do
         Character.Buff.update(character, buff, tick)
       end)
 
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_player(character))
+
     {:noreply, character}
   end
 
@@ -135,6 +137,9 @@ defmodule Ms2ex.Managers.Character do
 
   def cast(%Schema.Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
   def cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
+
+  def send_msg(character_id, msg),
+    do: process_name(character_id) |> Process.whereis() |> send(msg)
 
   defp process_name(character_id) do
     :"characters:#{character_id}"

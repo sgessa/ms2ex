@@ -1,10 +1,9 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets, Types}
+  alias Ms2ex.{Managers, Context, Packets, Types}
   alias Ms2ex.Managers
 
-  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   @use 0x0

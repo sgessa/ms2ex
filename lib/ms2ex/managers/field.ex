@@ -137,8 +137,8 @@ defmodule Ms2ex.Managers.Field do
     tick = Ms2ex.sync_ticks()
 
     for char_id <- Map.keys(state.sessions) do
-      with {:ok, char} <- Managers.Character.lookup(char_id) do
-        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+      with {:ok, _char} <- Managers.Character.lookup(char_id) do
+        Managers.Character.send_msg(char_id, {:update, tick})
       end
     end
 

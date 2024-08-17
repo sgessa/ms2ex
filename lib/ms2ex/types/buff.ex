@@ -1,6 +1,7 @@
 defmodule Ms2ex.Types.Buff do
   alias Ms2ex.Storage
   alias Ms2ex.Types.SkillCast
+  alias Ms2ex.Enums
 
   defstruct [
     :object_id,
@@ -10,10 +11,14 @@ defmodule Ms2ex.Types.Buff do
     :skill,
     :start_tick,
     :end_tick,
+    :can_proc,
+    :can_expire,
+    :interval_tick,
     :stacks,
     :enabled,
     :effect,
     :shield_health,
+    proc_count: 0,
     activated: false
   ]
 
@@ -34,7 +39,34 @@ defmodule Ms2ex.Types.Buff do
     __MODULE__
     |> struct(attrs)
     |> stack()
+    |> get_ticks()
     |> set_shield_health()
+  end
+
+  def get_ticks(%__MODULE__{} = buff) do
+    prop_interval_tick = buff.effect[:property][:interval_tick] || 0
+
+    interval_tick =
+      if prop_interval_tick > 0,
+        do: prop_interval_tick,
+        else: buff.effect[:property][:duration_tick] + 1000
+
+    next_proc_tick =
+      buff.start_tick + (buff.effect[:property][:delay_tick] || 0) +
+        (buff.effect[:property][:interval_tick] || 0)
+
+    keep_condition =
+      if c = buff.effect[:property][:keep_condition], do: Enums.BuffKeepCondition.get_key(c)
+
+    can_proc = keep_condition != :unlimited_duration
+
+    can_expire = can_proc && buff.end_tick >= buff.start_tick
+
+    buff
+    |> Map.put(:interval_tick, interval_tick)
+    |> Map.put(:can_proc, can_proc)
+    |> Map.put(:can_expire, can_expire)
+    |> Map.put(:next_proc_tick, next_proc_tick)
   end
 
   def stack(%__MODULE__{} = buff) do
