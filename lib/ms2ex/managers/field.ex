@@ -95,17 +95,22 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
-  #
-  # NPCs
-  #
+  def handle_info({:leave_battle_stance, character}, state) do
+    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    {:noreply, state}
+  end
 
-  def handle_info({:add_buff, skill_cast, skill, character}, state) do
+  def handle_info({:add_buff, character, skill_cast, skill}, state) do
     object_id = state.counter + 1
 
     Managers.Character.call(character, {:add_buff, object_id, skill_cast, skill})
 
     {:noreply, %{state | counter: object_id}}
   end
+
+  #
+  # NPCs
+  #
 
   def handle_info(:load_npc_spawns, state) do
     Field.Npc.load_npc_spawns(state)
@@ -126,11 +131,6 @@ defmodule Ms2ex.Managers.Field do
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
     {:noreply, Field.Npc.remove_npc(field_npc, state)}
-  end
-
-  def handle_info({:leave_battle_stance, character}, state) do
-    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
-    {:noreply, state}
   end
 
   def handle_info(:send_updates, state) do

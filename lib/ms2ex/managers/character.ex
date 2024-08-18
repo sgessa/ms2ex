@@ -51,7 +51,17 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:cast_skill, skill_cast}, _from, character) do
-    character = Character.Skill.cast_skill(character, skill_cast)
+    case Character.Skill.cast_skill(character, skill_cast) do
+      {:ok, character} ->
+        {:reply, {:ok, character}, character}
+
+      {:error, character} ->
+        {:reply, {:error, character}, character}
+    end
+  end
+
+  def handle_call({:update_skill_cast, skill_cast}, _from, character) do
+    character = Character.Skill.add(character, skill_cast)
     {:reply, {:ok, character}, character}
   end
 

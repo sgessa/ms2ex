@@ -68,9 +68,9 @@ defmodule Ms2ex.GameHandlers.Skill do
         hold_string: hold_string
       })
 
-    {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
-
-    Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast))
+    with {:ok, character} <- Managers.Character.call(character, {:cast_skill, skill_cast}) do
+      Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast))
+    end
   end
 
   def handle_mode(@attack, packet, session) do
@@ -95,12 +95,15 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if skill_cast = character.skill_casts[cast_id] do
-      Managers.Character.Skill.update(character, skill_cast, %{
-        motion_point: motion_point,
-        position: position,
-        direction: direction,
-        rotation: rotation
-      })
+      skill_cast =
+        Map.merge(skill_cast, %{
+          motion_point: motion_point,
+          position: position,
+          direction: direction,
+          rotation: rotation
+        })
+
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       Context.Field.broadcast(skill_cast.caster, Packets.SkillSync.bytes(skill_cast))
     end
@@ -113,9 +116,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if skill_cast = character.skill_casts[cast_id] do
-      Managers.Character.Skill.update(character, skill_cast, %{
-        server_tick: server_tick
-      })
+      skill_cast = %{skill_cast | server_tick: server_tick}
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
     end
   end
 
@@ -140,11 +142,14 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if skill_cast = character.skill_casts[cast_id] do
-      Managers.Character.Skill.update(character, skill_cast, %{
-        position: position,
-        direction: direction,
-        attack_point: attack_point
-      })
+      skill_cast =
+        Map.merge(skill_cast, %{
+          position: position,
+          direction: direction,
+          attack_point: attack_point
+        })
+
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       damage_targets(packet, target_count, skill_cast)
     end
@@ -166,10 +171,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if skill_cast = character.skill_casts[cast_id] do
-      Managers.Character.Skill.update(character, skill_cast, %{
-        position: position,
-        rotation: rotation
-      })
+      skill_cast = %{skill_cast | position: position, rotation: rotation}
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
       mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
@@ -196,12 +199,14 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
     if skill_cast = character.skill_casts[cast_id] do
-      {:ok, character, skill_cast} =
-        Managers.Character.Skill.update(character, skill_cast, %{
+      skill_cast =
+        Map.merge(skill_cast, %{
           attack_point: attack_point,
           position: position,
           rotation: rotation
         })
+
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       Context.Field.call(character, {:add_field_skill, skill_cast})
     end
