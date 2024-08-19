@@ -1,10 +1,9 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets, Types}
+  alias Ms2ex.{Managers, Context, Packets, Types}
   alias Ms2ex.Managers
 
-  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   @use 0x0
@@ -34,7 +33,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {rotation, packet} = get_coord(packet)
     {rotate2z, packet} = get_float(packet)
 
-    {client_tick, packet} = get_int(packet)
+    {_client_tick, packet} = get_int(packet)
 
     {unknown, packet} = get_bool(packet)
     {_item_uid, packet} = get_long(packet)
@@ -63,13 +62,15 @@ defmodule Ms2ex.GameHandlers.Skill do
         rotate2z: rotate2z,
         motion_point: motion_point,
         server_tick: server_tick,
-        client_tick: client_tick
+        unknown: unknown,
+        is_hold: is_hold,
+        hold_int: hold_int,
+        hold_string: hold_string
       })
 
-    {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
-
-    state = {unknown, is_hold, hold_int, hold_string}
-    Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, state))
+    with {:ok, character} <- Managers.Character.call(character, {:cast_skill, skill_cast}) do
+      Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast))
+    end
   end
 
   def handle_mode(@attack, packet, session) do
@@ -77,7 +78,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     handle_damage(damage_type, packet, session)
   end
 
-  def handle_mode(@sync, packet, _session) do
+  def handle_mode(@sync, packet, session) do
     {cast_id, packet} = get_long(packet)
     {_skill_id, packet} = get_int(packet)
     {_skill_level, packet} = get_int(packet)
@@ -91,38 +92,46 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_unk3, packet} = get_byte(packet)
     {_unk4, _packet} = get_byte(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
-      Managers.SkillCast.update(skill_cast, %{
-        motion_point: motion_point,
-        position: position,
-        direction: direction,
-        rotation: rotation
-      })
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+
+    if skill_cast = character.skill_casts[cast_id] do
+      skill_cast =
+        Map.merge(skill_cast, %{
+          motion_point: motion_point,
+          position: position,
+          direction: direction,
+          rotation: rotation
+        })
+
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       Context.Field.broadcast(skill_cast.caster, Packets.SkillSync.bytes(skill_cast))
     end
   end
 
-  def handle_mode(@tick_sync, packet, _session) do
+  def handle_mode(@tick_sync, packet, session) do
     {cast_id, packet} = get_long(packet)
     {server_tick, _packet} = get_int(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
-      Managers.SkillCast.update(skill_cast, %{
-        server_tick: server_tick
-      })
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+
+    if skill_cast = character.skill_casts[cast_id] do
+      skill_cast = %{skill_cast | server_tick: server_tick}
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
     end
   end
 
-  def handle_mode(@cancel, packet, _session) do
+  def handle_mode(@cancel, packet, session) do
     {cast_id, _packet} = get_long(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+
+    if skill_cast = character.skill_casts[cast_id] do
       Context.Field.broadcast(skill_cast.caster, Packets.SkillCancel.bytes(skill_cast))
     end
   end
 
-  defp handle_damage(@point, packet, _session) do
+  defp handle_damage(@point, packet, session) do
     {cast_id, packet} = get_long(packet)
     {attack_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
@@ -130,14 +139,17 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_iterations, packet} = get_int(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
-      # TODO calc next_tick
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+
+    if skill_cast = character.skill_casts[cast_id] do
       skill_cast =
-        Managers.SkillCast.update(skill_cast, %{
+        Map.merge(skill_cast, %{
           position: position,
           direction: direction,
           attack_point: attack_point
         })
+
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       damage_targets(packet, target_count, skill_cast)
     end
@@ -156,46 +168,27 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
-      skill_cast =
-        Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+
+    if skill_cast = character.skill_casts[cast_id] do
+      skill_cast = %{skill_cast | position: position, rotation: rotation}
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
       mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
 
-      # TODO check whether it's a player or an ally
-      # Types.SkillCast.heal?(skill_cast)
-      if false do
-        # TODO BUFF
-        # status =
-        #   Types.SkillStatus.new(
-        #     skill_cast,
-        #     skill_cast.caster.object_id,
-        #     skill_cast.caster.object_id,
-        #     1
-        #   )
+      # TODO
+      # handle splash and/or conditions
 
-        # Context.Field.add_status(skill_cast.caster, status)
-
-        # TODO heal based on stats
-        heal = 50
-        # Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
-
-        {:ok, character} =
-          Managers.Character.cast(skill_cast.caster, {:increase_stat, :health, heal})
-
-        push(session, Packets.Stats.update_char_stats(character, :health))
-      else
-        Context.Field.broadcast(
-          skill_cast.caster,
-          Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
-        )
-      end
+      Context.Field.broadcast(
+        skill_cast.caster,
+        Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
+      )
     end
   end
 
   # AoE Damage
-  defp handle_damage(@splash, packet, _session) do
+  defp handle_damage(@splash, packet, session) do
     {cast_id, packet} = get_long(packet)
     {attack_point, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
@@ -203,14 +196,19 @@ defmodule Ms2ex.GameHandlers.Skill do
     {position, packet} = get_coord(packet)
     {rotation, _packet} = get_coord(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
-      Managers.SkillCast.update(skill_cast, %{
-        attack_point: attack_point,
-        position: position,
-        rotation: rotation
-      })
+    {:ok, character} = Managers.Character.lookup(session.character_id)
 
-      Context.Field.add_region_skill(skill_cast.caster, skill_cast)
+    if skill_cast = character.skill_casts[cast_id] do
+      skill_cast =
+        Map.merge(skill_cast, %{
+          attack_point: attack_point,
+          position: position,
+          rotation: rotation
+        })
+
+      Managers.Character.call(character, {:update_skill_cast, skill_cast})
+
+      Context.Field.call(character, {:add_field_skill, skill_cast})
     end
   end
 

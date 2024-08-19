@@ -51,7 +51,22 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:cast_skill, skill_cast}, _from, character) do
-    character = Character.Skill.cast_skill(character, skill_cast)
+    case Character.Skill.cast_skill(character, skill_cast) do
+      {:ok, character} ->
+        {:reply, {:ok, character}, character}
+
+      {:error, character} ->
+        {:reply, {:error, character}, character}
+    end
+  end
+
+  def handle_call({:update_skill_cast, skill_cast}, _from, character) do
+    character = Character.Skill.add(character, skill_cast)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call({:add_buff, object_id, skill_cast, skill}, _from, character) do
+    character = Character.Buff.add_buff(character, object_id, skill_cast, skill)
     {:reply, {:ok, character}, character}
   end
 
@@ -94,6 +109,17 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, character}
   end
 
+  def handle_info({:update, tick}, character) do
+    character =
+      Enum.reduce(character.buffs, character, fn {_id, buff}, character ->
+        Character.Buff.update(character, buff, tick)
+      end)
+
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_player(character))
+
+    {:noreply, character}
+  end
+
   def handle_info({:regen, stat_id}, character) do
     {:noreply, Character.Stats.regen(character, stat_id)}
   end
@@ -121,6 +147,9 @@ defmodule Ms2ex.Managers.Character do
 
   def cast(%Schema.Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
   def cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
+
+  def send_msg(character_id, msg),
+    do: process_name(character_id) |> Process.whereis() |> send(msg)
 
   defp process_name(character_id) do
     :"characters:#{character_id}"

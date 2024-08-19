@@ -6,7 +6,7 @@ defmodule Ms2ex.Types.Npc do
     animations: %{}
   ]
 
-  def new(attrs) do
+  def build(attrs) do
     friendly = get_in(attrs, [:metadata, :basic, :friendly]) || 0
     class = get_in(attrs, [:metadata, :basic, :class]) || 0
 

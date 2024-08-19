@@ -46,7 +46,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     object_id = state.counter + 1
 
     field_npc =
-      Types.FieldNpc.new(%{
+      Types.FieldNpc.build(%{
         object_id: object_id,
         spawn_point_id: npc_spawn[:id],
         npc: npc,
@@ -64,7 +64,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   def load_npc(state, npc_id, npc_spawn) do
     with %{} = metadata <- Storage.Npcs.get_meta(npc_id),
-         npc <- Types.Npc.new(%{id: npc_id, metadata: metadata}) do
+         npc <- Types.Npc.build(%{id: npc_id, metadata: metadata}) do
       load_npc(state, npc, npc_spawn)
     else
       _ -> state
