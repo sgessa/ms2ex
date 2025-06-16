@@ -1,6 +1,8 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/sgessa/ms2ex/update-readme/assets/logo.png" alt="MS2EX Logo" width="300"/>
+<div>
   <h1>MS2EX</h1>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/sgessa/ms2ex/update-readme/assets/logo.png" alt="MS2EX Logo" width="300"/>
+  </p>
   <p><strong>MapleStory 2 Server Emulator written in Elixir</strong></p>
 
   [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
