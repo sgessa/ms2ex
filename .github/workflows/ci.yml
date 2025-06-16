@@ -38,7 +38,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Setup Elixir
       - name: Set up Elixir
@@ -55,7 +55,7 @@ jobs:
 
       # Cache dependencies and build artifacts
       - name: Cache deps and _build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             deps
