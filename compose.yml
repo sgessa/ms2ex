@@ -12,13 +12,13 @@ services:
       - 5432:5432
 
   redis:
-    image: redis:latest
+    image: redis:7
     container_name: ms2ex-cache
     restart: unless-stopped
     ports:
       - 6379:6379
     volumes:
-      - redis:/data
+      - ./priv/redis-data:/data
 
 volumes:
   postgres:

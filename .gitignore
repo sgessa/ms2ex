@@ -30,8 +30,8 @@ ms2ex-*.tar
 # this depending on your deployment strategy.
 /priv/static/
 
-# Ignore Game Metadata
-/priv/resources/
+# Ignore Redis Data (Game Client Metadata)
+/priv/redis-data/dump.rdb
 
 # MapleShark dump files
 /dumps/
