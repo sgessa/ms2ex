@@ -32,6 +32,11 @@ jobs:
           elixir-version: "1.18.x"
           otp-version: "27.x"
 
+      - name: Install LuaJIT dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libluajit-5.1-dev
+
       - name: Checkout code
         uses: actions/checkout@v4
 
