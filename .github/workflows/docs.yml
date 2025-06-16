@@ -28,8 +28,8 @@ jobs:
       - name: Setup Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.18.4" # Match your project version
-          otp-version: "27.3" # Match with a compatible OTP
+          elixir-version: "1.18.x"
+          otp-version: "27.x"
 
       - name: Checkout code
         uses: actions/checkout@v3

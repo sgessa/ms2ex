@@ -44,8 +44,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.17.x"
-          otp-version: "26.x"
+          elixir-version: "1.18.x"
+          otp-version: "27.x"
 
       # Install LuaJIT dependencies
       - name: Install LuaJIT dependencies
