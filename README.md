@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/your-username/ms2ex-server/raw/main/assets/logo.png" alt="MS2EX Logo" width="300"/>
+  <img src="https://raw.githubusercontent.com/sgessa/ms2ex/update-readme/assets/logo.png" alt="MS2EX Logo" width="300"/>
   <h1>MS2EX</h1>
   <p><strong>MapleStory 2 Server Emulator written in Elixir</strong></p>
 
