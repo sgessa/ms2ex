@@ -140,8 +140,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📬 Contact
 
-For any questions or concerns, please open an issue on this repository or contact the project maintainers directly.
+For questions or to connect with the community:
 
+- **Open an issue** on this repository for bug reports or feature requests
+- **Join the [MapleStory 2 Hub Discord](https://discord.gg/P66m7cvdJp)** - The community gathering spot for MS2 fans where you can also find MS2EX maintainers
 ---
 
 <div align="center">
