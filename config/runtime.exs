@@ -14,7 +14,7 @@ config :ms2ex, Ms2ex.Repo,
   database: env!("DB_NAME"),
   hostname: env!("DB_HOST")
 
-server_address = env!("SERVER_ADDRESS", :string, "127.0.0.1")
+server_address = env!("SERVER_ADDRESS", :string)
 
 config :ms2ex, Ms2ex,
   login: %{host: server_address, port: 8526},
