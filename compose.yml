@@ -19,6 +19,7 @@ services:
       - 6379:6379
     volumes:
       - redis:/data
+      - ./priv/resources/metadata.rdb:/data/dump.rdb:ro
 
 volumes:
   postgres:
