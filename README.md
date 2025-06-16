@@ -8,7 +8,7 @@
   <p><strong>MapleStory 2 Server Emulator written in Elixir</strong></p>
 
   [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Elixir Version](https://img.shields.io/badge/elixir-~%3E%201.17-blueviolet.svg)](https://elixir-lang.org/)
+  [![Elixir Version](https://img.shields.io/badge/elixir-1.17-blueviolet.svg)](https://elixir-lang.org/)
   [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
   <h3>🚀 <strong>Actively Seeking Contributors!</strong> 🚀</h3>
@@ -36,11 +36,11 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ### Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) ~> 1.17
-- [Docker & Docker Compose](https://www.docker.com/products/docker-desktop/) (optional, but recommended)
-- [PostgreSQL](https://www.postgresql.org/download/)
+- [Elixir](https://elixir-lang.org/install.html) 1.17
+- [Docker & Docker Compose](https://docs.docker.com/compose) (optional, but recommended)
+- [PostgreSQL](https://www.postgresql.org/download)
 - [Redis](https://redis.io/download) - Required for game client metadata
-- LuaJIT dependencies
+- LuaJIT dependencies - Required to run Game Client scripts
 
 ### Installation
 
@@ -136,8 +136,8 @@ Simply download the metadata file and place it in the right location:
 
 1. **Download the latest Redis dump**:
    - Go to our [GitHub Releases](https://github.com/sgessa/ms2ex/releases) page
-   - Download the latest `metadata.rdb` file
-   - Place it in the `priv/resources/` directory of the project as `metadata.rdb`
+   - Download the latest `dump.rdb` file
+   - Place it in the `priv/redis-data/` directory of the project
 
 2. **Start Redis with Docker Compose**:
    ```bash
@@ -192,6 +192,7 @@ If MS2EX fails to start or exhibits unexpected behavior, verify that:
 - Redis is running and accessible
 - MS2EX's Redis connection configuration is correct
 - The metadata has been correctly loaded
+- For Docker setup: Make sure the `priv/redis-data/dump.rdb` file exists
 - For pre-built dumps: Ensure you're using a Redis version compatible with the dump format
 
 ## 🤝 Contributing
