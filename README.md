@@ -74,8 +74,8 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
    **Option A:** Using Docker (Recommended)
    ```bash
-   # Download the metadata.rdb file from GitHub Releases first
-   # Place it in the priv/resources/ directory of the project
+   # Download the dump.rdb file from GitHub Releases first
+   # Place it in the priv/redis-data/ directory of the project
 
    # Start PostgreSQL and Redis with Docker Compose
    docker compose up -d
@@ -149,7 +149,7 @@ Simply download the metadata file and place it in the right location:
 
 1. **Download the latest Redis dump (rdb)**:
    - Go to our [GitHub Releases](https://github.com/sgessa/ms2ex/releases) page
-   - Download the latest `metadata.rdb` file
+   - Download the latest `dump.rdb` file
 
 2. **Place the file in your Redis data directory**:
    - For standard Redis installs: `/var/lib/redis/dump.rdb` (Linux) or appropriate directory based on your installation
@@ -239,5 +239,5 @@ For questions or to connect with the community:
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by the MS2EX community</sub>
+  <sub>Built with ❤️ by the Maplers</sub>
 </div>
