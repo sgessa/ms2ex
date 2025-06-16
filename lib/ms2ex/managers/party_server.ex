@@ -96,7 +96,7 @@ defmodule Ms2ex.PartyServer do
   def handle_call({:update_member, character}, _from, state) do
     state = update_member(state, character)
 
-    unless Types.Party.new?(state) do
+    if !Types.Party.new?(state) do
       broadcast(state.id, Packets.Party.update_member(character))
     end
 

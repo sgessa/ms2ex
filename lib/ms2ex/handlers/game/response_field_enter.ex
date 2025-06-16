@@ -23,16 +23,17 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     push(session, Packets.ChatSticker.load(favorite_stickers, sticker_groups))
   end
 
-  defp maybe_change_map(%{change_map: new_map} = character) do
+  defp maybe_change_map(%{change_map: nil} = character), do: character
+
+  defp maybe_change_map(character) do
     run(character, fn -> Context.Field.unsubscribe(character) end)
 
+    new_map = character.change_map
     {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
 
     character
-    |> Map.delete(:change_map)
+    |> Map.put(:change_map, nil)
     |> Map.put(:position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
   end
-
-  defp maybe_change_map(character), do: character
 end

@@ -27,10 +27,6 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Configure your database
 config :ms2ex, Ms2ex.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "ms2ex_dev",
-  hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 

@@ -130,7 +130,7 @@ defmodule Ms2ex.Net.SenderSession do
   defp log_sent_packet(opcode, packet) do
     name = Packets.opcode_to_name(:send, opcode)
 
-    unless name in conf()[:skip_packet_logs] do
+    if name not in conf()[:skip_packet_logs] do
       L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{stringify_packet(packet)}"]))
     end
   end

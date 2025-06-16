@@ -8,7 +8,7 @@
   <p><strong>MapleStory 2 Server Emulator written in Elixir</strong></p>
 
   [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Elixir Version](https://img.shields.io/badge/elixir-1.17-blueviolet.svg)](https://elixir-lang.org/)
+  [![Elixir Version](https://img.shields.io/badge/elixir-1.18-blueviolet.svg)](https://elixir-lang.org/)
   [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
   <h3>🚀 <strong>Actively Seeking Contributors!</strong> 🚀</h3>
@@ -36,7 +36,7 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ### Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) 1.17
+- [Elixir](https://elixir-lang.org/install.html) 1.18
 - [Docker & Docker Compose](https://docs.docker.com/compose) (optional, but recommended)
 - [PostgreSQL](https://www.postgresql.org/download)
 - [Redis](https://redis.io/download) - Required for game client metadata
@@ -70,7 +70,14 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    brew install luajit
    ```
 
-4. **Set up PostgreSQL and Redis**
+4. **Configure environment variables**
+   ```bash
+   # Copy the example .env file and modify if needed
+   cp .env-example .env
+   ```
+   The default values are configured to work with the Docker Compose setup.
+
+5. **Set up PostgreSQL and Redis**
 
    **Option A:** Using Docker (Recommended)
    ```bash
@@ -85,13 +92,14 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    **Option B:** Manual Setup
    - Install and configure PostgreSQL and Redis manually
    - Set up game client metadata as described in the [Game Client Metadata](#-game-client-metadata) section below
+   - Update the `.env` file with your database connection details
 
-5. **Install Elixir dependencies and set-up the database**
+6. **Install Elixir dependencies and set-up the database**
    ```bash
    mix setup
    ```
 
-6. **Start the server**
+7. **Start the server**
    ```bash
    mix run --no-halt
    ```
@@ -164,7 +172,7 @@ For those interested in extending or modifying the metadata, here's how the syst
 
 1. **Source Data**: The original game client XML files contain crucial game data.
 
-2. **Parsing & Organization**: [MapleServer2](https://github.com/AlanMorel/MapleServer2) (a C# emulator) parses these XML files and stores them in a structured format in their MySQL database.
+2. **Parsing & Organization**: [MapleServer2](https://github.com/AngeloTadeucci/Maple2) (a C# emulator) parses these XML files and stores them in a structured format in their MySQL database.
 
 3. **Redis Export**: [Ms2ex.File](https://github.com/sgessa/ms2ex-file) reads the organized data from a MySQL and exports it to Redis.
 
