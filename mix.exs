@@ -1,6 +1,8 @@
 defmodule Ms2ex.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/sgessa/ms2ex"
+
   def project do
     [
       app: :ms2ex,
@@ -10,7 +12,15 @@ defmodule Ms2ex.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      # ExDoc configuration
+      name: "MS2EX",
+      source_url: @source_url,
+      homepage_url: @source_url,
+      docs: [
+        main: "readme",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -49,7 +59,11 @@ defmodule Ms2ex.MixProject do
       {:varint, ">= 0.0.0"},
       {:libgraph, "~> 0.13"},
       {:ranch, "~> 2.0", override: true},
-      {:luaport, "~> 1.6"}
+      {:luaport, "~> 1.6"},
+
+      # Development and testing tools
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 
