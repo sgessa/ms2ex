@@ -21,6 +21,25 @@ defmodule Ms2ex.Managers.Character do
 
   def monitor(%Schema.Character{} = character), do: call(character, :monitor)
 
+  def call(%Schema.Character{id: id}, msg) do
+    if pid = Process.whereis(process_name(id)) do
+      GenServer.call(pid, msg)
+    else
+      :error
+    end
+  end
+
+  def call(character_id, msg) do
+    if pid = Process.whereis(process_name(character_id)) do
+      GenServer.call(pid, msg)
+    else
+      :error
+    end
+  end
+
+  def cast(%Schema.Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
+  def cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
+
   def start(%Schema.Character{} = character) do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
@@ -102,25 +121,6 @@ defmodule Ms2ex.Managers.Character do
     cleanup(character)
     {:stop, :normal, character}
   end
-
-  def call(%Schema.Character{id: id}, msg) do
-    if pid = Process.whereis(process_name(id)) do
-      GenServer.call(pid, msg)
-    else
-      :error
-    end
-  end
-
-  def call(character_id, msg) do
-    if pid = Process.whereis(process_name(character_id)) do
-      GenServer.call(pid, msg)
-    else
-      :error
-    end
-  end
-
-  def cast(%Schema.Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
-  def cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
 
   defp process_name(character_id) do
     :"characters:#{character_id}"

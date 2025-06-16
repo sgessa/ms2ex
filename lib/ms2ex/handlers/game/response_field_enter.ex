@@ -29,7 +29,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
 
     character
-    |> Map.delete(:change_map)
+    |> Map.put(:change_map, nil)
     |> Map.put(:position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
   end

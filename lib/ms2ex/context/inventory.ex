@@ -71,7 +71,7 @@ defmodule Ms2ex.Context.Inventory do
 
   defp update_or_create(
          character,
-         %{amount: amount, stack_limit: stack_limit} = item,
+         %{amount: amount, metadata: %{stack_limit: stack_limit}} = item,
          %{amount: new_amount} = attrs
        )
        when amount + new_amount > stack_limit do

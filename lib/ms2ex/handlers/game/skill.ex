@@ -1,10 +1,9 @@
 defmodule Ms2ex.GameHandlers.Skill do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets, Types}
+  alias Ms2ex.{Managers, Context, Packets, Types}
   alias Ms2ex.Managers
 
-  import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
 
   @use 0x0
@@ -143,9 +142,9 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  defp handle_damage(@target, packet, session) do
+  defp handle_damage(@target, packet, _session) do
     {cast_id, packet} = get_long(packet)
-    {attack_counter, packet} = get_int(packet)
+    {_attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
 
     {position, packet} = get_coord(packet)
@@ -161,36 +160,10 @@ defmodule Ms2ex.GameHandlers.Skill do
         Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
-      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
 
-      # TODO check whether it's a player or an ally
-      # Types.SkillCast.heal?(skill_cast)
-      if false do
-        # TODO BUFF
-        # status =
-        #   Types.SkillStatus.new(
-        #     skill_cast,
-        #     skill_cast.caster.object_id,
-        #     skill_cast.caster.object_id,
-        #     1
-        #   )
+      damage_targets(skill_cast, crit?, target_count, [], packet)
 
-        # Context.Field.add_status(skill_cast.caster, status)
-
-        # TODO heal based on stats
-        heal = 50
-        # Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.heal(status, heal))
-
-        {:ok, character} =
-          Managers.Character.cast(skill_cast.caster, {:increase_stat, :health, heal})
-
-        push(session, Packets.Stats.update_char_stats(character, :health))
-      else
-        Context.Field.broadcast(
-          skill_cast.caster,
-          Packets.SkillDamage.damage(skill_cast, mobs, attack_counter)
-        )
-      end
+      # TODO
     end
   end
 
