@@ -187,7 +187,7 @@ If you need to extend or modify the metadata:
    - Ensure the MySQL database is properly seeded with game metadata.
 
 2. **Use Ms2ex.File to export to Redis**:
-   - Clone the [Ms2ex.File repository](https://github.com/sgessa/ms2ex-file)
+   - Clone the [Ms2ex.File repository](https://github.com/icr4/ms2ex_file)
    - Follow the instructions in its README to connect to your MySQL database
    - Run the export process to transfer data to your Redis instance
 
