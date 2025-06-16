@@ -8,7 +8,7 @@
   <p><strong>MapleStory 2 Server Emulator written in Elixir</strong></p>
 
   [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Elixir Version](https://img.shields.io/badge/elixir-1.17-blueviolet.svg)](https://elixir-lang.org/)
+  [![Elixir Version](https://img.shields.io/badge/elixir-1.18-blueviolet.svg)](https://elixir-lang.org/)
   [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
   <h3>🚀 <strong>Actively Seeking Contributors!</strong> 🚀</h3>
@@ -36,7 +36,7 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ### Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) 1.17
+- [Elixir](https://elixir-lang.org/install.html) 1.18
 - [Docker & Docker Compose](https://docs.docker.com/compose) (optional, but recommended)
 - [PostgreSQL](https://www.postgresql.org/download)
 - [Redis](https://redis.io/download) - Required for game client metadata
@@ -164,7 +164,7 @@ For those interested in extending or modifying the metadata, here's how the syst
 
 1. **Source Data**: The original game client XML files contain crucial game data.
 
-2. **Parsing & Organization**: [MapleServer2](https://github.com/AlanMorel/MapleServer2) (a C# emulator) parses these XML files and stores them in a structured format in their MySQL database.
+2. **Parsing & Organization**: [MapleServer2](https://github.com/AngeloTadeucci/Maple2) (a C# emulator) parses these XML files and stores them in a structured format in their MySQL database.
 
 3. **Redis Export**: [Ms2ex.File](https://github.com/sgessa/ms2ex-file) reads the organized data from a MySQL and exports it to Redis.
 
