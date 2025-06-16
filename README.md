@@ -70,7 +70,14 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    brew install luajit
    ```
 
-4. **Set up PostgreSQL and Redis**
+4. **Configure environment variables**
+   ```bash
+   # Copy the example .env file and modify if needed
+   cp .env-example .env
+   ```
+   The default values are configured to work with the Docker Compose setup.
+
+5. **Set up PostgreSQL and Redis**
 
    **Option A:** Using Docker (Recommended)
    ```bash
@@ -85,13 +92,14 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    **Option B:** Manual Setup
    - Install and configure PostgreSQL and Redis manually
    - Set up game client metadata as described in the [Game Client Metadata](#-game-client-metadata) section below
+   - Update the `.env` file with your database connection details
 
-5. **Install Elixir dependencies and set-up the database**
+6. **Install Elixir dependencies and set-up the database**
    ```bash
    mix setup
    ```
 
-6. **Start the server**
+7. **Start the server**
    ```bash
    mix run --no-halt
    ```
