@@ -10,8 +10,7 @@ defmodule Ms2ex.Net.Utils do
     |> Base.encode16()
     |> String.codepoints()
     |> Enum.chunk_every(2)
-    |> Enum.map(&Enum.join/1)
-    |> Enum.join(" ")
+    |> Enum.map_join(" ", &Enum.join/1)
   end
 
   def conf() do
