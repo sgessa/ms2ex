@@ -1,7 +1,7 @@
 defmodule Ms2ex.Net.Utils do
   def peername(socket) do
     {:ok, {inet, port}} = :inet.peername(socket)
-    inet = inet |> Tuple.to_list() |> Enum.map(&to_string/1) |> Enum.join(".")
+    inet = inet |> Tuple.to_list() |> Enum.map_join(".", &to_string/1)
     "#{inet}:#{port}"
   end
 

@@ -29,18 +29,19 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     {rank, packet} = get_int(packet)
     {tab_count, packet} = get_int(packet)
 
-    Enum.reduce(1..tab_count, packet, fn _, packet ->
-      {tab_id, packet} = get_long(packet)
-      {tab_name, packet} = get_ustring(packet)
+    _packet =
+      Enum.reduce(1..tab_count, packet, fn _, packet ->
+        {tab_id, packet} = get_long(packet)
+        {tab_name, packet} = get_ustring(packet)
 
-      tab = Context.Skills.get_tab(character, tab_id)
-      {:ok, tab} = add_or_update_tab(character, tab, %{id: tab_id, name: tab_name})
+        tab = Context.Skills.get_tab(character, tab_id)
+        {:ok, tab} = add_or_update_tab(character, tab, %{id: tab_id, name: tab_name})
 
-      {skill_count, packet} = get_int(packet)
-      packet = save_skills(skill_count, tab, packet)
+        {skill_count, packet} = get_int(packet)
+        packet = save_skills(skill_count, tab, packet)
 
-      packet
-    end)
+        packet
+      end)
 
     # TODO avoid SQL query
     character = Context.Characters.load_skills(character, force: true)

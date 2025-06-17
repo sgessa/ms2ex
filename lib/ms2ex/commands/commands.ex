@@ -39,25 +39,24 @@ defmodule Ms2ex.Commands do
   end
 
   def handle(["level", level], character, session) do
-    with {level, _} <- Integer.parse(level) do
-      level = min(level, Constants.get(:character_max_level))
-      {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
-      Managers.Character.update(character)
+    case Integer.parse(level) do
+      {level, _} ->
+        level = min(level, Constants.get(:character_max_level))
+        {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
+        Managers.Character.update(character)
 
-      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
-      push(session, Packets.Experience.bytes(0, 0, 0))
-    else
+        Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
+        push(session, Packets.Experience.bytes(0, 0, 0))
+
       _ ->
         push_notice(session, character, "Invalid Level: #{level}")
     end
   end
 
   def handle(["map", map_id], character, session) do
-    with {map_id, _} <- Integer.parse(map_id) do
-      Context.Field.change_field(character, map_id)
-    else
-      _ ->
-        push_notice(session, character, "Invalid Map: #{map_id}")
+    case Integer.parse(map_id) do
+      {map_id, _} -> Context.Field.change_field(character, map_id)
+      _ -> push_notice(session, character, "Invalid Map: #{map_id}")
     end
   end
 

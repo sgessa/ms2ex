@@ -78,7 +78,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, party} <- PartyServer.lookup(character.party_id),
-         true <- Types.Party.is_leader?(party, character),
+         true <- Types.Party.leader?(party, character),
          {:ok, target} <- PartyServer.kick_member(party, target_id) do
       if target.online? do
         run(target, fn -> PartyServer.unsubscribe(party.id) end)
@@ -118,7 +118,7 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x2E, _packet, session) do
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, party} <- PartyServer.lookup(character.party_id) do
-      if Types.Party.is_leader?(party, character) do
+      if Types.Party.leader?(party, character) do
         PartyServer.start_ready_check(party)
       end
     end

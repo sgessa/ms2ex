@@ -1,4 +1,9 @@
 defmodule Ms2ex.Types.SyncState do
+  @moduledoc """
+  Schema and functions for managing and synchronizing game state between clients.
+  Provides functionality to serialize and deserialize sync state to and from packets.
+  """
+
   use Ecto.Schema
 
   alias Ms2ex.{EctoTypes, Packets}
@@ -35,6 +40,15 @@ defmodule Ms2ex.Types.SyncState do
     field :unknown_flag_6, EctoTypes.Term, default: {0, 0, 0, @default_coord, @default_coord}
   end
 
+  @doc """
+  Deserializes a sync state from a packet.
+
+  Reads all the necessary state information from the given packet and returns
+  a tuple with the created sync state and the remaining packet data.
+
+  ## Returns
+    - {sync_state, packet}: A tuple with the deserialized sync state and the remaining packet data
+  """
   def from_packet(packet) do
     sync_state = %__MODULE__{}
 
@@ -139,100 +153,138 @@ defmodule Ms2ex.Types.SyncState do
     {%{sync_state | sync_number: sync_number}, packet}
   end
 
+  @doc """
+  Serializes a sync state to a packet.
+
+  Main entry point for writing state data to a packet. This function orchestrates
+  the writing of all components of the sync state by delegating to specialized helper functions.
+
+  ## Parameters
+    - packet: The packet to write to
+    - state: The sync state to serialize
+
+  ## Returns
+    - packet: The updated packet containing the serialized state
+  """
   def put_state(packet, %{flag: flag} = state) do
-    packet =
+    packet
+    |> put_base_state(state)
+    |> put_flag1_data(state, flag)
+    |> put_position_data(state)
+    |> put_animation_extras(state)
+    |> put_movement_data(state)
+    |> put_flag2_data(state, flag)
+    |> put_flag3_data(state, flag)
+    |> put_flag4_data(state, flag)
+    |> put_flag5_data(state, flag)
+    |> put_flag6_data(state, flag)
+    |> put_sync_number(state)
+  end
+
+  defp put_base_state(packet, state) do
+    packet
+    |> put_byte(state.state)
+    |> put_byte(state.sub_state)
+    |> put_byte(state.flag)
+  end
+
+  defp put_flag1_data(packet, state, flag) do
+    if has_bit?(flag, :flag1) do
+      {flag1_unknown1, flag1_unknown2} = state.unknown_flag_1
+
       packet
-      |> put_byte(state.state)
-      |> put_byte(state.sub_state)
-      |> put_byte(flag)
-
-    packet =
-      if has_bit?(flag, :flag1) do
-        {flag1_unknown1, flag1_unknown2} = state.unknown_flag_1
-
-        packet
-        |> put_int(flag1_unknown1)
-        |> put_short(flag1_unknown2)
-      else
-        packet
-      end
-
-    packet =
+      |> put_int(flag1_unknown1)
+      |> put_short(flag1_unknown2)
+    else
       packet
-      |> put_short_coord(state.position)
-      |> put_short(state.rotation)
-      |> put_byte(state.animation)
+    end
+  end
 
-    packet =
-      if state.animation > 127 do
-        packet
-        |> put_float(state.unknown_float_1)
-        |> put_float(state.unknown_float_2)
-      else
-        packet
-      end
+  defp put_position_data(packet, state) do
+    packet
+    |> put_short_coord(state.position)
+    |> put_short(state.rotation)
+    |> put_byte(state.animation)
+  end
 
-    packet =
+  defp put_animation_extras(packet, state) do
+    if state.animation > 127 do
       packet
-      |> put_short_coord(state.speed)
-      |> put_byte(state.unknown1)
-      |> put_short(state.rotation2)
-      |> put_short(state.unknown3)
+      |> put_float(state.unknown_float_1)
+      |> put_float(state.unknown_float_2)
+    else
+      packet
+    end
+  end
 
-    packet =
-      if has_bit?(flag, :flag2) do
-        {coord, str} = state.unknown_flag_2
+  defp put_movement_data(packet, state) do
+    packet
+    |> put_short_coord(state.speed)
+    |> put_byte(state.unknown1)
+    |> put_short(state.rotation2)
+    |> put_short(state.unknown3)
+  end
 
-        packet
-        |> put_coord(coord)
-        |> put_ustring(str)
-      else
-        packet
-      end
+  defp put_flag2_data(packet, state, flag) do
+    if has_bit?(flag, :flag2) do
+      {coord, str} = state.unknown_flag_2
 
-    packet =
-      if has_bit?(flag, :flag3) do
-        {int, str} = state.unknown_flag_3
+      packet
+      |> put_coord(coord)
+      |> put_ustring(str)
+    else
+      packet
+    end
+  end
 
-        packet
-        |> put_int(int)
-        |> put_ustring(str || "")
-      else
-        packet
-      end
+  defp put_flag3_data(packet, state, flag) do
+    if has_bit?(flag, :flag3) do
+      {int, str} = state.unknown_flag_3
 
-    packet =
-      if has_bit?(flag, :flag4) do
-        put_ustring(packet, state.flag_4_animation)
-      else
-        packet
-      end
+      packet
+      |> put_int(int)
+      |> put_ustring(str || "")
+    else
+      packet
+    end
+  end
 
-    packet =
-      if has_bit?(flag, :flag5) do
-        {int, str} = state.unknown_flag_5
+  defp put_flag4_data(packet, state, flag) do
+    if has_bit?(flag, :flag4) do
+      put_ustring(packet, state.flag_4_animation)
+    else
+      packet
+    end
+  end
 
-        packet
-        |> put_int(int)
-        |> put_ustring(str || "")
-      else
-        packet
-      end
+  defp put_flag5_data(packet, state, flag) do
+    if has_bit?(flag, :flag5) do
+      {int, str} = state.unknown_flag_5
 
-    packet =
-      if has_bit?(flag, :flag6) do
-        {int1, int2, int3, position, rotation} = state.unknown_flag_6
+      packet
+      |> put_int(int)
+      |> put_ustring(str || "")
+    else
+      packet
+    end
+  end
 
-        packet
-        |> put_int(int1)
-        |> put_int(int2)
-        |> put_byte(int3)
-        |> put_coord(position)
-        |> put_coord(rotation)
-      else
-        packet
-      end
+  defp put_flag6_data(packet, state, flag) do
+    if has_bit?(flag, :flag6) do
+      {int1, int2, int3, position, rotation} = state.unknown_flag_6
 
+      packet
+      |> put_int(int1)
+      |> put_int(int2)
+      |> put_byte(int3)
+      |> put_coord(position)
+      |> put_coord(rotation)
+    else
+      packet
+    end
+  end
+
+  defp put_sync_number(packet, state) do
     put_int(packet, state.sync_number)
   end
 
