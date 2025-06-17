@@ -19,7 +19,10 @@ defmodule Ms2ex.MixProject do
       homepage_url: @source_url,
       docs: [
         main: "readme",
-        extras: ["README.md", "CONTRIBUTING.md", "LICENSE"]
+        extras: ["README.md", "LICENSE", "docs/CLIENT_METADATA.md", "CONTRIBUTING.md"],
+        groups_for_extras: [
+          Guides: Path.wildcard("docs/*")
+        ]
       ]
     ]
   end

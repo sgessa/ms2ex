@@ -1,4 +1,4 @@
-# Contributing to MS2EX
+# Contributing
 
 First off, thank you for considering contributing to MS2EX! It's people like you that make this MapleStory 2 server emulator project such a great tool for the community. This document provides guidelines and steps for contributing.
 
