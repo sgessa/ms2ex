@@ -3,6 +3,8 @@ defmodule Ms2ex.Types.FieldNpc do
   alias Ms2ex.Enums
   alias Ms2ex.Context
 
+  @type t :: %__MODULE__{}
+
   defstruct [
     :object_id,
     :npc,

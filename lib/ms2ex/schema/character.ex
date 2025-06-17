@@ -4,6 +4,8 @@ defmodule Ms2ex.Schema.Character do
 
   alias Ms2ex.{Enums, Context, EctoTypes, Schema}
 
+  @type t :: %__MODULE__{}
+
   @fields [
     :awakened,
     :discovered_maps,

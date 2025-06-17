@@ -106,7 +106,7 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ## 🏗 Project Structure
 
-```
+```text
 ms2ex-server/
 ├── config/             # Configuration files
 ├── lib/                # Source code

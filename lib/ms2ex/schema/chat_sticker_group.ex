@@ -5,6 +5,8 @@ defmodule Ms2ex.Schema.ChatStickerGroup do
 
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   schema "chat_sticker_groups" do
     belongs_to :character, Schema.Character
 

@@ -19,7 +19,7 @@ defmodule Ms2ex.MixProject do
       homepage_url: @source_url,
       docs: [
         main: "readme",
-        extras: ["README.md"]
+        extras: ["README.md", "CONTRIBUTING.md", "LICENSE"]
       ]
     ]
   end

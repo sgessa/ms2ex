@@ -5,6 +5,8 @@ defmodule Ms2ex.Schema.Friend do
 
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   schema "friends" do
     belongs_to :character, Schema.Character
     belongs_to :rcpt, Schema.Character
