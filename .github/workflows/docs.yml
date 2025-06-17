@@ -1,0 +1,44 @@
+name: Deploy docs
+
+on:
+  push:
+    branches:
+      - master
+      - documentation
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18.x"
+          otp-version: "27.x"
+
+      - name: Install LuaJIT dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libluajit-5.1-dev
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Build documentation
+        run: mix docs
+
+      - name: Create .nojekyll file
+        run: touch doc/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: doc
+          clean: true

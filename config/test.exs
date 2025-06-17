@@ -19,4 +19,4 @@ config :ms2ex, Ms2exWeb.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning

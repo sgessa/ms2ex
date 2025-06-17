@@ -1,23 +1,20 @@
 import Config
+import Dotenvy
 
-if config_env() == :prod do
-  # Configure your database
-  db_user = System.get_env("DB_USER") || raise "DB_USER env variable not configured!"
-  db_pass = System.get_env("DB_PASS") || raise "DB_PASS env variable not configured!"
-  db_name = System.get_env("DB_NAME") || raise "DB_NAME env variable not configured!"
-  db_host = System.get_env("DB_HOST") || "localhost"
+env_dir_prefix = System.get_env("RELEASE_ROOT") || Path.expand(".")
 
-  config :ms2ex, Ms2ex.Repo,
-    username: db_user,
-    password: db_pass,
-    database: db_name,
-    hostname: db_host,
-    pool_size: 10
+source!([
+  Path.absname(".env", env_dir_prefix),
+  System.get_env()
+])
 
-  config :ms2ex, Ms2exWeb.Endpoint, server: true
-end
+config :ms2ex, Ms2ex.Repo,
+  username: env!("DB_USER"),
+  password: env!("DB_PASS"),
+  database: env!("DB_NAME"),
+  hostname: env!("DB_HOST")
 
-server_address = System.get_env("SERVER_ADDRESS", "127.0.0.1")
+server_address = env!("SERVER_ADDRESS", :string)
 
 config :ms2ex, Ms2ex,
   login: %{host: server_address, port: 8526},
@@ -39,3 +36,8 @@ config :ms2ex, Ms2ex,
 config :ms2ex, :constants,
   character_max_level: 70,
   expand_skill_tab_cost: -990
+
+if config_env() == :prod do
+  config :ms2ex, Ms2ex.Repo, pool_size: 10
+  config :ms2ex, Ms2exWeb.Endpoint, server: true
+end

@@ -1,6 +1,8 @@
 defmodule Ms2ex.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/sgessa/ms2ex"
+
   def project do
     [
       app: :ms2ex,
@@ -10,7 +12,31 @@ defmodule Ms2ex.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      # ExDoc configuration
+      name: "MS2EX",
+      source_url: @source_url,
+      homepage_url: @source_url,
+      docs: docs()
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "readme",
+      extras: ["README.md", "LICENSE", "docs/CLIENT_METADATA.md", "CONTRIBUTING.md"],
+      groups_for_extras: [
+        Guides: Path.wildcard("docs/*")
+      ],
+      groups_for_modules: [
+        Schema: ~r"Ms2ex\.Schema\.",
+        Enums: ~r"Ms2ex\.Enums\.",
+        Types: ~r"Ms2ex\.Types\.",
+        Contexts: ~r"Ms2ex\.Context\.",
+        Network: ~r"Ms2ex\.Net\.",
+        Packets: ~r"Ms2ex\.Packets\.",
+        Crypto: ~r"Ms2ex\.Crypto\."
+      ]
     ]
   end
 
@@ -33,6 +59,7 @@ defmodule Ms2ex.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:dotenvy, "~> 1.0.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.9"},
@@ -41,7 +68,6 @@ defmodule Ms2ex.MixProject do
       {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:protobuf, ">= 0.0.0"},
@@ -49,7 +75,11 @@ defmodule Ms2ex.MixProject do
       {:varint, ">= 0.0.0"},
       {:libgraph, "~> 0.13"},
       {:ranch, "~> 2.0", override: true},
-      {:luaport, "~> 1.6"}
+      {:luaport, "~> 1.6"},
+
+      # Development and testing tools
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

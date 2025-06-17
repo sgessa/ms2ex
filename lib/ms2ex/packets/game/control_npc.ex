@@ -33,10 +33,5 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
-  defp put_target_id(packet, %Types.Npc{boss?: true}) do
-    # ObjectId of Player being targeted?
-    put_int(packet)
-  end
-
   defp put_target_id(packet, _npc), do: packet
 end

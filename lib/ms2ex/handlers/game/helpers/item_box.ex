@@ -12,21 +12,25 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     if one_group? do
       handle_one_group(session, character, contents)
     else
-      Enum.reduce(contents, session, fn content, session ->
-        %{metadata: %{jobs: jobs}} =
-          Context.Items.load_metadata(%Schema.Item{item_id: content.id})
-
-        if character.job in jobs or :none in jobs do
-          add_item(session, character, content)
-        else
-          session
-        end
-      end)
+      handle_groups(session, character, contents)
     end
   end
 
   defp handle_one_group(session, character, [%{smart_drop_rate: smart_drop_rate} | _] = contents) do
     handle_smart_drop_rate(session, smart_drop_rate, character, contents)
+  end
+
+  defp handle_groups(session, character, contents) do
+    Enum.reduce(contents, session, fn content, session ->
+      %{metadata: %{jobs: jobs}} =
+        Context.Items.load_metadata(%Schema.Item{item_id: content.id})
+
+      if character.job in jobs or :none in jobs do
+        add_item(session, character, content)
+      else
+        session
+      end
+    end)
   end
 
   defp handle_smart_drop_rate(session, 0, character, contents) do

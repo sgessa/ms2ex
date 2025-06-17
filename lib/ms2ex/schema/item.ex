@@ -5,6 +5,8 @@ defmodule Ms2ex.Schema.Item do
 
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   @fields [
     :amount,
     :color,

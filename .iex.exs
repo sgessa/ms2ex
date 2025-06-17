@@ -1,5 +1,6 @@
 alias Ms2ex.Context
 alias Ms2ex.Enums
+alias Ms2ex.Managers
 alias Ms2ex.Repo
 alias Ms2ex.Schema
 alias Ms2ex.Storage

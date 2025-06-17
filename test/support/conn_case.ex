@@ -34,7 +34,7 @@ defmodule Ms2exWeb.ConnCase do
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Ms2ex.Repo)
 
-    unless tags[:async] do
+    if !tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Ms2ex.Repo, {:shared, self()})
     end
 

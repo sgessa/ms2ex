@@ -197,7 +197,7 @@ defmodule Ms2ex.Net.Session do
   defp log_incoming_packet(opcode, packet) do
     name = Packets.opcode_to_name(:recv, opcode)
 
-    unless name in conf()[:skip_packet_logs] do
+    if name not in conf()[:skip_packet_logs] do
       L.debug("[RECV] #{name}: #{stringify_packet(packet)}")
     end
   end

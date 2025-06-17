@@ -7,7 +7,7 @@ defmodule Ms2ex.Lua.Items do
     {:ok, results} =
       :luaport.call(script, :calcEnchantBoostValues, [
         item.enchant_level,
-        Enums.ItemType.get_value(Context.Items.type(item)),
+        get_item_type(item.item_id),
         item.metadata.limit.level
       ])
 
@@ -21,7 +21,7 @@ defmodule Ms2ex.Lua.Items do
       :luaport.call(script, get_pick_attribute(:static, pick_attr), [
         stat_value,
         deviation,
-        Enums.ItemType.get_value(Context.Items.type(item)),
+        get_item_type(item.item_id),
         List.first(item.metadata.limit.job_recommends),
         item.metadata.option.level_factor,
         item.rarity,
@@ -33,13 +33,12 @@ defmodule Ms2ex.Lua.Items do
 
   def get_stat_constant_value(pick_attr, stat_value, deviation, item) do
     script = get_script("calcItemValues")
-    item_type = Enums.ItemType.get_value(Context.Items.type(item))
 
     {:ok, [value]} =
       :luaport.call(script, get_pick_attribute(:constant, pick_attr), [
         stat_value,
         deviation,
-        item_type,
+        get_item_type(item.item_id),
         List.first(item.metadata.limit.job_recommends),
         item.metadata.option.level_factor,
         item.rarity,
@@ -60,37 +59,42 @@ defmodule Ms2ex.Lua.Items do
     end
   end
 
+  @static_constant_stats %{
+    health: :constant_value_hp,
+    defense: :constant_value_ndd,
+    magical_res: :constant_value_mar,
+    physical_res: :constant_value_par,
+    critical_rate: :constant_value_cap,
+    strength: :constant_value_str,
+    dexterity: :constant_value_dex,
+    intelligence: :constant_value_int,
+    luck: :constant_value_luk,
+    physical_atk: :constant_value_pap,
+    magical_atk: :constant_value_map,
+    min_weapon_atk: :constant_value_wapmin,
+    max_weapon_atk: :constant_value_wapmax
+  }
   defp get_pick_attribute(:constant, stat) do
-    case stat do
-      :health -> :constant_value_hp
-      :defense -> :constant_value_ndd
-      :magical_res -> :constant_value_mar
-      :physical_res -> :constant_value_par
-      :critical_rate -> :constant_value_cap
-      :strength -> :constant_value_str
-      :dexterity -> :constant_value_dex
-      :intelligence -> :constant_value_int
-      :luck -> :constant_value_luk
-      :magical_atk -> :constant_value_map
-      :min_weapon_atk -> :constant_value_wapmin
-      :max_weapon_atk -> :constant_value_wapmax
-      _ -> nil
-    end
+    Map.get(@static_constant_stats, stat)
   end
 
+  @static_constant_stats %{
+    health: :static_value_hp,
+    defense: :static_value_ndd,
+    magical_res: :static_value_mar,
+    physical_res: :static_value_par,
+    physical_atk: :static_value_pap,
+    magical_atk: :static_value_map,
+    max_weapon_atk: :static_value_wapmax,
+    perfect_guard: :static_rate_abp
+  }
   defp get_pick_attribute(:static, stat) do
-    case stat do
-      # Flat
-      :health -> :static_value_hp
-      :defense -> :static_value_ndd
-      :magical_res -> :static_value_mar
-      :physical_res -> :static_value_par
-      :physical_atk -> :static_value_pap
-      :magical_atk -> :static_value_map
-      :max_weapon_atk -> :static_value_wapmax
-      # Rate
-      :perfect_guard -> :static_rate_abp
-      _ -> nil
-    end
+    Map.get(@static_constant_stats, stat)
+  end
+
+  defp get_item_type(item_id) do
+    item_id
+    |> Context.ItemTypes.get_type_by_item_id()
+    |> Enums.ItemType.get_value()
   end
 end

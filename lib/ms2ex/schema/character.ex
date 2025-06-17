@@ -4,6 +4,8 @@ defmodule Ms2ex.Schema.Character do
 
   alias Ms2ex.{Enums, Context, EctoTypes, Schema}
 
+  @type t :: %__MODULE__{}
+
   @fields [
     :awakened,
     :discovered_maps,
@@ -74,6 +76,7 @@ defmodule Ms2ex.Schema.Character do
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
 
     field :animation, :integer, virtual: true, default: 0
+    field :change_map, :map, virtual: true
     field :channel_id, :integer, virtual: true
     field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Ms2ex.Enums.Gender, default: :male

@@ -5,6 +5,8 @@ defmodule Ms2ex.Schema.FavoriteChatSticker do
 
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   schema "favorite_chat_stickers" do
     belongs_to :character, Schema.Character
     belongs_to :group, Schema.ChatStickerGroup
