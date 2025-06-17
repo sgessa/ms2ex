@@ -2,7 +2,9 @@ name: Deploy ExDocs to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - documentation
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -33,7 +35,7 @@ jobs:
           elixir-version: "1.18.x"
           otp-version: "27.x"
 
-      - name: Install LuaJIT dependencies
+      - name: Install Lua JIT dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
