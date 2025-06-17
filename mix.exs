@@ -17,12 +17,25 @@ defmodule Ms2ex.MixProject do
       name: "MS2EX",
       source_url: @source_url,
       homepage_url: @source_url,
-      docs: [
-        main: "readme",
-        extras: ["README.md", "LICENSE", "docs/CLIENT_METADATA.md", "CONTRIBUTING.md"],
-        groups_for_extras: [
-          Guides: Path.wildcard("docs/*")
-        ]
+      docs: docs()
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "readme",
+      extras: ["README.md", "LICENSE", "docs/CLIENT_METADATA.md", "CONTRIBUTING.md"],
+      groups_for_extras: [
+        Guides: Path.wildcard("docs/*")
+      ],
+      groups_for_modules: [
+        Schema: ~r"Ms2ex\.Schema\.",
+        Enums: ~r"Ms2ex\.Enums\.",
+        Types: ~r"Ms2ex\.Types\.",
+        Contexts: ~r"Ms2ex\.Context\.",
+        Network: ~r"Ms2ex\.Net\.",
+        Packets: ~r"Ms2ex\.Packets\.",
+        Crypto: ~r"Ms2ex\.Crypto\."
       ]
     ]
   end

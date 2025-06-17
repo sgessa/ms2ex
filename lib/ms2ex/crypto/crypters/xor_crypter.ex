@@ -1,12 +1,34 @@
 defmodule Ms2ex.Crypto.XorCrypter do
+  @moduledoc """
+  Implements a XOR-based crypter.
+
+  This crypter applies XOR operations with values derived from the protocol version
+  to encrypt and decrypt data.
+  """
+
   alias Ms2ex.Crypto.Rand32
 
   import Bitwise
+
+  @typedoc "XOR crypter state containing a table of values"
+  @type t :: %__MODULE__{
+          table: list(float())
+        }
 
   defstruct table: []
 
   @index 2
 
+  @doc """
+  Builds a XOR crypter with values derived from the protocol version.
+
+  ## Parameters
+    * `version` - Protocol version
+
+  ## Returns
+    * XOR crypter struct
+  """
+  @spec build(non_neg_integer()) :: t()
   def build(version) do
     {_rand32, rand_float} =
       version
@@ -23,10 +45,39 @@ defmodule Ms2ex.Crypto.XorCrypter do
     }
   end
 
+  @doc """
+  Returns the base index for this crypter.
+
+  ## Returns
+    * Index value
+  """
+  @spec index() :: non_neg_integer()
   def index(), do: @index
 
+  @doc """
+  Decrypts data using XOR operations.
+
+  ## Parameters
+    * `xc` - XOR crypter struct
+    * `data` - List of bytes to decrypt
+
+  ## Returns
+    * Decrypted list of bytes
+  """
+  @spec decrypt(t(), list(non_neg_integer())) :: list(non_neg_integer())
   def decrypt(%__MODULE__{} = xc, data), do: encrypt_or_decrypt(xc, data)
 
+  @doc """
+  Encrypts data using XOR operations.
+
+  ## Parameters
+    * `xc` - XOR crypter struct
+    * `data` - List of bytes to encrypt
+
+  ## Returns
+    * Encrypted list of bytes
+  """
+  @spec encrypt(t(), list(non_neg_integer())) :: list(non_neg_integer())
   def encrypt(%__MODULE__{} = xc, data), do: encrypt_or_decrypt(xc, data)
 
   defp encrypt_or_decrypt(xc, data) do
