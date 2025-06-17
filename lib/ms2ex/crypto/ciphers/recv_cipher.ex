@@ -1,4 +1,11 @@
 defmodule Ms2ex.Crypto.RecvCipher do
+  @moduledoc """
+  Handles decryption of incoming packets in the MapleStory 2 encryption protocol.
+
+  This module manages packet header parsing and decryption for data received
+  from the client.
+  """
+
   alias Ms2ex.Crypto.{Cipher, RearrangeCrypter, TableCrypter, XorCrypter}
   alias Ms2ex.Packets.PacketReader
 
@@ -6,8 +13,27 @@ defmodule Ms2ex.Crypto.RecvCipher do
 
   import Bitwise
 
+  @typedoc "Receive cipher state containing version, IV, and cryptographic sequence"
+  @type t :: %__MODULE__{
+          version: non_neg_integer(),
+          iv: non_neg_integer(),
+          crypt_seq: [module() | struct()]
+        }
+
   defstruct [:version, :iv, :crypt_seq]
 
+  @doc """
+  Creates a new receive cipher with the specified parameters.
+
+  ## Parameters
+    * `version` - Protocol version
+    * `iv` - Initialization vector as integer
+    * `block_iv` - Block initialization vector
+
+  ## Returns
+    * New receive cipher struct
+  """
+  @spec build(non_neg_integer(), non_neg_integer(), non_neg_integer()) :: t()
   def build(version, iv, block_iv) do
     crypt_seq =
       version
@@ -17,6 +43,17 @@ defmodule Ms2ex.Crypto.RecvCipher do
     %__MODULE__{version: version, iv: iv, crypt_seq: crypt_seq}
   end
 
+  @doc """
+  Decrypts a binary packet by first parsing the header and then applying the decryption sequence.
+
+  ## Parameters
+    * `cipher` - Current receive cipher state
+    * `data` - Binary packet data to decrypt
+
+  ## Returns
+    * `{updated_cipher, decrypted_packet}` - Tuple with updated state and packet
+  """
+  @spec decrypt(t(), binary()) :: {t(), binary()}
   def decrypt(%__MODULE__{} = cipher, data) do
     {cipher, packet} = read_header(cipher, data)
 

@@ -1,7 +1,11 @@
 defmodule Ms2ex.Schema.Emote do
   use Ecto.Schema
+
   import Ecto.Changeset
+
   alias Ms2ex.Schema
+
+  @type t :: %__MODULE__{}
 
   schema "emotes" do
     belongs_to :character, Schema.Character

@@ -59,7 +59,7 @@ defmodule Ms2ex.Types.Party do
     Enum.any?(party.members, &(&1.id == character.id))
   end
 
-  def is_leader?(party, character) do
+  def leader?(party, character) do
     party.leader_id == character.id
   end
 

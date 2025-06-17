@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
 
   def invite_to_party(character, target) do
     with {:ok, party} <- PartyServer.lookup(character.party_id),
-         :ok <- is_leader?(party, character),
+         :ok <- leader?(party, character),
          :ok <- target_already_in_party?(character, target) do
       push(target, Packets.Party.invite(character))
     else
@@ -44,7 +44,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
     end
   end
 
-  defp is_leader?(party, character) do
+  defp leader?(party, character) do
     if party.leader_id == character.id do
       :ok
     else

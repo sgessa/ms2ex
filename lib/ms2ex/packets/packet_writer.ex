@@ -70,8 +70,7 @@ defmodule Ms2ex.Packets.PacketWriter do
       addr
       |> String.split(".")
       |> Enum.map(&String.to_integer(&1))
-      |> Enum.map(&<<&1>>)
-      |> Enum.join()
+      |> Enum.map_join("", &<<&1>>)
 
     packet <> addr
   end

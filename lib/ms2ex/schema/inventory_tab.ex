@@ -5,6 +5,8 @@ defmodule Ms2ex.Schema.InventoryTab do
 
   alias Ms2ex.{Enums, Schema}
 
+  @type t :: %__MODULE__{}
+
   schema "inventory_tabs" do
     belongs_to :character, Schema.Character
 

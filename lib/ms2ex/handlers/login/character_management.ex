@@ -78,16 +78,14 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     result =
       Repo.transaction(fn ->
-        with {:ok, character} <- Context.Characters.create(session.account, attrs) do
-          Enum.each(equips, fn {equip_slot, item} ->
-            {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
-            {:ok, _equip} = Context.Equips.equip(item, equip_slot)
-          end)
+        case Context.Characters.create(session.account, attrs) do
+          {:ok, character} ->
+            add_equips(character, equips)
+            equips = Context.Equips.list(character)
+            %{character | equips: equips}
 
-          equips = Context.Equips.list(character)
-          %{character | equips: equips}
-        else
-          error -> Repo.rollback(error)
+          error ->
+            Repo.rollback(error)
         end
       end)
 
@@ -100,6 +98,13 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       _error ->
         push(session, Packets.CharacterCreate.name_taken())
     end
+  end
+
+  defp add_equips(character, equips) do
+    Enum.each(equips, fn {equip_slot, item} ->
+      {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
+      {:ok, _equip} = Context.Equips.equip(item, equip_slot)
+    end)
   end
 
   defp get_equip(packet) do

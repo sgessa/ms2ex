@@ -5,6 +5,8 @@ defmodule Ms2ex.Schema.Account do
 
   alias Ms2ex.Schema
 
+  @type t :: %__MODULE__{}
+
   schema "accounts" do
     has_many :characters, Schema.Character
 

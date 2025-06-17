@@ -34,7 +34,7 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   end
 
   def check_block_list_size(character, rcpt, error_notice) do
-    size = character.friends |> Enum.filter(&(&1.status == :blocked)) |> Enum.count()
+    size = character.friends |> Enum.count(&(&1.status == :blocked))
 
     if size < @friend_list_max_size do
       :ok
@@ -44,7 +44,7 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   end
 
   def check_friend_list_size(character, rcpt, error_notice) do
-    size = character.friends |> Enum.filter(&(&1.status != :blocked)) |> Enum.count()
+    size = character.friends |> Enum.count(&(&1.status != :blocked))
 
     if size < @friend_list_max_size do
       :ok

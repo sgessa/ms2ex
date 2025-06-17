@@ -3,6 +3,7 @@ defmodule Ms2ex.Types.SkillCast do
   alias Ms2ex.Enums
   alias Ms2ex.Types.Coord
 
+  @type t :: %__MODULE__{}
   defstruct [
     :client_tick,
     :server_tick,

@@ -12,7 +12,8 @@
       checks: [
         # Skip ModuleDoc and Spec checks initially
         {Credo.Check.Readability.ModuleDoc, false},
-        {Credo.Check.Readability.Specs, false}
+        {Credo.Check.Readability.Specs, false},
+        {Credo.Check.Design.TagTODO, false}
       ]
     }
   ]
