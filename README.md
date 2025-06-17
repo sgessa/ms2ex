@@ -4,21 +4,20 @@
   <p align="center">
     <img src="https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo.png" alt="MS2EX Logo" width="300"/>
   </p>
-
-  <p><strong>MapleStory 2 Server Emulator written in Elixir</strong></p>
-
-  [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Elixir Version](https://img.shields.io/badge/elixir-1.18-blueviolet.svg)](https://elixir-lang.org/)
-  [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
-  [![Documentation](https://img.shields.io/badge/📚_documentation-online-brightgreen.svg)](https://sgessa.github.io/ms2ex)
-
-  <h3>🚀 <strong>Actively Seeking Contributors!</strong> 🚀</h3>
-
-  <p>
-      Join us in accelerating the development of this open-source project.<br/>
-      See our <a href="#-contributing">Contributing section</a> to get started.
-  </p>
 </div>
+
+### MapleStory 2 Server Emulator written in Elixir
+
+[![Elixir Version](https://img.shields.io/badge/elixir-1.18-blueviolet.svg)](https://elixir-lang.org/)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Documentation](https://img.shields.io/badge/📚_documentation-online-brightgreen.svg)](https://sgessa.github.io/ms2ex)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+### 🚀 Actively Seeking Contributors! 🚀
+
+Join us in accelerating the development of this open-source project.
+
+See our [Contributing section](#-contributing) to get started.
 
 ## 🌟 Overview
 
