@@ -1,10 +1,6 @@
-<div>
-  <h1>MS2EX</h1>
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo-light.png#gh-light-mode-only
 
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo.png" alt="MS2EX Logo" width="300"/>
-  </p>
-</div>
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo-dark.png#gh-dark-mode-only)
 
 ### MapleStory 2 Server Emulator written in Elixir
 
