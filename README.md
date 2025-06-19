@@ -1,6 +1,6 @@
-![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo-light.png#gh-light-mode-only
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-light.png#gh-light-mode-only
 
-![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo-dark.png#gh-dark-mode-only)
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-dark.png#gh-dark-mode-only)
 
 ### MapleStory 2 Server Emulator written in Elixir
 
