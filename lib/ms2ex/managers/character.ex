@@ -1,8 +1,7 @@
 defmodule Ms2ex.Managers.Character do
   use GenServer
 
-  alias Ms2ex.{Context, Packets, Schema}
-  alias Ms2ex.Managers.Character
+  alias Ms2ex.{Context, Managers, Packets, Schema}
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -70,7 +69,7 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:cast_skill, skill_cast}, _from, character) do
-    character = Character.Skill.cast_skill(character, skill_cast)
+    character = Managers.Character.Skill.cast_skill(character, skill_cast)
     {:reply, {:ok, character}, character}
   end
 
@@ -79,11 +78,11 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_cast({:consume_stat, stat_id, amount}, character) do
-    {:noreply, Character.Stats.decrease(character, stat_id, amount)}
+    {:noreply, Managers.Character.Stats.decrease(character, stat_id, amount)}
   end
 
   def handle_cast({:increase_stat, stat_id, amount}, character) do
-    {:noreply, Character.Stats.increase(character, stat_id, amount)}
+    {:noreply, Managers.Character.Stats.increase(character, stat_id, amount)}
   end
 
   # --------------------------------
@@ -106,7 +105,7 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:receive_fall_dmg}, character) do
     hp = Map.get(character.stats, :health_cur)
     dmg = Context.Damage.calculate_fall_dmg(character)
-    character = Character.Stats.set(character, :health, max(hp - dmg, 25))
+    character = Managers.Character.Stats.set(character, :health, max(hp - dmg, 25))
 
     push(character, Packets.FallDamage.bytes(character, 0))
 
@@ -114,7 +113,7 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_info({:regen, stat_id}, character) do
-    {:noreply, Character.Stats.regen(character, stat_id)}
+    {:noreply, Managers.Character.Stats.regen(character, stat_id)}
   end
 
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
