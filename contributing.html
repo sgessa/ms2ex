@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="project" content="MS2EX v0.1.0">
+
+
+    <title>Contributing — MS2EX v0.1.0</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+
+    <script defer src="dist/sidebar_items-F7E11F06.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-DPJLHKSM.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="https://github.com/sgessa/ms2ex" class="sidebar-projectName" translate="no">
+MS2EX
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.1.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-extra" id="main" data-type="extras">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of MS2EX</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>Contributing</h1>
+
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/CONTRIBUTING.md#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+  </div>
+
+
+<p>First off, thank you for considering contributing to MS2EX! It's people like you that make this MapleStory 2 server emulator project such a great tool for the community. This document provides guidelines and steps for contributing.</p><h2 id="code-of-conduct" class="section-heading"><a href="#code-of-conduct" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Code of Conduct</span></h2><p>By participating in this project, you agree to abide by its Code of Conduct. Please be respectful and constructive in your communications with other community members.</p><h2 id="how-can-i-contribute" class="section-heading"><a href="#how-can-i-contribute" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">How Can I Contribute?</span></h2><h3 id="reporting-bugs" class="section-heading"><a href="#reporting-bugs" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Reporting Bugs</span></h3><p>This section guides you through submitting a bug report for MS2EX. Following these guidelines helps maintainers understand your report, reproduce the behavior, and find related reports.</p><ul><li><strong>Use the GitHub issue tracker</strong> to report bugs</li><li><strong>Use a clear and descriptive title</strong> for the issue</li><li><strong>Describe the exact steps to reproduce the bug</strong> in as much detail as possible</li><li><strong>Provide specific examples</strong> to demonstrate the steps</li><li><strong>Describe the behavior you observed after following the steps</strong></li><li><strong>Explain which behavior you expected to see instead and why</strong></li><li><strong>Include screenshots and animated GIFs</strong> if possible</li><li><strong>Include your environment information</strong> (OS, Elixir version, etc.)</li></ul><h3 id="suggesting-enhancements" class="section-heading"><a href="#suggesting-enhancements" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Suggesting Enhancements</span></h3><p>This section guides you through submitting an enhancement suggestion for MS2EX, including completely new features and minor improvements to existing functionality.</p><ul><li><strong>Use the GitHub issue tracker</strong> with the enhancement label</li><li><strong>Use a clear and descriptive title</strong> for the issue</li><li><strong>Provide a detailed description of the suggested enhancement</strong></li><li><strong>Explain why this enhancement would be useful</strong> to most MS2EX users</li><li><strong>List some other applications where this enhancement exists</strong>, if applicable</li></ul><h3 id="pull-requests" class="section-heading"><a href="#pull-requests" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Pull Requests</span></h3><ul><li><strong>Fill in the required template</strong></li><li><strong>Do not include issue numbers in the PR title</strong></li><li><strong>Include screenshots and animated GIFs</strong> in your pull request whenever possible</li><li><strong>Follow the Elixir style guide</strong></li><li><strong>Document new code</strong></li><li><strong>End all files with a newline</strong></li></ul><h2 id="development-process" class="section-heading"><a href="#development-process" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Development Process</span></h2><h3 id="setup-development-environment" class="section-heading"><a href="#setup-development-environment" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Setup Development Environment</span></h3><ol><li><strong>Fork the repository</strong></li><li><strong>Clone your fork</strong></li><li><strong>Check README.md for setup instructions</strong></li></ol><h3 id="making-changes" class="section-heading"><a href="#making-changes" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Making Changes</span></h3><ol><li><p><strong>Create a branch</strong></p><pre><code class="makeup bash" translate="no"><span class="">git checkout -b name-of-your-branch
+</span></code></pre></li><li><p><strong>Make your changes</strong></p><ul><li>Write your code</li><li>Add or update tests as necessary</li><li>Add or update documentation as necessary</li></ul></li><li><p><strong>Format your code</strong></p><pre><code class="makeup bash" translate="no"><span class="">mix format
+</span></code></pre><p>You can set-up your editor to format on save, or run the command manually.</p></li><li><p><strong>Commit your changes</strong></p><pre><code class="makeup bash" translate="no"><span class="">git commit -m &quot;A brief description of your changes&quot;
+</span></code></pre></li><li><p><strong>Push to your fork</strong></p><pre><code class="makeup bash" translate="no"><span class="">git push origin name-of-your-branch
+</span></code></pre></li><li><p><strong>Open a pull request</strong></p></li></ol><h2 id="styleguides" class="section-heading"><a href="#styleguides" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Styleguides</span></h2><h3 id="git-commit-messages" class="section-heading"><a href="#git-commit-messages" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Git Commit Messages</span></h3><ul><li>Use the present tense (&quot;Add feature&quot; not &quot;Added feature&quot;)</li><li>Use the imperative mood (&quot;Move cursor to...&quot; not &quot;Moves cursor to...&quot;)</li><li>Limit the first line to 90 characters or less</li><li>Reference issues and pull requests liberally after the first line</li></ul>
+
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="license.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+LICENSE
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="client_metadata.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Game Client Metadata
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="MS2EX.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="project" content="MS2EX v0.1.0">
+
+
+    <title>Ms2ex.Packets.PacketWriter — MS2EX v0.1.0</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+
+    <script defer src="dist/sidebar_items-F7E11F06.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-DPJLHKSM.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="https://github.com/sgessa/ms2ex" class="sidebar-projectName" translate="no">
+MS2EX
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.1.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of MS2EX</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Ms2ex.Packets.PacketWriter</span> 
+      <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
+
+    </h1>
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+  </div>
+
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#build/1" data-no-tooltip="" translate="no">build(module)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#deflate/1" data-no-tooltip="" translate="no">deflate(data)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_bool/2" data-no-tooltip="" translate="no">put_bool(packet, bool)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_byte/2" data-no-tooltip="" translate="no">put_byte(packet, byte \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_bytes/2" data-no-tooltip="" translate="no">put_bytes(packet, b)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_coord/2" data-no-tooltip="" translate="no">put_coord(packet, coord \\ nil)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_deflated/2" data-no-tooltip="" translate="no">put_deflated(packet, data)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_ecto_enum/3" data-no-tooltip="" translate="no">put_ecto_enum(packet, type, atom)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_float/3" data-no-tooltip="" translate="no">put_float(packet, number \\ 0, size \\ 32)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_int/2" data-no-tooltip="" translate="no">put_int(packet, int \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_int_big/2" data-no-tooltip="" translate="no">put_int_big(packet, int \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_ip_address/2" data-no-tooltip="" translate="no">put_ip_address(packet, addr)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_long/2" data-no-tooltip="" translate="no">put_long(packet, int \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_sbyte_coord/2" data-no-tooltip="" translate="no">put_sbyte_coord(packet, map)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_short/2" data-no-tooltip="" translate="no">put_short(packet, short \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_short_coord/2" data-no-tooltip="" translate="no">put_short_coord(packet, coord \\ nil)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_static_packet/2" data-no-tooltip="" translate="no">put_static_packet(packet, static)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_string/2" data-no-tooltip="" translate="no">put_string(packet, str \\ &quot;&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_time/2" data-no-tooltip="" translate="no">put_time(packet, time \\ nil)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_uchar/2" data-no-tooltip="" translate="no">put_uchar(packet, arg2)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_ushort/2" data-no-tooltip="" translate="no">put_ushort(packet, short \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_ustring/2" data-no-tooltip="" translate="no">put_ustring(packet, str \\ &quot;&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#reduce/3" data-no-tooltip="" translate="no">reduce(packet, enum, fun)</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="build/1">
+
+  <div class="detail-header">
+    <a href="#build/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">build(module)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="deflate/1">
+
+  <div class="detail-header">
+    <a href="#deflate/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">deflate(data)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L147" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_bool/2">
+
+  <div class="detail-header">
+    <a href="#put_bool/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_bool(packet, bool)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L15" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_byte/2">
+
+    <span id="put_byte/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_byte/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_byte(packet, byte \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L17" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_bytes/2">
+
+  <div class="detail-header">
+    <a href="#put_bytes/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_bytes(packet, b)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L18" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_coord/2">
+
+    <span id="put_coord/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_coord/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_coord(packet, coord \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L20" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_deflated/2">
+
+  <div class="detail-header">
+    <a href="#put_deflated/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_deflated(packet, data)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L36" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_ecto_enum/3">
+
+  <div class="detail-header">
+    <a href="#put_ecto_enum/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_ecto_enum(packet, type, atom)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L53" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_float/3">
+
+    <span id="put_float/1"></span>
+
+    <span id="put_float/2"></span>
+
+  <div class="detail-header">
+    <a href="#put_float/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_float(packet, number \\ 0, size \\ 32)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L58" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_int/2">
+
+    <span id="put_int/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_int/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_int(packet, int \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L62" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_int_big/2">
+
+    <span id="put_int_big/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_int_big/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_int_big(packet, int \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L66" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_ip_address/2">
+
+  <div class="detail-header">
+    <a href="#put_ip_address/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_ip_address(packet, addr)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L68" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_long/2">
+
+    <span id="put_long/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_long/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_long(packet, int \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L78" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_sbyte_coord/2">
+
+  <div class="detail-header">
+    <a href="#put_sbyte_coord/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_sbyte_coord(packet, map)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L84" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_short/2">
+
+    <span id="put_short/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_short/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_short(packet, short \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L82" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_short_coord/2">
+
+    <span id="put_short_coord/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_short_coord/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_short_coord(packet, coord \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L91" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_static_packet/2">
+
+  <div class="detail-header">
+    <a href="#put_static_packet/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_static_packet(packet, static)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L137" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_string/2">
+
+    <span id="put_string/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_string/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_string(packet, str \\ &quot;&quot;)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L107" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_time/2">
+
+    <span id="put_time/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_time/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_time(packet, time \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L113" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_uchar/2">
+
+  <div class="detail-header">
+    <a href="#put_uchar/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_uchar(packet, arg2)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L121" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_ushort/2">
+
+    <span id="put_ushort/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_ushort/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_ushort(packet, short \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L129" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_ustring/2">
+
+    <span id="put_ustring/1"></span>
+
+  <div class="detail-header">
+    <a href="#put_ustring/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_ustring(packet, str \\ &quot;&quot;)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L131" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="reduce/3">
+
+  <div class="detail-header">
+    <a href="#reduce/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">reduce(packet, enum, fun)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/packet_writer.ex#L157" class="icon-action" rel="help" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="MS2EX.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

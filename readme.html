@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="project" content="MS2EX v0.1.0">
+
+
+    <title>README — MS2EX v0.1.0</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+
+    <script defer src="dist/sidebar_items-F7E11F06.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-DPJLHKSM.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="https://github.com/sgessa/ms2ex" class="sidebar-projectName" translate="no">
+MS2EX
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.1.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-extra" id="main" data-type="extras">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of MS2EX</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>README</h1>
+
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/README.md#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+  </div>
+
+
+<p><img src="https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-light.png#gh-light-mode-only" alt="Ms2Ex"/></p><p><img src="https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-dark.png#gh-dark-mode-only" alt="Ms2Ex"/></p><h3 id="maplestory-2-server-emulator-written-in-elixir" class="section-heading"><a href="#maplestory-2-server-emulator-written-in-elixir" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">MapleStory 2 Server Emulator written in Elixir</span></h3><p><a href="https://elixir-lang.org/"><img src="https://img.shields.io/badge/elixir-1.18-blueviolet.svg" alt="Elixir Version"/></a>
+<a href="contributing.html"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" alt="Contributions Welcome"/></a>
+<a href="https://sgessa.github.io/ms2ex"><img src="https://img.shields.io/badge/📚_documentation-online-brightgreen.svg" alt="Documentation"/></a>
+<a href="license.html"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="GitHub license"/></a></p><h3 id="actively-seeking-contributors" class="section-heading"><a href="#actively-seeking-contributors" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🚀 Actively Seeking Contributors! 🚀</span></h3><p>Join us in accelerating the development of this open-source project.</p><p>See our <a href="#-contributing">Contributing section</a> to get started.</p><h2 id="overview" class="section-heading"><a href="#overview" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🌟 Overview</span></h2><p>MS2EX is an open-source server emulator for MapleStory 2, a retired Korean MMORPG.</p><p>The project aims to recreate the server infrastructure using Elixir, a functional programming language known for building scalable and fault-tolerant applications.</p><h2 id="features" class="section-heading"><a href="#features" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">✨ Features</span></h2><ul><li><strong>Concurrent Architecture</strong>: Built on the Erlang VM (BEAM) for excellent handling of concurrent connections</li><li><strong>Hot Code Reloading</strong>: Update code without restarting the server</li><li><strong>Fault Tolerance</strong>: Isolated processes ensure crashes don't bring down the entire system</li><li><strong>Scalable Design</strong>: Easily scale horizontally across multiple nodes</li></ul><h2 id="getting-started" class="section-heading"><a href="#getting-started" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🚀 Getting Started</span></h2><h3 id="prerequisites" class="section-heading"><a href="#prerequisites" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Prerequisites</span></h3><ul><li><a href="https://elixir-lang.org/install.html">Elixir</a> 1.18</li><li><a href="https://docs.docker.com/compose">Docker &amp; Docker Compose</a> (optional, but recommended)</li><li><a href="https://www.postgresql.org/download">PostgreSQL</a></li><li><a href="https://redis.io/download">Redis</a> - Required for game client metadata</li><li>LuaJIT dependencies - Required to run Game Client scripts</li></ul><h3 id="installation" class="section-heading"><a href="#installation" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Installation</span></h3><ol><li><p><strong>Clone the repository</strong></p><pre><code class="makeup bash" translate="no"><span class="">git clone https://github.com/sgessa/ms2ex.git
+</span><span class="">cd ms2ex
+</span></code></pre></li><li><p><strong>Install Elixir and Erlang</strong>
+Follow the instructions on the <a href="https://elixir-lang.org/install.html">Elixir installation page</a> to install Elixir and Erlang.</p><p>If you are using <code class="inline">asdf</code> you can simply do:</p><pre><code class="makeup bash" translate="no"><span class="">asdf plugin add elixir
+</span><span class="">asdf plugin add erlang
+</span><span class="">asdf install
+</span></code></pre></li><li><p><strong>Install Lua dependencies</strong></p><pre><code class="makeup bash" translate="no"><span class=""># For Ubuntu/Debian
+</span><span class="">apt install libluajit-5.1-dev
+</span><span class="">
+</span><span class=""># For OSX
+</span><span class="">brew install luajit
+</span></code></pre></li><li><p><strong>Configure environment variables</strong></p><pre><code class="makeup bash" translate="no"><span class=""># Copy the example .env file and modify if needed
+</span><span class="">cp .env-example .env
+</span></code></pre><p>The default values are configured to work with the Docker Compose setup.</p></li><li><p><strong>Set up PostgreSQL and Redis</strong></p><p><strong>Download Game Client Metadata</strong></p><p>Download the latest dump.rdb file from <a href="https://github.com/sgessa/ms2ex/releases">GitHub Releases</a> first.</p><p>Place it in the <code class="inline">priv/redis-data/</code> directory of the project.</p><p><strong>Option A:</strong> Using Docker (Recommended)</p><pre><code class="makeup bash" translate="no"><span class=""># Start PostgreSQL and Redis
+</span><span class="">docker compose up -d
+</span></code></pre><p><strong>Option B:</strong> Manual Setup (Linux)</p><ul><li>Install and configure PostgreSQL and Redis manually</li><li>Stop Redis</li><li>Copy <code class="inline">dump.rdb</code> to <code class="inline">/var/lib/redis/dump.rdb</code></li><li>Start Redis</li></ul></li><li><p><strong>Install Elixir dependencies and set-up the database</strong></p><pre><code class="makeup bash" translate="no"><span class="">mix setup
+</span></code></pre></li><li><p><strong>Start the server</strong></p><pre><code class="makeup bash" translate="no"><span class="">mix phx.server
+</span></code></pre></li></ol><h2 id="project-structure" class="section-heading"><a href="#project-structure" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🏗 Project Structure</span></h2><pre><code class="text">ms2ex-server/
+├── config/             # Configuration files
+├── lib/                # Source code
+│   ├── ms2ex/          # Core game logic
+│   └── ms2ex_web/      # Web interface and API endpoints
+├── priv/               # Assets and database migrations
+│   ├── repo/           # Database migrations and seeds
+│   └── static/         # Static assets
+└── test/               # Test files</code></pre><h2 id="technology-stack" class="section-heading"><a href="#technology-stack" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🛠 Technology Stack</span></h2><ul><li><strong><a href="https://elixir-lang.org/">Elixir</a></strong> - Primary programming language</li><li><strong><a href="https://www.phoenixframework.org/">Phoenix</a></strong> - Web framework</li><li><strong><a href="https://hexdocs.pm/ecto/Ecto.html">Ecto</a></strong> - Database wrapper and query generator</li><li><strong><a href="https://www.postgresql.org/">PostgreSQL</a></strong> - Persistent data storage</li><li><strong><a href="https://redis.io/">Redis</a></strong> - In-memory data structure store</li><li><strong><a href="https://hexdocs.pm/luaport/api-reference.html">LuaPort</a></strong> - Lua integration</li><li><strong><a href="https://ninenines.eu/docs/en/ranch/2.0/guide/">Ranch</a></strong> - TCP socket acceptor pool</li></ul><h2 id="contributing" class="section-heading"><a href="#contributing" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🤝 Contributing</span></h2><h3 id="we-need-your-help" class="section-heading"><a href="#we-need-your-help" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🔥 We Need Your Help! 🔥</span></h3><p><strong>This project is actively seeking contributors to accelerate development!</strong></p><p>Whether you're interested in fixing bugs, adding new features, or improving documentation, your help is appreciated.</p><p>Even if you're new to Elixir or are just passionate about MapleStory 2, we welcome your contributions!</p><p>The project offers a great opportunity to learn Elixir while working on something fun.</p><p>See our <a href="contributing.html">contributing guidelines</a> for detailed instructions on how to get started.</p><h2 id="roadmap" class="section-heading"><a href="#roadmap" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">📋 Roadmap</span></h2><ul><li>[ ] Complete core server functionalities</li><li>[ ] Implement all game mechanics</li><li>[ ] Add unit and integration tests</li><li>[ ] Create comprehensive documentation</li><li>[ ] Develop admin interface</li><li>[ ] Support for custom plugins</li></ul><p><strong>Want to make an impact?</strong> Choose an area that matches your interests and skills! Please reach out via our <a href="https://discord.gg/DRASSfqAKk">Discord</a> or open an issue to discuss how you can contribute.</p><h2 id="license" class="section-heading"><a href="#license" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">📜 License</span></h2><p>This project is licensed under the MIT License - see the <a href="license.html">LICENSE</a> file for details.</p><h2 id="acknowledgments" class="section-heading"><a href="#acknowledgments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">🙏 Acknowledgments</span></h2><ul><li>The MapleStory 2 community for their research and documentation</li><li>Contributors to the project</li><li>The Elixir community for their excellent tools and libraries</li></ul><h2 id="contact" class="section-heading"><a href="#contact" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">📬 Contact</span></h2><p>For questions or to connect with the community:</p><ul><li><strong>Open an issue</strong> on this repository for bug reports or feature requests</li><li><strong>Join our <a href="https://discord.gg/DRASSfqAKk">Discord</a></strong> - The community gathering spot for MS2 fans where you can also find MS2EX maintainers</li></ul><hr class="thin"/><div align="center">  <sub>Built with ❤️ by Maplers</sub></div>
+
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="license.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+LICENSE
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="MS2EX.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>
