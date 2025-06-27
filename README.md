@@ -1,10 +1,6 @@
-<div>
-  <h1>MS2EX</h1>
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-light.png#gh-light-mode-only)
 
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo.png" alt="MS2EX Logo" width="300"/>
-  </p>
-</div>
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-dark.png#gh-dark-mode-only)
 
 ### MapleStory 2 Server Emulator written in Elixir
 
@@ -154,7 +150,7 @@ See our [contributing guidelines](CONTRIBUTING.md) for detailed instructions on 
 - [ ] Develop admin interface
 - [ ] Support for custom plugins
 
-**Want to make an impact?** Choose an area that matches your interests and skills! Please reach out via our [Discord](https://discord.gg/P66m7cvdJp) or open an issue to discuss how you can contribute.
+**Want to make an impact?** Choose an area that matches your interests and skills! Please reach out via our [Discord](https://discord.gg/DRASSfqAKk) or open an issue to discuss how you can contribute.
 
 ## 📜 License
 
@@ -171,7 +167,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions or to connect with the community:
 
 - **Open an issue** on this repository for bug reports or feature requests
-- **Join the [MapleStory 2 Hub Discord](https://discord.gg/P66m7cvdJp)** - The community gathering spot for MS2 fans where you can also find MS2EX maintainers
+- **Join our [Discord](https://discord.gg/DRASSfqAKk)** - The community gathering spot for MS2 fans where you can also find MS2EX maintainers
 ---
 
 <div align="center">
