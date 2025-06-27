@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - logo
   workflow_dispatch:
 
 jobs:
@@ -23,7 +22,7 @@ jobs:
           elixir-version: "1.18.x"
           otp-version: "27.x"
 
-      - name: Install LuaJIT dependencies
+      - name: Install Lua JIT dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
