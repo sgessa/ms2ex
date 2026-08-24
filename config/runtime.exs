@@ -33,7 +33,6 @@ config :ms2ex, Ms2ex,
   }
 
 config :ms2ex, Ms2exWeb.Endpoint,
-  adapter: Bandit.PhoenixAdapter,
   http: [port: env!("WEB_PORT", :integer, 4000)]
 
 # Imports server constants
