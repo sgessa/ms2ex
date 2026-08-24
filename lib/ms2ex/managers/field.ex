@@ -25,12 +25,10 @@ defmodule Ms2ex.Managers.Field do
   # client dropping controls sent while it asynchronously loads the entity
   @idle_control_ms 2000
 
-  # players draw from the global id space; npcs/portals use the local one and
-  # items get their own range — this client collides server items with its
-  # own field-boss entities when they share the local band
+  # players draw from the global id space; npcs, portals and items share the
+  # local one, mirroring the reference server's per-field id counter
   @object_counter 10_000_000
   @local_object_counter 50_000_000
-  @item_object_counter 300_000_000
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
@@ -43,7 +41,6 @@ defmodule Ms2ex.Managers.Field do
       channel_id: channel_id,
       counter: @object_counter,
       local_counter: local_counter,
-      item_counter: @item_object_counter,
       interactable: %{},
       items: %{},
       map_id: map_id,
