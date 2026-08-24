@@ -13,7 +13,7 @@ defmodule Ms2ex.Packets.FieldAddNpc do
     |> put_coord(field_npc.position)
     |> put_coord(field_npc.rotation)
     |> put_model(npc)
-    |> put_npc_stats()
+    |> put_npc_stats(field_npc)
     |> put_bool(field_npc.dead?)
     # TODO: Put buffs
     |> put_short(0)
@@ -49,16 +49,18 @@ defmodule Ms2ex.Packets.FieldAddNpc do
 
   defp put_boss(packet, _npc), do: packet
 
-  defp put_npc_stats(packet) do
-    flag = 0x23
+  defp put_npc_stats(packet, %Types.FieldNpc{} = field_npc) do
+    health = field_npc.stats.health
+    attack_speed = field_npc.stats.attack_speed
 
+    # client indexes stat triples as [Total, Base, Current]
     packet
-    |> put_byte(flag)
-    |> put_long(0x5)
-    |> put_int()
-    |> put_long(0x5)
-    |> put_int()
-    |> put_long(0x5)
-    |> put_int()
+    |> put_byte(0x23)
+    |> put_long(health.total)
+    |> put_int(trunc(attack_speed.total))
+    |> put_long(health.base)
+    |> put_int(trunc(attack_speed.base))
+    |> put_long(health.current)
+    |> put_int(trunc(attack_speed.current))
   end
 end
