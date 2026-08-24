@@ -17,10 +17,15 @@ defmodule Ms2ex.Types.FieldNpc do
     :last_attacker,
     animation: 255,
     dead?: false,
+    corpse?: false,
     send_control?: true,
     seq_counter: 0,
     last_control_at: 0
   ]
+
+  # must match @idle_control_ms in Managers.Field; staggering keeps npcs from
+  # all becoming dirty on the same tick
+  @idle_control_ms 2000
 
   def new(attrs) do
     attrs =
@@ -29,6 +34,10 @@ defmodule Ms2ex.Types.FieldNpc do
       |> Map.put(:type, get_type(attrs.npc))
       |> Map.put(:animation, 255)
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
+      |> Map.put_new(
+        :last_control_at,
+        System.monotonic_time(:millisecond) + :rand.uniform(@idle_control_ms)
+      )
       |> randomize_pos()
 
     struct(__MODULE__, attrs)

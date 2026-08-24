@@ -25,18 +25,25 @@ defmodule Ms2ex.Managers.Field do
   # client dropping controls sent while it asynchronously loads the entity
   @idle_control_ms 2000
 
+  # players draw from the global id space; npcs/portals use the local one and
+  # items get their own range — this client collides server items with its
+  # own field-boss entities when they share the local band
   @object_counter 10_000_000
+  @local_object_counter 50_000_000
+  @item_object_counter 300_000_000
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
     field_name = Context.Field.field_name(map_id, channel_id)
 
-    {counter, portals} = Field.Portal.load(map_id, @object_counter)
+    {local_counter, portals} = Field.Portal.load(map_id, @local_object_counter)
     # {counter, interactable} = load_interactable(map, counter)
 
     state = %{
       channel_id: channel_id,
-      counter: counter,
+      counter: @object_counter,
+      local_counter: local_counter,
+      item_counter: @item_object_counter,
       interactable: %{},
       items: %{},
       map_id: map_id,
@@ -126,7 +133,17 @@ defmodule Ms2ex.Managers.Field do
           # death animation on its own before the corpse is removed.
           # The hp=0 sync must reach the client BEFORE the dead control entry,
           # otherwise it ignores the state change.
-          field_npc = %{field_npc | dead?: true, send_control?: false}
+          corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
+
+          field_npc =
+            %{
+              field_npc
+              | dead?: true,
+                send_control?: false,
+                corpse?: corpse?,
+                seq_counter: field_npc.seq_counter + 1,
+                last_control_at: System.monotonic_time(:millisecond)
+            }
 
           Logger.debug("NPC #{field_npc.npc.id} died (obj #{field_npc.object_id})")
           Context.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
@@ -185,32 +202,52 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, Field.Npc.remove_npc(field_npc, state)}
   end
 
+  # corpse npcs keep re-announcing their death entry once per second while
+  # their body remains interactable
+  @corpse_broadcast_ms 1000
+
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
 
     now = System.monotonic_time(:millisecond)
 
-    {npcs, dirty} =
-      Enum.flat_map_reduce(state.npcs, [], fn {object_id, npc}, acc ->
-        dirty? =
+    {npcs, {live_dirty, corpse_dirty}} =
+      Enum.flat_map_reduce(state.npcs, {[], []}, fn {object_id, npc}, {live, corpses} ->
+        cond do
+          npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
+            npc =
+              npc
+              |> Map.update!(:seq_counter, &(&1 + 1))
+              |> Map.put(:last_control_at, now)
+
+            {[{object_id, npc}], {live, [npc | corpses]}}
+
           not npc.dead? and
-            (npc.send_control? or now - npc.last_control_at >= @idle_control_ms)
+            (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
+            npc =
+              npc
+              |> Map.update!(:seq_counter, &(&1 + 1))
+              |> Map.put(:last_control_at, now)
+              |> Map.put(:send_control?, false)
 
-        if dirty? do
-          npc =
-            npc
-            |> Map.update!(:seq_counter, &(&1 + 1))
-            |> Map.put(:last_control_at, now)
-            |> Map.put(:send_control?, false)
+            {[{object_id, npc}], {[npc | live], corpses}}
 
-          {[{object_id, npc}], [npc | acc]}
-        else
-          {[{object_id, npc}], acc}
+          true ->
+            {[{object_id, npc}], {live, corpses}}
         end
       end)
 
-    unless dirty == [] do
-      Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes(Enum.reverse(dirty)))
+    unless live_dirty == [] do
+      # one packet per npc, mirroring the reference broadcast sites
+      Enum.each(Enum.reverse(live_dirty), fn npc ->
+        Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc]))
+      end)
+    end
+
+    unless corpse_dirty == [] do
+      Enum.each(Enum.reverse(corpse_dirty), fn npc ->
+        Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(npc))
+      end)
     end
 
     {:noreply, %{state | npcs: Map.new(npcs)}}

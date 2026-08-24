@@ -16,8 +16,10 @@ defmodule Ms2ex.Packets.ControlNpc do
     end)
   end
 
-  # Death announcement (mirrors NpcControlPacket.Dead): a single entry with
-  # flags=0, state=None and seqId=-1; the client plays the death animation.
+  # Death announcement: a single entry with flags=0, state=None and seqId=-1;
+  # the client plays the death animation. Bosses still carry the target-id
+  # slot but it reads zero here, and the sequence counter is the npc's real
+  # (incremented) value.
   def dead(%Types.FieldNpc{} = npc) do
     data =
       ""
@@ -27,10 +29,10 @@ defmodule Ms2ex.Packets.ControlNpc do
       |> put_short(trunc(npc.rotation.z * 10))
       |> put_short_coord()
       |> put_short(100)
-      |> put_target_id(npc)
+      |> put_dead_target_id(npc)
       |> put_byte(0x0)
       |> put_short(-1)
-      |> put_short(1)
+      |> put_short(npc.seq_counter)
 
     __MODULE__
     |> build()
@@ -67,4 +69,11 @@ defmodule Ms2ex.Packets.ControlNpc do
   end
 
   defp put_target_id(packet, _npc), do: packet
+
+  # dead entries always report an idle target, even for bosses
+  defp put_dead_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}}) do
+    put_int(packet, 0)
+  end
+
+  defp put_dead_target_id(packet, _npc), do: packet
 end
