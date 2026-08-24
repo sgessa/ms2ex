@@ -20,10 +20,10 @@ defmodule Ms2ex.Managers.Field do
   #   if (send_control && !dead?) { seq_counter++; broadcast(); send_control? = false; }
   @npc_tick_intval 15
 
-  # the client asynchronously loads npc entities after FieldAddNpc; controls
-  # sent during that window are dropped, so keep broadcasting for a short
-  # grace period before falling back to change-driven updates
-  @spawn_grace_ms 1000
+  # animation transitions keep dirtying npcs on the reference server, so even
+  # idle ones re-announce themselves every few seconds; this also covers the
+  # client dropping controls sent while it asynchronously loads the entity
+  @idle_control_ms 2000
 
   @object_counter 10_000_000
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
@@ -192,17 +192,20 @@ defmodule Ms2ex.Managers.Field do
 
     {npcs, dirty} =
       Enum.flat_map_reduce(state.npcs, [], fn {object_id, npc}, acc ->
-        cond do
-          npc.dead? ->
-            # death was announced via ControlNpc.dead/1; stay silent until removal
-            {[{object_id, npc}], acc}
+        dirty? =
+          not npc.dead? and
+            (npc.send_control? or now - npc.last_control_at >= @idle_control_ms)
 
-          npc.send_control? or now - npc.born_at < @spawn_grace_ms ->
-            npc = Map.update!(npc, :seq_counter, &(&1 + 1))
-            {[{object_id, %{npc | send_control?: false}}], [npc | acc]}
+        if dirty? do
+          npc =
+            npc
+            |> Map.update!(:seq_counter, &(&1 + 1))
+            |> Map.put(:last_control_at, now)
+            |> Map.put(:send_control?, false)
 
-          true ->
-            {[{object_id, npc}], acc}
+          {[{object_id, npc}], [npc | acc]}
+        else
+          {[{object_id, npc}], acc}
         end
       end)
 

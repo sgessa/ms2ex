@@ -16,10 +16,10 @@ defmodule Ms2ex.Types.FieldNpc do
     :stats,
     :last_attacker,
     animation: 255,
-    born_at: 0,
     dead?: false,
     send_control?: true,
-    seq_counter: 0
+    seq_counter: 0,
+    last_control_at: 0
   ]
 
   def new(attrs) do
@@ -29,7 +29,6 @@ defmodule Ms2ex.Types.FieldNpc do
       |> Map.put(:type, get_type(attrs.npc))
       |> Map.put(:animation, 255)
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
-      |> Map.put_new(:born_at, System.monotonic_time(:millisecond))
       |> randomize_pos()
 
     struct(__MODULE__, attrs)
