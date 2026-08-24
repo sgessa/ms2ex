@@ -4,12 +4,16 @@ defmodule Ms2ex.Context.Skills do
   import Ecto.Query, except: [update: 2]
 
   def by_job(job) do
-    jobs = Storage.Tables.Jobs.all()
+    case Storage.Tables.Jobs.get(job) do
+      nil ->
+        []
 
-    basic_skills = get_in(jobs, [job, :skills, :basic]) || []
-    awakening_skills = get_in(jobs, [job, :skills, :awakening]) || []
+      job_data ->
+        basic_skills = get_in(job_data, [:skills, :basic]) || []
+        awakening_skills = get_in(job_data, [:skills, :awakening]) || []
 
-    basic_skills ++ awakening_skills
+        basic_skills ++ awakening_skills
+    end
   end
 
   def get_active_tab(%Schema.Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do

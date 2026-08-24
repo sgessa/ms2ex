@@ -1,6 +1,33 @@
 defmodule Ms2ex.Lua.Items do
   alias Ms2ex.{Context, Enums}
 
+  @constant_stats %{
+    health: :constant_value_hp,
+    defense: :constant_value_ndd,
+    magical_res: :constant_value_mar,
+    physical_res: :constant_value_par,
+    critical_rate: :constant_value_cap,
+    strength: :constant_value_str,
+    dexterity: :constant_value_dex,
+    intelligence: :constant_value_int,
+    luck: :constant_value_luk,
+    physical_atk: :constant_value_pap,
+    magical_atk: :constant_value_map,
+    min_weapon_atk: :constant_value_wapmin,
+    max_weapon_atk: :constant_value_wapmax
+  }
+
+  @static_stats %{
+    health: :static_value_hp,
+    defense: :static_value_ndd,
+    magical_res: :static_value_mar,
+    physical_res: :static_value_par,
+    physical_atk: :static_value_pap,
+    magical_atk: :static_value_map,
+    max_weapon_atk: :static_value_wapmax,
+    perfect_guard: :static_rate_abp
+  }
+
   def get_enchant_values(item) do
     script = get_script("calcEnchantValues")
 
@@ -59,37 +86,12 @@ defmodule Ms2ex.Lua.Items do
     end
   end
 
-  @static_constant_stats %{
-    health: :constant_value_hp,
-    defense: :constant_value_ndd,
-    magical_res: :constant_value_mar,
-    physical_res: :constant_value_par,
-    critical_rate: :constant_value_cap,
-    strength: :constant_value_str,
-    dexterity: :constant_value_dex,
-    intelligence: :constant_value_int,
-    luck: :constant_value_luk,
-    physical_atk: :constant_value_pap,
-    magical_atk: :constant_value_map,
-    min_weapon_atk: :constant_value_wapmin,
-    max_weapon_atk: :constant_value_wapmax
-  }
   defp get_pick_attribute(:constant, stat) do
-    Map.get(@static_constant_stats, stat)
+    Map.fetch!(@constant_stats, stat)
   end
 
-  @static_constant_stats %{
-    health: :static_value_hp,
-    defense: :static_value_ndd,
-    magical_res: :static_value_mar,
-    physical_res: :static_value_par,
-    physical_atk: :static_value_pap,
-    magical_atk: :static_value_map,
-    max_weapon_atk: :static_value_wapmax,
-    perfect_guard: :static_rate_abp
-  }
   defp get_pick_attribute(:static, stat) do
-    Map.get(@static_constant_stats, stat)
+    Map.fetch!(@static_stats, stat)
   end
 
   defp get_item_type(item_id) do

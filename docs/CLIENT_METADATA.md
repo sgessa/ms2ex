@@ -4,37 +4,54 @@ MS2EX requires game client metadata to function properly.
 
 ## Metadata System Overview
 
-For those interested in extending or modifying the metadata, here's how the system works:
+1. **Source Data**: The original game client archives (`Xml.m2d`, `Server.m2d`,
+   `Resource/Exported.m2d`) contain the game data.
 
-1. **Source Data**: The original game client XML files contain crucial game data.
+2. **Ingest**: [ms2ex-file-ingest](../ms2ex-file-ingest) (standalone C# tool,
+   extracted from Maple2's `Maple2.File.Ingest`) parses the client archives and
+   writes ETF-encoded documents **directly to Redis** — no MySQL involved.
 
-2. **Parsing & Organization**: [Maple2](https://github.com/AngeloTadeucci/Maple2) (a C# emulator) parses these XML files and stores them in a structured format in their MySQL database.
+3. **Server Usage**: MS2EX lazily loads documents from Redis into ETS on first
+   access (`Ms2ex.Storage`). Data is immutable while the server runs; keys
+   missing from Redis are negatively cached.
 
-3. **Redis Export**: [Ms2ex.File](https://github.com/sgessa/ms2ex-file) reads the organized data from Maple2 database and exports it to Redis.
+```
+client files (m2d) → ms2ex-file-ingest → Redis → ms2ex
+```
 
-4. **Server Usage**: MS2EX server reads the metadata from Redis at runtime.
+## Setup
 
-## Advanced Setup (For Metadata Development)
+```bash
+cd ms2ex-file-ingest
+cp .env-example .env    # point MS2_DATA_FOLDER at your client folder
+docker compose build
+docker compose run --rm ms2ex-file-ingest
+```
 
-If you need to extend or modify the metadata:
+Re-runs are incremental: each set carries a CRC32C checksum in the Redis hash
+`ingest:checksum` and unchanged sets are skipped. Use `--drop-data` to force a
+full re-write.
 
-1. **Set up Maple2 with MySQL**:
-   - Follow the instructions in [Maple2](https://github.com/AngeloTadeucci/Maple2) to parse client XML files into MySQL
-   - Ensure the MySQL database is properly seeded with game metadata
+See [ms2ex-file-ingest README](../ms2ex-file-ingest/README.md) for details.
 
-2. **Use Ms2ex.File to export to Redis**:
-   - Clone the [Ms2ex.File repository](https://github.com/icr4/ms2ex_file)
-   - Follow the instructions in its README to connect to your MySQL database
-   - Run the export process to transfer data to your Redis instance
+## What gets ingested
 
-3. **Configure MS2EX to use Redis**:
-   - Ensure your Redis connection settings in `config/dev.exs` point to the Redis instance containing the metadata
+| Redis set            | Contents                                        |
+|----------------------|-------------------------------------------------|
+| `item:<id>`          | slots, limits, options, functions, box contents |
+| `npc:<id>`           | basic/class/level, model, stats                 |
+| `skill:<id>`         | properties + per-level data                     |
+| `additional-effect:` | buff properties, shield, status values          |
+| `map:<id>`           | boundings, spawns, portals                      |
+| `table:<filename>`   | job.xml, itemoption\*.xml, nametagsymbol.xml, magicpath.xml, chatemoticon.xml, exp\*.xml |
+
+Values are Erlang external term format (ETF) with atom keys, decoded with
+`:erlang.binary_to_term/1`. The map encoding follows OTP 28's layout — the
+server must run on OTP >= 28.
 
 ## Troubleshooting
 
 If MS2EX fails to start or exhibits unexpected behavior, verify that:
-- Redis is running and accessible
-- MS2EX's Redis connection configuration is correct
-- The metadata has been correctly loaded
-- For Docker setup: Make sure the `priv/redis-data/dump.rdb` file exists
-- For pre-built dumps: Ensure you're using a Redis version compatible with the dump format
+- Redis is running and accessible (connection settings in `config/dev.exs`)
+- The ingest has been run against that Redis instance
+- The client data folder contains all three m2d archives

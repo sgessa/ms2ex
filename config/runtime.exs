@@ -32,6 +32,9 @@ config :ms2ex, Ms2ex,
     locale: "na"
   }
 
+config :ms2ex, Ms2exWeb.Endpoint,
+  http: [port: env!("WEB_PORT", :integer, 4000)]
+
 # Imports server constants
 config :ms2ex, :constants,
   character_max_level: 70,

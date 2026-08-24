@@ -62,7 +62,7 @@ defmodule Ms2ex.Commands do
 
   # def handle(["boss", mob_id], character, session) do
   #   with {mob_id, _} <- Integer.parse(mob_id),
-  #        {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
+  #        {:ok, npc} <- Storage.Npcs.get_meta(mob_id) do
   #     npc = Map.merge(npc, %{boss?: true, respawnable?: false})
   #     Context.Field.add_mob(character, npc)
   #     session
