@@ -78,6 +78,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     put_int(packet, attacker.object_id)
   end
 
+  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}}), do: put_int(packet, 0)
   defp put_target_id(packet, _npc), do: packet
 
   # dead entries always report an idle target, even for bosses
