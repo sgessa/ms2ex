@@ -9,7 +9,7 @@ defmodule Ms2ex.Packets.ControlNpc do
 
   def bytes(npcs) do
     frame(npcs, fn npc ->
-      entry(npc, flags: 0x2, state: @actor_state_idle)
+      entry(npc, flags: 0x2, state: @actor_state_idle, seq_id: npc.animation)
     end)
   end
 
@@ -48,7 +48,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(100)
     |> put_target_id(npc)
     |> put_byte(Keyword.fetch!(opts, :state))
-    |> put_short(@seq_continue)
+    |> put_short(Keyword.get(opts, :seq_id, @seq_continue))
     |> put_short(Keyword.get(opts, :seq_counter, npc.seq_counter))
   end
 

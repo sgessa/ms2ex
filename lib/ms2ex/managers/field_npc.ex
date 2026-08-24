@@ -15,6 +15,9 @@ defmodule Ms2ex.Managers.FieldNpc do
 
     Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
+    # initial control entry: the client needs one to initialize the npc's
+    # animation state (we have no movement ai yet, so later updates are rare)
+    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
 
     # send(self(), :test_move)
     send(self(), :send_updates)
