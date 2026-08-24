@@ -161,7 +161,11 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
 
-      damage_targets(skill_cast, crit?, target_count, [], packet)
+      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
+
+      unless mobs == [] do
+        Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
+      end
 
       # TODO
     end

@@ -39,15 +39,18 @@ defmodule Ms2ex.Packets.Stats do
   end
 
   def update_mob_stat(%FieldNpc{} = mob, stat) do
+    values = mob.stats[stat]
+
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
     |> put_byte()
     |> put_byte(0x1)
     |> put_byte(Enums.BasicStatType.get_value(stat))
-    |> reduce(mob.stats[stat], fn {_stat, value}, packet ->
-      put_long(packet, value)
-    end)
+    # the client reads stat values by index: [Total, Base, Current]
+    |> put_long(values.total)
+    |> put_long(values.base)
+    |> put_long(values.current)
   end
 
   def put_stats(packet, stats) do

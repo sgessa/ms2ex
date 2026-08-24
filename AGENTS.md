@@ -52,6 +52,10 @@ expect a `.env` (see `.env-example`) and a running Redis.
 
 ## Architecture notes
 
+- **Never commit without explicit approval.** Implement changes, compile,
+  and verify, but leave them uncommitted so the user can test against the
+  game client first. Commit only after the user confirms the fix works.
+
 - `lib/ms2ex/storage.ex` is a lazy, immutable cache: documents are fetched
   from Redis on first access into the `:metadata` ETS table and never
   invalidated. Missing keys are negative-cached. Do not add TTLs, eviction,

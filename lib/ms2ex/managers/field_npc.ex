@@ -1,4 +1,5 @@
 defmodule Ms2ex.Managers.FieldNpc do
+  require Logger
   use GenServer
 
   alias Ms2ex.{Context, Schema, Packets}
@@ -15,9 +16,6 @@ defmodule Ms2ex.Managers.FieldNpc do
 
     Context.Field.broadcast(field_npc.field, Packets.FieldAddNpc.add_npc(field_npc))
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.load_npc(field_npc))
-    # initial control entry: the client needs one to initialize the npc's
-    # animation state (we have no movement ai yet, so later updates are rare)
-    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
 
     # send(self(), :test_move)
     send(self(), :send_updates)
@@ -47,14 +45,14 @@ defmodule Ms2ex.Managers.FieldNpc do
   end
 
   def handle_info(:send_updates, %{dead?: true} = field_npc) do
-    # death is announced once via ControlNpc.dead/1; no further updates until removal
+    # death was announced via ControlNpc.dead/1; stay silent until removal
     {:noreply, field_npc}
   end
 
   def handle_info(:send_updates, field_npc) do
-    if field_npc.send_control? do
-      Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
-    end
+    # if field_npc.send_control? do
+    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
+    # end
 
     Process.send_after(self(), :send_updates, @updates_intval)
 
@@ -86,11 +84,14 @@ defmodule Ms2ex.Managers.FieldNpc do
     field_npc = update_stat(field_npc, :health, :current, hp)
 
     if hp == 0 do
-      field_npc =
-        field_npc
-        |> Map.put(:dead?, true)
-        |> Map.update(:seq_counter, 1, &(&1 + 1))
+      # Death is announced with ControlNpc.dead/1; the client plays the
+      # death animation on its own before the corpse is removed.
+      # The hp=0 sync must reach the client BEFORE the dead control entry,
+      # otherwise it ignores the state change.
+      field_npc = Map.put(field_npc, :dead?, true)
 
+      Logger.debug("NPC #{field_npc.npc.id} died (obj #{field_npc.object_id})")
+      Context.Field.broadcast(field_npc.field, Packets.Stats.update_mob_stat(field_npc, :health))
       Context.Field.broadcast(field_npc.field, Packets.ControlNpc.dead(field_npc))
 
       corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || 3
@@ -104,7 +105,7 @@ defmodule Ms2ex.Managers.FieldNpc do
 
       {:reply, {:ok, field_npc}, field_npc}
     else
-      {:reply, {:ok, field_npc}, %{field_npc | send_control?: true}}
+      {:reply, {:ok, field_npc}, field_npc}
     end
   end
 
