@@ -53,7 +53,7 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_target_id(npc)
     |> put_byte(0x1)
     |> put_short(npc.animation)
-    |> put_short(0x1)
+    |> put_short(npc.seq_counter)
   end
 
   # bosses carry their current target's object id; a non-zero value tells

@@ -5,7 +5,14 @@ defmodule Ms2ex.Managers.FieldNpc do
   alias Ms2ex.{Context, Schema, Packets}
   alias Ms2ex.Types.FieldNpc
 
-  @updates_intval 100
+  # field update loop ticks every ~15ms
+  @updates_intval 15
+
+  # the client asynchronously loads npc entities after FieldAddNpc; controls
+  # sent during that window are dropped, so keep broadcasting for a short
+  # grace period before falling back to change-driven updates
+  @spawn_grace_ms 1000
+  @updates_intval 15
 
   def start(%FieldNpc{} = field_npc) do
     GenServer.start(__MODULE__, {field_npc, self()}, name: process_name(field_npc))
@@ -49,14 +56,24 @@ defmodule Ms2ex.Managers.FieldNpc do
     {:noreply, field_npc}
   end
 
+  # only broadcast when something changed, bumping the sequence counter:
+  #   if (send_control && !dead?) { seq_counter++; broadcast(); send_control? = false; }
   def handle_info(:send_updates, field_npc) do
-    # if field_npc.send_control? do
-    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
-    # end
-
     Process.send_after(self(), :send_updates, @updates_intval)
 
-    {:noreply, %{field_npc | send_control?: false}}
+    if field_npc.dead? do
+      {:noreply, field_npc}
+    else
+      dirty? = field_npc.send_control? or in_spawn_grace?(field_npc)
+
+      if dirty? do
+        field_npc = Map.update!(field_npc, :seq_counter, &(&1 + 1))
+
+        Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
+      end
+
+      {:noreply, %{field_npc | send_control?: false}}
+    end
   end
 
   def handle_info(:stop, field_npc) do
@@ -72,6 +89,10 @@ defmodule Ms2ex.Managers.FieldNpc do
 
   def handle_info(_, field_npc) do
     {:noreply, field_npc}
+  end
+
+  defp in_spawn_grace?(field_npc) do
+    System.monotonic_time(:millisecond) - field_npc.born_at < @spawn_grace_ms
   end
 
   def handle_call(:lookup, _from, field_npc) do
