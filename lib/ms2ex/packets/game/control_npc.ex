@@ -56,6 +56,15 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
-  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}}), do: put_int(packet, 0)
+  # bosses carry their current target's object id; a non-zero value tells
+  # the client the boss is in battle (drives the boss HP bar UI)
+  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}) do
+    put_int(packet, 0)
+  end
+
+  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: attacker}) do
+    put_int(packet, attacker.object_id)
+  end
+
   defp put_target_id(packet, _npc), do: packet
 end
