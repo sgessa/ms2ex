@@ -17,7 +17,8 @@ defmodule Ms2ex.Types.FieldNpc do
     :last_attacker,
     animation: 255,
     dead?: false,
-    send_control?: true
+    send_control?: true,
+    seq_counter: 0
   ]
 
   def new(attrs) do

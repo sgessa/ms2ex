@@ -43,10 +43,15 @@ defmodule Ms2ex.Managers.FieldNpc do
     {:noreply, %{field_npc | position: new_position, send_control?: true}}
   end
 
+  def handle_info(:send_updates, %{dead?: true} = field_npc) do
+    # death is announced once via ControlNpc.dead/1; no further updates until removal
+    {:noreply, field_npc}
+  end
+
   def handle_info(:send_updates, field_npc) do
-    # if field_npc.send_control? do
-    Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
-    # end
+    if field_npc.send_control? do
+      Context.Field.broadcast(field_npc.field, Packets.ControlNpc.bytes([field_npc]))
+    end
 
     Process.send_after(self(), :send_updates, @updates_intval)
 
@@ -78,11 +83,15 @@ defmodule Ms2ex.Managers.FieldNpc do
     field_npc = update_stat(field_npc, :health, :current, hp)
 
     if hp == 0 do
-      # TODO
-      # Death animation (see metadata `ai` and `animation` to build sequences & triggers)
-      field_npc = field_npc |> Map.put(:dead?, true) |> Map.put(:animation, 8)
+      field_npc =
+        field_npc
+        |> Map.put(:dead?, true)
+        |> Map.update(:seq_counter, 1, &(&1 + 1))
 
-      Process.send_after(self(), :stop, :timer.seconds(field_npc.npc.metadata.dead.time))
+      Context.Field.broadcast(field_npc.field, Packets.ControlNpc.dead(field_npc))
+
+      corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || 3
+      Process.send_after(self(), :stop, :timer.seconds(corpse_time))
 
       Context.Mobs.drop_rewards(field_npc)
       Context.Mobs.reward_exp(field_npc)
@@ -92,7 +101,7 @@ defmodule Ms2ex.Managers.FieldNpc do
 
       {:reply, {:ok, field_npc}, field_npc}
     else
-      {:reply, {:ok, field_npc}, field_npc}
+      {:reply, {:ok, field_npc}, %{field_npc | send_control?: true}}
     end
   end
 
