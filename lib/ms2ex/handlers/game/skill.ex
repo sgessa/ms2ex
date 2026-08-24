@@ -203,7 +203,8 @@ defmodule Ms2ex.GameHandlers.Skill do
           Context.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
           mobs ++ [{mob, dmg}]
 
-        _any ->
+        other ->
+          Logger.debug("hit dropped for obj #{obj_id}: lookup returned #{inspect(other, limit: 2)}")
           mobs
       end
 
