@@ -33,5 +33,6 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(0x1)
   end
 
+  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}}), do: put_int(packet, 0)
   defp put_target_id(packet, _npc), do: packet
 end

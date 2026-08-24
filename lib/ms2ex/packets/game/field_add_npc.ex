@@ -22,7 +22,6 @@ defmodule Ms2ex.Packets.FieldAddNpc do
     |> put_byte()
     |> put_int(npc.metadata.basic.level)
     |> put_int()
-    |> put_byte()
     |> put_boss(npc)
     |> put_bool(false)
   end
@@ -33,13 +32,18 @@ defmodule Ms2ex.Packets.FieldAddNpc do
 
   defp put_model(packet, _npc), do: packet
 
-  defp put_boss(packet, %Types.Npc{boss?: true}) do
+  defp put_boss(packet, %Types.Npc{boss?: true} = npc) do
+    skills = get_in(npc.metadata, [:skill]) || []
+
     packet
     # EffectStr
     |> put_ustring()
-    # Buff count
-    |> put_int(0)
-    # TODO: Put buffs
+    |> put_int(length(skills))
+    |> reduce(skills, fn skill, packet ->
+      packet
+      |> put_int(skill.id)
+      |> put_short(skill.level)
+    end)
     |> put_int()
   end
 
