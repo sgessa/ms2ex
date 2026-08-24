@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="generator" content="ExDoc v0.40.3">
     <meta name="project" content="MS2EX v0.1.0">
 
 
     <title>Ms2ex.Context.ChatStickers — MS2EX v0.1.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FB78764B.js"></script>
+    <script defer src="dist/sidebar_items-A8939A8D.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-DPJLHKSM.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@ MS2EX
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
   </div>
 </nav>
 
@@ -54,16 +54,34 @@ MS2EX
         <form class="search-bar" action="search.html">
           <label class="search-label">
             <span class="sr-only">Search documentation of MS2EX</span>
-            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
           </label>
-          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
-            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
-          </button>
-          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-            <i class="ri-close-line ri-lg" title="Cancel search"></i>
-          </button>
         </form>
         <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
         </div>
         <button class="icon-settings display-settings">
           <i class="ri-settings-3-line"></i>
@@ -75,12 +93,19 @@ MS2EX
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">Ms2ex.Context.ChatStickers</span> 
+      <span translate="no">Ms2ex.<wbr />Context.<wbr />ChatStickers</span> 
       <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
 
     </h1>
 
-      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L1" title="View Source" class="icon-action" rel="help">
+<a href="Ms2ex.Context.ChatStickers.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
+
+
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -95,16 +120,16 @@ MS2EX
 </div>
 
   <section id="summary" class="details-list">
-    <h1 class="section-heading">
+    <h2 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
       <span class="text">Summary</span>
-    </h1>
+    </h2>
 <div class="summary-functions summary">
-  <h2>
+  <h3>
     <a href="#functions">Functions</a>
-  </h2>
+  </h3>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -182,12 +207,13 @@ MS2EX
 
 
   <section id="functions" class="details-list">
-    <h1 class="section-heading">
+    <h2 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
       <span class="text">Functions</span>
-    </h1>
+    </h2>
+
     <div class="functions-list">
 <section class="detail" id="add/2">
 
@@ -199,7 +225,7 @@ MS2EX
       <h1 class="signature" translate="no">add(character, group_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L60" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L60" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -211,15 +237,15 @@ MS2EX
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> add(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.ChatStickerGroup.html#t:t/0">Ms2ex.Schema.ChatStickerGroup.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+  {:ok, <a href="Ms2ex.Schema.ChatStickerGroup.html#t:t/0">Ms2ex.Schema.ChatStickerGroup.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Adds a sticker group to a character.</p><h2 id="add/2-examples" class="section-heading"><a href="#add/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="1934817930-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="1934817930-1">)</span><span class="w">
-</span><span class="p" data-group-id="1934817930-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1934817930-3">%</span><span class="nc" data-group-id="1934817930-3">Schema.ChatStickerGroup</span><span class="p" data-group-id="1934817930-3">{</span><span class="p" data-group-id="1934817930-3">}</span><span class="p" data-group-id="1934817930-2">}</span><span class="w">
+<p>Adds a sticker group to a character.</p><h2 id="add/2-examples" class="section-heading"><a href="#add/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="8446981951-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="8446981951-1">)</span><span class="w">
+</span><span class="p" data-group-id="8446981951-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8446981951-3">%</span><span class="nc" data-group-id="8446981951-3">Schema.ChatStickerGroup</span><span class="p" data-group-id="8446981951-3">{</span><span class="p" data-group-id="8446981951-3">}</span><span class="p" data-group-id="8446981951-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="1934817930-4">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="1934817930-4">)</span><span class="w"> </span><span class="c1"># when already exists</span><span class="w">
-</span><span class="p" data-group-id="1934817930-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1934817930-6">%</span><span class="nc" data-group-id="1934817930-6">Ecto.Changeset</span><span class="p" data-group-id="1934817930-6">{</span><span class="p" data-group-id="1934817930-6">}</span><span class="p" data-group-id="1934817930-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="8446981951-4">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="8446981951-4">)</span><span class="w"> </span><span class="c1"># when already exists</span><span class="w">
+</span><span class="p" data-group-id="8446981951-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8446981951-6">%</span><span class="nc" data-group-id="8446981951-6">Ecto.Changeset</span><span class="p" data-group-id="8446981951-6">{</span><span class="p" data-group-id="8446981951-6">}</span><span class="p" data-group-id="8446981951-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="default_stickers/0">
@@ -232,7 +258,7 @@ MS2EX
       <h1 class="signature" translate="no">default_stickers()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L128" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L128" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -247,7 +273,7 @@ MS2EX
 
       </div>
 
-<p>Returns the list of default sticker IDs available to all characters.</p><h2 id="default_stickers/0-examples" class="section-heading"><a href="#default_stickers/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">default_stickers</span><span class="p" data-group-id="0811837523-1">(</span><span class="p" data-group-id="0811837523-1">)</span><span class="w">
+<p>Returns the list of default sticker IDs available to all characters.</p><h2 id="default_stickers/0-examples" class="section-heading"><a href="#default_stickers/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">default_stickers</span><span class="p" data-group-id="7692341355-1">(</span><span class="p" data-group-id="7692341355-1">)</span><span class="w">
 </span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span></code></pre>
   </section>
 </section>
@@ -261,7 +287,7 @@ MS2EX
       <h1 class="signature" translate="no">favorite(character, sticker_id, group_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L95" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L95" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -273,12 +299,12 @@ MS2EX
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> favorite(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.FavoriteChatSticker.html#t:t/0">Ms2ex.Schema.FavoriteChatSticker.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+  {:ok, <a href="Ms2ex.Schema.FavoriteChatSticker.html#t:t/0">Ms2ex.Schema.FavoriteChatSticker.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Marks a sticker as favorite for a character.</p><h2 id="favorite/3-examples" class="section-heading"><a href="#favorite/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">favorite</span><span class="p" data-group-id="3936007705-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3936007705-1">)</span><span class="w">
-</span><span class="p" data-group-id="3936007705-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3936007705-3">%</span><span class="nc" data-group-id="3936007705-3">Schema.FavoriteChatSticker</span><span class="p" data-group-id="3936007705-3">{</span><span class="p" data-group-id="3936007705-3">}</span><span class="p" data-group-id="3936007705-2">}</span></code></pre>
+<p>Marks a sticker as favorite for a character.</p><h2 id="favorite/3-examples" class="section-heading"><a href="#favorite/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">favorite</span><span class="p" data-group-id="5793819217-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5793819217-1">)</span><span class="w">
+</span><span class="p" data-group-id="5793819217-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5793819217-3">%</span><span class="nc" data-group-id="5793819217-3">Schema.FavoriteChatSticker</span><span class="p" data-group-id="5793819217-3">{</span><span class="p" data-group-id="5793819217-3">}</span><span class="p" data-group-id="5793819217-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get/2">
@@ -291,7 +317,7 @@ MS2EX
       <h1 class="signature" translate="no">get(character, group_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L43" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L43" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -307,10 +333,10 @@ MS2EX
 
       </div>
 
-<p>Gets a specific sticker group for a character by group ID.</p><p>Returns the chat sticker group if found, otherwise nil.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="7024758983-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7024758983-1">)</span><span class="w">
-</span><span class="p" data-group-id="7024758983-2">%</span><span class="nc" data-group-id="7024758983-2">Schema.ChatStickerGroup</span><span class="p" data-group-id="7024758983-2">{</span><span class="p" data-group-id="7024758983-2">}</span><span class="w">
+<p>Gets a specific sticker group for a character by group ID.</p><p>Returns the chat sticker group if found, otherwise nil.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="5218435046-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5218435046-1">)</span><span class="w">
+</span><span class="p" data-group-id="5218435046-2">%</span><span class="nc" data-group-id="5218435046-2">Schema.ChatStickerGroup</span><span class="p" data-group-id="5218435046-2">{</span><span class="p" data-group-id="5218435046-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="7024758983-3">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="7024758983-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="5218435046-3">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="5218435046-3">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -324,7 +350,7 @@ MS2EX
       <h1 class="signature" translate="no">list_favorited(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L78" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L78" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -339,8 +365,8 @@ MS2EX
 
       </div>
 
-<p>Lists all favorited stickers for a character.</p><p>Returns a list of sticker IDs.</p><h2 id="list_favorited/1-examples" class="section-heading"><a href="#list_favorited/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_favorited</span><span class="p" data-group-id="2490713766-1">(</span><span class="n">character</span><span class="p" data-group-id="2490713766-1">)</span><span class="w">
-</span><span class="p" data-group-id="2490713766-2">[</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p" data-group-id="2490713766-2">]</span></code></pre>
+<p>Lists all favorited stickers for a character.</p><p>Returns a list of sticker IDs.</p><h2 id="list_favorited/1-examples" class="section-heading"><a href="#list_favorited/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_favorited</span><span class="p" data-group-id="1812518221-1">(</span><span class="n">character</span><span class="p" data-group-id="1812518221-1">)</span><span class="w">
+</span><span class="p" data-group-id="1812518221-2">[</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p" data-group-id="1812518221-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_groups/1">
@@ -353,7 +379,7 @@ MS2EX
       <h1 class="signature" translate="no">list_groups(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L21" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -368,8 +394,8 @@ MS2EX
 
       </div>
 
-<p>Lists all sticker groups for a given character.</p><p>Returns a list of group IDs.</p><h2 id="list_groups/1-examples" class="section-heading"><a href="#list_groups/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_groups</span><span class="p" data-group-id="3313842387-1">(</span><span class="n">character</span><span class="p" data-group-id="3313842387-1">)</span><span class="w">
-</span><span class="p" data-group-id="3313842387-2">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="3313842387-2">]</span></code></pre>
+<p>Lists all sticker groups for a given character.</p><p>Returns a list of group IDs.</p><h2 id="list_groups/1-examples" class="section-heading"><a href="#list_groups/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_groups</span><span class="p" data-group-id="8676479658-1">(</span><span class="n">character</span><span class="p" data-group-id="8676479658-1">)</span><span class="w">
+</span><span class="p" data-group-id="8676479658-2">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="8676479658-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="unfavorite/2">
@@ -382,7 +408,7 @@ MS2EX
       <h1 class="signature" translate="no">unfavorite(character, sticker_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L111" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/chat_stickers.ex#L111" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -398,8 +424,8 @@ MS2EX
 
       </div>
 
-<p>Removes a sticker from a character's favorites.</p><h2 id="unfavorite/2-examples" class="section-heading"><a href="#unfavorite/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unfavorite</span><span class="p" data-group-id="6048718097-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p" data-group-id="6048718097-1">)</span><span class="w">
-</span><span class="p" data-group-id="6048718097-2">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="6048718097-2">}</span></code></pre>
+<p>Removes a sticker from a character's favorites.</p><h2 id="unfavorite/2-examples" class="section-heading"><a href="#unfavorite/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unfavorite</span><span class="p" data-group-id="2187771283-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p" data-group-id="2187771283-1">)</span><span class="w">
+</span><span class="p" data-group-id="2187771283-2">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="2187771283-2">}</span></code></pre>
   </section>
 </section>
 
@@ -407,27 +433,34 @@ MS2EX
   </section>
 
     <footer class="footer">
-      <p>
 
-        <span class="line">
-          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-            Search HexDocs
-          </button>
+        <p>
 
-            <a href="MS2EX.epub" title="ePub version">
-              Download ePub version
-            </a>
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
 
-        </span>
-      </p>
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
 
-      <p class="built-using">
-        Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
 
-          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+              <a href="MS2EX.epub">
+                Download ePub version
+              </a>
 
-      </p>
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
 
     </footer>
   </div>

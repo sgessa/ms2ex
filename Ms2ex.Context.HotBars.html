@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="generator" content="ExDoc v0.40.3">
     <meta name="project" content="MS2EX v0.1.0">
 
 
     <title>Ms2ex.Context.HotBars — MS2EX v0.1.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FB78764B.js"></script>
+    <script defer src="dist/sidebar_items-A8939A8D.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-DPJLHKSM.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@ MS2EX
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
   </div>
 </nav>
 
@@ -54,16 +54,34 @@ MS2EX
         <form class="search-bar" action="search.html">
           <label class="search-label">
             <span class="sr-only">Search documentation of MS2EX</span>
-            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
           </label>
-          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
-            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
-          </button>
-          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-            <i class="ri-close-line ri-lg" title="Cancel search"></i>
-          </button>
         </form>
         <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
         </div>
         <button class="icon-settings display-settings">
           <i class="ri-settings-3-line"></i>
@@ -75,12 +93,19 @@ MS2EX
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">Ms2ex.Context.HotBars</span> 
+      <span translate="no">Ms2ex.<wbr />Context.<wbr />HotBars</span> 
       <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
 
     </h1>
 
-      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L1" title="View Source" class="icon-action" rel="help">
+<a href="Ms2ex.Context.HotBars.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
+
+
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -96,16 +121,16 @@ character hot bars and quick slots.</p>
 </div>
 
   <section id="summary" class="details-list">
-    <h1 class="section-heading">
+    <h2 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
       <span class="text">Summary</span>
-    </h1>
+    </h2>
 <div class="summary-functions summary">
-  <h2>
+  <h3>
     <a href="#functions">Functions</a>
-  </h2>
+  </h3>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -153,12 +178,13 @@ character hot bars and quick slots.</p>
 
 
   <section id="functions" class="details-list">
-    <h1 class="section-heading">
+    <h2 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
       <span class="text">Functions</span>
-    </h1>
+    </h2>
+
     <div class="functions-list">
 <section class="detail" id="get_by/1">
 
@@ -170,7 +196,7 @@ character hot bars and quick slots.</p>
       <h1 class="signature" translate="no">get_by(attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L25" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L25" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -185,10 +211,10 @@ character hot bars and quick slots.</p>
 
       </div>
 
-<p>Gets a hot bar by the given attributes.</p><h2 id="get_by/1-examples" class="section-heading"><a href="#get_by/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="5499800272-1">(</span><span class="p" data-group-id="5499800272-2">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5499800272-2">}</span><span class="p" data-group-id="5499800272-1">)</span><span class="w">
-</span><span class="p" data-group-id="5499800272-3">%</span><span class="nc" data-group-id="5499800272-3">Schema.HotBar</span><span class="p" data-group-id="5499800272-3">{</span><span class="p" data-group-id="5499800272-3">}</span><span class="w">
+<p>Gets a hot bar by the given attributes.</p><h2 id="get_by/1-examples" class="section-heading"><a href="#get_by/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="8756415526-1">(</span><span class="p" data-group-id="8756415526-2">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="8756415526-2">}</span><span class="p" data-group-id="8756415526-1">)</span><span class="w">
+</span><span class="p" data-group-id="8756415526-3">%</span><span class="nc" data-group-id="8756415526-3">Schema.HotBar</span><span class="p" data-group-id="8756415526-3">{</span><span class="p" data-group-id="8756415526-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="5499800272-4">(</span><span class="p" data-group-id="5499800272-5">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="5499800272-5">}</span><span class="p" data-group-id="5499800272-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="8756415526-4">(</span><span class="p" data-group-id="8756415526-5">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="8756415526-5">}</span><span class="p" data-group-id="8756415526-4">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -202,7 +228,7 @@ character hot bars and quick slots.</p>
       <h1 class="signature" translate="no">list(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L38" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L38" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -217,8 +243,8 @@ character hot bars and quick slots.</p>
 
       </div>
 
-<p>Lists all hot bars for a given character.</p><p>Returns hot bars ordered by ID.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="4165320155-1">(</span><span class="n">character</span><span class="p" data-group-id="4165320155-1">)</span><span class="w">
-</span><span class="p" data-group-id="4165320155-2">[</span><span class="p" data-group-id="4165320155-3">%</span><span class="nc" data-group-id="4165320155-3">Schema.HotBar</span><span class="p" data-group-id="4165320155-3">{</span><span class="p" data-group-id="4165320155-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4165320155-4">%</span><span class="nc" data-group-id="4165320155-4">Schema.HotBar</span><span class="p" data-group-id="4165320155-4">{</span><span class="p" data-group-id="4165320155-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="4165320155-2">]</span></code></pre>
+<p>Lists all hot bars for a given character.</p><p>Returns hot bars ordered by ID.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="3201273719-1">(</span><span class="n">character</span><span class="p" data-group-id="3201273719-1">)</span><span class="w">
+</span><span class="p" data-group-id="3201273719-2">[</span><span class="p" data-group-id="3201273719-3">%</span><span class="nc" data-group-id="3201273719-3">Schema.HotBar</span><span class="p" data-group-id="3201273719-3">{</span><span class="p" data-group-id="3201273719-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3201273719-4">%</span><span class="nc" data-group-id="3201273719-4">Schema.HotBar</span><span class="p" data-group-id="3201273719-4">{</span><span class="p" data-group-id="3201273719-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3201273719-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="move_quick_slot/3">
@@ -231,7 +257,7 @@ character hot bars and quick slots.</p>
       <h1 class="signature" translate="no">move_quick_slot(hot_bar, quick_slot, target)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L61" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L61" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -243,15 +269,15 @@ character hot bars and quick slots.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> move_quick_slot(<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>(), <a href="Ms2ex.Types.QuickSlot.html#t:t/0">Ms2ex.Types.QuickSlot.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()} | :error</pre>
+  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()} | :error</pre>
 
       </div>
 
 <p>Moves a quick slot to a new target position in a hot bar.</p><p>If there's already a quick slot at the target position, the slots are swapped.
-If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/3-examples" class="section-heading"><a href="#move_quick_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">move_quick_slot</span><span class="p" data-group-id="3438720043-1">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="n">quick_slot</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="3438720043-1">)</span><span class="w">
-</span><span class="p" data-group-id="3438720043-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3438720043-3">%</span><span class="nc" data-group-id="3438720043-3">Schema.HotBar</span><span class="p" data-group-id="3438720043-3">{</span><span class="p" data-group-id="3438720043-3">}</span><span class="p" data-group-id="3438720043-2">}</span><span class="w">
+If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/3-examples" class="section-heading"><a href="#move_quick_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">move_quick_slot</span><span class="p" data-group-id="3192380732-1">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="n">quick_slot</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="3192380732-1">)</span><span class="w">
+</span><span class="p" data-group-id="3192380732-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3192380732-3">%</span><span class="nc" data-group-id="3192380732-3">Schema.HotBar</span><span class="p" data-group-id="3192380732-3">{</span><span class="p" data-group-id="3192380732-3">}</span><span class="p" data-group-id="3192380732-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">move_quick_slot</span><span class="p" data-group-id="3438720043-4">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="n">quick_slot</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p" data-group-id="3438720043-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">move_quick_slot</span><span class="p" data-group-id="3192380732-4">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="n">quick_slot</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p" data-group-id="3192380732-4">)</span><span class="w">
 </span><span class="ss">:error</span></code></pre>
   </section>
 </section>
@@ -265,7 +291,7 @@ If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/
       <h1 class="signature" translate="no">remove_quick_slot(hot_bar, skill_id, item_uid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L90" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L90" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -277,14 +303,14 @@ If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> remove_quick_slot(<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) ::
-  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()} | :error</pre>
+  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()} | :error</pre>
 
       </div>
 
-<p>Removes a quick slot from a hot bar.</p><p>Finds the quick slot by skill ID and item UID and replaces it with an empty slot.</p><h2 id="remove_quick_slot/3-parameters" class="section-heading"><a href="#remove_quick_slot/3-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">hot_bar</code> - The hot bar to modify</li><li><code class="inline">skill_id</code> - The skill ID to find</li><li><code class="inline">item_uid</code> - The item UID to find</li></ul><h2 id="remove_quick_slot/3-examples" class="section-heading"><a href="#remove_quick_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_quick_slot</span><span class="p" data-group-id="8748362223-1">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="mi">10500</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;item123&quot;</span><span class="p" data-group-id="8748362223-1">)</span><span class="w">
-</span><span class="p" data-group-id="8748362223-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8748362223-3">%</span><span class="nc" data-group-id="8748362223-3">Schema.HotBar</span><span class="p" data-group-id="8748362223-3">{</span><span class="p" data-group-id="8748362223-3">}</span><span class="p" data-group-id="8748362223-2">}</span><span class="w">
+<p>Removes a quick slot from a hot bar.</p><p>Finds the quick slot by skill ID and item UID and replaces it with an empty slot.</p><h2 id="remove_quick_slot/3-parameters" class="section-heading"><a href="#remove_quick_slot/3-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">hot_bar</code> - The hot bar to modify</li><li><code class="inline">skill_id</code> - The skill ID to find</li><li><code class="inline">item_uid</code> - The item UID to find</li></ul><h2 id="remove_quick_slot/3-examples" class="section-heading"><a href="#remove_quick_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_quick_slot</span><span class="p" data-group-id="2028991944-1">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="mi">10500</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;item123&quot;</span><span class="p" data-group-id="2028991944-1">)</span><span class="w">
+</span><span class="p" data-group-id="2028991944-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2028991944-3">%</span><span class="nc" data-group-id="2028991944-3">Schema.HotBar</span><span class="p" data-group-id="2028991944-3">{</span><span class="p" data-group-id="2028991944-3">}</span><span class="p" data-group-id="2028991944-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">remove_quick_slot</span><span class="p" data-group-id="8748362223-4">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="mi">99999</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;nonexistent&quot;</span><span class="p" data-group-id="8748362223-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">remove_quick_slot</span><span class="p" data-group-id="2028991944-4">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="mi">99999</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;nonexistent&quot;</span><span class="p" data-group-id="2028991944-4">)</span><span class="w">
 </span><span class="ss">:error</span></code></pre>
   </section>
 </section>
@@ -293,27 +319,34 @@ If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/
   </section>
 
     <footer class="footer">
-      <p>
 
-        <span class="line">
-          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-            Search HexDocs
-          </button>
+        <p>
 
-            <a href="MS2EX.epub" title="ePub version">
-              Download ePub version
-            </a>
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
 
-        </span>
-      </p>
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
 
-      <p class="built-using">
-        Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
 
-          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+              <a href="MS2EX.epub">
+                Download ePub version
+              </a>
 
-      </p>
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
 
     </footer>
   </div>

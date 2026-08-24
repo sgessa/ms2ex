@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="generator" content="ExDoc v0.40.3">
     <meta name="project" content="MS2EX v0.1.0">
 
 
     <title>Game Client Metadata — MS2EX v0.1.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FB78764B.js"></script>
+    <script defer src="dist/sidebar_items-A8939A8D.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-DPJLHKSM.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@ MS2EX
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
   </div>
 </nav>
 
@@ -54,16 +54,34 @@ MS2EX
         <form class="search-bar" action="search.html">
           <label class="search-label">
             <span class="sr-only">Search documentation of MS2EX</span>
-            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
           </label>
-          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
-            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
-          </button>
-          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-            <i class="ri-close-line ri-lg" title="Cancel search"></i>
-          </button>
         </form>
         <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
         </div>
         <button class="icon-settings display-settings">
           <i class="ri-settings-3-line"></i>
@@ -76,8 +94,13 @@ MS2EX
   <div class="heading-with-actions top-heading">
     <h1>Game Client Metadata</h1>
 
+<a href="client_metadata.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
 
-      <a href="https://github.com/sgessa/ms2ex/blob/main/docs/CLIENT_METADATA.md#L1" title="View Source" class="icon-action" rel="help">
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/docs/CLIENT_METADATA.md#L1" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -85,7 +108,20 @@ MS2EX
   </div>
 
 
-<p>MS2EX requires game client metadata to function properly.</p><h2 id="metadata-system-overview" class="section-heading"><a href="#metadata-system-overview" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Metadata System Overview</span></h2><p>For those interested in extending or modifying the metadata, here's how the system works:</p><ol><li><p><strong>Source Data</strong>: The original game client XML files contain crucial game data.</p></li><li><p><strong>Parsing &amp; Organization</strong>: <a href="https://github.com/AngeloTadeucci/Maple2">Maple2</a> (a C# emulator) parses these XML files and stores them in a structured format in their MySQL database.</p></li><li><p><strong>Redis Export</strong>: <a href="https://github.com/sgessa/ms2ex-file">Ms2ex.File</a> reads the organized data from Maple2 database and exports it to Redis.</p></li><li><p><strong>Server Usage</strong>: MS2EX server reads the metadata from Redis at runtime.</p></li></ol><h2 id="advanced-setup-for-metadata-development" class="section-heading"><a href="#advanced-setup-for-metadata-development" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Advanced Setup (For Metadata Development)</span></h2><p>If you need to extend or modify the metadata:</p><ol><li><p><strong>Set up Maple2 with MySQL</strong>:</p><ul><li>Follow the instructions in <a href="https://github.com/AngeloTadeucci/Maple2">Maple2</a> to parse client XML files into MySQL</li><li>Ensure the MySQL database is properly seeded with game metadata</li></ul></li><li><p><strong>Use Ms2ex.File to export to Redis</strong>:</p><ul><li>Clone the <a href="https://github.com/icr4/ms2ex_file">Ms2ex.File repository</a></li><li>Follow the instructions in its README to connect to your MySQL database</li><li>Run the export process to transfer data to your Redis instance</li></ul></li><li><p><strong>Configure MS2EX to use Redis</strong>:</p><ul><li>Ensure your Redis connection settings in <code class="inline">config/dev.exs</code> point to the Redis instance containing the metadata</li></ul></li></ol><h2 id="troubleshooting" class="section-heading"><a href="#troubleshooting" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Troubleshooting</span></h2><p>If MS2EX fails to start or exhibits unexpected behavior, verify that:</p><ul><li>Redis is running and accessible</li><li>MS2EX's Redis connection configuration is correct</li><li>The metadata has been correctly loaded</li><li>For Docker setup: Make sure the <code class="inline">priv/redis-data/dump.rdb</code> file exists</li><li>For pre-built dumps: Ensure you're using a Redis version compatible with the dump format</li></ul>
+<p>MS2EX requires game client metadata to function properly.</p><h2 id="metadata-system-overview" class="section-heading"><a href="#metadata-system-overview" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Metadata System Overview</span></h2><ol><li><p><strong>Source Data</strong>: The original game client archives (<code class="inline">Xml.m2d</code>, <code class="inline">Server.m2d</code>,
+<code class="inline">Resource/Exported.m2d</code>) contain the game data.</p></li><li><p><strong>Ingest</strong>: <a href="../ms2ex-file-ingest">ms2ex-file-ingest</a> (standalone C# tool,
+extracted from Maple2's <code class="inline">Maple2.File.Ingest</code>) parses the client archives and
+writes ETF-encoded documents <strong>directly to Redis</strong> — no MySQL involved.</p></li><li><p><strong>Server Usage</strong>: MS2EX lazily loads documents from Redis into ETS on first
+access (<a href="Ms2ex.Storage.html"><code class="inline">Ms2ex.Storage</code></a>). Data is immutable while the server runs; keys
+missing from Redis are negatively cached.</p></li></ol><pre><code class="makeup elixir" translate="no"><span class="n">client</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="p" data-group-id="1347584649-1">(</span><span class="n">m2d</span><span class="p" data-group-id="1347584649-1">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">ingest</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nc">Redis</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span></code></pre><h2 id="setup" class="section-heading"><a href="#setup" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Setup</span></h2><pre><code class="makeup bash" translate="no"><span class="">cd ms2ex-file-ingest
+</span><span class="">cp .env-example .env    # point MS2_DATA_FOLDER at your client folder
+</span><span class="">docker compose build
+</span><span class="">docker compose run --rm ms2ex-file-ingest
+</span></code></pre><p>Re-runs are incremental: each set carries a CRC32C checksum in the Redis hash
+<code class="inline">ingest:checksum</code> and unchanged sets are skipped. Use <code class="inline">--drop-data</code> to force a
+full re-write.</p><p>See <a href="readme.html">ms2ex-file-ingest README</a> for details.</p><h2 id="what-gets-ingested" class="section-heading"><a href="#what-gets-ingested" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">What gets ingested</span></h2><table><thead><tr><th style="text-align: left;">Redis set</th><th style="text-align: left;">Contents</th></tr></thead><tbody><tr><td style="text-align: left;"><code class="inline">item:&lt;id&gt;</code></td><td style="text-align: left;">slots, limits, options, functions, box contents</td></tr><tr><td style="text-align: left;"><code class="inline">npc:&lt;id&gt;</code></td><td style="text-align: left;">basic/class/level, model, stats</td></tr><tr><td style="text-align: left;"><code class="inline">skill:&lt;id&gt;</code></td><td style="text-align: left;">properties + per-level data</td></tr><tr><td style="text-align: left;"><code class="inline">additional-effect:</code></td><td style="text-align: left;">buff properties, shield, status values</td></tr><tr><td style="text-align: left;"><code class="inline">map:&lt;id&gt;</code></td><td style="text-align: left;">boundings, spawns, portals</td></tr><tr><td style="text-align: left;"><code class="inline">table:&lt;filename&gt;</code></td><td style="text-align: left;">job.xml, itemoption*.xml, nametagsymbol.xml, magicpath.xml, chatemoticon.xml, exp*.xml</td></tr></tbody></table><p>Values are Erlang external term format (ETF) with atom keys, decoded with
+<a href="https://www.erlang.org/doc/apps/erts/erlang.html#binary_to_term/1"><code class="inline">:erlang.binary_to_term/1</code></a>. The map encoding follows OTP 28's layout — the
+server must run on OTP &gt;= 28.</p><h2 id="troubleshooting" class="section-heading"><a href="#troubleshooting" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Troubleshooting</span></h2><p>If MS2EX fails to start or exhibits unexpected behavior, verify that:</p><ul><li>Redis is running and accessible (connection settings in <code class="inline">config/dev.exs</code>)</li><li>The ingest has been run against that Redis instance</li><li>The client data folder contains all three m2d archives</li></ul>
 
 </div>
 
@@ -107,27 +143,34 @@ Contributing
   </div>
 </div>
     <footer class="footer">
-      <p>
 
-        <span class="line">
-          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-            Search HexDocs
-          </button>
+        <p>
 
-            <a href="MS2EX.epub" title="ePub version">
-              Download ePub version
-            </a>
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
 
-        </span>
-      </p>
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
 
-      <p class="built-using">
-        Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
 
-          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+              <a href="MS2EX.epub">
+                Download ePub version
+              </a>
 
-      </p>
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
 
     </footer>
   </div>

@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="generator" content="ExDoc v0.40.3">
     <meta name="project" content="MS2EX v0.1.0">
 
 
     <title>Ms2ex.Enums.InventoryTab — MS2EX v0.1.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FB78764B.js"></script>
+    <script defer src="dist/sidebar_items-A8939A8D.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-DPJLHKSM.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@ MS2EX
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
   </div>
 </nav>
 
@@ -54,16 +54,34 @@ MS2EX
         <form class="search-bar" action="search.html">
           <label class="search-label">
             <span class="sr-only">Search documentation of MS2EX</span>
-            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
           </label>
-          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
-            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
-          </button>
-          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-            <i class="ri-close-line ri-lg" title="Cancel search"></i>
-          </button>
         </form>
         <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
         </div>
         <button class="icon-settings display-settings">
           <i class="ri-settings-3-line"></i>
@@ -75,12 +93,19 @@ MS2EX
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">Ms2ex.Enums.InventoryTab</span> 
+      <span translate="no">Ms2ex.<wbr />Enums.<wbr />InventoryTab</span> 
       <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
 
     </h1>
 
-      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L1" title="View Source" class="icon-action" rel="help">
+<a href="Ms2ex.Enums.InventoryTab.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
+
+
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -91,16 +116,16 @@ MS2EX
 </div>
 
   <section id="summary" class="details-list">
-    <h1 class="section-heading">
+    <h2 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
       <span class="text">Summary</span>
-    </h1>
+    </h2>
 <div class="summary-functions summary">
-  <h2>
+  <h3>
     <a href="#functions">Functions</a>
-  </h2>
+  </h3>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -124,7 +149,7 @@ MS2EX
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a><code class="inline">Ecto.Type.cast/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:cast/1"><code class="inline">Ecto.Type.cast/1</code></a>.</p></div>
 
     </div>
 
@@ -134,7 +159,7 @@ MS2EX
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a><code class="inline">Ecto.Type.dump/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:dump/1"><code class="inline">Ecto.Type.dump/1</code></a>.</p></div>
 
     </div>
 
@@ -144,7 +169,7 @@ MS2EX
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a><code class="inline">Ecto.Type.embed_as/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:embed_as/1"><code class="inline">Ecto.Type.embed_as/1</code></a>.</p></div>
 
     </div>
 
@@ -154,7 +179,7 @@ MS2EX
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a><code class="inline">Ecto.Type.equal?/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:equal?/2"><code class="inline">Ecto.Type.equal?/2</code></a>.</p></div>
 
     </div>
 
@@ -180,7 +205,7 @@ MS2EX
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a><code class="inline">Ecto.Type.load/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:load/1"><code class="inline">Ecto.Type.load/1</code></a>.</p></div>
 
     </div>
 
@@ -190,7 +215,7 @@ MS2EX
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a><code class="inline">Ecto.Type.type/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:type/0"><code class="inline">Ecto.Type.type/0</code></a>.</p></div>
 
     </div>
 
@@ -208,12 +233,13 @@ MS2EX
 
 
   <section id="functions" class="details-list">
-    <h1 class="section-heading">
+    <h2 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
       <span class="text">Functions</span>
-    </h1>
+    </h2>
+
     <div class="functions-list">
 <section class="detail" id="all/0">
 
@@ -225,7 +251,7 @@ MS2EX
       <h1 class="signature" translate="no">all()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -247,7 +273,7 @@ MS2EX
       <h1 class="signature" translate="no">all_map()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -269,7 +295,7 @@ MS2EX
       <h1 class="signature" translate="no">cast(string)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -278,7 +304,7 @@ MS2EX
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Type.html#c:cast/1"><code class="inline">Ecto.Type.cast/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:cast/1"><code class="inline">Ecto.Type.cast/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="dump/1">
@@ -291,7 +317,7 @@ MS2EX
       <h1 class="signature" translate="no">dump(value)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -300,7 +326,7 @@ MS2EX
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Type.html#c:dump/1"><code class="inline">Ecto.Type.dump/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:dump/1"><code class="inline">Ecto.Type.dump/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="embed_as/1">
@@ -313,7 +339,7 @@ MS2EX
       <h1 class="signature" translate="no">embed_as(_)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -322,7 +348,7 @@ MS2EX
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Type.html#c:embed_as/1"><code class="inline">Ecto.Type.embed_as/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:embed_as/1"><code class="inline">Ecto.Type.embed_as/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="equal?/2">
@@ -335,7 +361,7 @@ MS2EX
       <h1 class="signature" translate="no">equal?(term1, term2)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -344,7 +370,7 @@ MS2EX
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Type.html#c:equal?/2"><code class="inline">Ecto.Type.equal?/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:equal?/2"><code class="inline">Ecto.Type.equal?/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_key/1">
@@ -357,7 +383,7 @@ MS2EX
       <h1 class="signature" translate="no">get_key(value)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -379,7 +405,7 @@ MS2EX
       <h1 class="signature" translate="no">get_value(key)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -401,7 +427,7 @@ MS2EX
       <h1 class="signature" translate="no">load(data)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -410,7 +436,7 @@ MS2EX
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Type.html#c:load/1"><code class="inline">Ecto.Type.load/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:load/1"><code class="inline">Ecto.Type.load/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="type/0">
@@ -423,7 +449,7 @@ MS2EX
       <h1 class="signature" translate="no">type()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -432,7 +458,7 @@ MS2EX
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.6/Ecto.Type.html#c:type/0"><code class="inline">Ecto.Type.type/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Type.html#c:type/0"><code class="inline">Ecto.Type.type/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="values/0">
@@ -445,7 +471,7 @@ MS2EX
       <h1 class="signature" translate="no">values()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/inventory_tab.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -462,27 +488,34 @@ MS2EX
   </section>
 
     <footer class="footer">
-      <p>
 
-        <span class="line">
-          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-            Search HexDocs
-          </button>
+        <p>
 
-            <a href="MS2EX.epub" title="ePub version">
-              Download ePub version
-            </a>
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
 
-        </span>
-      </p>
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
 
-      <p class="built-using">
-        Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
 
-          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+              <a href="MS2EX.epub">
+                Download ePub version
+              </a>
 
-      </p>
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
 
     </footer>
   </div>

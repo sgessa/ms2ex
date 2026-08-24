@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.38.2">
+    <meta name="generator" content="ExDoc v0.40.3">
     <meta name="project" content="MS2EX v0.1.0">
 
 
     <title>API Reference — MS2EX v0.1.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-KV3YOVJ3.css" />
+    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FB78764B.js"></script>
+    <script defer src="dist/sidebar_items-A8939A8D.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-DPJLHKSM.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@ MS2EX
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
   </div>
 </nav>
 
@@ -54,16 +54,34 @@ MS2EX
         <form class="search-bar" action="search.html">
           <label class="search-label">
             <span class="sr-only">Search documentation of MS2EX</span>
-            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
           </label>
-          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
-            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
-          </button>
-          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-            <i class="ri-close-line ri-lg" title="Cancel search"></i>
-          </button>
         </form>
         <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
         </div>
         <button class="icon-settings display-settings">
           <i class="ri-settings-3-line"></i>
@@ -75,8 +93,13 @@ MS2EX
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>API Reference <small class="app-vsn">MS2EX v#0.1.0</small></h1>
+<a href="api-reference.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
 
-      <a href="https://github.com/sgessa/ms2ex" title="View Source" class="icon-action" rel="help">
+
+      <a href="https://github.com/sgessa/ms2ex" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -95,21 +118,21 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Commands.html" translate="no">Ms2ex.Commands</a>
+    <a href="Ms2ex.Commands.html" translate="no">Ms2ex.<wbr />Commands</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Constants.html" translate="no">Ms2ex.Constants</a>
+    <a href="Ms2ex.Constants.html" translate="no">Ms2ex.<wbr />Constants</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Accounts.html" translate="no">Ms2ex.Context.Accounts</a>
+    <a href="Ms2ex.Context.Accounts.html" translate="no">Ms2ex.<wbr />Context.<wbr />Accounts</a>
 
   </div>
 
@@ -118,14 +141,14 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Characters.html" translate="no">Ms2ex.Context.Characters</a>
+    <a href="Ms2ex.Context.Characters.html" translate="no">Ms2ex.<wbr />Context.<wbr />Characters</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.ChatStickers.html" translate="no">Ms2ex.Context.ChatStickers</a>
+    <a href="Ms2ex.Context.ChatStickers.html" translate="no">Ms2ex.<wbr />Context.<wbr />ChatStickers</a>
 
   </div>
 
@@ -134,7 +157,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Damage.html" translate="no">Ms2ex.Context.Damage</a>
+    <a href="Ms2ex.Context.Damage.html" translate="no">Ms2ex.<wbr />Context.<wbr />Damage</a>
 
   </div>
 
@@ -143,7 +166,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Dismantle.html" translate="no">Ms2ex.Context.Dismantle</a>
+    <a href="Ms2ex.Context.Dismantle.html" translate="no">Ms2ex.<wbr />Context.<wbr />Dismantle</a>
 
   </div>
 
@@ -152,7 +175,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Emotes.html" translate="no">Ms2ex.Context.Emotes</a>
+    <a href="Ms2ex.Context.Emotes.html" translate="no">Ms2ex.<wbr />Context.<wbr />Emotes</a>
 
   </div>
 
@@ -161,7 +184,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Equips.html" translate="no">Ms2ex.Context.Equips</a>
+    <a href="Ms2ex.Context.Equips.html" translate="no">Ms2ex.<wbr />Context.<wbr />Equips</a>
 
   </div>
 
@@ -170,7 +193,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Experience.html" translate="no">Ms2ex.Context.Experience</a>
+    <a href="Ms2ex.Context.Experience.html" translate="no">Ms2ex.<wbr />Context.<wbr />Experience</a>
 
   </div>
 
@@ -179,7 +202,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Field.html" translate="no">Ms2ex.Context.Field</a>
+    <a href="Ms2ex.Context.Field.html" translate="no">Ms2ex.<wbr />Context.<wbr />Field</a>
 
   </div>
 
@@ -188,7 +211,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Friends.html" translate="no">Ms2ex.Context.Friends</a>
+    <a href="Ms2ex.Context.Friends.html" translate="no">Ms2ex.<wbr />Context.<wbr />Friends</a>
 
   </div>
 
@@ -197,7 +220,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.HotBars.html" translate="no">Ms2ex.Context.HotBars</a>
+    <a href="Ms2ex.Context.HotBars.html" translate="no">Ms2ex.<wbr />Context.<wbr />HotBars</a>
 
   </div>
 
@@ -206,7 +229,7 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Inventory.html" translate="no">Ms2ex.Context.Inventory</a>
+    <a href="Ms2ex.Context.Inventory.html" translate="no">Ms2ex.<wbr />Context.<wbr />Inventory</a>
 
   </div>
 
@@ -215,91 +238,91 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.ItemConstantStats.html" translate="no">Ms2ex.Context.ItemConstantStats</a>
+    <a href="Ms2ex.Context.ItemConstantStats.html" translate="no">Ms2ex.<wbr />Context.<wbr />ItemConstantStats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.ItemEnchantStats.html" translate="no">Ms2ex.Context.ItemEnchantStats</a>
+    <a href="Ms2ex.Context.ItemEnchantStats.html" translate="no">Ms2ex.<wbr />Context.<wbr />ItemEnchantStats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.ItemRandomStats.html" translate="no">Ms2ex.Context.ItemRandomStats</a>
+    <a href="Ms2ex.Context.ItemRandomStats.html" translate="no">Ms2ex.<wbr />Context.<wbr />ItemRandomStats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.ItemStaticStats.html" translate="no">Ms2ex.Context.ItemStaticStats</a>
+    <a href="Ms2ex.Context.ItemStaticStats.html" translate="no">Ms2ex.<wbr />Context.<wbr />ItemStaticStats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.ItemTypes.html" translate="no">Ms2ex.Context.ItemTypes</a>
+    <a href="Ms2ex.Context.ItemTypes.html" translate="no">Ms2ex.<wbr />Context.<wbr />ItemTypes</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Items.html" translate="no">Ms2ex.Context.Items</a>
+    <a href="Ms2ex.Context.Items.html" translate="no">Ms2ex.<wbr />Context.<wbr />Items</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.MapBlock.html" translate="no">Ms2ex.Context.MapBlock</a>
+    <a href="Ms2ex.Context.MapBlock.html" translate="no">Ms2ex.<wbr />Context.<wbr />MapBlock</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Mobs.html" translate="no">Ms2ex.Context.Mobs</a>
+    <a href="Ms2ex.Context.Mobs.html" translate="no">Ms2ex.<wbr />Context.<wbr />Mobs</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.PremiumMemberships.html" translate="no">Ms2ex.Context.PremiumMemberships</a>
+    <a href="Ms2ex.Context.PremiumMemberships.html" translate="no">Ms2ex.<wbr />Context.<wbr />PremiumMemberships</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.SkillTabs.html" translate="no">Ms2ex.Context.SkillTabs</a>
+    <a href="Ms2ex.Context.SkillTabs.html" translate="no">Ms2ex.<wbr />Context.<wbr />SkillTabs</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Skills.html" translate="no">Ms2ex.Context.Skills</a>
+    <a href="Ms2ex.Context.Skills.html" translate="no">Ms2ex.<wbr />Context.<wbr />Skills</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Taxi.html" translate="no">Ms2ex.Context.Taxi</a>
+    <a href="Ms2ex.Context.Taxi.html" translate="no">Ms2ex.<wbr />Context.<wbr />Taxi</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Utils.html" translate="no">Ms2ex.Context.Utils</a>
+    <a href="Ms2ex.Context.Utils.html" translate="no">Ms2ex.<wbr />Context.<wbr />Utils</a>
 
   </div>
 
@@ -308,28 +331,28 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.Wallets.html" translate="no">Ms2ex.Context.Wallets</a>
+    <a href="Ms2ex.Context.Wallets.html" translate="no">Ms2ex.<wbr />Context.<wbr />Wallets</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.World.html" translate="no">Ms2ex.Context.World</a>
+    <a href="Ms2ex.Context.World.html" translate="no">Ms2ex.<wbr />Context.<wbr />World</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Context.WorldGraph.html" translate="no">Ms2ex.Context.WorldGraph</a>
+    <a href="Ms2ex.Context.WorldGraph.html" translate="no">Ms2ex.<wbr />Context.<wbr />WorldGraph</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.Cipher.html" translate="no">Ms2ex.Crypto.Cipher</a>
+    <a href="Ms2ex.Crypto.Cipher.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />Cipher</a>
 
   </div>
 
@@ -339,7 +362,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.Crypter.html" translate="no">Ms2ex.Crypto.Crypter</a>
+    <a href="Ms2ex.Crypto.Crypter.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />Crypter</a>
 
   </div>
 
@@ -348,7 +371,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.Rand32.html" translate="no">Ms2ex.Crypto.Rand32</a>
+    <a href="Ms2ex.Crypto.Rand32.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />Rand32</a>
 
   </div>
 
@@ -357,7 +380,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.RearrangeCrypter.html" translate="no">Ms2ex.Crypto.RearrangeCrypter</a>
+    <a href="Ms2ex.Crypto.RearrangeCrypter.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />RearrangeCrypter</a>
 
   </div>
 
@@ -366,7 +389,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.RecvCipher.html" translate="no">Ms2ex.Crypto.RecvCipher</a>
+    <a href="Ms2ex.Crypto.RecvCipher.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />RecvCipher</a>
 
   </div>
 
@@ -375,7 +398,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.SendCipher.html" translate="no">Ms2ex.Crypto.SendCipher</a>
+    <a href="Ms2ex.Crypto.SendCipher.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />SendCipher</a>
 
   </div>
 
@@ -384,7 +407,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.TableCrypter.html" translate="no">Ms2ex.Crypto.TableCrypter</a>
+    <a href="Ms2ex.Crypto.TableCrypter.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />TableCrypter</a>
 
   </div>
 
@@ -393,7 +416,7 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Crypto.XorCrypter.html" translate="no">Ms2ex.Crypto.XorCrypter</a>
+    <a href="Ms2ex.Crypto.XorCrypter.html" translate="no">Ms2ex.<wbr />Crypto.<wbr />XorCrypter</a>
 
   </div>
 
@@ -402,574 +425,574 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.EctoTypes.Term.html" translate="no">Ms2ex.EctoTypes.Term</a>
+    <a href="Ms2ex.EctoTypes.Term.html" translate="no">Ms2ex.<wbr />EctoTypes.<wbr />Term</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enum.html" translate="no">Ms2ex.Enum</a>
+    <a href="Ms2ex.Enum.html" translate="no">Ms2ex.<wbr />Enum</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.AttackType.html" translate="no">Ms2ex.Enums.AttackType</a>
+    <a href="Ms2ex.Enums.AttackType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />AttackType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.BasicStatType.html" translate="no">Ms2ex.Enums.BasicStatType</a>
+    <a href="Ms2ex.Enums.BasicStatType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />BasicStatType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.ChatType.html" translate="no">Ms2ex.Enums.ChatType</a>
+    <a href="Ms2ex.Enums.ChatType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ChatType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.EquipSlot.html" translate="no">Ms2ex.Enums.EquipSlot</a>
+    <a href="Ms2ex.Enums.EquipSlot.html" translate="no">Ms2ex.<wbr />Enums.<wbr />EquipSlot</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.FieldProperty.html" translate="no">Ms2ex.Enums.FieldProperty</a>
+    <a href="Ms2ex.Enums.FieldProperty.html" translate="no">Ms2ex.<wbr />Enums.<wbr />FieldProperty</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.Gender.html" translate="no">Ms2ex.Enums.Gender</a>
+    <a href="Ms2ex.Enums.Gender.html" translate="no">Ms2ex.<wbr />Enums.<wbr />Gender</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.InsigniaType.html" translate="no">Ms2ex.Enums.InsigniaType</a>
+    <a href="Ms2ex.Enums.InsigniaType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />InsigniaType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.InventoryTab.html" translate="no">Ms2ex.Enums.InventoryTab</a>
+    <a href="Ms2ex.Enums.InventoryTab.html" translate="no">Ms2ex.<wbr />Enums.<wbr />InventoryTab</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.ItemType.html" translate="no">Ms2ex.Enums.ItemType</a>
+    <a href="Ms2ex.Enums.ItemType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ItemType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.Job.html" translate="no">Ms2ex.Enums.Job</a>
+    <a href="Ms2ex.Enums.Job.html" translate="no">Ms2ex.<wbr />Enums.<wbr />Job</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.PartyNotice.html" translate="no">Ms2ex.Enums.PartyNotice</a>
+    <a href="Ms2ex.Enums.PartyNotice.html" translate="no">Ms2ex.<wbr />Enums.<wbr />PartyNotice</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.RegionType.html" translate="no">Ms2ex.Enums.RegionType</a>
+    <a href="Ms2ex.Enums.RegionType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />RegionType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.SkillRank.html" translate="no">Ms2ex.Enums.SkillRank</a>
+    <a href="Ms2ex.Enums.SkillRank.html" translate="no">Ms2ex.<wbr />Enums.<wbr />SkillRank</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.SpecialStatType.html" translate="no">Ms2ex.Enums.SpecialStatType</a>
+    <a href="Ms2ex.Enums.SpecialStatType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />SpecialStatType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.StringCode.html" translate="no">Ms2ex.Enums.StringCode</a>
+    <a href="Ms2ex.Enums.StringCode.html" translate="no">Ms2ex.<wbr />Enums.<wbr />StringCode</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.SystemNotice.html" translate="no">Ms2ex.Enums.SystemNotice</a>
+    <a href="Ms2ex.Enums.SystemNotice.html" translate="no">Ms2ex.<wbr />Enums.<wbr />SystemNotice</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Enums.TransferType.html" translate="no">Ms2ex.Enums.TransferType</a>
+    <a href="Ms2ex.Enums.TransferType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />TransferType</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.ChatSticker.html" translate="no">Ms2ex.GameHandlers.ChatSticker</a>
+    <a href="Ms2ex.GameHandlers.ChatSticker.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />ChatSticker</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Dismantle.html" translate="no">Ms2ex.GameHandlers.Dismantle</a>
+    <a href="Ms2ex.GameHandlers.Dismantle.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Dismantle</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Emote.html" translate="no">Ms2ex.GameHandlers.Emote</a>
+    <a href="Ms2ex.GameHandlers.Emote.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Emote</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.EquipItem.html" translate="no">Ms2ex.GameHandlers.EquipItem</a>
+    <a href="Ms2ex.GameHandlers.EquipItem.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />EquipItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.FileHash.html" translate="no">Ms2ex.GameHandlers.FileHash</a>
+    <a href="Ms2ex.GameHandlers.FileHash.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />FileHash</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Friend.html" translate="no">Ms2ex.GameHandlers.Friend</a>
+    <a href="Ms2ex.GameHandlers.Friend.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Friend</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.GroupChat.html" translate="no">Ms2ex.GameHandlers.GroupChat</a>
+    <a href="Ms2ex.GameHandlers.GroupChat.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />GroupChat</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Helper.Friend.html" translate="no">Ms2ex.GameHandlers.Helper.Friend</a>
+    <a href="Ms2ex.GameHandlers.Helper.Friend.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Helper.<wbr />Friend</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Helper.ItemBox.html" translate="no">Ms2ex.GameHandlers.Helper.ItemBox</a>
+    <a href="Ms2ex.GameHandlers.Helper.ItemBox.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Helper.<wbr />ItemBox</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Helper.Party.html" translate="no">Ms2ex.GameHandlers.Helper.Party</a>
+    <a href="Ms2ex.GameHandlers.Helper.Party.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Helper.<wbr />Party</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Helper.Session.html" translate="no">Ms2ex.GameHandlers.Helper.Session</a>
+    <a href="Ms2ex.GameHandlers.Helper.Session.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Helper.<wbr />Session</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Insignia.html" translate="no">Ms2ex.GameHandlers.Insignia</a>
+    <a href="Ms2ex.GameHandlers.Insignia.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Insignia</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Inventory.html" translate="no">Ms2ex.GameHandlers.Inventory</a>
+    <a href="Ms2ex.GameHandlers.Inventory.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Inventory</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Job.html" translate="no">Ms2ex.GameHandlers.Job</a>
+    <a href="Ms2ex.GameHandlers.Job.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Job</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.KeyTable.html" translate="no">Ms2ex.GameHandlers.KeyTable</a>
+    <a href="Ms2ex.GameHandlers.KeyTable.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />KeyTable</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.LoadUgcMap.html" translate="no">Ms2ex.GameHandlers.LoadUgcMap</a>
+    <a href="Ms2ex.GameHandlers.LoadUgcMap.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />LoadUgcMap</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Party.html" translate="no">Ms2ex.GameHandlers.Party</a>
+    <a href="Ms2ex.GameHandlers.Party.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Party</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.PickupItem.html" translate="no">Ms2ex.GameHandlers.PickupItem</a>
+    <a href="Ms2ex.GameHandlers.PickupItem.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />PickupItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.PickupMoney.html" translate="no">Ms2ex.GameHandlers.PickupMoney</a>
+    <a href="Ms2ex.GameHandlers.PickupMoney.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />PickupMoney</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.PremiumClub.html" translate="no">Ms2ex.GameHandlers.PremiumClub</a>
+    <a href="Ms2ex.GameHandlers.PremiumClub.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />PremiumClub</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.RequestChangeChannel.html" translate="no">Ms2ex.GameHandlers.RequestChangeChannel</a>
+    <a href="Ms2ex.GameHandlers.RequestChangeChannel.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestChangeChannel</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.RequestChangeField.html" translate="no">Ms2ex.GameHandlers.RequestChangeField</a>
+    <a href="Ms2ex.GameHandlers.RequestChangeField.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestChangeField</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.RequestCube.html" translate="no">Ms2ex.GameHandlers.RequestCube</a>
+    <a href="Ms2ex.GameHandlers.RequestCube.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestCube</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.RequestQuit.html" translate="no">Ms2ex.GameHandlers.RequestQuit</a>
+    <a href="Ms2ex.GameHandlers.RequestQuit.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestQuit</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.RequestWorldMap.html" translate="no">Ms2ex.GameHandlers.RequestWorldMap</a>
+    <a href="Ms2ex.GameHandlers.RequestWorldMap.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestWorldMap</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.ResponseClientSyncTick.html" translate="no">Ms2ex.GameHandlers.ResponseClientSyncTick</a>
+    <a href="Ms2ex.GameHandlers.ResponseClientSyncTick.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />ResponseClientSyncTick</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.ResponseFieldEnter.html" translate="no">Ms2ex.GameHandlers.ResponseFieldEnter</a>
+    <a href="Ms2ex.GameHandlers.ResponseFieldEnter.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />ResponseFieldEnter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.ResponseKey.html" translate="no">Ms2ex.GameHandlers.ResponseKey</a>
+    <a href="Ms2ex.GameHandlers.ResponseKey.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />ResponseKey</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.ResponseVersion.html" translate="no">Ms2ex.GameHandlers.ResponseVersion</a>
+    <a href="Ms2ex.GameHandlers.ResponseVersion.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />ResponseVersion</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Ride.html" translate="no">Ms2ex.GameHandlers.Ride</a>
+    <a href="Ms2ex.GameHandlers.Ride.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Ride</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.RideSync.html" translate="no">Ms2ex.GameHandlers.RideSync</a>
+    <a href="Ms2ex.GameHandlers.RideSync.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RideSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Skill.html" translate="no">Ms2ex.GameHandlers.Skill</a>
+    <a href="Ms2ex.GameHandlers.Skill.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Skill</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.SkillBook.html" translate="no">Ms2ex.GameHandlers.SkillBook</a>
+    <a href="Ms2ex.GameHandlers.SkillBook.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />SkillBook</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Taxi.html" translate="no">Ms2ex.GameHandlers.Taxi</a>
+    <a href="Ms2ex.GameHandlers.Taxi.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Taxi</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.UseItem.html" translate="no">Ms2ex.GameHandlers.UseItem</a>
+    <a href="Ms2ex.GameHandlers.UseItem.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />UseItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.UserChat.html" translate="no">Ms2ex.GameHandlers.UserChat</a>
+    <a href="Ms2ex.GameHandlers.UserChat.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />UserChat</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.UserEnv.html" translate="no">Ms2ex.GameHandlers.UserEnv</a>
+    <a href="Ms2ex.GameHandlers.UserEnv.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />UserEnv</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.UserSync.html" translate="no">Ms2ex.GameHandlers.UserSync</a>
+    <a href="Ms2ex.GameHandlers.UserSync.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />UserSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GameHandlers.Vibrate.html" translate="no">Ms2ex.GameHandlers.Vibrate</a>
+    <a href="Ms2ex.GameHandlers.Vibrate.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Vibrate</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.GroupChat.html" translate="no">Ms2ex.GroupChat</a>
+    <a href="Ms2ex.GroupChat.html" translate="no">Ms2ex.<wbr />GroupChat</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Handlers.SendLog.html" translate="no">Ms2ex.Handlers.SendLog</a>
+    <a href="Ms2ex.Handlers.SendLog.html" translate="no">Ms2ex.<wbr />Handlers.<wbr />SendLog</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.LoginHandlers.CharacterManagement.html" translate="no">Ms2ex.LoginHandlers.CharacterManagement</a>
+    <a href="Ms2ex.LoginHandlers.CharacterManagement.html" translate="no">Ms2ex.<wbr />LoginHandlers.<wbr />CharacterManagement</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.LoginHandlers.ResponseKey.html" translate="no">Ms2ex.LoginHandlers.ResponseKey</a>
+    <a href="Ms2ex.LoginHandlers.ResponseKey.html" translate="no">Ms2ex.<wbr />LoginHandlers.<wbr />ResponseKey</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.LoginHandlers.ResponseLogin.html" translate="no">Ms2ex.LoginHandlers.ResponseLogin</a>
+    <a href="Ms2ex.LoginHandlers.ResponseLogin.html" translate="no">Ms2ex.<wbr />LoginHandlers.<wbr />ResponseLogin</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.LoginHandlers.ResponseServerEnter.html" translate="no">Ms2ex.LoginHandlers.ResponseServerEnter</a>
+    <a href="Ms2ex.LoginHandlers.ResponseServerEnter.html" translate="no">Ms2ex.<wbr />LoginHandlers.<wbr />ResponseServerEnter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.LoginHandlers.ResponseVersion.html" translate="no">Ms2ex.LoginHandlers.ResponseVersion</a>
+    <a href="Ms2ex.LoginHandlers.ResponseVersion.html" translate="no">Ms2ex.<wbr />LoginHandlers.<wbr />ResponseVersion</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Lua.Items.html" translate="no">Ms2ex.Lua.Items</a>
+    <a href="Ms2ex.Lua.Items.html" translate="no">Ms2ex.<wbr />Lua.<wbr />Items</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Buff.html" translate="no">Ms2ex.Managers.Buff</a>
+    <a href="Ms2ex.Managers.Buff.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Buff</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Character.html" translate="no">Ms2ex.Managers.Character</a>
+    <a href="Ms2ex.Managers.Character.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Character.Skill.html" translate="no">Ms2ex.Managers.Character.Skill</a>
+    <a href="Ms2ex.Managers.Character.Skill.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Skill</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Character.Stats.html" translate="no">Ms2ex.Managers.Character.Stats</a>
+    <a href="Ms2ex.Managers.Character.Stats.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Stats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Field.html" translate="no">Ms2ex.Managers.Field</a>
+    <a href="Ms2ex.Managers.Field.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Field.Buff.html" translate="no">Ms2ex.Managers.Field.Buff</a>
+    <a href="Ms2ex.Managers.Field.Buff.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Buff</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Field.Character.html" translate="no">Ms2ex.Managers.Field.Character</a>
+    <a href="Ms2ex.Managers.Field.Character.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Character</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Field.Item.html" translate="no">Ms2ex.Managers.Field.Item</a>
+    <a href="Ms2ex.Managers.Field.Item.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Item</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Field.Npc.html" translate="no">Ms2ex.Managers.Field.Npc</a>
+    <a href="Ms2ex.Managers.Field.Npc.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Npc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Field.Portal.html" translate="no">Ms2ex.Managers.Field.Portal</a>
+    <a href="Ms2ex.Managers.Field.Portal.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Portal</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.FieldNpc.html" translate="no">Ms2ex.Managers.FieldNpc</a>
+    <a href="Ms2ex.Managers.FieldNpc.html" translate="no">Ms2ex.<wbr />Managers.<wbr />FieldNpc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.GlobalCounter.html" translate="no">Ms2ex.Managers.GlobalCounter</a>
+    <a href="Ms2ex.Managers.GlobalCounter.html" translate="no">Ms2ex.<wbr />Managers.<wbr />GlobalCounter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.SkillCast.html" translate="no">Ms2ex.Managers.SkillCast</a>
+    <a href="Ms2ex.Managers.SkillCast.html" translate="no">Ms2ex.<wbr />Managers.<wbr />SkillCast</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Net.Router.html" translate="no">Ms2ex.Net.Router</a>
+    <a href="Ms2ex.Net.Router.html" translate="no">Ms2ex.<wbr />Net.<wbr />Router</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Net.SenderSession.html" translate="no">Ms2ex.Net.SenderSession</a>
+    <a href="Ms2ex.Net.SenderSession.html" translate="no">Ms2ex.<wbr />Net.<wbr />SenderSession</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Net.Session.html" translate="no">Ms2ex.Net.Session</a>
+    <a href="Ms2ex.Net.Session.html" translate="no">Ms2ex.<wbr />Net.<wbr />Session</a>
 
   </div>
 
@@ -978,945 +1001,947 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Net.Utils.html" translate="no">Ms2ex.Net.Utils</a>
+    <a href="Ms2ex.Net.Utils.html" translate="no">Ms2ex.<wbr />Net.<wbr />Utils</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.html" translate="no">Ms2ex.Packets</a>
+    <a href="Ms2ex.Packets.html" translate="no">Ms2ex.<wbr />Packets</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.AddInteractObjects.html" translate="no">Ms2ex.Packets.AddInteractObjects</a>
+    <a href="Ms2ex.Packets.AddInteractObjects.html" translate="no">Ms2ex.<wbr />Packets.<wbr />AddInteractObjects</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.AddPortal.html" translate="no">Ms2ex.Packets.AddPortal</a>
+    <a href="Ms2ex.Packets.AddPortal.html" translate="no">Ms2ex.<wbr />Packets.<wbr />AddPortal</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.BannerList.html" translate="no">Ms2ex.Packets.BannerList</a>
+    <a href="Ms2ex.Packets.BannerList.html" translate="no">Ms2ex.<wbr />Packets.<wbr />BannerList</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Buff.html" translate="no">Ms2ex.Packets.Buff</a>
+    <a href="Ms2ex.Packets.Buff.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Buff</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.CharacterCreate.html" translate="no">Ms2ex.Packets.CharacterCreate</a>
+    <a href="Ms2ex.Packets.CharacterCreate.html" translate="no">Ms2ex.<wbr />Packets.<wbr />CharacterCreate</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.CharacterList.html" translate="no">Ms2ex.Packets.CharacterList</a>
+    <a href="Ms2ex.Packets.CharacterList.html" translate="no">Ms2ex.<wbr />Packets.<wbr />CharacterList</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.CharacterMaxCount.html" translate="no">Ms2ex.Packets.CharacterMaxCount</a>
+    <a href="Ms2ex.Packets.CharacterMaxCount.html" translate="no">Ms2ex.<wbr />Packets.<wbr />CharacterMaxCount</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ChatSticker.html" translate="no">Ms2ex.Packets.ChatSticker</a>
+    <a href="Ms2ex.Packets.ChatSticker.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ChatSticker</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ControlNpc.html" translate="no">Ms2ex.Packets.ControlNpc</a>
+    <a href="Ms2ex.Packets.ControlNpc.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ControlNpc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Dismantle.html" translate="no">Ms2ex.Packets.Dismantle</a>
+    <a href="Ms2ex.Packets.Dismantle.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Dismantle</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.DynamicChannel.html" translate="no">Ms2ex.Packets.DynamicChannel</a>
+    <a href="Ms2ex.Packets.DynamicChannel.html" translate="no">Ms2ex.<wbr />Packets.<wbr />DynamicChannel</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Emote.html" translate="no">Ms2ex.Packets.Emote</a>
+    <a href="Ms2ex.Packets.Emote.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Emote</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.EquipItem.html" translate="no">Ms2ex.Packets.EquipItem</a>
+    <a href="Ms2ex.Packets.EquipItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />EquipItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Experience.html" translate="no">Ms2ex.Packets.Experience</a>
+    <a href="Ms2ex.Packets.Experience.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Experience</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FallDamage.html" translate="no">Ms2ex.Packets.FallDamage</a>
+    <a href="Ms2ex.Packets.FallDamage.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FallDamage</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Field.html" translate="no">Ms2ex.Packets.Field</a>
+    <a href="Ms2ex.Packets.Field.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Field</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldAddItem.html" translate="no">Ms2ex.Packets.FieldAddItem</a>
+    <a href="Ms2ex.Packets.FieldAddItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldAddItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldAddNpc.html" translate="no">Ms2ex.Packets.FieldAddNpc</a>
+    <a href="Ms2ex.Packets.FieldAddNpc.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldAddNpc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldAddUser.html" translate="no">Ms2ex.Packets.FieldAddUser</a>
+    <a href="Ms2ex.Packets.FieldAddUser.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldAddUser</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldEntrance.html" translate="no">Ms2ex.Packets.FieldEntrance</a>
+    <a href="Ms2ex.Packets.FieldEntrance.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldEntrance</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldPickupItem.html" translate="no">Ms2ex.Packets.FieldPickupItem</a>
+    <a href="Ms2ex.Packets.FieldPickupItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldPickupItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldProperty.html" translate="no">Ms2ex.Packets.FieldProperty</a>
+    <a href="Ms2ex.Packets.FieldProperty.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldProperty</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldRemoveItem.html" translate="no">Ms2ex.Packets.FieldRemoveItem</a>
+    <a href="Ms2ex.Packets.FieldRemoveItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldRemoveItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldRemoveNpc.html" translate="no">Ms2ex.Packets.FieldRemoveNpc</a>
+    <a href="Ms2ex.Packets.FieldRemoveNpc.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldRemoveNpc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FieldRemoveObject.html" translate="no">Ms2ex.Packets.FieldRemoveObject</a>
+    <a href="Ms2ex.Packets.FieldRemoveObject.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FieldRemoveObject</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Fishing.html" translate="no">Ms2ex.Packets.Fishing</a>
+    <a href="Ms2ex.Packets.Fishing.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Fishing</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Friend.html" translate="no">Ms2ex.Packets.Friend</a>
+    <a href="Ms2ex.Packets.Friend.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Friend</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.FurnishingInventory.html" translate="no">Ms2ex.Packets.FurnishingInventory</a>
+    <a href="Ms2ex.Packets.FurnishingInventory.html" translate="no">Ms2ex.<wbr />Packets.<wbr />FurnishingInventory</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.GameToGame.html" translate="no">Ms2ex.Packets.GameToGame</a>
+    <a href="Ms2ex.Packets.GameToGame.html" translate="no">Ms2ex.<wbr />Packets.<wbr />GameToGame</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.GameToLogin.html" translate="no">Ms2ex.Packets.GameToLogin</a>
+    <a href="Ms2ex.Packets.GameToLogin.html" translate="no">Ms2ex.<wbr />Packets.<wbr />GameToLogin</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.GroupChat.html" translate="no">Ms2ex.Packets.GroupChat</a>
+    <a href="Ms2ex.Packets.GroupChat.html" translate="no">Ms2ex.<wbr />Packets.<wbr />GroupChat</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Insignia.html" translate="no">Ms2ex.Packets.Insignia</a>
+    <a href="Ms2ex.Packets.Insignia.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Insignia</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.InventoryItem.html" translate="no">Ms2ex.Packets.InventoryItem</a>
+    <a href="Ms2ex.Packets.InventoryItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />InventoryItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Job.html" translate="no">Ms2ex.Packets.Job</a>
+    <a href="Ms2ex.Packets.Job.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Job</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.KeyTable.html" translate="no">Ms2ex.Packets.KeyTable</a>
+    <a href="Ms2ex.Packets.KeyTable.html" translate="no">Ms2ex.<wbr />Packets.<wbr />KeyTable</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.LevelUp.html" translate="no">Ms2ex.Packets.LevelUp</a>
+    <a href="Ms2ex.Packets.LevelUp.html" translate="no">Ms2ex.<wbr />Packets.<wbr />LevelUp</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.LoadUgcMap.html" translate="no">Ms2ex.Packets.LoadUgcMap</a>
+    <a href="Ms2ex.Packets.LoadUgcMap.html" translate="no">Ms2ex.<wbr />Packets.<wbr />LoadUgcMap</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.LoginRequired.html" translate="no">Ms2ex.Packets.LoginRequired</a>
+    <a href="Ms2ex.Packets.LoginRequired.html" translate="no">Ms2ex.<wbr />Packets.<wbr />LoginRequired</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.LoginResult.html" translate="no">Ms2ex.Packets.LoginResult</a>
+    <a href="Ms2ex.Packets.LoginResult.html" translate="no">Ms2ex.<wbr />Packets.<wbr />LoginResult</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.LoginToGame.html" translate="no">Ms2ex.Packets.LoginToGame</a>
+    <a href="Ms2ex.Packets.LoginToGame.html" translate="no">Ms2ex.<wbr />Packets.<wbr />LoginToGame</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.MarketInventory.html" translate="no">Ms2ex.Packets.MarketInventory</a>
+    <a href="Ms2ex.Packets.MarketInventory.html" translate="no">Ms2ex.<wbr />Packets.<wbr />MarketInventory</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Merets.html" translate="no">Ms2ex.Packets.Merets</a>
+    <a href="Ms2ex.Packets.Merets.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Merets</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Mesos.html" translate="no">Ms2ex.Packets.Mesos</a>
+    <a href="Ms2ex.Packets.Mesos.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Mesos</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.MoveCharacter.html" translate="no">Ms2ex.Packets.MoveCharacter</a>
+    <a href="Ms2ex.Packets.MoveCharacter.html" translate="no">Ms2ex.<wbr />Packets.<wbr />MoveCharacter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.MoveResult.html" translate="no">Ms2ex.Packets.MoveResult</a>
+    <a href="Ms2ex.Packets.MoveResult.html" translate="no">Ms2ex.<wbr />Packets.<wbr />MoveResult</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Notice.html" translate="no">Ms2ex.Packets.Notice</a>
+    <a href="Ms2ex.Packets.Notice.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Notice</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.NpsInfo.html" translate="no">Ms2ex.Packets.NpsInfo</a>
+    <a href="Ms2ex.Packets.NpsInfo.html" translate="no">Ms2ex.<wbr />Packets.<wbr />NpsInfo</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.PacketReader.html" translate="no">Ms2ex.Packets.PacketReader</a>
+    <a href="Ms2ex.Packets.PacketReader.html" translate="no">Ms2ex.<wbr />Packets.<wbr />PacketReader</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.PacketWriter.html" translate="no">Ms2ex.Packets.PacketWriter</a>
+    <a href="Ms2ex.Packets.PacketWriter.html" translate="no">Ms2ex.<wbr />Packets.<wbr />PacketWriter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Party.html" translate="no">Ms2ex.Packets.Party</a>
+    <a href="Ms2ex.Packets.Party.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Party</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.PremiumClub.html" translate="no">Ms2ex.Packets.PremiumClub</a>
+    <a href="Ms2ex.Packets.PremiumClub.html" translate="no">Ms2ex.<wbr />Packets.<wbr />PremiumClub</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Prestige.html" translate="no">Ms2ex.Packets.Prestige</a>
+    <a href="Ms2ex.Packets.Prestige.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Prestige</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ProxyGameObj.html" translate="no">Ms2ex.Packets.ProxyGameObj</a>
+    <a href="Ms2ex.Packets.ProxyGameObj.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ProxyGameObj</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RegionSkill.html" translate="no">Ms2ex.Packets.RegionSkill</a>
+    <a href="Ms2ex.Packets.RegionSkill.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RegionSkill</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RequestClientSyncTick.html" translate="no">Ms2ex.Packets.RequestClientSyncTick</a>
+    <a href="Ms2ex.Packets.RequestClientSyncTick.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RequestClientSyncTick</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RequestFieldEnter.html" translate="no">Ms2ex.Packets.RequestFieldEnter</a>
+    <a href="Ms2ex.Packets.RequestFieldEnter.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RequestFieldEnter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RequestKey.html" translate="no">Ms2ex.Packets.RequestKey</a>
+    <a href="Ms2ex.Packets.RequestKey.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RequestKey</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RequestLogin.html" translate="no">Ms2ex.Packets.RequestLogin</a>
+    <a href="Ms2ex.Packets.RequestLogin.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RequestLogin</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RequestVersion.html" translate="no">Ms2ex.Packets.RequestVersion</a>
+    <a href="Ms2ex.Packets.RequestVersion.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RequestVersion</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ResponseCube.html" translate="no">Ms2ex.Packets.ResponseCube</a>
+    <a href="Ms2ex.Packets.ResponseCube.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ResponseCube</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ResponseRide.html" translate="no">Ms2ex.Packets.ResponseRide</a>
+    <a href="Ms2ex.Packets.ResponseRide.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ResponseRide</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ResponseTimeSync.html" translate="no">Ms2ex.Packets.ResponseTimeSync</a>
+    <a href="Ms2ex.Packets.ResponseTimeSync.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ResponseTimeSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.RideSync.html" translate="no">Ms2ex.Packets.RideSync</a>
+    <a href="Ms2ex.Packets.RideSync.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RideSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ServerEnter.html" translate="no">Ms2ex.Packets.ServerEnter</a>
+    <a href="Ms2ex.Packets.ServerEnter.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ServerEnter</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.ServerList.html" translate="no">Ms2ex.Packets.ServerList</a>
+    <a href="Ms2ex.Packets.ServerList.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ServerList</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.SkillBook.html" translate="no">Ms2ex.Packets.SkillBook</a>
+    <a href="Ms2ex.Packets.SkillBook.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SkillBook</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.SkillCancel.html" translate="no">Ms2ex.Packets.SkillCancel</a>
+    <a href="Ms2ex.Packets.SkillCancel.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SkillCancel</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.SkillDamage.html" translate="no">Ms2ex.Packets.SkillDamage</a>
+    <a href="Ms2ex.Packets.SkillDamage.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SkillDamage</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.SkillSync.html" translate="no">Ms2ex.Packets.SkillSync</a>
+    <a href="Ms2ex.Packets.SkillSync.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SkillSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.SkillUse.html" translate="no">Ms2ex.Packets.SkillUse</a>
+    <a href="Ms2ex.Packets.SkillUse.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SkillUse</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.StatPoints.html" translate="no">Ms2ex.Packets.StatPoints</a>
+    <a href="Ms2ex.Packets.StatPoints.html" translate="no">Ms2ex.<wbr />Packets.<wbr />StatPoints</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Stats.html" translate="no">Ms2ex.Packets.Stats</a>
+    <a href="Ms2ex.Packets.Stats.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Stats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.SyncNumber.html" translate="no">Ms2ex.Packets.SyncNumber</a>
+    <a href="Ms2ex.Packets.SyncNumber.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SyncNumber</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Taxi.html" translate="no">Ms2ex.Packets.Taxi</a>
+    <a href="Ms2ex.Packets.Taxi.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Taxi</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UGC.html" translate="no">Ms2ex.Packets.UGC</a>
+    <a href="Ms2ex.Packets.UGC.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UGC</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UnequipItem.html" translate="no">Ms2ex.Packets.UnequipItem</a>
+    <a href="Ms2ex.Packets.UnequipItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UnequipItem</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UnknownSync.html" translate="no">Ms2ex.Packets.UnknownSync</a>
+    <a href="Ms2ex.Packets.UnknownSync.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UnknownSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UserBattle.html" translate="no">Ms2ex.Packets.UserBattle</a>
+    <a href="Ms2ex.Packets.UserBattle.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UserBattle</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UserChat.html" translate="no">Ms2ex.Packets.UserChat</a>
+    <a href="Ms2ex.Packets.UserChat.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UserChat</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UserEnv.html" translate="no">Ms2ex.Packets.UserEnv</a>
+    <a href="Ms2ex.Packets.UserEnv.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UserEnv</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.UserSync.html" translate="no">Ms2ex.Packets.UserSync</a>
+    <a href="Ms2ex.Packets.UserSync.html" translate="no">Ms2ex.<wbr />Packets.<wbr />UserSync</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Vibrate.html" translate="no">Ms2ex.Packets.Vibrate</a>
+    <a href="Ms2ex.Packets.Vibrate.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Vibrate</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.Wallet.html" translate="no">Ms2ex.Packets.Wallet</a>
+    <a href="Ms2ex.Packets.Wallet.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Wallet</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Packets.WorldMap.html" translate="no">Ms2ex.Packets.WorldMap</a>
+    <a href="Ms2ex.Packets.WorldMap.html" translate="no">Ms2ex.<wbr />Packets.<wbr />WorldMap</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.PartyManager.html" translate="no">Ms2ex.PartyManager</a>
+    <a href="Ms2ex.PartyManager.html" translate="no">Ms2ex.<wbr />PartyManager</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.PartyServer.html" translate="no">Ms2ex.PartyServer</a>
+    <a href="Ms2ex.PartyServer.html" translate="no">Ms2ex.<wbr />PartyServer</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.ProtoMetadata.ChatSticker.html" translate="no">Ms2ex.ProtoMetadata.ChatSticker</a>
+    <a href="Ms2ex.Release.html" translate="no">Ms2ex.<wbr />Release</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Release.html" translate="no">Ms2ex.Release</a>
+    <a href="Ms2ex.Repo.html" translate="no">Ms2ex.<wbr />Repo</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Repo.html" translate="no">Ms2ex.Repo</a>
+    <a href="Ms2ex.Schema.Account.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Account</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Account.html" translate="no">Ms2ex.Schema.Account</a>
+    <a href="Ms2ex.Schema.AccountWallet.html" translate="no">Ms2ex.<wbr />Schema.<wbr />AccountWallet</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.AccountWallet.html" translate="no">Ms2ex.Schema.AccountWallet</a>
+    <a href="Ms2ex.Schema.Character.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Character</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Character.html" translate="no">Ms2ex.Schema.Character</a>
+    <a href="Ms2ex.Schema.CharacterStats.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterStats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.CharacterStats.html" translate="no">Ms2ex.Schema.CharacterStats</a>
+    <a href="Ms2ex.Schema.CharacterTitle.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterTitle</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.CharacterTitle.html" translate="no">Ms2ex.Schema.CharacterTitle</a>
+    <a href="Ms2ex.Schema.ChatStickerGroup.html" translate="no">Ms2ex.<wbr />Schema.<wbr />ChatStickerGroup</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.ChatStickerGroup.html" translate="no">Ms2ex.Schema.ChatStickerGroup</a>
+    <a href="Ms2ex.Schema.Emote.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Emote</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Emote.html" translate="no">Ms2ex.Schema.Emote</a>
+    <a href="Ms2ex.Schema.FavoriteChatSticker.html" translate="no">Ms2ex.<wbr />Schema.<wbr />FavoriteChatSticker</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.FavoriteChatSticker.html" translate="no">Ms2ex.Schema.FavoriteChatSticker</a>
+    <a href="Ms2ex.Schema.Friend.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Friend</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Friend.html" translate="no">Ms2ex.Schema.Friend</a>
+    <a href="Ms2ex.Schema.HotBar.html" translate="no">Ms2ex.<wbr />Schema.<wbr />HotBar</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.HotBar.html" translate="no">Ms2ex.Schema.HotBar</a>
+    <a href="Ms2ex.Schema.InventoryTab.html" translate="no">Ms2ex.<wbr />Schema.<wbr />InventoryTab</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.InventoryTab.html" translate="no">Ms2ex.Schema.InventoryTab</a>
+    <a href="Ms2ex.Schema.Item.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Item</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Item.html" translate="no">Ms2ex.Schema.Item</a>
+    <a href="Ms2ex.Schema.PremiumMembership.html" translate="no">Ms2ex.<wbr />Schema.<wbr />PremiumMembership</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.PremiumMembership.html" translate="no">Ms2ex.Schema.PremiumMembership</a>
+    <a href="Ms2ex.Schema.Skill.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Skill</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Skill.html" translate="no">Ms2ex.Schema.Skill</a>
+    <a href="Ms2ex.Schema.SkillTab.html" translate="no">Ms2ex.<wbr />Schema.<wbr />SkillTab</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.SkillTab.html" translate="no">Ms2ex.Schema.SkillTab</a>
+    <a href="Ms2ex.Schema.Wallet.html" translate="no">Ms2ex.<wbr />Schema.<wbr />Wallet</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Schema.Wallet.html" translate="no">Ms2ex.Schema.Wallet</a>
+    <a href="Ms2ex.SessionManager.html" translate="no">Ms2ex.<wbr />SessionManager</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.SessionManager.html" translate="no">Ms2ex.SessionManager</a>
+    <a href="Ms2ex.Storage.html" translate="no">Ms2ex.<wbr />Storage</a>
 
   </div>
 
+    <div class="summary-synopsis"><p>Lazy, Redis-backed metadata cache.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.html" translate="no">Ms2ex.Storage</a>
+    <a href="Ms2ex.Storage.Items.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Items</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Items.html" translate="no">Ms2ex.Storage.Items</a>
+    <a href="Ms2ex.Storage.Maps.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Maps</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Maps.html" translate="no">Ms2ex.Storage.Maps</a>
+    <a href="Ms2ex.Storage.Npcs.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Npcs</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Metadata.html" translate="no">Ms2ex.Storage.Metadata</a>
+    <a href="Ms2ex.Storage.Skills.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Skills</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Npcs.html" translate="no">Ms2ex.Storage.Npcs</a>
+    <a href="Ms2ex.Storage.Table.MagicPaths.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Table.<wbr />MagicPaths</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Skills.html" translate="no">Ms2ex.Storage.Skills</a>
+    <a href="Ms2ex.Storage.Tables.ChatStickers.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />ChatStickers</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Table.MagicPaths.html" translate="no">Ms2ex.Storage.Table.MagicPaths</a>
+    <a href="Ms2ex.Storage.Tables.ExpTable.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />ExpTable</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Tables.Insignias.html" translate="no">Ms2ex.Storage.Tables.Insignias</a>
+    <a href="Ms2ex.Storage.Tables.Insignias.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />Insignias</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Tables.ItemOptions.html" translate="no">Ms2ex.Storage.Tables.ItemOptions</a>
+    <a href="Ms2ex.Storage.Tables.ItemOptions.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />ItemOptions</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Storage.Tables.Jobs.html" translate="no">Ms2ex.Storage.Tables.Jobs</a>
+    <a href="Ms2ex.Storage.Tables.Jobs.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />Jobs</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.TransferFlags.html" translate="no">Ms2ex.TransferFlags</a>
+    <a href="Ms2ex.TransferFlags.html" translate="no">Ms2ex.<wbr />TransferFlags</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.Buff.html" translate="no">Ms2ex.Types.Buff</a>
+    <a href="Ms2ex.Types.Buff.html" translate="no">Ms2ex.<wbr />Types.<wbr />Buff</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.Color.html" translate="no">Ms2ex.Types.Color</a>
+    <a href="Ms2ex.Types.Color.html" translate="no">Ms2ex.<wbr />Types.<wbr />Color</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.Coord.html" translate="no">Ms2ex.Types.Coord</a>
+    <a href="Ms2ex.Types.Coord.html" translate="no">Ms2ex.<wbr />Types.<wbr />Coord</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.CoordF.html" translate="no">Ms2ex.Types.CoordF</a>
+    <a href="Ms2ex.Types.CoordF.html" translate="no">Ms2ex.<wbr />Types.<wbr />CoordF</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.FieldNpc.html" translate="no">Ms2ex.Types.FieldNpc</a>
+    <a href="Ms2ex.Types.FieldNpc.html" translate="no">Ms2ex.<wbr />Types.<wbr />FieldNpc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.Hair.html" translate="no">Ms2ex.Types.Hair</a>
+    <a href="Ms2ex.Types.Hair.html" translate="no">Ms2ex.<wbr />Types.<wbr />Hair</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.HairData.html" translate="no">Ms2ex.Types.HairData</a>
+    <a href="Ms2ex.Types.HairData.html" translate="no">Ms2ex.<wbr />Types.<wbr />HairData</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.ItemColor.html" translate="no">Ms2ex.Types.ItemColor</a>
+    <a href="Ms2ex.Types.ItemColor.html" translate="no">Ms2ex.<wbr />Types.<wbr />ItemColor</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.ItemStat.html" translate="no">Ms2ex.Types.ItemStat</a>
+    <a href="Ms2ex.Types.ItemStat.html" translate="no">Ms2ex.<wbr />Types.<wbr />ItemStat</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.ItemStats.html" translate="no">Ms2ex.Types.ItemStats</a>
+    <a href="Ms2ex.Types.ItemStats.html" translate="no">Ms2ex.<wbr />Types.<wbr />ItemStats</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.Npc.html" translate="no">Ms2ex.Types.Npc</a>
+    <a href="Ms2ex.Types.Npc.html" translate="no">Ms2ex.<wbr />Types.<wbr />Npc</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.Party.html" translate="no">Ms2ex.Types.Party</a>
+    <a href="Ms2ex.Types.Party.html" translate="no">Ms2ex.<wbr />Types.<wbr />Party</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.QuickSlot.html" translate="no">Ms2ex.Types.QuickSlot</a>
+    <a href="Ms2ex.Types.QuickSlot.html" translate="no">Ms2ex.<wbr />Types.<wbr />QuickSlot</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.SkillCast.html" translate="no">Ms2ex.Types.SkillCast</a>
+    <a href="Ms2ex.Types.SkillCast.html" translate="no">Ms2ex.<wbr />Types.<wbr />SkillCast</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.SkinColor.html" translate="no">Ms2ex.Types.SkinColor</a>
+    <a href="Ms2ex.Types.SkinColor.html" translate="no">Ms2ex.<wbr />Types.<wbr />SkinColor</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Types.SyncState.html" translate="no">Ms2ex.Types.SyncState</a>
+    <a href="Ms2ex.Types.SyncState.html" translate="no">Ms2ex.<wbr />Types.<wbr />SyncState</a>
 
   </div>
 
@@ -1936,28 +1961,28 @@ as controllers, views, channels and so on.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2exWeb.AccountSocket.html" translate="no">Ms2exWeb.AccountSocket</a>
+    <a href="Ms2exWeb.AccountSocket.html" translate="no">Ms2exWeb.<wbr />AccountSocket</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2exWeb.Endpoint.html" translate="no">Ms2exWeb.Endpoint</a>
+    <a href="Ms2exWeb.Endpoint.html" translate="no">Ms2exWeb.<wbr />Endpoint</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2exWeb.Router.html" translate="no">Ms2exWeb.Router</a>
+    <a href="Ms2exWeb.Router.html" translate="no">Ms2exWeb.<wbr />Router</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2exWeb.Telemetry.html" translate="no">Ms2exWeb.Telemetry</a>
+    <a href="Ms2exWeb.Telemetry.html" translate="no">Ms2exWeb.<wbr />Telemetry</a>
 
   </div>
 
@@ -1969,27 +1994,34 @@ as controllers, views, channels and so on.</p></div>
 
 </div>
     <footer class="footer">
-      <p>
 
-        <span class="line">
-          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-            Search HexDocs
-          </button>
+        <p>
 
-            <a href="MS2EX.epub" title="ePub version">
-              Download ePub version
-            </a>
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
 
-        </span>
-      </p>
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
 
-      <p class="built-using">
-        Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.38.2) for the
 
-          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+              <a href="MS2EX.epub">
+                Download ePub version
+              </a>
 
-      </p>
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
 
     </footer>
   </div>
