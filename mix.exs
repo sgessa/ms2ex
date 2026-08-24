@@ -68,7 +68,7 @@ defmodule Ms2ex.MixProject do
       {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"},
+      {:bandit, "~> 1.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:libgraph, "~> 0.13"},
       {:ranch, "~> 2.0", override: true},
