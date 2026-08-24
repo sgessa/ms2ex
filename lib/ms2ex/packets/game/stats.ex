@@ -44,7 +44,9 @@ defmodule Ms2ex.Packets.Stats do
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
-    |> put_byte()
+    # mode 0x1 = targeted update (same layout as working player updates);
+    # mode 0x0 makes this client expect a full 35-stat dump and drop the packet
+    |> put_byte(@mode.update_char_stats)
     |> put_byte(0x1)
     |> put_byte(Enums.BasicStatType.get_value(stat))
     # the client reads stat values by index: [Total, Base, Current]
