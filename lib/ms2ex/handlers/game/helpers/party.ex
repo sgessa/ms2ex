@@ -1,5 +1,9 @@
 defmodule Ms2ex.GameHandlers.Helper.Party do
-  alias Ms2ex.{Managers, Packets, PartyManager, PartyServer, Types}
+  alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.PartyManager
+  alias Ms2ex.PartyServer
+  alias Ms2ex.Types
 
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 

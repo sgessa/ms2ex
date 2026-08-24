@@ -1,7 +1,9 @@
 defmodule Ms2ex.PartyServer do
   use GenServer
 
-  alias Ms2ex.{Packets, PartyManager, Types}
+  alias Ms2ex.Packets
+  alias Ms2ex.PartyManager
+  alias Ms2ex.Types
   alias Phoenix.PubSub
 
   def broadcast(nil, _packet), do: :error

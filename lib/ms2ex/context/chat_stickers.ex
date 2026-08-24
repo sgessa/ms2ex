@@ -3,7 +3,8 @@ defmodule Ms2ex.Context.ChatStickers do
   Context module for managing chat stickers.
   """
 
-  alias Ms2ex.{Repo, Schema}
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
 

@@ -1,5 +1,8 @@
 defmodule Ms2ex.GameHandlers.UseItem do
-  alias Ms2ex.{Managers, Context, Packets, Schema}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
   alias Ms2ex.GameHandlers.Helper.ItemBox
 
   import Packets.PacketReader

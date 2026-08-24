@@ -1,5 +1,6 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{Enums, Packets}
+  alias Ms2ex.Enums
+  alias Ms2ex.Packets
 
   alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter

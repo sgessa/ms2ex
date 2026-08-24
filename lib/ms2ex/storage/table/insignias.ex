@@ -1,5 +1,6 @@
 defmodule Ms2ex.Storage.Tables.Insignias do
-  alias Ms2ex.{Enums, Storage}
+  alias Ms2ex.Enums
+  alias Ms2ex.Storage
 
   def get(id) do
     :table

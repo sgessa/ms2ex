@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.Items do
-  alias Ms2ex.{Schema, Storage, Types}
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
+  alias Ms2ex.Types
 
   def init(id, attrs \\ %{}) do
     %Schema.Item{item_id: id}

@@ -1,5 +1,6 @@
 defmodule Ms2ex.Packets.FieldAddNpc do
-  alias Ms2ex.{Packets, Types}
+  alias Ms2ex.Packets
+  alias Ms2ex.Types
 
   import Packets.PacketWriter
 

@@ -1,5 +1,8 @@
 defmodule Ms2ex.GameHandlers.RideSync do
-  alias Ms2ex.{Managers, Packets, Types, Context}
+  alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.Types
+  alias Ms2ex.Context
 
   import Packets.PacketReader
 

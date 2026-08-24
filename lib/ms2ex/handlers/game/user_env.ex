@@ -1,5 +1,7 @@
 defmodule Ms2ex.GameHandlers.UserEnv do
-  alias Ms2ex.{Managers, Context, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
 

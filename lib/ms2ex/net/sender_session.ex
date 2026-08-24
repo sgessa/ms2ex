@@ -4,7 +4,13 @@ defmodule Ms2ex.Net.SenderSession do
   require Logger, as: L
 
   alias Ms2ex.Crypto.SendCipher
-  alias Ms2ex.{Managers, Context, GroupChat, Net, Packets, PartyServer, Schema}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.GroupChat
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.PartyServer
+  alias Ms2ex.Schema
   alias Ms2ex.Packets.{PacketReader, RequestVersion}
 
   import Net.Utils

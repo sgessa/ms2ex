@@ -1,5 +1,7 @@
 defmodule Ms2ex.GameHandlers.GroupChat do
-  alias Ms2ex.{Managers, GroupChat, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.GroupChat
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]

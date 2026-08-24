@@ -1,7 +1,10 @@
 defmodule Ms2ex.GameHandlers.RequestChangeField do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Packets, Storage}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Storage
 
   import Packets.PacketReader
 

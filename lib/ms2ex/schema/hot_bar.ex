@@ -3,7 +3,9 @@ defmodule Ms2ex.Schema.HotBar do
 
   import Ecto.Changeset
 
-  alias Ms2ex.{EctoTypes, Schema, Types}
+  alias Ms2ex.EctoTypes
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   @type t :: %__MODULE__{}
   @max_slots 25

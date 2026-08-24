@@ -1,5 +1,9 @@
 defmodule Ms2ex.GameHandlers.Party do
-  alias Ms2ex.{Managers, Enums, Packets, PartyServer, Types}
+  alias Ms2ex.Managers
+  alias Ms2ex.Enums
+  alias Ms2ex.Packets
+  alias Ms2ex.PartyServer
+  alias Ms2ex.Types
 
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Party

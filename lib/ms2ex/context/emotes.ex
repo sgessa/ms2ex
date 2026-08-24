@@ -6,7 +6,8 @@ defmodule Ms2ex.Context.Emotes do
   default emotes available to characters.
   """
 
-  alias Ms2ex.{Repo, Schema}
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
 

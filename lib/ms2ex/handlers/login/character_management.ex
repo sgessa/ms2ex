@@ -1,14 +1,12 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
-  alias Ms2ex.{
-    Context,
-    Net,
-    Packets,
-    Repo,
-    Schema,
-    SessionManager,
-    Types,
-    Enums
-  }
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
+  alias Ms2ex.SessionManager
+  alias Ms2ex.Types
+  alias Ms2ex.Enums
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]

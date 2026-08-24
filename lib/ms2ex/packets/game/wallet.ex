@@ -1,5 +1,6 @@
 defmodule Ms2ex.Packets.Wallet do
-  alias Ms2ex.{Context, Packets}
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketWriter
 

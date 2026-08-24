@@ -1,7 +1,11 @@
 defmodule Ms2ex.GameHandlers.SkillBook do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets, Constants}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Constants
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader

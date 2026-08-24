@@ -1,12 +1,10 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{
-    Managers,
-    Context,
-    Net,
-    Packets,
-    Storage,
-    Constants
-  }
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Storage
+  alias Ms2ex.Constants
 
   import Net.SenderSession, only: [push: 2, push_notice: 3]
 

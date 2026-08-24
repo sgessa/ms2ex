@@ -1,5 +1,7 @@
 defmodule Ms2ex.Types.ItemStats do
-  alias Ms2ex.{Context, Schema, Storage}
+  alias Ms2ex.Context
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   defstruct constants: %{},
             statics: %{},

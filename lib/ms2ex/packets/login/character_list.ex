@@ -1,5 +1,8 @@
 defmodule Ms2ex.Packets.CharacterList do
-  alias Ms2ex.{Packets, Schema, Enums, Types}
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
+  alias Ms2ex.Enums
+  alias Ms2ex.Types
 
   import Packets.PacketWriter
 

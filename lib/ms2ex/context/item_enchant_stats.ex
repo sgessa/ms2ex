@@ -1,5 +1,8 @@
 defmodule Ms2ex.Context.ItemEnchantStats do
-  alias Ms2ex.{Enums, Lua, Schema, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Lua
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   def get(%Schema.Item{} = item) do
     item

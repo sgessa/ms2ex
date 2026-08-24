@@ -6,7 +6,8 @@ defmodule Ms2ex.Types.SyncState do
 
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, Packets}
+  alias Ms2ex.EctoTypes
+  alias Ms2ex.Packets
   alias Ms2ex.Types.Coord
 
   import Bitwise

@@ -1,5 +1,9 @@
 defmodule Ms2ex.Context.ItemStaticStats do
-  alias Ms2ex.{Enums, Lua, Schema, Storage, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Lua
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
+  alias Ms2ex.Types
 
   def get(%Schema.Item{} = item, pick_options) do
     static_id = get_in(item.metadata, [:option, :static_id])

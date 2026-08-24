@@ -1,7 +1,9 @@
 defmodule Ms2ex.Schema.Item do
   use Ecto.Schema
 
-  alias Ms2ex.{EctoTypes, Enums, Schema}
+  alias Ms2ex.EctoTypes
+  alias Ms2ex.Enums
+  alias Ms2ex.Schema
 
   import Ecto.Changeset
 

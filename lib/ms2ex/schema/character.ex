@@ -2,7 +2,10 @@ defmodule Ms2ex.Schema.Character do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ms2ex.{Enums, Context, EctoTypes, Schema}
+  alias Ms2ex.Enums
+  alias Ms2ex.Context
+  alias Ms2ex.EctoTypes
+  alias Ms2ex.Schema
 
   @type t :: %__MODULE__{}
 

@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.Wallets do
-  alias Ms2ex.{Packets, Repo, Schema}
+  alias Ms2ex.Packets
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
   import Ms2ex.Net.SenderSession, only: [push: 2]
