@@ -6,7 +6,7 @@ defmodule Ms2ex.Context.Experience do
   including level-ups and experience calculations.
   """
 
-  alias Ms2ex.{Context, ProtoMetadata.ExpTable, Schema, Constants}
+  alias Ms2ex.{Constants, Context, Schema, Storage}
 
   @doc """
   Adds experience to a character and handles level-ups if necessary.
@@ -35,7 +35,7 @@ defmodule Ms2ex.Context.Experience do
     if level >= Constants.get(:character_max_level) do
       {:ok, character}
     else
-      {:ok, tnl} = ExpTable.to_next_level(level)
+      {:ok, tnl} = Storage.Tables.ExpTable.to_next_level(level)
       total_exp = current_exp + exp_gained
 
       if total_exp >= tnl do
