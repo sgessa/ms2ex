@@ -31,8 +31,7 @@ defmodule Ms2ex.Managers.Field.Character do
     state = %{state | counter: state.counter + 1, sessions: sessions}
 
     # Load NPCs
-    for {_id, npc_pid} <- state.npcs do
-      npc = :sys.get_state(npc_pid)
+    for {_id, npc} <- state.npcs do
       push(character, Packets.FieldAddNpc.add_npc(npc))
       push(character, Packets.ProxyGameObj.load_npc(npc))
     end

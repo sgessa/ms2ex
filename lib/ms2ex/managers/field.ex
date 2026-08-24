@@ -3,12 +3,10 @@ defmodule Ms2ex.Managers.Field do
 
   require Logger
 
-  alias Ms2ex.{
-    Managers,
-    Context,
-    Packets,
-    Schema
-  }
+  alias Ms2ex.Context
+  alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
 
   alias Ms2ex.Types.FieldNpc
   alias Ms2ex.Types.SkillCast
@@ -16,6 +14,16 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Managers.Field
 
   @updates_intval 1000
+
+  # npcs are ticked on their own faster loop; only entities flagged as changed
+  # are broadcast, bumping their sequence counter:
+  #   if (send_control && !dead?) { seq_counter++; broadcast(); send_control? = false; }
+  @npc_tick_intval 15
+
+  # the client asynchronously loads npc entities after FieldAddNpc; controls
+  # sent during that window are dropped, so keep broadcasting for a short
+  # grace period before falling back to change-driven updates
+  @spawn_grace_ms 1000
 
   @object_counter 10_000_000
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
@@ -42,6 +50,7 @@ defmodule Ms2ex.Managers.Field do
 
     send(self(), :load_npc_spawns)
     send(self(), :send_updates)
+    send(self(), :tick_npcs)
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
@@ -94,6 +103,49 @@ defmodule Ms2ex.Managers.Field do
     {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
   end
 
+  def handle_call({:lookup_npc, object_id}, _from, state) do
+    case Map.get(state.npcs, object_id) do
+      nil -> {:reply, :error, state}
+      npc -> {:reply, {:ok, npc}, state}
+    end
+  end
+
+  def handle_call({:inflict_dmg, attacker, %{dmg: dmg}, object_id}, _from, state) do
+    case Map.get(state.npcs, object_id) do
+      nil ->
+        {:reply, :error, state}
+
+      %FieldNpc{} = field_npc ->
+        field_npc = Map.put(field_npc, :last_attacker, attacker)
+        hp = max(0, field_npc.stats.health.current - dmg)
+        stats = put_in(field_npc.stats, [:health, :current], hp)
+        field_npc = %{field_npc | stats: stats}
+
+        if hp == 0 do
+          # Death is announced with ControlNpc.dead/1; the client plays the
+          # death animation on its own before the corpse is removed.
+          # The hp=0 sync must reach the client BEFORE the dead control entry,
+          # otherwise it ignores the state change.
+          field_npc = %{field_npc | dead?: true, send_control?: false}
+
+          Logger.debug("NPC #{field_npc.npc.id} died (obj #{field_npc.object_id})")
+          Context.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
+          Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
+
+          corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || 3
+          Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
+
+          Context.Mobs.drop_rewards(field_npc)
+          Context.Mobs.reward_exp(field_npc)
+
+          # TODO
+          # Player Condition update (quest, achievements...)
+        end
+
+        {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
+    end
+  end
+
   def handle_cast({:drop_item, source, item}, state) do
     {:noreply, Field.Item.drop_item(source, item, state)}
   end
@@ -131,6 +183,34 @@ defmodule Ms2ex.Managers.Field do
     Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
     {:noreply, Field.Npc.remove_npc(field_npc, state)}
+  end
+
+  def handle_info(:tick_npcs, state) do
+    Process.send_after(self(), :tick_npcs, @npc_tick_intval)
+
+    now = System.monotonic_time(:millisecond)
+
+    {npcs, dirty} =
+      Enum.flat_map_reduce(state.npcs, [], fn {object_id, npc}, acc ->
+        cond do
+          npc.dead? ->
+            # death was announced via ControlNpc.dead/1; stay silent until removal
+            {[{object_id, npc}], acc}
+
+          npc.send_control? or now - npc.born_at < @spawn_grace_ms ->
+            npc = Map.update!(npc, :seq_counter, &(&1 + 1))
+            {[{object_id, %{npc | send_control?: false}}], [npc | acc]}
+
+          true ->
+            {[{object_id, npc}], acc}
+        end
+      end)
+
+    unless dirty == [] do
+      Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes(Enum.reverse(dirty)))
+    end
+
+    {:noreply, %{state | npcs: Map.new(npcs)}}
   end
 
   def handle_info({:remove_region_skill, source_id}, state) do
