@@ -6,7 +6,10 @@ defmodule Ms2ex.Context.Experience do
   including level-ups and experience calculations.
   """
 
-  alias Ms2ex.{Constants, Context, Schema, Storage}
+  alias Ms2ex.Constants
+  alias Ms2ex.Context
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   @doc """
   Adds experience to a character and handles level-ups if necessary.
