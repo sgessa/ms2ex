@@ -180,7 +180,6 @@ defmodule Ms2ex.Managers.Field do
           last_control_at: System.monotonic_time(:millisecond)
       }
 
-    Logger.debug("NPC #{field_npc.npc.id} died (obj #{field_npc.object_id})")
     Context.Field.broadcast(topic, Packets.Stats.update_mob_stat(field_npc, :health))
     Context.Field.broadcast(topic, Packets.ControlNpc.dead(field_npc))
 
@@ -284,17 +283,13 @@ defmodule Ms2ex.Managers.Field do
         end
       end)
 
-    unless live_dirty == [] do
-      # one packet per npc
-      Enum.each(Enum.reverse(live_dirty), fn npc ->
-        Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc]))
-      end)
+    # one packet per npc
+    for npc <- Enum.reverse(live_dirty) do
+      Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc]))
     end
 
-    unless corpse_dirty == [] do
-      Enum.each(Enum.reverse(corpse_dirty), fn npc ->
-        Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(npc))
-      end)
+    for npc <- Enum.reverse(corpse_dirty) do
+      Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(npc))
     end
 
     {:noreply, %{state | npcs: Map.new(npcs)}}
