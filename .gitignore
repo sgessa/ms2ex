@@ -40,3 +40,6 @@ ms2ex-*.tar
 
 # cross-implementation comparison notes (local only)
 /docs/reference-deltas.md
+
+# local debugging scripts
+/scripts/
