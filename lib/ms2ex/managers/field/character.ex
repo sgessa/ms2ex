@@ -22,13 +22,18 @@ defmodule Ms2ex.Managers.Field.Character do
       end
     end
 
-    # Update registry
-    character = %{character | object_id: state.counter, map_id: state.map_id}
+    # Update registry; players and mounts share the app-wide counter
+    character = %{
+      character
+      | object_id: Managers.GlobalCounter.get_and_increment(),
+        map_id: state.map_id
+    }
+
     character = Map.put(character, :field_pid, self())
     Managers.Character.update(character)
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
-    state = %{state | counter: state.counter + 1, sessions: sessions}
+    state = %{state | sessions: sessions}
 
     # Load NPCs
     for {_id, npc} <- state.npcs do

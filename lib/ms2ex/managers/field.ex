@@ -18,29 +18,32 @@ defmodule Ms2ex.Managers.Field do
   # npcs are ticked on their own faster loop; only entities flagged as changed
   # are broadcast, bumping their sequence counter:
   #   if (send_control && !dead?) { seq_counter++; broadcast(); send_control? = false; }
+  def next_local_id(state) do
+    id = state.local_id_counter + 1
+    {id, %{state | local_id_counter: id}}
+  end
+
   @npc_tick_intval 15
 
-  # animation transitions keep dirtying npcs on the reference server, so even
-  # idle ones re-announce themselves every few seconds; this also covers the
+  # animation transitions keep dirtying npcs on live servers, so even idle
+  # ones re-announce themselves every few seconds; this also covers the
   # client dropping controls sent while it asynchronously loads the entity
   @idle_control_ms 2000
+  # one app-wide counter feeds players and mounts, while each field instance
+  # owns a local counter for npcs, portals, spawn points and items
+  @local_id_counter 50_000_000
 
-  # players draw from the global id space; npcs, portals and items share the
-  # local one, mirroring the reference server's per-field id counter
-  @object_counter 10_000_000
-  @local_object_counter 50_000_000
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
     field_name = Context.Field.field_name(map_id, channel_id)
 
-    {local_counter, portals} = Field.Portal.load(map_id, @local_object_counter)
+    {local_id_counter, portals} = Field.Portal.load(map_id, @local_id_counter)
     # {counter, interactable} = load_interactable(map, counter)
 
     state = %{
       channel_id: channel_id,
-      counter: @object_counter,
-      local_counter: local_counter,
+      local_id_counter: local_id_counter,
       interactable: %{},
       items: %{},
       map_id: map_id,
@@ -235,7 +238,7 @@ defmodule Ms2ex.Managers.Field do
       end)
 
     unless live_dirty == [] do
-      # one packet per npc, mirroring the reference broadcast sites
+      # one packet per npc
       Enum.each(Enum.reverse(live_dirty), fn npc ->
         Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc]))
       end)

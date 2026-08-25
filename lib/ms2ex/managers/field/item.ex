@@ -46,24 +46,28 @@ defmodule Ms2ex.Managers.Field.Item do
   end
 
   def drop_item(character, item, state) do
+    {object_id, state} = Managers.Field.next_local_id(state)
+
     item = %{
       item
       | position: character.position,
-        object_id: state.local_counter,
+        object_id: object_id,
         source_object_id: character.object_id
     }
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
 
-    items = Map.put(state.items, state.local_counter, item)
-    %{state | local_counter: state.local_counter + 1, items: items}
+    items = Map.put(state.items, object_id, item)
+    %{state | items: items}
   end
 
   def add_mob_drop(mob, item, state) do
+    {object_id, state} = Managers.Field.next_local_id(state)
+
     item = %{
       item
       | position: mob.position,
-        object_id: state.local_counter,
+        object_id: object_id,
         lock_character_id: mob.last_attacker.id,
         mob_drop?: true,
         source_object_id: mob.object_id,
@@ -72,7 +76,7 @@ defmodule Ms2ex.Managers.Field.Item do
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
 
-    items = Map.put(state.items, state.local_counter, item)
-    %{state | local_counter: state.local_counter + 1, items: items}
+    items = Map.put(state.items, object_id, item)
+    %{state | items: items}
   end
 end

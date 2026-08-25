@@ -52,6 +52,13 @@ expect a `.env` (see `.env-example`) and a running Redis.
 
 ## Architecture notes
 
+- **Never mention the reference implementation in comments or code.**
+  Comments must describe behavior in domain terms only. Never name another
+  implementation, its classes, methods, files, or identifiers (packet
+  builders, serializers, counter names, etc.) anywhere in `lib/` or
+  `config/`. Cross-implementation comparison notes belong exclusively in
+  `docs/reference-deltas.md`.
+
 - **Never commit without explicit approval.** Implement changes, compile,
   and verify, but leave them uncommitted so the user can test against the
   game client first. Commit only after the user confirms the fix works.

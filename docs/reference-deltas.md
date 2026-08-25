@@ -9,22 +9,20 @@ behavior, and status. Update entries as investigations conclude.
 Reference:
 
 - `FieldManager._globalIdCounter` (static, cross-field): starts at
-  10,000,000 — players.
+  10,000,000 — players and mount action ids.
 - `FieldManager.localIdCounter` (per field instance): starts at
-  50,000,000 — NPCs, portals, items, pets.
+  50,000,000 — NPCs, portals, spawn points, items.
 - `Actor.localIdCounter` (per actor): starts at 1 — skill/effect entities.
 
-ms2ex: players draw from `state.counter` (10M+); portals, spawn points,
-NPCs, buffs and items share `state.local_counter` (50M+); mounts use the
-app-wide `Managers.GlobalCounter`.
+ms2ex: players and mounts draw from the app-wide `Managers.GlobalCounter`
+(10,000,000 base, first id 10,000,001); NPCs, portals, spawn points,
+buffs and items share each field's `local_id_counter` (50,000,000 base)
+via `Managers.Field.next_local_id/1`.
 
-Status: **aligned, with one deviation** — `GlobalCounter` now starts at
-500,000,000. It previously started at exactly 10,000,000 and collided
-with the first player's object id whenever that player rode a mount.
-
-History: during the boss-corruption investigation item ids were moved to
-300,000,000; the corruption later reproduced with ids in both ranges once
-the packet fixes below landed, so the range was never the root cause.
+Status: **aligned**. Previously two independent counters both started at
+10,000,000 (players per-field, mounts app-wide), so a mount could receive
+the same object id as its rider; fixed by feeding both from the single
+app-wide counter.
 
 ## FieldAddItem (0x002B)
 

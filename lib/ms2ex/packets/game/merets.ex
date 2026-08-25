@@ -1,8 +1,7 @@
 defmodule Ms2ex.Packets.Merets do
   import Ms2ex.Packets.PacketWriter
 
-  # mirrors the reference meret update: balances first, then the delta that
-  # drives the client-side gain toast
+  # balances first, then the delta that drives the client-side gain toast
   def update(wallet, delta \\ 0) do
     __MODULE__
     |> build()
