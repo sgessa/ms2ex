@@ -64,7 +64,6 @@
 - [Ms2ex.Managers.Field.Item](Ms2ex.Managers.Field.Item.md)
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
 - [Ms2ex.Managers.Field.Portal](Ms2ex.Managers.Field.Portal.md)
-- [Ms2ex.Managers.FieldNpc](Ms2ex.Managers.FieldNpc.md)
 - [Ms2ex.Managers.GlobalCounter](Ms2ex.Managers.GlobalCounter.md)
 - [Ms2ex.Managers.SkillCast](Ms2ex.Managers.SkillCast.md)
 - [Ms2ex.Packets](Ms2ex.Packets.md)

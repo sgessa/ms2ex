@@ -113,7 +113,6 @@ Ms2ex.Managers.Field.Item.html
 Ms2ex.Managers.Field.Npc.html
 Ms2ex.Managers.Field.Portal.html
 Ms2ex.Managers.Field.html
-Ms2ex.Managers.FieldNpc.html
 Ms2ex.Managers.GlobalCounter.html
 Ms2ex.Managers.SkillCast.html
 Ms2ex.Net.Router.html
@@ -270,8 +269,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-CA57E8B1.js
-dist/sidebar_items-A8939A8D.js
+dist/search_data-8D371041.js
+dist/sidebar_items-8A478568.js
 index.html
 license.html
 readme.html

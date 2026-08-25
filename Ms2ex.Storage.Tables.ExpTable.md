@@ -1,6 +1,10 @@
 # `Ms2ex.Storage.Tables.ExpTable`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/table/exp_table.ex#L1)
 
+# `mob_exp`
+
+Returns the base exp for killing a mob of the given level, or nil.
+
 # `to_next_level`
 
 ```elixir

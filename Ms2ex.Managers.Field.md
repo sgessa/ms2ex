@@ -11,6 +11,8 @@ See `Supervisor`.
 
 # `init`
 
+# `next_local_id`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

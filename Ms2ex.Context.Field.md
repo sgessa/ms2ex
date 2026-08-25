@@ -231,6 +231,20 @@ Removes a character from their current field.
     iex> leave(character)
     :ok
 
+# `lookup_npc`
+
+```elixir
+@spec lookup_npc(Ms2ex.Schema.Character.t(), integer()) ::
+  {:ok, Ms2ex.Types.FieldNpc.t()} | :error
+```
+
+Looks up an NPC by object id in the character's field.
+
+## Examples
+
+    iex> lookup_npc(character, 10_000_001)
+    {:ok, %FieldNpc{}}
+
 # `pickup_item`
 
 ```elixir

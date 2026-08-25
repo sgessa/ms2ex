@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A8939A8D.js"></script>
+    <script defer src="dist/sidebar_items-8A478568.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -206,7 +206,7 @@ updating, and deletion of user accounts.</p>
       <h1 class="signature" translate="no">authenticate(username, password)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L29" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -223,11 +223,11 @@ updating, and deletion of user accounts.</p>
       </div>
 
 <p>Authenticates a user with a username and password.</p><p>Returns <code class="inline">{:ok, account}</code> if authentication is successful,
-or <code class="inline">{:error, :invalid_credentials}</code> if username doesn't exist or password is incorrect.</p><h2 id="authenticate/2-examples" class="section-heading"><a href="#authenticate/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">authenticate</span><span class="p" data-group-id="2191749909-1">(</span><span class="s">&quot;username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="p" data-group-id="2191749909-1">)</span><span class="w">
-</span><span class="p" data-group-id="2191749909-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2191749909-3">%</span><span class="nc" data-group-id="2191749909-3">Schema.Account</span><span class="p" data-group-id="2191749909-3">{</span><span class="p" data-group-id="2191749909-3">}</span><span class="p" data-group-id="2191749909-2">}</span><span class="w">
+or <code class="inline">{:error, :invalid_credentials}</code> if username doesn't exist or password is incorrect.</p><h2 id="authenticate/2-examples" class="section-heading"><a href="#authenticate/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">authenticate</span><span class="p" data-group-id="2783689386-1">(</span><span class="s">&quot;username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="p" data-group-id="2783689386-1">)</span><span class="w">
+</span><span class="p" data-group-id="2783689386-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2783689386-3">%</span><span class="nc" data-group-id="2783689386-3">Schema.Account</span><span class="p" data-group-id="2783689386-3">{</span><span class="p" data-group-id="2783689386-3">}</span><span class="p" data-group-id="2783689386-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">authenticate</span><span class="p" data-group-id="2191749909-4">(</span><span class="s">&quot;wrong_username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="p" data-group-id="2191749909-4">)</span><span class="w">
-</span><span class="p" data-group-id="2191749909-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:invalid_credentials</span><span class="p" data-group-id="2191749909-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">authenticate</span><span class="p" data-group-id="2783689386-4">(</span><span class="s">&quot;wrong_username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="p" data-group-id="2783689386-4">)</span><span class="w">
+</span><span class="p" data-group-id="2783689386-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:invalid_credentials</span><span class="p" data-group-id="2783689386-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="create/1">
@@ -240,7 +240,7 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
       <h1 class="signature" translate="no">create(attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L75" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L76" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -255,11 +255,11 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
 
       </div>
 
-<p>Creates a new account with the given attributes.</p><h2 id="create/1-examples" class="section-heading"><a href="#create/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">create</span><span class="p" data-group-id="6939159000-1">(</span><span class="p" data-group-id="6939159000-2">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;new_user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;secret&quot;</span><span class="p" data-group-id="6939159000-2">}</span><span class="p" data-group-id="6939159000-1">)</span><span class="w">
-</span><span class="p" data-group-id="6939159000-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6939159000-4">%</span><span class="nc" data-group-id="6939159000-4">Schema.Account</span><span class="p" data-group-id="6939159000-4">{</span><span class="p" data-group-id="6939159000-4">}</span><span class="p" data-group-id="6939159000-3">}</span><span class="w">
+<p>Creates a new account with the given attributes.</p><h2 id="create/1-examples" class="section-heading"><a href="#create/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">create</span><span class="p" data-group-id="3094940146-1">(</span><span class="p" data-group-id="3094940146-2">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;new_user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;secret&quot;</span><span class="p" data-group-id="3094940146-2">}</span><span class="p" data-group-id="3094940146-1">)</span><span class="w">
+</span><span class="p" data-group-id="3094940146-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3094940146-4">%</span><span class="nc" data-group-id="3094940146-4">Schema.Account</span><span class="p" data-group-id="3094940146-4">{</span><span class="p" data-group-id="3094940146-4">}</span><span class="p" data-group-id="3094940146-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">create</span><span class="p" data-group-id="6939159000-5">(</span><span class="p" data-group-id="6939159000-6">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="6939159000-6">}</span><span class="p" data-group-id="6939159000-5">)</span><span class="w">
-</span><span class="p" data-group-id="6939159000-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6939159000-8">%</span><span class="nc" data-group-id="6939159000-8">Ecto.Changeset</span><span class="p" data-group-id="6939159000-8">{</span><span class="p" data-group-id="6939159000-8">}</span><span class="p" data-group-id="6939159000-7">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">create</span><span class="p" data-group-id="3094940146-5">(</span><span class="p" data-group-id="3094940146-6">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="3094940146-6">}</span><span class="p" data-group-id="3094940146-5">)</span><span class="w">
+</span><span class="p" data-group-id="3094940146-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3094940146-8">%</span><span class="nc" data-group-id="3094940146-8">Ecto.Changeset</span><span class="p" data-group-id="3094940146-8">{</span><span class="p" data-group-id="3094940146-8">}</span><span class="p" data-group-id="3094940146-7">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="delete/1">
@@ -272,7 +272,7 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
       <h1 class="signature" translate="no">delete(account)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L114" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L115" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -288,8 +288,8 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
 
       </div>
 
-<p>Deletes an account.</p><h2 id="delete/1-examples" class="section-heading"><a href="#delete/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete</span><span class="p" data-group-id="3305695317-1">(</span><span class="n">account</span><span class="p" data-group-id="3305695317-1">)</span><span class="w">
-</span><span class="p" data-group-id="3305695317-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3305695317-3">%</span><span class="nc" data-group-id="3305695317-3">Schema.Account</span><span class="p" data-group-id="3305695317-3">{</span><span class="p" data-group-id="3305695317-3">}</span><span class="p" data-group-id="3305695317-2">}</span></code></pre>
+<p>Deletes an account.</p><h2 id="delete/1-examples" class="section-heading"><a href="#delete/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete</span><span class="p" data-group-id="4285325476-1">(</span><span class="n">account</span><span class="p" data-group-id="4285325476-1">)</span><span class="w">
+</span><span class="p" data-group-id="4285325476-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4285325476-3">%</span><span class="nc" data-group-id="4285325476-3">Schema.Account</span><span class="p" data-group-id="4285325476-3">{</span><span class="p" data-group-id="4285325476-3">}</span><span class="p" data-group-id="4285325476-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get/1">
@@ -302,7 +302,7 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
       <h1 class="signature" translate="no">get(id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L61" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L62" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -317,10 +317,10 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
 
       </div>
 
-<p>Gets an account by ID.</p><p>Returns the account if found, or <code class="inline">nil</code> if not found.</p><h2 id="get/1-examples" class="section-heading"><a href="#get/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="2495433206-1">(</span><span class="mi">1</span><span class="p" data-group-id="2495433206-1">)</span><span class="w">
-</span><span class="p" data-group-id="2495433206-2">%</span><span class="nc" data-group-id="2495433206-2">Schema.Account</span><span class="p" data-group-id="2495433206-2">{</span><span class="p" data-group-id="2495433206-2">}</span><span class="w">
+<p>Gets an account by ID.</p><p>Returns the account if found, or <code class="inline">nil</code> if not found.</p><h2 id="get/1-examples" class="section-heading"><a href="#get/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="0199097888-1">(</span><span class="mi">1</span><span class="p" data-group-id="0199097888-1">)</span><span class="w">
+</span><span class="p" data-group-id="0199097888-2">%</span><span class="nc" data-group-id="0199097888-2">Schema.Account</span><span class="p" data-group-id="0199097888-2">{</span><span class="p" data-group-id="0199097888-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="2495433206-3">(</span><span class="mi">999</span><span class="p" data-group-id="2495433206-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="0199097888-3">(</span><span class="mi">999</span><span class="p" data-group-id="0199097888-3">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -334,7 +334,7 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
       <h1 class="signature" translate="no">update(account, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L97" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/accounts.ex#L98" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -350,11 +350,11 @@ or <code class="inline">{:error, :invalid_credentials}</code> if username doesn'
 
       </div>
 
-<p>Updates an account with the given attributes.</p><h2 id="update/2-examples" class="section-heading"><a href="#update/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update</span><span class="p" data-group-id="4016147680-1">(</span><span class="n">account</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4016147680-2">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;updated_name&quot;</span><span class="p" data-group-id="4016147680-2">}</span><span class="p" data-group-id="4016147680-1">)</span><span class="w">
-</span><span class="p" data-group-id="4016147680-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4016147680-4">%</span><span class="nc" data-group-id="4016147680-4">Schema.Account</span><span class="p" data-group-id="4016147680-4">{</span><span class="p" data-group-id="4016147680-4">}</span><span class="p" data-group-id="4016147680-3">}</span><span class="w">
+<p>Updates an account with the given attributes.</p><h2 id="update/2-examples" class="section-heading"><a href="#update/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update</span><span class="p" data-group-id="3947834897-1">(</span><span class="n">account</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3947834897-2">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;updated_name&quot;</span><span class="p" data-group-id="3947834897-2">}</span><span class="p" data-group-id="3947834897-1">)</span><span class="w">
+</span><span class="p" data-group-id="3947834897-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3947834897-4">%</span><span class="nc" data-group-id="3947834897-4">Schema.Account</span><span class="p" data-group-id="3947834897-4">{</span><span class="p" data-group-id="3947834897-4">}</span><span class="p" data-group-id="3947834897-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">update</span><span class="p" data-group-id="4016147680-5">(</span><span class="n">account</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4016147680-6">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="4016147680-6">}</span><span class="p" data-group-id="4016147680-5">)</span><span class="w">
-</span><span class="p" data-group-id="4016147680-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4016147680-8">%</span><span class="nc" data-group-id="4016147680-8">Ecto.Changeset</span><span class="p" data-group-id="4016147680-8">{</span><span class="p" data-group-id="4016147680-8">}</span><span class="p" data-group-id="4016147680-7">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">update</span><span class="p" data-group-id="3947834897-5">(</span><span class="n">account</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3947834897-6">%{</span><span class="ss">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="3947834897-6">}</span><span class="p" data-group-id="3947834897-5">)</span><span class="w">
+</span><span class="p" data-group-id="3947834897-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3947834897-8">%</span><span class="nc" data-group-id="3947834897-8">Ecto.Changeset</span><span class="p" data-group-id="3947834897-8">{</span><span class="p" data-group-id="3947834897-8">}</span><span class="p" data-group-id="3947834897-7">}</span></code></pre>
   </section>
 </section>
 

@@ -3,6 +3,10 @@
 
 # `bytes`
 
+# `corpse_hit`
+
+# `dead`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*
