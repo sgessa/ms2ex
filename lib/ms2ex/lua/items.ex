@@ -1,5 +1,6 @@
 defmodule Ms2ex.Lua.Items do
-  alias Ms2ex.{Context, Enums}
+  alias Ms2ex.Context
+  alias Ms2ex.Enums
 
   @constant_stats %{
     health: :constant_value_hp,

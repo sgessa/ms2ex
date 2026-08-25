@@ -15,4 +15,9 @@ defmodule Ms2ex.Storage.Tables.ExpTable do
       _ -> :error
     end
   end
+
+  @doc "Returns the base exp for killing a mob of the given level, or nil."
+  def mob_exp(level) do
+    get_in(Storage.get(:table, @table_name), [:table, :exp_base, "2", to_string(level)])
+  end
 end

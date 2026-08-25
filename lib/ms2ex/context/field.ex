@@ -7,14 +7,13 @@ defmodule Ms2ex.Context.Field do
   and field broadcasts.
   """
 
-  alias Ms2ex.{
-    Context,
-    Net,
-    Packets,
-    Schema,
-    Storage,
-    Managers
-  }
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
+  alias Ms2ex.Managers
+  alias Ms2ex.Types
 
   alias Ms2ex.Types.FieldNpc
   alias Phoenix.PubSub
@@ -80,8 +79,21 @@ defmodule Ms2ex.Context.Field do
       :ok
   """
   @spec add_mob(Schema.Character.t(), %{type: :npc}) :: :ok
-  def add_mob(%Schema.Character{} = character, %{type: :npc} = npc) do
+  def add_mob(%Schema.Character{} = character, %Types.Npc{} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
+  end
+
+  @doc """
+  Looks up an NPC by object id in the character's field.
+
+  ## Examples
+
+      iex> lookup_npc(character, 10_000_001)
+      {:ok, %FieldNpc{}}
+  """
+  @spec lookup_npc(Schema.Character.t(), integer()) :: {:ok, FieldNpc.t()} | :error
+  def lookup_npc(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:lookup_npc, object_id})
   end
 
   @doc """

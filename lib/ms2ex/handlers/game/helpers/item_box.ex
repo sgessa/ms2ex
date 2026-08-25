@@ -1,5 +1,7 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
-  alias Ms2ex.{Context, Packets, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 

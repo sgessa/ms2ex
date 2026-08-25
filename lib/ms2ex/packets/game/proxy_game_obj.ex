@@ -1,5 +1,7 @@
 defmodule Ms2ex.Packets.ProxyGameObj do
-  alias Ms2ex.{Schema, Packets, Enums}
+  alias Ms2ex.Schema
+  alias Ms2ex.Packets
+  alias Ms2ex.Enums
 
   import Bitwise
   import Packets.PacketWriter

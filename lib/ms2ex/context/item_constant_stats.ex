@@ -1,5 +1,8 @@
 defmodule Ms2ex.Context.ItemConstantStats do
-  alias Ms2ex.{Lua, Schema, Storage, Types}
+  alias Ms2ex.Lua
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
+  alias Ms2ex.Types
 
   def get(%Schema.Item{} = item, pick_options) do
     item.metadata.option.constant_id

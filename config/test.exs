@@ -20,3 +20,6 @@ config :ms2ex, Ms2exWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warning
+
+# the game/login TCP listeners never start under test
+config :ms2ex, :start_game_servers, false

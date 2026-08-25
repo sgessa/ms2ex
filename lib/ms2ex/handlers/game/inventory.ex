@@ -1,7 +1,12 @@
 defmodule Ms2ex.GameHandlers.Inventory do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Context, Net, Packets, Schema, TransferFlags}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
+  alias Ms2ex.TransferFlags
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader

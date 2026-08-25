@@ -1,5 +1,9 @@
 defmodule Ms2ex.GameHandlers.UserSync do
-  alias Ms2ex.{Managers, Context, Types, Storage, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Types
+  alias Ms2ex.Storage
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]

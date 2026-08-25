@@ -1,17 +1,15 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
   require Logger
 
-  alias Ms2ex.{
-    Managers,
-    Context,
-    LoginHandlers,
-    Net,
-    Packets,
-    PartyManager,
-    PartyServer,
-    SessionManager,
-    Storage
-  }
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.LoginHandlers
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.PartyManager
+  alias Ms2ex.PartyServer
+  alias Ms2ex.SessionManager
+  alias Ms2ex.Storage
 
   import Net.SenderSession, only: [push: 2, run: 2]
   import Packets.PacketReader

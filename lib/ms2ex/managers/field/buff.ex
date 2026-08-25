@@ -5,7 +5,7 @@ defmodule Ms2ex.Managers.Field.Buff do
   alias Ms2ex.Packets
 
   def add_buff(skill_cast, skill, character, state) do
-    object_id = state.counter + 1
+    {object_id, state} = Managers.Field.next_local_id(state)
     buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
     Managers.Buff.start(buff)
 
@@ -14,6 +14,6 @@ defmodule Ms2ex.Managers.Field.Buff do
     # TODO
     # Process.send_after(self(), {:remove_buff, buff}, buff.duration)
 
-    %{state | counter: object_id}
+    state
   end
 end

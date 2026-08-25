@@ -6,7 +6,8 @@ defmodule Ms2ex.Context.Inventory do
   including adding, removing, updating, and organizing items.
   """
 
-  alias Ms2ex.{Schema, Repo}
+  alias Ms2ex.Schema
+  alias Ms2ex.Repo
 
   import Ecto.Query, except: [update: 2]
 

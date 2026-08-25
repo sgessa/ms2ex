@@ -1,5 +1,7 @@
 defmodule Ms2ex.Packets.InventoryItem do
-  alias Ms2ex.{Enums, Schema, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   import Ms2ex.Packets.PacketWriter
 

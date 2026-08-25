@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.Items do
-  alias Ms2ex.{Schema, Storage, Types}
+  alias Ms2ex.Schema
+  alias Ms2ex.Storage
+  alias Ms2ex.Types
 
   def init(id, attrs \\ %{}) do
     %Schema.Item{item_id: id}
@@ -18,8 +20,8 @@ defmodule Ms2ex.Context.Items do
   end
 
   @meso_ids [90_000_001, 90_000_002, 90_000_003]
-  def mesos?(%Schema.Item{}), do: false
   def mesos?(%Schema.Item{item_id: id}) when id in @meso_ids, do: true
+  def mesos?(%Schema.Item{}), do: false
   def mesos(amount), do: init(List.first(@meso_ids), %{amount: amount})
 
   @meret_ids [90_000_004, 90_000_011, 90_000_015, 90_000_016]

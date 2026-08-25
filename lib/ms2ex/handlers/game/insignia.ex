@@ -1,5 +1,8 @@
 defmodule Ms2ex.GameHandlers.Insignia do
-  alias Ms2ex.{Managers, Context, Context, Storage, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Storage
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
 

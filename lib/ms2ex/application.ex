@@ -21,14 +21,23 @@ defmodule Ms2ex.Application do
         # Start Managers
         Ms2ex.Managers.GlobalCounter,
         {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
-        {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]},
-        # Start TCP Listeners
-        server_tcp_chidspec(login_server_opts()),
-        server_tcp_chidspec(world_login_opts())
-      ] ++ channel_listeners()
+        {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]}
+      ] ++ game_listeners()
 
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # tests never bind the game ports
+  defp game_listeners() do
+    if Application.get_env(:ms2ex, :start_game_servers, true) do
+      [
+        server_tcp_chidspec(login_server_opts()),
+        server_tcp_chidspec(world_login_opts())
+      ] ++ channel_listeners()
+    else
+      []
+    end
   end
 
   defp login_server_opts() do

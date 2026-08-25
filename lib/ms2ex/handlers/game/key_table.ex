@@ -1,7 +1,12 @@
 defmodule Ms2ex.GameHandlers.KeyTable do
   require Logger
 
-  alias Ms2ex.{Managers, Context, Net, Packets, Schema, Types}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader

@@ -3,7 +3,8 @@ defmodule Ms2ex.Schema.InventoryTab do
 
   import Ecto.Changeset
 
-  alias Ms2ex.{Enums, Schema}
+  alias Ms2ex.Enums
+  alias Ms2ex.Schema
 
   @type t :: %__MODULE__{}
 

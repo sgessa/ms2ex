@@ -1,21 +1,22 @@
 defmodule Ms2ex.Packets.Wallet do
-  alias Ms2ex.{Context, Packets}
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketWriter
 
-  def update(wallet, :mesos) do
+  def update(wallet, type, delta \\ 0)
+
+  def update(wallet, :mesos, _delta) do
     wallet
     |> Map.get(:mesos)
     |> Packets.Mesos.update()
   end
 
-  def update(wallet, type) when type in [:merets, :game_merets, :event_merets] do
-    wallet
-    |> Map.get(type)
-    |> Packets.Merets.update()
+  def update(wallet, type, delta) when type in [:merets, :game_merets, :event_merets] do
+    Packets.Merets.update(wallet, delta)
   end
 
-  def update(wallet, type) do
+  def update(wallet, type, _delta) do
     amount = Map.get(wallet, type)
 
     __MODULE__

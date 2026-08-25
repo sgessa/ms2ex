@@ -1,6 +1,8 @@
 defmodule Ms2ex.Managers.Field.Npc do
-  alias Ms2ex.Storage
+  alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.Storage
   alias Ms2ex.Types
 
   def load_npc_spawns(state) do
@@ -25,7 +27,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   def load_spawn(state, npc_spawn, npc_ids) do
-    spawn_point_id = state.counter + 1
+    {spawn_point_id, state} = Managers.Field.next_local_id(state)
     npc_spawn = Map.put(npc_spawn, :id, spawn_point_id)
 
     state =
@@ -39,11 +41,11 @@ defmodule Ms2ex.Managers.Field.Npc do
       send(self(), {:add_npc, npc_id, npc_spawn})
     end)
 
-    %{state | counter: spawn_point_id}
+    state
   end
 
   def load_npc(state, %Types.Npc{} = npc, npc_spawn) do
-    object_id = state.counter + 1
+    {object_id, state} = Managers.Field.next_local_id(state)
 
     field_npc =
       Types.FieldNpc.new(%{
@@ -55,11 +57,10 @@ defmodule Ms2ex.Managers.Field.Npc do
         field: state.topic
       })
 
-    {:ok, pid} = Managers.FieldNpc.start(field_npc)
+    Context.Field.broadcast(state.topic, Packets.FieldAddNpc.add_npc(field_npc))
+    Context.Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
 
-    state
-    |> Map.put(:counter, object_id)
-    |> put_in([:npcs, object_id], pid)
+    put_in(state, [:npcs, object_id], field_npc)
   end
 
   def load_npc(state, npc_id, npc_spawn) do

@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.ItemRandomStats do
-  alias Ms2ex.{Enums, Schema, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
   alias Ms2ex.Storage
 
   def get(%Schema.Item{} = item) do

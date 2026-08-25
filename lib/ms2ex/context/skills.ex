@@ -1,5 +1,8 @@
 defmodule Ms2ex.Context.Skills do
-  alias Ms2ex.{Context, Storage, Repo, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Storage
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
 

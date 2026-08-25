@@ -1,5 +1,8 @@
 defmodule Ms2ex.GameHandlers.Emote do
-  alias Ms2ex.{Managers, Context, Context, Packets, Schema}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]

@@ -1,10 +1,11 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{Enums, Packets}
+  alias Ms2ex.Enums
+  alias Ms2ex.Packets
 
   alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter
 
-  @mode %{update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
+  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
 
   def set_character_stats(character) do
     __MODULE__
@@ -39,15 +40,18 @@ defmodule Ms2ex.Packets.Stats do
   end
 
   def update_mob_stat(%FieldNpc{} = mob, stat) do
+    values = mob.stats[stat]
+
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
-    |> put_byte()
+    |> put_byte(@mode.update)
     |> put_byte(0x1)
     |> put_byte(Enums.BasicStatType.get_value(stat))
-    |> reduce(mob.stats[stat], fn {_stat, value}, packet ->
-      put_long(packet, value)
-    end)
+    # the client reads stat values by index: [Total, Base, Current]
+    |> put_long(values.total)
+    |> put_long(values.base)
+    |> put_long(values.current)
   end
 
   def put_stats(packet, stats) do

@@ -6,7 +6,9 @@ defmodule Ms2ex.Context.HotBars do
   character hot bars and quick slots.
   """
 
-  alias Ms2ex.{Repo, Schema, Types}
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   import Ecto.Query, except: [update: 2]
 

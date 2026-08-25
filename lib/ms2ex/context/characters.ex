@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.Characters do
-  alias Ms2ex.{Context, Repo, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
 

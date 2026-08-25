@@ -1,7 +1,9 @@
 defmodule Ms2ex.Managers.Character do
   use GenServer
 
-  alias Ms2ex.{Context, Packets, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]

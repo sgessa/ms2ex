@@ -1,7 +1,9 @@
 defmodule Ms2ex.Packets.Job do
   import Ms2ex.Packets.PacketWriter
 
-  alias Ms2ex.{Context, Schema, Enums}
+  alias Ms2ex.Context
+  alias Ms2ex.Schema
+  alias Ms2ex.Enums
 
   @job_skill_splits %{
     none: 0,

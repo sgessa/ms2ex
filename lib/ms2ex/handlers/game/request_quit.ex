@@ -1,7 +1,9 @@
 defmodule Ms2ex.GameHandlers.RequestQuit do
   require Logger
 
-  alias Ms2ex.{Net, Packets, SessionManager}
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.SessionManager
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader

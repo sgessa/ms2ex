@@ -1,7 +1,10 @@
 defmodule Ms2ex.LoginHandlers.ResponseLogin do
   require Logger
 
-  alias Ms2ex.{Context, Net, Packets, SessionManager}
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.SessionManager
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]

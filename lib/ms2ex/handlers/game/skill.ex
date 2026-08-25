@@ -1,8 +1,8 @@
 defmodule Ms2ex.GameHandlers.Skill do
-  require Logger
-
-  alias Ms2ex.{Managers, Context, Packets, Types}
   alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Types
 
   import Packets.PacketReader
 
@@ -161,7 +161,11 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
 
-      damage_targets(skill_cast, crit?, target_count, [], packet)
+      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
+
+      unless mobs == [] do
+        Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
+      end
 
       # TODO
     end
@@ -193,13 +197,13 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_byte(packet)
 
     mobs =
-      case Managers.FieldNpc.call(:lookup, skill_cast.caster, obj_id) do
+      case Context.Field.lookup_npc(skill_cast.caster, obj_id) do
         {:ok, %{dead?: false, type: :mob} = mob} ->
           {mob, dmg} = damage_mob(skill_cast, mob, crit?)
           Context.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
           mobs ++ [{mob, dmg}]
 
-        _any ->
+        _ ->
           mobs
       end
 
@@ -212,7 +216,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     dmg = Context.Damage.calculate(skill_cast, mob, crit?)
 
     {:ok, mob} =
-      Managers.FieldNpc.call({:inflict_dmg, skill_cast.caster, dmg}, skill_cast.caster, mob)
+      Context.Field.call(skill_cast.caster, {:inflict_dmg, skill_cast.caster, dmg, mob.object_id})
 
     # TODO Buff
     # if Types.SkillCast.element_debuff?(skill_cast) or
