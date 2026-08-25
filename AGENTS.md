@@ -57,8 +57,9 @@ expect a `.env` (see `.env-example`) and a running Redis.
   Comments must describe behavior in domain terms only. Never name another
   implementation, its classes, methods, files, or identifiers (packet
   builders, serializers, counter names, etc.) anywhere in `lib/` or
-  `config/`. Cross-implementation comparison notes belong exclusively in
-  `docs/reference-deltas.md`.
+  `config/`. Cross-implementation comparison notes live in a local,
+  git-ignored file (`docs/reference-deltas.md`) and must never be
+  committed.
 
 - **Never commit without explicit approval.** Implement changes, compile,
   and verify, but leave them uncommitted so the user can test against the

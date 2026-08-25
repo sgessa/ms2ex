@@ -37,3 +37,6 @@ ms2ex-*.tar
 
 # Ignore secrets for production release
 /config/*.secret.exs
+
+# cross-implementation comparison notes (local only)
+/docs/reference-deltas.md
