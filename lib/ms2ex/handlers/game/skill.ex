@@ -1,11 +1,8 @@
 defmodule Ms2ex.GameHandlers.Skill do
-  require Logger
-
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Packets
   alias Ms2ex.Types
-  alias Ms2ex.Managers
 
   import Packets.PacketReader
 
@@ -206,11 +203,7 @@ defmodule Ms2ex.GameHandlers.Skill do
           Context.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
           mobs ++ [{mob, dmg}]
 
-        other ->
-          Logger.debug(
-            "hit dropped for obj #{obj_id}: lookup returned #{inspect(other, limit: 2)}"
-          )
-
+        _ ->
           mobs
       end
 
