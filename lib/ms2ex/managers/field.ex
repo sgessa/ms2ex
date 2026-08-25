@@ -184,7 +184,16 @@ defmodule Ms2ex.Managers.Field do
     Context.Field.broadcast(topic, Packets.Stats.update_mob_stat(field_npc, :health))
     Context.Field.broadcast(topic, Packets.ControlNpc.dead(field_npc))
 
-    corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || 3
+    # corpse-hittable bodies stay around for their full window so players can
+    # keep striking them; everyone else despawns once the animation settles
+    corpse_window? = field_npc.corpse?
+    corpse_time =
+      if corpse_window? do
+        get_in(field_npc.npc.metadata, [:dead, :time]) || 20
+      else
+        3
+      end
+
     Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
 
     Context.Mobs.drop_rewards(field_npc)

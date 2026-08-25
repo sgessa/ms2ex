@@ -69,10 +69,10 @@ defmodule Ms2ex.Managers.Field.Item do
       item
       | position: drop_position(mob),
         object_id: object_id,
-        lock_character_id: locked_receiver_id(mob, receiver),
+        lock_character_id: receiver.id,
         mob_drop?: true,
         source_object_id: mob.object_id,
-        target_object_id: target_object_id(mob, receiver)
+        target_object_id: receiver.object_id
     }
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
@@ -80,13 +80,6 @@ defmodule Ms2ex.Managers.Field.Item do
     items = Map.put(state.items, object_id, item)
     %{state | items: items}
   end
-
-  # boss drops stay unlocked so anyone can pick them up
-  defp locked_receiver_id(%{npc: %{boss?: true}}, _receiver), do: 0
-  defp locked_receiver_id(_mob, receiver), do: receiver.id
-
-  defp target_object_id(%{npc: %{boss?: true}}, _receiver), do: 0
-  defp target_object_id(_mob, receiver), do: receiver.object_id
 
   # scatter drops around the corpse
   defp drop_position(mob) do
