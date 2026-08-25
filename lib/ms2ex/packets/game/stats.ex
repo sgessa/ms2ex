@@ -5,7 +5,7 @@ defmodule Ms2ex.Packets.Stats do
   alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter
 
-  @mode %{update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
+  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
 
   def set_character_stats(character) do
     __MODULE__
@@ -45,9 +45,7 @@ defmodule Ms2ex.Packets.Stats do
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
-    # mode 0x1 = targeted update (same layout as working player updates);
-    # mode 0x0 makes this client expect a full 35-stat dump and drop the packet
-    |> put_byte(@mode.update_char_stats)
+    |> put_byte(@mode.update)
     |> put_byte(0x1)
     |> put_byte(Enums.BasicStatType.get_value(stat))
     # the client reads stat values by index: [Total, Base, Current]
