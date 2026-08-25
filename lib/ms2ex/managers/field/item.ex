@@ -63,15 +63,16 @@ defmodule Ms2ex.Managers.Field.Item do
 
   def add_mob_drop(mob, item, state) do
     {object_id, state} = Managers.Field.next_local_id(state)
+    receiver = mob.first_attacker || mob.last_attacker
 
     item = %{
       item
-      | position: mob.position,
+      | position: drop_position(mob),
         object_id: object_id,
-        lock_character_id: mob.last_attacker.id,
+        lock_character_id: locked_receiver_id(mob, receiver),
         mob_drop?: true,
         source_object_id: mob.object_id,
-        target_object_id: mob.last_attacker.object_id
+        target_object_id: target_object_id(mob, receiver)
     }
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
@@ -79,4 +80,28 @@ defmodule Ms2ex.Managers.Field.Item do
     items = Map.put(state.items, object_id, item)
     %{state | items: items}
   end
+
+  # boss drops stay unlocked so anyone can pick them up
+  defp locked_receiver_id(%{npc: %{boss?: true}}, _receiver), do: 0
+  defp locked_receiver_id(_mob, receiver), do: receiver.id
+
+  defp target_object_id(%{npc: %{boss?: true}}, _receiver), do: 0
+  defp target_object_id(_mob, receiver), do: receiver.object_id
+
+  # scatter drops around the corpse
+  defp drop_position(mob) do
+    case get_in(mob.npc.metadata, [:drop_info, :drop_distance_random]) do
+      radius when is_integer(radius) and radius > 0 ->
+        %{
+          mob.position
+          | x: mob.position.x + jitter(radius),
+            y: mob.position.y + jitter(radius)
+        }
+
+      _ ->
+        mob.position
+    end
+  end
+
+  defp jitter(radius), do: :rand.uniform(radius * 2 + 1) - radius - 1
 end

@@ -1,6 +1,7 @@
 defmodule Ms2ex.Context.Mobs do
   alias Ms2ex.Managers
   alias Ms2ex.Context
+  alias Ms2ex.Storage.Tables.ExpTable
 
   def drop_rewards(mob) do
     if Ms2ex.roll(70) do
@@ -24,8 +25,26 @@ defmodule Ms2ex.Context.Mobs do
   end
 
   def reward_exp(mob) do
-    # TODO party exp
-    # TODO get mob exp (instead of hardcoded 10)
-    Managers.Character.cast(mob.last_attacker, {:earn_exp, 10})
+    player = mob.first_attacker || mob.last_attacker
+
+    case exp_reward(mob) do
+      :none ->
+        :ok
+
+      amount -> Managers.Character.cast(player, {:earn_exp, amount})
+    end
+  end
+
+  # a fixed custom value; -1 means level-based, zero means no exp at all.
+  # missing metadata falls back to the legacy flat reward
+  defp exp_reward(mob) do
+    level = get_in(mob.npc.metadata, [:basic, :level]) || 1
+
+    case get_in(mob.npc.metadata, [:basic, :custom_exp]) do
+      nil -> 10
+      0 -> :none
+      -1 -> ExpTable.mob_exp(level) || 10
+      amount -> amount
+    end
   end
 end

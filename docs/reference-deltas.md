@@ -10,7 +10,10 @@ entries cover what still differs. Update as investigations conclude.
   counter for npcs, portals, spawn points, buffs, items)
 - FieldPickupItem amounts (meso long, stamina int, other items none)
 - ControlNpc dead entries (boss target id 0, real sequence counters,
-  periodic corpse re-announcements)
+  periodic corpse re-announcements). 98 NPCs in the ingest carry a
+  hittable corpse; hits replay a hit animation via a dedicated control
+  entry. Note: the npc projection previously dropped `corpse`,
+  `drop_info` and `custom_exp` entirely, which hid this from the server.
 - Merets update layout and gain delta
 - State sync (UserSync relay, RideSync relay with ride-state relabeling,
   SyncNumber)
@@ -47,6 +50,10 @@ faithful default-state port of `Item.WriteTo`. Two open deviations:
 - Death ordering details: the reference spawns some loot per damage tick
   (`OnDamageReceived` → `DropHitLoot`) and attributes damage via
   `HandleDamageDealers`; ms2ex only rolls rewards at death.
+- TODO: metadata-driven drops. NPC `drop_info` (global/dead/individual/
+  hit drop box ids) is now projected but unused — ms2ex still rolls a
+  hardcoded reward table. Needs the global drop-item box/set tables
+  ingested plus per-dealer damage tracking to do faithfully.
 - Join-flow packets (`FieldAddUser`, `AddPortal`, battle packets) have
   not been diffed against the reference yet.
 - TODO: implement `RecvOp 0x21 StateSkill` — currently mislabeled as

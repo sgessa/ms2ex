@@ -13,6 +13,7 @@ defmodule Ms2ex.Context.Field do
   alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Managers
+  alias Ms2ex.Types
 
   alias Ms2ex.Types.FieldNpc
   alias Phoenix.PubSub
@@ -78,7 +79,7 @@ defmodule Ms2ex.Context.Field do
       :ok
   """
   @spec add_mob(Schema.Character.t(), %{type: :npc}) :: :ok
-  def add_mob(%Schema.Character{} = character, %{type: :npc} = npc) do
+  def add_mob(%Schema.Character{} = character, %Types.Npc{} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
 

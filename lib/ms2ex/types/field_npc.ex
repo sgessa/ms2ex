@@ -14,6 +14,7 @@ defmodule Ms2ex.Types.FieldNpc do
     :spawn_point_id,
     :type,
     :stats,
+    :first_attacker,
     :last_attacker,
     animation: 255,
     dead?: false,
@@ -30,7 +31,7 @@ defmodule Ms2ex.Types.FieldNpc do
   def new(attrs) do
     attrs =
       attrs
-      |> Map.put(:rotation, struct(Coord, attrs.rotation || %{}))
+      |> Map.put(:rotation, to_coord(attrs.rotation))
       |> Map.put(:type, get_type(attrs.npc))
       |> Map.put(:animation, 255)
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
@@ -43,6 +44,10 @@ defmodule Ms2ex.Types.FieldNpc do
     struct(__MODULE__, attrs)
   end
 
+  defp to_coord(%Coord{} = coord), do: coord
+  defp to_coord(nil), do: struct(Coord, %{})
+  defp to_coord(map), do: struct(Coord, map)
+
   def get_type(npc) do
     friendly = get_in(npc.metadata, [:basic, :friendly]) || 0
 
@@ -51,7 +56,7 @@ defmodule Ms2ex.Types.FieldNpc do
 
   @spawn_distance 250
   defp randomize_pos(%{type: :mob} = attrs) do
-    position = struct(Coord, attrs.position || %{})
+    position = to_coord(attrs.position)
 
     min_x = position.x - @spawn_distance
     max_x = position.x + @spawn_distance
@@ -66,9 +71,7 @@ defmodule Ms2ex.Types.FieldNpc do
   end
 
   defp randomize_pos(attrs) do
-    position = struct(Coord, attrs.position || %{})
-
-    Map.put(attrs, :position, position)
+    Map.put(attrs, :position, to_coord(attrs.position))
   end
 
   defp build_stats(stats) do

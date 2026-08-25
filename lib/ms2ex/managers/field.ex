@@ -9,6 +9,7 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Schema
 
   alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types.Npc
   alias Ms2ex.Types.SkillCast
 
   alias Ms2ex.Managers.Field
@@ -123,44 +124,76 @@ defmodule Ms2ex.Managers.Field do
         {:reply, :error, state}
 
       %FieldNpc{} = field_npc ->
-        field_npc = Map.put(field_npc, :last_attacker, attacker)
-        hp = max(0, field_npc.stats.health.current - dmg)
-        stats = put_in(field_npc.stats, [:health, :current], hp)
-        field_npc = %{field_npc | stats: stats}
+        field_npc = tag_attackers(field_npc, attacker)
 
-        if hp == 0 do
-          # Death is announced with ControlNpc.dead/1; the client plays the
-          # death animation on its own before the corpse is removed.
-          # The hp=0 sync must reach the client BEFORE the dead control entry,
-          # otherwise it ignores the state change.
-          corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
+        cond do
+          # corpses replay a hit animation per strike; no further rewards
+          field_npc.dead? && field_npc.corpse? ->
+            field_npc = %{field_npc | seq_counter: field_npc.seq_counter + 1}
+            Context.Field.broadcast(state.topic, Packets.ControlNpc.corpse_hit(field_npc))
 
-          field_npc =
-            %{
-              field_npc
-              | dead?: true,
-                send_control?: false,
-                corpse?: corpse?,
-                seq_counter: field_npc.seq_counter + 1,
-                last_control_at: System.monotonic_time(:millisecond)
-            }
+            {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
 
-          Logger.debug("NPC #{field_npc.npc.id} died (obj #{field_npc.object_id})")
-          Context.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
-          Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
+          field_npc.dead? ->
+            {:reply, {:ok, field_npc}, state}
 
-          corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || 3
-          Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
-
-          Context.Mobs.drop_rewards(field_npc)
-          Context.Mobs.reward_exp(field_npc)
-
-          # TODO
-          # Player Condition update (quest, achievements...)
+          true ->
+            apply_live_damage(field_npc, dmg, state, object_id)
         end
-
-        {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
     end
+  end
+
+  defp tag_attackers(field_npc, attacker) do
+    field_npc
+    |> Map.put(:last_attacker, attacker)
+    |> Map.put(:first_attacker, field_npc.first_attacker || attacker)
+  end
+
+  defp apply_live_damage(%FieldNpc{} = field_npc, dmg, state, object_id) do
+    hp = max(0, field_npc.stats.health.current - dmg)
+    stats = put_in(field_npc.stats, [:health, :current], hp)
+
+    field_npc =
+      if hp == 0 do
+        announce_death(%{field_npc | stats: stats}, state.topic)
+      else
+        %{field_npc | stats: stats}
+      end
+
+    {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
+  end
+
+  # Death is announced with ControlNpc.dead/1; the client plays the death
+  # animation on its own before the corpse is removed. The hp=0 sync must
+  # reach the client BEFORE the dead control entry, otherwise it ignores
+  # the state change.
+  defp announce_death(field_npc, topic) do
+    corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
+
+    field_npc =
+      %{
+        field_npc
+        | dead?: true,
+          send_control?: false,
+          corpse?: corpse?,
+          seq_counter: field_npc.seq_counter + 1,
+          last_control_at: System.monotonic_time(:millisecond)
+      }
+
+    Logger.debug("NPC #{field_npc.npc.id} died (obj #{field_npc.object_id})")
+    Context.Field.broadcast(topic, Packets.Stats.update_mob_stat(field_npc, :health))
+    Context.Field.broadcast(topic, Packets.ControlNpc.dead(field_npc))
+
+    corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || 3
+    Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
+
+    Context.Mobs.drop_rewards(field_npc)
+    Context.Mobs.reward_exp(field_npc)
+
+    # TODO
+    # Player Condition update (quest, achievements...)
+
+    field_npc
   end
 
   def handle_cast({:drop_item, source, item}, state) do
@@ -193,6 +226,10 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info({:add_npc, npc_id, npc_spawn}, state) do
     {:noreply, Field.Npc.load_npc(state, npc_id, npc_spawn)}
+  end
+
+  def handle_info({:add_mob, %Npc{} = npc, position}, state) do
+    {:noreply, Field.Npc.load_npc(state, npc, %{position: position, rotation: nil})}
   end
 
   def handle_info({:remove_npc, field_npc}, state) do

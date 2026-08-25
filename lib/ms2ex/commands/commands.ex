@@ -5,6 +5,7 @@ defmodule Ms2ex.Commands do
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Constants
+  alias Ms2ex.Types
 
   import Net.SenderSession, only: [push: 2, push_notice: 3]
 
@@ -58,28 +59,29 @@ defmodule Ms2ex.Commands do
     end
   end
 
-  # def handle(["boss", mob_id], character, session) do
-  #   with {mob_id, _} <- Integer.parse(mob_id),
-  #        {:ok, npc} <- Storage.Npcs.get_meta(mob_id) do
-  #     npc = Map.merge(npc, %{boss?: true, respawnable?: false})
-  #     Context.Field.add_mob(character, npc)
-  #     session
-  #   else
-  #     _ ->
-  #       push_notice(session, character, "Invalid Mob: #{mob_id}")
-  #   end
-  # end
+  def handle(["boss", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),
+         %Types.Npc{} = npc <- Types.Npc.new(%{id: mob_id, metadata: metadata}) do
+      Context.Field.add_mob(character, %{npc | boss?: true})
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
 
-  # def handle(["mob", mob_id], character, session) do
-  #   with {mob_id, _} <- Integer.parse(mob_id),
-  #        metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id) do
-  #     Context.Field.add_mob(character, npc)
-  #     session
-  #   else
-  #     _ ->
-  #       push_notice(session, character, "Invalid Mob: #{mob_id}")
-  #   end
-  # end
+  def handle(["mob", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),
+         %Types.Npc{} = npc <- Types.Npc.new(%{id: mob_id, metadata: metadata}) do
+      Context.Field.add_mob(character, npc)
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
 
   def handle([currency, amount], character, session) when currency in ["merets", "mesos"] do
     currency = String.to_existing_atom(currency)

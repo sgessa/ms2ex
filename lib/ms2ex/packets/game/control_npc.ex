@@ -21,6 +21,16 @@ defmodule Ms2ex.Packets.ControlNpc do
   # slot but it reads zero here, and the sequence counter is the npc's real
   # (incremented) value.
   def dead(%Types.FieldNpc{} = npc) do
+    single_entry(npc, 0x0)
+  end
+
+  # Hitting a corpse replays a hit animation on the fallen body instead of
+  # the death animation.
+  def corpse_hit(%Types.FieldNpc{} = npc) do
+    single_entry(npc, 13)
+  end
+
+  defp single_entry(%Types.FieldNpc{} = npc, state) do
     data =
       ""
       |> put_int(npc.object_id)
@@ -30,7 +40,7 @@ defmodule Ms2ex.Packets.ControlNpc do
       |> put_short_coord()
       |> put_short(100)
       |> put_dead_target_id(npc)
-      |> put_byte(0x0)
+      |> put_byte(state)
       |> put_short(-1)
       |> put_short(npc.seq_counter)
 
