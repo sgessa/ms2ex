@@ -14,6 +14,7 @@ Redis uses the OTP 28 ETF map layout).
 mix deps.get     # fetch dependencies
 mix compile      # compile
 mix test         # run tests
+mix format       # format code — ALWAYS run before committing
 ```
 
 Game client metadata comes from Redis, populated by the sibling

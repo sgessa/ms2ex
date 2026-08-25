@@ -187,6 +187,7 @@ defmodule Ms2ex.Managers.Field do
     # corpse-hittable bodies stay around for their full window so players can
     # keep striking them; everyone else despawns once the animation settles
     corpse_window? = field_npc.corpse?
+
     corpse_time =
       if corpse_window? do
         get_in(field_npc.npc.metadata, [:dead, :time]) || 20
@@ -269,7 +270,7 @@ defmodule Ms2ex.Managers.Field do
             {[{object_id, npc}], {live, [npc | corpses]}}
 
           not npc.dead? and
-            (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
+              (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
             npc =
               npc
               |> Map.update!(:seq_counter, &(&1 + 1))

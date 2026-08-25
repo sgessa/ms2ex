@@ -25,10 +25,10 @@ server_ports =
   end
 
 config :ms2ex, Ms2ex,
-  login: %{host: server_address, port: server_ports && server_ports.login || 8526},
+  login: %{host: server_address, port: (server_ports && server_ports.login) || 8526},
   world: %{
     name: "Paperwood",
-    login: %{host: server_address, port: server_ports && server_ports.world || 20001},
+    login: %{host: server_address, port: (server_ports && server_ports.world) || 20001},
     channels: [
       %{host: server_address, port: (server_ports && Enum.at(server_ports.channels, 0)) || 20002},
       %{host: server_address, port: (server_ports && Enum.at(server_ports.channels, 1)) || 20003}
@@ -40,8 +40,7 @@ config :ms2ex, Ms2ex,
     locale: "na"
   }
 
-config :ms2ex, Ms2exWeb.Endpoint,
-  http: [port: env!("WEB_PORT", :integer, 4000)]
+config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
 
 # Imports server constants
 config :ms2ex, :constants,

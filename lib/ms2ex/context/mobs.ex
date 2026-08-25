@@ -28,9 +28,7 @@ defmodule Ms2ex.Context.Mobs do
     player = mob.first_attacker || mob.last_attacker
 
     case exp_reward(mob) do
-      :none ->
-        :ok
-
+      :none -> :ok
       amount -> Managers.Character.cast(player, {:earn_exp, amount})
     end
   end
@@ -41,9 +39,9 @@ defmodule Ms2ex.Context.Mobs do
     level = get_in(mob.npc.metadata, [:basic, :level]) || 1
 
     case get_in(mob.npc.metadata, [:basic, :custom_exp]) do
-      nil -> 10
+      nil -> :none
       0 -> :none
-      -1 -> ExpTable.mob_exp(level) || 10
+      -1 -> ExpTable.mob_exp(level) || :none
       amount -> amount
     end
   end
