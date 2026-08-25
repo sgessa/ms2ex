@@ -18,6 +18,7 @@ defmodule NpcMeta do
         boss? = (basic[:friendly] || 0) == 0 && (basic[:class] || 0) >= 3
 
         IO.puts("npc #{npc_id} — #{get_in(npc, [:model, :name])}")
+
         IO.puts(
           "level=#{basic[:level]} friendly=#{basic[:friendly]} class=#{basic[:class]} boss?=#{boss?}"
         )
@@ -36,7 +37,8 @@ defmodule NpcMeta do
   end
 
   defp stream_keys(cursor) do
-    {:ok, [next, keys]} = Redix.command(Ms2ex.Redix, ["SCAN", cursor, "MATCH", "npc:*", "COUNT", 500])
+    {:ok, [next, keys]} =
+      Redix.command(Ms2ex.Redix, ["SCAN", cursor, "MATCH", "npc:*", "COUNT", 500])
 
     ids =
       Enum.flat_map(keys, fn
@@ -68,7 +70,9 @@ else
   IO.puts("scanning npcs for a corpse-hittable mob ...")
 
   case NpcMeta.find_hittable_corpse() do
-    :none -> IO.puts("no npc has a hittable corpse")
+    :none ->
+      IO.puts("no npc has a hittable corpse")
+
     id ->
       IO.puts("found:")
       NpcMeta.print(id)
