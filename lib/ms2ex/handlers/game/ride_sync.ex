@@ -6,6 +6,11 @@ defmodule Ms2ex.GameHandlers.RideSync do
 
   import Packets.PacketReader
 
+  # riders report walk while mounted; relabel so other clients render the
+  # mounted animation instead of walking legs
+  @walk_state 2
+  @ride_state 33
+
   def handle(packet, session) do
     {_mode, packet} = get_byte(packet)
 
@@ -30,10 +35,17 @@ defmodule Ms2ex.GameHandlers.RideSync do
   defp get_sync_states(segment_count, packet) do
     Enum.reduce(1..segment_count, {[], packet}, fn _, {sync_states, packet} ->
       {sync_state, packet} = Types.SyncState.from_packet(packet)
+      sync_state = maybe_relabel_ride(sync_state)
       {_client_tick, packet} = get_int(packet)
       {_server_tick, packet} = get_int(packet)
 
       {sync_states ++ [sync_state], packet}
     end)
   end
+
+  defp maybe_relabel_ride(%{state: @walk_state} = sync_state) do
+    %{sync_state | state: @ride_state}
+  end
+
+  defp maybe_relabel_ride(sync_state), do: sync_state
 end
