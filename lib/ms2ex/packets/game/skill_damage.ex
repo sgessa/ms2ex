@@ -17,8 +17,7 @@ defmodule Ms2ex.Packets.SkillDamage do
     |> put_byte(skill_cast.attack_point)
     |> put_short_coord(skill_cast.position)
     |> put_coord(skill_cast.direction)
-    # TODO: FIXME ??? should be bool
-    |> put_byte()
+    |> put_bool(true)
     |> put_int(skill_cast.server_tick)
     |> put_byte(length(targets))
     |> reduce(targets, fn
@@ -58,15 +57,18 @@ defmodule Ms2ex.Packets.SkillDamage do
     end)
   end
 
-  def heal(status, heal_amount) do
+  # heal record layout: [caster][target][owner][hp][sp][ep] + animate flag;
+  # unused amounts stay zero
+  def heal(record) do
     __MODULE__
     |> build()
     |> put_byte(0x4)
-    |> put_int(status.source)
-    |> put_int(status.target)
-    |> put_int(status.id)
-    |> put_int(heal_amount)
-    |> put_long()
-    |> put_byte(0x1)
+    |> put_int(record.caster_id)
+    |> put_int(record.target_id)
+    |> put_int(record.owner_id)
+    |> put_int(Map.get(record, :hp_amount, 0))
+    |> put_int(Map.get(record, :sp_amount, 0))
+    |> put_int(Map.get(record, :ep_amount, 0))
+    |> put_bool(true)
   end
 end

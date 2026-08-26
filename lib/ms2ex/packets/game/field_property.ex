@@ -22,6 +22,12 @@ defmodule Ms2ex.Packets.FieldProperty do
     |> put_bool(true)
   end
 
+  def load(properties \\ []) do
+    bytes()
+    |> put_byte(@modes.load)
+    |> put_int(length(properties))
+  end
+
   def remove(property) do
     bytes()
     |> put_byte(@modes.remove)

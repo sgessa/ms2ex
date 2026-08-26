@@ -13,7 +13,7 @@ defmodule Ms2ex.Packets.RegionSkill do
     |> build()
     |> put_byte(@modes.add)
     |> put_int(source_id)
-    |> put_int(skill_cast.caster.object_id)
+    |> put_int(source_id)
     |> put_int(skill_cast.next_tick)
     |> put_byte(length(points))
     |> reduce(points, fn point, packet ->

@@ -5,9 +5,9 @@ defmodule Ms2ex.Managers.Character.Stats do
 
   @regen_stats %{health: :hp, spirit: :sp, stamina: :stamina}
 
-  def decrease(character, stat_id, amount) do
+  def decrease(character, stat_id, amount, opts \\ []) do
     cur = Map.get(character.stats, :"#{stat_id}_cur")
-    set(character, stat_id, cur - amount)
+    set(character, stat_id, cur - amount, opts)
   end
 
   def increase(character, stat_id, amount) do
@@ -23,7 +23,7 @@ defmodule Ms2ex.Managers.Character.Stats do
     character
   end
 
-  def set(character, stat_id, amount) do
+  def set(character, stat_id, amount, opts \\ []) do
     total = Map.get(character.stats, :"#{stat_id}_max")
     amount = amount |> max(0) |> min(total)
     stats = Map.put(character.stats, :"#{stat_id}_cur", amount)
@@ -35,7 +35,10 @@ defmodule Ms2ex.Managers.Character.Stats do
     end
 
     character = %{character | stats: stats}
-    broadcast_new_stats(character, stat_id)
+
+    if Keyword.get(opts, :broadcast, true) do
+      broadcast_new_stats(character, stat_id)
+    end
 
     character
   end

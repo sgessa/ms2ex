@@ -65,6 +65,11 @@ defmodule Ms2ex.Types.SkillCast do
     Enums.AttackType.get_value(meta.property.attack_type) == :physical
   end
 
+  def in_battle?(%__MODULE__{meta: meta}) do
+    # defaults to true for skill metadata that predates the state projection
+    Map.get(meta, :state, %{})[:in_battle] != false
+  end
+
   def magic?(%__MODULE__{meta: meta}) do
     Enums.AttackType.get_value(meta.property.attack_type) == :magic
   end

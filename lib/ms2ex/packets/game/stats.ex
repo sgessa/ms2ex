@@ -5,7 +5,7 @@ defmodule Ms2ex.Packets.Stats do
   alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter
 
-  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
+  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 0x23}
 
   def set_character_stats(character) do
     __MODULE__

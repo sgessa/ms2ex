@@ -68,7 +68,20 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
 
     state = {unknown, is_hold, hold_int, hold_string}
-    Context.Field.broadcast(character, Packets.SkillUse.bytes(skill_cast, state))
+    use_packet = Packets.SkillUse.bytes(skill_cast, state)
+
+    # battle-start sequence in the order live servers emit it:
+    # skill use, battle flag, skill use relay, full stat refresh,
+    # casting actor state
+    Context.Field.broadcast(character, use_packet)
+
+    if Types.SkillCast.in_battle?(skill_cast) do
+      Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
+    end
+
+    Context.Field.broadcast(character, use_packet)
+    Context.Field.broadcast(character, Packets.Stats.set_character_stats(character))
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
   end
 
   def handle_mode(@attack, packet, session) do

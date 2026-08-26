@@ -39,7 +39,7 @@ ms2ex-*.tar
 /config/*.secret.exs
 
 # cross-implementation comparison notes (local only)
-/docs/reference-deltas.md
+/docs/
 
 # local debugging scripts
 /scripts/

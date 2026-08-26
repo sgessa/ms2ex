@@ -3,7 +3,7 @@ defmodule Ms2ex.Managers.GlobalCounter do
 
   # app-wide counter shared by players and mounts; per-field entities use
   # each field's own local_id_counter instead
-  @counter 10_000_000
+  @counter 10_000_001
 
   def start_link(_args \\ []) do
     Agent.start_link(fn -> @counter end, name: __MODULE__)

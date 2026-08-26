@@ -84,6 +84,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push(Packets.World.bytes())
       |> push_party(character)
     end
   end
