@@ -20,10 +20,7 @@ defmodule Ms2ex do
   end
 
   def sync_ticks() do
-    {res, _0} = :erlang.statistics(:runtime)
-
-    res
-    |> trunc()
+    System.monotonic_time(:millisecond)
   end
 
   def get_env({:system, env}), do: System.get_env(env)

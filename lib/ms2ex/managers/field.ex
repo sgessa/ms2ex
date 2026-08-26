@@ -53,6 +53,7 @@ defmodule Ms2ex.Managers.Field do
       mounts: %{},
       npcs: %{},
       npc_spawns: %{},
+      players: %{},
       portals: portals,
       sessions: %{},
       topic: field_name
@@ -219,9 +220,8 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_cast({:enter_battle_stance, character}, state) do
-    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
-    # the client tracks player combat through actor state transitions too
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
+    # battle-start packets are emitted by the cast handler in order; the
+    # field process only schedules the eventual stance drop
     Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
     {:noreply, state}
   end
@@ -291,8 +291,10 @@ defmodule Ms2ex.Managers.Field do
       end)
 
     # one packet per npc
+    boss_target = state.players |> Map.values() |> List.first()
+
     for npc <- Enum.reverse(live_dirty) do
-      Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc]))
+      Context.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc], boss_target))
     end
 
     for npc <- Enum.reverse(corpse_dirty) do

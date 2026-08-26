@@ -33,7 +33,13 @@ defmodule Ms2ex.Managers.Field.Character do
     Managers.Character.update(character)
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
-    state = %{state | sessions: sessions}
+    players = Map.put(state.players, character.id, character.object_id)
+    state = %{state | sessions: sessions, players: players}
+
+    # field-object systems must be initialized before entities load
+    push(character, Packets.Breakable.load())
+    push(character, Packets.Liftable.load())
+    push(character, Packets.FunctionCube.load())
 
     # Load NPCs
     for {_id, npc} <- state.npcs do
@@ -61,11 +67,20 @@ defmodule Ms2ex.Managers.Field.Character do
       push(character, Packets.FieldAddItem.add_item(item))
     end
 
+    # trigger/ui state finalizes before the player stats load
+    push(character, Packets.Trigger.load())
+    push(character, Packets.FieldProperty.load())
+
     # Load Emotes and Player Stats after Player Object is loaded
     push(character, Packets.Stats.set_character_stats(character))
 
+    push(character, Packets.UserState.bytes(character))
+
     emotes = Context.Emotes.list(character)
     push(character, Packets.Emote.load(emotes))
+
+    push(character, Packets.SkillMacro.load())
+    push(character, Packets.Lapenshard.load())
 
     # Load Premium membership if active
     with %Schema.PremiumMembership{} = membership <-
@@ -85,11 +100,12 @@ defmodule Ms2ex.Managers.Field.Character do
 
     mounts = Map.delete(state.mounts, character.id)
     sessions = Map.delete(state.sessions, character.id)
+    players = Map.delete(state.players, character.id)
 
     Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
     Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
 
-    %{state | mounts: mounts, sessions: sessions}
+    %{state | mounts: mounts, sessions: sessions, players: players}
   end
 
   defp maybe_teleport_character(%{update_position: coord} = character) do

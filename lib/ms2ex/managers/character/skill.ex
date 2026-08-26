@@ -26,10 +26,17 @@ defmodule Ms2ex.Managers.Character.Skill do
       end
     end
 
-    Context.Field.enter_battle_stance(character)
+    # battle stance only arms for skills flagged to put the caster in combat;
+    # also schedules the stance drop. battle-start packets are emitted by the
+    # cast handler in live-server order
+    if Types.SkillCast.in_battle?(skill_cast) do
+      Context.Field.enter_battle_stance(character)
+    end
 
+    # costs are carried to clients inside the battle-start stat refresh
+    # emitted by the cast handler; no per-stat broadcasts here
     character
-    |> Character.Stats.decrease(:spirit, spirit_cost)
-    |> Character.Stats.decrease(:stamina, stamina_cost)
+    |> Character.Stats.decrease(:spirit, spirit_cost, broadcast: false)
+    |> Character.Stats.decrease(:stamina, stamina_cost, broadcast: false)
   end
 end

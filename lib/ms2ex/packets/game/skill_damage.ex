@@ -16,7 +16,7 @@ defmodule Ms2ex.Packets.SkillDamage do
     |> put_byte(skill_cast.motion_point)
     |> put_byte(skill_cast.attack_point)
     |> put_short_coord(skill_cast.position)
-    |> put_short_coord(skill_cast.direction)
+    |> put_coord(skill_cast.direction)
     |> put_bool(true)
     |> put_int(skill_cast.server_tick)
     |> put_byte(length(targets))

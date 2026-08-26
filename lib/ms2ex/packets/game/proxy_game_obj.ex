@@ -32,8 +32,8 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> build()
     |> put_byte(@modes.load_player)
     |> put_int(character.object_id)
-    |> put_long(character.account_id)
     |> put_long(character.id)
+    |> put_long(character.account_id)
     |> put_ustring(character.name)
     |> put_ustring(character.profile_url)
     |> put_ustring(character.motto)
@@ -48,7 +48,9 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_ustring(character.home_name)
     |> put_int()
     |> put_short()
-    |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
+    |> put_int()
+    |> put_int()
+    |> put_int()
   end
 
   # periodic position sync for other clients

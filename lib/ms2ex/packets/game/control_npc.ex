@@ -3,12 +3,12 @@ defmodule Ms2ex.Packets.ControlNpc do
 
   import Ms2ex.Packets.PacketWriter
 
-  def bytes(npcs) do
+  def bytes(npcs, boss_target \\ nil) do
     __MODULE__
     |> build()
     |> put_short(length(npcs))
     |> reduce(npcs, fn npc, packet ->
-      npc_data = npc_data(npc)
+      npc_data = npc_data(npc, boss_target)
 
       packet
       |> put_short(byte_size(npc_data))
@@ -51,41 +51,56 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_bytes(data)
   end
 
-  defp npc_data(%Types.FieldNpc{} = npc) do
+  defp npc_data(%Types.FieldNpc{} = npc, boss_target) do
     ""
     |> put_int(npc.object_id)
-    # Flags bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated); for
-    # bosses the bit flips only when they enter battle so clients see an
-    # idle -> in-battle transition instead of a static value
-    |> put_byte(npc_flags(npc))
+    # Flags: bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated). The
+    # client registers a boss's HP bar from these bits, so they stay set for
+    # every alive entry regardless of combat state; only the boss target-id
+    # changes when battle begins.
+    |> put_byte(0x2)
     |> put_short_coord(npc.position)
     # TODO convert Z to degree
     |> put_short(trunc(npc.rotation.z * 10))
     # speed
     |> put_short_coord()
     |> put_short(100)
-    |> put_target_id(npc)
-    |> put_byte(0x1)
+    |> put_target_id(npc, boss_target)
+    |> put_state(npc)
     |> put_short(npc.animation)
     |> put_short(npc.seq_counter)
   end
 
-  defp npc_flags(%Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}), do: 0x0
-  defp npc_flags(%Types.FieldNpc{npc: %{boss?: true}}), do: 0x2
-  defp npc_flags(_npc), do: 0x2
+  # A boss announces its spawn through a one-tick Regen state (the client
+  # reveals the field-boss HP bar while a boss is recovering), then idles
+  # like any other mob. Holding Regen hides the mob on this client.
+  defp put_state(packet, %Types.FieldNpc{npc: %{boss?: true}, seq_counter: 1}),
+    do: put_byte(packet, 23)
+
+  defp put_state(packet, _npc), do: put_byte(packet, 1)
 
   # bosses carry their current target's object id; a non-zero value tells
-  # the client the boss is in battle (drives the boss HP bar UI)
-  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}) do
-    put_int(packet, 0)
-  end
+  # the client the boss is in battle (drives the boss HP bar UI). Until the
+  # boss has been struck, it holds the field's default target (the nearest
+  # player), mirroring a freshly-aggroed boss.
+  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}, nil),
+    do: put_int(packet, 0)
 
-  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: attacker}) do
-    put_int(packet, attacker.object_id)
-  end
+  defp put_target_id(
+         packet,
+         %Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil},
+         default_target
+       ),
+       do: put_int(packet, default_target)
 
-  defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}}), do: put_int(packet, 0)
-  defp put_target_id(packet, _npc), do: packet
+  defp put_target_id(
+         packet,
+         %Types.FieldNpc{npc: %{boss?: true}, last_attacker: attacker},
+         _default
+       ),
+       do: put_int(packet, attacker.object_id)
+
+  defp put_target_id(packet, _npc, _default), do: packet
 
   # dead entries always report an idle target, even for bosses
   defp put_dead_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}}) do
