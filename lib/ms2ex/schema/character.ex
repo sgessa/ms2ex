@@ -94,6 +94,7 @@ defmodule Ms2ex.Schema.Character do
     field :position, EctoTypes.Term, virtual: true
     field :rotation, EctoTypes.Term, virtual: true
     field :safe_position, EctoTypes.Term, virtual: true
+    field :update_position, EctoTypes.Term, virtual: true
     field :session_pid, EctoTypes.Term, virtual: true
     field :sender_session_pid, EctoTypes.Term, virtual: true
     field :skill_cast, EctoTypes.Term, virtual: true

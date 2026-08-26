@@ -14,7 +14,7 @@ defmodule Ms2ex.Packets.PacketReader do
   def get_byte(<<n::integer-8, packet::binary>>), do: {n, packet}
 
   def get_bytes(packet, n) do
-    <<b::little-bytes-size(n), packet::bytes>> = packet
+    <<b::little-bytes-size(^n), packet::bytes>> = packet
     {b, packet}
   end
 

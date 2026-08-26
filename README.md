@@ -4,7 +4,7 @@
 
 ### MapleStory 2 Server Emulator written in Elixir
 
-[![Elixir Version](https://img.shields.io/badge/elixir-1.18-blueviolet.svg)](https://elixir-lang.org/)
+[![Elixir Version](https://img.shields.io/badge/elixir-1.20-blueviolet.svg)](https://elixir-lang.org/)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Documentation](https://img.shields.io/badge/📚_documentation-online-brightgreen.svg)](https://sgessa.github.io/ms2ex)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

@@ -85,12 +85,13 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
   def handle_mode(_mode, _packet, session), do: session
 
+  @spec auto_add(term(), Schema.Character.t(), integer(), [Schema.Item.t()]) :: map()
   defp auto_add(session, character, max_rarity, items) do
     items
     |> Enum.take(Context.Dismantle.max_slots())
     |> Enum.map(&Context.Items.load_metadata/1)
     |> Enum.filter(&(&1.rarity <= max_rarity && &1.metadata.dismantable?))
-    |> Enum.reduce(character.inventory, fn item, inventory ->
+    |> Enum.reduce(character.dismantle_inventory, fn item, inventory ->
       {slot, inventory} = Context.Dismantle.append(inventory, item.id, item.amount)
       inventory = Context.Dismantle.update_rewards(character, inventory)
 

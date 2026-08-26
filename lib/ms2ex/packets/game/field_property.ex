@@ -2,8 +2,6 @@ defmodule Ms2ex.Packets.FieldProperty do
   alias Ms2ex.Enums
   import Ms2ex.Packets.PacketWriter
 
-  require Logger
-
   @modes %{
     load: 0x0,
     add: 0x1,

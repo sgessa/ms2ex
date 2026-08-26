@@ -2,15 +2,17 @@ defmodule Ms2ex.Managers.SkillCast do
   alias Ms2ex.Managers
   alias Ms2ex.Types.SkillCast
 
+  @spec get(integer()) :: {:ok, Ms2ex.Types.SkillCast.t()} | :error
   def get(skill_cast_id) do
-    skill_cast =
-      skill_cast_id
-      |> process_name()
-      |> Agent.get(& &1)
+    if pid = Process.whereis(process_name(skill_cast_id)) do
+      skill_cast = Agent.get(pid, & &1)
 
-    # Reload caster
-    {:ok, caster} = Managers.Character.lookup(skill_cast.caster.id)
-    Map.put(skill_cast, :caster, caster)
+      # Reload caster
+      {:ok, caster} = Managers.Character.lookup(skill_cast.caster.id)
+      {:ok, Map.put(skill_cast, :caster, caster)}
+    else
+      :error
+    end
   end
 
   def start_link(%SkillCast{} = skill_cast) do

@@ -108,11 +108,15 @@ defmodule Ms2ex.Managers.Field.Character do
     %{state | mounts: mounts, sessions: sessions, players: players}
   end
 
-  defp maybe_teleport_character(%{update_position: coord} = character) do
-    character = Map.delete(character, :update_position)
-    Managers.Character.update(character)
-    push(character, Packets.MoveCharacter.bytes(character, coord))
-  end
+  defp maybe_teleport_character(character) do
+    case Map.get(character, :update_position) do
+      nil ->
+        :ok
 
-  defp maybe_teleport_character(_character), do: nil
+      coord ->
+        character = %{character | update_position: nil}
+        Managers.Character.update(character)
+        push(character, Packets.MoveCharacter.bytes(character, coord))
+    end
+  end
 end

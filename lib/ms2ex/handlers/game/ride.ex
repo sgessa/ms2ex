@@ -1,6 +1,4 @@
 defmodule Ms2ex.GameHandlers.Ride do
-  require Logger
-
   alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Context

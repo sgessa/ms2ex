@@ -62,7 +62,7 @@ defmodule Ms2ex.Types.SkillCast do
   end
 
   def physical?(%__MODULE__{meta: meta}) do
-    Enums.AttackType.get_value(meta.property.attack_type) == :physical
+    meta.property.attack_type == Enums.AttackType.get_value(:physical)
   end
 
   def in_battle?(%__MODULE__{meta: meta}) do
@@ -71,7 +71,7 @@ defmodule Ms2ex.Types.SkillCast do
   end
 
   def magic?(%__MODULE__{meta: meta}) do
-    Enums.AttackType.get_value(meta.property.attack_type) == :magic
+    meta.property.attack_type == Enums.AttackType.get_value(:magic)
   end
 
   def crit_damage_rate(%__MODULE__{} = skill_cast) do
