@@ -1,6 +1,4 @@
 defmodule Ms2ex.GameHandlers.RequestChangeChannel do
-  require Logger
-
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets

@@ -9,9 +9,11 @@ defmodule Ms2ex.Managers.Character do
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
+  @spec lookup(integer()) :: {:ok, Schema.Character.t()} | :error
   def lookup(character_id), do: call(character_id, :lookup)
 
   # TODO avoid SQL
+  @spec lookup_by_name(String.t()) :: {:ok, Schema.Character.t()} | :error
   def lookup_by_name(character_name) do
     case Context.Characters.get_by(name: character_name) do
       nil -> :error
@@ -19,6 +21,7 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
+  @spec update(Schema.Character.t()) :: :ok | :error
   def update(%Schema.Character{} = character), do: call(character, {:update, character})
 
   def monitor(%Schema.Character{} = character), do: call(character, :monitor)

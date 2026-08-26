@@ -103,7 +103,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_unk3, packet} = get_byte(packet)
     {_unk4, _packet} = get_byte(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       Managers.SkillCast.update(skill_cast, %{
         motion_point: motion_point,
         position: position,
@@ -119,7 +119,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {cast_id, packet} = get_long(packet)
     {server_tick, _packet} = get_int(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       Managers.SkillCast.update(skill_cast, %{
         server_tick: server_tick
       })
@@ -129,7 +129,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   def handle_mode(@cancel, packet, _session) do
     {cast_id, _packet} = get_long(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       Context.Field.broadcast(skill_cast.caster, Packets.SkillCancel.bytes(skill_cast))
     end
   end
@@ -142,7 +142,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_iterations, packet} = get_int(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       # TODO calc next_tick
       skill_cast =
         Managers.SkillCast.update(skill_cast, %{
@@ -168,7 +168,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       skill_cast =
         Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
 
@@ -193,7 +193,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {position, packet} = get_coord(packet)
     {rotation, _packet} = get_coord(packet)
 
-    if skill_cast = Managers.SkillCast.get(cast_id) do
+    with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       Managers.SkillCast.update(skill_cast, %{
         attack_point: attack_point,
         position: position,

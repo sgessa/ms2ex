@@ -32,7 +32,8 @@ defmodule Ms2ex.FieldDeathTest do
     %{field_npc: field_npc, max_hp: field_npc.stats.health.current}
   end
 
-  defp state_with(field_npc), do: %{npcs: %{@oid => field_npc}, topic: "test-topic"}
+  defp state_with(field_npc),
+    do: %{npcs: %{@oid => field_npc}, players: %{}, topic: "test-topic"}
 
   defp hit(state, dmg) do
     {:reply, {:ok, mob}, new_state} =

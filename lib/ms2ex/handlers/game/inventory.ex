@@ -1,6 +1,4 @@
 defmodule Ms2ex.GameHandlers.Inventory do
-  require Logger
-
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Net

@@ -1,6 +1,4 @@
 defmodule Ms2ex.GameHandlers.RequestQuit do
-  require Logger
-
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.SessionManager

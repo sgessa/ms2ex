@@ -3,20 +3,24 @@ defmodule Ms2ex.Context.Items do
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
+  @spec init(integer(), map()) :: Schema.Item.t()
   def init(id, attrs \\ %{}) do
-    %Schema.Item{item_id: id}
-    |> Map.merge(attrs)
+    %Schema.Item{} = item = struct(Schema.Item, Map.merge(%{item_id: id}, attrs))
+
+    item
     |> load_metadata()
     |> set_stats()
     |> set_level()
   end
 
+  @spec set_level(Schema.Item.t()) :: Schema.Item.t()
   def set_level(%Schema.Item{metadata: metadata} = item) do
-    Map.put(item, :level, metadata.limit.level)
+    %{item | level: metadata.limit.level}
   end
 
+  @spec set_stats(Schema.Item.t()) :: Schema.Item.t()
   def set_stats(%Schema.Item{} = item) do
-    Map.put(item, :stats, Types.ItemStats.create(item))
+    %{item | stats: Types.ItemStats.create(item)}
   end
 
   @meso_ids [90_000_001, 90_000_002, 90_000_003]
@@ -69,8 +73,8 @@ defmodule Ms2ex.Context.Items do
     Enum.any?(item.metadata.slots, &(&1 in @weapon_slots))
   end
 
+  @spec load_metadata(Schema.Item.t()) :: Schema.Item.t()
   def load_metadata(%Schema.Item{item_id: id} = item) do
-    meta = Storage.Items.get_meta(id)
-    Map.put(item, :metadata, meta)
+    %{item | metadata: Storage.Items.get_meta(id)}
   end
 end
