@@ -54,8 +54,10 @@ defmodule Ms2ex.Packets.ControlNpc do
   defp npc_data(%Types.FieldNpc{} = npc) do
     ""
     |> put_int(npc.object_id)
-    # Flags bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated)
-    |> put_byte(0x2)
+    # Flags bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated); for
+    # bosses the bit flips only when they enter battle so clients see an
+    # idle -> in-battle transition instead of a static value
+    |> put_byte(npc_flags(npc))
     |> put_short_coord(npc.position)
     # TODO convert Z to degree
     |> put_short(trunc(npc.rotation.z * 10))
@@ -67,6 +69,10 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(npc.animation)
     |> put_short(npc.seq_counter)
   end
+
+  defp npc_flags(%Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}), do: 0x0
+  defp npc_flags(%Types.FieldNpc{npc: %{boss?: true}}), do: 0x2
+  defp npc_flags(_npc), do: 0x2
 
   # bosses carry their current target's object id; a non-zero value tells
   # the client the boss is in battle (drives the boss HP bar UI)

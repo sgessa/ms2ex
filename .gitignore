@@ -40,6 +40,8 @@ ms2ex-*.tar
 
 # cross-implementation comparison notes (local only)
 /docs/reference-deltas.md
+/docs/boss-hp-bar.md
+/docs/client-memory.md
 
 # local debugging scripts
 /scripts/

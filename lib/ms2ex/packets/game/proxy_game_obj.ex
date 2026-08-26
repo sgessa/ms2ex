@@ -3,7 +3,6 @@ defmodule Ms2ex.Packets.ProxyGameObj do
   alias Ms2ex.Packets
   alias Ms2ex.Enums
 
-  import Bitwise
   import Packets.PacketWriter
 
   @modes %{
@@ -15,15 +14,15 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     update_npc: 0x8
   }
 
-  @updates %{
-    none: 0,
-    type1: 1,
-    move: 2,
-    type3: 4,
-    type4: 8,
-    type5: 16,
-    type6: 32,
-    animate: 64
+  # which fields follow the flag byte
+  @player_flags %{
+    dead: 0x01,
+    position: 0x02,
+    level: 0x04,
+    job: 0x08,
+    motto: 0x10,
+    gear_score: 0x20,
+    state: 0x40
   }
 
   def load_player(character) do
@@ -52,65 +51,26 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> reduce(character.trophies, fn trophy, packet -> put_int(packet, trophy) end)
   end
 
+  # periodic position sync for other clients
   def update_player(character) do
-    flag = flag(:move) ||| flag(:animate)
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_player)
+    |> put_int(character.object_id)
+    |> put_byte(@player_flags.position)
+    |> put_coord(character.position)
+  end
 
-    packet =
-      __MODULE__
-      |> build()
-      |> put_byte(@modes.update_player)
-      |> put_int(character.object_id)
-      |> put_byte(flag)
-
-    packet =
-      if has_bit?(flag, :type1) do
-        put_byte(packet)
-      else
-        packet
-      end
-
-    packet =
-      if has_bit?(flag, :move) do
-        put_coord(packet, character.position)
-      else
-        packet
-      end
-
-    packet =
-      if has_bit?(flag, :type3) do
-        put_short(packet)
-      else
-        packet
-      end
-
-    packet =
-      if has_bit?(flag, :type4) do
-        packet
-        |> put_short()
-        |> put_int()
-      else
-        packet
-      end
-
-    packet =
-      if has_bit?(flag, :type5) do
-        put_ustring(packet, "Unknown")
-      else
-        packet
-      end
-
-    packet =
-      if has_bit?(flag, :type6) do
-        put_int(packet)
-      else
-        packet
-      end
-
-    if has_bit?(flag, :animate) do
-      put_short(packet, character.animation)
-    else
-      packet
-    end
+  # actor state transitions (idle, casting, etc.) reach clients through the
+  # state flag; values mirror the client's actor state enum (idle=1,
+  # pc_skill=16)
+  def update_state(character, state) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_player)
+    |> put_int(character.object_id)
+    |> put_byte(@player_flags.state)
+    |> put_short(state)
   end
 
   def remove_player(object_id) do
@@ -146,8 +106,4 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_bool(field_npc.dead?)
     |> put_coord(field_npc.position)
   end
-
-  defp has_bit?(flag, bit), do: (flag &&& flag(bit)) != 0
-
-  defp flag(flag), do: Map.get(@updates, flag)
 end
