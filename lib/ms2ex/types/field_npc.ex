@@ -26,7 +26,7 @@ defmodule Ms2ex.Types.FieldNpc do
 
   # must match @idle_control_ms in Managers.Field; staggering keeps npcs from
   # all becoming dirty on the same tick
-  @idle_control_ms 2000
+  @idle_control_ms 30
 
   def new(attrs) do
     attrs =

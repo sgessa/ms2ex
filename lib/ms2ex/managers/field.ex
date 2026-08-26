@@ -29,7 +29,9 @@ defmodule Ms2ex.Managers.Field do
   # animation transitions keep dirtying npcs on live servers, so even idle
   # ones re-announce themselves every few seconds; this also covers the
   # client dropping controls sent while it asynchronously loads the entity
-  @idle_control_ms 2000
+  # every npc streams control entries continuously at this cadence,
+  # matching what live servers emit and what the client expects
+  @idle_control_ms 30
   # one app-wide counter feeds players and mounts, while each field instance
   # owns a local counter for npcs, portals, spawn points and items
   @local_id_counter 50_000_000
@@ -147,6 +149,9 @@ defmodule Ms2ex.Managers.Field do
     field_npc
     |> Map.put(:last_attacker, attacker)
     |> Map.put(:first_attacker, field_npc.first_attacker || attacker)
+    # entering battle must reach clients on the next control tick so the
+    # boss HP bar picks up the new target without waiting for idle cadence
+    |> Map.put(:send_control?, true)
   end
 
   defp apply_live_damage(%FieldNpc{} = field_npc, dmg, state, object_id) do
@@ -215,6 +220,8 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_cast({:enter_battle_stance, character}, state) do
     Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
+    # the client tracks player combat through actor state transitions too
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
     Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
     {:noreply, state}
   end
@@ -307,6 +314,7 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info({:leave_battle_stance, character}, state) do
     Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
     {:noreply, state}
   end
 
