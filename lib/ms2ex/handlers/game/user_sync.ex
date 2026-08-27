@@ -4,6 +4,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   alias Ms2ex.Types
   alias Ms2ex.Storage
   alias Ms2ex.Packets
+  alias Ms2ex.Constants
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -42,6 +43,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   # TODO needs reworking, re-use in RideSync handler
+
   defp ensure_safe_position(session, character, sync_states) do
     %{state: state, position: new_position} = List.first(sync_states)
     closest_block = Context.MapBlock.closest_block(new_position)
@@ -54,7 +56,8 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     if out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
-      Managers.Character.cast(character, {:receive_fall_dmg, 0})
+      fall_distance = Constants.get(:out_of_bounds_fall_distance)
+      Managers.Character.cast(character, {:receive_fall_dmg, fall_distance})
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     end
   end
