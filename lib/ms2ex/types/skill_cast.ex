@@ -102,7 +102,7 @@ defmodule Ms2ex.Types.SkillCast do
     cube_magic_path_id = attack_point(skill_cast)[:cube_magic_path_id] || 0
 
     case Storage.Table.MagicPaths.get(cube_magic_path_id) do
-      paths when is_list(paths) and length(paths) > 0 ->
+      paths when is_list(paths) and paths != [] ->
         Enum.map(paths, fn path ->
           # TODO fire_offset rotate if path.rotate?
           fire_offset = struct(Coord, path[:fire_offset] || %{})

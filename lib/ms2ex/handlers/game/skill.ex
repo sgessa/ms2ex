@@ -176,30 +176,7 @@ defmodule Ms2ex.GameHandlers.Skill do
       crit? = Context.Damage.roll_crit(skill_cast.caster)
 
       mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
-
-      unless mobs == [] do
-        # the target relay (mode 0) announces which entity was hit; it precedes
-        # the damage numbers (mode 1)
-        targets =
-          mobs
-          |> Enum.with_index()
-          |> Enum.map(fn {{mob, _dmg}, index} ->
-            %{
-              prev_uid: 0x0,
-              uid: skill_cast.caster.object_id * 0x1_0000_0000 + index,
-              target_id: mob.object_id,
-              unknown: 0x0,
-              index: index
-            }
-          end)
-
-        Context.Field.broadcast(
-          skill_cast.caster,
-          Packets.SkillDamage.target(skill_cast, targets)
-        )
-
-        Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
-      end
+      broadcast_damage(skill_cast, mobs)
 
       # TODO
     end
@@ -223,6 +200,28 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       Context.Field.add_region_skill(skill_cast.caster, skill_cast)
     end
+  end
+
+  # the target relay (mode 0) announces which entity was hit and precedes the
+  # damage numbers (mode 1)
+  defp broadcast_damage(_skill_cast, []), do: :ok
+
+  defp broadcast_damage(skill_cast, mobs) do
+    targets =
+      mobs
+      |> Enum.with_index()
+      |> Enum.map(fn {{mob, _dmg}, index} ->
+        %{
+          prev_uid: 0x0,
+          uid: skill_cast.caster.object_id * 0x1_0000_0000 + index,
+          target_id: mob.object_id,
+          unknown: 0x0,
+          index: index
+        }
+      end)
+
+    Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.target(skill_cast, targets))
+    Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
   end
 
   defp damage_targets(skill_cast, crit?, target_count, mobs, packet)

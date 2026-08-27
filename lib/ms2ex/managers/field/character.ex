@@ -12,14 +12,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # Load other characters
     for char_id <- Map.keys(state.sessions) do
-      with {:ok, char} <- Managers.Character.lookup(char_id) do
-        push(character, Packets.FieldAddUser.bytes(char))
-        push(character, Packets.ProxyGameObj.load_player(char))
-
-        if mount = Map.get(state.mounts, char.id) do
-          push(character, Packets.ResponseRide.start_ride(char, mount))
-        end
-      end
+      load_peer(character, char_id, state)
     end
 
     # Update registry; players and mounts share the app-wide counter
@@ -113,6 +106,18 @@ defmodule Ms2ex.Managers.Field.Character do
     maybe_teleport_character(character)
 
     state
+  end
+
+  # loads a peer character (and any mount they are riding) for the joining player
+  defp load_peer(character, char_id, state) do
+    with {:ok, char} <- Managers.Character.lookup(char_id) do
+      push(character, Packets.FieldAddUser.bytes(char))
+      push(character, Packets.ProxyGameObj.load_player(char))
+
+      if mount = Map.get(state.mounts, char.id) do
+        push(character, Packets.ResponseRide.start_ride(char, mount))
+      end
+    end
   end
 
   def remove_character(character, state) do

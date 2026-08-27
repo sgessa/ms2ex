@@ -75,7 +75,6 @@ jobs:
       # Run Credo for code analysis
       - name: Run Credo
         run: mix credo
-        continue-on-error: true
 
       # Run tests when available
       - name: Run tests

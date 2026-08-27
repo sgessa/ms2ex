@@ -269,29 +269,8 @@ defmodule Ms2ex.Managers.Field do
     now = System.monotonic_time(:millisecond)
 
     {npcs, {live_dirty, corpse_dirty}} =
-      Enum.flat_map_reduce(state.npcs, {[], []}, fn {object_id, npc}, {live, corpses} ->
-        cond do
-          npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
-            npc =
-              npc
-              |> Map.update!(:seq_counter, &(&1 + 1))
-              |> Map.put(:last_control_at, now)
-
-            {[{object_id, npc}], {live, [npc | corpses]}}
-
-          not npc.dead? and
-              (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
-            npc =
-              npc
-              |> Map.update!(:seq_counter, &(&1 + 1))
-              |> Map.put(:last_control_at, now)
-              |> Map.put(:send_control?, false)
-
-            {[{object_id, npc}], {[npc | live], corpses}}
-
-          true ->
-            {[{object_id, npc}], {live, corpses}}
-        end
+      Enum.flat_map_reduce(state.npcs, {[], []}, fn {object_id, npc}, acc ->
+        tick_npc(now, object_id, npc, acc)
       end)
 
     # one packet per npc
@@ -348,5 +327,31 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(data, state) do
     Logger.warning("[Field] Unknown message: #{inspect(data)}")
     {:noreply, state}
+  end
+
+  # decides whether a corpse keeps re-announcing its death entry and whether a
+  # live npc gets a control update this tick
+  defp tick_npc(now, object_id, npc, {live, corpses}) do
+    cond do
+      npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
+        npc =
+          npc
+          |> Map.update!(:seq_counter, &(&1 + 1))
+          |> Map.put(:last_control_at, now)
+
+        {[{object_id, npc}], {live, [npc | corpses]}}
+
+      not npc.dead? and (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
+        npc =
+          npc
+          |> Map.update!(:seq_counter, &(&1 + 1))
+          |> Map.put(:last_control_at, now)
+          |> Map.put(:send_control?, false)
+
+        {[{object_id, npc}], {[npc | live], corpses}}
+
+      true ->
+        {[{object_id, npc}], {live, corpses}}
+    end
   end
 end
