@@ -169,6 +169,10 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, Character.Stats.decrease(character, stat_id, amount)}
   end
 
+  def handle_cast({:set_stat, stat_id, amount}, character) do
+    {:noreply, Character.Stats.set(character, stat_id, amount)}
+  end
+
   def handle_cast({:increase_stat, stat_id, amount}, character) do
     {:noreply, Character.Stats.increase(character, stat_id, amount)}
   end
