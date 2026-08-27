@@ -3,7 +3,7 @@ defmodule Ms2ex.Packets.SkillMacro do
 
   def load do
     build(__MODULE__)
-    |> put_byte(0x0)
+    |> put_byte(0x2)
     |> put_int(0)
   end
 end

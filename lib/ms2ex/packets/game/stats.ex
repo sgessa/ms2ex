@@ -24,7 +24,7 @@ defmodule Ms2ex.Packets.Stats do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> put_byte(@mode.update_char_stats)
+    |> put_byte(@mode.update)
     |> put_byte(0x1)
     |> reduce(updated_stats, fn
       :health, packet ->

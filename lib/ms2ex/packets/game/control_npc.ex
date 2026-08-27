@@ -71,12 +71,10 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(npc.seq_counter)
   end
 
-  # A boss announces its spawn through a one-tick Regen state (the client
-  # reveals the field-boss HP bar while a boss is recovering), then idles
-  # like any other mob. Holding Regen hides the mob on this client.
-  defp put_state(packet, %Types.FieldNpc{npc: %{boss?: true}, seq_counter: 1}),
-    do: put_byte(packet, 23)
-
+  # bosses stay in the PcSkill reaction state while engaged by a player (the
+  # client shows the field-boss HP bar for a boss reacting to a player skill);
+  # regular mobs idle
+  defp put_state(packet, %Types.FieldNpc{npc: %{boss?: true}}), do: put_byte(packet, 16)
   defp put_state(packet, _npc), do: put_byte(packet, 1)
 
   # bosses carry their current target's object id; a non-zero value tells

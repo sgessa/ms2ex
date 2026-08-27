@@ -8,16 +8,23 @@ defmodule Ms2ex.FieldDeathTest do
   @oid 50_000_086
   @attacker %Ms2ex.Schema.Character{id: 1, name: "Testy"}
 
+  # minimal metadata fixture so the test runs without the game-data store
+  @npc_metadata %{
+    basic: %{friendly: 0, class: 3},
+    stat: %{stats: %{health: 1000, attack_speed: 100}}
+  }
+
   setup do
-    case Redix.start_link("redis://localhost:6379", name: Ms2ex.Redix) do
-      {:ok, _} -> :ok
-      {:error, {:already_started, _}} -> :ok
+    # seed the metadata cache directly (no Redis / game data needed)
+    :ets.insert(:metadata, {"npc:#{@mob_id}", {:ok, @npc_metadata}})
+
+    # field-drop item metadata (mesos, merets, spirit orbs, stamina) so the
+    # death/damage reward paths can build items without the game-data store
+    for item_id <- [90_000_001, 90_000_004, 90_000_009, 90_000_010] do
+      :ets.insert(:metadata, {"item:#{item_id}", {:ok, %{limit: %{level: 1}, slot_names: []}}})
     end
 
-    metadata = Ms2ex.Storage.Npcs.get_meta(@mob_id)
-    assert metadata, "npc #{@mob_id} missing from metadata store"
-
-    npc = Types.Npc.new(%{id: @mob_id, metadata: metadata})
+    npc = Types.Npc.new(%{id: @mob_id, metadata: @npc_metadata})
 
     field_npc =
       Types.FieldNpc.new(%{

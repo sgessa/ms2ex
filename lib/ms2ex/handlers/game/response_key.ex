@@ -81,7 +81,12 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Fishing.load_log())
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
+      |> push(Packets.InGameRank.load())
       |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push(Packets.HomeCommand.load(account.id))
+      |> push(Packets.Mentor.load())
+      |> push(Packets.Mentor.unknown12())
+      |> push(Packets.Mail.notify())
       |> push(Packets.World.bytes())
       |> push_party(character)
     end

@@ -12,14 +12,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # Load other characters
     for char_id <- Map.keys(state.sessions) do
-      with {:ok, char} <- Managers.Character.lookup(char_id) do
-        push(character, Packets.FieldAddUser.bytes(char))
-        push(character, Packets.ProxyGameObj.load_player(char))
-
-        if mount = Map.get(state.mounts, char.id) do
-          push(character, Packets.ResponseRide.start_ride(char, mount))
-        end
-      end
+      load_peer(character, char_id, state)
     end
 
     # Update registry; players and mounts share the app-wide counter
@@ -37,8 +30,14 @@ defmodule Ms2ex.Managers.Field.Character do
     state = %{state | sessions: sessions, players: players}
 
     # field-object systems must be initialized before entities load
+    push(character, Packets.LoadCubes.load_plots())
+    push(character, Packets.LoadCubes.load())
+    push(character, Packets.LoadCubes.plot_state())
+    push(character, Packets.LoadCubes.plot_expiry())
+    push(character, Packets.Ugc.load())
     push(character, Packets.Breakable.load())
     push(character, Packets.Liftable.load())
+    push(character, Packets.AddInteractObjects.bytes([]))
     push(character, Packets.FunctionCube.load())
 
     # Load NPCs
@@ -80,7 +79,19 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.Emote.load(emotes))
 
     push(character, Packets.SkillMacro.load())
+    push(character, Packets.Wedding.update_marriage())
+    push(character, Packets.Wedding.update_hall())
+    push(character, Packets.ResponseCube.design_rank_reward(character.account_id))
+    push(character, Packets.ResponseCube.update_profile(character))
+    push(character, Packets.ResponseCube.return_map(character.map_id))
     push(character, Packets.Lapenshard.load())
+
+    tick = Ms2ex.sync_ticks()
+    push(character, Packets.RevivalCount.bytes())
+    push(character, Packets.RevivalConfirm.bytes(character.object_id, tick))
+    push(character, Packets.StatPoints.sources())
+    push(character, Packets.StatPoints.allocation())
+    push(character, Packets.SkillPoint.sources())
 
     # Load Premium membership if active
     with %Schema.PremiumMembership{} = membership <-
@@ -89,10 +100,24 @@ defmodule Ms2ex.Managers.Field.Character do
       push(character, Packets.PremiumClub.activate(character, membership))
     end
 
+    push(character, Packets.DynamicChannel.bytes())
+
     # If character teleported or was summoned by an other user
     maybe_teleport_character(character)
 
     state
+  end
+
+  # loads a peer character (and any mount they are riding) for the joining player
+  defp load_peer(character, char_id, state) do
+    with {:ok, char} <- Managers.Character.lookup(char_id) do
+      push(character, Packets.FieldAddUser.bytes(char))
+      push(character, Packets.ProxyGameObj.load_player(char))
+
+      if mount = Map.get(state.mounts, char.id) do
+        push(character, Packets.ResponseRide.start_ride(char, mount))
+      end
+    end
   end
 
   def remove_character(character, state) do

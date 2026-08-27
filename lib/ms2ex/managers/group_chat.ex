@@ -69,7 +69,7 @@ defmodule Ms2ex.GroupChat do
       member_ids = Enum.reject(chat.member_ids, &(&1 == member.id))
       chat = %{chat | member_ids: member_ids}
 
-      if length(chat.member_ids) < 1 do
+      if Enum.empty?(chat.member_ids) do
         send(self(), :stop)
       end
 

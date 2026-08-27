@@ -92,7 +92,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   def handle_mode(@sync, packet, _session) do
     {cast_id, packet} = get_long(packet)
     {_skill_id, packet} = get_int(packet)
-    {_skill_level, packet} = get_int(packet)
+    {_skill_level, packet} = get_short(packet)
     {motion_point, packet} = get_byte(packet)
 
     {position, packet} = get_coord(packet)
@@ -100,8 +100,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {rotation, packet} = get_coord(packet)
     {_input, packet} = get_coord(packet)
     {_toggle, packet} = get_byte(packet)
-    {_unk3, packet} = get_byte(packet)
-    {_unk4, _packet} = get_byte(packet)
+    {_is_release, packet} = get_byte(packet)
+    {_unk3, _packet} = get_int(packet)
 
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       Managers.SkillCast.update(skill_cast, %{
@@ -139,46 +139,44 @@ defmodule Ms2ex.GameHandlers.Skill do
     {attack_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
-    {target_count, packet} = get_byte(packet)
-    {_iterations, packet} = get_int(packet)
+    {_target_count, packet} = get_byte(packet)
+    {_iterations, _packet} = get_int(packet)
 
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
-      # TODO calc next_tick
-      skill_cast =
-        Managers.SkillCast.update(skill_cast, %{
-          position: position,
-          direction: direction,
-          attack_point: attack_point
-        })
-
-      damage_targets(packet, target_count, skill_cast)
+      Managers.SkillCast.update(skill_cast, %{
+        position: position,
+        direction: direction,
+        attack_point: attack_point
+      })
     end
   end
 
   defp handle_damage(@target, packet, _session) do
     {cast_id, packet} = get_long(packet)
-    {_attack_counter, packet} = get_int(packet)
+    {attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
 
     {position, packet} = get_coord(packet)
     {_impact_pos, packet} = get_coord(packet)
     {rotation, packet} = get_coord(packet)
-    {_motion_point, packet} = get_byte(packet)
+    {attack_point, packet} = get_byte(packet)
 
     {target_count, packet} = get_byte(packet)
     {_, packet} = get_int(packet)
 
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       skill_cast =
-        Managers.SkillCast.update(skill_cast, %{position: position, rotation: rotation})
+        Managers.SkillCast.update(skill_cast, %{
+          position: position,
+          rotation: rotation,
+          attack_counter: attack_counter,
+          attack_point: attack_point
+        })
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
 
       mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
-
-      unless mobs == [] do
-        Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
-      end
+      broadcast_damage(skill_cast, mobs)
 
       # TODO
     end
@@ -202,6 +200,28 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       Context.Field.add_region_skill(skill_cast.caster, skill_cast)
     end
+  end
+
+  # the target relay (mode 0) announces which entity was hit and precedes the
+  # damage numbers (mode 1)
+  defp broadcast_damage(_skill_cast, []), do: :ok
+
+  defp broadcast_damage(skill_cast, mobs) do
+    targets =
+      mobs
+      |> Enum.with_index()
+      |> Enum.map(fn {{mob, _dmg}, index} ->
+        %{
+          prev_uid: 0x0,
+          uid: skill_cast.caster.object_id * 0x1_0000_0000 + index,
+          target_id: mob.object_id,
+          unknown: 0x0,
+          index: index
+        }
+      end)
+
+    Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.target(skill_cast, targets))
+    Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
   end
 
   defp damage_targets(skill_cast, crit?, target_count, mobs, packet)
@@ -239,65 +259,5 @@ defmodule Ms2ex.GameHandlers.Skill do
     # end
 
     {mob, dmg}
-  end
-
-  defp damage_targets(packet, 0, _skill_cast), do: packet
-
-  defp damage_targets(packet, target_count, skill_cast) do
-    Enum.reduce(1..target_count, {[], packet}, fn
-      _, {targets, packet} ->
-        {uid, packet} = get_long(packet)
-        {target_id, packet} = get_int(packet)
-        {unknown, packet} = get_byte(packet)
-
-        targets =
-          targets ++
-            [
-              %{
-                prev_uid: 0x0,
-                uid: uid,
-                target_id: target_id,
-                unknown: unknown,
-                index: 0x0
-              }
-            ]
-
-        {more, packet} = get_bool(packet)
-        {targets, packet} = get_subtargets(packet, more, targets)
-
-        Context.Field.broadcast(
-          skill_cast.caster,
-          Packets.SkillDamage.target(skill_cast, targets)
-        )
-
-        {[], packet}
-    end)
-  end
-
-  defp get_subtargets(packet, false, targets) do
-    {targets, packet}
-  end
-
-  defp get_subtargets(packet, true, targets) do
-    last = List.last(targets)
-    {uid, packet} = get_long(packet)
-    {target_id, packet} = get_int(packet)
-    {unknown, packet} = get_byte(packet)
-    {index, packet} = get_byte(packet)
-
-    targets =
-      targets ++
-        [
-          %{
-            prev_uid: last.uid,
-            uid: uid,
-            target_id: target_id,
-            unknown: unknown,
-            index: index
-          }
-        ]
-
-    {more, packet} = get_bool(packet)
-    get_subtargets(packet, more, targets)
   end
 end

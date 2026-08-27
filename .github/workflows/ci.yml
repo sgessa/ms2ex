@@ -44,14 +44,26 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.18.x"
-          otp-version: "27.x"
+          elixir-version: "1.20.x"
+          otp-version: "29.x"
 
       # Install LuaJIT dependencies
       - name: Install LuaJIT dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
+
+      # runtime config reads DB_* / SERVER_ADDRESS from .env; match the
+      # postgres service started above
+      - name: Create env file
+        run: |
+          cat > .env <<'EOF'
+          DB_USER=postgres
+          DB_PASS=postgres
+          DB_NAME=ms2ex_test
+          DB_HOST=localhost
+          SERVER_ADDRESS=127.0.0.1
+          EOF
 
       # Cache dependencies and build artifacts
       - name: Cache deps and _build
@@ -75,7 +87,6 @@ jobs:
       # Run Credo for code analysis
       - name: Run Credo
         run: mix credo
-        continue-on-error: true
 
       # Run tests when available
       - name: Run tests
@@ -87,4 +98,3 @@ jobs:
           fi
         env:
           MIX_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost/ms2ex_test
