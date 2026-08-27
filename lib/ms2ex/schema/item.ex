@@ -21,6 +21,7 @@ defmodule Ms2ex.Schema.Item do
     :limit_break_level,
     :location,
     :rarity,
+    :remaining_trades,
     :stats,
     :transfer_flags
   ]
@@ -57,7 +58,7 @@ defmodule Ms2ex.Schema.Item do
     field :paired_character_name, :string, virtual: true, default: ""
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
-    field :remaining_trades, :integer, virtual: true, default: 0
+    field :remaining_trades, :integer, default: 0
     field :source_object_id, :integer, virtual: true
     field :stats, EctoTypes.Term
     field :target_object_id, :integer, virtual: true

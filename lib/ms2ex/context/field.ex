@@ -19,16 +19,17 @@ defmodule Ms2ex.Context.Field do
   alias Phoenix.PubSub
 
   @doc """
-  Drops an item from a Field NPC (mob) into the field.
+  Drops an item from a Field NPC (mob) into the field, locked to the given
+  receiver when one is provided (nil for shared/unlocked drops).
 
   ## Examples
 
       iex> add_mob_drop(field_npc, item)
       :ok
   """
-  @spec add_mob_drop(FieldNpc.t(), Schema.Item.t()) :: :ok | :error
-  def add_mob_drop(%FieldNpc{} = field_npc, item) do
-    cast(field_npc.field, {:add_mob_drop, field_npc, item})
+  @spec add_mob_drop(FieldNpc.t(), Schema.Item.t(), Schema.Character.t() | nil) :: :ok | :error
+  def add_mob_drop(%FieldNpc{} = field_npc, item, receiver \\ nil) do
+    cast(field_npc.field, {:add_mob_drop, field_npc, item, receiver})
   end
 
   @doc """

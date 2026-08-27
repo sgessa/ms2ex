@@ -25,23 +25,36 @@ defmodule Ms2ex.Packets.FieldAddItem do
   end
 
   def add_item(item) do
-    __MODULE__
-    |> build()
-    |> put_int(item.object_id)
-    |> put_int(item.item_id)
-    |> put_int(item.amount)
-    |> put_byte(0x1)
-    |> put_long(item.lock_character_id)
-    |> put_coord(item.position)
-    |> put_int(item.source_object_id)
-    |> put_int()
-    |> put_byte(0x2)
-    |> put_int(item.rarity)
-    |> put_short(0)
-    |> put_bool(false)
-    |> put_bool(false)
-    |> put_special_item_data(item)
+    packet =
+      __MODULE__
+      |> build()
+      |> put_int(item.object_id)
+      |> put_int(item.item_id)
+      |> put_int(item.amount)
+      |> put_byte(0x1)
+      |> put_long(item.lock_character_id)
+      |> put_coord(item.position)
+      |> put_int(item.source_object_id)
+      |> put_int()
+      |> put_byte(0x2)
+      |> put_int(item.rarity)
+      |> put_short(0)
+      |> put_bool(false)
+      |> put_bool(false)
+
+    put_mob_drop_item_class(packet, item)
   end
+
+  # meso drops carry no item payload; the currency family uses the legacy
+  # blob; every other dropped item is serialized in full so the client can
+  # render it on the field
+  defp put_mob_drop_item_class(packet, %{item_id: id}) when id in 90_000_001..90_000_003,
+    do: packet
+
+  defp put_mob_drop_item_class(packet, %{item_id: id} = item) when id in 90_000_004..90_000_011,
+    do: put_special_item_data(packet, item)
+
+  defp put_mob_drop_item_class(packet, item), do: put_item_class(packet, item)
 
   defp put_special_item_data(packet, %{item_id: id} = item)
        when id >= 90_000_004 and id <= 90_000_011 do
@@ -121,10 +134,10 @@ defmodule Ms2ex.Packets.FieldAddItem do
     |> put_int()
     |> put_int()
     |> put_int()
-    # transfer: flag 0, no binding, socket transfer bit set
-    |> put_int()
+    # transfer: item trade state, no binding, socket transfer bit set
+    |> put_int(item.transfer_flags)
     |> put_bool(false)
-    |> put_int()
+    |> put_int(item.remaining_trades)
     |> put_int()
     |> put_byte()
     |> put_bool(true)

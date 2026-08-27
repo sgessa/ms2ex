@@ -113,7 +113,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     # TODO put gem slot
     |> put_int(item.transfer_flags)
     |> put_byte()
-    |> put_int()
+    |> put_int(item.remaining_trades)
     |> put_int()
     |> put_byte()
     |> put_byte()

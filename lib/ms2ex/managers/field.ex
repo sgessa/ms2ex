@@ -150,6 +150,7 @@ defmodule Ms2ex.Managers.Field do
     field_npc
     |> Map.put(:last_attacker, attacker)
     |> Map.put(:first_attacker, field_npc.first_attacker || attacker)
+    |> Map.put(:damage_dealers, Map.put(field_npc.damage_dealers, attacker.id, attacker))
     # entering battle must reach clients on the next control tick so the
     # boss HP bar picks up the new target without waiting for idle cadence
     |> Map.put(:send_control?, true)
@@ -161,12 +162,8 @@ defmodule Ms2ex.Managers.Field do
 
     field_npc =
       if hp == 0 do
-        announce_death(%{field_npc | stats: stats}, state.topic)
+        announce_death(%{field_npc | stats: stats}, state.topic, state.map_id)
       else
-        # a spirit orb drops on every damage tick (hit loot); the client ties
-        # the boss into the combat/reward flow from these drops
-        Context.Field.add_mob_drop(%{field_npc | stats: stats}, Context.Items.sp(20))
-
         %{field_npc | stats: stats}
       end
 
@@ -177,7 +174,7 @@ defmodule Ms2ex.Managers.Field do
   # animation on its own before the corpse is removed. The hp=0 sync must
   # reach the client BEFORE the dead control entry, otherwise it ignores
   # the state change.
-  defp announce_death(field_npc, topic) do
+  defp announce_death(field_npc, topic, map_id) do
     corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
 
     field_npc =
@@ -206,7 +203,7 @@ defmodule Ms2ex.Managers.Field do
 
     Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
 
-    Context.Mobs.drop_rewards(field_npc)
+    Context.Mobs.drop_rewards(field_npc, map_id)
     Context.Mobs.reward_exp(field_npc)
 
     # TODO
@@ -219,8 +216,8 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, Field.Item.drop_item(source, item, state)}
   end
 
-  def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item}, state) do
-    {:noreply, Field.Item.add_mob_drop(mob, item, state)}
+  def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item, receiver}, state) do
+    {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
   end
 
   def handle_cast({:enter_battle_stance, character}, state) do
