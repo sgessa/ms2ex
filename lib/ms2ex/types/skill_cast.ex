@@ -34,6 +34,26 @@ defmodule Ms2ex.Types.SkillCast do
     meta.levels["#{level}"]
   end
 
+  def cooldown(%__MODULE__{} = skill_cast, start_tick) do
+    level = skill_level(skill_cast)
+    state = Map.get(skill_cast.meta, :state, %{})
+
+    cooldown_time = level[:cooldown_time] || 0
+    recharge_max_count = Map.get(state, :recharge_max_count, 0)
+
+    if cooldown_time > 0 or recharge_max_count > 0 do
+      %{
+        skill_id: skill_cast.skill_id,
+        level: skill_cast.skill_level,
+        start_tick: start_tick,
+        end_tick: start_tick + trunc(cooldown_time * 1000),
+        group_id: Map.get(state, :cooldown_group_id, 0),
+        recharge_max_count: recharge_max_count,
+        charges: 0
+      }
+    end
+  end
+
   def duration(%__MODULE__{} = skill_cast) do
     case splash(skill_cast) do
       %{interval: interval} -> interval

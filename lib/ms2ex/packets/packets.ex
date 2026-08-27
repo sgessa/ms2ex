@@ -90,6 +90,8 @@ defmodule Ms2ex.Packets do
     0x40 => "SKILL_CANCEL",
     0x3E => "SKILL_DAMAGE",
     0x42 => "STATE_SKILL",
+    0x43 => "SKILL_COOLDOWN",
+    0x44 => "SKILL_RESET_COOLDOWN",
     0x45 => "SKILL_POINT",
     0x46 => "STAT_POINTS",
     0x47 => "CHARACTER_CREATE",
