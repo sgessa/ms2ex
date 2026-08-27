@@ -1,38 +1,42 @@
 import Config
 import Dotenvy
 
-env_dir_prefix = System.get_env("RELEASE_ROOT") || Path.expand(".")
+# runtime config (secret/env-backed) only applies outside :test; the test env
+# configures the repo and app itself so it must not be overridden here
+if config_env() != :test do
+  env_dir_prefix = System.get_env("RELEASE_ROOT") || Path.expand(".")
 
-source!([
-  Path.absname(".env", env_dir_prefix),
-  System.get_env()
-])
+  source!([
+    Path.absname(".env", env_dir_prefix),
+    System.get_env()
+  ])
 
-config :ms2ex, Ms2ex.Repo,
-  username: env!("DB_USER"),
-  password: env!("DB_PASS"),
-  database: env!("DB_NAME"),
-  hostname: env!("DB_HOST")
+  config :ms2ex, Ms2ex.Repo,
+    username: env!("DB_USER"),
+    password: env!("DB_PASS"),
+    database: env!("DB_NAME"),
+    hostname: env!("DB_HOST")
 
-server_address = env!("SERVER_ADDRESS", :string)
+  server_address = env!("SERVER_ADDRESS", :string)
 
-config :ms2ex, Ms2ex,
-  login: %{host: server_address, port: 8526},
-  world: %{
-    name: "Paperwood",
-    login: %{host: server_address, port: 20001},
-    channels: [
-      %{host: server_address, port: 20002},
-      %{host: server_address, port: 20003}
-    ]
-  },
-  ugc: %{
-    endpoint: "http://#{server_address}/ws.asmx?wsdl",
-    resource: "http://#{server_address}",
-    locale: "na"
-  }
+  config :ms2ex, Ms2ex,
+    login: %{host: server_address, port: 8526},
+    world: %{
+      name: "Paperwood",
+      login: %{host: server_address, port: 20001},
+      channels: [
+        %{host: server_address, port: 20002},
+        %{host: server_address, port: 20003}
+      ]
+    },
+    ugc: %{
+      endpoint: "http://#{server_address}/ws.asmx?wsdl",
+      resource: "http://#{server_address}",
+      locale: "na"
+    }
 
-config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
+  config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
+end
 
 # Imports server constants
 config :ms2ex, :constants,
