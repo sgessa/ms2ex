@@ -219,8 +219,6 @@ defmodule Ms2ex.Context.Inventory do
   @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
           {:ok, Schema.Item.t()} | {:error, Ecto.Changeset.t()}
   def update_item(data, attrs) do
-    # cast/3 accepts a changeset as its data, so a pre-built bind changeset
-    # is merged with the attrs change in one update
     data
     |> Schema.Item.changeset(attrs)
     |> Repo.update()
