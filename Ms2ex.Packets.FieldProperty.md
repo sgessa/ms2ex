@@ -3,6 +3,8 @@
 
 # `add`
 
+# `load`
+
 # `remove`
 
 ---

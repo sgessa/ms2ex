@@ -11,7 +11,15 @@
 
 # `init`
 
+```elixir
+@spec init(integer(), map()) :: Ms2ex.Schema.Item.t()
+```
+
 # `load_metadata`
+
+```elixir
+@spec load_metadata(Ms2ex.Schema.Item.t()) :: Ms2ex.Schema.Item.t()
+```
 
 # `merets`
 
@@ -27,7 +35,15 @@
 
 # `set_level`
 
+```elixir
+@spec set_level(Ms2ex.Schema.Item.t()) :: Ms2ex.Schema.Item.t()
+```
+
 # `set_stats`
+
+```elixir
+@spec set_stats(Ms2ex.Schema.Item.t()) :: Ms2ex.Schema.Item.t()
+```
 
 # `sp`
 

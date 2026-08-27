@@ -15,13 +15,25 @@ See `Supervisor`.
 
 # `lookup`
 
+```elixir
+@spec lookup(integer()) :: {:ok, Ms2ex.Schema.Character.t()} | :error
+```
+
 # `lookup_by_name`
+
+```elixir
+@spec lookup_by_name(String.t()) :: {:ok, Ms2ex.Schema.Character.t()} | :error
+```
 
 # `monitor`
 
 # `start`
 
 # `update`
+
+```elixir
+@spec update(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
 
 ---
 

@@ -5,6 +5,7 @@
 
 ```elixir
 @type t() :: %Ms2ex.Types.SkillCast{
+  attack_counter: term(),
   attack_point: term(),
   caster: term(),
   client_tick: term(),
@@ -34,6 +35,8 @@
 # `damage_rate`
 
 # `duration`
+
+# `in_battle?`
 
 # `magic?`
 

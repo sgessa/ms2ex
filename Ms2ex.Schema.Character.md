@@ -61,6 +61,7 @@
   titles: term(),
   trophies: term(),
   unknown_id: term(),
+  update_position: term(),
   updated_at: term(),
   wallet: term()
 }

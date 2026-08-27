@@ -13,6 +13,8 @@
 
 # `update_player`
 
+# `update_state`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

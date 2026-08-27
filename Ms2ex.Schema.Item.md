@@ -25,6 +25,7 @@
   inventory_tab: term(),
   is_locked: term(),
   item_id: term(),
+  level: term(),
   limit_break_level: term(),
   location: term(),
   lock_character_id: term(),

@@ -3,6 +3,10 @@
 
 # `get`
 
+```elixir
+@spec get(integer()) :: {:ok, Ms2ex.Types.SkillCast.t()} | :error
+```
+
 # `start_link`
 
 # `update`

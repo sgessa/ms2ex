@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-8A478568.js"></script>
+    <script defer src="dist/sidebar_items-68B98081.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -113,7 +113,7 @@ MS2EX
 extracted from Maple2's <code class="inline">Maple2.File.Ingest</code>) parses the client archives and
 writes ETF-encoded documents <strong>directly to Redis</strong> — no MySQL involved.</p></li><li><p><strong>Server Usage</strong>: MS2EX lazily loads documents from Redis into ETS on first
 access (<a href="Ms2ex.Storage.html"><code class="inline">Ms2ex.Storage</code></a>). Data is immutable while the server runs; keys
-missing from Redis are negatively cached.</p></li></ol><pre><code class="makeup elixir" translate="no"><span class="n">client</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="p" data-group-id="6307658492-1">(</span><span class="n">m2d</span><span class="p" data-group-id="6307658492-1">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">ingest</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nc">Redis</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span></code></pre><h2 id="setup" class="section-heading"><a href="#setup" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Setup</span></h2><pre><code class="makeup bash" translate="no"><span class="">cd ms2ex-file-ingest
+missing from Redis are negatively cached.</p></li></ol><pre><code class="makeup elixir" translate="no"><span class="n">client</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="p" data-group-id="7416389840-1">(</span><span class="n">m2d</span><span class="p" data-group-id="7416389840-1">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">ingest</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nc">Redis</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span></code></pre><h2 id="setup" class="section-heading"><a href="#setup" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Setup</span></h2><pre><code class="makeup bash" translate="no"><span class="">cd ms2ex-file-ingest
 </span><span class="">cp .env-example .env    # point MS2_DATA_FOLDER at your client folder
 </span><span class="">docker compose build
 </span><span class="">docker compose run --rm ms2ex-file-ingest
