@@ -432,11 +432,11 @@ defmodule Ms2ex.MobDropsTest do
 
     refute_received {:"$gen_cast", {:add_mob_drop, _mob, _item, _receiver}}
 
-    {:reply, {:ok, mob2}, _state2} =
+    {:reply, {:ok, _mob2}, _state2} =
       Field.handle_call({:inflict_dmg, @attacker, %{dmg: 100}, @oid}, nil, state)
 
     assert_received {:"$gen_cast",
-                     {:add_mob_drop, mob2, %Schema.Item{item_id: @item_id},
+                     {:add_mob_drop, _mob2, %Schema.Item{item_id: @item_id},
                       %Schema.Character{id: 1}}}
   end
 
