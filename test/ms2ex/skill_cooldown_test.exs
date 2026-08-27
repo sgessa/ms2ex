@@ -125,6 +125,29 @@ defmodule Ms2ex.SkillCooldownTest do
     assert cooldown.skill_id == 15_000_220
   end
 
+  test "setting a cooldown overrides the stored one (cooldown reset)" do
+    character = %Ms2ex.Schema.Character{id: 102_000, stats: %{}, level: 1}
+    now = Ms2ex.sync_ticks()
+
+    {:ok, _pid} =
+      GenServer.start(Ms2ex.Managers.Character, character, name: :"characters:102000")
+
+    Managers.Character.save_skill_cooldown(character, %{
+      skill_id: 15_000_220,
+      level: 1,
+      start_tick: now,
+      end_tick: now + 5000,
+      group_id: 3,
+      recharge_max_count: 0,
+      charges: 0
+    })
+
+    {:ok, cooldown} = Managers.Character.set_skill_cooldown(character, 15_000_220, 1, 0)
+    assert cooldown.end_tick == 0
+
+    assert {:ok, []} = Managers.Character.get_skill_cooldowns(102_000)
+  end
+
   test "rechargeable skills gain charges on each cast" do
     character = %Ms2ex.Schema.Character{id: 100_000, stats: %{}, level: 1}
     now = Ms2ex.sync_ticks()

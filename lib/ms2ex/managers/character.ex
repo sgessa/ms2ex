@@ -29,6 +29,12 @@ defmodule Ms2ex.Managers.Character do
     call(character, {:save_skill_cooldown, cooldown})
   end
 
+  @spec set_skill_cooldown(Schema.Character.t(), integer(), integer(), integer()) ::
+          {:ok, map()} | :error
+  def set_skill_cooldown(%Schema.Character{} = character, skill_id, level, end_tick) do
+    call(character, {:set_skill_cooldown, skill_id, level, end_tick})
+  end
+
   @spec get_skill_cooldowns(integer()) :: {:ok, [map()]} | :error
   def get_skill_cooldowns(character_id) do
     call(character_id, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
@@ -119,6 +125,26 @@ defmodule Ms2ex.Managers.Character do
       Map.put(character, :skill_cooldowns, Map.put(cooldowns, cooldown.skill_id, cooldown))
 
     {:reply, :ok, character}
+  end
+
+  def handle_call({:set_skill_cooldown, skill_id, level, end_tick}, _from, character) do
+    cooldown = %{
+      skill_id: skill_id,
+      level: level,
+      group_id: 0,
+      end_tick: end_tick,
+      recharge_max_count: 0,
+      charges: 0
+    }
+
+    character =
+      Map.put(
+        character,
+        :skill_cooldowns,
+        Map.put(Map.get(character, :skill_cooldowns, %{}), skill_id, cooldown)
+      )
+
+    {:reply, {:ok, cooldown}, character}
   end
 
   def handle_call({:get_skill_cooldowns, now}, _from, character) do
