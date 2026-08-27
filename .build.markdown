@@ -61,6 +61,7 @@ Ms2ex.GameHandlers.ChatSticker.md
 Ms2ex.GameHandlers.Dismantle.md
 Ms2ex.GameHandlers.Emote.md
 Ms2ex.GameHandlers.EquipItem.md
+Ms2ex.GameHandlers.FallDamage.md
 Ms2ex.GameHandlers.FileHash.md
 Ms2ex.GameHandlers.Friend.md
 Ms2ex.GameHandlers.GroupChat.md

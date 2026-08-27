@@ -62,6 +62,7 @@ Ms2ex.GameHandlers.ChatSticker.html
 Ms2ex.GameHandlers.Dismantle.html
 Ms2ex.GameHandlers.Emote.html
 Ms2ex.GameHandlers.EquipItem.html
+Ms2ex.GameHandlers.FallDamage.html
 Ms2ex.GameHandlers.FileHash.html
 Ms2ex.GameHandlers.Friend.html
 Ms2ex.GameHandlers.GroupChat.html
@@ -294,8 +295,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-0C9A97B1.js
-dist/sidebar_items-343C1978.js
+dist/search_data-06B03644.js
+dist/sidebar_items-16A63049.js
 index.html
 license.html
 readme.html

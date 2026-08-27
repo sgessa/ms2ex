@@ -37,17 +37,15 @@ Can calculate critical damage if the `crit?` parameter is set to true.
 # `calculate_fall_dmg`
 
 ```elixir
-@spec calculate_fall_dmg(Ms2ex.Schema.Character.t()) :: integer()
+@spec calculate_fall_dmg(Ms2ex.Schema.Character.t(), number()) :: integer()
 ```
 
 Calculates damage a character takes from falling.
 
-Currently returns a constant value of 150.
-
 ## Examples
 
-    iex> calculate_fall_dmg(character)
-    150
+    iex> calculate_fall_dmg(character, 0)
+    24
 
 # `roll_crit`
 

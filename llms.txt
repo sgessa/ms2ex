@@ -21,6 +21,7 @@
 - [Ms2ex.GameHandlers.Dismantle](Ms2ex.GameHandlers.Dismantle.md)
 - [Ms2ex.GameHandlers.Emote](Ms2ex.GameHandlers.Emote.md)
 - [Ms2ex.GameHandlers.EquipItem](Ms2ex.GameHandlers.EquipItem.md)
+- [Ms2ex.GameHandlers.FallDamage](Ms2ex.GameHandlers.FallDamage.md)
 - [Ms2ex.GameHandlers.FileHash](Ms2ex.GameHandlers.FileHash.md)
 - [Ms2ex.GameHandlers.Friend](Ms2ex.GameHandlers.Friend.md)
 - [Ms2ex.GameHandlers.GroupChat](Ms2ex.GameHandlers.GroupChat.md)
