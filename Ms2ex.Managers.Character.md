@@ -11,6 +11,12 @@ Returns a specification to start this module under a supervisor.
 
 See `Supervisor`.
 
+# `get_skill_cooldowns`
+
+```elixir
+@spec get_skill_cooldowns(integer()) :: {:ok, [map()]} | :error
+```
+
 # `init`
 
 # `lookup`
@@ -26,6 +32,19 @@ See `Supervisor`.
 ```
 
 # `monitor`
+
+# `save_skill_cooldown`
+
+```elixir
+@spec save_skill_cooldown(Ms2ex.Schema.Character.t(), map()) :: :ok | :error
+```
+
+# `set_skill_cooldown`
+
+```elixir
+@spec set_skill_cooldown(Ms2ex.Schema.Character.t(), integer(), integer(), integer()) ::
+  {:ok, map()} | :error
+```
 
 # `start`
 

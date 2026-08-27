@@ -30,6 +30,8 @@
 
 # `condition_skills`
 
+# `cooldown`
+
 # `crit_damage_rate`
 
 # `damage_rate`

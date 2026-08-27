@@ -279,6 +279,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Packets.ServerList](Ms2ex.Packets.ServerList.md)
   - [Ms2ex.Packets.SkillBook](Ms2ex.Packets.SkillBook.md)
   - [Ms2ex.Packets.SkillCancel](Ms2ex.Packets.SkillCancel.md)
+  - [Ms2ex.Packets.SkillCooldown](Ms2ex.Packets.SkillCooldown.md)
   - [Ms2ex.Packets.SkillDamage](Ms2ex.Packets.SkillDamage.md)
   - [Ms2ex.Packets.SkillMacro](Ms2ex.Packets.SkillMacro.md)
   - [Ms2ex.Packets.SkillPoint](Ms2ex.Packets.SkillPoint.md)

@@ -200,6 +200,7 @@ Ms2ex.Packets.ServerEnter.md
 Ms2ex.Packets.ServerList.md
 Ms2ex.Packets.SkillBook.md
 Ms2ex.Packets.SkillCancel.md
+Ms2ex.Packets.SkillCooldown.md
 Ms2ex.Packets.SkillDamage.md
 Ms2ex.Packets.SkillMacro.md
 Ms2ex.Packets.SkillPoint.md
