@@ -1,4 +1,4 @@
-defmodule Ms2ex.Types.ItemTransfer do
+defmodule Ms2ex.Context.ItemTransfer do
   @moduledoc """
   Item trade-state semantics: transfer flags and character binding.
 
@@ -8,16 +8,9 @@ defmodule Ms2ex.Types.ItemTransfer do
   type requires it.
   """
 
-  import Bitwise
-
-  alias Ms2ex.Enums.TransferFlag
   alias Ms2ex.Enums.TransferType
   alias Ms2ex.Schema
-
-  @trade TransferFlag.get_value(:trade)
-  @split TransferFlag.get_value(:split)
-  @bind TransferFlag.get_value(:bind)
-  @limit_trade TransferFlag.get_value(:limit_trade)
+  alias Ms2ex.TransferFlags
 
   @tradeable TransferType.get_value(:tradeable)
   @untradeable TransferType.get_value(:untradeable)
@@ -80,7 +73,8 @@ defmodule Ms2ex.Types.ItemTransfer do
 
   @doc "Whether the item carries the bind transfer flag."
   @spec bind_flagged?(Schema.Item.t()) :: boolean()
-  def bind_flagged?(%Schema.Item{transfer_flags: flags}), do: band(flags, @bind) != 0
+  def bind_flagged?(%Schema.Item{transfer_flags: flags}),
+    do: TransferFlags.has_flag?(flags, :bind)
 
   @doc """
   Computes the transfer flags for a transfer type given whether the item
@@ -98,18 +92,20 @@ defmodule Ms2ex.Types.ItemTransfer do
     end
   end
 
-  defp tradable(_zero_trades, true), do: @trade ||| @split
+  defp tradable(_zero_trades, true), do: set_flags([:tradeable, :splittable])
   defp tradable(true, false), do: 0
-  defp tradable(false, false), do: @limit_trade
+  defp tradable(false, false), do: set_flags([:limit_trade])
 
   defp untradeable(true), do: 0
-  defp untradeable(false), do: @limit_trade
+  defp untradeable(false), do: set_flags([:limit_trade])
 
-  defp black_market(_zero_trades, true), do: @trade
+  defp black_market(_zero_trades, true), do: set_flags([:tradeable])
   defp black_market(true, false), do: 0
-  defp black_market(false, false), do: @trade
+  defp black_market(false, false), do: set_flags([:tradeable])
 
-  defp bind(true, true), do: @bind ||| @trade ||| @split
-  defp bind(true, false), do: @bind
-  defp bind(false, _), do: @bind ||| @limit_trade
+  defp bind(true, true), do: set_flags([:bind, :tradeable, :splittable])
+  defp bind(true, false), do: set_flags([:bind])
+  defp bind(false, _), do: set_flags([:bind, :limit_trade])
+
+  defp set_flags(flags), do: TransferFlags.set(flags) || 0
 end

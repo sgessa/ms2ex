@@ -1,4 +1,5 @@
 defmodule Ms2ex.Context.Items do
+  alias Ms2ex.Context
   alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
@@ -11,7 +12,7 @@ defmodule Ms2ex.Context.Items do
     |> load_metadata()
     |> set_stats()
     |> set_level()
-    |> Types.ItemTransfer.apply()
+    |> Context.ItemTransfer.apply()
   end
 
   @doc """
@@ -53,7 +54,7 @@ defmodule Ms2ex.Context.Items do
   binding also covers BindOnEquip.
   """
   @spec bind_if_needed(Schema.Item.t(), :loot | :equip) :: Schema.Item.t()
-  defdelegate bind_if_needed(item, on \\ :loot), to: Types.ItemTransfer
+  defdelegate bind_if_needed(item, on \\ :loot), to: Context.ItemTransfer
 
   @meso_ids [90_000_001, 90_000_002, 90_000_003]
   def mesos?(%Schema.Item{item_id: id}) when id in @meso_ids, do: true
