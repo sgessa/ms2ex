@@ -17,6 +17,7 @@ Ms2ex.Context.ItemConstantStats.html
 Ms2ex.Context.ItemEnchantStats.html
 Ms2ex.Context.ItemRandomStats.html
 Ms2ex.Context.ItemStaticStats.html
+Ms2ex.Context.ItemTransfer.html
 Ms2ex.Context.ItemTypes.html
 Ms2ex.Context.Items.html
 Ms2ex.Context.MapBlock.html
@@ -38,6 +39,7 @@ Ms2ex.Crypto.SendCipher.html
 Ms2ex.Crypto.TableCrypter.html
 Ms2ex.Crypto.XorCrypter.html
 Ms2ex.EctoTypes.Term.html
+Ms2ex.EctoTypes.TransferFlags.html
 Ms2ex.Enum.html
 Ms2ex.Enums.AttackType.html
 Ms2ex.Enums.BasicStatType.html
@@ -251,6 +253,8 @@ Ms2ex.Storage.Skills.html
 Ms2ex.Storage.Table.MagicPaths.html
 Ms2ex.Storage.Tables.ChatStickers.html
 Ms2ex.Storage.Tables.ExpTable.html
+Ms2ex.Storage.Tables.GlobalDropItemBox.html
+Ms2ex.Storage.Tables.IndividualDropItem.html
 Ms2ex.Storage.Tables.Insignias.html
 Ms2ex.Storage.Tables.ItemOptions.html
 Ms2ex.Storage.Tables.Jobs.html
@@ -288,8 +292,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-BEE1ABC1.js
-dist/sidebar_items-68B98081.js
+dist/search_data-AC2BD0FF.js
+dist/sidebar_items-21C2F405.js
 index.html
 license.html
 readme.html

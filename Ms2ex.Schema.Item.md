@@ -23,6 +23,7 @@
   inserted_at: term(),
   inventory_slot: term(),
   inventory_tab: term(),
+  is_bound: term(),
   is_locked: term(),
   item_id: term(),
   level: term(),
@@ -32,8 +33,6 @@
   metadata: term(),
   mob_drop?: term(),
   object_id: term(),
-  paired_character_id: term(),
-  paired_character_name: term(),
   position: term(),
   rarity: term(),
   remaining_trades: term(),
@@ -46,6 +45,16 @@
   updated_at: term()
 }
 ```
+
+# `bind_if_needed`
+
+```elixir
+@spec bind_if_needed(t(), :loot | :equip) :: t() | Ecto.Changeset.t()
+```
+
+Returns a changeset carrying the bind change (or the item unchanged) when
+the transfer type requires binding. Callers merge the changeset into the
+persist; the change is only produced when the item is not already bound.
 
 # `changeset`
 

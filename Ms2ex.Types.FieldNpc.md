@@ -7,6 +7,7 @@
 @type t() :: %Ms2ex.Types.FieldNpc{
   animation: term(),
   corpse?: term(),
+  damage_dealers: term(),
   dead?: term(),
   field: term(),
   first_attacker: term(),

@@ -23,10 +23,16 @@ Adds a mob (Field NPC) to the field at the character's position.
 # `add_mob_drop`
 
 ```elixir
-@spec add_mob_drop(Ms2ex.Types.FieldNpc.t(), Ms2ex.Schema.Item.t()) :: :ok | :error
+@spec add_mob_drop(
+  Ms2ex.Types.FieldNpc.t(),
+  Ms2ex.Schema.Item.t(),
+  Ms2ex.Schema.Character.t() | nil
+) ::
+  :ok | :error
 ```
 
-Drops an item from a Field NPC (mob) into the field.
+Drops an item from a Field NPC (mob) into the field, locked to the given
+receiver when one is provided (nil for shared/unlocked drops).
 
 ## Examples
 

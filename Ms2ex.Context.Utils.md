@@ -5,6 +5,16 @@ Utility functions.
 
 This module provides common helper functions used across the application.
 
+# `pick_weighted`
+
+```elixir
+@spec pick_weighted([map()], atom()) :: map()
+```
+
+Picks an entry from `entries` at random, weighted by the numeric value of
+the given key. Zero-weight entries never get picked; with no positive
+weights a plain uniform pick is used so callers don't need to guard.
+
 # `rand_float`
 
 ```elixir

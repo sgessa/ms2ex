@@ -16,6 +16,7 @@ Ms2ex.Context.ItemConstantStats.md
 Ms2ex.Context.ItemEnchantStats.md
 Ms2ex.Context.ItemRandomStats.md
 Ms2ex.Context.ItemStaticStats.md
+Ms2ex.Context.ItemTransfer.md
 Ms2ex.Context.ItemTypes.md
 Ms2ex.Context.Items.md
 Ms2ex.Context.MapBlock.md
@@ -37,6 +38,7 @@ Ms2ex.Crypto.SendCipher.md
 Ms2ex.Crypto.TableCrypter.md
 Ms2ex.Crypto.XorCrypter.md
 Ms2ex.EctoTypes.Term.md
+Ms2ex.EctoTypes.TransferFlags.md
 Ms2ex.Enum.md
 Ms2ex.Enums.AttackType.md
 Ms2ex.Enums.BasicStatType.md
@@ -250,6 +252,8 @@ Ms2ex.Storage.Skills.md
 Ms2ex.Storage.Table.MagicPaths.md
 Ms2ex.Storage.Tables.ChatStickers.md
 Ms2ex.Storage.Tables.ExpTable.md
+Ms2ex.Storage.Tables.GlobalDropItemBox.md
+Ms2ex.Storage.Tables.IndividualDropItem.md
 Ms2ex.Storage.Tables.Insignias.md
 Ms2ex.Storage.Tables.ItemOptions.md
 Ms2ex.Storage.Tables.Jobs.md

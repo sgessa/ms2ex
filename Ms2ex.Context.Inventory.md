@@ -252,7 +252,7 @@ Swaps an item to a new slot, handling any item that might already be in that slo
 # `update_item`
 
 ```elixir
-@spec update_item(Ms2ex.Schema.Item.t(), map()) ::
+@spec update_item(Ms2ex.Schema.Item.t() | Ecto.Changeset.t(), map()) ::
   {:ok, Ms2ex.Schema.Item.t()} | {:error, Ecto.Changeset.t()}
 ```
 

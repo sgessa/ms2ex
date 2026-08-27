@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-68B98081.js"></script>
+    <script defer src="dist/sidebar_items-21C2F405.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -129,9 +129,34 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#drop_rewards/1" data-no-tooltip="" translate="no">drop_rewards(mob)</a>
+        <a href="#drop_corpse_rewards/3" data-no-tooltip="" translate="no">drop_corpse_rewards(mob, character, map_id \\ nil)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Rolls corpse loot from the mob's <code class="inline">dead_global_drop_box_ids</code> and locks it
+to the player who struck the body. Drops on every corpse strike.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#drop_hit_rewards/2" data-no-tooltip="" translate="no">drop_hit_rewards(mob, map_id \\ nil)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Rolls the mob's on-hit drops from its <code class="inline">drop_info</code> metadata. Global hit
+boxes drop unlocked loot; individual hit boxes are locked to the player
+who dealt the hit.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#drop_rewards/2" data-no-tooltip="" translate="no">drop_rewards(mob, map_id \\ nil)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Rolls the mob's death drops from its <code class="inline">drop_info</code> metadata.</p></div>
 
     </div>
 
@@ -157,17 +182,19 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="drop_rewards/1">
+<section class="detail" id="drop_corpse_rewards/3">
+
+    <span id="drop_corpse_rewards/2"></span>
 
   <div class="detail-header">
-    <a href="#drop_rewards/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#drop_corpse_rewards/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">drop_rewards(mob)</h1>
+      <h1 class="signature" translate="no">drop_corpse_rewards(mob, character, map_id \\ nil)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mobs.ex#L6" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mobs.ex#L49" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -176,7 +203,61 @@ MS2EX
 
   <section class="docstring">
 
+<p>Rolls corpse loot from the mob's <code class="inline">dead_global_drop_box_ids</code> and locks it
+to the player who struck the body. Drops on every corpse strike.</p>
+  </section>
+</section>
+<section class="detail" id="drop_hit_rewards/2">
 
+    <span id="drop_hit_rewards/1"></span>
+
+  <div class="detail-header">
+    <a href="#drop_hit_rewards/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">drop_hit_rewards(mob, map_id \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mobs.ex#L30" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Rolls the mob's on-hit drops from its <code class="inline">drop_info</code> metadata. Global hit
+boxes drop unlocked loot; individual hit boxes are locked to the player
+who dealt the hit.</p>
+  </section>
+</section>
+<section class="detail" id="drop_rewards/2">
+
+    <span id="drop_rewards/1"></span>
+
+  <div class="detail-header">
+    <a href="#drop_rewards/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">drop_rewards(mob, map_id \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mobs.ex#L19" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Rolls the mob's death drops from its <code class="inline">drop_info</code> metadata.</p><p>Bosses drop shared global loot (unlocked) plus per-dealer individual
+loot; regular mobs drop global and individual loot locked to the tagged
+player. Mobs without drop metadata drop nothing. When <code class="inline">map_id</code> is given,
+drop groups/items are gated on the map's type, continent and id.</p>
   </section>
 </section>
 <section class="detail" id="reward_exp/1">
@@ -189,7 +270,7 @@ MS2EX
       <h1 class="signature" translate="no">reward_exp(mob)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mobs.ex#L27" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mobs.ex#L62" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

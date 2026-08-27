@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-68B98081.js"></script>
+    <script defer src="dist/sidebar_items-21C2F405.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -143,6 +143,18 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#bind_if_needed/2" data-no-tooltip="" translate="no">bind_if_needed(item, on \\ :loot)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a changeset carrying the bind change (or the item unchanged) when
+the transfer type requires binding. Callers merge the changeset into the
+persist; the change is only produced when the item is not already bound.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#changeset/2" data-no-tooltip="" translate="no">changeset(item, attrs)</a>
 
       </div>
@@ -203,6 +215,7 @@ MS2EX
   inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   inventory_slot: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   inventory_tab: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  is_bound: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   is_locked: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   item_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   level: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -212,8 +225,6 @@ MS2EX
   metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   mob_drop?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   object_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  paired_character_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  paired_character_name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   position: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   rarity: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   remaining_trades: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -244,6 +255,38 @@ MS2EX
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="bind_if_needed/2">
+
+    <span id="bind_if_needed/1"></span>
+
+  <div class="detail-header">
+    <a href="#bind_if_needed/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">bind_if_needed(item, on \\ :loot)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/schema/item.ex#L84" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bind_if_needed(<a href="#t:t/0">t</a>(), :loot | :equip) :: <a href="#t:t/0">t</a>() | <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+
+      </div>
+
+<p>Returns a changeset carrying the bind change (or the item unchanged) when
+the transfer type requires binding. Callers merge the changeset into the
+persist; the change is only produced when the item is not already bound.</p>
+  </section>
+</section>
 <section class="detail" id="changeset/2">
 
   <div class="detail-header">
@@ -254,7 +297,7 @@ MS2EX
       <h1 class="signature" translate="no">changeset(item, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/schema/item.ex#L71" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/schema/item.ex#L72" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

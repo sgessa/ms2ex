@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-68B98081.js"></script>
+    <script defer src="dist/sidebar_items-21C2F405.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -129,17 +129,31 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#has_flag?/2" data-no-tooltip="" translate="no">has_flag?(flags, flag_name)</a>
+        <a href="#from_int/1" data-no-tooltip="" translate="no">from_int(flags)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Decodes an integer bitmask into its flag atoms.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#set/1" data-no-tooltip="" translate="no">set(flags)</a>
+        <a href="#has_flag?/2" data-no-tooltip="" translate="no">has_flag?(flags, name)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Whether an integer bitmask carries the given flag.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_int/1" data-no-tooltip="" translate="no">to_int(names)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Combines a list of flag atoms into its integer bitmask.</p></div>
 
     </div>
 
@@ -157,6 +171,29 @@ MS2EX
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="from_int/1">
+
+  <div class="detail-header">
+    <a href="#from_int/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">from_int(flags)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/types/transfer_flag.ex#L27" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Decodes an integer bitmask into its flag atoms.</p><h2 id="from_int/1-examples" class="section-heading"><a href="#from_int/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">from_int</span><span class="p" data-group-id="7798857707-1">(</span><span class="mi">6</span><span class="p" data-group-id="7798857707-1">)</span><span class="w">
+</span><span class="p" data-group-id="7798857707-2">[</span><span class="ss">:split</span><span class="p">,</span><span class="w"> </span><span class="ss">:trade</span><span class="p" data-group-id="7798857707-2">]</span></code></pre>
+  </section>
+</section>
 <section class="detail" id="has_flag?/2">
 
   <div class="detail-header">
@@ -164,10 +201,10 @@ MS2EX
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">has_flag?(flags, flag_name)</h1>
+      <h1 class="signature" translate="no">has_flag?(flags, name)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/types/transfer_flag.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/types/transfer_flag.ex#L39" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -176,20 +213,21 @@ MS2EX
 
   <section class="docstring">
 
-
+<p>Whether an integer bitmask carries the given flag.</p><h2 id="has_flag?/2-examples" class="section-heading"><a href="#has_flag?/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">has_flag?</span><span class="p" data-group-id="5013387159-1">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="ss">:trade</span><span class="p" data-group-id="5013387159-1">)</span><span class="w">
+</span><span class="no">true</span></code></pre>
   </section>
 </section>
-<section class="detail" id="set/1">
+<section class="detail" id="to_int/1">
 
   <div class="detail-header">
-    <a href="#set/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#to_int/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">set(flags)</h1>
+      <h1 class="signature" translate="no">to_int(names)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/types/transfer_flag.ex#L12" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/types/transfer_flag.ex#L15" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -198,7 +236,8 @@ MS2EX
 
   <section class="docstring">
 
-
+<p>Combines a list of flag atoms into its integer bitmask.</p><h2 id="to_int/1-examples" class="section-heading"><a href="#to_int/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">to_int</span><span class="p" data-group-id="5587970848-1">(</span><span class="p" data-group-id="5587970848-2">[</span><span class="ss">:trade</span><span class="p">,</span><span class="w"> </span><span class="ss">:split</span><span class="p" data-group-id="5587970848-2">]</span><span class="p" data-group-id="5587970848-1">)</span><span class="w">
+</span><span class="mi">6</span></code></pre>
   </section>
 </section>
 

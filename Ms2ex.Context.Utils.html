@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-68B98081.js"></script>
+    <script defer src="dist/sidebar_items-21C2F405.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -133,6 +133,18 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#pick_weighted/2" data-no-tooltip="" translate="no">pick_weighted(entries, weight_key)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Picks an entry from <code class="inline">entries</code> at random, weighted by the numeric value of
+the given key. Zero-weight entries never get picked; with no positive
+weights a plain uniform pick is used so callers don't need to guard.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#rand_float/2" data-no-tooltip="" translate="no">rand_float(min, max)</a>
 
       </div>
@@ -155,6 +167,36 @@ MS2EX
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="pick_weighted/2">
+
+  <div class="detail-header">
+    <a href="#pick_weighted/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">pick_weighted(entries, weight_key)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/utils.ex#L30" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pick_weighted([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()], <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
+
+      </div>
+
+<p>Picks an entry from <code class="inline">entries</code> at random, weighted by the numeric value of
+the given key. Zero-weight entries never get picked; with no positive
+weights a plain uniform pick is used so callers don't need to guard.</p>
+  </section>
+</section>
 <section class="detail" id="rand_float/2">
 
   <div class="detail-header">
@@ -180,10 +222,10 @@ MS2EX
 
       </div>
 
-<p>Generates a random float number between the given minimum and maximum values.</p><h2 id="rand_float/2-examples" class="section-heading"><a href="#rand_float/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">rand_float</span><span class="p" data-group-id="0069650565-1">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p" data-group-id="0069650565-1">)</span><span class="w">
+<p>Generates a random float number between the given minimum and maximum values.</p><h2 id="rand_float/2-examples" class="section-heading"><a href="#rand_float/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">rand_float</span><span class="p" data-group-id="0876909934-1">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p" data-group-id="0876909934-1">)</span><span class="w">
 </span><span class="mf">3.7128453297529</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">rand_float</span><span class="p" data-group-id="0069650565-2">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p" data-group-id="0069650565-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">rand_float</span><span class="p" data-group-id="0876909934-2">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p" data-group-id="0876909934-2">)</span><span class="w">
 </span><span class="mf">0.21390374928473</span></code></pre>
   </section>
 </section>
