@@ -118,8 +118,10 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_byte()
     |> put_byte()
-    |> put_bool(false)
-    # TODO handle if char bound
+    # character-bound flag; when set the client treats the item as already
+    # bound (ignoring the bind transfer flag) and stops warning on equip
+    |> put_bool(item.is_bound)
+    |> put_bound_owner(item, character)
     |> put_sockets()
     # couple info: no couples implemented, so the id stays 0 and skips the
     # name/bool block; the bind id belongs to the following ItemBinding
@@ -127,6 +129,15 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_long(if(item.is_bound, do: character.id, else: 0))
     |> put_ustring(if(item.is_bound, do: character.name, else: ""))
   end
+
+  # the ItemBinding lives inside the transfer block once the item is bound
+  defp put_bound_owner(packet, %{is_bound: true}, character) do
+    packet
+    |> put_long(character.id)
+    |> put_ustring(character.name)
+  end
+
+  defp put_bound_owner(packet, _item, _character), do: packet
 
   def load_items(tab_id, items, character) do
     __MODULE__
