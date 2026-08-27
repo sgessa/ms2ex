@@ -19,9 +19,19 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     hot_bars = Context.HotBars.list(character)
     push(session, Packets.KeyTable.send_hot_bars(hot_bars))
 
+    send_skill_cooldowns(session, character_id)
+
     favorite_stickers = Context.ChatStickers.list_favorited(character)
     sticker_groups = Context.ChatStickers.list_groups(character)
     push(session, Packets.ChatSticker.load(favorite_stickers, sticker_groups))
+  end
+
+  defp send_skill_cooldowns(session, character_id) do
+    case Managers.Character.get_skill_cooldowns(character_id) do
+      {:ok, []} -> :ok
+      {:ok, cooldowns} -> push(session, Packets.SkillCooldown.bytes(cooldowns))
+      :error -> :ok
+    end
   end
 
   defp maybe_change_map(%{change_map: nil} = character), do: character

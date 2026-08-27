@@ -67,6 +67,11 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
 
+    case Types.SkillCast.cooldown(skill_cast, Ms2ex.sync_ticks()) do
+      nil -> :ok
+      cooldown -> Managers.Character.save_skill_cooldown(character, cooldown)
+    end
+
     state = {unknown, is_hold, hold_int, hold_string}
     use_packet = Packets.SkillUse.bytes(skill_cast, state)
 

@@ -24,6 +24,16 @@ defmodule Ms2ex.Managers.Character do
   @spec update(Schema.Character.t()) :: :ok | :error
   def update(%Schema.Character{} = character), do: call(character, {:update, character})
 
+  @spec save_skill_cooldown(Schema.Character.t(), map()) :: :ok | :error
+  def save_skill_cooldown(%Schema.Character{} = character, cooldown) do
+    call(character, {:save_skill_cooldown, cooldown})
+  end
+
+  @spec get_skill_cooldowns(integer()) :: {:ok, [map()]} | :error
+  def get_skill_cooldowns(character_id) do
+    call(character_id, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
+  end
+
   def monitor(%Schema.Character{} = character), do: call(character, :monitor)
 
   def call(%Schema.Character{id: id}, msg) do
@@ -54,15 +64,16 @@ defmodule Ms2ex.Managers.Character do
      character
      |> Map.put(:regen_hp?, false)
      |> Map.put(:regen_sp?, false)
-     |> Map.put(:regen_sta?, false)}
+     |> Map.put(:regen_sta?, false)
+     |> Map.put(:skill_cooldowns, %{})}
   end
 
   def handle_call(:lookup, _from, character) do
     {:reply, {:ok, character}, character}
   end
 
-  def handle_call({:update, character}, _from, _state) do
-    {:reply, :ok, character}
+  def handle_call({:update, character}, _from, state) do
+    {:reply, :ok, Map.put(character, :skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))}
   end
 
   def handle_call(:monitor, {pid, _}, character) do
@@ -77,6 +88,51 @@ defmodule Ms2ex.Managers.Character do
   def handle_call({:cast_skill, skill_cast}, _from, character) do
     character = Character.Skill.cast_skill(character, skill_cast)
     {:reply, {:ok, character}, character}
+  end
+
+  def handle_call({:save_skill_cooldown, cooldown}, _from, character) do
+    cooldowns = Map.get(character, :skill_cooldowns, %{})
+    existing = Map.get(cooldowns, cooldown.skill_id)
+
+    cooldown =
+      if is_nil(existing) or cooldown.start_tick > existing.end_tick do
+        %{
+          skill_id: cooldown.skill_id,
+          level: cooldown.level,
+          group_id: cooldown.group_id,
+          end_tick: cooldown.end_tick,
+          recharge_max_count: cooldown.recharge_max_count,
+          charges: 0
+        }
+      else
+        existing
+      end
+
+    cooldown =
+      if cooldown.recharge_max_count > 0 do
+        %{cooldown | charges: min(cooldown.charges + 1, cooldown.recharge_max_count)}
+      else
+        cooldown
+      end
+
+    character =
+      Map.put(character, :skill_cooldowns, Map.put(cooldowns, cooldown.skill_id, cooldown))
+
+    {:reply, :ok, character}
+  end
+
+  def handle_call({:get_skill_cooldowns, now}, _from, character) do
+    cooldowns = Map.get(character, :skill_cooldowns, %{})
+    active = Map.values(cooldowns) |> Enum.filter(&(&1.end_tick > now))
+
+    character =
+      Map.put(
+        character,
+        :skill_cooldowns,
+        Map.filter(cooldowns, fn {_id, cooldown} -> cooldown.end_tick > now end)
+      )
+
+    {:reply, {:ok, active}, character}
   end
 
   # --------------------------------
@@ -97,6 +153,7 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_cast({:earn_exp, amount}, character) do
     old_lvl = character.level
+    cooldowns = Map.get(character, :skill_cooldowns, %{})
     {:ok, character} = Context.Experience.maybe_add_exp(character, amount)
 
     if old_lvl != character.level do
@@ -105,7 +162,7 @@ defmodule Ms2ex.Managers.Character do
 
     push(character, Packets.Experience.bytes(amount, character.exp, character.rest_exp))
 
-    {:noreply, character}
+    {:noreply, Map.put(character, :skill_cooldowns, cooldowns)}
   end
 
   def handle_cast({:receive_fall_dmg}, character) do
