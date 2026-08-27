@@ -56,7 +56,6 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       unequip_item(character, item, session)
     end)
 
-    # Equip new item
     with {:ok, item} <- Context.Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Context.Field.broadcast(character, equip_packet)
@@ -74,7 +73,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
       Context.Field.broadcast(character, unequip_packet)
 
-      push(session, Packets.InventoryItem.add_item({:create, item}))
+      push(session, Packets.InventoryItem.add_item({:create, item}, character))
     end
   end
 end

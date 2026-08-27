@@ -40,7 +40,7 @@ defmodule Ms2ex.FieldDeathTest do
   end
 
   defp state_with(field_npc),
-    do: %{npcs: %{@oid => field_npc}, players: %{}, topic: "test-topic"}
+    do: %{npcs: %{@oid => field_npc}, players: %{}, topic: "test-topic", map_id: nil}
 
   defp hit(state, dmg) do
     {:reply, {:ok, mob}, new_state} =

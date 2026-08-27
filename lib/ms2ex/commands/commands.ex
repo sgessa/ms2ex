@@ -143,14 +143,12 @@ defmodule Ms2ex.Commands do
   end
 
   defp add_item(character, item_id, rarity, session) do
-    flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-
     with {item_id, _} <- Integer.parse(item_id),
          {rarity, _} <- Integer.parse(rarity),
-         item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
+         item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: [:split, :trade]}),
          {:ok, {_, item} = result} <- Context.Inventory.add_item(character, item) do
       session
-      |> push(Packets.InventoryItem.add_item(result))
+      |> push(Packets.InventoryItem.add_item(result, character))
       |> push(Packets.InventoryItem.mark_item_new(item))
     end
   end

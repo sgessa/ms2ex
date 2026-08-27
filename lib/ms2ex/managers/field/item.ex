@@ -29,11 +29,14 @@ defmodule Ms2ex.Managers.Field.Item do
         Managers.Character.cast(character, {:increase_stat, :stamina, item.amount})
 
       true ->
-        item = Context.Items.load_metadata(item)
+        item =
+          item
+          |> Context.Items.load_metadata()
+          |> Context.Items.bind_if_needed(:loot)
 
         with {:ok, result} <- Context.Inventory.add_item(character, item) do
           {_status, item} = result
-          push(character, Packets.InventoryItem.add_item(result))
+          push(character, Packets.InventoryItem.add_item(result, character))
           push(character, Packets.InventoryItem.mark_item_new(item))
         end
     end
@@ -61,18 +64,18 @@ defmodule Ms2ex.Managers.Field.Item do
     %{state | items: items}
   end
 
-  def add_mob_drop(mob, item, state) do
+  def add_mob_drop(mob, item, receiver \\ nil, state) do
     {object_id, state} = Managers.Field.next_local_id(state)
-    receiver = mob.first_attacker || mob.last_attacker
+    receiver = receiver || mob.first_attacker || mob.last_attacker
 
     item = %{
       item
       | position: drop_position(mob),
         object_id: object_id,
-        lock_character_id: receiver.id,
+        lock_character_id: if(receiver, do: receiver.id, else: 0),
         mob_drop?: true,
         source_object_id: mob.object_id,
-        target_object_id: receiver.object_id
+        target_object_id: if(receiver, do: receiver.object_id, else: 0)
     }
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
