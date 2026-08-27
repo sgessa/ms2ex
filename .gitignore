@@ -38,5 +38,8 @@ ms2ex-*.tar
 # cross-implementation comparison notes (local only)
 /docs/
 
+# Memory or packet Dumps used for debugging
+/dumps/
+
 # local debugging scripts
 /scripts/
