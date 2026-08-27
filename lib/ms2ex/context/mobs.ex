@@ -1,5 +1,6 @@
 defmodule Ms2ex.Context.Mobs do
   alias Ms2ex.Context
+  alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -198,32 +199,112 @@ defmodule Ms2ex.Context.Mobs do
   defp map_ok?(map_ids, map_id), do: map_id in map_ids
 
   # Individual box resolution: per-player, groups gate on the player's level,
-  # roll a weighted drop count, then pick that many items by weight, rolling
-  # rarity for each and creating every id in the entry.
-  defp individual_drop_items(box_id, %Schema.Character{level: level}, map) do
+  # then items are gender-filtered for smart-gender groups, gated on map,
+  # and job-weighted when the group has a smart drop rate, before rolling
+  # the weighted drop count and creating every id in the picked entries.
+  defp individual_drop_items(box_id, %Schema.Character{} = character, map) do
     box_id
     |> IndividualDropItem.get()
     |> Map.values()
     |> Enum.flat_map(fn group ->
-      if group.min_level > level do
+      if group.min_level > character.level do
         []
       else
-        roll_individual_group(group, map)
+        roll_individual_group(group, character, map)
       end
     end)
   end
 
-  defp roll_individual_group(group, map) do
+  defp roll_individual_group(group, character, map) do
     amount = Context.Utils.pick_weighted(group.drop_counts, :probability).count
+    items = eligible_individual_items(group, character, map)
 
-    if amount == 0 do
-      []
-    else
-      group.items
-      |> Enum.reject(&(&1.quest_id > 0))
-      |> Enum.filter(&map_ok?(&1.map_ids, map.id))
-      |> roll_individual_items(amount)
+    cond do
+      amount == 0 -> []
+      smart_zero?(group, items) -> roll_smart_item(items, character)
+      true -> items |> job_weighted(group, character) |> roll_individual_items(amount)
     end
+  end
+
+  defp eligible_individual_items(group, character, map) do
+    group.items
+    |> gendered_entries(group, character)
+    |> Enum.reject(&(&1.quest_id > 0))
+    |> Enum.filter(&map_ok?(&1.map_ids, map.id))
+  end
+
+  defp roll_smart_item(items, character) do
+    case Enum.find(items, &job_recommended?(&1, job_code(character))) do
+      nil -> []
+      item -> roll_individual_items([item], 1)
+    end
+  end
+
+  defp smart_zero?(%{smart_drop_rate: rate}, items) when rate > 0 do
+    items != [] && Enum.all?(items, &(&1.weight == 0))
+  end
+
+  defp smart_zero?(_, _), do: false
+
+  # smart-gender groups drop only items whose gender restriction matches
+  defp gendered_entries(items, %{smart_gender: true}, character) do
+    gender = Enums.Gender.get_value(character.gender)
+
+    Enum.filter(items, fn item ->
+      item_gender = item_gender(item)
+      item_gender == 2 || item_gender == gender
+    end)
+  end
+
+  defp gendered_entries(items, _group, _character), do: items
+
+  defp item_gender(item) do
+    case item.ids |> Enum.find(&(&1 != 0)) do
+      nil -> 2
+      id -> gender_or_all(item_limit_value(id, :gender))
+    end
+  end
+
+  defp gender_or_all(nil), do: 2
+  defp gender_or_all(gender), do: gender
+
+  defp job_code(%Schema.Character{job: job}), do: Enums.Job.get_value(job) || 1
+
+  # smart-drop-rate groups reweight items by the player's job
+  defp job_weighted(items, %{smart_drop_rate: rate}, character) when rate > 0 do
+    job = job_code(character)
+
+    Enum.map(items, fn item ->
+      %{item | weight: weight_by_job(item, job)}
+    end)
+  end
+
+  defp job_weighted(items, _group, _character), do: items
+
+  defp weight_by_job(item, job) do
+    recommends = job_recommends(item)
+
+    cond do
+      recommends == [] -> item.weight
+      job in recommends || 0 in recommends -> item.proper_job_weight
+      true -> item.improper_job_weight
+    end
+  end
+
+  defp job_recommended?(item, job) do
+    recommends = job_recommends(item)
+    recommends == [] || job in recommends || 0 in recommends
+  end
+
+  defp job_recommends(item) do
+    case item.ids |> Enum.find(&(&1 != 0)) do
+      nil -> []
+      id -> item_limit_value(id, :job_recommends) || []
+    end
+  end
+
+  defp item_limit_value(id, key) do
+    get_in(Storage.get(:item, id), [:limit, key])
   end
 
   defp roll_individual_items([], _amount), do: []

@@ -10,6 +10,8 @@ defmodule Ms2ex.MobDropsTest do
   @mob_id 23_991_091
   @hit_mob_id 23_991_093
   @corpse_mob_id 23_991_094
+  @smart_mob_id 23_991_095
+  @gender_mob_id 23_991_096
   @gated_mob_id 22_990_100
   @map_matching 999_001
   @map_other 999_002
@@ -80,6 +82,30 @@ defmodule Ms2ex.MobDropsTest do
       global_drop_box_ids: [],
       individual_drop_box_ids: [],
       dead_global_drop_box_ids: [1],
+      global_hit_drop_box_ids: [],
+      individual_hit_drop_box_ids: []
+    },
+    stat: %{stats: %{health: 1000, attack_speed: 100}}
+  }
+
+  @smart_metadata %{
+    basic: %{friendly: 0, class: 1, level: 50},
+    drop_info: %{
+      global_drop_box_ids: [],
+      individual_drop_box_ids: [5],
+      dead_global_drop_box_ids: [],
+      global_hit_drop_box_ids: [],
+      individual_hit_drop_box_ids: []
+    },
+    stat: %{stats: %{health: 1000, attack_speed: 100}}
+  }
+
+  @gender_metadata %{
+    basic: %{friendly: 0, class: 1, level: 50},
+    drop_info: %{
+      global_drop_box_ids: [],
+      individual_drop_box_ids: [6],
+      dead_global_drop_box_ids: [],
       global_hit_drop_box_ids: [],
       individual_hit_drop_box_ids: []
     },
@@ -195,6 +221,66 @@ defmodule Ms2ex.MobDropsTest do
               }
             ]
           }
+        },
+        # smart drop rate + zero weight: only the job-recommended item drops
+        "5" => %{
+          "500" => %{
+            group_id: 500,
+            smart_drop_rate: 1,
+            drop_counts: [%{count: 1, probability: 100}],
+            min_level: 1,
+            server_drop: false,
+            smart_gender: false,
+            items: [
+              %{
+                ids: [@item_id, 0],
+                announce: false,
+                proper_job_weight: 50,
+                improper_job_weight: 1,
+                weight: 0,
+                drop_count: %{min: 1, max: 1},
+                rarities: [%{probability: 100, grade: 2}],
+                enchant_level: 0,
+                socket_data_id: 0,
+                deduct_trade_count: false,
+                deduct_repack_limit: false,
+                bind: false,
+                disable_break: false,
+                map_ids: [],
+                quest_id: 0
+              }
+            ]
+          }
+        },
+        # smart gender: only items matching the player's gender drop
+        "6" => %{
+          "600" => %{
+            group_id: 600,
+            smart_drop_rate: 0,
+            drop_counts: [%{count: 1, probability: 100}],
+            min_level: 1,
+            server_drop: false,
+            smart_gender: true,
+            items: [
+              %{
+                ids: [@item2_id, 0],
+                announce: false,
+                proper_job_weight: 0,
+                improper_job_weight: 0,
+                weight: 1,
+                drop_count: %{min: 1, max: 1},
+                rarities: [%{probability: 100, grade: 2}],
+                enchant_level: 0,
+                socket_data_id: 0,
+                deduct_trade_count: false,
+                deduct_repack_limit: false,
+                bind: false,
+                disable_break: false,
+                map_ids: [],
+                quest_id: 0
+              }
+            ]
+          }
         }
       }
     }
@@ -206,6 +292,8 @@ defmodule Ms2ex.MobDropsTest do
     :ets.insert(:metadata, {"npc:#{@mob_id + 1}", {:ok, @no_drop_metadata}})
     :ets.insert(:metadata, {"npc:#{@hit_mob_id}", {:ok, @hit_metadata}})
     :ets.insert(:metadata, {"npc:#{@corpse_mob_id}", {:ok, @corpse_metadata}})
+    :ets.insert(:metadata, {"npc:#{@smart_mob_id}", {:ok, @smart_metadata}})
+    :ets.insert(:metadata, {"npc:#{@gender_mob_id}", {:ok, @gender_metadata}})
     :ets.insert(:metadata, {"npc:#{@gated_mob_id}", {:ok, @gated_metadata}})
     :ets.insert(:metadata, {"table:globaldropitembox.xml", {:ok, @global_table}})
     :ets.insert(:metadata, {"table:individualdropitem.xml", {:ok, @individual_table}})
@@ -213,13 +301,28 @@ defmodule Ms2ex.MobDropsTest do
     :ets.insert(:metadata, {"map:#{@map_matching}", {:ok, %{property: %{type: 7, continent: 0}}}})
     :ets.insert(:metadata, {"map:#{@map_other}", {:ok, %{property: %{type: 1, continent: 0}}}})
 
-    for item_id <- [@item_id, @item2_id] do
-      :ets.insert(
-        :metadata,
-        {"item:#{item_id}",
-         {:ok, %{limit: %{level: 1}, slot_names: [], option: %{constant_id: 1}}}}
-      )
-    end
+    # @item_id is knight-recommended; @item2_id is male-only
+    :ets.insert(
+      :metadata,
+      {"item:#{@item_id}",
+       {:ok,
+        %{
+          limit: %{level: 1, gender: 2, job_recommends: [10]},
+          slot_names: [],
+          option: %{constant_id: 1}
+        }}}
+    )
+
+    :ets.insert(
+      :metadata,
+      {"item:#{@item2_id}",
+       {:ok,
+        %{
+          limit: %{level: 1, gender: 0, job_recommends: []},
+          slot_names: [],
+          option: %{constant_id: 1}
+        }}}
+    )
 
     :ok
   end
@@ -243,6 +346,13 @@ defmodule Ms2ex.MobDropsTest do
   defp kill(state, dmg) do
     {:reply, {:ok, mob}, new_state} =
       Field.handle_call({:inflict_dmg, @attacker, %{dmg: dmg}, @oid}, nil, state)
+
+    {mob, new_state}
+  end
+
+  defp kill_with(state, dmg, attacker) do
+    {:reply, {:ok, mob}, new_state} =
+      Field.handle_call({:inflict_dmg, attacker, %{dmg: dmg}, @oid}, nil, state)
 
     {mob, new_state}
   end
@@ -328,5 +438,35 @@ defmodule Ms2ex.MobDropsTest do
     assert_received {:"$gen_cast",
                      {:add_mob_drop, mob2, %Schema.Item{item_id: @item_id},
                       %Schema.Character{id: 1}}}
+  end
+
+  test "smart-drop boxes only drop the job-recommended item" do
+    field_npc = field_npc(@smart_mob_id)
+    knight = %Schema.Character{id: 1, name: "Testy", job: :knight, gender: :male}
+    {_mob, _state} = kill_with(state_with(field_npc), 10_000, knight)
+
+    assert_received {:"$gen_cast",
+                     {:add_mob_drop, _mob, %Schema.Item{item_id: @item_id}, _receiver}}
+
+    field_npc = field_npc(@smart_mob_id)
+    priest = %Schema.Character{id: 1, name: "Testy", job: :priest, gender: :male}
+    {_mob2, _state2} = kill_with(state_with(field_npc), 10_000, priest)
+
+    refute_received {:"$gen_cast", {:add_mob_drop, _mob2, _item, _receiver}}
+  end
+
+  test "smart-gender boxes only drop items matching the player's gender" do
+    field_npc = field_npc(@gender_mob_id)
+    male = %Schema.Character{id: 1, name: "Testy", job: :knight, gender: :male}
+    {_mob, _state} = kill_with(state_with(field_npc), 10_000, male)
+
+    assert_received {:"$gen_cast",
+                     {:add_mob_drop, _mob, %Schema.Item{item_id: @item2_id}, _receiver}}
+
+    field_npc = field_npc(@gender_mob_id)
+    female = %Schema.Character{id: 1, name: "Testy", job: :knight, gender: :female}
+    {_mob2, _state2} = kill_with(state_with(field_npc), 10_000, female)
+
+    refute_received {:"$gen_cast", {:add_mob_drop, _mob2, _item, _receiver}}
   end
 end
