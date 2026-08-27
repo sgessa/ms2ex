@@ -38,7 +38,7 @@ defmodule Ms2ex.Types.SkillCast do
     level = skill_level(skill_cast)
     state = Map.get(skill_cast.meta, :state, %{})
 
-    cooldown_time = get_in(level, [:condition, :cooldown_time]) || 0
+    cooldown_time = level[:cooldown_time] || 0
     recharge_max_count = Map.get(state, :recharge_max_count, 0)
 
     if cooldown_time > 0 or recharge_max_count > 0 do

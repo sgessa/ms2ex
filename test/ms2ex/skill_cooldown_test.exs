@@ -10,7 +10,7 @@ defmodule Ms2ex.SkillCooldownTest do
       skill_id: 15_000_220,
       skill_level: level,
       meta: %{
-        levels: %{"1" => %{condition: %{cooldown_time: cooldown_time}}},
+        levels: %{"1" => %{cooldown_time: cooldown_time}},
         state: state
       }
     }
