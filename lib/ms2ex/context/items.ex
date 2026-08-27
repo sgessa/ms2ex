@@ -1,6 +1,4 @@
 defmodule Ms2ex.Context.Items do
-  import Bitwise
-
   alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
@@ -13,7 +11,7 @@ defmodule Ms2ex.Context.Items do
     |> load_metadata()
     |> set_stats()
     |> set_level()
-    |> set_transfer()
+    |> Types.ItemTransfer.apply()
   end
 
   @doc """
@@ -49,80 +47,13 @@ defmodule Ms2ex.Context.Items do
     %{item | stats: Types.ItemStats.create(item)}
   end
 
-  @transfer_trade 4
-  @transfer_split 2
-  @transfer_bind 8
-  @transfer_limit_trade 16
-
   @doc """
   Binds an item to a character when its transfer type requires it and the
   bind flag is set. On-loot binding applies to BindOnLoot items; on-equip
-  binding also covers BindOnEquip. Marks the item bound (persisted) and
-  zeroes its remaining trades; the owner is the holding character.
+  binding also covers BindOnEquip.
   """
   @spec bind_if_needed(Schema.Item.t(), :loot | :equip) :: Schema.Item.t()
-  def bind_if_needed(%Schema.Item{} = item, on \\ :loot) do
-    transfer_type = get_in(item.metadata, [:limit, :transfer_type]) || 0
-
-    binds? =
-      case on do
-        :loot -> transfer_type == 2
-        :equip -> transfer_type in [2, 3]
-      end
-
-    if binds? && bind_flagged?(item) do
-      %{item | is_bound: true, remaining_trades: 0}
-    else
-      item
-    end
-  end
-
-  defp bind_flagged?(%Schema.Item{transfer_flags: flags}), do: band(flags, @transfer_bind) != 0
-
-  # Sets the trade state from item metadata. Items with a tradeable transfer
-  # type, enough rarity headroom and a non-zero trade count stay tradeable;
-  # bind-on-loot/equip/use items start bind-flagged.
-  defp set_transfer(%Schema.Item{metadata: metadata} = item) do
-    tradable_count = get_in(metadata, [:property, :tradable_count]) || 0
-    trade_max_rarity = get_in(metadata, [:limit, :trade_max_rarity]) || 0
-    transfer_type = get_in(metadata, [:limit, :transfer_type]) || 0
-    rarity = item.rarity || 1
-
-    zero_trades = tradable_count <= 0
-    below_rarity = rarity < trade_max_rarity
-
-    %{
-      item
-      | transfer_flags: transfer_flags(transfer_type, zero_trades, below_rarity),
-        remaining_trades: max(tradable_count, 0)
-    }
-  end
-
-  defp transfer_flags(0, zero_trades, below_rarity), do: tradable_flags(zero_trades, below_rarity)
-  defp transfer_flags(1, zero_trades, _), do: untradeable_flags(zero_trades)
-
-  defp transfer_flags(6, zero_trades, below_rarity),
-    do: black_market_flags(zero_trades, below_rarity)
-
-  defp transfer_flags(type, zero_trades, below_rarity) when type in [2, 3, 4, 5, 7],
-    do: bind_flags(zero_trades, below_rarity)
-
-  defp transfer_flags(_, _, _), do: 0
-
-  defp tradable_flags(_zero_trades, true), do: @transfer_trade ||| @transfer_split
-  defp tradable_flags(true, false), do: 0
-  defp tradable_flags(false, false), do: @transfer_limit_trade
-
-  defp untradeable_flags(true), do: 0
-  defp untradeable_flags(false), do: @transfer_limit_trade
-
-  defp black_market_flags(_zero_trades, true), do: @transfer_trade
-  defp black_market_flags(true, false), do: 0
-  defp black_market_flags(false, false), do: @transfer_trade
-
-  defp bind_flags(true, true), do: @transfer_bind ||| @transfer_trade ||| @transfer_split
-  defp bind_flags(true, false), do: @transfer_bind
-  defp bind_flags(false, _), do: @transfer_bind ||| @transfer_limit_trade
+  defdelegate bind_if_needed(item, on \\ :loot), to: Types.ItemTransfer
 
   @meso_ids [90_000_001, 90_000_002, 90_000_003]
   def mesos?(%Schema.Item{item_id: id}) when id in @meso_ids, do: true
