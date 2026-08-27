@@ -96,11 +96,9 @@ defmodule Ms2ex.Context.Equips do
 
   def equip(%Schema.Item{location: :inventory} = item, equip_slot) do
     item
-    |> bind_if_needed()
+    |> Schema.Item.bind_if_needed(:equip)
     |> update_item(%{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
   end
-
-  defp bind_if_needed(item), do: Schema.Item.bind_if_needed(item, :equip)
 
   @doc """
   Unequips an item, moving it back to inventory.
