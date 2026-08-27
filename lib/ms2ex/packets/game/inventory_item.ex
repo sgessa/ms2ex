@@ -121,8 +121,10 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_bool(false)
     # TODO handle if char bound
     |> put_sockets()
-    |> put_long(if(item.is_bound, do: character.id, else: 0))
+    # couple info: no couples implemented, so the id stays 0 and skips the
+    # name/bool block; the bind id belongs to the following ItemBinding
     |> put_long()
+    |> put_long(if(item.is_bound, do: character.id, else: 0))
     |> put_ustring(if(item.is_bound, do: character.name, else: ""))
   end
 
