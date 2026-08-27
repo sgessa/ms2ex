@@ -1,6 +1,7 @@
 defmodule Ms2ex.Packets.InventoryItem do
   alias Ms2ex.Enums
   alias Ms2ex.Schema
+  alias Ms2ex.TransferFlags
   alias Ms2ex.Types
 
   import Ms2ex.Packets.PacketWriter
@@ -17,7 +18,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     reset_tab: 0xD
   }
 
-  def add_item({:create, item}) do
+  def add_item({:create, item}, character) do
     __MODULE__
     |> build()
     |> put_byte(@modes.add)
@@ -26,11 +27,11 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_short(item.inventory_slot)
     |> put_int(item.rarity)
     |> put_ustring()
-    |> put_item(item)
+    |> put_item(item, character)
     |> put_ustring()
   end
 
-  def add_item({:update, item}), do: update_item(item.id, item.amount)
+  def add_item({:update, item}, _character), do: update_item(item.id, item.amount)
 
   def mark_item_new(item) do
     __MODULE__
@@ -69,19 +70,19 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_short(dst_slot)
   end
 
-  def put_equips(packet, []), do: packet
+  def put_equips(packet, [], _character), do: packet
 
-  def put_equips(packet, [item | equips]) do
+  def put_equips(packet, [item | equips], character) do
     packet
     |> put_int(item.item_id)
     |> put_long(item.id)
     |> put_ustring(to_string(item.equip_slot))
     |> put_int(item.rarity)
-    |> put_item(item)
-    |> put_equips(equips)
+    |> put_item(item, character)
+    |> put_equips(equips, character)
   end
 
-  def put_item(packet, item) do
+  def put_item(packet, item, character) do
     packet
     |> put_int(item.amount)
     |> put_int()
@@ -111,22 +112,34 @@ defmodule Ms2ex.Packets.InventoryItem do
     # |> put_template(item)
     # TODO put pets
     # TODO put gem slot
-    |> put_int(item.transfer_flags)
+    |> put_int(TransferFlags.to_int(item.transfer_flags))
     |> put_byte()
+    |> put_int(item.remaining_trades)
     |> put_int()
-    |> put_int()
     |> put_byte()
     |> put_byte()
-    |> put_bool(false)
-    # TODO handle if char bound
+    # character-bound flag; when set the client treats the item as already
+    # bound (ignoring the bind transfer flag) and stops warning on equip
+    |> put_bool(item.is_bound)
+    |> put_bound_owner(item, character)
     |> put_sockets()
-    |> put_long(item.paired_character_id)
-    # TODO put paired character name if present
+    # couple info: no couples implemented, so the id stays 0 and skips the
+    # name/bool block; the bind id belongs to the following ItemBinding
     |> put_long()
-    |> put_ustring("")
+    |> put_long(if(item.is_bound, do: character.id, else: 0))
+    |> put_ustring(if(item.is_bound, do: character.name, else: ""))
   end
 
-  def load_items(tab_id, items) do
+  # the ItemBinding lives inside the transfer block once the item is bound
+  defp put_bound_owner(packet, %{is_bound: true}, character) do
+    packet
+    |> put_long(character.id)
+    |> put_ustring(character.name)
+  end
+
+  defp put_bound_owner(packet, _item, _character), do: packet
+
+  def load_items(tab_id, items, character) do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
@@ -138,7 +151,7 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> put_long(item.id)
       |> put_short(item.inventory_slot)
       |> put_int(item.rarity)
-      |> put_item(item)
+      |> put_item(item, character)
     end)
   end
 

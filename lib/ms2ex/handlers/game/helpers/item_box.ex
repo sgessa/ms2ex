@@ -131,7 +131,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     item = Context.Items.load_metadata(item)
 
     case Context.Inventory.add_item(character, item) do
-      {:ok, result} -> push(session, Packets.InventoryItem.add_item(result))
+      {:ok, result} -> push(session, Packets.InventoryItem.add_item(result, character))
       _ -> session
     end
   end

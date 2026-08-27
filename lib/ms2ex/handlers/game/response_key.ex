@@ -65,7 +65,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(character, account_wallet, character_wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(Context.Inventory.list_tabs(character))
+      |> push_inventory_tab(character, Context.Inventory.list_tabs(character))
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -116,16 +116,16 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     }
   end
 
-  defp push_inventory_tab(session, []), do: session
+  defp push_inventory_tab(session, _character, []), do: session
 
-  defp push_inventory_tab(session, [inventory_tab | tabs]) do
+  defp push_inventory_tab(session, character, [inventory_tab | tabs]) do
     items = Context.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
 
     session
     |> push(Packets.InventoryItem.reset_tab(inventory_tab.tab))
     |> push(Packets.InventoryItem.load_tab(inventory_tab.tab, inventory_tab.slots))
-    |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items))
-    |> push_inventory_tab(tabs)
+    |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items, character))
+    |> push_inventory_tab(character, tabs)
   end
 
   defp push_party(session, character) do

@@ -216,10 +216,10 @@ defmodule Ms2ex.Context.Inventory do
       iex> update_item(item, %{amount: 5})
       {:ok, %Schema.Item{amount: 5}}
   """
-  @spec update_item(Schema.Item.t(), map()) ::
+  @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
           {:ok, Schema.Item.t()} | {:error, Ecto.Changeset.t()}
-  def update_item(%Schema.Item{} = item, attrs) do
-    item
+  def update_item(data, attrs) do
+    data
     |> Schema.Item.changeset(attrs)
     |> Repo.update()
   end

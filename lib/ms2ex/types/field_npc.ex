@@ -16,6 +16,7 @@ defmodule Ms2ex.Types.FieldNpc do
     :stats,
     :first_attacker,
     :last_attacker,
+    :damage_dealers,
     animation: 255,
     dead?: false,
     corpse?: false,
@@ -39,6 +40,7 @@ defmodule Ms2ex.Types.FieldNpc do
         :last_control_at,
         System.monotonic_time(:millisecond) + :rand.uniform(@idle_control_ms)
       )
+      |> Map.put_new(:damage_dealers, %{})
       |> randomize_pos()
 
     struct(__MODULE__, attrs)

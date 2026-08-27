@@ -121,7 +121,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
       item = Context.Items.init(item_id, %{amount: amount})
 
       with {:ok, result} <- Context.Inventory.add_item(character, item) do
-        push(session, Packets.InventoryItem.add_item(result))
+        push(session, Packets.InventoryItem.add_item(result, character))
       end
     end)
   end
