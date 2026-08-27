@@ -99,8 +99,6 @@ defmodule Ms2ex.Context.Damage do
   @doc """
   Calculates damage a character takes from falling.
 
-  Uses the same diminishing-return formula as the Ms2C server.
-
   ## Examples
 
       iex> calculate_fall_dmg(character, 0)
