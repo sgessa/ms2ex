@@ -51,7 +51,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_ustring(character.profile_url)
     |> put_long()
     |> put_byte(length(character.equips))
-    |> Packets.InventoryItem.put_equips(character.equips)
+    |> Packets.InventoryItem.put_equips(character.equips, character)
     |> put_byte(length(badges))
     |> put_badges(badges)
     |> put_bool(false)

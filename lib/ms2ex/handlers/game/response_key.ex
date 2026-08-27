@@ -119,15 +119,12 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   defp push_inventory_tab(session, _character, []), do: session
 
   defp push_inventory_tab(session, character, [inventory_tab | tabs]) do
-    items =
-      inventory_tab.character_id
-      |> Context.Inventory.list_tab_items(inventory_tab.tab)
-      |> Enum.map(&Context.Items.apply_binding(&1, character))
+    items = Context.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
 
     session
     |> push(Packets.InventoryItem.reset_tab(inventory_tab.tab))
     |> push(Packets.InventoryItem.load_tab(inventory_tab.tab, inventory_tab.slots))
-    |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items))
+    |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items, character))
     |> push_inventory_tab(character, tabs)
   end
 

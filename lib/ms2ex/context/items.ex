@@ -57,12 +57,11 @@ defmodule Ms2ex.Context.Items do
   @doc """
   Binds an item to a character when its transfer type requires it and the
   bind flag is set. On-loot binding applies to BindOnLoot items; on-equip
-  binding also covers BindOnEquip. Returns the item unchanged otherwise.
-  The bound owner is not stored; `apply_binding/2` derives it at serialize
-  time.
+  binding also covers BindOnEquip. Marks the item bound (persisted) and
+  zeroes its remaining trades; the owner is the holding character.
   """
-  @spec bind_if_needed(Schema.Item.t(), Schema.Character.t(), :loot | :equip) :: Schema.Item.t()
-  def bind_if_needed(%Schema.Item{} = item, %Schema.Character{} = character, on \\ :loot) do
+  @spec bind_if_needed(Schema.Item.t(), :loot | :equip) :: Schema.Item.t()
+  def bind_if_needed(%Schema.Item{} = item, on \\ :loot) do
     transfer_type = get_in(item.metadata, [:limit, :transfer_type]) || 0
 
     binds? =
@@ -72,41 +71,10 @@ defmodule Ms2ex.Context.Items do
       end
 
     if binds? && bind_flagged?(item) do
-      %{
-        item
-        | paired_character_id: character.id,
-          paired_character_name: character.name,
-          remaining_trades: 0
-      }
+      %{item | is_bound: true, remaining_trades: 0}
     else
       item
     end
-  end
-
-  @doc """
-  Derives the bound-owner block for serialization from the item's own state
-  and the owner character. A bound item's owner is always the character that
-  holds it, so no separate owner is stored.
-  """
-  @spec apply_binding(Schema.Item.t(), Schema.Character.t()) :: Schema.Item.t()
-  def apply_binding(%Schema.Item{} = item, %Schema.Character{} = character) do
-    item = load_metadata(item)
-
-    if bound?(item) do
-      %{item | paired_character_id: character.id, paired_character_name: character.name}
-    else
-      %{item | paired_character_id: 0, paired_character_name: ""}
-    end
-  end
-
-  # BindOnLoot binds on pickup; BindOnEquip binds once equipped and stays
-  # bound afterwards (a zeroed trade count is the persisted signal).
-  defp bound?(%Schema.Item{} = item) do
-    transfer_type = get_in(item.metadata, [:limit, :transfer_type]) || 0
-
-    bind_flagged?(item) &&
-      item.remaining_trades == 0 &&
-      transfer_type in [2, 3]
   end
 
   defp bind_flagged?(%Schema.Item{transfer_flags: flags}), do: band(flags, @transfer_bind) != 0

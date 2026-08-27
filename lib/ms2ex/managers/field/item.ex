@@ -32,11 +32,11 @@ defmodule Ms2ex.Managers.Field.Item do
         item =
           item
           |> Context.Items.load_metadata()
-          |> Context.Items.bind_if_needed(character, :loot)
+          |> Context.Items.bind_if_needed(:loot)
 
         with {:ok, result} <- Context.Inventory.add_item(character, item) do
           {_status, item} = result
-          push(character, Packets.InventoryItem.add_item(result))
+          push(character, Packets.InventoryItem.add_item(result, character))
           push(character, Packets.InventoryItem.mark_item_new(item))
         end
     end

@@ -150,7 +150,7 @@ defmodule Ms2ex.Commands do
          item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
          {:ok, {_, item} = result} <- Context.Inventory.add_item(character, item) do
       session
-      |> push(Packets.InventoryItem.add_item(result))
+      |> push(Packets.InventoryItem.add_item(result, character))
       |> push(Packets.InventoryItem.mark_item_new(item))
     end
   end

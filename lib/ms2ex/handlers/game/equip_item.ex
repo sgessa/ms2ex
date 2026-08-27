@@ -57,7 +57,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     end)
 
     # Equip new item
-    item = Context.Items.bind_if_needed(item, character, :equip)
+    item = Context.Items.bind_if_needed(item, :equip)
 
     with {:ok, item} <- Context.Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
@@ -72,11 +72,11 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     with {:ok, item} <- Context.Equips.unequip(item) do
       Managers.Character.update(Context.Characters.load_equips(character))
 
-      item = Context.Items.apply_binding(item, character)
+      item = Context.Items.load_metadata(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
       Context.Field.broadcast(character, unequip_packet)
 
-      push(session, Packets.InventoryItem.add_item({:create, item}))
+      push(session, Packets.InventoryItem.add_item({:create, item}, character))
     end
   end
 end

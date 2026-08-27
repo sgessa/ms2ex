@@ -2,9 +2,6 @@ defmodule Ms2ex.ItemsBindTest do
   use ExUnit.Case, async: false
 
   alias Ms2ex.Context
-  alias Ms2ex.Schema
-
-  @character %Schema.Character{id: 7, name: "BoundOne"}
 
   setup do
     for key <- [
@@ -35,29 +32,25 @@ defmodule Ms2ex.ItemsBindTest do
     )
 
     item = Context.Items.init(id, %{rarity: 1, amount: 1})
-    Context.Items.bind_if_needed(item, @character, on)
+    Context.Items.bind_if_needed(item, on)
   end
 
   test "BindOnLoot items bind when looted" do
     bound = bind_item(2, :loot)
-    assert bound.paired_character_id == 7
-    assert bound.paired_character_name == "BoundOne"
+    assert bound.is_bound == true
     assert bound.remaining_trades == 0
   end
 
   test "BindOnLoot items also bind when equipped" do
-    bound = bind_item(2, :equip)
-    assert bound.paired_character_id == 7
+    assert bind_item(2, :equip).is_bound == true
   end
 
   test "BindOnEquip items only bind when equipped" do
-    assert bind_item(3, :loot).paired_character_id == 0
-    assert bind_item(3, :equip).paired_character_id == 7
+    assert bind_item(3, :loot).is_bound == false
+    assert bind_item(3, :equip).is_bound == true
   end
 
   test "tradeable items never bind" do
-    bound = bind_item(0, :loot)
-    assert bound.paired_character_id == 0
-    assert bound.paired_character_name == ""
+    assert bind_item(0, :loot).is_bound == false
   end
 end

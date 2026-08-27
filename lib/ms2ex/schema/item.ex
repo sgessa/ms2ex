@@ -18,6 +18,7 @@ defmodule Ms2ex.Schema.Item do
     :item_id,
     :inventory_slot,
     :inventory_tab,
+    :is_bound,
     :limit_break_level,
     :location,
     :rarity,
@@ -48,14 +49,13 @@ defmodule Ms2ex.Schema.Item do
     field :is_locked, :boolean, virtual: true, default: false
     field :inventory_slot, :integer
     field :inventory_tab, Enums.InventoryTab
+    field :is_bound, :boolean, default: false
     field :level, :integer, virtual: true
     field :limit_break_level, :integer, default: 0
     field :location, Ecto.Enum, values: [inventory: 0, equipment: 1], default: :inventory
     field :lock_character_id, :integer, virtual: true
     field :mob_drop?, :boolean, virtual: true, default: false
     field :object_id, :integer, virtual: true
-    field :paired_character_id, :integer, virtual: true, default: 0
-    field :paired_character_name, :string, virtual: true, default: ""
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
     field :remaining_trades, :integer, default: 0

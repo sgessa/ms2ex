@@ -58,11 +58,9 @@ defmodule Ms2ex.GameHandlers.Inventory do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, items} <- Context.Inventory.sort_tab(character, tab) do
-      items = Enum.map(items, &Context.Items.apply_binding(&1, character))
-
       session
       |> push(Packets.InventoryItem.reset_tab(tab))
-      |> push(Packets.InventoryItem.load_items(tab, items))
+      |> push(Packets.InventoryItem.load_items(tab, items, character))
     end
   end
 

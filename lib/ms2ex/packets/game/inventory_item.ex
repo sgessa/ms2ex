@@ -17,7 +17,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     reset_tab: 0xD
   }
 
-  def add_item({:create, item}) do
+  def add_item({:create, item}, character) do
     __MODULE__
     |> build()
     |> put_byte(@modes.add)
@@ -26,11 +26,11 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_short(item.inventory_slot)
     |> put_int(item.rarity)
     |> put_ustring()
-    |> put_item(item)
+    |> put_item(item, character)
     |> put_ustring()
   end
 
-  def add_item({:update, item}), do: update_item(item.id, item.amount)
+  def add_item({:update, item}, _character), do: update_item(item.id, item.amount)
 
   def mark_item_new(item) do
     __MODULE__
@@ -69,19 +69,19 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_short(dst_slot)
   end
 
-  def put_equips(packet, []), do: packet
+  def put_equips(packet, [], _character), do: packet
 
-  def put_equips(packet, [item | equips]) do
+  def put_equips(packet, [item | equips], character) do
     packet
     |> put_int(item.item_id)
     |> put_long(item.id)
     |> put_ustring(to_string(item.equip_slot))
     |> put_int(item.rarity)
-    |> put_item(item)
-    |> put_equips(equips)
+    |> put_item(item, character)
+    |> put_equips(equips, character)
   end
 
-  def put_item(packet, item) do
+  def put_item(packet, item, character) do
     packet
     |> put_int(item.amount)
     |> put_int()
@@ -120,12 +120,12 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_bool(false)
     # TODO handle if char bound
     |> put_sockets()
-    |> put_long(item.paired_character_id)
+    |> put_long(if(item.is_bound, do: character.id, else: 0))
     |> put_long()
-    |> put_ustring(item.paired_character_name)
+    |> put_ustring(if(item.is_bound, do: character.name, else: ""))
   end
 
-  def load_items(tab_id, items) do
+  def load_items(tab_id, items, character) do
     __MODULE__
     |> build()
     |> put_byte(@modes.load_items)
@@ -137,7 +137,7 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> put_long(item.id)
       |> put_short(item.inventory_slot)
       |> put_int(item.rarity)
-      |> put_item(item)
+      |> put_item(item, character)
     end)
   end
 
