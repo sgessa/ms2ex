@@ -20,6 +20,7 @@ defmodule Ms2ex.Packets do
     0x1D => "PICKUP_MONEY",
     0x20 => "SKILL",
     0x21 => "STATE_SKILL",
+    0x34 => "FALL_DAMAGE",
     0x25 => "JOB",
     0x26 => "VIBRATE",
     0x2C => "PARTY",

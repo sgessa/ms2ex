@@ -96,20 +96,27 @@ defmodule Ms2ex.Context.Damage do
     end
   end
 
-  @fall_dmg 150
-
   @doc """
   Calculates damage a character takes from falling.
 
-  Currently returns a constant value of #{@fall_dmg}.
+  Uses the same diminishing-return formula as the Ms2C server.
 
   ## Examples
 
-      iex> calculate_fall_dmg(character)
-      150
+      iex> calculate_fall_dmg(character, 0)
+      24
   """
-  @spec calculate_fall_dmg(Schema.Character.t()) :: integer()
-  def calculate_fall_dmg(%Schema.Character{}) do
-    @fall_dmg
+  @spec calculate_fall_dmg(Schema.Character.t(), number()) :: integer()
+  def calculate_fall_dmg(%Schema.Character{stats: stats}, distance) do
+    current_hp = stats.health_cur
+    max_hp = stats.health_max
+    distance_factor = 0.04813 * :math.exp(0.0046 * distance)
+    hp_ratio = current_hp / max_hp
+    hp_scaling = :math.pow(hp_ratio, 1.087)
+
+    current_hp
+    |> min(current_hp * 0.25)
+    |> min(current_hp * distance_factor * hp_scaling)
+    |> trunc()
   end
 end
