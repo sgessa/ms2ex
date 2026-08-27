@@ -43,32 +43,6 @@ defmodule Ms2ex.Context.ItemTransfer do
   end
 
   @doc """
-  Binds an item to a character when its transfer type requires it and the
-  bind flag is set. On-loot binding applies to BindOnLoot items; on-equip
-  binding also covers BindOnEquip. The owner is the holding character.
-  """
-  @spec bind_if_needed(Schema.Item.t(), :loot | :equip) :: Schema.Item.t()
-  def bind_if_needed(%Schema.Item{} = item, on \\ :loot) do
-    transfer_type = get_in(item.metadata, [:limit, :transfer_type]) || :tradeable
-
-    binds? =
-      case on do
-        :loot -> transfer_type == :bind_on_loot
-        :equip -> transfer_type in [:bind_on_loot, :bind_on_equip]
-      end
-
-    if binds? && bind_flagged?(item) do
-      %{item | is_bound: true, remaining_trades: 0}
-    else
-      item
-    end
-  end
-
-  @doc "Whether the item carries the bind transfer flag."
-  @spec bind_flagged?(Schema.Item.t()) :: boolean()
-  def bind_flagged?(%Schema.Item{transfer_flags: flags}), do: :bind in flags
-
-  @doc """
   Computes the transfer flags for a transfer type given whether the item
   has zero remaining trades and whether its rarity sits below the
   trade-max rarity.

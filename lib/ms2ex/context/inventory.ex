@@ -216,11 +216,19 @@ defmodule Ms2ex.Context.Inventory do
       iex> update_item(item, %{amount: 5})
       {:ok, %Schema.Item{amount: 5}}
   """
-  @spec update_item(Schema.Item.t(), map()) ::
+  @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
           {:ok, Schema.Item.t()} | {:error, Ecto.Changeset.t()}
   def update_item(%Schema.Item{} = item, attrs) do
     item
     |> Schema.Item.changeset(attrs)
+    |> Repo.update()
+  end
+
+  # a pre-built changeset (e.g. the bind change) is merged with the change
+  # for the given attrs, so both persist in one update
+  def update_item(%Ecto.Changeset{} = changeset, attrs) do
+    changeset
+    |> Ecto.Changeset.merge(Schema.Item.changeset(changeset.data, attrs))
     |> Repo.update()
   end
 

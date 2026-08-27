@@ -56,9 +56,6 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       unequip_item(character, item, session)
     end)
 
-    # Equip new item
-    item = Context.Items.bind_if_needed(item, :equip)
-
     with {:ok, item} <- Context.Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Context.Field.broadcast(character, equip_packet)

@@ -74,4 +74,28 @@ defmodule Ms2ex.Schema.Item do
     |> cast(attrs, @fields)
     |> validate_required(@required)
   end
+
+  @doc """
+  Returns a changeset carrying the bind change (or the item unchanged) when
+  the transfer type requires binding. Callers merge the changeset into the
+  persist; the change is only produced when the item is not already bound.
+  """
+  @spec bind_if_needed(Schema.Item.t(), :loot | :equip) :: Schema.Item.t() | Ecto.Changeset.t()
+  def bind_if_needed(%Schema.Item{} = item, on \\ :loot) do
+    transfer_type = get_in(item.metadata, [:limit, :transfer_type]) || :tradeable
+
+    binds? =
+      case on do
+        :loot -> transfer_type == :bind_on_loot
+        :equip -> transfer_type in [:bind_on_loot, :bind_on_equip]
+      end
+
+    if binds? && bind_flagged?(item.transfer_flags) do
+      change(item, is_bound: true, remaining_trades: 0)
+    else
+      item
+    end
+  end
+
+  defp bind_flagged?(flags), do: :bind in flags
 end

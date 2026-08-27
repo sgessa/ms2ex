@@ -50,11 +50,16 @@ defmodule Ms2ex.Context.Items do
 
   @doc """
   Binds an item to a character when its transfer type requires it and the
-  bind flag is set. On-loot binding applies to BindOnLoot items; on-equip
-  binding also covers BindOnEquip.
+  bind flag is set. Used before an INSERT (pickup), so the resulting struct
+  carries the bind; the equip path merges the changeset form directly.
   """
   @spec bind_if_needed(Schema.Item.t(), :loot | :equip) :: Schema.Item.t()
-  defdelegate bind_if_needed(item, on \\ :loot), to: Context.ItemTransfer
+  def bind_if_needed(%Schema.Item{} = item, on \\ :loot) do
+    case Schema.Item.bind_if_needed(item, on) do
+      %Ecto.Changeset{} = changeset -> Ecto.Changeset.apply_changes(changeset)
+      item -> item
+    end
+  end
 
   @meso_ids [90_000_001, 90_000_002, 90_000_003]
   def mesos?(%Schema.Item{item_id: id}) when id in @meso_ids, do: true
