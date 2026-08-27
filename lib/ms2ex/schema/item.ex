@@ -63,7 +63,7 @@ defmodule Ms2ex.Schema.Item do
     field :stats, EctoTypes.Term
     field :target_object_id, :integer, virtual: true
     field :times_attr_changed, :integer, virtual: true, default: 0
-    field :transfer_flags, :integer, default: 0
+    field :transfer_flags, EctoTypes.TransferFlags, default: []
     field :unlocks_at, :utc_datetime, virtual: true
 
     timestamps(type: :utc_datetime)

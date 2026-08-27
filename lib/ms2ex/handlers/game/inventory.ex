@@ -4,7 +4,6 @@ defmodule Ms2ex.GameHandlers.Inventory do
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
-  alias Ms2ex.TransferFlags
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -34,8 +33,8 @@ defmodule Ms2ex.GameHandlers.Inventory do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          %Schema.Item{} = item <- Context.Inventory.get(character, id),
-         true <- TransferFlags.has_flag?(item.transfer_flags, :tradeable),
-         true <- TransferFlags.has_flag?(item.transfer_flags, :splittable) do
+         true <- :trade in item.transfer_flags,
+         true <- :split in item.transfer_flags do
       consumed_item = Context.Inventory.consume(item, amount)
       Context.Field.drop_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)

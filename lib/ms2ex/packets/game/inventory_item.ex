@@ -1,6 +1,7 @@
 defmodule Ms2ex.Packets.InventoryItem do
   alias Ms2ex.Enums
   alias Ms2ex.Schema
+  alias Ms2ex.TransferFlags
   alias Ms2ex.Types
 
   import Ms2ex.Packets.PacketWriter
@@ -111,7 +112,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     # |> put_template(item)
     # TODO put pets
     # TODO put gem slot
-    |> put_int(item.transfer_flags)
+    |> put_int(TransferFlags.to_int(item.transfer_flags))
     |> put_byte()
     |> put_int(item.remaining_trades)
     |> put_int()

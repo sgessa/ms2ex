@@ -1,5 +1,6 @@
 defmodule Ms2ex.Packets.FieldAddItem do
   alias Ms2ex.Packets
+  alias Ms2ex.TransferFlags
 
   import Packets.PacketWriter
 
@@ -135,7 +136,7 @@ defmodule Ms2ex.Packets.FieldAddItem do
     |> put_int()
     |> put_int()
     # transfer: item trade state, no binding, socket transfer bit set
-    |> put_int(item.transfer_flags)
+    |> put_int(TransferFlags.to_int(item.transfer_flags))
     |> put_bool(false)
     |> put_int(item.remaining_trades)
     |> put_int()
