@@ -41,6 +41,23 @@ defmodule Ms2ex.Context.Mobs do
     end
   end
 
+  @doc """
+  Rolls corpse loot from the mob's `dead_global_drop_box_ids` and locks it
+  to the player who struck the body. Drops on every corpse strike.
+  """
+  def drop_corpse_rewards(mob, %Schema.Character{} = character, map_id \\ nil) do
+    drop_info = get_in(mob.npc.metadata, [:drop_info])
+
+    if drop_info do
+      mob_level = get_in(mob.npc.metadata, [:basic, :level]) || 1
+      map = map_conditions(map_id)
+
+      (drop_info[:dead_global_drop_box_ids] || [])
+      |> Enum.flat_map(&global_drop_items(&1, mob_level, map))
+      |> Enum.each(&Context.Field.add_mob_drop(mob, &1, character))
+    end
+  end
+
   def reward_exp(mob) do
     player = mob.first_attacker || mob.last_attacker
 

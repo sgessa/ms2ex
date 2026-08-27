@@ -130,10 +130,12 @@ defmodule Ms2ex.Managers.Field do
         field_npc = tag_attackers(field_npc, attacker)
 
         cond do
-          # corpses replay a hit animation per strike; no further rewards
+          # corpses replay a hit animation and drop corpse loot per strike
           field_npc.dead? && field_npc.corpse? ->
             field_npc = %{field_npc | seq_counter: field_npc.seq_counter + 1}
             Context.Field.broadcast(state.topic, Packets.ControlNpc.corpse_hit(field_npc))
+
+            Context.Mobs.drop_corpse_rewards(field_npc, attacker, state.map_id)
 
             {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
 

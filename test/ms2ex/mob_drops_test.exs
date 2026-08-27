@@ -9,6 +9,7 @@ defmodule Ms2ex.MobDropsTest do
   @boss_id 23_991_090
   @mob_id 23_991_091
   @hit_mob_id 23_991_093
+  @corpse_mob_id 23_991_094
   @gated_mob_id 22_990_100
   @map_matching 999_001
   @map_other 999_002
@@ -67,6 +68,20 @@ defmodule Ms2ex.MobDropsTest do
       dead_global_drop_box_ids: [],
       global_hit_drop_box_ids: [1],
       individual_hit_drop_box_ids: [2]
+    },
+    stat: %{stats: %{health: 1000, attack_speed: 100}}
+  }
+
+  @corpse_metadata %{
+    basic: %{friendly: 0, class: 1, level: 50},
+    corpse: %{hit_able: true},
+    dead: %{time: 20},
+    drop_info: %{
+      global_drop_box_ids: [],
+      individual_drop_box_ids: [],
+      dead_global_drop_box_ids: [1],
+      global_hit_drop_box_ids: [],
+      individual_hit_drop_box_ids: []
     },
     stat: %{stats: %{health: 1000, attack_speed: 100}}
   }
@@ -190,6 +205,7 @@ defmodule Ms2ex.MobDropsTest do
     :ets.insert(:metadata, {"npc:#{@mob_id}", {:ok, @regular_metadata}})
     :ets.insert(:metadata, {"npc:#{@mob_id + 1}", {:ok, @no_drop_metadata}})
     :ets.insert(:metadata, {"npc:#{@hit_mob_id}", {:ok, @hit_metadata}})
+    :ets.insert(:metadata, {"npc:#{@corpse_mob_id}", {:ok, @corpse_metadata}})
     :ets.insert(:metadata, {"npc:#{@gated_mob_id}", {:ok, @gated_metadata}})
     :ets.insert(:metadata, {"table:globaldropitembox.xml", {:ok, @global_table}})
     :ets.insert(:metadata, {"table:individualdropitem.xml", {:ok, @individual_table}})
@@ -298,5 +314,19 @@ defmodule Ms2ex.MobDropsTest do
     {_mob, _state} = kill(state_with(field_npc), 10_000)
 
     assert_received {:"$gen_cast", {:add_mob_drop, _mob, %Schema.Item{item_id: @item_id}, nil}}
+  end
+
+  test "corpse strikes drop dead-global loot locked to the striker" do
+    field_npc = field_npc(@corpse_mob_id)
+    {_mob, state} = kill(state_with(field_npc), 10_000)
+
+    refute_received {:"$gen_cast", {:add_mob_drop, _mob, _item, _receiver}}
+
+    {:reply, {:ok, mob2}, _state2} =
+      Field.handle_call({:inflict_dmg, @attacker, %{dmg: 100}, @oid}, nil, state)
+
+    assert_received {:"$gen_cast",
+                     {:add_mob_drop, mob2, %Schema.Item{item_id: @item_id},
+                      %Schema.Character{id: 1}}}
   end
 end
