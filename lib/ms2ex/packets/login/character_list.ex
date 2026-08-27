@@ -45,13 +45,15 @@ defmodule Ms2ex.Packets.CharacterList do
 
   defp put_entries(packet, [character | characters]) do
     badges = []
+    {gears, outfits} = Enum.split_with(character.equips, &(&1.inventory_tab == :gear))
+    equips = gears ++ outfits
 
     packet
     |> put_character(character)
     |> put_ustring(character.profile_url)
     |> put_long()
-    |> put_byte(length(character.equips))
-    |> Packets.InventoryItem.put_equips(character.equips)
+    |> put_byte(length(equips))
+    |> Packets.InventoryItem.put_equips(equips)
     |> put_byte(length(badges))
     |> put_badges(badges)
     |> put_bool(false)

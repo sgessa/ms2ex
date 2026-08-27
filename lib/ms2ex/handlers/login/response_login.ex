@@ -39,7 +39,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
   defp handle_login(0x2, account, session) do
     session
     |> push(Packets.LoginResult.success(account.id))
-    |> push(Packets.UGC.set_endpoint())
+    |> push(Packets.Ugc.set_endpoint())
     |> push(Packets.CharacterMaxCount.set_max(4, 6))
     |> push(Packets.CharacterList.start_list())
     |> push(Packets.CharacterList.add_entries(account.characters))

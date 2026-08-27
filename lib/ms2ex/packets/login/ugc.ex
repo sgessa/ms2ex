@@ -1,4 +1,4 @@
-defmodule Ms2ex.Packets.UGC do
+defmodule Ms2ex.Packets.Ugc do
   import Ms2ex.Packets.PacketWriter
 
   def set_endpoint() do
@@ -26,5 +26,15 @@ defmodule Ms2ex.Packets.UGC do
     |> put_long()
     |> put_ustring()
     |> put_byte()
+  end
+
+  @load_banner 0x12
+  def load do
+    __MODULE__
+    |> build()
+    |> put_byte(@load_banner)
+    |> put_int(0)
+    |> put_int(0)
+    |> put_int(0)
   end
 end
