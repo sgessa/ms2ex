@@ -21,6 +21,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
         "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
         "OpenItemBox" -> open_box(session, character, item, packet)
         "SelectItemBox" -> select_item(session, character, item, packet)
+        "AddAdditionalEffect" -> add_additional_effect(session, character, item)
         _ -> session
       end
     end
@@ -59,6 +60,29 @@ defmodule Ms2ex.GameHandlers.UseItem do
       session
       |> ItemBox.add_item(character, selected_item)
       |> push(Packets.InventoryItem.consume(consumed_item))
+    end
+  end
+
+  defp add_additional_effect(session, character, item) do
+    case item.metadata[:function_parameters] do
+      nil ->
+        session
+
+      parameters ->
+        case parameters |> String.split(",") |> Enum.map(&String.to_integer/1) do
+          [effect_id, effect_level] ->
+            with :ok <-
+                   Context.Field.call(
+                     character,
+                     {:add_effect_buff, effect_id, effect_level, character}
+                   ) do
+              consumed_item = Context.Inventory.consume(item)
+              push(session, Packets.InventoryItem.consume(consumed_item))
+            end
+
+          _ ->
+            session
+        end
     end
   end
 end

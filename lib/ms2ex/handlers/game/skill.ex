@@ -5,6 +5,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   alias Ms2ex.Types
 
   import Packets.PacketReader
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @use 0x0
   @attack 0x1
@@ -36,7 +37,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {client_tick, packet} = get_int(packet)
 
     {unknown, packet} = get_bool(packet)
-    {_item_uid, packet} = get_long(packet)
+    {item_uid, packet} = get_long(packet)
     {is_hold, _packet} = get_bool(packet)
 
     {hold_int, hold_string, _packet} =
@@ -62,10 +63,15 @@ defmodule Ms2ex.GameHandlers.Skill do
         rotate2z: rotate2z,
         motion_point: motion_point,
         server_tick: server_tick,
-        client_tick: client_tick
+        client_tick: client_tick,
+        item_uid: item_uid
       })
 
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
+
+    if Types.SkillCast.use_item?(skill_cast) do
+      consume_used_item(session, character, item_uid)
+    end
 
     case Types.SkillCast.cooldown(skill_cast, Ms2ex.sync_ticks()) do
       nil -> :ok
@@ -264,5 +270,16 @@ defmodule Ms2ex.GameHandlers.Skill do
     # end
 
     {mob, dmg}
+  end
+
+  defp consume_used_item(session, character, item_uid) do
+    case Context.Inventory.get(character, item_uid) do
+      %Ms2ex.Schema.Item{} = item ->
+        consumed_item = Context.Inventory.consume(item)
+        push(session, Packets.InventoryItem.consume(consumed_item))
+
+      _ ->
+        session
+    end
   end
 end

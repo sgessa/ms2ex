@@ -111,7 +111,13 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
-    {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
+    {buff, state} = Field.Buff.add_buff(skill_cast, skill, character, state)
+    {:reply, {:ok, buff}, state}
+  end
+
+  def handle_call({:add_effect_buff, effect_id, effect_level, character}, _from, state) do
+    {_buff, state} = Field.Buff.add_effect_buff(effect_id, effect_level, character, state)
+    {:reply, :ok, state}
   end
 
   def handle_call({:lookup_npc, object_id}, _from, state) do
@@ -295,6 +301,12 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info({:remove_status, status}, state) do
     Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
+    {:noreply, state}
+  end
+
+  def handle_info({:remove_buff, buff}, state) do
+    Managers.Buff.stop(buff.object_id)
+    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     {:noreply, state}
   end
 

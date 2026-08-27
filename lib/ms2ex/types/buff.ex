@@ -52,11 +52,35 @@ defmodule Ms2ex.Types.Buff do
   end
 
   def set_shield_health(%__MODULE__{} = buff) do
+    shield = buff.effect[:shield]
+
     shield_health =
-      if buff.effect.shield[:hp_value],
-        do: buff.effect.shield.hp_value,
-        else: buff.owner.stats.health_max * buff.effect.shield.hp_by_target_max_hp
+      cond do
+        shield && shield[:hp_value] -> shield.hp_value
+        shield -> buff.owner.stats.health_max * shield[:hp_by_target_max_hp]
+        true -> 0
+      end
 
     Map.put(buff, :shield_health, shield_health)
+  end
+
+  def recovery_amounts(%__MODULE__{} = buff, character, crit?) do
+    case buff.effect[:recovery] do
+      nil ->
+        {0, 0, 0}
+
+      recovery ->
+        multiplier = if recovery[:disable_crit] or !crit?, do: 1.0, else: 1.5
+        stats = character.stats
+
+        {
+          trunc(
+            recovery[:hp_value] + recovery[:hp_rate] * stats.health_max +
+              recovery[:recovery_rate] * stats.magical_atk_cur * multiplier
+          ),
+          trunc(recovery[:sp_value] + recovery[:sp_rate] * stats.spirit_max * multiplier),
+          trunc(recovery[:ep_value] + recovery[:ep_rate] * stats.stamina_max * multiplier)
+        }
+    end
   end
 end
