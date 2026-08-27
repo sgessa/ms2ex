@@ -35,7 +35,7 @@ defmodule Ms2ex.Packets.FieldAddItem do
     |> put_coord(item.position)
     |> put_int(item.source_object_id)
     |> put_int()
-    |> put_byte()
+    |> put_byte(0x2)
     |> put_int(item.rarity)
     |> put_short(0)
     |> put_bool(false)

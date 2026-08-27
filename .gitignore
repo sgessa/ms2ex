@@ -32,9 +32,6 @@ ms2ex-*.tar
 # Ignore Redis Data (Game Client Metadata)
 /priv/redis-data/dump.rdb
 
-# MapleShark dump files
-/dumps/
-
 # Ignore secrets for production release
 /config/*.secret.exs
 

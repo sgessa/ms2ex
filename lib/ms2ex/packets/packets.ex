@@ -99,6 +99,7 @@ defmodule Ms2ex.Packets do
     0x4F => "TRIGGER",
     0x50 => "BREAKABLE",
     0x54 => "PARTY",
+    0x55 => "MAIL",
     0x56 => "FIELD_ADD_NPC",
     0x57 => "FIELD_REMOVE_NPC",
     0x59 => "CONTROL_NPC",
@@ -125,6 +126,7 @@ defmodule Ms2ex.Packets do
     0xA9 => "DYNAMIC_CHANNEL",
     0xB3 => "INSIGNIA",
     0xB5 => "BANNER_LIST",
+    0xB9 => "HOME_COMMAND",
     0xBA => "CHARACTER_MAX_COUNT",
     0xBB => "WORLD",
     0xC6 => "FISHING",
@@ -132,11 +134,14 @@ defmodule Ms2ex.Packets do
     0xED => "PREMIUM_CLUB",
     0xCC => "FIELD_PROPERTY",
     0xD3 => "SKILL_MACRO",
+    0xF0 => "IN_GAME_RANK",
+    0x10C => "MENTOR",
     0x10E => "SKILL_BOOK",
     0x11B => "LOGIN_REQUIRED",
     0x11D => "LAPENSHARD",
     0x11E => "PRESTIGE",
     0x128 => "CHAT_STICKER",
+    0x12A => "WEDDING",
     0x132 => "UNKNOWN_SYNC"
   }
 

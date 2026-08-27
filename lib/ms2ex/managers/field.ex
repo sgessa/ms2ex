@@ -163,6 +163,10 @@ defmodule Ms2ex.Managers.Field do
       if hp == 0 do
         announce_death(%{field_npc | stats: stats}, state.topic)
       else
+        # a spirit orb drops on every damage tick (hit loot); the client ties
+        # the boss into the combat/reward flow from these drops
+        Context.Field.add_mob_drop(%{field_npc | stats: stats}, Context.Items.sp(20))
+
         %{field_npc | stats: stats}
       end
 

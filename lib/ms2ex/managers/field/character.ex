@@ -37,8 +37,14 @@ defmodule Ms2ex.Managers.Field.Character do
     state = %{state | sessions: sessions, players: players}
 
     # field-object systems must be initialized before entities load
+    push(character, Packets.LoadCubes.load_plots())
+    push(character, Packets.LoadCubes.load())
+    push(character, Packets.LoadCubes.plot_state())
+    push(character, Packets.LoadCubes.plot_expiry())
+    push(character, Packets.Ugc.load())
     push(character, Packets.Breakable.load())
     push(character, Packets.Liftable.load())
+    push(character, Packets.AddInteractObjects.bytes([]))
     push(character, Packets.FunctionCube.load())
 
     # Load NPCs
@@ -80,7 +86,19 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.Emote.load(emotes))
 
     push(character, Packets.SkillMacro.load())
+    push(character, Packets.Wedding.update_marriage())
+    push(character, Packets.Wedding.update_hall())
+    push(character, Packets.ResponseCube.design_rank_reward(character.account_id))
+    push(character, Packets.ResponseCube.update_profile(character))
+    push(character, Packets.ResponseCube.return_map(character.map_id))
     push(character, Packets.Lapenshard.load())
+
+    tick = Ms2ex.sync_ticks()
+    push(character, Packets.RevivalCount.bytes())
+    push(character, Packets.RevivalConfirm.bytes(character.object_id, tick))
+    push(character, Packets.StatPoints.sources())
+    push(character, Packets.StatPoints.allocation())
+    push(character, Packets.SkillPoint.sources())
 
     # Load Premium membership if active
     with %Schema.PremiumMembership{} = membership <-
@@ -88,6 +106,8 @@ defmodule Ms2ex.Managers.Field.Character do
          false <- Context.PremiumMemberships.expired?(membership) do
       push(character, Packets.PremiumClub.activate(character, membership))
     end
+
+    push(character, Packets.DynamicChannel.bytes())
 
     # If character teleported or was summoned by an other user
     maybe_teleport_character(character)

@@ -18,6 +18,7 @@ defmodule Ms2ex.Types.SkillCast do
     :direction,
     :rotate2z,
     :caster,
+    :attack_counter,
     motion_point: 0,
     attack_point: 0
   ]

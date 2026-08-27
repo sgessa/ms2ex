@@ -37,8 +37,11 @@ defmodule Ms2ex.Packets.SkillDamage do
     __MODULE__
     |> build()
     |> put_byte(@modes.damage)
-    |> put_long(skill_cast.id)
-    |> put_long(skill_cast.id)
+    # SkillUid: the damage record carries no cast reference; TargetUid links
+    # the hit to the target (caster object id in the high dword + per-attack
+    # counter in the low dword), which the client's HP-bar logic keys on
+    |> put_long(0)
+    |> put_long(caster.object_id * 0x1_0000_0000 + (skill_cast.attack_counter || 0))
     |> put_int(caster.object_id)
     |> put_int(skill_cast.skill_id)
     |> put_short(skill_cast.skill_level)
