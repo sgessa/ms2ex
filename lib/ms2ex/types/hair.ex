@@ -11,9 +11,9 @@ defmodule Ms2ex.Types.Hair do
   ]
 
   def get_hair(packet) do
-    {back_length, packet} = get_int(packet)
+    {back_length, packet} = get_float(packet)
     {back_pos, packet} = get_bytes(packet, @position_length)
-    {front_length, packet} = get_int(packet)
+    {front_length, packet} = get_float(packet)
     {front_pos, packet} = get_bytes(packet, @position_length)
 
     {%__MODULE__{
@@ -26,9 +26,9 @@ defmodule Ms2ex.Types.Hair do
 
   def put_hair(packet, %__MODULE__{} = hair) do
     packet
-    |> put_int(hair.back_length)
+    |> put_float(hair.back_length)
     |> put_bytes(hair.back_position)
-    |> put_int(hair.front_length)
+    |> put_float(hair.front_length)
     |> put_bytes(hair.front_position)
   end
 end

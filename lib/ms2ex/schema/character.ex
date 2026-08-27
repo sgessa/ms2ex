@@ -58,7 +58,7 @@ defmodule Ms2ex.Schema.Character do
     field :exp, :integer, default: 0
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
-    field :job, Enums.Job, default: :newbie
+    field :job, Enums.Job, default: :beginner
     field :map_id, :integer
     field :motto, :string, default: "Let's Maple!"
     field :name, :string
