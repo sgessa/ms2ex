@@ -17,7 +17,12 @@ defmodule Ms2ex.FieldDeathTest do
   setup do
     # seed the metadata cache directly (no Redis / game data needed)
     :ets.insert(:metadata, {"npc:#{@mob_id}", {:ok, @npc_metadata}})
-    :ets.insert(:metadata, {"item:90000009", {:ok, %{limit: %{level: 1}, slot_names: []}}})
+
+    # field-drop item metadata (mesos, merets, spirit orbs, stamina) so the
+    # death/damage reward paths can build items without the game-data store
+    for item_id <- [90_000_001, 90_000_004, 90_000_009, 90_000_010] do
+      :ets.insert(:metadata, {"item:#{item_id}", {:ok, %{limit: %{level: 1}, slot_names: []}}})
+    end
 
     npc = Types.Npc.new(%{id: @mob_id, metadata: @npc_metadata})
 
