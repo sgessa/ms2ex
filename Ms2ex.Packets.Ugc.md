@@ -3,6 +3,10 @@
 
 # `load`
 
+# `put_ugc`
+
+# `set_endpoint`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

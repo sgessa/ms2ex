@@ -211,7 +211,6 @@ Ms2ex.Packets.Stats.md
 Ms2ex.Packets.SyncNumber.md
 Ms2ex.Packets.Taxi.md
 Ms2ex.Packets.Trigger.md
-Ms2ex.Packets.UGC.md
 Ms2ex.Packets.Ugc.md
 Ms2ex.Packets.UnequipItem.md
 Ms2ex.Packets.UnknownSync.md

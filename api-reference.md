@@ -281,7 +281,6 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Packets.SyncNumber](Ms2ex.Packets.SyncNumber.md)
   - [Ms2ex.Packets.Taxi](Ms2ex.Packets.Taxi.md)
   - [Ms2ex.Packets.Trigger](Ms2ex.Packets.Trigger.md)
-  - [Ms2ex.Packets.UGC](Ms2ex.Packets.UGC.md)
   - [Ms2ex.Packets.Ugc](Ms2ex.Packets.Ugc.md)
   - [Ms2ex.Packets.UnequipItem](Ms2ex.Packets.UnequipItem.md)
   - [Ms2ex.Packets.UnknownSync](Ms2ex.Packets.UnknownSync.md)
