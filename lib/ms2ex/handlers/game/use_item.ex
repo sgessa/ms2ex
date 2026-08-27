@@ -64,25 +64,29 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp add_additional_effect(session, character, item) do
-    case item.metadata[:function_parameters] do
-      nil ->
-        session
+    with parameters when is_binary(parameters) <- item.metadata[:function_parameters],
+         [effect_id, effect_level] <- parse_effect_params(parameters),
+         :ok <-
+           Context.Field.call(character, {:add_effect_buff, effect_id, effect_level, character}) do
+      consumed_item = Context.Inventory.consume(item)
+      push(session, Packets.InventoryItem.consume(consumed_item))
+    else
+      _ -> session
+    end
+  end
 
-      parameters ->
-        case parameters |> String.split(",") |> Enum.map(&String.to_integer/1) do
-          [effect_id, effect_level] ->
-            with :ok <-
-                   Context.Field.call(
-                     character,
-                     {:add_effect_buff, effect_id, effect_level, character}
-                   ) do
-              consumed_item = Context.Inventory.consume(item)
-              push(session, Packets.InventoryItem.consume(consumed_item))
-            end
-
-          _ ->
-            session
+  defp parse_effect_params(parameters) do
+    case String.split(parameters, ",") do
+      [effect_id, effect_level] ->
+        with {effect_id, ""} <- Integer.parse(effect_id),
+             {effect_level, ""} <- Integer.parse(effect_level) do
+          [effect_id, effect_level]
+        else
+          _ -> nil
         end
+
+      _ ->
+        nil
     end
   end
 end
