@@ -14,9 +14,9 @@ ears = Context.Items.init(10500001)
 hair_color = ItemColor.build(Color.build(47, 47, -86, -1), Color.build(-37, -123, 76, -1), Color.build(19, 19, 96, -1), 0)
 
 hair =
-  Context.Items.init(10_200_001, %{
+  Context.Items.init(10_200_004, %{
     color: hair_color,
-    data: %Hair{back_length: 1_065_353_216, front_length: 1_065_353_216}
+    data: %Hair{back_length: 0.20000000298023224, front_length: 1.0}
   })
 
 face_color = ItemColor.build(Color.build(41, 36, -75, -1), Color.build(-29, -29, -9, -1), Color.build(2, 7, 20, -1), 0)

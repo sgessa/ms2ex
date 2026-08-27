@@ -50,7 +50,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp handle_create(packet, session) do
     {gender, packet} = get_byte(packet)
-    {job, packet} = get_short(packet)
+    {job_code, packet} = get_short(packet)
     {name, packet} = get_ustring(packet)
     {skin_color, packet} = Types.SkinColor.get_skin_color(packet)
     {_, packet} = get_short(packet)
@@ -68,7 +68,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     attrs = %{
       gender: gender,
-      job: Enums.Job.get_value(job),
+      job: Enums.Job.get_key(job_code),
       map_id: 2_000_023,
       name: name,
       skin_color: skin_color
