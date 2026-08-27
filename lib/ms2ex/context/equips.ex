@@ -25,11 +25,11 @@ defmodule Ms2ex.Context.Equips do
       [%Schema.Item{location: :equipment, ...}, ...]
   """
   @spec list(Schema.Character.t()) :: [Schema.Item.t()]
-  def list(%Schema.Character{id: char_id}) do
+  def list(%Schema.Character{} = character) do
     Schema.Item
-    |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
+    |> where([i], i.character_id == ^character.id and i.location == ^:equipment)
     |> Repo.all()
-    |> Enum.map(&Context.Items.load_metadata(&1))
+    |> Enum.map(&Context.Items.apply_binding(&1, character))
   end
 
   @doc """

@@ -20,8 +20,6 @@ defmodule Ms2ex.Schema.Item do
     :inventory_tab,
     :limit_break_level,
     :location,
-    :paired_character_id,
-    :paired_character_name,
     :rarity,
     :remaining_trades,
     :stats,
@@ -56,8 +54,8 @@ defmodule Ms2ex.Schema.Item do
     field :lock_character_id, :integer, virtual: true
     field :mob_drop?, :boolean, virtual: true, default: false
     field :object_id, :integer, virtual: true
-    field :paired_character_id, :integer, default: 0
-    field :paired_character_name, :string, default: ""
+    field :paired_character_id, :integer, virtual: true, default: 0
+    field :paired_character_name, :string, virtual: true, default: ""
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
     field :remaining_trades, :integer, default: 0

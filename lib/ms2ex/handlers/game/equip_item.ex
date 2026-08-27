@@ -72,7 +72,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     with {:ok, item} <- Context.Equips.unequip(item) do
       Managers.Character.update(Context.Characters.load_equips(character))
 
-      item = Context.Items.load_metadata(item)
+      item = Context.Items.apply_binding(item, character)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
       Context.Field.broadcast(character, unequip_packet)
 
