@@ -191,12 +191,12 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, Map.put(character, :skill_cooldowns, cooldowns)}
   end
 
-  def handle_cast({:receive_fall_dmg}, character) do
+  def handle_cast({:receive_fall_dmg, distance}, character) do
     hp = Map.get(character.stats, :health_cur)
-    dmg = Context.Damage.calculate_fall_dmg(character)
-    character = Character.Stats.set(character, :health, max(hp - dmg, 25))
+    dmg = Context.Damage.calculate_fall_dmg(character, distance)
+    character = Character.Stats.set(character, :health, hp - dmg)
 
-    push(character, Packets.FallDamage.bytes(character, 0))
+    push(character, Packets.FallDamage.bytes(character, dmg))
 
     {:noreply, character}
   end

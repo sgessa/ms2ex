@@ -4,6 +4,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   alias Ms2ex.Types
   alias Ms2ex.Storage
   alias Ms2ex.Packets
+  alias Ms2ex.Constants
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -42,6 +43,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   # TODO needs reworking, re-use in RideSync handler
+
   defp ensure_safe_position(session, character, sync_states) do
     %{state: state, position: new_position} = List.first(sync_states)
     closest_block = Context.MapBlock.closest_block(new_position)
@@ -54,7 +56,8 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     if out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
-      Managers.Character.cast(character, {:receive_fall_dmg})
+      fall_distance = Constants.get(:out_of_bounds_fall_distance)
+      Managers.Character.cast(character, {:receive_fall_dmg, fall_distance})
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     end
   end
@@ -94,25 +97,8 @@ defmodule Ms2ex.GameHandlers.UserSync do
   defp find_high_low_bounds(x, y) when x > y, do: {x, y}
   defp find_high_low_bounds(x, y), do: {y, x}
 
-  defp handle_out_of_bounds(%{position: pos, safe_position: safe_pos} = character) do
-    # Without this player will spawn inside the block
-    # for some reason if coord is negative player is teleported one block over,
-    # which can result player being stuck inside a block
+  defp handle_out_of_bounds(%{safe_position: safe_pos} = character) do
     safe_pos = %{safe_pos | z: safe_pos.z + Context.MapBlock.block_size() + 1}
-
-    safe_pos =
-      if pos.x < 0 do
-        %{safe_pos | x: safe_pos.x - Context.MapBlock.block_size()}
-      else
-        safe_pos
-      end
-
-    safe_pos =
-      if pos.y < 0 do
-        %{safe_pos | y: safe_pos.y - Context.MapBlock.block_size()}
-      else
-        safe_pos
-      end
 
     %{character | safe_position: safe_pos}
   end
