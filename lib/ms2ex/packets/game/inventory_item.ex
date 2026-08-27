@@ -121,9 +121,8 @@ defmodule Ms2ex.Packets.InventoryItem do
     # TODO handle if char bound
     |> put_sockets()
     |> put_long(item.paired_character_id)
-    # TODO put paired character name if present
     |> put_long()
-    |> put_ustring("")
+    |> put_ustring(item.paired_character_name)
   end
 
   def load_items(tab_id, items) do

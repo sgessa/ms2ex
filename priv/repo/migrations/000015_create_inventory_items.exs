@@ -15,6 +15,8 @@ defmodule Ms2ex.Repo.Migrations.CreateInventory do
       add :inventory_tab, :integer, null: false
       add :limit_break_level, :integer
       add :location, :integer, null: false
+      add :paired_character_id, :bigint, null: false, default: 0
+      add :paired_character_name, :string, null: false, default: ""
       add :rarity, :integer, null: false
       add :remaining_trades, :integer, null: false, default: 0
       add :stats, :binary

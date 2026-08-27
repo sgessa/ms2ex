@@ -29,7 +29,10 @@ defmodule Ms2ex.Managers.Field.Item do
         Managers.Character.cast(character, {:increase_stat, :stamina, item.amount})
 
       true ->
-        item = Context.Items.load_metadata(item)
+        item =
+          item
+          |> Context.Items.load_metadata()
+          |> Context.Items.bind_if_needed(character, :loot)
 
         with {:ok, result} <- Context.Inventory.add_item(character, item) do
           {_status, item} = result
