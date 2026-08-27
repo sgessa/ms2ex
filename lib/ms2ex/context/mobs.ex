@@ -21,6 +21,26 @@ defmodule Ms2ex.Context.Mobs do
     if drop_info, do: drop_rewards_for(mob, drop_info, map_conditions(map_id))
   end
 
+  @doc """
+  Rolls the mob's on-hit drops from its `drop_info` metadata. Global hit
+  boxes drop unlocked loot; individual hit boxes are locked to the player
+  who dealt the hit.
+  """
+  def drop_hit_rewards(mob, map_id \\ nil) do
+    drop_info = get_in(mob.npc.metadata, [:drop_info])
+
+    if drop_info do
+      mob_level = get_in(mob.npc.metadata, [:basic, :level]) || 1
+      map = map_conditions(map_id)
+
+      drop_global_boxes(mob, drop_info[:global_hit_drop_box_ids] || [], mob_level, nil, map)
+
+      if receiver = mob.last_attacker do
+        drop_individual_boxes(mob, receiver, drop_info[:individual_hit_drop_box_ids] || [], map)
+      end
+    end
+  end
+
   def reward_exp(mob) do
     player = mob.first_attacker || mob.last_attacker
 

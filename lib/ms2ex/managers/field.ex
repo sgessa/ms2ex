@@ -160,6 +160,8 @@ defmodule Ms2ex.Managers.Field do
     hp = max(0, field_npc.stats.health.current - dmg)
     stats = put_in(field_npc.stats, [:health, :current], hp)
 
+    Context.Mobs.drop_hit_rewards(field_npc, state.map_id)
+
     field_npc =
       if hp == 0 do
         announce_death(%{field_npc | stats: stats}, state.topic, state.map_id)
