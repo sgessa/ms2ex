@@ -91,6 +91,7 @@ Ms2ex.GameHandlers.Ride.md
 Ms2ex.GameHandlers.RideSync.md
 Ms2ex.GameHandlers.Skill.md
 Ms2ex.GameHandlers.SkillBook.md
+Ms2ex.GameHandlers.StateSkill.md
 Ms2ex.GameHandlers.Taxi.md
 Ms2ex.GameHandlers.UseItem.md
 Ms2ex.GameHandlers.UserChat.md
@@ -205,6 +206,7 @@ Ms2ex.Packets.SkillPoint.md
 Ms2ex.Packets.SkillSync.md
 Ms2ex.Packets.SkillUse.md
 Ms2ex.Packets.StatPoints.md
+Ms2ex.Packets.StateSkill.md
 Ms2ex.Packets.Stats.md
 Ms2ex.Packets.SyncNumber.md
 Ms2ex.Packets.Taxi.md

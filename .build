@@ -92,6 +92,7 @@ Ms2ex.GameHandlers.Ride.html
 Ms2ex.GameHandlers.RideSync.html
 Ms2ex.GameHandlers.Skill.html
 Ms2ex.GameHandlers.SkillBook.html
+Ms2ex.GameHandlers.StateSkill.html
 Ms2ex.GameHandlers.Taxi.html
 Ms2ex.GameHandlers.UseItem.html
 Ms2ex.GameHandlers.UserChat.html
@@ -206,6 +207,7 @@ Ms2ex.Packets.SkillPoint.html
 Ms2ex.Packets.SkillSync.html
 Ms2ex.Packets.SkillUse.html
 Ms2ex.Packets.StatPoints.html
+Ms2ex.Packets.StateSkill.html
 Ms2ex.Packets.Stats.html
 Ms2ex.Packets.SyncNumber.html
 Ms2ex.Packets.Taxi.html
@@ -292,8 +294,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-AC2BD0FF.js
-dist/sidebar_items-21C2F405.js
+dist/search_data-7260DFDB.js
+dist/sidebar_items-92C06C16.js
 index.html
 license.html
 readme.html
