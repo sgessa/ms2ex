@@ -111,8 +111,7 @@ the first hit immediately.
 
 The top-center boss HP bar never renders for NPC bosses in this client build.
 The server-side packet set is aligned; the arming trigger is believed to be
-client-side and needs a live sniff diff during a boss fight (investigation
-notes are kept local).
+client-side and needs a live sniff diff during a boss fight.
 
 ### 11. RegionSkill rotation — [Open]
 
