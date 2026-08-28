@@ -99,23 +99,24 @@ defmodule Ms2ex.Formulas.GearScore do
   @spec calculate([map()]) :: integer()
   def calculate(items) do
     Enum.reduce(items, 0, fn item, total ->
-      if Map.get(item, :item_type) in [40, 41] do
-        total
-      else
-        {base, enchant} =
-          item_level(
-            Map.get(item, :gear_score, 0),
-            Map.get(item, :rarity, 0),
-            Map.get(item, :item_type, 0),
-            Map.get(item, :enchant_level, 0),
-            Map.get(item, :limit_break_level, 0)
-          )
-
-        score = base + enchant
-        score = if Map.get(item, :item_type) in [31, 34], do: div(score, 2), else: score
-        total + score
-      end
+      total + item_score(item)
     end)
+  end
+
+  defp item_score(%{item_type: item_type}) when item_type in [40, 41], do: 0
+
+  defp item_score(item) do
+    {base, enchant} =
+      item_level(
+        Map.get(item, :gear_score, 0),
+        Map.get(item, :rarity, 0),
+        Map.get(item, :item_type, 0),
+        Map.get(item, :enchant_level, 0),
+        Map.get(item, :limit_break_level, 0)
+      )
+
+    score = base + enchant
+    if Map.get(item, :item_type) in [31, 34], do: div(score, 2), else: score
   end
 
   defp base_score(gear_score, rarity, item_type, limit_break_level) do
@@ -157,35 +158,34 @@ defmodule Ms2ex.Formulas.GearScore do
     do: (10 * gear_score + max(rarity - 1, 0) * 5) * item_coefficient(item_type)
 
   defp enchant_coefficient(rarity, gear_score, enchant_level, limit_break_level) do
-    cond do
-      limit_break_level < 60 and rarity >= 4 ->
-        coefficient(@na_coefficients, enchant_level)
+    coefficients =
+      cond do
+        limit_break_level < 60 ->
+          pre_limit_break_coefficients(rarity)
 
-      limit_break_level < 60 ->
-        coefficient(@common_coefficients, enchant_level)
+        limit_break_level < 70 ->
+          if(rarity >= 4, do: @r5_coefficients, else: @common_coefficients)
 
-      limit_break_level < 70 and rarity >= 4 ->
-        coefficient(@r5_coefficients, enchant_level)
+        limit_break_level < 80 ->
+          limit_break_coefficients(rarity, gear_score)
 
-      limit_break_level < 70 ->
-        coefficient(@common_coefficients, enchant_level)
+        rarity >= 4 ->
+          @na_coefficients
 
-      limit_break_level < 80 and rarity == 4 and gear_score < 70 ->
-        coefficient(@r5_coefficients, enchant_level)
+        true ->
+          @common_coefficients
+      end
 
-      limit_break_level < 80 and rarity == 4 ->
-        coefficient(@l70_coefficients, enchant_level)
-
-      limit_break_level < 80 and rarity > 4 ->
-        coefficient(@na_coefficients, enchant_level)
-
-      rarity >= 4 ->
-        coefficient(@na_coefficients, enchant_level)
-
-      true ->
-        coefficient(@common_coefficients, enchant_level)
-    end
+    coefficient(coefficients, enchant_level)
   end
+
+  defp pre_limit_break_coefficients(rarity),
+    do: if(rarity >= 4, do: @na_coefficients, else: @common_coefficients)
+
+  defp limit_break_coefficients(4, gear_score) when gear_score < 70, do: @r5_coefficients
+  defp limit_break_coefficients(4, _gear_score), do: @l70_coefficients
+  defp limit_break_coefficients(rarity, _gear_score) when rarity > 4, do: @na_coefficients
+  defp limit_break_coefficients(_rarity, _gear_score), do: @common_coefficients
 
   defp coefficient(coefficients, enchant_level), do: Enum.at(coefficients, enchant_level, 0.0)
   defp high_rank?(gear_score, rarity), do: rarity > 3 and gear_score >= 50

@@ -4,6 +4,71 @@ defmodule Ms2ex.Formulas.BaseStats do
 
   @split_level 50
 
+  @dex_gain_rules %{
+    archer: 7,
+    heavy_gunner: 7,
+    striker: 7,
+    knight: 1,
+    berserker: 1,
+    beginner: :beginner,
+    thief: :thief,
+    assassin: 1,
+    rune_blade: 1,
+    wizard: :spellcaster,
+    priest: :spellcaster,
+    soul_binder: :spellcaster
+  }
+  @int_gain_rules %{
+    beginner: :beginner,
+    knight: :even,
+    berserker: :odd,
+    wizard: 8,
+    priest: 8,
+    soul_binder: 8,
+    archer: :even,
+    heavy_gunner: :even,
+    thief: :even,
+    assassin: :even,
+    rune_blade: :even,
+    striker: :odd
+  }
+  @luck_gain_rules %{
+    thief: 7,
+    assassin: 7,
+    heavy_gunner: 1,
+    wizard: :spellcaster,
+    priest: :spellcaster,
+    soul_binder: :spellcaster,
+    knight: :odd,
+    archer: :odd,
+    rune_blade: :odd,
+    berserker: :even,
+    striker: :even,
+    beginner: :beginner
+  }
+  @post50_rules %{
+    {:str, :beginner} => :always,
+    {:str, :knight} => :always,
+    {:str, :berserker} => :always,
+    {:str, :rune_blade} => :always,
+    {:dex, :archer} => :always,
+    {:dex, :heavy_gunner} => :always,
+    {:dex, :striker} => :always,
+    {:int, :wizard} => :always,
+    {:int, :priest} => :always,
+    {:int, :soul_binder} => :always,
+    {:luk, :thief} => :always,
+    {:luk, :assassin} => :always,
+    {:luk, :heavy_gunner} => :heavy_gunner,
+    {:dex, :knight} => :multiple_of_three,
+    {:dex, :berserker} => :multiple_of_three,
+    {:dex, :assassin} => :multiple_of_three,
+    {:dex, :rune_blade} => :multiple_of_three,
+    {:str, :archer} => :multiple_of_three,
+    {:str, :thief} => :multiple_of_three,
+    {:str, :striker} => :multiple_of_three
+  }
+
   @jobs %{
     beginner: {7, 6, 2, 2, 66},
     knight: {8, 6, 2, 1, 72},
@@ -76,30 +141,31 @@ defmodule Ms2ex.Formulas.BaseStats do
   end
 
   def all(job, level) do
-    defaults = Map.merge(get(job, level), %{
-      hp_regen: 10,
-      hp_regen_interval: 3000,
-      spirit: 100,
-      sp_regen: 10,
-      sp_regen_interval: 1000,
-      stamina: 120,
-      stamina_regen: 10,
-      stamina_regen_interval: 500,
-      attack_speed: 100,
-      movement_speed: 100,
-      accuracy: 82,
-      evasion: evasion(job),
-      critical_rate: critical_rate(job),
-      critical_damage: 125,
-      critical_evasion: 50,
-      defense: max(level, 1),
-      jump_height: 100,
-      physical_res: physical_res(job, level),
-      magical_res: magical_res(job, level),
-      mount_speed: 100,
-      physical_atk: 0,
-      magical_atk: 0
-    })
+    defaults =
+      Map.merge(get(job, level), %{
+        hp_regen: 10,
+        hp_regen_interval: 3000,
+        spirit: 100,
+        sp_regen: 10,
+        sp_regen_interval: 1000,
+        stamina: 120,
+        stamina_regen: 10,
+        stamina_regen_interval: 500,
+        attack_speed: 100,
+        movement_speed: 100,
+        accuracy: 82,
+        evasion: evasion(job),
+        critical_rate: critical_rate(job),
+        critical_damage: 125,
+        critical_evasion: 50,
+        defense: max(level, 1),
+        jump_height: 100,
+        physical_res: physical_res(job, level),
+        magical_res: magical_res(job, level),
+        mount_speed: 100,
+        physical_atk: 0,
+        magical_atk: 0
+      })
 
     base = Map.merge(defaults, UserStats.get(job, level) || %{})
 
@@ -121,79 +187,46 @@ defmodule Ms2ex.Formulas.BaseStats do
   end
 
   defp dex_gain(job, level) do
-    cond do
-      job in [:archer, :heavy_gunner, :striker] -> 7
-      job in [:knight, :berserker] -> 1
-      job == :beginner and rem(level, 3) != 2 -> 1
-      job == :thief and rem(level, 2) == 1 -> 1
-      job in [:assassin, :rune_blade] -> 1
-      rem(level, 3) == 1 and job in [:wizard, :priest, :soul_binder] -> 1
-      true -> 0
+    case Map.get(@dex_gain_rules, job) do
+      gain when is_integer(gain) -> gain
+      :beginner -> if(rem(level, 3) != 2, do: 1, else: 0)
+      :thief -> if(rem(level, 2) == 1, do: 1, else: 0)
+      :spellcaster -> if(rem(level, 3) == 1, do: 1, else: 0)
+      _ -> 0
     end
   end
 
   defp int_gain(job, level) do
-    cond do
-      job == :beginner ->
-        if(rem(level, 3) != 1, do: 1, else: 0)
-
-      job == :knight ->
-        if(rem(level, 2) == 0, do: 1, else: 0)
-
-      job == :berserker ->
-        if(rem(level, 2) == 1, do: 1, else: 0)
-
-      job in [:wizard, :priest, :soul_binder] ->
-        8
-
-      job in [:archer, :heavy_gunner, :thief, :assassin, :rune_blade] ->
-        if(rem(level, 2) == 0, do: 1, else: 0)
-
-      job == :striker ->
-        if(rem(level, 2) == 1, do: 1, else: 0)
-
-      true ->
-        0
+    case Map.get(@int_gain_rules, job) do
+      gain when is_integer(gain) -> gain
+      :beginner -> if(rem(level, 3) != 1, do: 1, else: 0)
+      :even -> if(rem(level, 2) == 0, do: 1, else: 0)
+      :odd -> if(rem(level, 2) == 1, do: 1, else: 0)
+      _ -> 0
     end
   end
 
   defp luck_gain(job, level) do
-    cond do
-      job in [:thief, :assassin] -> 7
-      job == :heavy_gunner -> 1
-      rem(level, 3) == 2 and job in [:wizard, :priest, :soul_binder] -> 1
-      rem(level, 2) == 1 and job in [:knight, :archer, :rune_blade] -> 1
-      rem(level, 2) == 0 and job in [:berserker, :striker] -> 1
-      job == :beginner and rem(level, 3) != 0 -> 1
-      true -> 0
-    end
+    luck_gain_for_rule(Map.get(@luck_gain_rules, job), level)
   end
 
+  defp luck_gain_for_rule(7, _level), do: 7
+  defp luck_gain_for_rule(1, _level), do: 1
+  defp luck_gain_for_rule(:spellcaster, level), do: parity_gain(level, 3, 2)
+  defp luck_gain_for_rule(:odd, level), do: parity_gain(level, 2, 1)
+  defp luck_gain_for_rule(:even, level), do: parity_gain(level, 2, 0)
+  defp luck_gain_for_rule(:beginner, level), do: if(rem(level, 3) != 0, do: 1, else: 0)
+  defp luck_gain_for_rule(_, _level), do: 0
+
+  defp parity_gain(level, divisor, remainder),
+    do: if(rem(level, divisor) == remainder, do: 1, else: 0)
+
   defp post50(job, level, stat) do
-    cond do
-      stat == :str and job in [:beginner, :knight, :berserker, :rune_blade] ->
-        1
-
-      stat == :dex and job in [:archer, :heavy_gunner, :striker] ->
-        1
-
-      stat == :int and job in [:wizard, :priest, :soul_binder] ->
-        1
-
-      stat == :luk and job in [:thief, :assassin] ->
-        1
-
-      stat == :luk and job == :heavy_gunner and rem(level, 3) == 0 ->
-        1
-
-      stat == :dex and job in [:knight, :berserker, :assassin, :rune_blade] and rem(level, 3) == 0 ->
-        1
-
-      stat == :str and job in [:archer, :thief, :striker] and rem(level, 3) == 0 ->
-        1
-
-      true ->
-        0
+    case Map.get(@post50_rules, {stat, job}) do
+      :always -> 1
+      :heavy_gunner -> if(rem(level, 3) == 0, do: 1, else: 0)
+      :multiple_of_three -> if(rem(level, 3) == 0, do: 1, else: 0)
+      _ -> 0
     end
   end
 

@@ -73,12 +73,14 @@ defmodule Ms2ex.Context.ItemStatsCalculator do
       stat,
       stat_value,
       deviation,
-      item_type(item),
-      first_recommended_job(item),
-      item.metadata.option.level_factor,
-      item.rarity,
-      item.metadata.limit.level,
-      if(stat == :intelligence, do: 1, else: 0)
+      %{
+        item_type: item_type(item),
+        job: first_recommended_job(item),
+        factor: item.metadata.option.level_factor,
+        grade: item.rarity,
+        level: item.metadata.limit.level,
+        p7: if(stat == :intelligence, do: 1, else: 0)
+      }
     )
   end
 

@@ -93,13 +93,17 @@ defmodule Ms2ex.Context.ItemStats do
     item
     |> item_stats()
     |> Enum.reduce(%{}, fn stat, acc ->
-      if stat.class == class and (stat.type == :flat or stat.attribute == :piercing) do
-        value = if stat.type == :rate, do: round(stat.value * 1000), else: trunc(stat.value)
-        Map.update(acc, stat.attribute, value, &(&1 + value))
-      else
-        acc
+      case stat do
+        %{class: ^class, type: :flat} -> add_stat_value(acc, stat)
+        %{class: ^class, attribute: :piercing} -> add_stat_value(acc, stat)
+        _ -> acc
       end
     end)
+  end
+
+  defp add_stat_value(acc, %{attribute: attribute, type: type, value: value}) do
+    value = if type == :rate, do: round(value * 1000), else: trunc(value)
+    Map.update(acc, attribute, value, &(&1 + value))
   end
 
   defp item_stat_rates(item, class) do
