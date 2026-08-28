@@ -1,6 +1,8 @@
 # `Ms2ex.Context.Skills`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/skills.ex#L1)
 
+# `add`
+
 # `add_tab`
 
 # `by_job`
