@@ -15,6 +15,5 @@ defmodule Ms2ex.TestHelpers do
   """
   def stub_metadata(data) do
     Mimic.stub(Ms2ex.Storage, :get, fn set, id -> Map.get(data, "#{set}:#{id}") end)
-    :ok
   end
 end
