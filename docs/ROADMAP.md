@@ -69,12 +69,14 @@ Applied today: `status.values` / `status.rates` stat modifiers, the
 - recovery is skipped on mob-owned buffs; empty effects are applied as no-op
   buffs
 
-### 5. Skill resource costs — [Open]
+### 5. Skill resource costs — [Partial]
 
-Skills track cooldowns, but SP/stamina costs are never consumed: regular casts
-skip them entirely, and state skills (recv `0x21`) have no per-tick
-re-validation/consumption loop and are never cancelled when the actor state
-changes.
+Regular skill casts validate and consume SP/stamina (the cast is gated on
+having enough, then both are drained). What remains:
+
+- state skills (recv `0x21`) validate and consume nothing
+- state skills have no per-tick re-validation/consumption loop and are never
+  cancelled when the actor state changes
 
 ### 6. SkillDamage Tile damage mode — [Partial]
 
