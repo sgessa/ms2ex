@@ -1,6 +1,10 @@
 # `Ms2ex.Managers.Field`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L1)
 
+# `apply_skill_effects`
+
+# `apply_splash_skill`
+
 # `child_spec`
 
 Returns a specification to start this module under a supervisor.

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-55DC3565.js"></script>
+    <script defer src="dist/sidebar_items-7855DB82.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -137,7 +137,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_effect_buff/4" data-no-tooltip="" translate="no">add_effect_buff(effect_id, effect_level, character, state)</a>
+        <a href="#add_effect_buff/5" data-no-tooltip="" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0)</a>
 
       </div>
 
@@ -145,7 +145,15 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_mob_buff/5" data-no-tooltip="" translate="no">add_mob_buff(caster, effect_id, effect_level, mob, state)</a>
+        <a href="#add_mob_buff/6" data-no-tooltip="" translate="no">add_mob_buff(caster, effect_id, effect_level, mob, state, overlap_count \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_buff/3" data-no-tooltip="" translate="no">remove_buff(buff_id, state, force \\ false)</a>
 
       </div>
 
@@ -183,7 +191,7 @@ MS2EX
       <h1 class="signature" translate="no">add_buff(skill_cast, skill, character, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L9" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L10" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -195,14 +203,16 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="add_effect_buff/4">
+<section class="detail" id="add_effect_buff/5">
+
+    <span id="add_effect_buff/4"></span>
 
   <div class="detail-header">
-    <a href="#add_effect_buff/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#add_effect_buff/5" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">add_effect_buff(effect_id, effect_level, character, state)</h1>
+      <h1 class="signature" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0)</h1>
 
 
         <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L22" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -217,17 +227,43 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="add_mob_buff/5">
+<section class="detail" id="add_mob_buff/6">
+
+    <span id="add_mob_buff/5"></span>
 
   <div class="detail-header">
-    <a href="#add_mob_buff/5" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#add_mob_buff/6" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">add_mob_buff(caster, effect_id, effect_level, mob, state)</h1>
+      <h1 class="signature" translate="no">add_mob_buff(caster, effect_id, effect_level, mob, state, overlap_count \\ 0)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L45" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="remove_buff/3">
+
+    <span id="remove_buff/2"></span>
+
+  <div class="detail-header">
+    <a href="#remove_buff/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_buff(buff_id, state, force \\ false)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L63" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -249,7 +285,7 @@ MS2EX
       <h1 class="signature" translate="no">tick(buff_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L66" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L237" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

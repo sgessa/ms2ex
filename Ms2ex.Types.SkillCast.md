@@ -55,6 +55,8 @@
 
 # `splash`
 
+# `splash_skill_cast`
+
 # `stamina_cost`
 
 # `use_item?`

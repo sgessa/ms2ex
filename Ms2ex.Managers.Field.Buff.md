@@ -7,6 +7,8 @@
 
 # `add_mob_buff`
 
+# `remove_buff`
+
 # `tick`
 
 ---
