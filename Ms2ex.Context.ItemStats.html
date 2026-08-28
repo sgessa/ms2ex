@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-6E603E3A.js"></script>
+    <script defer src="dist/sidebar_items-55DC3565.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -115,9 +115,8 @@ MS2EX
 
     <section id="moduledoc">
 <p>Aggregates the stat bonuses granted by equipped items and applies them to a
-character's stats.</p><p>Each item's constant and static option stats are rolled through the
-<code class="inline">calcItemValues</code> Lua script, then summed over every equipped item and added
-to the character's current and maximum stat values.</p>
+character's stats.</p><p>Each item's calculated stats are summed over every equipped item and added
+to the character's base stat values.</p>
     </section>
 
 </div>
@@ -162,7 +161,7 @@ stack.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Stat bonuses granted by a single item: its constant plus static value stats.</p></div>
+        <div class="summary-synopsis"><p>Stat bonuses granted by a single item.</p></div>
 
     </div>
 
@@ -190,7 +189,7 @@ stack.</p></div>
       <h1 class="signature" translate="no">apply(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L39" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L31" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -214,7 +213,7 @@ stack.</p>
       <h1 class="signature" translate="no">apply_stats(character, bonuses)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L56" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -236,7 +235,7 @@ stack.</p>
       <h1 class="signature" translate="no">bonuses(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L20" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L22" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -245,7 +244,7 @@ stack.</p>
 
   <section class="docstring">
 
-<p>Stat bonuses granted by a single item: its constant plus static value stats.</p>
+<p>Stat bonuses granted by a single item.</p>
   </section>
 </section>
 

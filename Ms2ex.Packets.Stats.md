@@ -11,6 +11,8 @@
 
 # `update_mob_stat`
 
+# `update_player_stats`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

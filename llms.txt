@@ -17,6 +17,15 @@
 - [Ms2ex.EctoTypes.Term](Ms2ex.EctoTypes.Term.md)
 - [Ms2ex.EctoTypes.TransferFlags](Ms2ex.EctoTypes.TransferFlags.md)
 - [Ms2ex.Enum](Ms2ex.Enum.md)
+- [Ms2ex.Formulas.AttackStats](Ms2ex.Formulas.AttackStats.md)
+- [Ms2ex.Formulas.BaseStats](Ms2ex.Formulas.BaseStats.md)
+- [Ms2ex.Formulas.GearScore](Ms2ex.Formulas.GearScore.md)
+- [Ms2ex.Formulas.ItemBasicStats](Ms2ex.Formulas.ItemBasicStats.md)
+- [Ms2ex.Formulas.ItemDefense](Ms2ex.Formulas.ItemDefense.md)
+- [Ms2ex.Formulas.ItemRates](Ms2ex.Formulas.ItemRates.md)
+- [Ms2ex.Formulas.ItemStaticStats](Ms2ex.Formulas.ItemStaticStats.md)
+- [Ms2ex.Formulas.ItemWeaponAttack](Ms2ex.Formulas.ItemWeaponAttack.md)
+- [Ms2ex.GameHandlers.CharacterInfo](Ms2ex.GameHandlers.CharacterInfo.md)
 - [Ms2ex.GameHandlers.ChatSticker](Ms2ex.GameHandlers.ChatSticker.md)
 - [Ms2ex.GameHandlers.Dismantle](Ms2ex.GameHandlers.Dismantle.md)
 - [Ms2ex.GameHandlers.Emote](Ms2ex.GameHandlers.Emote.md)
@@ -66,7 +75,7 @@
 - [Ms2ex.LoginHandlers.ResponseLogin](Ms2ex.LoginHandlers.ResponseLogin.md)
 - [Ms2ex.LoginHandlers.ResponseServerEnter](Ms2ex.LoginHandlers.ResponseServerEnter.md)
 - [Ms2ex.LoginHandlers.ResponseVersion](Ms2ex.LoginHandlers.ResponseVersion.md)
-- [Ms2ex.Lua.Items](Ms2ex.Lua.Items.md)
+- [Ms2ex.Lua.ItemEnchant](Ms2ex.Lua.ItemEnchant.md)
 - [Ms2ex.Managers.Buff](Ms2ex.Managers.Buff.md)
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
 - [Ms2ex.Managers.Character.Skill](Ms2ex.Managers.Character.Skill.md)
@@ -98,6 +107,7 @@
 - [Ms2ex.Storage.Tables.Insignias](Ms2ex.Storage.Tables.Insignias.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
+- [Ms2ex.Storage.Tables.UserStats](Ms2ex.Storage.Tables.UserStats.md)
 - [Ms2ex.TransferFlags](Ms2ex.TransferFlags.md)
 - [Ms2exWeb](Ms2exWeb.md): The entrypoint for defining your web interface, such
 as controllers, views, channels and so on.
@@ -183,6 +193,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Context.ItemStaticStats](Ms2ex.Context.ItemStaticStats.md)
   - [Ms2ex.Context.ItemStats](Ms2ex.Context.ItemStats.md): Aggregates the stat bonuses granted by equipped items and applies them to a
 character's stats.
+  - [Ms2ex.Context.ItemStatsCalculator](Ms2ex.Context.ItemStatsCalculator.md)
   - [Ms2ex.Context.ItemTransfer](Ms2ex.Context.ItemTransfer.md): Item trade-state semantics: transfer flags and character binding.
   - [Ms2ex.Context.ItemTypes](Ms2ex.Context.ItemTypes.md)
   - [Ms2ex.Context.Items](Ms2ex.Context.Items.md)
@@ -211,6 +222,7 @@ character's stats.
   - [Ms2ex.Packets.Breakable](Ms2ex.Packets.Breakable.md)
   - [Ms2ex.Packets.Buff](Ms2ex.Packets.Buff.md)
   - [Ms2ex.Packets.CharacterCreate](Ms2ex.Packets.CharacterCreate.md)
+  - [Ms2ex.Packets.CharacterInfo](Ms2ex.Packets.CharacterInfo.md)
   - [Ms2ex.Packets.CharacterList](Ms2ex.Packets.CharacterList.md)
   - [Ms2ex.Packets.CharacterMaxCount](Ms2ex.Packets.CharacterMaxCount.md)
   - [Ms2ex.Packets.ChatSticker](Ms2ex.Packets.ChatSticker.md)

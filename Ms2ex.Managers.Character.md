@@ -39,6 +39,13 @@ See `Supervisor`.
 @spec save_skill_cooldown(Ms2ex.Schema.Character.t(), map()) :: :ok | :error
 ```
 
+# `set_level`
+
+```elixir
+@spec set_level(Ms2ex.Schema.Character.t(), integer()) ::
+  {:ok, Ms2ex.Schema.Character.t()} | :error
+```
+
 # `set_skill_cooldown`
 
 ```elixir

@@ -20,6 +20,7 @@ Ms2ex.Context.ItemEnchantStats.html
 Ms2ex.Context.ItemRandomStats.html
 Ms2ex.Context.ItemStaticStats.html
 Ms2ex.Context.ItemStats.html
+Ms2ex.Context.ItemStatsCalculator.html
 Ms2ex.Context.ItemTransfer.html
 Ms2ex.Context.ItemTypes.html
 Ms2ex.Context.Items.html
@@ -61,6 +62,15 @@ Ms2ex.Enums.SpecialStatType.html
 Ms2ex.Enums.StringCode.html
 Ms2ex.Enums.SystemNotice.html
 Ms2ex.Enums.TransferType.html
+Ms2ex.Formulas.AttackStats.html
+Ms2ex.Formulas.BaseStats.html
+Ms2ex.Formulas.GearScore.html
+Ms2ex.Formulas.ItemBasicStats.html
+Ms2ex.Formulas.ItemDefense.html
+Ms2ex.Formulas.ItemRates.html
+Ms2ex.Formulas.ItemStaticStats.html
+Ms2ex.Formulas.ItemWeaponAttack.html
+Ms2ex.GameHandlers.CharacterInfo.html
 Ms2ex.GameHandlers.ChatSticker.html
 Ms2ex.GameHandlers.Dismantle.html
 Ms2ex.GameHandlers.Emote.html
@@ -110,7 +120,7 @@ Ms2ex.LoginHandlers.ResponseKey.html
 Ms2ex.LoginHandlers.ResponseLogin.html
 Ms2ex.LoginHandlers.ResponseServerEnter.html
 Ms2ex.LoginHandlers.ResponseVersion.html
-Ms2ex.Lua.Items.html
+Ms2ex.Lua.ItemEnchant.html
 Ms2ex.Managers.Buff.html
 Ms2ex.Managers.Character.Skill.html
 Ms2ex.Managers.Character.Stats.html
@@ -133,6 +143,7 @@ Ms2ex.Packets.BannerList.html
 Ms2ex.Packets.Breakable.html
 Ms2ex.Packets.Buff.html
 Ms2ex.Packets.CharacterCreate.html
+Ms2ex.Packets.CharacterInfo.html
 Ms2ex.Packets.CharacterList.html
 Ms2ex.Packets.CharacterMaxCount.html
 Ms2ex.Packets.ChatSticker.html
@@ -264,6 +275,7 @@ Ms2ex.Storage.Tables.IndividualDropItem.html
 Ms2ex.Storage.Tables.Insignias.html
 Ms2ex.Storage.Tables.ItemOptions.html
 Ms2ex.Storage.Tables.Jobs.html
+Ms2ex.Storage.Tables.UserStats.html
 Ms2ex.Storage.html
 Ms2ex.TransferFlags.html
 Ms2ex.Types.Buff.html
@@ -299,8 +311,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-7033FAB2.js
-dist/sidebar_items-6E603E3A.js
+dist/search_data-972CAC4B.js
+dist/sidebar_items-55DC3565.js
 index.html
 license.html
 readme.html

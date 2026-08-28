@@ -97,6 +97,15 @@ except for the specified process.
     iex> broadcast_from(character, packet, self())
     :ok
 
+# `broadcast_stats`
+
+```elixir
+@spec broadcast_stats(Ms2ex.Schema.Character.t()) :: :ok
+```
+
+Sends the full stat set to the character and the compact player stat update
+to every other character in the same field.
+
 # `call`
 
 ```elixir

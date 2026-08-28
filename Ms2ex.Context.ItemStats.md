@@ -4,9 +4,8 @@
 Aggregates the stat bonuses granted by equipped items and applies them to a
 character's stats.
 
-Each item's constant and static option stats are rolled through the
-`calcItemValues` Lua script, then summed over every equipped item and added
-to the character's current and maximum stat values.
+Each item's calculated stats are summed over every equipped item and added
+to the character's base stat values.
 
 # `apply`
 
@@ -20,7 +19,7 @@ Adds a map of stat bonuses to a character's current and maximum stats.
 
 # `bonuses`
 
-Stat bonuses granted by a single item: its constant plus static value stats.
+Stat bonuses granted by a single item.
 
 ---
 

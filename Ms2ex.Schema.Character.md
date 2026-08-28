@@ -23,6 +23,7 @@
   favorite_stickers: term(),
   field_pid: term(),
   friends: term(),
+  gear_score: term(),
   gender: term(),
   group_chat_ids: term(),
   guild_name: term(),

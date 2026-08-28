@@ -19,6 +19,7 @@ Ms2ex.Context.ItemEnchantStats.md
 Ms2ex.Context.ItemRandomStats.md
 Ms2ex.Context.ItemStaticStats.md
 Ms2ex.Context.ItemStats.md
+Ms2ex.Context.ItemStatsCalculator.md
 Ms2ex.Context.ItemTransfer.md
 Ms2ex.Context.ItemTypes.md
 Ms2ex.Context.Items.md
@@ -60,6 +61,15 @@ Ms2ex.Enums.SpecialStatType.md
 Ms2ex.Enums.StringCode.md
 Ms2ex.Enums.SystemNotice.md
 Ms2ex.Enums.TransferType.md
+Ms2ex.Formulas.AttackStats.md
+Ms2ex.Formulas.BaseStats.md
+Ms2ex.Formulas.GearScore.md
+Ms2ex.Formulas.ItemBasicStats.md
+Ms2ex.Formulas.ItemDefense.md
+Ms2ex.Formulas.ItemRates.md
+Ms2ex.Formulas.ItemStaticStats.md
+Ms2ex.Formulas.ItemWeaponAttack.md
+Ms2ex.GameHandlers.CharacterInfo.md
 Ms2ex.GameHandlers.ChatSticker.md
 Ms2ex.GameHandlers.Dismantle.md
 Ms2ex.GameHandlers.Emote.md
@@ -109,7 +119,7 @@ Ms2ex.LoginHandlers.ResponseKey.md
 Ms2ex.LoginHandlers.ResponseLogin.md
 Ms2ex.LoginHandlers.ResponseServerEnter.md
 Ms2ex.LoginHandlers.ResponseVersion.md
-Ms2ex.Lua.Items.md
+Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Skill.md
 Ms2ex.Managers.Character.Stats.md
@@ -132,6 +142,7 @@ Ms2ex.Packets.BannerList.md
 Ms2ex.Packets.Breakable.md
 Ms2ex.Packets.Buff.md
 Ms2ex.Packets.CharacterCreate.md
+Ms2ex.Packets.CharacterInfo.md
 Ms2ex.Packets.CharacterList.md
 Ms2ex.Packets.CharacterMaxCount.md
 Ms2ex.Packets.ChatSticker.md
@@ -263,6 +274,7 @@ Ms2ex.Storage.Tables.IndividualDropItem.md
 Ms2ex.Storage.Tables.Insignias.md
 Ms2ex.Storage.Tables.ItemOptions.md
 Ms2ex.Storage.Tables.Jobs.md
+Ms2ex.Storage.Tables.UserStats.md
 Ms2ex.Storage.md
 Ms2ex.TransferFlags.md
 Ms2ex.Types.Buff.md
