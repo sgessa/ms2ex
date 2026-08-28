@@ -90,8 +90,13 @@ defmodule Ms2ex.Types.Buff do
   def ticks?(%__MODULE__{} = buff) do
     not is_nil(buff.effect[:recovery]) or
       not is_nil(get_in(buff.effect, [:dot, :damage])) or
-      not is_nil(get_in(buff.effect, [:dot, :buff]))
+      not is_nil(get_in(buff.effect, [:dot, :buff])) or
+      tick_skills(buff) != []
   end
+
+  def skills(%__MODULE__{} = buff), do: Map.get(buff.effect, :skills, [])
+
+  def tick_skills(%__MODULE__{} = buff), do: Map.get(buff.effect, :tick_skills, [])
 
   def dot_amounts(%__MODULE__{} = buff) do
     case get_in(buff.effect, [:dot, :damage]) do

@@ -56,6 +56,17 @@ defmodule Ms2ex.BuffStatusTest do
     refute Types.Buff.ticks?(buff(%{}))
   end
 
+  test "ticks when the effect has tick skills" do
+    buff = %Types.Buff{effect: %{tick_skills: [%{id: 10_300_263, level: 2}]}}
+    assert Types.Buff.ticks?(buff)
+    assert Types.Buff.tick_skills(buff) == [%{id: 10_300_263, level: 2}]
+  end
+
+  test "skills and tick_skills default to empty" do
+    assert Types.Buff.skills(buff(%{})) == []
+    assert Types.Buff.tick_skills(buff(%{})) == []
+  end
+
   test "dot damage combines base and target-max-hp terms and clamps on not_kill" do
     dot = %{
       is_const_damage: true,

@@ -111,6 +111,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     state = apply_recovery(buff, state)
     state = apply_dot_damage(buff, state)
     state = apply_dot_buff(buff, state)
+    state = apply_tick_skills(buff, state)
 
     {buff, state}
   end
@@ -240,6 +241,25 @@ defmodule Ms2ex.Managers.Field.Buff do
             {_buff, state} = add_effect_buff(id, level, target, state)
             state
         end
+    end
+  end
+
+  # effects the buff applies to its owner on every proc (tick skills)
+  defp apply_tick_skills(buff, state) do
+    Enum.reduce(Types.Buff.tick_skills(buff), state, fn effect, state ->
+      apply_effect_to_owner(buff, effect, state)
+    end)
+  end
+
+  defp apply_effect_to_owner(buff, %{id: id, level: level}, state) do
+    case buff.owner do
+      %Types.FieldNpc{} = mob ->
+        {_buff, state} = add_mob_buff(buff.caster, id, level, mob, state)
+        state
+
+      %Schema.Character{} ->
+        {_buff, state} = add_effect_buff(id, level, buff.owner, state)
+        state
     end
   end
 
