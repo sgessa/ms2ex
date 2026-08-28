@@ -33,8 +33,9 @@ defmodule Ms2ex.Context.ItemStats do
     equips = equipped_gear(character)
 
     {bonuses, rates, special_values, special_rates} =
-      Enum.reduce(equips, {%{}, %{}, %{}, %{}}, fn item,
-                                                   {bonuses, rates, special_values, special_rates} ->
+      Enum.reduce(equips, {%{}, %{}, %{}, %{}}, fn item, stats ->
+        {bonuses, rates, special_values, special_rates} = stats
+
         {
           merge_values(bonuses, item_stat_values(item, :basic)),
           merge_values(rates, item_stat_rates(item, :basic)),
@@ -109,13 +110,17 @@ defmodule Ms2ex.Context.ItemStats do
   defp item_stat_rates(item, class) do
     item
     |> item_stats()
-    |> Enum.reduce(%{}, fn stat, acc ->
-      if stat.class == class and stat.type == :rate and stat.attribute != :piercing do
+    |> Enum.reduce(
+      %{},
+      fn stat, acc
+         when stat.class == class and stat.type == :rate and stat.attribute != :piercing ->
         Map.update(acc, stat.attribute, stat.value, &(&1 + stat.value))
-      else
-        acc
+
+        fn _stat, acc ->
+          acc
+        end
       end
-    end)
+    )
   end
 
   defp put_stat_metadata(
@@ -171,7 +176,6 @@ defmodule Ms2ex.Context.ItemStats do
     |> Enums.ItemType.get_value()
   end
 
-  defp merge_values(left, right) do
-    Map.merge(left, right, fn _stat, left_value, right_value -> left_value + right_value end)
-  end
+  defp merge_values(left, right),
+    do: Map.merge(left, right, fn _stat, left_value, right_value -> left_value + right_value end)
 end
