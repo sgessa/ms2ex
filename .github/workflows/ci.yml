@@ -42,6 +42,7 @@ jobs:
 
       # Setup Elixir
       - name: Set up Elixir
+        id: beam
         uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.20.x"
@@ -65,24 +66,42 @@ jobs:
           SERVER_ADDRESS=127.0.0.1
           EOF
 
-      # Cache dependencies and build artifacts
+      # Cache Hex/Mix package archives so mix deps.get avoids re-downloading
+      # from hex.pm even when the deps/_build cache key misses
+      - name: Cache Hex and Mix
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.hex
+            ~/.mix
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-hex
+          restore-keys: |
+            ${{ runner.os }}-hex-
+
+      # Cache dependencies and build artifacts. The key pins the OTP/Elixir
+      # versions so _build artifacts are never reused across toolchain bumps;
+      # restore-keys lets an older mix.lock build be reused incrementally.
       - name: Cache deps and _build
         uses: actions/cache@v4
         with:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-
 
       # Install dependencies
       - name: Install dependencies
         run: mix deps.get
 
-      # Compile project (with warnings as errors)
+      # Compile project in the test environment (with warnings as errors) so
+      # the cached _build only holds test artifacts and mix test reuses them
       - name: Compile
         run: mix compile --warnings-as-errors
+        env:
+          MIX_ENV: test
 
       # Run Credo for code analysis
       - name: Run Credo

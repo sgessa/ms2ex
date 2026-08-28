@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Elixir
+        id: beam
         uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.20.x"
@@ -26,6 +27,31 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
+
+      # Cache Hex/Mix package archives so mix deps.get avoids re-downloading
+      # from hex.pm even when the deps/_build cache key misses
+      - name: Cache Hex and Mix
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.hex
+            ~/.mix
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-hex
+          restore-keys: |
+            ${{ runner.os }}-hex-
+
+      # Cache dependencies and build artifacts. Keyed separately from the CI
+      # job (docs builds in dev env) so the two jobs don't overwrite each
+      # other's _build cache entries.
+      - name: Cache deps and _build
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-docs-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-docs-
 
       - name: Install dependencies
         run: mix deps.get
