@@ -15,6 +15,8 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Managers.Field
 
   @updates_intval 1000
+  @splash_radius 800
+  @splash_targets 8
 
   # npcs are ticked on their own faster loop; only entities flagged as changed
   # are broadcast, bumping their sequence counter:
@@ -45,6 +47,7 @@ defmodule Ms2ex.Managers.Field do
     # {counter, interactable} = load_interactable(map, counter)
 
     state = %{
+      buffs: %{},
       channel_id: channel_id,
       local_id_counter: local_id_counter,
       interactable: %{},
@@ -55,6 +58,7 @@ defmodule Ms2ex.Managers.Field do
       npc_spawns: %{},
       players: %{},
       portals: portals,
+      regions: %{},
       sessions: %{},
       topic: field_name
     }
@@ -105,14 +109,52 @@ defmodule Ms2ex.Managers.Field do
       Packets.RegionSkill.add(source_id, skill_cast)
     )
 
-    duration = SkillCast.duration(skill_cast)
-    Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
-    {:reply, :ok, state}
+    case SkillCast.splash_skill_cast(skill_cast) do
+      {splash_cast, splash} ->
+        interval = Map.get(splash, :interval, 0) || 0
+        fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
+
+        end_tick =
+          Ms2ex.sync_ticks() + (Map.get(splash, :remove_delay, 0) || 0) + (fires - 1) * interval
+
+        state =
+          if interval > 0 and fires > 1 do
+            # repeating region: first hit now, then every interval until the
+            # fire count runs out
+            state = apply_splash_skill(splash_cast, state)
+
+            region = %{
+              splash_cast: splash_cast,
+              interval: interval,
+              fires_left: fires - 1,
+              end_tick: end_tick
+            }
+
+            Process.send_after(self(), {:region_tick, source_id}, interval)
+            put_in(state, [:regions, source_id], region)
+          else
+            apply_splash_skill(splash_cast, state)
+          end
+
+        Process.send_after(
+          self(),
+          {:remove_region_skill, source_id},
+          max(end_tick - Ms2ex.sync_ticks(), 1)
+        )
+
+        {:reply, :ok, state}
+
+      nil ->
+        duration = SkillCast.duration(skill_cast)
+        Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
+        {:reply, :ok, state}
+    end
   end
 
   def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
     {buff, state} = Field.Buff.add_buff(skill_cast, skill, character, state)
-    {:reply, {:ok, buff}, state}
+    reply = if is_nil(buff), do: :error, else: {:ok, buff}
+    {:reply, reply, state}
   end
 
   def handle_call({:add_effect_buff, effect_id, effect_level, character}, _from, state) do
@@ -133,20 +175,33 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:apply_skill_effects, skill_cast, mob_id}, _from, state) do
+    {:reply, :ok, apply_skill_effects(state, skill_cast, mob_id)}
+  end
+
+  # applies the attack's on-hit effects (skills + skills_on_damage) to a mob;
+  # effects that carry a splash are region skills and are not applied as buffs
+  def apply_skill_effects(state, skill_cast, mob_id) do
     case Map.get(state.npcs, mob_id) do
       %FieldNpc{dead?: false} = mob ->
-        state =
-          Enum.reduce(SkillCast.attack_skills(skill_cast), state, fn effect, state ->
-            {_buff, state} =
-              Field.Buff.add_mob_buff(skill_cast.caster, effect.id, effect.level, mob, state)
+        skill_cast
+        |> SkillCast.attack_skills()
+        |> Enum.reject(&Map.get(&1, :has_splash, false))
+        |> Enum.reduce(state, fn effect, state ->
+          {_buff, state} =
+            Field.Buff.add_mob_buff(
+              skill_cast.caster,
+              effect.id,
+              effect.level,
+              mob,
+              state,
+              Map.get(effect, :overlap_count, 0)
+            )
 
-            state
-          end)
-
-        {:reply, :ok, state}
+          state
+        end)
 
       _ ->
-        {:reply, :ok, state}
+        state
     end
   end
 
@@ -318,6 +373,20 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, %{state | npcs: Map.new(npcs)}}
   end
 
+  def handle_info({:region_tick, source_id}, state) do
+    case Map.get(state.regions, source_id) do
+      nil ->
+        {:noreply, state}
+
+      region ->
+        if region.fires_left <= 0 or Ms2ex.sync_ticks() >= region.end_tick do
+          {:noreply, %{state | regions: Map.delete(state.regions, source_id)}}
+        else
+          {:noreply, region_tick(region, source_id, state)}
+        end
+    end
+  end
+
   def handle_info({:remove_region_skill, source_id}, state) do
     Context.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
     {:noreply, state}
@@ -334,16 +403,7 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_info({:remove_buff, buff_id}, state) do
-    case Managers.Buff.fetch(buff_id) do
-      nil ->
-        :ok
-
-      buff ->
-        remove_buff_status(buff)
-        Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
-        Managers.Buff.stop(buff_id)
-    end
-
+    state = Field.Buff.remove_buff(buff_id, state)
     {:noreply, state}
   end
 
@@ -405,10 +465,52 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  defp remove_buff_status(%{stat_modifiers: modifiers, owner: owner})
-       when map_size(modifiers) > 0 do
-    Managers.Character.cast(owner, {:remove_buff_status, modifiers})
+  # a region/splash attack fires its splash skill once over the mobs near the
+  # cast position (e.g. Ice Spear's splash skill 10300052 applies the chill)
+  def apply_splash_skill(splash_cast, state) do
+    targets =
+      state.npcs
+      |> Enum.filter(fn {_id, npc} ->
+        not npc.dead? and in_splash_range?(npc, splash_cast)
+      end)
+      |> Enum.take(@splash_targets)
+
+    hit_mobs(splash_cast, targets, state)
   end
 
-  defp remove_buff_status(_buff), do: :ok
+  defp region_tick(region, source_id, state) do
+    state = apply_splash_skill(region.splash_cast, state)
+    state = update_in(state, [:regions, source_id], &%{&1 | fires_left: &1.fires_left - 1})
+    Process.send_after(self(), {:region_tick, source_id}, region.interval)
+    state
+  end
+
+  defp hit_mobs(splash_cast, targets, state) do
+    {mobs, state} =
+      Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
+        dmg = Context.Damage.calculate(splash_cast, mob, false)
+        {_reply, state} = damage_npc(state, splash_cast.caster, dmg.dmg, object_id)
+        state = apply_skill_effects(state, splash_cast, object_id)
+        {[{mob, dmg} | mobs], state}
+      end)
+
+    if mobs != [] do
+      Context.Field.broadcast(
+        state.topic,
+        Packets.SkillDamage.damage(splash_cast, Enum.reverse(mobs))
+      )
+    end
+
+    state
+  end
+
+  defp in_splash_range?(npc, splash_cast) do
+    case {npc.position, splash_cast.position} do
+      {%{x: x1, y: y1}, %{x: x2, y: y2}} ->
+        (x1 - x2) ** 2 + (y1 - y2) ** 2 <= @splash_radius ** 2
+
+      _ ->
+        false
+    end
+  end
 end

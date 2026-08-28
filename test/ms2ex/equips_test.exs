@@ -1,31 +1,25 @@
 defmodule Ms2ex.EquipsTest do
-  use ExUnit.Case, async: false
+  use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Context
-  alias Ms2ex.Repo
   alias Ms2ex.Schema
 
   setup do
-    Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-
     # BindOnEquip staff metadata (item 15260310 from the dev seed)
-    :ets.insert(
-      :metadata,
-      {"item:15260310",
-       {:ok,
-        %{
-          limit: %{
-            level: 70,
-            gender: 2,
-            job_recommends: [30],
-            transfer_type: 3,
-            trade_max_rarity: 4
-          },
-          property: %{type: 1, ride: 0, tradable_count: 1},
-          slot_names: [5, 4],
-          option: %{constant_id: 15_260_310, pick_id: 0, static_id: 0, random_id: 0}
-        }}}
-    )
+    stub_metadata(%{
+      "item:15260310" => %{
+        limit: %{
+          level: 70,
+          gender: 2,
+          job_recommends: [30],
+          transfer_type: 3,
+          trade_max_rarity: 4
+        },
+        property: %{type: 1, ride: 0, tradable_count: 1},
+        slot_names: [5, 4],
+        option: %{constant_id: 15_260_310, pick_id: 0, static_id: 0, random_id: 0}
+      }
+    })
 
     :ok
   end

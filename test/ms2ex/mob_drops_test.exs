@@ -1,9 +1,8 @@
 defmodule Ms2ex.MobDropsTest do
-  use ExUnit.Case, async: false
+  use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Managers.Field
   alias Ms2ex.Schema
-  alias Ms2ex.Storage
   alias Ms2ex.Types
 
   @boss_id 23_991_090
@@ -287,48 +286,47 @@ defmodule Ms2ex.MobDropsTest do
   }
 
   setup do
-    :ets.insert(:metadata, {"npc:#{@boss_id}", {:ok, @npc_metadata}})
-    :ets.insert(:metadata, {"npc:#{@mob_id}", {:ok, @regular_metadata}})
-    :ets.insert(:metadata, {"npc:#{@mob_id + 1}", {:ok, @no_drop_metadata}})
-    :ets.insert(:metadata, {"npc:#{@hit_mob_id}", {:ok, @hit_metadata}})
-    :ets.insert(:metadata, {"npc:#{@corpse_mob_id}", {:ok, @corpse_metadata}})
-    :ets.insert(:metadata, {"npc:#{@smart_mob_id}", {:ok, @smart_metadata}})
-    :ets.insert(:metadata, {"npc:#{@gender_mob_id}", {:ok, @gender_metadata}})
-    :ets.insert(:metadata, {"npc:#{@gated_mob_id}", {:ok, @gated_metadata}})
-    :ets.insert(:metadata, {"table:globaldropitembox.xml", {:ok, @global_table}})
-    :ets.insert(:metadata, {"table:individualdropitem.xml", {:ok, @individual_table}})
-
-    :ets.insert(:metadata, {"map:#{@map_matching}", {:ok, %{property: %{type: 7, continent: 0}}}})
-    :ets.insert(:metadata, {"map:#{@map_other}", {:ok, %{property: %{type: 1, continent: 0}}}})
+    metadata = %{
+      "npc:#{@boss_id}" => @npc_metadata,
+      "npc:#{@mob_id}" => @regular_metadata,
+      "npc:#{@mob_id + 1}" => @no_drop_metadata,
+      "npc:#{@hit_mob_id}" => @hit_metadata,
+      "npc:#{@corpse_mob_id}" => @corpse_metadata,
+      "npc:#{@smart_mob_id}" => @smart_metadata,
+      "npc:#{@gender_mob_id}" => @gender_metadata,
+      "npc:#{@gated_mob_id}" => @gated_metadata,
+      "table:globaldropitembox.xml" => @global_table,
+      "table:individualdropitem.xml" => @individual_table,
+      "map:#{@map_matching}" => %{property: %{type: 7, continent: 0}},
+      "map:#{@map_other}" => %{property: %{type: 1, continent: 0}}
+    }
 
     # @item_id is knight-recommended; @item2_id is male-only
-    :ets.insert(
-      :metadata,
-      {"item:#{@item_id}",
-       {:ok,
+    metadata =
+      metadata
+      |> Map.put(
+        "item:#{@item_id}",
         %{
           limit: %{level: 1, gender: 2, job_recommends: [10]},
           slot_names: [],
           option: %{constant_id: 1}
-        }}}
-    )
-
-    :ets.insert(
-      :metadata,
-      {"item:#{@item2_id}",
-       {:ok,
+        }
+      )
+      |> Map.put(
+        "item:#{@item2_id}",
         %{
           limit: %{level: 1, gender: 0, job_recommends: []},
           slot_names: [],
           option: %{constant_id: 1}
-        }}}
-    )
+        }
+      )
 
+    stub_metadata(metadata)
     :ok
   end
 
   defp field_npc(npc_id) do
-    npc = Types.Npc.new(%{id: npc_id, metadata: Storage.Npcs.get_meta(npc_id)})
+    npc = Types.Npc.new(%{id: npc_id, metadata: Ms2ex.Storage.Npcs.get_meta(npc_id)})
 
     Types.FieldNpc.new(%{
       object_id: @oid,

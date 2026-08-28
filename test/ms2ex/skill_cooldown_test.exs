@@ -1,5 +1,5 @@
 defmodule Ms2ex.SkillCooldownTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   alias Ms2ex.Managers
   alias Ms2ex.Packets

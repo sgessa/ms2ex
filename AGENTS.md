@@ -21,6 +21,18 @@ Game client metadata comes from Redis, populated by the sibling
 `../ms2ex-file-ingest` Docker tool (see `docs/CLIENT_METADATA.md`). Local runs
 expect a `.env` (see `.env-example`) and a running Redis.
 
+The ingest tool also ships probe flags for inspecting raw client data without
+re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
+
+- `--probe-skill <id,id>` — full skill levels/motions/attacks, incl. each
+  on-hit effect's `splash`/`overlap_count`/`fireCount`
+- `--probe-effects <id,id>` — full additional-effect documents (dot, recovery,
+  skills, tick_skills, modify_overlap, update.cancel)
+- `--probe-source <effectId>` — reverse lookup: every skill and effect that
+  references an effect id (attack skills, skills, tick_skills, dot.buff,
+  modify_overlap)
+- `--probe-ticks` — skills whose effects tick
+
 ## Elixir style
 
 - **One `alias` per line.** Never alias multiple modules on the same line,

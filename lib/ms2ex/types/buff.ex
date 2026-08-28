@@ -13,14 +13,15 @@ defmodule Ms2ex.Types.Buff do
     :skill,
     :start_tick,
     :end_tick,
-    :stacks,
     :enabled,
     :effect,
     :shield_health,
     :next_proc_tick,
     stat_modifiers: %{},
+    stacks: 1,
     can_proc: false,
-    proc_count: 0
+    proc_count: 0,
+    removal_timer: nil
   ]
 
   def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
@@ -90,7 +91,29 @@ defmodule Ms2ex.Types.Buff do
   def ticks?(%__MODULE__{} = buff) do
     not is_nil(buff.effect[:recovery]) or
       not is_nil(get_in(buff.effect, [:dot, :damage])) or
-      not is_nil(get_in(buff.effect, [:dot, :buff]))
+      not is_nil(get_in(buff.effect, [:dot, :buff])) or
+      tick_skills(buff) != []
+  end
+
+  def skills(%__MODULE__{} = buff), do: Map.get(buff.effect, :skills, [])
+
+  def tick_skills(%__MODULE__{} = buff), do: Map.get(buff.effect, :tick_skills, [])
+
+  def max_stacks(%__MODULE__{} = buff), do: get_in(buff.effect, [:property, :max_count]) || 1
+
+  def stun(%__MODULE__{} = buff), do: get_in(buff.effect, [:property, :stun]) || 0
+
+  def cancel(%__MODULE__{} = buff) do
+    case get_in(buff.effect, [:update, :cancel]) do
+      %{ids: ids} ->
+        %{
+          ids: ids,
+          check_same_caster: get_in(buff.effect, [:update, :cancel, :check_same_caster])
+        }
+
+      _ ->
+        nil
+    end
   end
 
   def dot_amounts(%__MODULE__{} = buff) do

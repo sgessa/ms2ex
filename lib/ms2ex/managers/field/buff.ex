@@ -5,61 +5,232 @@ defmodule Ms2ex.Managers.Field.Buff do
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   def add_buff(skill_cast, skill, character, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
-    buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
-    Managers.Buff.start(buff)
-
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
-
-    reset_skill_cooldowns(buff, character)
-    schedule(buff)
-
-    {buff, state}
+    if effect_available?(skill.id, skill.level) do
+      {object_id, state} = Managers.Field.next_local_id(state)
+      buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
+      {buff, state} = apply_buff(buff, state, false)
+      reset_skill_cooldowns(buff, character)
+      {buff, state}
+    else
+      {nil, state}
+    end
   end
 
-  def add_effect_buff(effect_id, effect_level, character, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
-    skill = %{id: effect_id, level: effect_level}
+  def add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0) do
+    if effect_available?(effect_id, effect_level) do
+      {object_id, state} = Managers.Field.next_local_id(state)
+      skill = %{id: effect_id, level: effect_level, overlap_count: overlap_count}
 
-    skill_cast = %Types.SkillCast{
-      id: 0,
-      skill_id: effect_id,
-      skill_level: effect_level,
-      caster: character
-    }
+      skill_cast = %Types.SkillCast{
+        id: 0,
+        skill_id: effect_id,
+        skill_level: effect_level,
+        caster: character
+      }
 
-    buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
-    Managers.Buff.start(buff)
-
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
-
-    apply_status(buff, character)
-    schedule(buff)
-
-    {buff, state}
+      buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
+      apply_buff(buff, state, true)
+    else
+      {nil, state}
+    end
   end
 
   # buff applied to a field npc (e.g. an on-hit burn from a skill)
-  def add_mob_buff(caster, effect_id, effect_level, mob, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
-    skill = %{id: effect_id, level: effect_level}
+  def add_mob_buff(caster, effect_id, effect_level, mob, state, overlap_count \\ 0) do
+    if effect_available?(effect_id, effect_level) do
+      {object_id, state} = Managers.Field.next_local_id(state)
+      skill = %{id: effect_id, level: effect_level, overlap_count: overlap_count}
 
-    skill_cast = %Types.SkillCast{
-      id: 0,
-      skill_id: effect_id,
-      skill_level: effect_level,
-      caster: caster
-    }
+      skill_cast = %Types.SkillCast{
+        id: 0,
+        skill_id: effect_id,
+        skill_level: effect_level,
+        caster: caster
+      }
 
-    buff = Types.Buff.new(object_id, skill_cast, skill, caster, mob)
+      buff = Types.Buff.new(object_id, skill_cast, skill, caster, mob)
+      apply_buff(buff, state, false)
+    else
+      {nil, state}
+    end
+  end
+
+  # removes a buff and unregisters it from the field's active set; a non-forced
+  # removal reschedules when the buff was refreshed since its timer was set
+  def remove_buff(buff_id, state, force \\ false) do
+    case Managers.Buff.fetch(buff_id) do
+      nil ->
+        state
+
+      buff ->
+        if not force and Ms2ex.sync_ticks() < buff.end_tick do
+          schedule_removal(buff)
+          state
+        else
+          unregister_removed_buff(buff_id, buff, state)
+        end
+    end
+  end
+
+  defp unregister_removed_buff(buff_id, buff, state) do
+    remove_buff_status(buff)
+    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+    Managers.Buff.stop(buff_id)
+
+    case Map.get(state.buffs, buff_key(buff)) do
+      ^buff_id -> %{state | buffs: Map.delete(state.buffs, buff_key(buff))}
+      _ -> state
+    end
+  end
+
+  defp apply_buff(buff, state, apply_status?) do
+    case Map.get(state.buffs, buff_key(buff)) do
+      nil -> create_buff(buff, state, apply_status?)
+      buff_id -> stack_buff(buff, buff_id, state)
+    end
+  end
+
+  defp create_buff(buff, state, apply_status?) do
+    state = cancel_effects(buff, state)
     Managers.Buff.start(buff)
+    state = put_in(state, [:buffs, buff_key(buff)], buff.object_id)
 
     Context.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
+
+    if apply_status?, do: apply_status(buff)
+    state = modify_overlap(buff, state)
     schedule(buff)
 
     {buff, state}
+  end
+
+  defp stack_buff(buff, buff_id, state) do
+    existing = Managers.Buff.fetch(buff_id)
+    max = Types.Buff.max_stacks(buff)
+    overlap = Map.get(buff.skill, :overlap_count, 0) || 0
+    previous = existing.stacks
+    stacks = min(max(previous + overlap, 0), max)
+
+    # re-applying refreshes the effect's window (the reference's
+    # UpdateEndTime) and adds the condition's overlap_count stacks
+    new_end = Ms2ex.sync_ticks() + get_in(buff.effect, [:property, :duration_tick])
+    end_tick = if new_end > existing.end_tick, do: new_end, else: existing.end_tick
+
+    # cancel the pending removal and reschedule for the extended window
+    if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
+    existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
+    schedule_removal(existing)
+    Context.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
+
+    state =
+      if stacks >= max and previous < max and overlap > 0 do
+        fire_skills(existing, state)
+      else
+        state
+      end
+
+    {existing, state}
+  end
+
+  # re-applying the effect cancels buffs listed in its update.cancel metadata
+  # (e.g. frozen cancels the chill it replaces)
+  defp cancel_effects(buff, state) do
+    case Types.Buff.cancel(buff) do
+      nil ->
+        state
+
+      %{ids: ids, check_same_caster: same_caster?} ->
+        Enum.reduce(ids, state, fn cancel_id, state ->
+          state
+          |> cancel_candidates(buff, cancel_id, same_caster?)
+          |> remove_cancelled(state)
+        end)
+    end
+  end
+
+  defp cancel_candidates(state, buff, cancel_id, same_caster?) do
+    Enum.filter(state.buffs, fn {{owner_id, effect_id, caster_id}, _buff_id} ->
+      owner_id == buff.owner.object_id and
+        effect_id == cancel_id and
+        (not same_caster? or caster_id == buff.caster.object_id)
+    end)
+  end
+
+  defp remove_cancelled(candidates, state) do
+    Enum.reduce(candidates, state, fn {_key, buff_id}, state ->
+      remove_buff(buff_id, state, true)
+    end)
+  end
+
+  # once a buff reaches its stack cap it fires its skills (chill -> frozen)
+  defp fire_skills(buff, state) do
+    Enum.reduce(Types.Buff.skills(buff), state, fn effect, state ->
+      apply_effect_to_owner(buff, effect, state)
+    end)
+  end
+
+  # a buff's modify_overlap bumps another effect's stacks on the owner (e.g.
+  # the splash marker 10300182 stacks the chill 10300051); at the cap the
+  # target fires its skills, at zero it is removed
+  defp modify_overlap(buff, state) do
+    case get_in(buff.effect, [:modify_overlap]) do
+      list when is_list(list) and list != [] ->
+        Enum.reduce(list, state, fn %{id: target_id, offset: offset}, state ->
+          apply_overlap(state, buff, target_id, offset)
+        end)
+
+      _ ->
+        state
+    end
+  end
+
+  defp apply_overlap(state, buff, target_id, offset) do
+    overlap_targets(state, buff, target_id)
+    |> Enum.reduce(state, fn {_key, buff_id}, state ->
+      stack_target(buff_id, offset, state)
+    end)
+  end
+
+  defp overlap_targets(state, buff, target_id) do
+    Enum.filter(state.buffs, fn {{owner_id, effect_id, _caster_id}, _buff_id} ->
+      owner_id == buff.owner.object_id and effect_id == target_id
+    end)
+  end
+
+  defp stack_target(buff_id, offset, state) do
+    case Managers.Buff.fetch(buff_id) do
+      nil ->
+        state
+
+      target ->
+        max = Types.Buff.max_stacks(target)
+        previous = target.stacks
+        stacks = min(max(previous + offset, 0), max)
+        target = Managers.Buff.update(target, %{stacks: stacks})
+        Context.Field.broadcast(state.topic, Packets.Buff.send(:update, target))
+
+        cond do
+          stacks <= 0 ->
+            remove_buff(buff_id, state)
+
+          stacks >= max and previous < max and offset > 0 ->
+            fire_skills(target, state)
+
+          true ->
+            state
+        end
+    end
+  end
+
+  defp buff_key(buff) do
+    {buff.owner.object_id, buff.skill.id, buff.caster.object_id}
+  end
+
+  defp effect_available?(effect_id, effect_level) do
+    not is_nil(Storage.Skills.get_effect(effect_id, effect_level))
   end
 
   # per-interval proc: apply recovery/dot while procs remain, otherwise expire
@@ -111,11 +282,13 @@ defmodule Ms2ex.Managers.Field.Buff do
     state = apply_recovery(buff, state)
     state = apply_dot_damage(buff, state)
     state = apply_dot_buff(buff, state)
+    state = apply_tick_skills(buff, state)
 
     {buff, state}
   end
 
-  defp apply_status(buff, character) do
+  defp apply_status(%Types.Buff{owner: %Schema.Character{}} = buff) do
+    character = buff.owner
     modifiers = Types.Buff.stat_modifiers(buff, character)
 
     if map_size(modifiers) > 0 do
@@ -125,6 +298,20 @@ defmodule Ms2ex.Managers.Field.Buff do
 
     :ok
   end
+
+  defp apply_status(_buff), do: :ok
+
+  defp remove_buff_status(%Types.Buff{owner: %Schema.Character{}} = buff) do
+    modifiers = buff.stat_modifiers
+
+    if map_size(modifiers) > 0 do
+      Managers.Character.cast(buff.owner, {:remove_buff_status, modifiers})
+    end
+
+    :ok
+  end
+
+  defp remove_buff_status(_buff), do: :ok
 
   defp apply_recovery(%Types.Buff{owner: %Types.FieldNpc{}}, state), do: state
 
@@ -243,6 +430,25 @@ defmodule Ms2ex.Managers.Field.Buff do
     end
   end
 
+  # effects the buff applies to its owner on every proc (tick skills)
+  defp apply_tick_skills(buff, state) do
+    Enum.reduce(Types.Buff.tick_skills(buff), state, fn effect, state ->
+      apply_effect_to_owner(buff, effect, state)
+    end)
+  end
+
+  defp apply_effect_to_owner(buff, %{id: id, level: level}, state) do
+    case buff.owner do
+      %Types.FieldNpc{} = mob ->
+        {_buff, state} = add_mob_buff(buff.caster, id, level, mob, state)
+        state
+
+      %Schema.Character{} ->
+        {_buff, state} = add_effect_buff(id, level, buff.owner, state)
+        state
+    end
+  end
+
   defp npc_alive?(state, object_id) do
     case Map.get(state.npcs, object_id) do
       %{dead?: false} -> true
@@ -260,7 +466,9 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   defp schedule_removal(buff) do
     ms_left = max(buff.end_tick - Ms2ex.sync_ticks(), 1)
-    Process.send_after(self(), {:remove_buff, buff.object_id}, ms_left)
+    ref = Process.send_after(self(), {:remove_buff, buff.object_id}, ms_left)
+    Managers.Buff.update(buff, %{removal_timer: ref})
+    ref
   end
 
   defp reset_skill_cooldowns(buff, character) do
