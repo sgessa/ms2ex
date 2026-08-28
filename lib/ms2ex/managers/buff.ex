@@ -17,6 +17,12 @@ defmodule Ms2ex.Managers.Buff do
     |> Map.put(:skill_cast, skill_cast)
   end
 
+  def fetch(buff_id) do
+    if pid = Process.whereis(process_name(buff_id)) do
+      Agent.get(pid, & &1)
+    end
+  end
+
   def start(%Buff{} = buff) do
     Agent.start_link(fn -> buff end, name: process_name(buff.object_id))
   end

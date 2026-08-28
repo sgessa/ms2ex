@@ -27,8 +27,12 @@ defmodule Ms2ex.Managers.Character.Skill do
           reduce: character do
         character ->
           case Context.Field.call(character, {:add_buff, skill_cast, skill, character}) do
-            {:ok, buff} -> apply_recovery(character, buff)
-            _ -> character
+            {:ok, buff} ->
+              character = apply_recovery(character, buff)
+              apply_status(character, buff)
+
+            _ ->
+              character
           end
       end
 
@@ -77,4 +81,18 @@ defmodule Ms2ex.Managers.Character.Skill do
 
   defp maybe_increase(character, stat, amount),
     do: Character.Stats.increase(character, stat, amount)
+
+  defp apply_status(character, buff) do
+    modifiers = Types.Buff.stat_modifiers(buff, character)
+
+    if map_size(modifiers) > 0 do
+      Managers.Buff.update(buff, %{stat_modifiers: modifiers})
+
+      Enum.reduce(modifiers, character, fn {stat, amount}, character ->
+        Character.Stats.modify_max(character, stat, amount)
+      end)
+    else
+      character
+    end
+  end
 end

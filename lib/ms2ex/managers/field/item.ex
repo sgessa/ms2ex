@@ -23,10 +23,10 @@ defmodule Ms2ex.Managers.Field.Item do
         Context.Wallets.update(character, :havi_fruits, item.amount)
 
       Context.Items.sp?(item) ->
-        Managers.Character.cast(character, {:increase_stat, :spirit, item.amount})
+        Managers.Character.cast(character, {:increase_stats, [spirit: item.amount]})
 
       Context.Items.stamina?(item) ->
-        Managers.Character.cast(character, {:increase_stat, :stamina, item.amount})
+        Managers.Character.cast(character, {:increase_stats, [stamina: item.amount]})
 
       true ->
         item =

@@ -304,9 +304,17 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
-  def handle_info({:remove_buff, buff}, state) do
-    Managers.Buff.stop(buff.object_id)
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+  def handle_info({:remove_buff, buff_id}, state) do
+    case Managers.Buff.fetch(buff_id) do
+      nil ->
+        :ok
+
+      buff ->
+        remove_buff_status(buff)
+        Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+        Managers.Buff.stop(buff_id)
+    end
+
     {:noreply, state}
   end
 
@@ -367,4 +375,11 @@ defmodule Ms2ex.Managers.Field do
         {[{object_id, npc}], {live, corpses}}
     end
   end
+
+  defp remove_buff_status(%{stat_modifiers: modifiers, owner: owner})
+       when map_size(modifiers) > 0 do
+    Managers.Character.cast(owner, {:remove_buff_status, modifiers})
+  end
+
+  defp remove_buff_status(_buff), do: :ok
 end

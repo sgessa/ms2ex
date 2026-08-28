@@ -23,6 +23,22 @@ defmodule Ms2ex.Managers.Character.Stats do
     character
   end
 
+  def modify_max(character, stat_id, amount) do
+    max = Map.get(character.stats, :"#{stat_id}_max", 0)
+    cur = Map.get(character.stats, :"#{stat_id}_cur", 0)
+
+    stats =
+      character.stats
+      |> Map.put(:"#{stat_id}_max", max + amount)
+      |> Map.put(:"#{stat_id}_cur", min(cur, max + amount))
+
+    character = %{character | stats: stats}
+
+    broadcast_new_stats(character, stat_id)
+
+    character
+  end
+
   def set(character, stat_id, amount, opts \\ []) do
     total = Map.get(character.stats, :"#{stat_id}_max")
     amount = amount |> max(0) |> min(total)

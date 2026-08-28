@@ -36,18 +36,33 @@ defmodule Ms2ex.Managers.Field.Buff do
     Context.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
 
     apply_recovery(buff, character)
+    apply_status(buff, character)
     schedule_removal(buff)
 
     {buff, state}
+  end
+
+  defp apply_status(buff, character) do
+    modifiers = Types.Buff.stat_modifiers(buff, character)
+
+    if map_size(modifiers) > 0 do
+      Managers.Buff.update(buff, %{stat_modifiers: modifiers})
+      Managers.Character.cast(character, {:modify_buff_status, modifiers})
+    end
+
+    :ok
   end
 
   defp apply_recovery(buff, character) do
     crit? = Context.Damage.roll_crit(character)
     {hp, sp, ep} = Types.Buff.recovery_amounts(buff, character, crit?)
 
-    if hp > 0, do: Managers.Character.cast(character, {:increase_stat, :health, hp})
-    if sp > 0, do: Managers.Character.cast(character, {:increase_stat, :spirit, sp})
-    if ep > 0, do: Managers.Character.cast(character, {:increase_stat, :stamina, ep})
+    stats =
+      [health: hp, spirit: sp, stamina: ep] |> Enum.filter(fn {_stat, amount} -> amount > 0 end)
+
+    if stats != [] do
+      Managers.Character.cast(character, {:increase_stats, stats})
+    end
 
     if hp > 0 or sp > 0 or ep > 0 do
       Context.Field.broadcast(
@@ -65,7 +80,7 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp schedule_removal(buff) do
-    Process.send_after(self(), {:remove_buff, buff}, buff.end_tick - buff.start_tick)
+    Process.send_after(self(), {:remove_buff, buff.object_id}, buff.end_tick - buff.start_tick)
   end
 
   defp reset_skill_cooldowns(buff, character) do

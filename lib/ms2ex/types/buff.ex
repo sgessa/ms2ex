@@ -13,7 +13,8 @@ defmodule Ms2ex.Types.Buff do
     :stacks,
     :enabled,
     :effect,
-    :shield_health
+    :shield_health,
+    stat_modifiers: %{}
   ]
 
   def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
@@ -83,4 +84,28 @@ defmodule Ms2ex.Types.Buff do
         }
     end
   end
+
+  def stat_modifiers(%__MODULE__{} = buff, character) do
+    status = buff.effect[:status] || %{}
+    values = Map.get(status, :values, %{})
+    rates = Map.get(status, :rates, %{})
+
+    values
+    |> Enum.reduce(%{}, fn {stat, value}, acc -> put_modifier(acc, character, stat, value) end)
+    |> then(fn acc ->
+      Enum.reduce(rates, acc, fn {stat, rate}, acc ->
+        put_modifier(acc, character, stat, trunc(rate * stat_max(character, stat)))
+      end)
+    end)
+  end
+
+  defp put_modifier(acc, character, stat, amount) do
+    if stat_max(character, stat) do
+      Map.update(acc, stat, amount, &(&1 + amount))
+    else
+      acc
+    end
+  end
+
+  defp stat_max(character, stat), do: Map.get(character.stats, :"#{stat}_max")
 end
