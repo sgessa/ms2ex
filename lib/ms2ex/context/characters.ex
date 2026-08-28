@@ -51,7 +51,53 @@ defmodule Ms2ex.Context.Characters do
   end
 
   def load_equips(%Schema.Character{} = character) do
-    %{character | equips: Context.Equips.list(character)}
+    character = Repo.preload(character, :stats, force: true)
+    equips = Context.Equips.list(character)
+    stats = aggregate_equip_stats(character.stats, equips)
+    gear_score = calculate_gear_score(equips)
+    %{character | equips: equips, stats: stats, gear_score: gear_score}
+  end
+
+  defp calculate_gear_score(equips) do
+    Enum.reduce(equips, 0, fn item, total ->
+      score = get_in(item.metadata, [:property, :gear_score]) || 0
+      score = if get_in(item.metadata, [:property, :type]) in [:dagger, :throwing_star], do: div(score, 2), else: score
+      total + score
+    end)
+  end
+
+  defp aggregate_equip_stats(nil, _equips), do: nil
+
+  defp aggregate_equip_stats(stats, equips) do
+    values =
+      equips
+      |> Enum.flat_map(fn item ->
+        item.stats
+        |> Map.take([:constants, :statics, :randoms, :enchants, :limit_break_enchants])
+        |> Map.values()
+        |> Enum.flat_map(&Map.values/1)
+      end)
+      |> Enum.filter(fn
+        %Ms2ex.Types.ItemStat{class: :basic, type: :flat} -> true
+        _ -> false
+      end)
+      |> Enum.reduce(%{}, fn
+        %Ms2ex.Types.ItemStat{attribute: attribute, value: value}, acc ->
+          Map.update(acc, attribute, trunc(value), &(&1 + trunc(value)))
+      end)
+
+    Enum.reduce(values, stats, fn {attribute, value}, stats ->
+      fields =
+        Enum.map([:min, :cur, :max], &String.to_atom("#{attribute}_#{&1}"))
+
+      if Enum.all?(fields, &Map.has_key?(stats, &1)) do
+        Enum.reduce(fields, stats, fn field, stats ->
+          Map.update!(stats, field, fn current -> trunc(current) + trunc(value) end)
+        end)
+      else
+        stats
+      end
+    end)
   end
 
   def load_skills(%Schema.Character{} = character, opts \\ []) do

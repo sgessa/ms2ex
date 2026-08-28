@@ -25,8 +25,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       character =
         auth_data[:character_id]
         |> Context.Characters.get()
-        |> Context.Characters.load_equips()
         |> Context.Characters.preload([:friends, :stats])
+        |> Context.Characters.load_equips()
         |> Context.Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)

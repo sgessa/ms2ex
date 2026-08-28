@@ -54,30 +54,29 @@ defmodule Ms2ex.Context.Damage do
   def calculate(%SkillCast{} = skill_cast, %FieldNpc{} = mob, crit? \\ false) do
     caster = skill_cast.caster
 
-    # TODO calculate from character stats
-    attk_dmg = 1_000_000
+    stats = caster.stats
+    attack_min = stats.min_weapon_atk_cur + stats.bonus_atk_cur
+    attack_max = stats.max_weapon_atk_cur + stats.bonus_atk_cur
 
-    skill_dmg_rate =
-      if crit?,
-        do: SkillCast.crit_damage_rate(skill_cast),
-        else: SkillCast.damage_rate(skill_cast)
+    attack = attack_min + :rand.uniform() * (attack_max - attack_min)
 
-    skill_dmg = skill_dmg_rate * attk_dmg
+    resistance = calc_enemy_res(skill_cast, mob)
+    resistance_multiplier = calculate_resistance(resistance, stats.piercing_cur / 100)
+    attack_type_amount =
+      if SkillCast.physical?(skill_cast),
+        do: stats.physical_atk_cur,
+        else: stats.magical_atk_cur
 
-    enemy_res = calc_enemy_res(skill_cast, mob)
-    pierce_res = calc_pierce_res(skill_cast, caster)
+    defense = max(mob.stats.defense.current, 1)
+    skill_rate = if crit?, do: SkillCast.crit_damage_rate(skill_cast), else: SkillCast.damage_rate(skill_cast)
 
-    # TODO fix dmg multiplier
-    numerator =
-      skill_dmg * (1 + caster.stats.bonus_atk_cur) * (1500 - (enemy_res - pierce_res * 15))
-
-    pierce_coeff = 1 - caster.stats.piercing_cur
-
-    # TODO find correct enemy def stats
-    denominator = mob.stats.defense.total * pierce_coeff * 15
-
-    dmg = trunc(numerator / denominator)
+    dmg = attack * skill_rate * attack_type_amount * resistance_multiplier / defense
+    dmg = max(trunc(dmg), 1)
     %{dmg: dmg, crit?: crit?}
+  end
+
+  defp calculate_resistance(target_resistance, piercing_multiplier) do
+    (1500 - max(0, target_resistance - 1500 * piercing_multiplier)) / 1500
   end
 
   defp calc_enemy_res(%SkillCast{} = skill_cast, mob) do
@@ -85,14 +84,6 @@ defmodule Ms2ex.Context.Damage do
       mob.stats.physical_res.total
     else
       mob.stats.magical_res.total
-    end
-  end
-
-  defp calc_pierce_res(%SkillCast{} = skill_cast, caster) do
-    if SkillCast.physical?(skill_cast) do
-      caster.stats.physical_atk_cur
-    else
-      caster.stats.magical_atk_cur
     end
   end
 

@@ -63,6 +63,15 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_coord(character.position)
   end
 
+  def update_gear_score(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_player)
+    |> put_int(character.object_id)
+    |> put_byte(@player_flags.gear_score)
+    |> put_int(Map.get(character, :gear_score, 0))
+  end
+
   # actor state transitions (idle, casting, etc.) reach clients through the
   # state flag; values mirror the client's actor state enum (idle=1,
   # pc_skill=16)

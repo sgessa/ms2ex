@@ -60,14 +60,18 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Context.Field.broadcast(character, equip_packet)
 
-      Managers.Character.update(Context.Characters.load_equips(character))
+      character = refresh_character(character)
+      Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
+      push(session, Packets.Stats.set_character_stats(character))
       push(session, Packets.InventoryItem.remove_item(item.id))
     end
   end
 
   defp unequip_item(character, item, session) do
     with {:ok, item} <- Context.Equips.unequip(item) do
-      Managers.Character.update(Context.Characters.load_equips(character))
+      character = refresh_character(character)
+      Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
+      push(session, Packets.Stats.set_character_stats(character))
 
       item = Context.Items.load_metadata(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
@@ -75,5 +79,11 @@ defmodule Ms2ex.GameHandlers.EquipItem do
 
       push(session, Packets.InventoryItem.add_item({:create, item}, character))
     end
+  end
+
+  defp refresh_character(character) do
+    character = Context.Characters.load_equips(character)
+    Managers.Character.update(character)
+    character
   end
 end

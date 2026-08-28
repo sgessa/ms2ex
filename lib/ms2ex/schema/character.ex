@@ -88,6 +88,7 @@ defmodule Ms2ex.Schema.Character do
     field :object_id, :integer, virtual: true, default: 0
     field :online?, :boolean, default: false, virtual: true
     field :group_chat_ids, {:array, :integer}, virtual: true, default: []
+    field :gear_score, :integer, virtual: true, default: 0
     field :dismantle_inventory, EctoTypes.Term, virtual: true
     field :mount, :map, virtual: true
     field :party_id, :integer, virtual: true

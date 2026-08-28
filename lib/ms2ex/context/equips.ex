@@ -10,6 +10,7 @@ defmodule Ms2ex.Context.Equips do
   alias Ms2ex.Schema
   alias Ms2ex.Repo
   alias Ms2ex.Enums
+  alias Ms2ex.Types
 
   import Ecto.Query, except: [update: 2]
   import Context.Inventory, only: [update_item: 2, find_first_available_slot: 2]
@@ -30,6 +31,11 @@ defmodule Ms2ex.Context.Equips do
     |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
     |> Repo.all()
     |> Enum.map(&Context.Items.load_metadata(&1))
+    |> Enum.map(fn
+      %{stats: nil} = item -> Context.Items.set_stats(item)
+      %{stats: %Ms2ex.Types.ItemStats{}} = item -> item
+      item -> item
+    end)
   end
 
   @doc """
@@ -97,7 +103,12 @@ defmodule Ms2ex.Context.Equips do
   def equip(%Schema.Item{location: :inventory} = item, equip_slot) do
     item
     |> Schema.Item.bind_if_needed(:equip)
-    |> update_item(%{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
+    |> update_item(%{
+      equip_slot: equip_slot,
+      inventory_slot: nil,
+      location: :equipment,
+      stats: item.stats || Types.ItemStats.create(item)
+    })
   end
 
   @doc """
