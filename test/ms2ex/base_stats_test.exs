@@ -1,5 +1,5 @@
 defmodule Ms2ex.BaseStatsTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   use Mimic
 
   alias Ms2ex.Formulas.AttackStats

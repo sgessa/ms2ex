@@ -1,35 +1,35 @@
 defmodule Ms2ex.ItemsBindTest do
-  use ExUnit.Case, async: false
+  use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Context
 
   setup do
-    for key <- [
-          "table:itemoptionpick.xml",
-          "table:itemoptionconstant.xml",
-          "table:itemoptionstatic.xml",
-          "table:itemoptionrandom.xml"
-        ] do
-      :ets.insert(:metadata, {key, {:ok, %{table: %{}}}})
-    end
+    metadata =
+      for key <- [
+            "table:itemoptionpick.xml",
+            "table:itemoptionconstant.xml",
+            "table:itemoptionstatic.xml",
+            "table:itemoptionrandom.xml"
+          ],
+          into: %{} do
+        {key, %{table: %{}}}
+      end
 
+    stub_metadata(metadata)
     :ok
   end
 
   defp bind_item(type, on) do
     id = 910_000_001 + type
 
-    :ets.insert(
-      :metadata,
-      {"item:#{id}",
-       {:ok,
-        %{
-          limit: %{level: 1, transfer_type: type, trade_max_rarity: 4},
-          slot_names: [],
-          property: %{tradable_count: 0},
-          option: %{constant_id: 1}
-        }}}
-    )
+    stub_metadata(%{
+      "item:#{id}" => %{
+        limit: %{level: 1, transfer_type: type, trade_max_rarity: 4},
+        slot_names: [],
+        property: %{tradable_count: 0},
+        option: %{constant_id: 1}
+      }
+    })
 
     item = Context.Items.init(id, %{rarity: 1, amount: 1})
     Context.Items.bind_if_needed(item, on)

@@ -1,5 +1,5 @@
 defmodule Ms2ex.BuffChainTest do
-  use ExUnit.Case, async: false
+  use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Managers
   alias Ms2ex.Types
@@ -90,9 +90,10 @@ defmodule Ms2ex.BuffChainTest do
       {10_300_272, fire}
     ]
 
-    Enum.each(effects, fn {id, meta} ->
-      :ets.insert(:metadata, {"additional-effect:#{id}_1", {:ok, meta}})
-    end)
+    metadata =
+      Map.new(effects, fn {id, meta} -> {"additional-effect:#{id}_1", meta} end)
+
+    stub_metadata(metadata)
   end
 
   setup do

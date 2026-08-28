@@ -1,45 +1,36 @@
 defmodule Ms2ex.BuffRecoveryTest do
-  use ExUnit.Case, async: false
+  use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Types
 
   setup do
-    :ets.insert(
-      :metadata,
-      {"additional-effect:20000027_1",
-       {:ok,
-        %{
-          property: %{max_count: 1, duration_tick: 1000, interval_tick: 0},
-          reset_condition: 0,
-          persist_end_tick: 0,
-          shield: nil,
-          status: %{values: %{}, rates: %{}},
-          recovery: %{
-            recovery_rate: 10.0,
-            hp_value: 100,
-            hp_rate: 0.2,
-            sp_value: 50,
-            sp_rate: 0.1,
-            ep_value: 0,
-            ep_rate: 0.0,
-            disable_crit: false
-          }
-        }}}
-    )
-
-    :ets.insert(
-      :metadata,
-      {"additional-effect:20000028_1",
-       {:ok,
-        %{
-          property: %{max_count: 1, duration_tick: 1000, interval_tick: 0},
-          reset_condition: 0,
-          persist_end_tick: 0,
-          shield: nil,
-          status: %{values: %{}, rates: %{}},
-          recovery: nil
-        }}}
-    )
+    stub_metadata(%{
+      "additional-effect:20000027_1" => %{
+        property: %{max_count: 1, duration_tick: 1000, interval_tick: 0},
+        reset_condition: 0,
+        persist_end_tick: 0,
+        shield: nil,
+        status: %{values: %{}, rates: %{}},
+        recovery: %{
+          recovery_rate: 10.0,
+          hp_value: 100,
+          hp_rate: 0.2,
+          sp_value: 50,
+          sp_rate: 0.1,
+          ep_value: 0,
+          ep_rate: 0.0,
+          disable_crit: false
+        }
+      },
+      "additional-effect:20000028_1" => %{
+        property: %{max_count: 1, duration_tick: 1000, interval_tick: 0},
+        reset_condition: 0,
+        persist_end_tick: 0,
+        shield: nil,
+        status: %{values: %{}, rates: %{}},
+        recovery: nil
+      }
+    })
 
     :ok
   end
