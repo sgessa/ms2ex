@@ -11,6 +11,7 @@
   client_tick: term(),
   direction: term(),
   id: term(),
+  item_uid: term(),
   meta: term(),
   motion_point: term(),
   next_tick: term(),
@@ -53,6 +54,8 @@
 # `splash`
 
 # `stamina_cost`
+
+# `use_item?`
 
 ---
 

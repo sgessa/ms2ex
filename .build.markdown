@@ -269,6 +269,7 @@ Ms2ex.Types.CoordF.md
 Ms2ex.Types.FieldNpc.md
 Ms2ex.Types.Hair.md
 Ms2ex.Types.HairData.md
+Ms2ex.Types.Item.md
 Ms2ex.Types.ItemColor.md
 Ms2ex.Types.ItemStat.md
 Ms2ex.Types.ItemStats.md

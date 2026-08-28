@@ -3,9 +3,13 @@
 
 # `new`
 
+# `recovery_amounts`
+
 # `set_shield_health`
 
 # `stack`
+
+# `stat_modifiers`
 
 ---
 

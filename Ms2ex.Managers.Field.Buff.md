@@ -3,6 +3,8 @@
 
 # `add_buff`
 
+# `add_effect_buff`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

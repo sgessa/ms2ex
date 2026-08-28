@@ -7,6 +7,8 @@
 
 # `increase`
 
+# `modify_max`
+
 # `regen`
 
 # `set`
