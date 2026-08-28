@@ -36,8 +36,4 @@ ms2ex-*.tar
 /config/*.secret.exs
 
 # local-only investigation notes (not public-facing)
-/docs/reference-deltas.md
-/docs/boss-hp-bar.md
-/docs/client-memory.md
-/docs/client-re.md
-/docs/code-organization.md
+/docs/internal/

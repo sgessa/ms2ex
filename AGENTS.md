@@ -70,8 +70,7 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
   implementation, its classes, methods, files, or identifiers (packet
   builders, serializers, counter names, etc.) anywhere in `lib/` or
   `config/`. Cross-implementation comparison notes live in a local,
-  git-ignored file (`docs/reference-deltas.md`) and must never be
-  committed.
+  git-ignored directory (`docs/internal/`) and must never be committed.
 
 - **Never commit without explicit approval.** Implement changes, compile,
   and verify, but leave them uncommitted so the user can test against the
@@ -93,3 +92,8 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
 - **Leave `TODO` comments for unimplemented behavior.** When a code path is
   incomplete or stubbed, add a `# TODO` comment (with a short note on what
   remains) so unfinished work can be found by grepping for `TODO`.
+- **Write investigation notes under `docs/internal/`.** When digging into a
+  feature, a divergence, or a client-packet layout, capture findings in a
+  per-feature note in `docs/internal/` (git-ignored) instead of one monolithic
+  comparison document. Update the matching `docs/ROADMAP.md` item when the
+  investigation concludes.
