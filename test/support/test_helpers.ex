@@ -14,7 +14,6 @@ defmodule Ms2ex.TestHelpers do
   templates do).
   """
   def stub_metadata(data) do
-    Mimic.copy(Ms2ex.Storage)
     Mimic.stub(Ms2ex.Storage, :get, fn set, id -> Map.get(data, "#{set}:#{id}") end)
     :ok
   end
