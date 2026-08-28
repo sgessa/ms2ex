@@ -21,6 +21,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
         "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
         "OpenItemBox" -> open_box(session, character, item, packet)
         "SelectItemBox" -> select_item(session, character, item, packet)
+        "AddAdditionalEffect" -> add_additional_effect(session, character, item)
         _ -> session
       end
     end
@@ -59,6 +60,33 @@ defmodule Ms2ex.GameHandlers.UseItem do
       session
       |> ItemBox.add_item(character, selected_item)
       |> push(Packets.InventoryItem.consume(consumed_item))
+    end
+  end
+
+  defp add_additional_effect(session, character, item) do
+    with parameters when is_binary(parameters) <- item.metadata[:function_parameters],
+         [effect_id, effect_level] <- parse_effect_params(parameters),
+         :ok <-
+           Context.Field.call(character, {:add_effect_buff, effect_id, effect_level, character}) do
+      consumed_item = Context.Inventory.consume(item)
+      push(session, Packets.InventoryItem.consume(consumed_item))
+    else
+      _ -> session
+    end
+  end
+
+  defp parse_effect_params(parameters) do
+    case String.split(parameters, ",") do
+      [effect_id, effect_level] ->
+        with {effect_id, ""} <- Integer.parse(effect_id),
+             {effect_level, ""} <- Integer.parse(effect_level) do
+          [effect_id, effect_level]
+        else
+          _ -> nil
+        end
+
+      _ ->
+        nil
     end
   end
 end

@@ -13,7 +13,8 @@ defmodule Ms2ex.Types.Buff do
     :stacks,
     :enabled,
     :effect,
-    :shield_health
+    :shield_health,
+    stat_modifiers: %{}
   ]
 
   def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
@@ -52,11 +53,59 @@ defmodule Ms2ex.Types.Buff do
   end
 
   def set_shield_health(%__MODULE__{} = buff) do
+    shield = buff.effect[:shield]
+
     shield_health =
-      if buff.effect.shield[:hp_value],
-        do: buff.effect.shield.hp_value,
-        else: buff.owner.stats.health_max * buff.effect.shield.hp_by_target_max_hp
+      cond do
+        shield && shield[:hp_value] -> shield.hp_value
+        shield -> buff.owner.stats.health_max * shield[:hp_by_target_max_hp]
+        true -> 0
+      end
 
     Map.put(buff, :shield_health, shield_health)
   end
+
+  def recovery_amounts(%__MODULE__{} = buff, character, crit?) do
+    case buff.effect[:recovery] do
+      nil ->
+        {0, 0, 0}
+
+      recovery ->
+        multiplier = if recovery[:disable_crit] or !crit?, do: 1.0, else: 1.5
+        stats = character.stats
+
+        {
+          trunc(
+            recovery[:hp_value] + recovery[:hp_rate] * stats.health_max +
+              recovery[:recovery_rate] * stats.magical_atk_cur * multiplier
+          ),
+          trunc(recovery[:sp_value] + recovery[:sp_rate] * stats.spirit_max * multiplier),
+          trunc(recovery[:ep_value] + recovery[:ep_rate] * stats.stamina_max * multiplier)
+        }
+    end
+  end
+
+  def stat_modifiers(%__MODULE__{} = buff, character) do
+    status = buff.effect[:status] || %{}
+    values = Map.get(status, :values, %{})
+    rates = Map.get(status, :rates, %{})
+
+    values
+    |> Enum.reduce(%{}, fn {stat, value}, acc -> put_modifier(acc, character, stat, value) end)
+    |> then(fn acc ->
+      Enum.reduce(rates, acc, fn {stat, rate}, acc ->
+        put_modifier(acc, character, stat, trunc(rate * stat_max(character, stat)))
+      end)
+    end)
+  end
+
+  defp put_modifier(acc, character, stat, amount) do
+    if stat_max(character, stat) do
+      Map.update(acc, stat, amount, &(&1 + amount))
+    else
+      acc
+    end
+  end
+
+  defp stat_max(character, stat), do: Map.get(character.stats, :"#{stat}_max")
 end

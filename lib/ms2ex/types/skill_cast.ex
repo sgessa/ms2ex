@@ -19,6 +19,7 @@ defmodule Ms2ex.Types.SkillCast do
     :rotate2z,
     :caster,
     :attack_counter,
+    :item_uid,
     motion_point: 0,
     attack_point: 0
   ]
@@ -32,6 +33,11 @@ defmodule Ms2ex.Types.SkillCast do
 
   def skill_level(%__MODULE__{meta: meta, skill_level: level}) do
     meta.levels["#{level}"]
+  end
+
+  def use_item?(%__MODULE__{} = skill_cast) do
+    level = skill_level(skill_cast)
+    get_in(level, [:consume, :use_item]) || false
   end
 
   def cooldown(%__MODULE__{} = skill_cast, start_tick) do

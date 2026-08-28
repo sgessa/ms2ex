@@ -111,7 +111,13 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
-    {:reply, :ok, Field.Buff.add_buff(skill_cast, skill, character, state)}
+    {buff, state} = Field.Buff.add_buff(skill_cast, skill, character, state)
+    {:reply, {:ok, buff}, state}
+  end
+
+  def handle_call({:add_effect_buff, effect_id, effect_level, character}, _from, state) do
+    {_buff, state} = Field.Buff.add_effect_buff(effect_id, effect_level, character, state)
+    {:reply, :ok, state}
   end
 
   def handle_call({:lookup_npc, object_id}, _from, state) do
@@ -298,6 +304,20 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
+  def handle_info({:remove_buff, buff_id}, state) do
+    case Managers.Buff.fetch(buff_id) do
+      nil ->
+        :ok
+
+      buff ->
+        remove_buff_status(buff)
+        Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+        Managers.Buff.stop(buff_id)
+    end
+
+    {:noreply, state}
+  end
+
   def handle_info({:leave_battle_stance, character}, state) do
     Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
@@ -355,4 +375,11 @@ defmodule Ms2ex.Managers.Field do
         {[{object_id, npc}], {live, corpses}}
     end
   end
+
+  defp remove_buff_status(%{stat_modifiers: modifiers, owner: owner})
+       when map_size(modifiers) > 0 do
+    Managers.Character.cast(owner, {:remove_buff_status, modifiers})
+  end
+
+  defp remove_buff_status(_buff), do: :ok
 end

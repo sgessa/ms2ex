@@ -8,6 +8,7 @@ defmodule Ms2ex.Context.Inventory do
 
   alias Ms2ex.Schema
   alias Ms2ex.Repo
+  alias Ms2ex.Types
 
   import Ecto.Query, except: [update: 2]
 
@@ -182,9 +183,10 @@ defmodule Ms2ex.Context.Inventory do
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
     rarity = attrs.rarity || 1
-    slot = find_first_available_slot(character.id, meta.property.type)
+    inventory_tab = Types.Item.inventory_tab(meta)
+    slot = find_first_available_slot(character.id, inventory_tab)
 
-    attrs = %{attrs | inventory_tab: meta.property.type, rarity: rarity, inventory_slot: slot}
+    attrs = %{attrs | inventory_tab: inventory_tab, rarity: rarity, inventory_slot: slot}
     attrs = Map.from_struct(attrs)
 
     changeset =

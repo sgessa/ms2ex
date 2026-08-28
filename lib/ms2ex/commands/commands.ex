@@ -11,8 +11,19 @@ defmodule Ms2ex.Commands do
 
   def handle(["heal"], character, session) do
     max_hp = character.stats.health_max
-    Managers.Character.cast(character, {:increase_stat, :health, max_hp})
+    Managers.Character.cast(character, {:increase_stats, [health: max_hp]})
     session
+  end
+
+  def handle(["hp", amount], character, session) do
+    case Integer.parse(amount) do
+      {amount, _} ->
+        Managers.Character.cast(character, {:set_stat, :health, amount})
+        session
+
+      _ ->
+        push_notice(session, character, "Invalid HP: #{amount}")
+    end
   end
 
   def handle(["freecam" | args], _character, session) do
@@ -25,16 +36,29 @@ defmodule Ms2ex.Commands do
     end
   end
 
-  # !item 5 13160311
-  def handle(["item" | args], character, session) do
-    [rarity | ids] = args
+  # !item 13160311           (rarity from the item's constant option)
+  # !item 20300012 10        (10 potions)
+  # !item 13160311 1 5       (1 weapon, rarity 5)
+  def handle(["item", item_id | opts], character, session) do
+    {qty, rarity} = parse_item_opts(opts)
 
-    Enum.reduce(ids, session, fn item_id, session ->
-      case Storage.get(:item, item_id) do
-        nil -> push_notice(session, character, "Invalid Item: #{item_id}")
-        _metadata -> add_item(character, item_id, rarity, session)
-      end
-    end)
+    with {item_id, _} <- Integer.parse(item_id),
+         metadata when not is_nil(metadata) <- Storage.get(:item, item_id) do
+      item =
+        Context.Items.init(item_id, %{
+          rarity: rarity || resolve_rarity(metadata),
+          amount: qty,
+          transfer_flags: [:split, :trade]
+        })
+
+      {:ok, {_, item} = result} = Context.Inventory.add_item(character, item)
+
+      session
+      |> push(Packets.InventoryItem.add_item(result, character))
+      |> push(Packets.InventoryItem.mark_item_new(item))
+    else
+      _ -> push_notice(session, character, "Invalid Item: #{item_id}")
+    end
   end
 
   def handle(["level", level], character, session) do
@@ -142,14 +166,14 @@ defmodule Ms2ex.Commands do
     push_notice(session, character, "Command not found")
   end
 
-  defp add_item(character, item_id, rarity, session) do
-    with {item_id, _} <- Integer.parse(item_id),
-         {rarity, _} <- Integer.parse(rarity),
-         item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: [:split, :trade]}),
-         {:ok, {_, item} = result} <- Context.Inventory.add_item(character, item) do
-      session
-      |> push(Packets.InventoryItem.add_item(result, character))
-      |> push(Packets.InventoryItem.mark_item_new(item))
+  defp parse_item_opts(opts) do
+    case Enum.map(opts, &Integer.parse/1) do
+      [{qty, _}, {rarity, _}] -> {qty, rarity}
+      [{qty, _}] -> {qty, nil}
+      _ -> {1, nil}
     end
   end
+
+  defp resolve_rarity(%{option: %{constant_id: constant}}) when constant in 1..6, do: constant
+  defp resolve_rarity(_), do: 1
 end

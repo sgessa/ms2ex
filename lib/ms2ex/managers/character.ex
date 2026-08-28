@@ -169,8 +169,35 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, Character.Stats.decrease(character, stat_id, amount)}
   end
 
-  def handle_cast({:increase_stat, stat_id, amount}, character) do
-    {:noreply, Character.Stats.increase(character, stat_id, amount)}
+  def handle_cast({:set_stat, stat_id, amount}, character) do
+    {:noreply, Character.Stats.set(character, stat_id, amount)}
+  end
+
+  def handle_cast({:modify_buff_status, modifiers}, character) do
+    character =
+      Enum.reduce(modifiers, character, fn {stat, amount}, character ->
+        Character.Stats.modify_max(character, stat, amount)
+      end)
+
+    {:noreply, character}
+  end
+
+  def handle_cast({:remove_buff_status, modifiers}, character) do
+    character =
+      Enum.reduce(modifiers, character, fn {stat, amount}, character ->
+        Character.Stats.modify_max(character, stat, -amount)
+      end)
+
+    {:noreply, character}
+  end
+
+  def handle_cast({:increase_stats, stats}, character) do
+    character =
+      Enum.reduce(stats, character, fn {stat, amount}, character ->
+        Character.Stats.increase(character, stat, amount)
+      end)
+
+    {:noreply, character}
   end
 
   # --------------------------------
