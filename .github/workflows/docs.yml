@@ -28,14 +28,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
 
-      # Cache Hex/Mix package archives so mix deps.get avoids re-downloading
-      # from hex.pm even when the deps/_build cache key misses
-      - name: Cache Hex and Mix
+      # Cache Hex's package tarballs and registry (~/.hex) so mix deps.get
+      # avoids re-downloading from hex.pm when the deps/_build key misses.
+      # setup-beam force-reinstalls the hex tool into ~/.mix every run, so
+      # that directory is not worth caching.
+      - name: Cache Hex
         uses: actions/cache@v5
         with:
           path: |
             ~/.hex
-            ~/.mix
           key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-hex
           restore-keys: |
             ${{ runner.os }}-hex-
