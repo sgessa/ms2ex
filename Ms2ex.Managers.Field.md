@@ -7,6 +7,8 @@ Returns a specification to start this module under a supervisor.
 
 See `Supervisor`.
 
+# `damage_npc`
+
 # `handle_continue`
 
 # `init`

@@ -17,8 +17,10 @@ including critical hit calculation, skill damage, and fall damage.
 
 Calculates the damage dealt by a skill cast on a field NPC.
 
-Takes into account attack damage, skill damage rate, enemy resistance, and piercing.
-Can calculate critical damage if the `crit?` parameter is set to true.
+The attack roll is the character's weapon attack plus bonus attack; an
+unarmed character falls back to the job attack stat. Skill rate scales the
+hit, target defense and resistance reduce it, and piercing ignores a share
+of both. Critical hits multiply by the critical damage stat.
 
 ## Parameters
 
@@ -29,10 +31,7 @@ Can calculate critical damage if the `crit?` parameter is set to true.
 ## Examples
 
     iex> calculate(skill_cast, mob)
-    %{dmg: 10000, crit?: false}
-
-    iex> calculate(skill_cast, mob, true)
-    %{dmg: 15000, crit?: true}
+    %{dmg: 1, crit?: false}
 
 # `calculate_fall_dmg`
 
@@ -46,6 +45,11 @@ Calculates damage a character takes from falling.
 
     iex> calculate_fall_dmg(character, 0)
     24
+
+# `calculate_rate`
+
+Calculates damage for a given rate (e.g. a damage-over-time tick) instead of
+the skill's own rate.
 
 # `roll_crit`
 

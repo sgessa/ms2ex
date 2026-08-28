@@ -3,6 +3,8 @@
 
 # `damage`
 
+# `dot_damage`
+
 # `heal`
 
 # `target`

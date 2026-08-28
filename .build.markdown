@@ -16,6 +16,7 @@ Ms2ex.Context.ItemConstantStats.md
 Ms2ex.Context.ItemEnchantStats.md
 Ms2ex.Context.ItemRandomStats.md
 Ms2ex.Context.ItemStaticStats.md
+Ms2ex.Context.ItemStats.md
 Ms2ex.Context.ItemTransfer.md
 Ms2ex.Context.ItemTypes.md
 Ms2ex.Context.Items.md

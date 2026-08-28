@@ -5,6 +5,10 @@
 
 # `add_effect_buff`
 
+# `add_mob_buff`
+
+# `tick`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

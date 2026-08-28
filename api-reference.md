@@ -172,6 +172,8 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Context.ItemEnchantStats](Ms2ex.Context.ItemEnchantStats.md)
   - [Ms2ex.Context.ItemRandomStats](Ms2ex.Context.ItemRandomStats.md)
   - [Ms2ex.Context.ItemStaticStats](Ms2ex.Context.ItemStaticStats.md)
+  - [Ms2ex.Context.ItemStats](Ms2ex.Context.ItemStats.md): Aggregates the stat bonuses granted by equipped items and applies them to a
+character's stats.
   - [Ms2ex.Context.ItemTransfer](Ms2ex.Context.ItemTransfer.md): Item trade-state semantics: transfer flags and character binding.
   - [Ms2ex.Context.ItemTypes](Ms2ex.Context.ItemTypes.md)
   - [Ms2ex.Context.Items](Ms2ex.Context.Items.md)

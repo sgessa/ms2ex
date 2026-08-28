@@ -1,6 +1,10 @@
 # `Ms2ex.Types.Buff`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/types/buff.ex#L1)
 
+# `dot_amounts`
+
+# `interval_tick`
+
 # `new`
 
 # `recovery_amounts`
@@ -10,6 +14,8 @@
 # `stack`
 
 # `stat_modifiers`
+
+# `ticks?`
 
 ---
 

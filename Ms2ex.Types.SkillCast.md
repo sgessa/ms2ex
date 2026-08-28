@@ -27,15 +27,17 @@
 
 # `attack_point`
 
+# `attack_skills`
+
 # `build`
 
 # `condition_skills`
 
 # `cooldown`
 
-# `crit_damage_rate`
-
 # `damage_rate`
+
+# `damage_value`
 
 # `duration`
 
