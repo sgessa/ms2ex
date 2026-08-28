@@ -15,8 +15,14 @@ defmodule Ms2ex.Formulas.ItemStaticStats do
   defp attack(_base, _factor, _type), do: {0, 0}
 
   defp resistance(base, factor) do
-    minimum = round_value(1.0e-5 * :math.pow(factor, 3) - 0.003 * :math.pow(factor, 2) + 0.367 * factor + 4.8841)
-    maximum = if minimum < 5, do: minimum + 3, else: if(minimum == 5, do: minimum + 4, else: minimum + 5)
+    minimum =
+      round_value(
+        1.0e-5 * :math.pow(factor, 3) - 0.003 * :math.pow(factor, 2) + 0.367 * factor + 4.8841
+      )
+
+    maximum =
+      if minimum < 5, do: minimum + 3, else: if(minimum == 5, do: minimum + 4, else: minimum + 5)
+
     finish_range(base, minimum, maximum)
   end
 
@@ -40,8 +46,12 @@ defmodule Ms2ex.Formulas.ItemStaticStats do
     finish_range(base, minimum, health_maximum(minimum))
   end
 
-  defp polynomial(factor), do: 1.0e-5 * :math.pow(factor, 3) - 0.003 * :math.pow(factor, 2) + 0.367 * factor + 4.8841
-  defp health_polynomial(factor), do: -0.00007 * :math.pow(factor, 3) + 0.0162 * :math.pow(factor, 2) + 0.1656 * factor - 0.5098
+  defp polynomial(factor),
+    do: 1.0e-5 * :math.pow(factor, 3) - 0.003 * :math.pow(factor, 2) + 0.367 * factor + 4.8841
+
+  defp health_polynomial(factor),
+    do: -0.00007 * :math.pow(factor, 3) + 0.0162 * :math.pow(factor, 2) + 0.1656 * factor - 0.5098
+
   defp range_maximum(minimum) when minimum < 5, do: minimum + 3
   defp range_maximum(5), do: 9
   defp range_maximum(minimum), do: minimum + 5
@@ -64,6 +74,7 @@ defmodule Ms2ex.Formulas.ItemStaticStats do
   defp health_maximum(minimum), do: minimum + 20
 
   defp finish_range(0, minimum, maximum), do: {minimum, maximum}
+
   defp finish_range(base, _minimum, maximum) do
     value = round_value(maximum * base / 100)
     {value, value}

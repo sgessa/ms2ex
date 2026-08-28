@@ -112,13 +112,13 @@ defmodule Ms2ex.Context.ItemStats do
     |> item_stats()
     |> Enum.reduce(
       %{},
-      fn stat, acc
-         when stat.class == class and stat.type == :rate and stat.attribute != :piercing ->
-        Map.update(acc, stat.attribute, stat.value, &(&1 + stat.value))
+      fn
+        stat, acc
+        when stat.class == class and stat.type == :rate and stat.attribute != :piercing ->
+          Map.update(acc, stat.attribute, stat.value, &(&1 + stat.value))
 
-        fn _stat, acc ->
+        _stat, acc ->
           acc
-        end
       end
     )
   end
