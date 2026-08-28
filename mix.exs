@@ -76,7 +76,8 @@ defmodule Ms2ex.MixProject do
 
       # Development and testing tools
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:mimic, "~> 2.4", only: :test}
     ]
   end
 

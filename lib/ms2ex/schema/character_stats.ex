@@ -9,6 +9,10 @@ defmodule Ms2ex.Schema.CharacterStats do
   schema "character_stats" do
     belongs_to :character, Schema.Character
 
+    field :basic_rates, :map, virtual: true, default: %{}
+    field :special_rates, :map, virtual: true, default: %{}
+    field :special_values, :map, virtual: true, default: %{}
+
     field :pet_bonus_atk_min, :integer, default: 0
     field :pet_bonus_atk_cur, :integer, default: 0
     field :pet_bonus_atk_max, :integer, default: 0

@@ -16,6 +16,14 @@ defmodule Ms2ex.Packets.Stats do
     |> put_stats(character.stats)
   end
 
+  def update_player_stats(character) do
+    __MODULE__
+    |> build()
+    |> put_int(character.object_id)
+    |> put_byte(@mode.update)
+    |> put_player_stats(character.stats)
+  end
+
   def update_char_stats(character, stat) when not is_list(stat) do
     update_char_stats(character, [stat])
   end
@@ -89,5 +97,16 @@ defmodule Ms2ex.Packets.Stats do
     |> put_int(Map.get(stats, :"#{stat}_max"))
     |> put_int(Map.get(stats, :"#{stat}_min"))
     |> put_int(Map.get(stats, :"#{stat}_cur"))
+  end
+
+  defp put_player_stats(packet, stats) do
+    Enum.reduce([:max, :min, :cur], put_byte(packet, @mode.send_stats), fn suffix, packet ->
+      packet
+      |> put_long(Map.get(stats, :"health_#{suffix}"))
+      |> put_int(Map.get(stats, :"attack_speed_#{suffix}"))
+      |> put_int(Map.get(stats, :"movement_speed_#{suffix}"))
+      |> put_int(Map.get(stats, :"jump_height_#{suffix}"))
+      |> put_int(Map.get(stats, :"mount_speed_#{suffix}"))
+    end)
   end
 end
