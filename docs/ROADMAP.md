@@ -59,9 +59,9 @@ Applied today: `status.values` / `status.rates` stat modifiers, the
 `update.cancel` removal list, stacking via `overlap_count` /
 `modify_overlap`, tick skills, and recovery. What is still missing:
 
-- `status.special_values` / `status.special_rates` (special attributes such as
-  damage-type multipliers) — metadata is projected but the server does not
-  apply them yet
+- `status.special_values` / `status.special_rates` (special attributes granted
+  by buffs, such as damage-type multipliers) — metadata is projected and
+  item-granted special stats are applied, but buff-granted ones are not
 - `ApplyCancel` buff removal
 - non-tick effect skills only fire at max stacks; combat-event triggers
   (on-hit / on-attacked / on-death) are not evaluated
