@@ -1,4 +1,7 @@
 defmodule Ms2ex.Formulas.BaseStats do
+  alias Ms2ex.Formulas.AttackStats
+  alias Ms2ex.Storage.Tables.UserStats
+
   @split_level 50
 
   @jobs %{
@@ -72,6 +75,35 @@ defmodule Ms2ex.Formulas.BaseStats do
     }
   end
 
+  def all(job, level) do
+    base = Map.merge(get(job, level), UserStats.get(job, level) || %{})
+
+    Map.merge(base, %{
+      hp_regen: 10,
+      hp_regen_interval: 3000,
+      spirit: 100,
+      sp_regen: 10,
+      sp_regen_interval: 1000,
+      stamina: 120,
+      stamina_regen: 10,
+      stamina_regen_interval: 500,
+      attack_speed: 100,
+      movement_speed: 100,
+      accuracy: 82,
+      evasion: evasion(job),
+      critical_rate: critical_rate(job),
+      critical_damage: 125,
+      critical_evasion: 50,
+      defense: max(level, 1),
+      jump_height: 100,
+      physical_res: physical_res(job, level),
+      magical_res: magical_res(job, level),
+      mount_speed: 100,
+      physical_atk: AttackStats.physical_attack(job, base.strength, base.dexterity, base.luck),
+      magical_atk: AttackStats.magical_attack(job, base.intelligence)
+    })
+  end
+
   defp str_gain(job, level) do
     cond do
       job in [:beginner, :knight, :berserker, :rune_blade] -> 7
@@ -87,7 +119,7 @@ defmodule Ms2ex.Formulas.BaseStats do
     cond do
       job in [:archer, :heavy_gunner, :striker] -> 7
       job in [:knight, :berserker] -> 1
-      job == :newbie and rem(level, 3) != 2 -> 1
+      job == :beginner and rem(level, 3) != 2 -> 1
       job == :thief and rem(level, 2) == 1 -> 1
       job in [:assassin, :rune_blade] -> 1
       rem(level, 3) == 1 and job in [:wizard, :priest, :soul_binder] -> 1
@@ -95,12 +127,30 @@ defmodule Ms2ex.Formulas.BaseStats do
     end
   end
 
-  defp int_gain(job, level),
-    do:
-      if(job in [:wizard, :priest, :soul_binder],
-        do: 8,
-        else: if(job == :berserker or rem(level, 2) == 0, do: 1, else: 0)
-      )
+  defp int_gain(job, level) do
+    cond do
+      job == :beginner ->
+        if(rem(level, 3) != 1, do: 1, else: 0)
+
+      job == :knight ->
+        if(rem(level, 2) == 0, do: 1, else: 0)
+
+      job == :berserker ->
+        if(rem(level, 2) == 1, do: 1, else: 0)
+
+      job in [:wizard, :priest, :soul_binder] ->
+        8
+
+      job in [:archer, :heavy_gunner, :thief, :assassin, :rune_blade] ->
+        if(rem(level, 2) == 0, do: 1, else: 0)
+
+      job == :striker ->
+        if(rem(level, 2) == 1, do: 1, else: 0)
+
+      true ->
+        0
+    end
+  end
 
   defp luck_gain(job, level) do
     cond do
@@ -141,4 +191,84 @@ defmodule Ms2ex.Formulas.BaseStats do
         0
     end
   end
+
+  defp evasion(job) do
+    %{
+      beginner: 70,
+      knight: 70,
+      berserker: 72,
+      wizard: 70,
+      priest: 70,
+      archer: 77,
+      heavy_gunner: 77,
+      thief: 80,
+      assassin: 77,
+      rune_blade: 77,
+      striker: 76,
+      soul_binder: 76
+    }
+    |> Map.get(job, 70)
+  end
+
+  defp critical_rate(job) do
+    %{
+      beginner: 35,
+      knight: 45,
+      berserker: 47,
+      wizard: 40,
+      priest: 45,
+      archer: 55,
+      heavy_gunner: 52,
+      thief: 50,
+      assassin: 53,
+      rune_blade: 46,
+      striker: 48,
+      soul_binder: 48
+    }
+    |> Map.get(job, 35)
+  end
+
+  defp physical_res(job, level) do
+    factor =
+      %{
+        beginner: 15.0,
+        knight: 55.0,
+        berserker: 55.0,
+        wizard: 15.0,
+        priest: 15.0,
+        archer: 35.0,
+        heavy_gunner: 50.0,
+        thief: 15.0,
+        assassin: 15.0,
+        rune_blade: 55.0,
+        striker: 55.0,
+        soul_binder: 15.0
+      }
+      |> Map.get(job, 25.0)
+
+    ceil_value(factor * max(level, 1) / 99.0)
+  end
+
+  defp magical_res(job, level) do
+    factor =
+      %{
+        beginner: 15.0,
+        knight: 15.0,
+        berserker: 15.0,
+        wizard: 50.0,
+        priest: 55.0,
+        archer: 15.0,
+        heavy_gunner: 15.0,
+        thief: 15.0,
+        assassin: 15.0,
+        rune_blade: 5.0,
+        striker: 15.0,
+        soul_binder: 50.0
+      }
+      |> Map.get(job, 25.0)
+
+    ceil_value(factor * max(level, 1) / 99.0)
+  end
+
+  defp ceil_value(value), do: value |> :math.ceil() |> trunc()
 end

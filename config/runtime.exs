@@ -36,7 +36,7 @@ config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
 
 # Imports server constants
 config :ms2ex, :constants,
-  character_max_level: 70,
+  character_max_level: 99,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0
 

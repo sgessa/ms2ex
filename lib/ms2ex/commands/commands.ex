@@ -65,10 +65,7 @@ defmodule Ms2ex.Commands do
     case Integer.parse(level) do
       {level, _} ->
         level = min(level, Constants.get(:character_max_level))
-        {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
-        Managers.Character.update(character)
-
-        Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
+        {:ok, _character} = Managers.Character.set_level(character, level)
         push(session, Packets.Experience.bytes(0, 0, 0))
 
       _ ->

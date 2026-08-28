@@ -2,6 +2,7 @@ defmodule Ms2ex.Managers.Character do
   use GenServer
 
   alias Ms2ex.Context
+  alias Ms2ex.Constants
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
@@ -23,6 +24,11 @@ defmodule Ms2ex.Managers.Character do
 
   @spec update(Schema.Character.t()) :: :ok | :error
   def update(%Schema.Character{} = character), do: call(character, {:update, character})
+
+  @spec set_level(Schema.Character.t(), integer()) :: {:ok, Schema.Character.t()} | :error
+  def set_level(%Schema.Character{} = character, level) do
+    call(character, {:set_level, level})
+  end
 
   @spec save_skill_cooldown(Schema.Character.t(), map()) :: :ok | :error
   def save_skill_cooldown(%Schema.Character{} = character, cooldown) do
@@ -80,6 +86,15 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_call({:update, character}, _from, state) do
     {:reply, :ok, Map.put(character, :skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))}
+  end
+
+  def handle_call({:set_level, level}, _from, character) do
+    level = level |> max(1) |> min(Constants.get(:character_max_level))
+    old_level = character.level
+    {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
+    character = refresh_level(character, old_level)
+
+    {:reply, {:ok, character}, character}
   end
 
   def handle_call(:monitor, {pid, _}, character) do
@@ -217,10 +232,7 @@ defmodule Ms2ex.Managers.Character do
     old_lvl = character.level
     cooldowns = Map.get(character, :skill_cooldowns, %{})
     {:ok, character} = Context.Experience.maybe_add_exp(character, amount)
-
-    if old_lvl != character.level do
-      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
-    end
+    character = refresh_level(character, old_lvl)
 
     push(character, Packets.Experience.bytes(amount, character.exp, character.rest_exp))
 
@@ -244,6 +256,17 @@ defmodule Ms2ex.Managers.Character do
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
     cleanup(character)
     {:stop, :normal, character}
+  end
+
+  defp refresh_level(character, old_level) do
+    if old_level != character.level do
+      character = Context.ItemStats.apply(character)
+      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
+      Context.Field.broadcast(character, Packets.Stats.set_character_stats(character))
+      character
+    else
+      character
+    end
   end
 
   defp process_name(character_id) do

@@ -86,5 +86,6 @@ defmodule Ms2ex.GameHandlers.EquipItem do
 
     Managers.Character.update(character)
     Context.Field.broadcast(character, Packets.Stats.set_character_stats(character))
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
   end
 end

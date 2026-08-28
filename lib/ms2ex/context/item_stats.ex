@@ -3,31 +3,24 @@ defmodule Ms2ex.Context.ItemStats do
   Aggregates the stat bonuses granted by equipped items and applies them to a
   character's stats.
 
-  Each item's constant and static option stats are calculated in Elixir, then
-  summed over every equipped item and added to the character's current and
-  maximum stat values.
+  Each item's calculated stats are summed over every equipped item and added
+  to the character's base stat values.
   """
 
   alias Ms2ex.Context
+  alias Ms2ex.Enums
+  alias Ms2ex.Formulas.BaseStats
+  alias Ms2ex.Formulas.GearScore
   alias Ms2ex.Repo
   alias Ms2ex.Schema
-  alias Ms2ex.Storage
+
+  @item_stat_groups [:constants, :statics, :randoms, :enchants, :limit_break_enchants]
 
   @doc """
-  Stat bonuses granted by a single item: its constant plus static value stats.
+  Stat bonuses granted by a single item.
   """
   def bonuses(%Schema.Item{} = item) do
-    option = item.metadata.option
-
-    pick = Storage.Tables.ItemOptions.find_pick(option.pick_id, item.rarity)
-    constant = Storage.Tables.ItemOptions.find_constant(option.constant_id, item.rarity)
-    static = Storage.Tables.ItemOptions.find_static(option.static_id, item.rarity)
-
-    Map.merge(
-      value_stats(:constant, pick[:constant_value], constant[:values], item),
-      value_stats(:static, pick[:static_value], static[:values], item),
-      fn _stat, left, right -> left + right end
-    )
+    item_stat_values(item)
   end
 
   @doc """
@@ -36,21 +29,30 @@ defmodule Ms2ex.Context.ItemStats do
   stack.
   """
   def apply(%Schema.Character{} = character) do
-    character = Repo.preload(character, :stats)
-    equips = Map.get(character, :equips) || Context.Equips.list(character)
+    character = Repo.preload(character, :stats, force: true)
+    equips = equipped_gear(character)
 
-    bonuses =
-      Enum.reduce(equips, %{}, fn item, acc ->
-        Map.merge(acc, bonuses(item), fn _stat, left, right -> left + right end)
+    {bonuses, rates} =
+      Enum.reduce(equips, {%{}, %{}}, fn item, {bonuses, rates} ->
+        {
+          merge_values(bonuses, item_stat_values(item)),
+          merge_values(rates, item_stat_rates(item))
+        }
       end)
 
-    apply_stats(character, bonuses)
+    character = reset_base_stats(character)
+    character = apply_stats(character, bonuses, rates)
+    %{character | gear_score: calculate_gear_score(equips)}
   end
 
   @doc """
   Adds a map of stat bonuses to a character's current and maximum stats.
   """
   def apply_stats(%Schema.Character{} = character, bonuses) do
+    apply_stats(character, bonuses, %{})
+  end
+
+  defp apply_stats(%Schema.Character{} = character, bonuses, rates) do
     stats =
       Enum.reduce(bonuses, character.stats, fn {stat, amount}, stats ->
         stats
@@ -58,39 +60,95 @@ defmodule Ms2ex.Context.ItemStats do
         |> Map.update(:"#{stat}_max", amount, &(&1 + amount))
       end)
 
+    stats =
+      Enum.reduce(rates, stats, fn {stat, rate}, stats ->
+        max = Map.get(stats, :"#{stat}_max", 0)
+        total = max + trunc(max * rate)
+
+        stats
+        |> Map.put(:"#{stat}_max", total)
+        |> Map.put(:"#{stat}_cur", total)
+      end)
+
     %{character | stats: stats}
   end
 
-  defp value_stats(type, pick_list, values, item) do
-    allowed = Context.ItemStatsCalculator.allowed_stats(type)
+  defp reset_base_stats(%Schema.Character{stats: stats} = character) do
+    stats =
+      Enum.reduce(BaseStats.all(character.job, character.level), stats, fn {stat, value}, stats ->
+        stats
+        |> Map.put(:"#{stat}_min", value)
+        |> Map.put(:"#{stat}_cur", value)
+        |> Map.put(:"#{stat}_max", value)
+      end)
 
-    Enum.reduce(pick_list || [], %{}, fn {stat, deviation}, acc ->
-      if Map.has_key?(allowed, stat) do
-        add_stat(acc, type, stat, deviation, values, item)
+    %{character | stats: stats}
+  end
+
+  defp item_stat_values(item) do
+    item
+    |> item_stats()
+    |> Enum.reduce(%{}, fn stat, acc ->
+      if stat.class == :basic and stat.type == :flat do
+        value = trunc(stat.value)
+        Map.update(acc, stat.attribute, value, &(&1 + value))
       else
         acc
       end
     end)
   end
 
-  defp add_stat(acc, type, stat, deviation, values, item) do
-    base = Map.get(values || %{}, stat, 0)
-
-    case compute_value(type, stat, base, deviation, item) do
-      {:ok, value} -> Map.update(acc, stat, value, &(&1 + value))
-      :error -> acc
-    end
+  defp item_stat_rates(item) do
+    item
+    |> item_stats()
+    |> Enum.reduce(%{}, fn stat, acc ->
+      if stat.class == :basic and stat.type == :rate do
+        Map.update(acc, stat.attribute, stat.value, &(&1 + stat.value))
+      else
+        acc
+      end
+    end)
   end
 
-  defp compute_value(:constant, stat, base, deviation, item) do
-    {:ok, trunc(Context.ItemStatsCalculator.constant_value(stat, base, deviation, item))}
-  rescue
-    _ -> :error
+  defp item_stats(item) do
+    Enum.flat_map(@item_stat_groups, fn group ->
+      item.stats
+      |> Map.get(group, %{})
+      |> Map.values()
+    end)
   end
 
-  defp compute_value(:static, stat, base, deviation, item) do
-    {:ok, trunc(Context.ItemStatsCalculator.static_value(stat, base, deviation, item))}
-  rescue
-    _ -> :error
+  defp equipped_gear(character) do
+    equips =
+      case Map.get(character, :equips) do
+        equips when is_list(equips) -> equips
+        _ -> Context.Equips.list(character)
+      end
+
+    Enum.filter(equips, &(&1.inventory_tab == :gear))
+  end
+
+  defp calculate_gear_score(equips) do
+    equips
+    |> Enum.map(fn item ->
+      %{
+        gear_score: get_in(item.metadata, [:property, :gear_score]) || 0,
+        rarity: item.rarity || 0,
+        item_type: item_type(item),
+        enchant_level: item.enchant_level || 0,
+        limit_break_level: item.limit_break_level || 0
+      }
+    end)
+    |> GearScore.calculate()
+  end
+
+  defp item_type(item) do
+    item.item_id
+    |> Context.ItemTypes.get_type_by_item_id()
+    |> Enums.ItemType.get_value()
+  end
+
+  defp merge_values(left, right) do
+    Map.merge(left, right, fn _stat, left_value, right_value -> left_value + right_value end)
   end
 end

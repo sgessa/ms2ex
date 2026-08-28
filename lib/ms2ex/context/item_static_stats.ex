@@ -33,25 +33,25 @@ defmodule Ms2ex.Context.ItemStaticStats do
   # Flat Basic
   defp process_static_stat(%{values: values, basic_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :basic, value, :flat)
+    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :flat, value, :basic)
   end
 
   # Rates Basic
   defp process_static_stat(%{rates: values, basic_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :basic, value, :rate)
+    Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
   end
 
   # Flat Special
   defp process_static_stat(%{values: values, special_attribute: attr}) do
     value = Enum.random(values.min..values.max)
-    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :special, value, :flat)
+    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :flat, value, :special)
   end
 
   # Rate Special
   defp process_static_stat(%{rates: values, special_attribute: attr}) do
     value = :rand.uniform() * (values.max - values.min) + values.max
-    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :special, value, :rate)
+    Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :rate, value, :special)
   end
 
   defp get_pick_stats(static_stats, _item, nil), do: static_stats

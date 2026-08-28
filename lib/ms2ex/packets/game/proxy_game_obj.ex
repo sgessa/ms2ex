@@ -46,7 +46,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_int()
     |> put_int()
     |> put_ustring(character.home_name)
-    |> put_int()
+    |> put_int(character.gear_score)
     |> put_short()
     |> put_int()
     |> put_int()
@@ -61,6 +61,15 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_int(character.object_id)
     |> put_byte(@player_flags.position)
     |> put_coord(character.position)
+  end
+
+  def update_gear_score(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_player)
+    |> put_int(character.object_id)
+    |> put_byte(@player_flags.gear_score)
+    |> put_int(character.gear_score)
   end
 
   # actor state transitions (idle, casting, etc.) reach clients through the
