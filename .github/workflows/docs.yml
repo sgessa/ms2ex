@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Elixir
         id: beam
@@ -31,7 +31,7 @@ jobs:
       # Cache Hex/Mix package archives so mix deps.get avoids re-downloading
       # from hex.pm even when the deps/_build cache key misses
       - name: Cache Hex and Mix
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.hex
@@ -44,7 +44,7 @@ jobs:
       # job (docs builds in dev env) so the two jobs don't overwrite each
       # other's _build cache entries.
       - name: Cache deps and _build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             deps

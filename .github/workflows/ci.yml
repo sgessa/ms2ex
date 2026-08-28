@@ -38,7 +38,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Setup Elixir
       - name: Set up Elixir
@@ -69,7 +69,7 @@ jobs:
       # Cache Hex/Mix package archives so mix deps.get avoids re-downloading
       # from hex.pm even when the deps/_build cache key misses
       - name: Cache Hex and Mix
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.hex
@@ -82,7 +82,7 @@ jobs:
       # versions so _build artifacts are never reused across toolchain bumps;
       # restore-keys lets an older mix.lock build be reused incrementally.
       - name: Cache deps and _build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             deps
@@ -103,9 +103,12 @@ jobs:
         env:
           MIX_ENV: test
 
-      # Run Credo for code analysis
+      # Run Credo for code analysis. Runs under the test env (like the compile
+      # step) so it reuses the same _build instead of triggering a dev compile.
       - name: Run Credo
         run: mix credo
+        env:
+          MIX_ENV: test
 
       # Run tests when available
       - name: Run tests
