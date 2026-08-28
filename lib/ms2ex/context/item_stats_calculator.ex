@@ -146,7 +146,11 @@ defmodule Ms2ex.Context.ItemStatsCalculator do
   defp roll_value({minimum, maximum}),
     do: minimum + (maximum + 1 - minimum) * :rand.uniform()
 
-  defp first_recommended_job(item), do: List.first(item.metadata.limit.job_recommends)
+  defp first_recommended_job(item) do
+    item.metadata.limit
+    |> Map.get(:job_limits, [])
+    |> List.first() || 0
+  end
 
   defp item_type(item) do
     item.item_id

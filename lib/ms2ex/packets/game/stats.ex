@@ -5,7 +5,7 @@ defmodule Ms2ex.Packets.Stats do
   alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter
 
-  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 0x23}
+  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 35}
 
   def set_character_stats(character) do
     __MODULE__
@@ -14,6 +14,14 @@ defmodule Ms2ex.Packets.Stats do
     |> put_byte()
     |> put_byte(@mode.send_stats)
     |> put_stats(character.stats)
+  end
+
+  def update_player_stats(character) do
+    __MODULE__
+    |> build()
+    |> put_int(character.object_id)
+    |> put_byte(@mode.update)
+    |> put_player_stats(character.stats)
   end
 
   def update_char_stats(character, stat) when not is_list(stat) do
@@ -89,5 +97,16 @@ defmodule Ms2ex.Packets.Stats do
     |> put_int(Map.get(stats, :"#{stat}_max"))
     |> put_int(Map.get(stats, :"#{stat}_min"))
     |> put_int(Map.get(stats, :"#{stat}_cur"))
+  end
+
+  defp put_player_stats(packet, stats) do
+    Enum.reduce([:max, :min, :cur], put_byte(packet, @mode.send_stats), fn suffix, packet ->
+      packet
+      |> put_long(Map.get(stats, :"health_#{suffix}"))
+      |> put_int(Map.get(stats, :"attack_speed_#{suffix}"))
+      |> put_int(Map.get(stats, :"movement_speed_#{suffix}"))
+      |> put_int(Map.get(stats, :"jump_height_#{suffix}"))
+      |> put_int(Map.get(stats, :"mount_speed_#{suffix}"))
+    end)
   end
 end

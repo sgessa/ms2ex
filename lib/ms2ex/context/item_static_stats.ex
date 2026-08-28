@@ -38,7 +38,7 @@ defmodule Ms2ex.Context.ItemStaticStats do
 
   # Rates Basic
   defp process_static_stat(%{rates: values, basic_attribute: attr}) do
-    value = :rand.uniform() * (values.max - values.min) + values.max
+    value = :rand.uniform() * (values.max - values.min) + values.min
     Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
   end
 
@@ -50,7 +50,7 @@ defmodule Ms2ex.Context.ItemStaticStats do
 
   # Rate Special
   defp process_static_stat(%{rates: values, special_attribute: attr}) do
-    value = :rand.uniform() * (values.max - values.min) + values.max
+    value = :rand.uniform() * (values.max - values.min) + values.min
     Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :rate, value, :special)
   end
 
@@ -83,6 +83,7 @@ defmodule Ms2ex.Context.ItemStaticStats do
       )
 
     # Put / update static stat
+    value = if type == :flat, do: trunc(value), else: value
     Map.put(static_stats, pick_stat, %{static_stat | value: value})
   end
 end

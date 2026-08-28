@@ -172,6 +172,21 @@ defmodule Ms2ex.Context.Field do
   end
 
   @doc """
+  Sends the full stat set to the character and the compact player stat update
+  to every other character in the same field.
+  """
+  @spec broadcast_stats(Schema.Character.t()) :: :ok
+  def broadcast_stats(%Schema.Character{} = character) do
+    broadcast(character, Packets.Stats.set_character_stats(character))
+
+    broadcast_from(
+      character,
+      Packets.Stats.update_player_stats(character),
+      character.sender_session_pid
+    )
+  end
+
+  @doc """
   Broadcasts a packet to all characters in the same field as the given character,
   except for the specified process.
 

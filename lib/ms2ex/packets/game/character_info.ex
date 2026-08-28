@@ -7,9 +7,7 @@ defmodule Ms2ex.Packets.CharacterInfo do
 
   import Ms2ex.Packets.PacketWriter
 
-  @basic_total 35
   @stat_total 3
-  @special_total 180
 
   def not_found(character_id) do
     __MODULE__
@@ -19,7 +17,10 @@ defmodule Ms2ex.Packets.CharacterInfo do
   end
 
   def load(%Schema.Character{} = character) do
-    character = Context.Characters.load_equips(character)
+    character =
+      character
+      |> Context.Characters.load_equips()
+      |> Context.ItemStats.apply()
 
     __MODULE__
     |> build()
@@ -48,9 +49,9 @@ defmodule Ms2ex.Packets.CharacterInfo do
     |> put_int(character.prestige_level)
     |> put_byte()
     |> put_basic_stats(stats)
-    |> put_zero_floats(@basic_total)
-    |> put_zero_floats(@special_total)
-    |> put_zero_floats(@special_total)
+    |> put_basic_rates(stats)
+    |> put_special_rates(stats)
+    |> put_special_values(stats)
     |> put_ustring(Map.get(character, :profile_url, ""))
     |> put_ustring(character.motto)
     |> put_ustring(Map.get(character, :guild_name, ""))
@@ -86,8 +87,26 @@ defmodule Ms2ex.Packets.CharacterInfo do
   defp stat_suffix(1), do: :min
   defp stat_suffix(2), do: :cur
 
-  defp put_zero_floats(packet, count) do
-    Enum.reduce(1..count, packet, fn _, packet -> put_float(packet) end)
+  defp put_basic_rates(packet, stats) do
+    put_rates(packet, Enums.BasicStatType.ordered_keys(), Map.get(stats, :basic_rates, %{}))
+  end
+
+  defp put_special_rates(packet, stats) do
+    put_rates(packet, Enums.SpecialStatType.ordered_keys(), Map.get(stats, :special_rates, %{}))
+  end
+
+  defp put_rates(packet, attributes, rates) do
+    Enum.reduce(attributes, packet, fn attribute, packet ->
+      put_float(packet, Map.get(rates, attribute, 0.0))
+    end)
+  end
+
+  defp put_special_values(packet, stats) do
+    values = Map.get(stats, :special_values, %{})
+
+    Enum.reduce(Enums.SpecialStatType.ordered_keys(), packet, fn attribute, packet ->
+      put_float(packet, Map.get(values, attribute, 0.0))
+    end)
   end
 
   defp put_buffer(packet, buffer), do: put_int(packet, byte_size(buffer)) <> buffer

@@ -262,7 +262,7 @@ defmodule Ms2ex.Managers.Character do
     if old_level != character.level do
       character = Context.ItemStats.apply(character)
       Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
-      Context.Field.broadcast(character, Packets.Stats.set_character_stats(character))
+      Context.Field.broadcast_stats(character)
       character
     else
       character

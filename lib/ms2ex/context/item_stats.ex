@@ -20,7 +20,7 @@ defmodule Ms2ex.Context.ItemStats do
   Stat bonuses granted by a single item.
   """
   def bonuses(%Schema.Item{} = item) do
-    item_stat_values(item)
+    item_stat_values(item, :basic)
   end
 
   @doc """
@@ -32,16 +32,20 @@ defmodule Ms2ex.Context.ItemStats do
     character = Repo.preload(character, :stats, force: true)
     equips = equipped_gear(character)
 
-    {bonuses, rates} =
-      Enum.reduce(equips, {%{}, %{}}, fn item, {bonuses, rates} ->
+    {bonuses, rates, special_values, special_rates} =
+      Enum.reduce(equips, {%{}, %{}, %{}, %{}}, fn item,
+                                                   {bonuses, rates, special_values, special_rates} ->
         {
-          merge_values(bonuses, item_stat_values(item)),
-          merge_values(rates, item_stat_rates(item))
+          merge_values(bonuses, item_stat_values(item, :basic)),
+          merge_values(rates, item_stat_rates(item, :basic)),
+          merge_values(special_values, item_stat_values(item, :special)),
+          merge_values(special_rates, item_stat_rates(item, :special))
         }
       end)
 
     character = reset_base_stats(character)
     character = apply_stats(character, bonuses, rates)
+    character = put_stat_metadata(character, rates, special_values, special_rates)
     %{character | gear_score: calculate_gear_score(equips)}
   end
 
@@ -85,11 +89,11 @@ defmodule Ms2ex.Context.ItemStats do
     %{character | stats: stats}
   end
 
-  defp item_stat_values(item) do
+  defp item_stat_values(item, class) do
     item
     |> item_stats()
     |> Enum.reduce(%{}, fn stat, acc ->
-      if stat.class == :basic and (stat.type == :flat or stat.attribute == :piercing) do
+      if stat.class == class and (stat.type == :flat or stat.attribute == :piercing) do
         value = if stat.type == :rate, do: round(stat.value * 1000), else: trunc(stat.value)
         Map.update(acc, stat.attribute, value, &(&1 + value))
       else
@@ -98,16 +102,31 @@ defmodule Ms2ex.Context.ItemStats do
     end)
   end
 
-  defp item_stat_rates(item) do
+  defp item_stat_rates(item, class) do
     item
     |> item_stats()
     |> Enum.reduce(%{}, fn stat, acc ->
-      if stat.class == :basic and stat.type == :rate and stat.attribute != :piercing do
+      if stat.class == class and stat.type == :rate and stat.attribute != :piercing do
         Map.update(acc, stat.attribute, stat.value, &(&1 + stat.value))
       else
         acc
       end
     end)
+  end
+
+  defp put_stat_metadata(
+         %Schema.Character{stats: stats} = character,
+         basic_rates,
+         special_values,
+         special_rates
+       ) do
+    stats =
+      stats
+      |> Map.put(:basic_rates, basic_rates)
+      |> Map.put(:special_values, special_values)
+      |> Map.put(:special_rates, special_rates)
+
+    %{character | stats: stats}
   end
 
   defp item_stats(item) do
