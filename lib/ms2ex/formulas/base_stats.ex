@@ -76,9 +76,7 @@ defmodule Ms2ex.Formulas.BaseStats do
   end
 
   def all(job, level) do
-    base = Map.merge(get(job, level), UserStats.get(job, level) || %{})
-
-    Map.merge(base, %{
+    defaults = Map.merge(get(job, level), %{
       hp_regen: 10,
       hp_regen_interval: 3000,
       spirit: 100,
@@ -99,6 +97,13 @@ defmodule Ms2ex.Formulas.BaseStats do
       physical_res: physical_res(job, level),
       magical_res: magical_res(job, level),
       mount_speed: 100,
+      physical_atk: 0,
+      magical_atk: 0
+    })
+
+    base = Map.merge(defaults, UserStats.get(job, level) || %{})
+
+    Map.merge(base, %{
       physical_atk: AttackStats.physical_attack(job, base.strength, base.dexterity, base.luck),
       magical_atk: AttackStats.magical_attack(job, base.intelligence)
     })

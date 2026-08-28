@@ -56,8 +56,8 @@ defmodule Ms2ex.Context.ItemStats do
     stats =
       Enum.reduce(bonuses, character.stats, fn {stat, amount}, stats ->
         stats
-        |> Map.update(:"#{stat}_cur", amount, &(&1 + amount))
         |> Map.update(:"#{stat}_max", amount, &(&1 + amount))
+        |> Map.update(:"#{stat}_cur", amount, &(&1 + amount))
       end)
 
     stats =
@@ -89,8 +89,8 @@ defmodule Ms2ex.Context.ItemStats do
     item
     |> item_stats()
     |> Enum.reduce(%{}, fn stat, acc ->
-      if stat.class == :basic and stat.type == :flat do
-        value = trunc(stat.value)
+      if stat.class == :basic and (stat.type == :flat or stat.attribute == :piercing) do
+        value = if stat.type == :rate, do: round(stat.value * 1000), else: trunc(stat.value)
         Map.update(acc, stat.attribute, value, &(&1 + value))
       else
         acc
@@ -102,7 +102,7 @@ defmodule Ms2ex.Context.ItemStats do
     item
     |> item_stats()
     |> Enum.reduce(%{}, fn stat, acc ->
-      if stat.class == :basic and stat.type == :rate do
+      if stat.class == :basic and stat.type == :rate and stat.attribute != :piercing do
         Map.update(acc, stat.attribute, stat.value, &(&1 + stat.value))
       else
         acc

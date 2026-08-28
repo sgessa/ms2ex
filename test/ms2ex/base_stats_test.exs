@@ -20,10 +20,10 @@ defmodule Ms2ex.BaseStatsTest do
     assert stats.defense == 70
     assert stats.evasion == 70
     assert stats.critical_rate == 40
-    assert stats.physical_res == 11
-    assert stats.magical_res == 36
-    assert stats.physical_atk == 12
-    assert stats.magical_atk == 241
+    assert stats.physical_res == 0
+    assert stats.magical_res == 0
+    assert stats.physical_atk == 13
+    assert stats.magical_atk == 245
   end
 
   test "uses ingested userstat values when available" do

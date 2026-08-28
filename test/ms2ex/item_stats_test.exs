@@ -10,7 +10,9 @@ defmodule Ms2ex.ItemStatsTest do
       stats: %{
         physical_atk_cur: 10,
         physical_atk_max: 10,
+        physical_atk_min: 10,
         min_weapon_atk_cur: 0,
+        min_weapon_atk_min: 0,
         min_weapon_atk_max: 0,
         health_cur: 500,
         health_max: 500
@@ -23,6 +25,7 @@ defmodule Ms2ex.ItemStatsTest do
 
     assert character.stats.physical_atk_cur == 50
     assert character.stats.physical_atk_max == 50
+    assert character.stats.physical_atk_min == 10
     assert character.stats.health_cur == 750
     assert character.stats.health_max == 750
   end
@@ -48,11 +51,29 @@ defmodule Ms2ex.ItemStatsTest do
     assert ItemStats.bonuses(item) == %{health: 34}
   end
 
+  test "converts rate-only piercing to the scaled basic stat value" do
+    item = %Ms2ex.Schema.Item{
+      stats: %Types.ItemStats{
+        randoms: %{
+          piercing: %Types.ItemStat{
+            attribute: :piercing,
+            type: :rate,
+            value: 0.029,
+            class: :basic
+          }
+        }
+      }
+    }
+
+    assert ItemStats.bonuses(item) == %{piercing: 29}
+  end
+
   test "bonuses accumulate with existing gear" do
     character = ItemStats.apply_stats(character(), %{min_weapon_atk: 150})
     character = ItemStats.apply_stats(character, %{min_weapon_atk: 50})
 
     assert character.stats.min_weapon_atk_cur == 200
+    assert character.stats.min_weapon_atk_min == 0
   end
 
   test "calculates NA gear score for an enchanted rarity four weapon" do
