@@ -74,4 +74,16 @@ defmodule Ms2ex.Packets.SkillDamage do
     |> put_int(Map.get(record, :ep_amount, 0))
     |> put_bool(true)
   end
+
+  # dot record layout: [caster][target][proc][type][hp]; hp is negative
+  def dot_damage(record) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x3)
+    |> put_int(record.caster_id)
+    |> put_int(record.target_id)
+    |> put_int(record.proc_count)
+    |> put_byte(record.type)
+    |> put_int(record.hp_amount)
+  end
 end

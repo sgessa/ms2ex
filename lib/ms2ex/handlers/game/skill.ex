@@ -262,6 +262,9 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, mob} =
       Context.Field.call(skill_cast.caster, {:inflict_dmg, skill_cast.caster, dmg, mob.object_id})
 
+    # on-hit effects (e.g. Flame Wave's burn) apply to the target
+    Context.Field.call(skill_cast.caster, {:apply_skill_effects, skill_cast, mob.object_id})
+
     # TODO Buff
     # if Types.SkillCast.element_debuff?(skill_cast) or
     #      Types.SkillCast.entity_debuff?(skill_cast) do

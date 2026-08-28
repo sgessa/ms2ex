@@ -10,6 +10,8 @@ defmodule Ms2ex.Managers.Field.Character do
   def add_character(character, state) do
     Logger.info("Field #{state.map_id} @ Channel #{state.channel_id}: #{character.name} joined")
 
+    character = Context.ItemStats.apply(character)
+
     # Load other characters
     for char_id <- Map.keys(state.sessions) do
       load_peer(character, char_id, state)

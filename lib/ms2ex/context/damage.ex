@@ -33,8 +33,10 @@ defmodule Ms2ex.Context.Damage do
   @doc """
   Calculates the damage dealt by a skill cast on a field NPC.
 
-  Takes into account attack damage, skill damage rate, enemy resistance, and piercing.
-  Can calculate critical damage if the `crit?` parameter is set to true.
+  The attack roll is the character's weapon attack plus bonus attack; an
+  unarmed character falls back to the job attack stat. Skill rate scales the
+  hit, target defense and resistance reduce it, and piercing ignores a share
+  of both. Critical hits multiply by the critical damage stat.
 
   ## Parameters
 
@@ -45,54 +47,64 @@ defmodule Ms2ex.Context.Damage do
   ## Examples
 
       iex> calculate(skill_cast, mob)
-      %{dmg: 10000, crit?: false}
-
-      iex> calculate(skill_cast, mob, true)
-      %{dmg: 15000, crit?: true}
+      %{dmg: 1, crit?: false}
   """
   @spec calculate(SkillCast.t(), FieldNpc.t(), boolean()) :: %{dmg: integer(), crit?: boolean()}
   def calculate(%SkillCast{} = skill_cast, %FieldNpc{} = mob, crit? \\ false) do
-    caster = skill_cast.caster
-
-    # TODO calculate from character stats
-    attk_dmg = 1_000_000
-
-    skill_dmg_rate =
-      if crit?,
-        do: SkillCast.crit_damage_rate(skill_cast),
-        else: SkillCast.damage_rate(skill_cast)
-
-    skill_dmg = skill_dmg_rate * attk_dmg
-
-    enemy_res = calc_enemy_res(skill_cast, mob)
-    pierce_res = calc_pierce_res(skill_cast, caster)
-
-    # TODO fix dmg multiplier
-    numerator =
-      skill_dmg * (1 + caster.stats.bonus_atk_cur) * (1500 - (enemy_res - pierce_res * 15))
-
-    pierce_coeff = 1 - caster.stats.piercing_cur
-
-    # TODO find correct enemy def stats
-    denominator = mob.stats.defense.total * pierce_coeff * 15
-
-    dmg = trunc(numerator / denominator)
-    %{dmg: dmg, crit?: crit?}
+    damage(
+      skill_cast.caster,
+      mob,
+      SkillCast.damage_rate(skill_cast),
+      SkillCast.damage_value(skill_cast),
+      SkillCast.physical?(skill_cast),
+      crit?
+    )
   end
 
-  defp calc_enemy_res(%SkillCast{} = skill_cast, mob) do
-    if SkillCast.physical?(skill_cast) do
-      mob.stats.physical_res.total
-    else
-      mob.stats.magical_res.total
-    end
+  @doc """
+  Calculates damage for a given rate (e.g. a damage-over-time tick) instead of
+  the skill's own rate.
+  """
+  def calculate_rate(rate, caster, mob, physical?, crit? \\ false) do
+    damage(caster, mob, rate, 0, physical?, crit?)
   end
 
-  defp calc_pierce_res(%SkillCast{} = skill_cast, caster) do
-    if SkillCast.physical?(skill_cast) do
-      caster.stats.physical_atk_cur
+  defp damage(caster, mob, rate, value, physical?, crit?) do
+    stats = caster.stats
+    target = mob.stats
+
+    attack_dmg = base_attack(stats, physical?)
+    crit_mult = if crit?, do: stats.critical_damage_cur / 100, else: 1.0
+
+    damage_bonus = 1 + stats.damage_cur / 1000
+    damage_multiplier = damage_bonus * crit_mult * rate
+
+    # target defense reduces damage; piercing ignores a capped share of it
+    defense_pierce = 1 - min(0.3, stats.piercing_cur / 1000)
+    damage_multiplier = damage_multiplier / max(target.defense.total, 1) / defense_pierce
+
+    # the attack stat drives the hit; the target's resistance cuts it down
+    attack_stat = if physical?, do: stats.physical_atk_cur, else: stats.magical_atk_cur
+    target_res = if physical?, do: target.physical_res.total, else: target.magical_res.total
+
+    resistance =
+      (1500 - max(target_res - 1500 * (stats.piercing_cur / 1000), 0)) / 1500
+
+    damage_multiplier = damage_multiplier * attack_stat * resistance
+
+    dmg = trunc(attack_dmg * (damage_multiplier * 4) + value)
+
+    %{dmg: max(dmg, 1), crit?: crit?}
+  end
+
+  defp base_attack(stats, physical?) do
+    min_atk = stats.min_weapon_atk_cur + stats.bonus_atk_cur
+    max_atk = stats.max_weapon_atk_cur + stats.bonus_atk_cur
+
+    if max_atk > 0 do
+      min_atk + (max_atk - min_atk) * :rand.uniform()
     else
-      caster.stats.magical_atk_cur
+      if physical?, do: stats.physical_atk_cur, else: stats.magical_atk_cur
     end
   end
 

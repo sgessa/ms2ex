@@ -200,6 +200,15 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, character}
   end
 
+  def handle_cast({:decrease_stats, stats}, character) do
+    character =
+      Enum.reduce(stats, character, fn {stat, amount}, character ->
+        Character.Stats.decrease(character, stat, amount)
+      end)
+
+    {:noreply, character}
+  end
+
   # --------------------------------
   # Exp
   # --------------------------------

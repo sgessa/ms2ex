@@ -1,5 +1,8 @@
 defmodule Ms2ex.Types.Buff do
+  alias Ms2ex.Context
+  alias Ms2ex.Schema
   alias Ms2ex.Storage
+  alias Ms2ex.Types.FieldNpc
   alias Ms2ex.Types.SkillCast
 
   defstruct [
@@ -14,7 +17,10 @@ defmodule Ms2ex.Types.Buff do
     :enabled,
     :effect,
     :shield_health,
-    stat_modifiers: %{}
+    :next_proc_tick,
+    stat_modifiers: %{},
+    can_proc: false,
+    proc_count: 0
   ]
 
   def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
@@ -35,6 +41,7 @@ defmodule Ms2ex.Types.Buff do
     |> struct(attrs)
     |> stack()
     |> set_shield_health()
+    |> tick_state()
   end
 
   def stack(%__MODULE__{} = buff) do
@@ -64,6 +71,59 @@ defmodule Ms2ex.Types.Buff do
 
     Map.put(buff, :shield_health, shield_health)
   end
+
+  defp tick_state(%__MODULE__{} = buff) do
+    buff
+    |> Map.put(:next_proc_tick, (buff.effect.property[:delay_tick] || 0) + interval_tick(buff))
+    |> Map.put(:can_proc, ticks?(buff))
+    |> Map.put(:proc_count, 0)
+  end
+
+  def interval_tick(%__MODULE__{} = buff) do
+    case buff.effect[:property] do
+      %{interval_tick: tick} when is_integer(tick) and tick > 0 -> tick
+      %{duration_tick: duration} -> duration + 1000
+      _ -> 1000
+    end
+  end
+
+  def ticks?(%__MODULE__{} = buff) do
+    not is_nil(buff.effect[:recovery]) or
+      not is_nil(get_in(buff.effect, [:dot, :damage])) or
+      not is_nil(get_in(buff.effect, [:dot, :buff]))
+  end
+
+  def dot_amounts(%__MODULE__{} = buff) do
+    case get_in(buff.effect, [:dot, :damage]) do
+      nil ->
+        {0, 0, 0}
+
+      dot ->
+        max_hp = owner_max_hp(buff.owner)
+        cur_hp = owner_cur_hp(buff.owner)
+
+        hp =
+          if dot.is_const_damage do
+            dot.hp_value
+          else
+            rate_dmg =
+              Context.Damage.calculate_rate(dot.rate, buff.caster, buff.owner, dot.type == 1).dmg
+
+            rate_dmg + dot.hp_value
+          end
+
+        hp = hp + trunc(dot.damage_by_target_max_hp * max_hp)
+        hp = if dot.not_kill, do: min(hp, cur_hp - 1), else: hp
+
+        {max(hp, 0), max(dot.sp_value, 0), max(dot.ep_value, 0)}
+    end
+  end
+
+  defp owner_max_hp(%FieldNpc{} = mob), do: mob.stats.health.total
+  defp owner_max_hp(%Schema.Character{} = character), do: character.stats.health_max
+
+  defp owner_cur_hp(%FieldNpc{} = mob), do: mob.stats.health.current
+  defp owner_cur_hp(%Schema.Character{} = character), do: character.stats.health_cur
 
   def recovery_amounts(%__MODULE__{} = buff, character, crit?) do
     case buff.effect[:recovery] do
