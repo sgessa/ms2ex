@@ -35,5 +35,9 @@ ms2ex-*.tar
 # Ignore secrets for production release
 /config/*.secret.exs
 
-# cross-implementation comparison notes (local only)
-/docs/
+# local-only investigation notes (not public-facing)
+/docs/reference-deltas.md
+/docs/boss-hp-bar.md
+/docs/client-memory.md
+/docs/client-re.md
+/docs/code-organization.md
