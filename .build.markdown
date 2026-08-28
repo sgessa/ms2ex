@@ -1,3 +1,5 @@
+Mix.Tasks.Maple.Game.md
+Mix.Tasks.Maple.Server.md
 Ms2ex.Commands.md
 Ms2ex.Constants.md
 Ms2ex.Context.Accounts.md

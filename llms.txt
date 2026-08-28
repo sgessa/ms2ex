@@ -320,3 +320,10 @@ cryptographic sequences and managing initialization vectors (IVs).
   - [Ms2ex.Crypto.TableCrypter](Ms2ex.Crypto.TableCrypter.md): Implements a table-based substitution crypter.
   - [Ms2ex.Crypto.XorCrypter](Ms2ex.Crypto.XorCrypter.md): Implements a XOR-based crypter.
 
+## Mix Tasks
+
+- [mix maple.game](Mix.Tasks.Maple.Game.md): Starts the application and its game TCP listeners (login, world login and
+channel servers) without serving the Phoenix web endpoint.
+- [mix maple.server](Mix.Tasks.Maple.Server.md): Starts the application with both its game TCP listeners (login, world login
+and channel servers) and the Phoenix web endpoint.
+
