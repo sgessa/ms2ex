@@ -128,9 +128,33 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:inflict_dmg, attacker, %{dmg: dmg}, object_id}, _from, state) do
+    {reply, state} = damage_npc(state, attacker, dmg, object_id)
+    {:reply, reply, state}
+  end
+
+  def handle_call({:apply_skill_effects, skill_cast, mob_id}, _from, state) do
+    case Map.get(state.npcs, mob_id) do
+      %FieldNpc{dead?: false} = mob ->
+        state =
+          Enum.reduce(SkillCast.attack_skills(skill_cast), state, fn effect, state ->
+            {_buff, state} =
+              Field.Buff.add_mob_buff(skill_cast.caster, effect.id, effect.level, mob, state)
+
+            state
+          end)
+
+        {:reply, :ok, state}
+
+      _ ->
+        {:reply, :ok, state}
+    end
+  end
+
+  # applies damage to an npc directly; used by inflict_dmg and the buff tick loop
+  def damage_npc(state, attacker, dmg, object_id) do
     case Map.get(state.npcs, object_id) do
       nil ->
-        {:reply, :error, state}
+        {:error, state}
 
       %FieldNpc{} = field_npc ->
         field_npc = tag_attackers(field_npc, attacker)
@@ -143,10 +167,10 @@ defmodule Ms2ex.Managers.Field do
 
             Context.Mobs.drop_corpse_rewards(field_npc, attacker, state.map_id)
 
-            {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
+            {{:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
 
           field_npc.dead? ->
-            {:reply, {:ok, field_npc}, state}
+            {{:ok, field_npc}, state}
 
           true ->
             apply_live_damage(field_npc, dmg, state, object_id)
@@ -177,7 +201,7 @@ defmodule Ms2ex.Managers.Field do
         %{field_npc | stats: stats}
       end
 
-    {:reply, {:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
+    {{:ok, field_npc}, put_in(state, [:npcs, object_id], field_npc)}
   end
 
   # Death is announced with ControlNpc.dead/1; the client plays the death
@@ -301,6 +325,11 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info({:remove_status, status}, state) do
     Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
+    {:noreply, state}
+  end
+
+  def handle_info({:buff_tick, buff_id}, state) do
+    state = Field.Buff.tick(buff_id, state)
     {:noreply, state}
   end
 

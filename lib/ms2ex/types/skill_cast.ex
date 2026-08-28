@@ -88,6 +88,13 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
+  def damage_value(%__MODULE__{skill_level: lvl, meta: meta}) do
+    case meta.levels["#{lvl}"] do
+      %{motions: [%{attacks: [%{damage: %{value: value}}]}]} -> value
+      _ -> 0
+    end
+  end
+
   def physical?(%__MODULE__{meta: meta}) do
     meta.property.attack_type == Enums.AttackType.get_value(:physical)
   end
@@ -101,15 +108,23 @@ defmodule Ms2ex.Types.SkillCast do
     meta.property.attack_type == Enums.AttackType.get_value(:magic)
   end
 
-  def crit_damage_rate(%__MODULE__{} = skill_cast) do
-    damage_rate(skill_cast) * 2
-  end
-
   def condition_skills(%__MODULE__{skill_level: lvl, meta: meta}) do
     if skill_level = meta.levels["#{lvl}"] do
       skill_level.condition
     else
       []
+    end
+  end
+
+  # on-hit effects applied to targets: the attack's condition skills, both the
+  # plain ones and the dependOnDamageCount ones (skills_on_damage)
+  def attack_skills(%__MODULE__{} = skill_cast) do
+    case skill_level(skill_cast) do
+      %{motions: [%{attacks: [attack]}]} ->
+        Map.get(attack, :skills, []) ++ Map.get(attack, :skills_on_damage, [])
+
+      _ ->
+        []
     end
   end
 

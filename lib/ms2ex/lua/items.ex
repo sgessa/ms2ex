@@ -29,6 +29,13 @@ defmodule Ms2ex.Lua.Items do
     perfect_guard: :static_rate_abp
   }
 
+  def constant_stats, do: @constant_stats
+  def static_stats, do: @static_stats
+
+  def allowed_stats(type) do
+    if type == :constant, do: @constant_stats, else: @static_stats
+  end
+
   def get_enchant_values(item) do
     script = get_script("calcEnchantValues")
 
