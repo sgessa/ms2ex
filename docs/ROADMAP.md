@@ -124,21 +124,36 @@ client-side and needs a live sniff diff during a boss fight.
 - Equip stat bonuses: random options, enchant / limit-break enchants,
   special-value / special-rate stats, and rate-type stats (e.g. perfect guard)
   now aggregate over equipped gear and apply to the character
+  ([#74](https://github.com/sgessa/ms2ex/pull/74))
 - Flat skill damage (`damage.value`) applied from metadata
+  ([#71](https://github.com/sgessa/ms2ex/pull/71),
+  [ingest@218025f](https://github.com/sgessa/ms2ex-file-ingest/commit/218025f))
 - On-hit skill effects: `skills_on_damage` projected and applied alongside
   attack condition skills
+  ([#71](https://github.com/sgessa/ms2ex/pull/71),
+  [ingest@218025f](https://github.com/sgessa/ms2ex-file-ingest/commit/218025f))
 - SkillDamage DotDamage (0x3) record
+  ([#71](https://github.com/sgessa/ms2ex/pull/71))
 - Buff `status.special_values` / `special_rates` metadata projection
+  ([ingest@50681d4](https://github.com/sgessa/ms2ex-file-ingest/commit/50681d4))
 - Region splash `ImmediateActive` / `Delay` metadata projection
+  ([ingest@50681d4](https://github.com/sgessa/ms2ex-file-ingest/commit/50681d4))
 - Skill cooldowns (`0x43`), including restore on field change and
   buff-triggered resets
+  ([#68](https://github.com/sgessa/ms2ex/pull/68))
 - Buff tick loop: DoT, recovery, tick skills, stacking (`overlap_count` /
   `modify_overlap`), cancel-on-apply
+  ([#73](https://github.com/sgessa/ms2ex/pull/73))
 - Monster drops: death / hit / corpse, smart-drop weighting, character
   binding, map gating, tradeability
+  ([#64](https://github.com/sgessa/ms2ex/pull/64))
 - Item-skill & recovery consumables; buff expiry
+  ([#69](https://github.com/sgessa/ms2ex/pull/69))
 - State skills (recv `0x21`)
+  ([#66](https://github.com/sgessa/ms2ex/pull/66))
 - Field-load packets & skill target/damage relay
-- Complete item drops
+  ([#63](https://github.com/sgessa/ms2ex/pull/63))
 - Fall damage & out-of-bounds teleport
+  ([#67](https://github.com/sgessa/ms2ex/pull/67))
 - Boss HP bar packet set, mob stat updates, player entity sync
+  ([#59](https://github.com/sgessa/ms2ex/pull/59))
