@@ -42,4 +42,6 @@ ms2ex-*.tar
 /dumps/
 
 # local debugging scripts
-/scripts/
+/scripts//deps
+/_build
+/deps
