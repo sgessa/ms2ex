@@ -67,6 +67,29 @@ defmodule Ms2ex.BuffStatusTest do
     assert Types.Buff.tick_skills(buff(%{})) == []
   end
 
+  test "max_stacks, stun and cancel read from the effect metadata" do
+    buff = %Types.Buff{
+      effect: %{
+        property: %{max_count: 6, stun: 3},
+        update: %{cancel: %{ids: [10_300_051], check_same_caster: false}}
+      }
+    }
+
+    assert Types.Buff.max_stacks(buff) == 6
+    assert Types.Buff.stun(buff) == 3
+    assert Types.Buff.cancel(buff) == %{ids: [10_300_051], check_same_caster: false}
+  end
+
+  test "max_stacks and stun default when metadata is absent" do
+    assert Types.Buff.max_stacks(buff(%{})) == 1
+    assert Types.Buff.stun(buff(%{})) == 0
+    assert Types.Buff.cancel(buff(%{})) == nil
+  end
+
+  test "a new buff starts with one stack" do
+    assert buff(%{}).stacks == 1
+  end
+
   test "dot damage combines base and target-max-hp terms and clamps on not_kill" do
     dot = %{
       is_const_damage: true,

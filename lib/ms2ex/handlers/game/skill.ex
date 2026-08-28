@@ -203,11 +203,12 @@ defmodule Ms2ex.GameHandlers.Skill do
     {rotation, _packet} = get_coord(packet)
 
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
-      Managers.SkillCast.update(skill_cast, %{
-        attack_point: attack_point,
-        position: position,
-        rotation: rotation
-      })
+      skill_cast =
+        Managers.SkillCast.update(skill_cast, %{
+          attack_point: attack_point,
+          position: position,
+          rotation: rotation
+        })
 
       Context.Field.add_region_skill(skill_cast.caster, skill_cast)
     end

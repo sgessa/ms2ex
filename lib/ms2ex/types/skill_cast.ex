@@ -128,6 +128,30 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
+  # the skill fired by a region/splash attack: the first condition skill of the
+  # attack carries the splash skill id+level; returns {cast, splash} so the
+  # region can be ticked at the splash interval
+  def splash_skill_cast(%__MODULE__{} = skill_cast) do
+    case attack_skills(skill_cast) do
+      [%{id: id, level: level, splash: splash} | _] when id > 0 ->
+        cast = %__MODULE__{
+          id: 0,
+          skill_id: id,
+          skill_level: level,
+          caster: skill_cast.caster,
+          meta: Storage.Skills.get_meta(id),
+          position: skill_cast.position,
+          rotation: skill_cast.rotation,
+          attack_counter: skill_cast.attack_counter
+        }
+
+        {cast, splash}
+
+      _ ->
+        nil
+    end
+  end
+
   def attack_point(%__MODULE__{motion_point: motion, attack_point: attack} = skill_cast) do
     level = skill_cast.meta[:levels]["#{skill_cast.skill_level}"]
     motion = level[:motions] |> Enum.at(motion)

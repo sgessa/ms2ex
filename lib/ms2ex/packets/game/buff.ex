@@ -30,14 +30,16 @@ defmodule Ms2ex.Packets.Buff do
 
   defp handle_mode(packet, :remove, _status), do: packet
 
-  defp handle_mode(packet, :update, status) do
+  defp handle_mode(packet, :update, buff) do
+    # BuffFlag: UpdateBuff | UpdateShield
     packet
-    |> put_int(status.target)
-    |> put_int(status.start)
-    |> put_int(status.end)
-    |> put_int(status.skill_cast.skill_id)
-    |> put_short(status.skill_cast.skill_level)
-    |> put_int(status.stacks)
-    |> put_byte()
+    |> put_int(0x3)
+    |> put_int(buff.start_tick)
+    |> put_int(buff.end_tick)
+    |> put_int(buff.skill[:id])
+    |> put_short(buff.skill[:level])
+    |> put_int(buff.stacks)
+    |> put_bool(buff.enabled)
+    |> put_long(trunc(buff.shield_health))
   end
 end
