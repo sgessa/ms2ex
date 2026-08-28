@@ -3,13 +3,12 @@ defmodule Ms2ex.Context.ItemStats do
   Aggregates the stat bonuses granted by equipped items and applies them to a
   character's stats.
 
-  Each item's constant and static option stats are rolled through the
-  `calcItemValues` Lua script, then summed over every equipped item and added
-  to the character's current and maximum stat values.
+  Each item's constant and static option stats are calculated in Elixir, then
+  summed over every equipped item and added to the character's current and
+  maximum stat values.
   """
 
   alias Ms2ex.Context
-  alias Ms2ex.Lua
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -63,7 +62,7 @@ defmodule Ms2ex.Context.ItemStats do
   end
 
   defp value_stats(type, pick_list, values, item) do
-    allowed = Lua.Items.allowed_stats(type)
+    allowed = Context.ItemStatsCalculator.allowed_stats(type)
 
     Enum.reduce(pick_list || [], %{}, fn {stat, deviation}, acc ->
       if Map.has_key?(allowed, stat) do
@@ -84,13 +83,13 @@ defmodule Ms2ex.Context.ItemStats do
   end
 
   defp compute_value(:constant, stat, base, deviation, item) do
-    {:ok, trunc(Lua.Items.get_stat_constant_value(stat, base, deviation, item))}
+    {:ok, trunc(Context.ItemStatsCalculator.constant_value(stat, base, deviation, item))}
   rescue
     _ -> :error
   end
 
   defp compute_value(:static, stat, base, deviation, item) do
-    {:ok, trunc(Lua.Items.get_stat_static_value(stat, base, deviation, item))}
+    {:ok, trunc(Context.ItemStatsCalculator.static_value(stat, base, deviation, item))}
   rescue
     _ -> :error
   end

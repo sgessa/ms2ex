@@ -1,6 +1,6 @@
 defmodule Ms2ex.Context.ItemStaticStats do
+  alias Ms2ex.Context
   alias Ms2ex.Enums
-  alias Ms2ex.Lua
   alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
@@ -75,7 +75,7 @@ defmodule Ms2ex.Context.ItemStaticStats do
     static_stat = static_stats[pick_stat]
 
     value =
-      Lua.Items.get_stat_static_value(
+      Context.ItemStatsCalculator.static_value(
         pick_stat,
         static_stat.value,
         pick_value,
