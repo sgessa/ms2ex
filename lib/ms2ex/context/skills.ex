@@ -58,6 +58,13 @@ defmodule Ms2ex.Context.Skills do
     end
   end
 
+  def add(%Schema.SkillTab{} = tab, attrs) do
+    tab
+    |> Ecto.build_assoc(:skills)
+    |> Schema.Skill.changeset(attrs)
+    |> Repo.insert()
+  end
+
   def update(%Schema.Skill{} = skill, attrs) do
     skill
     |> Schema.Skill.changeset(attrs)

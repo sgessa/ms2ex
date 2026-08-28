@@ -28,9 +28,9 @@ defmodule Ms2ex.Application do
     Supervisor.start_link(children, opts)
   end
 
-  # tests never bind the game ports
+  # the game ports are opt-in, started via `mix maple.game` / `mix maple.server`
   defp game_listeners() do
-    if Application.get_env(:ms2ex, :start_game_servers, true) do
+    if Application.get_env(:ms2ex, :start_game_servers, false) do
       [
         server_tcp_chidspec(login_server_opts()),
         server_tcp_chidspec(world_login_opts())

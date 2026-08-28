@@ -91,7 +91,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
 
     Context.Field.broadcast(character, use_packet)
-    Context.Field.broadcast(character, Packets.Stats.set_character_stats(character))
+    Context.Field.broadcast_stats(character)
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
   end
 
