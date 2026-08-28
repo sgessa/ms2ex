@@ -162,6 +162,32 @@ defmodule Ms2ex.Commands do
     end
   end
 
+  # !awaken unlocks the awakening (rank 2) skill tree without completing the
+  # job quests; the awakening skills are added at level 0 so the player can
+  # spend skill points and build their own tree
+  def handle(["awaken"], character, session) do
+    {:ok, character} = Context.Characters.update(character, %{awakened: true})
+
+    tab = Context.Skills.get_active_tab(character)
+
+    awakening_skills =
+      Context.SkillTabs.set_skills(character.job, %{}, true)[:skills]
+      |> Enum.filter(&(&1.rank == :awakening))
+
+    existing_ids = Enum.map(tab.skills, & &1.skill_id)
+
+    awakening_skills
+    |> Enum.reject(&(&1.skill_id in existing_ids))
+    |> Enum.each(&Context.Skills.add(tab, &1))
+
+    character = Context.Characters.load_skills(character, force: true)
+    Managers.Character.update(character)
+
+    session
+    |> push(Packets.Job.save(character))
+    |> push(Packets.SkillBook.open(character))
+  end
+
   def handle(_args, character, session) do
     push_notice(session, character, "Command not found")
   end
