@@ -17,13 +17,6 @@ defmodule Ms2ex.Context.ItemStats do
   @item_stat_groups [:constants, :statics, :randoms, :enchants, :limit_break_enchants]
 
   @doc """
-  Stat bonuses granted by a single item.
-  """
-  def bonuses(%Schema.Item{} = item) do
-    item_stat_values(item, :basic)
-  end
-
-  @doc """
   Rebuilds a character's stats from the persisted base plus the bonuses of
   every equipped item. The base is reloaded so repeated applications never
   stack.
