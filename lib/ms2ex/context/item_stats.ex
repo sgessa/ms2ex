@@ -17,18 +17,19 @@ defmodule Ms2ex.Context.ItemStats do
   @item_stat_groups [:constants, :statics, :randoms, :enchants, :limit_break_enchants]
 
   @doc """
-  Stat bonuses granted by a single item.
-  """
-  def bonuses(%Schema.Item{} = item) do
-    item_stat_values(item, :basic)
-  end
-
-  @doc """
   Rebuilds a character's stats from the persisted base plus the bonuses of
   every equipped item. The base is reloaded so repeated applications never
   stack.
   """
   def apply(%Schema.Character{} = character) do
+    {character, _equipment_stats} = apply_with_equipment_stats(character)
+    character
+  end
+
+  @doc """
+  Rebuilds a character's stats and returns the equipment-derived packet data.
+  """
+  def apply_with_equipment_stats(%Schema.Character{} = character) do
     character = Repo.preload(character, :stats, force: true)
     equips = equipped_gear(character)
 
@@ -46,8 +47,14 @@ defmodule Ms2ex.Context.ItemStats do
 
     character = reset_base_stats(character)
     character = apply_stats(character, bonuses, rates)
-    character = put_stat_metadata(character, rates, special_values, special_rates)
-    %{character | gear_score: calculate_gear_score(equips)}
+
+    equipment_stats = %{
+      basic_rates: rates,
+      special_values: special_values,
+      special_rates: special_rates
+    }
+
+    {%{character | gear_score: calculate_gear_score(equips)}, equipment_stats}
   end
 
   @doc """
@@ -121,21 +128,6 @@ defmodule Ms2ex.Context.ItemStats do
           acc
       end
     )
-  end
-
-  defp put_stat_metadata(
-         %Schema.Character{stats: stats} = character,
-         basic_rates,
-         special_values,
-         special_rates
-       ) do
-    stats =
-      stats
-      |> Map.put(:basic_rates, basic_rates)
-      |> Map.put(:special_values, special_values)
-      |> Map.put(:special_rates, special_rates)
-
-    %{character | stats: stats}
   end
 
   defp item_stats(item) do

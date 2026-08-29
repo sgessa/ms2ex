@@ -34,40 +34,6 @@ defmodule Ms2ex.ItemStatsTest do
     assert ItemStats.apply_stats(character(), %{}).stats.physical_atk_cur == 10
   end
 
-  test "normalizes recalculated flat item values before applying them" do
-    item = %Ms2ex.Schema.Item{
-      stats: %Types.ItemStats{
-        constants: %{
-          health: %Types.ItemStat{
-            attribute: :health,
-            type: :flat,
-            value: 34.31733671931445,
-            class: :basic
-          }
-        }
-      }
-    }
-
-    assert ItemStats.bonuses(item) == %{health: 34}
-  end
-
-  test "converts rate-only piercing to the scaled basic stat value" do
-    item = %Ms2ex.Schema.Item{
-      stats: %Types.ItemStats{
-        randoms: %{
-          piercing: %Types.ItemStat{
-            attribute: :piercing,
-            type: :rate,
-            value: 0.029,
-            class: :basic
-          }
-        }
-      }
-    }
-
-    assert ItemStats.bonuses(item) == %{piercing: 29}
-  end
-
   test "bonuses accumulate with existing gear" do
     character = ItemStats.apply_stats(character(), %{min_weapon_atk: 150})
     character = ItemStats.apply_stats(character, %{min_weapon_atk: 50})

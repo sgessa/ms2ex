@@ -182,9 +182,9 @@ defmodule Ms2ex.Enums.SpecialStatType do
     reduce_game_item_socket_unlock_fee: 179
   }
 
-  def ordered_keys() do
-    values()
-    |> Enum.sort()
-    |> Enum.map(&get_key(&1))
-  end
+  def ordered_keys(),
+    do:
+      values()
+      |> Enum.sort()
+      |> Enum.map(&get_key(&1))
 end

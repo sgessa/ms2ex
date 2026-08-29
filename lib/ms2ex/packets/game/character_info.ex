@@ -17,10 +17,10 @@ defmodule Ms2ex.Packets.CharacterInfo do
   end
 
   def load(%Schema.Character{} = character) do
-    character =
+    {character, equipment_stats} =
       character
       |> Context.Characters.load_equips()
-      |> Context.ItemStats.apply()
+      |> Context.ItemStats.apply_with_equipment_stats()
 
     __MODULE__
     |> build()
@@ -29,12 +29,12 @@ defmodule Ms2ex.Packets.CharacterInfo do
     |> put_long()
     |> put_long(character.id)
     |> put_time(DateTime.utc_now())
-    |> put_buffer(details(character))
+    |> put_buffer(details(character, equipment_stats))
     |> put_buffer(equips(character))
     |> put_buffer(badges())
   end
 
-  defp details(character) do
+  defp details(character, equipment_stats) do
     stats = character.stats
     skin_color = character.skin_color || Types.SkinColor.build({0, 0, 0, 0}, {0, 0, 0, 0})
 
@@ -49,9 +49,9 @@ defmodule Ms2ex.Packets.CharacterInfo do
     |> put_int(character.prestige_level)
     |> put_byte()
     |> put_basic_stats(stats)
-    |> put_basic_rates(stats)
-    |> put_special_rates(stats)
-    |> put_special_values(stats)
+    |> put_basic_rates(equipment_stats)
+    |> put_special_rates(equipment_stats)
+    |> put_special_values(equipment_stats)
     |> put_ustring(Map.get(character, :profile_url, ""))
     |> put_ustring(character.motto)
     |> put_ustring(Map.get(character, :guild_name, ""))
@@ -77,8 +77,7 @@ defmodule Ms2ex.Packets.CharacterInfo do
   defp put_basic_stats(packet, stats) do
     Enum.reduce(0..(@stat_total - 1), packet, fn index, packet ->
       Enum.reduce(Enums.BasicStatType.ordered_keys(), packet, fn stat, packet ->
-        key = String.to_atom("#{stat}_#{stat_suffix(index)}")
-        put_long(packet, Map.get(stats, key, 0))
+        put_long(packet, Map.get(stats, :"#{stat}_#{stat_suffix(index)}", 0))
       end)
     end)
   end
@@ -87,12 +86,20 @@ defmodule Ms2ex.Packets.CharacterInfo do
   defp stat_suffix(1), do: :min
   defp stat_suffix(2), do: :cur
 
-  defp put_basic_rates(packet, stats) do
-    put_rates(packet, Enums.BasicStatType.ordered_keys(), Map.get(stats, :basic_rates, %{}))
+  defp put_basic_rates(packet, equipment_stats) do
+    put_rates(
+      packet,
+      Enums.BasicStatType.ordered_keys(),
+      Map.get(equipment_stats, :basic_rates, %{})
+    )
   end
 
-  defp put_special_rates(packet, stats) do
-    put_rates(packet, Enums.SpecialStatType.ordered_keys(), Map.get(stats, :special_rates, %{}))
+  defp put_special_rates(packet, equipment_stats) do
+    put_rates(
+      packet,
+      Enums.SpecialStatType.ordered_keys(),
+      Map.get(equipment_stats, :special_rates, %{})
+    )
   end
 
   defp put_rates(packet, attributes, rates) do
@@ -101,8 +108,8 @@ defmodule Ms2ex.Packets.CharacterInfo do
     end)
   end
 
-  defp put_special_values(packet, stats) do
-    values = Map.get(stats, :special_values, %{})
+  defp put_special_values(packet, equipment_stats) do
+    values = Map.get(equipment_stats, :special_values, %{})
 
     Enum.reduce(Enums.SpecialStatType.ordered_keys(), packet, fn attribute, packet ->
       put_float(packet, Map.get(values, attribute, 0.0))
