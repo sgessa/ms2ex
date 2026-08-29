@@ -17,9 +17,9 @@ stack.
 
 Adds a map of stat bonuses to a character's current and maximum stats.
 
-# `bonuses`
+# `apply_with_equipment_stats`
 
-Stat bonuses granted by a single item.
+Rebuilds a character's stats and returns the equipment-derived packet data.
 
 ---
 
