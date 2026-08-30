@@ -72,6 +72,16 @@ defmodule Ms2ex.Managers.Character do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
 
+  # ids of every online character, from the registered character processes
+  @spec online_ids() :: [integer()]
+  def online_ids do
+    :erlang.registered()
+    |> Enum.map(&Atom.to_string/1)
+    |> Enum.filter(&String.starts_with?(&1, "characters:"))
+    |> Enum.map(&String.trim_leading(&1, "characters:"))
+    |> Enum.map(&String.to_integer/1)
+  end
+
   def init(character) do
     {:ok,
      character
