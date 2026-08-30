@@ -34,11 +34,27 @@ config :ms2ex, Ms2ex,
 
 config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
 
+# Oban job queue; the daily-reset crontab fires the worker that zeroes each
+# character's meso instant-revive allowance. Crontab runs in UTC.
+config :ms2ex, Oban,
+  repo: Ms2ex.Repo,
+  plugins: [
+    {Oban.Plugins.Cron, crontab: [{"0 0 * * *", Ms2ex.Workers.DailyReset}]}
+  ],
+  queues: [default: 10]
+
 # Imports server constants
 config :ms2ex, :constants,
   character_max_level: 99,
   expand_skill_tab_cost: -990,
-  out_of_bounds_fall_distance: 0
+  out_of_bounds_fall_distance: 0,
+  # revival settings (mirror the server table defaults; the live values are
+  # tuned by the game's constants table)
+  revival_penalty_tick: 60_000,
+  revival_penalty_min_level: 10,
+  hit_per_dead_count: 1,
+  max_dead_count: 3,
+  revival_invincible_tick: 3_000
 
 if config_env() == :prod do
   config :ms2ex, Ms2ex.Repo, pool_size: 10

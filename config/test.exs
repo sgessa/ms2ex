@@ -15,3 +15,6 @@ config :logger, level: :warning
 
 # the game/login TCP listeners never start under test
 config :ms2ex, :start_game_servers, false
+
+# Oban starts but no crontab / producers run under test
+config :ms2ex, Oban, plugins: false, queues: false

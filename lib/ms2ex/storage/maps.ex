@@ -60,4 +60,19 @@ defmodule Ms2ex.Storage.Maps do
   def get_meta(map_id) do
     Storage.get(:map, map_id)
   end
+
+  # the map's property flags, including the revival/return rules projected by
+  # the ingest (revival_return_id, no_revival_here, only_dark_tomb, ...)
+  def get_property(map_id) do
+    map_id
+    |> get_meta()
+    |> case do
+      nil -> %{}
+      meta -> Map.get(meta, :property, %{})
+    end
+  end
+
+  def get_revival_return_id(map_id) do
+    Map.get(get_property(map_id), :revival_return_id, 0) || 0
+  end
 end

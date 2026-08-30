@@ -37,7 +37,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_ustring(character.name)
     |> put_ustring(character.profile_url)
     |> put_ustring(character.motto)
-    |> put_byte()
+    |> put_bool(character.dead?)
     |> put_coord(character.position)
     |> put_short(character.level)
     |> put_short(real_job_id)
@@ -70,6 +70,16 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_int(character.object_id)
     |> put_byte(@player_flags.gear_score)
     |> put_int(character.gear_score)
+  end
+
+  # death state changes (die / revive) reach the field through the dead flag
+  def update_dead(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_player)
+    |> put_int(character.object_id)
+    |> put_byte(@player_flags.dead)
+    |> put_bool(character.dead?)
   end
 
   # actor state transitions (idle, casting, etc.) reach clients through the

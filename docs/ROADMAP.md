@@ -23,13 +23,21 @@ Priorities:
 
 ## P1 — Core combat loop
 
-### 1. Player death & revive — [Open]
+### 1. Player death & revive — [Partial]
 
-Players cannot die yet. HP dropping to 0 has no effect, and fall damage is
-capped at 25% of current HP, so it can never kill. Missing: the death state and
-animation, a revive/respawn flow (respawn point, party/class revives), and the
-client's post-death HUD state (`RevivalCount`/`RevivalConfirm` are only sent on
-field entry today).
+Players can die and revive. HP reaching 0 triggers the death state and
+animation, a tombstone other players can hit to revive the owner, and the
+client's post-death HUD (`RevivalCount`/`RevivalConfirm` are now sent on death,
+not just field entry). Safe revive respawns at the map spawn (or the map's
+`revival_return_id`), instant revive costs mesos (`CalcRevivalMeso`: 10k flat
+first use, then 10k + (level-10)*1k, capped at 3/day) and keeps the player in
+place. The daily counter is reset by an Oban crontab job at midnight. The death
+penalty and daily revive counter are persisted on the character row, so they
+survive server restarts. What is still missing:
+
+- party / class revive skills (reviving a fallen teammate with a skill)
+- free-revive coupon consumption
+- auto-revive maps (`auto_revival_type` / `auto_revival_time`)
 
 ### 2. Mob AI: aggro & damage — [Open]
 
@@ -120,6 +128,11 @@ client-side and needs a live sniff diff during a boss fight.
 ---
 
 ## Recently completed
+
+- Player death & revive: death state + animation (`DeadUser`, dead flag),
+  tombstone entity with teammate hits, post-death HUD, safe revive (map spawn /
+  `revival_return_id`) and instant revive (meso cost)
+  (worktree `feature/player-death-revive`)
 
 - Equip stat bonuses: random options, enchant / limit-break enchants,
   special-value / special-rate stats, and rate-type stats (e.g. perfect guard)
