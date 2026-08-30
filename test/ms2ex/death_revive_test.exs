@@ -10,10 +10,7 @@ defmodule Ms2ex.DeathReviveTest do
   @map_id 2000
 
   setup do
-    Mimic.copy(Ms2ex.Storage)
-    Mimic.copy(Ms2ex.Context.Characters)
     Mimic.stub(Ms2ex.Context.Characters, :update, fn character, _attrs -> {:ok, character} end)
-    Mimic.copy(Ms2ex.Context.Wallets)
 
     Mimic.stub(Ms2ex.Context.Wallets, :find, fn _character ->
       %Ms2ex.Schema.Wallet{mesos: 100_000}
