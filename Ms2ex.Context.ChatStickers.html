@@ -241,11 +241,11 @@ MS2EX
 
       </div>
 
-<p>Adds a sticker group to a character.</p><h2 id="add/2-examples" class="section-heading"><a href="#add/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="7459185002-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7459185002-1">)</span><span class="w">
-</span><span class="p" data-group-id="7459185002-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7459185002-3">%</span><span class="nc" data-group-id="7459185002-3">Schema.ChatStickerGroup</span><span class="p" data-group-id="7459185002-3">{</span><span class="p" data-group-id="7459185002-3">}</span><span class="p" data-group-id="7459185002-2">}</span><span class="w">
+<p>Adds a sticker group to a character.</p><h2 id="add/2-examples" class="section-heading"><a href="#add/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="3363482410-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3363482410-1">)</span><span class="w">
+</span><span class="p" data-group-id="3363482410-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3363482410-3">%</span><span class="nc" data-group-id="3363482410-3">Schema.ChatStickerGroup</span><span class="p" data-group-id="3363482410-3">{</span><span class="p" data-group-id="3363482410-3">}</span><span class="p" data-group-id="3363482410-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="7459185002-4">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7459185002-4">)</span><span class="w"> </span><span class="c1"># when already exists</span><span class="w">
-</span><span class="p" data-group-id="7459185002-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7459185002-6">%</span><span class="nc" data-group-id="7459185002-6">Ecto.Changeset</span><span class="p" data-group-id="7459185002-6">{</span><span class="p" data-group-id="7459185002-6">}</span><span class="p" data-group-id="7459185002-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">add</span><span class="p" data-group-id="3363482410-4">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3363482410-4">)</span><span class="w"> </span><span class="c1"># when already exists</span><span class="w">
+</span><span class="p" data-group-id="3363482410-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3363482410-6">%</span><span class="nc" data-group-id="3363482410-6">Ecto.Changeset</span><span class="p" data-group-id="3363482410-6">{</span><span class="p" data-group-id="3363482410-6">}</span><span class="p" data-group-id="3363482410-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="default_stickers/0">
@@ -273,7 +273,7 @@ MS2EX
 
       </div>
 
-<p>Returns the list of default sticker IDs available to all characters.</p><h2 id="default_stickers/0-examples" class="section-heading"><a href="#default_stickers/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">default_stickers</span><span class="p" data-group-id="9694655168-1">(</span><span class="p" data-group-id="9694655168-1">)</span><span class="w">
+<p>Returns the list of default sticker IDs available to all characters.</p><h2 id="default_stickers/0-examples" class="section-heading"><a href="#default_stickers/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">default_stickers</span><span class="p" data-group-id="3029895084-1">(</span><span class="p" data-group-id="3029895084-1">)</span><span class="w">
 </span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span></code></pre>
   </section>
 </section>
@@ -303,8 +303,8 @@ MS2EX
 
       </div>
 
-<p>Marks a sticker as favorite for a character.</p><h2 id="favorite/3-examples" class="section-heading"><a href="#favorite/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">favorite</span><span class="p" data-group-id="3692745752-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3692745752-1">)</span><span class="w">
-</span><span class="p" data-group-id="3692745752-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3692745752-3">%</span><span class="nc" data-group-id="3692745752-3">Schema.FavoriteChatSticker</span><span class="p" data-group-id="3692745752-3">{</span><span class="p" data-group-id="3692745752-3">}</span><span class="p" data-group-id="3692745752-2">}</span></code></pre>
+<p>Marks a sticker as favorite for a character.</p><h2 id="favorite/3-examples" class="section-heading"><a href="#favorite/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">favorite</span><span class="p" data-group-id="7300929340-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7300929340-1">)</span><span class="w">
+</span><span class="p" data-group-id="7300929340-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7300929340-3">%</span><span class="nc" data-group-id="7300929340-3">Schema.FavoriteChatSticker</span><span class="p" data-group-id="7300929340-3">{</span><span class="p" data-group-id="7300929340-3">}</span><span class="p" data-group-id="7300929340-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get/2">
@@ -333,10 +333,10 @@ MS2EX
 
       </div>
 
-<p>Gets a specific sticker group for a character by group ID.</p><p>Returns the chat sticker group if found, otherwise nil.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="4212498923-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4212498923-1">)</span><span class="w">
-</span><span class="p" data-group-id="4212498923-2">%</span><span class="nc" data-group-id="4212498923-2">Schema.ChatStickerGroup</span><span class="p" data-group-id="4212498923-2">{</span><span class="p" data-group-id="4212498923-2">}</span><span class="w">
+<p>Gets a specific sticker group for a character by group ID.</p><p>Returns the chat sticker group if found, otherwise nil.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="4446383616-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4446383616-1">)</span><span class="w">
+</span><span class="p" data-group-id="4446383616-2">%</span><span class="nc" data-group-id="4446383616-2">Schema.ChatStickerGroup</span><span class="p" data-group-id="4446383616-2">{</span><span class="p" data-group-id="4446383616-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="4212498923-3">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="4212498923-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="4446383616-3">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="4446383616-3">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -365,8 +365,8 @@ MS2EX
 
       </div>
 
-<p>Lists all favorited stickers for a character.</p><p>Returns a list of sticker IDs.</p><h2 id="list_favorited/1-examples" class="section-heading"><a href="#list_favorited/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_favorited</span><span class="p" data-group-id="4679783213-1">(</span><span class="n">character</span><span class="p" data-group-id="4679783213-1">)</span><span class="w">
-</span><span class="p" data-group-id="4679783213-2">[</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p" data-group-id="4679783213-2">]</span></code></pre>
+<p>Lists all favorited stickers for a character.</p><p>Returns a list of sticker IDs.</p><h2 id="list_favorited/1-examples" class="section-heading"><a href="#list_favorited/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_favorited</span><span class="p" data-group-id="3262382662-1">(</span><span class="n">character</span><span class="p" data-group-id="3262382662-1">)</span><span class="w">
+</span><span class="p" data-group-id="3262382662-2">[</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p" data-group-id="3262382662-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_groups/1">
@@ -394,8 +394,8 @@ MS2EX
 
       </div>
 
-<p>Lists all sticker groups for a given character.</p><p>Returns a list of group IDs.</p><h2 id="list_groups/1-examples" class="section-heading"><a href="#list_groups/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_groups</span><span class="p" data-group-id="3894221126-1">(</span><span class="n">character</span><span class="p" data-group-id="3894221126-1">)</span><span class="w">
-</span><span class="p" data-group-id="3894221126-2">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="3894221126-2">]</span></code></pre>
+<p>Lists all sticker groups for a given character.</p><p>Returns a list of group IDs.</p><h2 id="list_groups/1-examples" class="section-heading"><a href="#list_groups/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_groups</span><span class="p" data-group-id="9496517018-1">(</span><span class="n">character</span><span class="p" data-group-id="9496517018-1">)</span><span class="w">
+</span><span class="p" data-group-id="9496517018-2">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="9496517018-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="unfavorite/2">
@@ -424,8 +424,8 @@ MS2EX
 
       </div>
 
-<p>Removes a sticker from a character's favorites.</p><h2 id="unfavorite/2-examples" class="section-heading"><a href="#unfavorite/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unfavorite</span><span class="p" data-group-id="9833100875-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p" data-group-id="9833100875-1">)</span><span class="w">
-</span><span class="p" data-group-id="9833100875-2">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="9833100875-2">}</span></code></pre>
+<p>Removes a sticker from a character's favorites.</p><h2 id="unfavorite/2-examples" class="section-heading"><a href="#unfavorite/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unfavorite</span><span class="p" data-group-id="3920586113-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">101</span><span class="p" data-group-id="3920586113-1">)</span><span class="w">
+</span><span class="p" data-group-id="3920586113-2">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="3920586113-2">}</span></code></pre>
   </section>
 </section>
 
