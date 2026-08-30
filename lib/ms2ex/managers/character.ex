@@ -190,11 +190,11 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_cast({:consume_stat, stat_id, amount}, character) do
-    {:noreply, character |> Character.Stats.decrease(stat_id, amount) |> maybe_die()}
+    {:noreply, Character.Stats.decrease(character, stat_id, amount)}
   end
 
   def handle_cast({:set_stat, stat_id, amount}, character) do
-    {:noreply, character |> Character.Stats.set(stat_id, amount) |> maybe_die()}
+    {:noreply, Character.Stats.set(character, stat_id, amount)}
   end
 
   def handle_cast({:modify_buff_status, modifiers}, character) do
@@ -230,7 +230,7 @@ defmodule Ms2ex.Managers.Character do
         Character.Stats.decrease(character, stat, amount)
       end)
 
-    {:noreply, maybe_die(character)}
+    {:noreply, character}
   end
 
   # --------------------------------
@@ -251,7 +251,7 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:receive_fall_dmg, distance}, character) do
     hp = Map.get(character.stats, :health_cur)
     dmg = Context.Damage.calculate_fall_dmg(character, distance)
-    character = character |> Character.Stats.set(:health, hp - dmg) |> maybe_die()
+    character = Character.Stats.set(character, :health, hp - dmg)
 
     push(character, Packets.FallDamage.bytes(character, dmg))
 
@@ -292,7 +292,10 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, character}
   end
 
-  defp maybe_die(%{stats: %{health_cur: hp}} = character) when hp <= 0 do
+  # triggers death when a stat write brings health to 0; called from
+  # Character.Stats.set so every health-mutating path is covered
+  @spec check_death(Schema.Character.t()) :: Schema.Character.t()
+  def check_death(%{stats: %{health_cur: hp}} = character) when hp <= 0 do
     if Map.get(character, :dead?, false) do
       character
     else
@@ -300,7 +303,7 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
-  defp maybe_die(character), do: character
+  def check_death(character), do: character
 
   defp die(character) do
     death_count = Map.get(character, :death_count, 0) + 1

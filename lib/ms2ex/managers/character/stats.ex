@@ -1,6 +1,7 @@
 defmodule Ms2ex.Managers.Character.Stats do
   alias Ms2ex.PartyServer
   alias Ms2ex.Context
+  alias Ms2ex.Managers.Character
   alias Ms2ex.Packets
 
   @regen_stats %{health: :hp, spirit: :sp, stamina: :stamina}
@@ -56,7 +57,13 @@ defmodule Ms2ex.Managers.Character.Stats do
       broadcast_new_stats(character, stat_id)
     end
 
-    character
+    # health reaching 0 kills the player; this is the single choke point all
+    # health writes (decrease, set, damage) flow through
+    if stat_id == :health do
+      Character.check_death(character)
+    else
+      character
+    end
   end
 
   def regen(%{stats: stats} = character, stat_id) do
