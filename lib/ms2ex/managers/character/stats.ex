@@ -86,6 +86,11 @@ defmodule Ms2ex.Managers.Character.Stats do
 
   def broadcast_new_stats(character, stat_id) do
     Context.Field.broadcast(character, Packets.Stats.update_char_stats(character, [stat_id]))
-    PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
+
+    # the party HP packet must only be emitted when health itself changed;
+    # spirit/stamina drains & regen fire constantly during combat
+    if stat_id == :health do
+      PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
+    end
   end
 end
