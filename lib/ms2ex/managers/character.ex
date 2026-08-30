@@ -5,7 +5,6 @@ defmodule Ms2ex.Managers.Character do
   alias Ms2ex.Constants
   alias Ms2ex.Packets
   alias Ms2ex.Schema
-  alias Ms2ex.Storage
   alias Ms2ex.Managers.Character
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
@@ -272,207 +271,28 @@ defmodule Ms2ex.Managers.Character do
   # Death & revive
   # --------------------------------
 
-  # daily cap for meso instant revives (the client's "uses left" gauge)
-  @meso_revival_daily_max 3
-
   # a player dies when their health hits 0; the death is announced to the
   # field, a tombstone is raised (teammates can hit it to revive), and the
   # revival HUD is armed
   def handle_cast({:revive, type}, character) do
-    {:noreply, revive(character, type)}
+    {:noreply, Character.Revival.revive(character, type)}
   end
 
   def handle_cast({:revive, :instant, use_voucher}, character) do
-    character =
-      if Map.get(character, :dead?, false) and pay_instant_revive(character, use_voucher) do
-        instant_revive(character)
-      else
-        character
-      end
-
-    {:noreply, character}
+    {:noreply, Character.Revival.instant_revive(character, use_voucher)}
   end
 
   # the daily-reset worker zeroes the meso instant-revive allowance for every
   # character; connected players also need their in-memory counter cleared and
   # the client gauge refreshed
   def handle_cast(:reset_daily_revives, character) do
-    character = Map.put(character, :instant_revive_count, 0)
-    push(character, Packets.RevivalCount.bytes(0))
-    {:noreply, character}
+    {:noreply, Character.Revival.reset_daily_revives(character)}
   end
 
   # triggers death when a stat write brings health to 0; called from
   # Character.Stats.set so every health-mutating path is covered
   @spec check_death(Schema.Character.t()) :: Schema.Character.t()
-  def check_death(%{stats: %{health_cur: hp}} = character) when hp <= 0 do
-    if Map.get(character, :dead?, false) do
-      character
-    else
-      die(character)
-    end
-  end
-
-  def check_death(character), do: character
-
-  defp die(character) do
-    death_count = Map.get(character, :death_count, 0) + 1
-    end_tick = Ms2ex.sync_ticks() + Constants.get(:revival_penalty_tick)
-
-    character =
-      character
-      |> Map.put(:dead?, true)
-      |> Map.put(:death_count, death_count)
-      |> Map.put(:death_tick, end_tick)
-
-    persist_revival_state(character)
-
-    dark_tomb = only_dark_tomb?(character) or death_count > 1
-
-    Context.Field.broadcast(character, Packets.DeadUser.bytes(character.object_id, dark_tomb))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
-
-    Context.Field.add_tombstone(character)
-
-    push(character, Packets.RevivalCount.bytes(Map.get(character, :instant_revive_count, 0)))
-    push(character, Packets.RevivalConfirm.bytes(character.object_id, end_tick, death_count))
-
-    # the corpse no longer carries its buffs
-    Context.Field.remove_owner_buffs(character)
-
-    character
-  end
-
-  # safe revive respawns at the map spawn (or the revival return map); the
-  # instant variant stays in place and costs mesos
-  defp revive(character, _type) do
-    if Map.get(character, :dead?, false) do
-      revive_dead(character)
-    else
-      character
-    end
-  end
-
-  defp revive_dead(character) do
-    if no_revival_here?(character) do
-      character
-    else
-      max_hp = Map.get(character.stats, :health_max)
-      character = Character.Stats.set(character, :health, max_hp)
-
-      character =
-        character
-        |> Map.put(:dead?, false)
-        |> Map.put(:death_tick, 0)
-
-      Context.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
-      Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
-      Context.Field.remove_tombstone(character)
-
-      push(character, Packets.Stats.set_character_stats(character))
-
-      move_to_respawn(character)
-    end
-  end
-
-  # instant revive costs mesos (level-scaled) or a free-revive coupon; returns
-  # true when the payment was made so the revive proceeds
-  defp pay_instant_revive(character, use_voucher) do
-    if use_voucher do
-      # TODO consume a FreeReviveCoupon item from the inventory
-      false
-    else
-      used = Map.get(character, :instant_revive_count, 0)
-
-      if used < @meso_revival_daily_max do
-        cost = revival_meso_cost(character.level, used)
-
-        # only revive once the mesos were actually deducted
-        enough_mesos?(character, cost) &&
-          match?({:ok, _}, Context.Wallets.update(character, :mesos, -cost))
-      else
-        false
-      end
-    end
-  end
-
-  # instant revive keeps the player in place (no respawn move)
-  defp instant_revive(character) do
-    max_hp = Map.get(character.stats, :health_max)
-    character = Character.Stats.set(character, :health, max_hp)
-
-    character =
-      character
-      |> Map.put(:dead?, false)
-      |> Map.put(:death_tick, 0)
-      |> Map.update!(:instant_revive_count, &(&1 + 1))
-
-    persist_revival_state(character)
-
-    Context.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
-    Context.Field.remove_tombstone(character)
-
-    push(character, Packets.Stats.set_character_stats(character))
-    push(character, Packets.RevivalCount.bytes(character.instant_revive_count))
-
-    character
-  end
-
-  # the client's instant-revive price (CalcRevivalMeso for non-CN): the first
-  # meso revive of the day is flat, later ones scale with level
-  def revival_meso_cost(_level, 1), do: 10_000
-  def revival_meso_cost(level, _used), do: 10_000 + max(level - 10, 0) * 1_000
-
-  defp enough_mesos?(character, cost) do
-    case Context.Wallets.find(character) do
-      %Schema.Wallet{mesos: mesos} -> mesos >= cost
-      _ -> false
-    end
-  end
-
-  defp move_to_respawn(character) do
-    return_map_id = Storage.Maps.get_revival_return_id(character.map_id)
-
-    if return_map_id != 0 and return_map_id != character.map_id do
-      Context.Field.change_field(character, return_map_id)
-      character
-    else
-      spawn_point = Storage.Maps.get_spawn(character.map_id)
-
-      character =
-        character
-        |> Map.put(:position, spawn_point.position)
-        |> Map.put(:rotation, spawn_point.rotation)
-
-      push(character, Packets.MoveCharacter.bytes(character, spawn_point.position))
-      Context.Field.broadcast(character, Packets.ProxyGameObj.update_player(character))
-      character
-    end
-  end
-
-  defp only_dark_tomb?(character) do
-    Storage.Maps.get_property(character.map_id)
-    |> Map.get(:only_dark_tomb, false)
-  end
-
-  # death penalty + the daily revive counter are persisted so a server restart
-  # mid-day does not wipe them (the reference keeps these in a character-config
-  # table; the daily counter is reset by a midnight worker rather than a reboot)
-  defp persist_revival_state(character) do
-    Context.Characters.update(character, %{
-      death_count: character.death_count,
-      death_tick: character.death_tick,
-      instant_revive_count: character.instant_revive_count
-    })
-
-    character
-  end
-
-  defp no_revival_here?(character) do
-    Storage.Maps.get_property(character.map_id)
-    |> Map.get(:no_revival_here, false)
-  end
+  def check_death(character), do: Character.Revival.check_death(character)
 
   def handle_info({:regen, stat_id}, character) do
     character =

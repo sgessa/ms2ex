@@ -467,7 +467,10 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info(:send_updates, state) do
     for char_id <- Map.keys(state.sessions) do
-      with {:ok, char} <- Managers.Character.lookup(char_id) do
+      with {:ok, char} <- Managers.Character.lookup(char_id),
+           # dead players freeze in place; a position-only update would clear
+           # their dead/collision state on clients, so skip them here
+           false <- Map.get(char, :dead?, false) do
         Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
       end
     end

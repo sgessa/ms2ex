@@ -35,6 +35,12 @@ place. The daily counter is reset by an Oban crontab job at midnight. The death
 penalty and daily revive counter are persisted on the character row, so they
 survive server restarts. What is still missing:
 
+- **tombstone can't be hit by other players**: the tombstone renders on the
+  client but has no collision, so skills pass through. `FieldAddUser` now
+  carries the dead player's `death_count` (the reference builds the collidable
+  tombstone from it), but the in-field case is still broken — investigate how
+  the proxy dead state reaches already-connected clients against a live
+  capture of the reference death sequence.
 - party / class revive skills (reviving a fallen teammate with a skill)
 - free-revive coupon consumption
 - auto-revive maps (`auto_revival_type` / `auto_revival_time`)

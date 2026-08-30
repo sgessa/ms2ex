@@ -135,13 +135,13 @@ defmodule Ms2ex.DeathReviveTest do
 
   describe "instant revive meso cost" do
     test "matches the client price at level 60 (60k)" do
-      assert Ms2ex.Managers.Character.revival_meso_cost(60, 0) == 60_000
+      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 0) == 60_000
     end
 
     test "first daily revive is flat, later ones scale with level" do
-      assert Ms2ex.Managers.Character.revival_meso_cost(60, 1) == 10_000
-      assert Ms2ex.Managers.Character.revival_meso_cost(20, 0) == 20_000
-      assert Ms2ex.Managers.Character.revival_meso_cost(60, 0) == 60_000
+      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 1) == 10_000
+      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(20, 0) == 20_000
+      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 0) == 60_000
     end
   end
 
@@ -198,6 +198,41 @@ defmodule Ms2ex.DeathReviveTest do
 
       assert <<0x80::little-signed-16, 0x5, 9_999::little-signed-32, 0x1, 0>> =
                Packets.ProxyGameObj.update_dead(%{char | dead?: false})
+    end
+
+    test "FieldAddUser carries the dead peer's death count" do
+      # the reference writes the death count right after the character's current
+      # health (FieldPacket.WriteCharacter); the client uses it to build a
+      # targetable tombstone for a player who joins a field where someone is
+      # already dead
+      alive =
+        character(9_999)
+        |> Map.put(:name, "Alice")
+        |> Map.put(:skin_color, Types.SkinColor.build({0, 0, 0, 0}, {0, 0, 0, 0}))
+        |> Map.put(:clubs, [])
+        |> Map.put(:trophies, [])
+
+      dead = %{alive | death_count: 2}
+
+      zero = Ms2ex.Packets.CharacterList.put_character(<<>>, dead, 0)
+      two = Ms2ex.Packets.CharacterList.put_character(<<>>, dead, 2)
+
+      # identical except for the death-count short
+      diff_at = first_diff(zero, two)
+      assert diff_at != -1
+      assert <<0::little-signed-16>> = binary_part(zero, diff_at, 2)
+      assert <<2::little-signed-16>> = binary_part(two, diff_at, 2)
+      assert byte_size(zero) == byte_size(two)
+    end
+
+    defp first_diff(a, b) do
+      Enum.reduce_while(0..(byte_size(a) - 1), -1, fn i, _acc ->
+        if binary_part(a, i, 1) != binary_part(b, i, 1) do
+          {:halt, i}
+        else
+          {:cont, -1}
+        end
+      end)
     end
   end
 end
