@@ -117,6 +117,16 @@ client-side and needs a live sniff diff during a boss fight.
 
 `RegionSkill` always sends rotation where direction-less skills should zero it.
 
+### 12. Party damage meter — [Open]
+
+The client's party DPS meter never updates because the server never feeds it.
+The client requests the meter via recv `0x57` (DpsMode) and expects periodic
+send `0x88` (DpsStat) per-member damage totals; ms2ex drops `0x57` as an
+unknown packet and never sends `0x88` (the reference declares both opcodes but
+never implements them either). Field `SkillDamage` broadcasts already reach
+party members byte-correctly, so this is purely the missing server-side
+damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
+
 ---
 
 ## Recently completed
