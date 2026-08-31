@@ -9,10 +9,14 @@ defmodule Ms2ex.Context.ItemStaticStats do
     static_id = get_in(item.metadata, [:option, :static_id])
 
     if static_id do
-      static_id
-      |> Storage.Tables.ItemOptions.find_static(item.rarity)
-      |> get_static_stats()
-      |> get_pick_stats(item, pick_options)
+      static_stats =
+        static_id
+        |> Storage.Tables.ItemOptions.find_static(item.rarity)
+        |> get_static_stats()
+
+      if lua_static?(item),
+        do: get_pick_stats(static_stats, item, pick_options),
+        else: static_stats
     else
       %{}
     end
@@ -67,6 +71,9 @@ defmodule Ms2ex.Context.ItemStaticStats do
     end)
   end
 
+  defp lua_static?(%Schema.Item{metadata: %{option: %{static_type: 2}}}), do: true
+  defp lua_static?(_item), do: false
+
   defp process_pick_stat(item, static_stats, type, {pick_stat, pick_value}) do
     # Initialize empty stat if not already present from static options
     static_stats =
@@ -84,6 +91,9 @@ defmodule Ms2ex.Context.ItemStaticStats do
 
     # Put / update static stat
     value = if type == :flat, do: trunc(value), else: value
-    Map.put(static_stats, pick_stat, %{static_stat | value: value})
+
+    if value > 0,
+      do: Map.put(static_stats, pick_stat, %{static_stat | value: value}),
+      else: static_stats
   end
 end
