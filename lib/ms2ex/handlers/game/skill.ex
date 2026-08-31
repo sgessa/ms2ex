@@ -82,15 +82,13 @@ defmodule Ms2ex.GameHandlers.Skill do
     use_packet = Packets.SkillUse.bytes(skill_cast, state)
 
     # battle-start sequence in the order live servers emit it:
-    # skill use, battle flag, skill use relay, full stat refresh,
-    # casting actor state
+    # skill use, battle flag, full stat refresh, casting actor state
     Context.Field.broadcast(character, use_packet)
 
     if Types.SkillCast.in_battle?(skill_cast) do
       Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
     end
 
-    Context.Field.broadcast(character, use_packet)
     Context.Field.broadcast_stats(character)
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
   end
@@ -169,7 +167,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {position, packet} = get_coord(packet)
     {_impact_pos, packet} = get_coord(packet)
-    {rotation, packet} = get_coord(packet)
+    {direction, packet} = get_coord(packet)
     {attack_point, packet} = get_byte(packet)
 
     {target_count, packet} = get_byte(packet)
@@ -179,7 +177,7 @@ defmodule Ms2ex.GameHandlers.Skill do
       skill_cast =
         Managers.SkillCast.update(skill_cast, %{
           position: position,
-          rotation: rotation,
+          direction: direction,
           attack_counter: attack_counter,
           attack_point: attack_point
         })
@@ -214,25 +212,11 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  # the target relay (mode 0) announces which entity was hit and precedes the
-  # damage numbers (mode 1)
+  # damage numbers (mode 1); the mode-0 target relay is recorded server-side
+  # only and never broadcast
   defp broadcast_damage(_skill_cast, []), do: :ok
 
   defp broadcast_damage(skill_cast, mobs) do
-    targets =
-      mobs
-      |> Enum.with_index()
-      |> Enum.map(fn {{mob, _dmg}, index} ->
-        %{
-          prev_uid: 0x0,
-          uid: skill_cast.caster.object_id * 0x1_0000_0000 + index,
-          target_id: mob.object_id,
-          unknown: 0x0,
-          index: index
-        }
-      end)
-
-    Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.target(skill_cast, targets))
     Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
   end
 

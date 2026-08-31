@@ -17,6 +17,7 @@ defmodule Ms2ex.Types.FieldNpc do
     :first_attacker,
     :last_attacker,
     :damage_dealers,
+    # TODO per-model sequence ids from anikey data (ingest projection)
     animation: 255,
     dead?: false,
     corpse?: false,

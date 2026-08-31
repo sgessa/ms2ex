@@ -17,13 +17,13 @@ config :ms2ex, Ms2ex.Repo,
 server_address = env!("SERVER_ADDRESS", :string)
 
 config :ms2ex, Ms2ex,
-  login: %{host: server_address, port: 8526},
+  login: %{host: server_address, port: 8531},
   world: %{
     name: "Paperwood",
-    login: %{host: server_address, port: 20001},
+    login: %{host: server_address, port: 20101},
     channels: [
-      %{host: server_address, port: 20002},
-      %{host: server_address, port: 20003}
+      %{host: server_address, port: 20102},
+      %{host: server_address, port: 20103}
     ]
   },
   ugc: %{
@@ -39,6 +39,8 @@ config :ms2ex, :constants,
   character_max_level: 99,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0
+
+config :ms2ex, packet_log_file: System.get_env("PACKET_LOG_FILE")
 
 if config_env() == :prod do
   config :ms2ex, Ms2ex.Repo, pool_size: 10
