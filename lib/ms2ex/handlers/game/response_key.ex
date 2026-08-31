@@ -36,6 +36,15 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character = character |> set_spawn_position() |> maybe_set_party()
 
+      # the object id must exist before ServerEnter is built: the client reads
+      # its own id from that packet and derives its session identity from it
+      character =
+        if character.object_id == 0 do
+          %{character | object_id: Managers.GlobalCounter.get_and_increment()}
+        else
+          character
+        end
+
       Managers.Character.start(character)
       Managers.Character.monitor(character)
 

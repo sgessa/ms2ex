@@ -14,9 +14,9 @@ defmodule Ms2ex.Managers.Field do
 
   alias Ms2ex.Managers.Field
 
-  @updates_intval 1000
   @splash_radius 800
   @splash_targets 8
+  @updates_intval 1000
 
   # npcs are ticked on their own faster loop; only entities flagged as changed
   # are broadcast, bumping their sequence counter:
@@ -65,7 +65,6 @@ defmodule Ms2ex.Managers.Field do
     }
 
     send(self(), :load_npc_spawns)
-    send(self(), :send_updates)
     send(self(), :tick_npcs)
 
     {:ok, state, {:continue, {:add_character, character}}}

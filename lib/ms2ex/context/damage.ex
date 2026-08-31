@@ -74,13 +74,13 @@ defmodule Ms2ex.Context.Damage do
     target = mob.stats
 
     attack_dmg = base_attack(stats, physical?)
-    crit_mult = if crit?, do: stats.critical_damage_cur / 100, else: 1.0
+    crit_mult = if crit?, do: critical_multiplier(stats.critical_damage_cur), else: 1.0
 
     damage_bonus = 1 + stats.damage_cur / 1000
     damage_multiplier = damage_bonus * crit_mult * rate
 
     # target defense reduces damage; piercing ignores a capped share of it
-    defense_pierce = 1 - min(0.3, stats.piercing_cur / 1000)
+    defense_pierce = 1 - min(0.3, stats.piercing_cur / 1000 - 1)
     damage_multiplier = damage_multiplier / max(target.defense.total, 1) / defense_pierce
 
     # the attack stat drives the hit; the target's resistance cuts it down
@@ -102,10 +102,23 @@ defmodule Ms2ex.Context.Damage do
     max_atk = stats.max_weapon_atk_cur + stats.bonus_atk_cur
 
     if max_atk > 0 do
-      min_atk + (max_atk - min_atk) * :rand.uniform()
+      first_roll = :rand.uniform()
+      second_roll = :rand.uniform()
+      interpolation = :rand.uniform()
+      roll = first_roll + (second_roll - first_roll) * interpolation
+
+      min_atk + (max_atk - min_atk) * roll
     else
       if physical?, do: stats.physical_atk_cur, else: stats.magical_atk_cur
     end
+  end
+
+  defp critical_multiplier(critical_damage) do
+    critical_damage
+    |> Kernel./(1000)
+    |> Kernel.+(1)
+    |> max(1.0)
+    |> min(2.5)
   end
 
   @doc """

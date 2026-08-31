@@ -11,10 +11,10 @@ defmodule Ms2ex.Packets.Field do
 
   defp put_stat_row(packet, stats, suffix) do
     packet
-    |> put_long(Map.fetch!(stats, String.to_atom("health_#{suffix}")))
-    |> put_int(Map.fetch!(stats, String.to_atom("attack_speed_#{suffix}")))
-    |> put_int(Map.fetch!(stats, String.to_atom("movement_speed_#{suffix}")))
-    |> put_int(Map.fetch!(stats, String.to_atom("jump_height_#{suffix}")))
-    |> put_int(Map.fetch!(stats, String.to_atom("mount_speed_#{suffix}")))
+    |> put_long(Map.fetch!(stats, :"health_#{suffix}"))
+    |> put_int(Map.fetch!(stats, :"attack_speed_#{suffix}"))
+    |> put_int(Map.fetch!(stats, :"movement_speed_#{suffix}"))
+    |> put_int(Map.fetch!(stats, :"jump_height_#{suffix}"))
+    |> put_int(Map.fetch!(stats, :"mount_speed_#{suffix}"))
   end
 end

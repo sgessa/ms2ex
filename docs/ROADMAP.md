@@ -121,15 +121,19 @@ The drop packet still has three deviations:
 still uses a fixed radius instead of the exact skill geometry and always lands
 the first hit immediately.
 
-### 10. Field boss HP bar — [Open]
-
-The top-center boss HP bar never renders for NPC bosses in this client build.
-The server-side packet set is aligned; the arming trigger is believed to be
-client-side and needs a live sniff diff during a boss fight.
-
 ### 11. RegionSkill rotation — [Open]
 
 `RegionSkill` always sends rotation where direction-less skills should zero it.
+
+### 12. Party damage meter — [Open]
+
+The client's party DPS meter never updates because the server never feeds it.
+The client requests the meter via recv `0x57` (DpsMode) and expects periodic
+send `0x88` (DpsStat) per-member damage totals; ms2ex drops `0x57` as an
+unknown packet and never sends `0x88` (the reference declares both opcodes but
+never implements them either). Field `SkillDamage` broadcasts already reach
+party members byte-correctly, so this is purely the missing server-side
+damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ---
 
@@ -139,7 +143,10 @@ client-side and needs a live sniff diff during a boss fight.
   tombstone entity with teammate hits, post-death HUD, safe revive (map spawn /
   `revival_return_id`) and instant revive (meso cost)
   (worktree `feature/player-death-revive`)
-
+- Field monster HP bar: the client's own id is now sent in `ServerEnter`
+  (allocated at channel login, stable across field changes) and the
+  `RequestFieldEnter` reply carries the validated field key — the top-center
+  HP bar renders for the last hit target and fades on the client timer
 - Equip stat bonuses: random options, enchant / limit-break enchants,
   special-value / special-rate stats, and rate-type stats (e.g. perfect guard)
   now aggregate over equipped gear and apply to the character

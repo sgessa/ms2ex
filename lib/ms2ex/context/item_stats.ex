@@ -1,10 +1,10 @@
 defmodule Ms2ex.Context.ItemStats do
   @moduledoc """
-  Aggregates the stat bonuses granted by equipped items and applies them to a
-  character's stats.
+  Aggregates the stat bonuses granted by equipped items and learned passive
+  skills, then applies them to a character's stats.
 
-  Each item's calculated stats are summed over every equipped item and added
-  to the character's base stat values.
+  Calculated item and passive effects are summed and added to the character's
+  base stat values.
   """
 
   alias Ms2ex.Context
@@ -13,41 +13,47 @@ defmodule Ms2ex.Context.ItemStats do
   alias Ms2ex.Formulas.GearScore
   alias Ms2ex.Repo
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   @item_stat_groups [:constants, :statics, :randoms, :enchants, :limit_break_enchants]
+  @empty_stat_groups %{values: %{}, rates: %{}, special_values: %{}, special_rates: %{}}
 
   @doc """
-  Stat bonuses granted by a single item.
-  """
-  def bonuses(%Schema.Item{} = item) do
-    item_stat_values(item, :basic)
-  end
-
-  @doc """
-  Rebuilds a character's stats from the persisted base plus the bonuses of
-  every equipped item. The base is reloaded so repeated applications never
+  Rebuilds a character's stats from the persisted base plus equipped-item and
+  learned-passive bonuses. The base is reloaded so repeated applications never
   stack.
   """
   def apply(%Schema.Character{} = character) do
-    character = Repo.preload(character, :stats, force: true)
+    {character, _equipment_stats} = apply_with_equipment_stats(character)
+    character
+  end
+
+  @doc """
+  Rebuilds a character's stats and returns the derived packet data.
+  """
+  def apply_with_equipment_stats(%Schema.Character{} = character) do
+    character = Repo.preload(character, [:stats, skill_tabs: :skills], force: true)
     equips = equipped_gear(character)
 
-    {bonuses, rates, special_values, special_rates} =
-      Enum.reduce(equips, {%{}, %{}, %{}, %{}}, fn item, stats ->
-        {bonuses, rates, special_values, special_rates} = stats
-
-        {
-          merge_values(bonuses, item_stat_values(item, :basic)),
-          merge_values(rates, item_stat_rates(item, :basic)),
-          merge_values(special_values, item_stat_values(item, :special)),
-          merge_values(special_rates, item_stat_rates(item, :special))
-        }
+    stat_groups =
+      Enum.reduce(equips, @empty_stat_groups, fn item, stat_groups ->
+        stat_groups
+        |> merge_stat_groups(item_stat_groups(item))
+        |> merge_stat_groups(item_effect_stats(item))
       end)
 
+    stat_groups = merge_stat_groups(stat_groups, passive_effect_stats(character))
+
     character = reset_base_stats(character)
-    character = apply_stats(character, bonuses, rates)
-    character = put_stat_metadata(character, rates, special_values, special_rates)
-    %{character | gear_score: calculate_gear_score(equips)}
+    character = apply_stats(character, stat_groups.values, stat_groups.rates)
+
+    equipment_stats = %{
+      basic_rates: stat_groups.rates,
+      special_values: stat_groups.special_values,
+      special_rates: stat_groups.special_rates
+    }
+
+    {%{character | gear_score: calculate_gear_score(equips)}, equipment_stats}
   end
 
   @doc """
@@ -123,26 +129,87 @@ defmodule Ms2ex.Context.ItemStats do
     )
   end
 
-  defp put_stat_metadata(
-         %Schema.Character{stats: stats} = character,
-         basic_rates,
-         special_values,
-         special_rates
-       ) do
-    stats =
-      stats
-      |> Map.put(:basic_rates, basic_rates)
-      |> Map.put(:special_values, special_values)
-      |> Map.put(:special_rates, special_rates)
-
-    %{character | stats: stats}
-  end
-
   defp item_stats(item) do
     Enum.flat_map(@item_stat_groups, fn group ->
       item.stats
       |> Map.get(group, %{})
       |> Map.values()
+    end)
+  end
+
+  defp item_stat_groups(item) do
+    %{
+      values: item_stat_values(item, :basic),
+      rates: item_stat_rates(item, :basic),
+      special_values: item_stat_values(item, :special),
+      special_rates: item_stat_rates(item, :special)
+    }
+  end
+
+  defp item_effect_stats(item) do
+    effects = Map.get(item.metadata, :additional_effects, [])
+
+    effect_stats(effects)
+  end
+
+  defp passive_effect_stats(%Schema.Character{} = character) do
+    character
+    |> Context.Skills.get_active_tab()
+    |> case do
+      %Schema.SkillTab{skills: skills} ->
+        Enum.reduce(skills, @empty_stat_groups, &merge_passive_skill/2)
+
+      _ ->
+        @empty_stat_groups
+    end
+  end
+
+  defp merge_passive_skill(skill, stats) do
+    [skill | Map.get(skill, :sub_skills, []) || []]
+    |> Enum.filter(&learned_passive?/1)
+    |> Enum.reduce(stats, fn passive_skill, stats ->
+      merge_stat_groups(stats, skill_effect_stats(passive_skill))
+    end)
+  end
+
+  defp learned_passive?(%{skill_id: id, level: level}) when level > 0 do
+    match?(%{property: %{type: 1}}, Storage.Skills.get_meta(id))
+  end
+
+  defp learned_passive?(_skill), do: false
+
+  defp skill_effect_stats(%{skill_id: id, level: level}) do
+    case Storage.Skills.get_meta(id) do
+      %{levels: levels} ->
+        effects = get_in(levels, [Integer.to_string(level), :skills]) || []
+
+        effect_stats(Enum.flat_map(effects, &Map.get(&1, :skills, [])))
+
+      _ ->
+        @empty_stat_groups
+    end
+  end
+
+  defp effect_stats(effects) do
+    Enum.reduce(effects, @empty_stat_groups, fn %{id: id, level: level}, stats ->
+      case Storage.Skills.get_effect(id, level) do
+        %{status: status} ->
+          merge_stat_groups(stats, %{
+            values: Map.get(status, :values, %{}),
+            rates: Map.get(status, :rates, %{}),
+            special_values: Map.get(status, :special_values, %{}),
+            special_rates: Map.get(status, :special_rates, %{})
+          })
+
+        _ ->
+          stats
+      end
+    end)
+  end
+
+  defp merge_stat_groups(left, right) do
+    Map.merge(left, right, fn _group, left_values, right_values ->
+      merge_values(left_values, right_values)
     end)
   end
 
