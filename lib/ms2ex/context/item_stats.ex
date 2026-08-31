@@ -8,7 +8,6 @@ defmodule Ms2ex.Context.ItemStats do
   """
 
   alias Ms2ex.Context
-  alias Ms2ex.Context.StatPoints
   alias Ms2ex.Enums
   alias Ms2ex.Formulas.BaseStats
   alias Ms2ex.Formulas.GearScore
@@ -20,19 +19,9 @@ defmodule Ms2ex.Context.ItemStats do
   @empty_stat_groups %{values: %{}, rates: %{}, special_values: %{}, special_rates: %{}}
 
   @doc """
-  Rebuilds a character's stats from the persisted base plus equipped-item and
-  learned-passive bonuses. The base is reloaded so repeated applications never
-  stack.
-  """
-  def apply(%Schema.Character{} = character) do
-    {character, _equipment_stats} = apply_with_equipment_stats(character)
-    character
-  end
-
-  @doc """
   Rebuilds a character's stats and returns the derived packet data.
   """
-  def apply_with_equipment_stats(%Schema.Character{} = character) do
+  def apply(%Schema.Character{} = character) do
     character = Repo.preload(character, [:stats, skill_tabs: :skills], force: true)
     equips = equipped_gear(character)
 
@@ -47,7 +36,6 @@ defmodule Ms2ex.Context.ItemStats do
 
     character = reset_base_stats(character)
     character = apply_stats(character, stat_groups.values, stat_groups.rates)
-    character = StatPoints.apply(character)
 
     equipment_stats = %{
       basic_rates: stat_groups.rates,

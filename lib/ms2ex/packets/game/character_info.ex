@@ -20,7 +20,7 @@ defmodule Ms2ex.Packets.CharacterInfo do
     {character, equipment_stats} =
       character
       |> Context.Characters.load_equips()
-      |> Context.ItemStats.apply_with_equipment_stats()
+      |> Context.CharacterStats.apply()
 
     __MODULE__
     |> build()

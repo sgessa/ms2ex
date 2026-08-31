@@ -381,7 +381,7 @@ defmodule Ms2ex.Managers.Character do
 
   defp refresh_level(character, old_level) do
     if old_level != character.level do
-      character = Context.ItemStats.apply(character)
+      {character, _equipment_stats} = Context.CharacterStats.apply(character)
       Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
       Context.Field.broadcast_stats(character)
       character
