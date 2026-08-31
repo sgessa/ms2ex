@@ -13,7 +13,7 @@ defmodule Ms2ex.Context.ItemEnchantStats do
         acc
       else
         attr = Enums.BasicStatType.get_key(attr_nr)
-        stat = Types.ItemStat.build(attr, :flat, value, :basic)
+        stat = Types.ItemStat.build(attr, :rate, value, :basic)
         Map.put(acc, attr, stat)
       end
     end)
