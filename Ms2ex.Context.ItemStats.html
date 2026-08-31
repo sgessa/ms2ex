@@ -114,9 +114,9 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Aggregates the stat bonuses granted by equipped items and applies them to a
-character's stats.</p><p>Each item's calculated stats are summed over every equipped item and added
-to the character's base stat values.</p>
+<p>Aggregates the stat bonuses granted by equipped items and learned passive
+skills, then applies them to a character's stats.</p><p>Calculated item and passive effects are summed and added to the character's
+base stat values.</p>
     </section>
 
 </div>
@@ -139,8 +139,8 @@ to the character's base stat values.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Rebuilds a character's stats from the persisted base plus the bonuses of
-every equipped item. The base is reloaded so repeated applications never
+        <div class="summary-synopsis"><p>Rebuilds a character's stats from the persisted base plus equipped-item and
+learned-passive bonuses. The base is reloaded so repeated applications never
 stack.</p></div>
 
     </div>
@@ -161,7 +161,7 @@ stack.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Rebuilds a character's stats and returns the equipment-derived packet data.</p></div>
+        <div class="summary-synopsis"><p>Rebuilds a character's stats and returns the derived packet data.</p></div>
 
     </div>
 
@@ -189,7 +189,7 @@ stack.</p></div>
       <h1 class="signature" translate="no">apply(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L26" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -198,8 +198,8 @@ stack.</p></div>
 
   <section class="docstring">
 
-<p>Rebuilds a character's stats from the persisted base plus the bonuses of
-every equipped item. The base is reloaded so repeated applications never
+<p>Rebuilds a character's stats from the persisted base plus equipped-item and
+learned-passive bonuses. The base is reloaded so repeated applications never
 stack.</p>
   </section>
 </section>
@@ -213,7 +213,7 @@ stack.</p>
       <h1 class="signature" translate="no">apply_stats(character, bonuses)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L63" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L62" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -235,7 +235,7 @@ stack.</p>
       <h1 class="signature" translate="no">apply_with_equipment_stats(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L32" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_stats.ex#L34" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -244,7 +244,7 @@ stack.</p>
 
   <section class="docstring">
 
-<p>Rebuilds a character's stats and returns the equipment-derived packet data.</p>
+<p>Rebuilds a character's stats and returns the derived packet data.</p>
   </section>
 </section>
 
