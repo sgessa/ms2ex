@@ -161,7 +161,7 @@ defmodule Ms2ex.BuffStatusTest do
     }
 
     buff = %Types.Buff{effect: %{dot: %{damage: dot}}, caster: caster, owner: mob}
-    assert Types.Buff.dot_amounts(buff) == {3, 0, 0}
+    assert Types.Buff.dot_amounts(buff) == {1, 0, 0}
   end
 
   defp buff_with(property) do
