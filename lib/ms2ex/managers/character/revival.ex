@@ -51,15 +51,6 @@ defmodule Ms2ex.Managers.Character.Revival do
     end
   end
 
-  # the daily-reset worker zeroes the meso instant-revive allowance for every
-  # character; connected players also need their in-memory counter cleared and
-  # the client gauge refreshed
-  def reset_daily_revives(character) do
-    character = Map.put(character, :instant_revive_count, 0)
-    push(character, Packets.RevivalCount.bytes(0))
-    character
-  end
-
   # the client's instant-revive price (CalcRevivalMeso for non-CN): the first
   # meso revive of the day is flat, later ones scale with level
   def revival_meso_cost(_level, 1), do: 10_000

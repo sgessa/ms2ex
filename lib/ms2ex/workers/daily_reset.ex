@@ -9,13 +9,9 @@ defmodule Ms2ex.Workers.DailyReset do
   use Oban.Worker
 
   alias Ms2ex.Context
-  alias Ms2ex.Managers
 
   @impl Oban.Worker
   def perform(_job) do
-    Context.Characters.reset_daily_revives()
-
-    Managers.Character.online_ids()
-    |> Enum.each(&Managers.Character.cast(&1, :reset_daily_revives))
+    Context.DailyReset.reset()
   end
 end

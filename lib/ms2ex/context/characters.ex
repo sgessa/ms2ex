@@ -5,12 +5,6 @@ defmodule Ms2ex.Context.Characters do
 
   import Ecto.Query, except: [update: 2]
 
-  # zeroes every character's daily meso instant-revive allowance
-  def reset_daily_revives() do
-    from(c in Schema.Character)
-    |> Repo.update_all(set: [instant_revive_count: 0])
-  end
-
   def list(%Schema.Account{id: account_id}) do
     Schema.Character
     |> where([c], c.account_id == ^account_id)

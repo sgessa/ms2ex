@@ -159,7 +159,7 @@ defmodule Ms2ex.DeathReviveTest do
     assert char.instant_revive_count == 2
 
     # the daily-reset worker cast clears the in-memory counter
-    reset = cast(char, :reset_daily_revives)
+    reset = cast(char, :daily_reset)
     assert reset.instant_revive_count == 0
   end
 
