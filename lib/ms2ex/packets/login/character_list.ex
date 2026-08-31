@@ -59,7 +59,10 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_entries(characters)
   end
 
-  def put_character(packet, character) do
+  # `death_count` defaults to 0 so the login list and party members read as
+  # alive; FieldAddUser passes the peer's real count so a joining client can
+  # build the targetable tombstone entity
+  def put_character(packet, character, death_count \\ 0) do
     real_job_id = Enums.Job.get_value(character.job)
     gender = Enums.Gender.get_value(character.gender)
 
@@ -80,7 +83,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_int(Schema.Character.job_id(character))
     |> put_int()
     |> put_int()
-    |> put_short()
+    |> put_short(death_count)
     |> put_long()
     |> put_long()
     |> put_long()

@@ -18,6 +18,8 @@ defmodule Ms2ex.Application do
         {Phoenix.PubSub, name: Ms2ex.PubSub},
         # Start the Endpoint (http/https)
         Ms2exWeb.Endpoint,
+        # Start Oban (job queue + daily reset crontab)
+        {Oban, oban_config()},
         # Start Managers
         Ms2ex.Managers.GlobalCounter,
         {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
@@ -26,6 +28,12 @@ defmodule Ms2ex.Application do
 
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # Oban powers the scheduled daily reset (crontab entry in config); the
+  # queue only needs to exist in non-test environments
+  defp oban_config() do
+    Application.get_env(:ms2ex, Oban, [])
   end
 
   # the game ports are opt-in, started via `mix maple.game` / `mix maple.server`

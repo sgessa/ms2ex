@@ -23,13 +23,27 @@ Priorities:
 
 ## P1 — Core combat loop
 
-### 1. Player death & revive — [Open]
+### 1. Player death & revive — [Partial]
 
-Players cannot die yet. HP dropping to 0 has no effect, and fall damage is
-capped at 25% of current HP, so it can never kill. Missing: the death state and
-animation, a revive/respawn flow (respawn point, party/class revives), and the
-client's post-death HUD state (`RevivalCount`/`RevivalConfirm` are only sent on
-field entry today).
+Players can die and revive. HP reaching 0 triggers the death state and
+animation, a tombstone other players can hit to revive the owner, and the
+client's post-death HUD (`RevivalCount`/`RevivalConfirm` are now sent on death,
+not just field entry). Safe revive respawns at the map spawn (or the map's
+`revival_return_id`), instant revive costs mesos (`CalcRevivalMeso`: 10k +
+(level-10)*1k, level-scaled on every use, capped at 3/day) and keeps the player
+in place. The daily counter is reset by an Oban crontab job at midnight. The
+death penalty and daily revive counter are persisted on the character row, so
+they survive server restarts. What is still missing:
+
+- **tombstone can't be hit by other players**: the tombstone renders on the
+  client but has no collision, so skills pass through. `FieldAddUser` now
+  carries the dead player's `death_count` (the reference builds the collidable
+  tombstone from it), but the in-field case is still broken — investigate how
+  the proxy dead state reaches already-connected clients against a live
+  capture of the reference death sequence.
+- party / class revive skills (reviving a fallen teammate with a skill)
+- free-revive coupon consumption
+- auto-revive maps (`auto_revival_type` / `auto_revival_time`)
 
 ### 2. Mob AI: aggro & damage — [Open]
 
@@ -125,6 +139,10 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- Player death & revive: death state + animation (`DeadUser`, dead flag),
+  tombstone entity with teammate hits, post-death HUD, safe revive (map spawn /
+  `revival_return_id`) and instant revive (meso cost)
+  (worktree `feature/player-death-revive`)
 - Field monster HP bar: the client's own id is now sent in `ServerEnter`
   (allocated at channel login, stable across field changes) and the
   `RequestFieldEnter` reply carries the validated field key — the top-center

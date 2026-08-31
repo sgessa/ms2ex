@@ -12,7 +12,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> Packets.CharacterList.put_character(character)
+    |> Packets.CharacterList.put_character(character, Map.get(character, :death_count, 0) || 0)
     |> put_int(Schema.Character.job_id(character))
     |> put_byte(0x1)
     |> put_int(real_job_id)

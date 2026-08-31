@@ -63,6 +63,11 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
   Items.get_meta(item_id)
   ```
 
+- **`Mimic.copy` calls live in `test/test_helper.exs`, not in per-test `setup`
+  blocks.** Copying a module there lets every test stub it; test files only
+  call `Mimic.stub`. If a test needs to stub a module that isn't copied yet,
+  add the `Mimic.copy` to `test_helper.exs` first.
+
 ## Architecture notes
 
 - **Never mention the reference implementation in comments or code.**

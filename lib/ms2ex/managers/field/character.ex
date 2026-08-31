@@ -125,11 +125,12 @@ defmodule Ms2ex.Managers.Field.Character do
     mounts = Map.delete(state.mounts, character.id)
     sessions = Map.delete(state.sessions, character.id)
     players = Map.delete(state.players, character.id)
+    tombstones = Map.delete(state.tombstones, character.id)
 
     Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
     Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
 
-    %{state | mounts: mounts, sessions: sessions, players: players}
+    %{state | mounts: mounts, sessions: sessions, players: players, tombstones: tombstones}
   end
 
   defp maybe_teleport_character(character) do

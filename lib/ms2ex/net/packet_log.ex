@@ -11,7 +11,7 @@ defmodule Ms2ex.Net.PacketLog do
   require Logger
 
   def log(direction, opcode, packet) do
-    name = Packets.opcode_to_name(:send, opcode)
+    name = Packets.opcode_to_name(direction, opcode)
     text = "#{tag(direction)} #{name}: #{Net.Utils.stringify_packet(packet)}"
 
     if name not in Net.Utils.conf()[:skip_packet_logs] do

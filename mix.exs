@@ -65,6 +65,7 @@ defmodule Ms2ex.MixProject do
       {:ecto_sql, "~> 3.9"},
       {:postgrex, "~> 0.16"},
       {:redix, "~> 1.1"},
+      {:oban, "~> 2.18"},
       {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},

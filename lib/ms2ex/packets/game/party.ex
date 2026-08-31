@@ -126,8 +126,14 @@ defmodule Ms2ex.Packets.Party do
     |> put_long(character.account_id)
     |> put_int(character.stats.health_max)
     |> put_int(character.stats.health_cur)
-    |> put_short()
+    |> put_short(death_state(character))
   end
+
+  # the reference writes the member's death state (alive, first death, metal);
+  # the client uses it to render the party tombstone icon
+  defp death_state(%{dead?: false}), do: 0
+  defp death_state(%{death_count: count}) when count > 1, do: 2
+  defp death_state(_), do: 1
 
   def join_request(character) do
     __MODULE__
