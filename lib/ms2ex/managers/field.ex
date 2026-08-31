@@ -4,7 +4,6 @@ defmodule Ms2ex.Managers.Field do
   require Logger
 
   alias Ms2ex.Context
-  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
 
@@ -14,7 +13,6 @@ defmodule Ms2ex.Managers.Field do
 
   alias Ms2ex.Managers.Field
 
-  @updates_intval 1000
   @splash_radius 800
   @splash_targets 8
 
@@ -64,7 +62,6 @@ defmodule Ms2ex.Managers.Field do
     }
 
     send(self(), :load_npc_spawns)
-    send(self(), :send_updates)
     send(self(), :tick_npcs)
 
     {:ok, state, {:continue, {:add_character, character}}}
@@ -410,18 +407,6 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:leave_battle_stance, character}, state) do
     Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
-    {:noreply, state}
-  end
-
-  def handle_info(:send_updates, state) do
-    for char_id <- Map.keys(state.sessions) do
-      with {:ok, char} <- Managers.Character.lookup(char_id) do
-        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
-      end
-    end
-
-    Process.send_after(self(), :send_updates, @updates_intval)
-
     {:noreply, state}
   end
 

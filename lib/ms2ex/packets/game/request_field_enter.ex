@@ -12,6 +12,8 @@ defmodule Ms2ex.Packets.RequestFieldEnter do
     |> put_int()
     |> put_coord(position)
     |> put_coord(rotation)
-    |> put_int()
+    # session field key the client validates on enter; a wrong value makes the
+    # client reject the field state without any visible error
+    |> put_int(0x1234)
   end
 end

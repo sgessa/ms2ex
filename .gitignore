@@ -37,3 +37,10 @@ ms2ex-*.tar
 
 # local-only investigation notes (not public-facing)
 /docs/internal/
+
+# ad-hoc client dump tooling output
+/dumps/
+
+# client tools
+/scripts/
+__pycache__/

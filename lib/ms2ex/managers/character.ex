@@ -164,12 +164,12 @@ defmodule Ms2ex.Managers.Character do
     with {:ok, stat} <- StatPoints.attribute(attribute) do
       total = character.stat_point_sources |> Map.values() |> Enum.sum()
       used = character.stat_point_allocation |> Map.values() |> Enum.sum()
-      limit = stat_point_limit(stat)
+      limit = Application.get_env(:ms2ex, :constants)[:stat_point_limits] |> Map.get(stat, 100)
       current = Map.get(character.stat_point_allocation, stat, 0)
 
       cond do
         used >= total ->
-          # no points available — silent failure (C# returns without notice)
+          # no points available — silent failure
           {:reply, :error, character}
 
         current >= limit ->
@@ -390,12 +390,6 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
-  defp stat_point_limit(stat) do
-    Application.get_env(:ms2ex, :stat_point_limits, %{})
-    |> Map.get(stat, 100)
-  end
-
-  defp process_name(character_id) do
-    :"characters:#{character_id}"
-  end
+  defp process_name(character_id),
+    do: :"characters:#{character_id}"
 end

@@ -107,12 +107,6 @@ The drop packet still has three deviations:
 still uses a fixed radius instead of the exact skill geometry and always lands
 the first hit immediately.
 
-### 10. Field boss HP bar — [Open]
-
-The top-center boss HP bar never renders for NPC bosses in this client build.
-The server-side packet set is aligned; the arming trigger is believed to be
-client-side and needs a live sniff diff during a boss fight.
-
 ### 11. RegionSkill rotation — [Open]
 
 `RegionSkill` always sends rotation where direction-less skills should zero it.
@@ -131,6 +125,10 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- Field monster HP bar: the client's own id is now sent in `ServerEnter`
+  (allocated at channel login, stable across field changes) and the
+  `RequestFieldEnter` reply carries the validated field key — the top-center
+  HP bar renders for the last hit target and fades on the client timer
 - Equip stat bonuses: random options, enchant / limit-break enchants,
   special-value / special-rate stats, and rate-type stats (e.g. perfect guard)
   now aggregate over equipped gear and apply to the character

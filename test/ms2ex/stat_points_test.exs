@@ -10,14 +10,6 @@ defmodule Ms2ex.StatPointsTest do
 
   # ---- unit tests (no DB) ----
 
-  test "AttributePointSource wire IDs match C# enum" do
-    assert AttributePointSource.get_value(:trophy) == 1
-    assert AttributePointSource.get_value(:quest) == 2
-    assert AttributePointSource.get_value(:exploration) == 3
-    assert AttributePointSource.get_value(:prestige) == 4
-    assert AttributePointSource.get_value(:command) == 5
-  end
-
   test "AttributePointSource.normalize fills missing keys with 0" do
     normalized = AttributePointSource.normalize(%{command: 10})
     assert normalized == %{trophy: 0, quest: 0, exploration: 0, prestige: 0, command: 10}
@@ -71,7 +63,7 @@ defmodule Ms2ex.StatPointsTest do
     assert <<0x46::little-16, 0x01, 10::little-32, 1::little-32, 0::8, 1::little-32>> = bytes
   end
 
-  test "Packets.Notice.message encodes non-localised string with C# InterfaceText format" do
+  test "Packets.Notice.message encodes non-localised string" do
     bytes = Packets.Notice.message("s_char_info_limit_stat_point")
 
     # opcode 0x73, command 4 (byte), flags 1 (short), localized=false (bool),

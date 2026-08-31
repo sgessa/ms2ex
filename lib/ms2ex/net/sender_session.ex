@@ -1,8 +1,6 @@
 defmodule Ms2ex.Net.SenderSession do
   use GenServer
 
-  require Logger, as: L
-
   alias Ms2ex.Crypto.SendCipher
   alias Ms2ex.Managers
   alias Ms2ex.Context
@@ -12,8 +10,6 @@ defmodule Ms2ex.Net.SenderSession do
   alias Ms2ex.PartyServer
   alias Ms2ex.Schema
   alias Ms2ex.Packets.{PacketReader, RequestVersion}
-
-  import Net.Utils
 
   def start_link(socket, transport, send_cipher, parent_pid) do
     {:ok, pid} = GenServer.start_link(__MODULE__, [socket, transport, send_cipher, parent_pid])
@@ -77,10 +73,11 @@ defmodule Ms2ex.Net.SenderSession do
   @impl true
   def handle_cast({:handshake, recv_cipher}, state) do
     %{send_cipher: send_cipher, socket: socket} = state
-    packet = RequestVersion.build(conf()[:version], recv_cipher, send_cipher, conf()[:block_iv])
+    conf = Net.Utils.conf()
+    packet = RequestVersion.build(conf[:version], recv_cipher, send_cipher, conf[:block_iv])
     {send_cipher, packet} = SendCipher.write_header(send_cipher, packet)
 
-    log_sent_packet(:handshake, packet)
+    Net.PacketLog.log(:send, :handshake, packet)
     state.transport.send(socket, packet)
 
     {:noreply, %{state | send_cipher: send_cipher}}
@@ -91,7 +88,7 @@ defmodule Ms2ex.Net.SenderSession do
     %{send_cipher: cipher, socket: socket, transport: transport} = state
 
     {opcode, data} = PacketReader.get_short(packet)
-    log_sent_packet(opcode, data)
+    Net.PacketLog.log(:send, opcode, data)
 
     {cipher, enc_packet} = SendCipher.encrypt(cipher, packet)
     transport.send(socket, enc_packet)
@@ -131,13 +128,5 @@ defmodule Ms2ex.Net.SenderSession do
     Managers.Character.update(character)
 
     {:noreply, state}
-  end
-
-  defp log_sent_packet(opcode, packet) do
-    name = Packets.opcode_to_name(:send, opcode)
-
-    if name not in conf()[:skip_packet_logs] do
-      L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{stringify_packet(packet)}"]))
-    end
   end
 end

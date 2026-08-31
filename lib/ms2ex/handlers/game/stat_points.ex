@@ -5,7 +5,6 @@ defmodule Ms2ex.GameHandlers.StatPoints do
   import Ms2ex.Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  # matches C# AttributePointHandler Command enum
   @cmd_increment 2
   @cmd_reset 3
 

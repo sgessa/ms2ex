@@ -1,7 +1,6 @@
 defmodule Ms2ex.Types.AttributePointSource do
   @type t :: :trophy | :quest | :exploration | :prestige | :command
 
-  # matches C# AttributePointSource enum wire values
   @values %{trophy: 1, quest: 2, exploration: 3, prestige: 4, command: 5}
   @default_sources %{trophy: 0, quest: 0, exploration: 0, prestige: 0, command: 0}
 
