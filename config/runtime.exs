@@ -40,6 +40,8 @@ config :ms2ex, :constants,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0
 
+config :ms2ex, packet_log_file: System.get_env("PACKET_LOG_FILE")
+
 if config_env() == :prod do
   config :ms2ex, Ms2ex.Repo, pool_size: 10
   config :ms2ex, Ms2exWeb.Endpoint, server: true
