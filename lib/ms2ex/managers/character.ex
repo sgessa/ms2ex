@@ -282,11 +282,11 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, Character.Revival.instant_revive(character, use_voucher)}
   end
 
-  # the daily-reset worker zeroes the meso instant-revive allowance for every
-  # character; connected players also need their in-memory counter cleared and
-  # the client gauge refreshed
+  # the daily-reset worker bulk-zeroes the DB for every character; connected
+  # players also need their in-memory state cleared and the client gauge
+  # refreshed
   def handle_cast(:reset_daily_revives, character) do
-    {:noreply, Character.Revival.reset_daily_revives(character)}
+    {:noreply, Character.DailyReset.reset_daily_revives(character)}
   end
 
   # triggers death when a stat write brings health to 0; called from
