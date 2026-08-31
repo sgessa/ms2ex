@@ -200,6 +200,10 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.WorldGraph](Ms2ex.Context.WorldGraph.md)
 
 - Network
+  - [Ms2ex.Net.PacketLog](Ms2ex.Net.PacketLog.md): Optional raw packet dump to disk for debugging client flows. Set `PACKET_LOG`
+to a file path to enable; without it every call is a no-op. When enabled,
+every packet is written regardless of the console `skip_packet_logs` filter.
+
   - [Ms2ex.Net.Router](Ms2ex.Net.Router.md)
   - [Ms2ex.Net.SenderSession](Ms2ex.Net.SenderSession.md)
   - [Ms2ex.Net.Session](Ms2ex.Net.Session.md): TCP client and protocol for ms2
