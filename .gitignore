@@ -37,3 +37,12 @@ ms2ex-*.tar
 
 # local-only investigation notes (not public-facing)
 /docs/internal/
+
+# local packet capture from PACKET_LOG debugging sessions
+/packets.log
+
+# ad-hoc client dump tooling output
+/dumps/
+
+# python tooling caches
+__pycache__/

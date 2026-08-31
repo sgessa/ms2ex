@@ -17,12 +17,9 @@ defmodule Ms2ex.Managers.Field.Character do
       load_peer(character, char_id, state)
     end
 
-    # Update registry; players and mounts share the app-wide counter
-    character = %{
-      character
-      | object_id: Managers.GlobalCounter.get_and_increment(),
-        map_id: state.map_id
-    }
+    # the object id is allocated at channel login (before ServerEnter) and
+    # stays stable across field transitions; only the field changes here
+    character = %{character | map_id: state.map_id}
 
     character = Map.put(character, :field_pid, self())
     Managers.Character.update(character)

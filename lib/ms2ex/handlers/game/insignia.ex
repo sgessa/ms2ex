@@ -10,14 +10,16 @@ defmodule Ms2ex.GameHandlers.Insignia do
     {insignia_id, _packet} = get_short(packet)
     {:ok, character} = Managers.Character.lookup(session.character_id)
 
-    with {:ok, metadata} <- Storage.Tables.Insignias.get(insignia_id),
-         true <- can_equip_insignia?(character, metadata, insignia_id) do
+    # an id absent from the table is ignored; otherwise the insignia is
+    # applied and the display flag broadcast
+    with {:ok, metadata} <- Storage.Tables.Insignias.get(insignia_id) do
+      display = can_equip_insignia?(character, metadata, insignia_id)
+
       {:ok, character} = Context.Characters.update(character, %{insignia_id: insignia_id})
       Managers.Character.update(character)
-      Context.Field.broadcast(character, Packets.Insignia.update(character, insignia_id, true))
+      Context.Field.broadcast(character, Packets.Insignia.update(character, insignia_id, display))
     else
-      _ ->
-        Context.Field.broadcast(character, Packets.Insignia.update(character, insignia_id, false))
+      _ -> :ok
     end
   end
 

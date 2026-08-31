@@ -8,6 +8,7 @@ defmodule Ms2ex.Net.SenderSession do
   alias Ms2ex.Context
   alias Ms2ex.GroupChat
   alias Ms2ex.Net
+  alias Ms2ex.Net.PacketLog
   alias Ms2ex.Packets
   alias Ms2ex.PartyServer
   alias Ms2ex.Schema
@@ -135,6 +136,7 @@ defmodule Ms2ex.Net.SenderSession do
 
   defp log_sent_packet(opcode, packet) do
     name = Packets.opcode_to_name(:send, opcode)
+    PacketLog.log("[SEND] #{name}: #{stringify_packet(packet)}")
 
     if name not in conf()[:skip_packet_logs] do
       L.debug(IO.ANSI.format([:magenta, "[SEND] #{name}: #{stringify_packet(packet)}"]))

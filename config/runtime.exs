@@ -17,13 +17,13 @@ config :ms2ex, Ms2ex.Repo,
 server_address = env!("SERVER_ADDRESS", :string)
 
 config :ms2ex, Ms2ex,
-  login: %{host: server_address, port: 8526},
+  login: %{host: server_address, port: 8531},
   world: %{
     name: "Paperwood",
-    login: %{host: server_address, port: 20001},
+    login: %{host: server_address, port: 20101},
     channels: [
-      %{host: server_address, port: 20002},
-      %{host: server_address, port: 20003}
+      %{host: server_address, port: 20102},
+      %{host: server_address, port: 20103}
     ]
   },
   ugc: %{

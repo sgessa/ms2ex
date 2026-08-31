@@ -55,9 +55,8 @@ defmodule Ms2ex.Packets.ControlNpc do
     ""
     |> put_int(npc.object_id)
     # Flags: bit-1 (AdditionalEffectRelated), bit-2 (UIHpBarRelated). The
-    # client registers a boss's HP bar from these bits, so they stay set for
-    # every alive entry regardless of combat state; only the boss target-id
-    # changes when battle begins.
+    # client registers a mob's HP bar from these bits, so they stay set for
+    # every alive entry regardless of combat state.
     |> put_byte(0x2)
     |> put_short_coord(npc.position)
     # TODO convert Z to degree
@@ -71,16 +70,20 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short(npc.seq_counter)
   end
 
-  # bosses stay in the PcSkill reaction state while engaged by a player (the
-  # client shows the field-boss HP bar for a boss reacting to a player skill);
-  # regular mobs idle
-  defp put_state(packet, %Types.FieldNpc{npc: %{boss?: true}}), do: put_byte(packet, 16)
+  # The state byte toggles between the PcSkill reaction state (16) while a
+  # mob is engaged by a player and idle (1) otherwise. The client shows the
+  # field HP bar for a mob reacting to a player skill, so the transition to
+  # the reaction state on the first hit is what arms the bar.
+  defp put_state(packet, %Types.FieldNpc{last_attacker: attacker}) when not is_nil(attacker),
+    do: put_byte(packet, 16)
+
   defp put_state(packet, _npc), do: put_byte(packet, 1)
 
   # bosses carry their current target's object id; a non-zero value tells
-  # the client the boss is in battle (drives the boss HP bar UI). Until the
-  # boss has been struck, it holds the field's default target (the nearest
-  # player), mirroring a freshly-aggroed boss.
+  # the client the boss is in battle (drives the boss HP bar UI). While
+  # engaged it holds the attacker's object id; until the boss has been
+  # struck, it holds the field's default target (the nearest player),
+  # mirroring a freshly-aggroed boss.
   defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}, nil),
     do: put_int(packet, 0)
 

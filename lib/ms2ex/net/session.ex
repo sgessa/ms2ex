@@ -8,7 +8,7 @@ defmodule Ms2ex.Net.Session do
   require Logger, as: L
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
-  alias Ms2ex.Net.{Router, SenderSession}
+  alias Ms2ex.Net.{Router, SenderSession, PacketLog}
   alias Ms2ex.Packets
   alias Ms2ex.Packets.PacketReader
 
@@ -196,6 +196,7 @@ defmodule Ms2ex.Net.Session do
 
   defp log_incoming_packet(opcode, packet) do
     name = Packets.opcode_to_name(:recv, opcode)
+    PacketLog.log("[RECV] #{name}: #{stringify_packet(packet)}")
 
     if name not in conf()[:skip_packet_logs] do
       L.debug("[RECV] #{name}: #{stringify_packet(packet)}")
