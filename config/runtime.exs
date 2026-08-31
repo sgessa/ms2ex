@@ -46,11 +46,11 @@ config :ms2ex, :constants,
   character_max_level: 99,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0,
-  revival_penalty_tick: 60_000,
+  revival_penalty_tick: 3_600_000,
   revival_penalty_min_level: 10,
-  hit_per_dead_count: 1,
+  hit_per_dead_count: 5,
   max_dead_count: 3,
-  revival_invincible_tick: 3_000
+  revival_invincible_tick: 5_000
 
 config :ms2ex, packet_log_file: System.get_env("PACKET_LOG_FILE")
 
