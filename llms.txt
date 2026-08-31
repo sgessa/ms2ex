@@ -57,12 +57,14 @@
 - [Ms2ex.GameHandlers.ResponseFieldEnter](Ms2ex.GameHandlers.ResponseFieldEnter.md)
 - [Ms2ex.GameHandlers.ResponseKey](Ms2ex.GameHandlers.ResponseKey.md)
 - [Ms2ex.GameHandlers.ResponseVersion](Ms2ex.GameHandlers.ResponseVersion.md)
+- [Ms2ex.GameHandlers.Revival](Ms2ex.GameHandlers.Revival.md)
 - [Ms2ex.GameHandlers.Ride](Ms2ex.GameHandlers.Ride.md)
 - [Ms2ex.GameHandlers.RideSync](Ms2ex.GameHandlers.RideSync.md)
 - [Ms2ex.GameHandlers.Skill](Ms2ex.GameHandlers.Skill.md)
 - [Ms2ex.GameHandlers.SkillBook](Ms2ex.GameHandlers.SkillBook.md)
 - [Ms2ex.GameHandlers.StateSkill](Ms2ex.GameHandlers.StateSkill.md)
 - [Ms2ex.GameHandlers.Taxi](Ms2ex.GameHandlers.Taxi.md)
+- [Ms2ex.GameHandlers.Tombstone](Ms2ex.GameHandlers.Tombstone.md)
 - [Ms2ex.GameHandlers.UseItem](Ms2ex.GameHandlers.UseItem.md)
 - [Ms2ex.GameHandlers.UserChat](Ms2ex.GameHandlers.UserChat.md)
 - [Ms2ex.GameHandlers.UserEnv](Ms2ex.GameHandlers.UserEnv.md)
@@ -78,6 +80,7 @@
 - [Ms2ex.Lua.ItemEnchant](Ms2ex.Lua.ItemEnchant.md)
 - [Ms2ex.Managers.Buff](Ms2ex.Managers.Buff.md)
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
+- [Ms2ex.Managers.Character.Revival](Ms2ex.Managers.Character.Revival.md): Death and revival logic for a character.
 - [Ms2ex.Managers.Character.Skill](Ms2ex.Managers.Character.Skill.md)
 - [Ms2ex.Managers.Character.Stats](Ms2ex.Managers.Character.Stats.md)
 - [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md)
@@ -109,6 +112,12 @@
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
 - [Ms2ex.Storage.Tables.UserStats](Ms2ex.Storage.Tables.UserStats.md)
 - [Ms2ex.TransferFlags](Ms2ex.TransferFlags.md)
+- [Ms2ex.Workers.DailyReset](Ms2ex.Workers.DailyReset.md): Runs at midnight (Oban crontab) to reset each character's daily meso
+instant-revive allowance. The counter is stored on the character row so it
+survives restarts; only the day roll-over (this job) clears it. Connected
+players are told immediately so their in-memory counter and the client's
+"uses left" gauge reset too.
+
 - [Ms2exWeb](Ms2exWeb.md): The entrypoint for defining your web interface, such
 as controllers, views, channels and so on.
 - [Ms2exWeb.AccountSocket](Ms2exWeb.AccountSocket.md)
@@ -173,11 +182,14 @@ as controllers, views, channels and so on.
   - [Ms2ex.Types.SyncState](Ms2ex.Types.SyncState.md): Schema and functions for managing and synchronizing game state between clients.
 Provides functionality to serialize and deserialize sync state to and from packets.
 
+  - [Ms2ex.Types.Tombstone](Ms2ex.Types.Tombstone.md)
+
 - Contexts
   - [Ms2ex.Context.Accounts](Ms2ex.Context.Accounts.md): Context module for account-related operations.
   - [Ms2ex.Context.Characters](Ms2ex.Context.Characters.md)
   - [Ms2ex.Context.ChatStickers](Ms2ex.Context.ChatStickers.md): Context module for managing chat stickers.
 
+  - [Ms2ex.Context.DailyReset](Ms2ex.Context.DailyReset.md): Resets per-character daily state when the midnight worker fires.
   - [Ms2ex.Context.Damage](Ms2ex.Context.Damage.md): Context module for damage calculation operations.
   - [Ms2ex.Context.Dismantle](Ms2ex.Context.Dismantle.md): Handles the item dismantling functionality.
   - [Ms2ex.Context.Emotes](Ms2ex.Context.Emotes.md): Context module for character emote-related operations.
@@ -231,6 +243,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.CharacterMaxCount](Ms2ex.Packets.CharacterMaxCount.md)
   - [Ms2ex.Packets.ChatSticker](Ms2ex.Packets.ChatSticker.md)
   - [Ms2ex.Packets.ControlNpc](Ms2ex.Packets.ControlNpc.md)
+  - [Ms2ex.Packets.DeadUser](Ms2ex.Packets.DeadUser.md)
   - [Ms2ex.Packets.Dismantle](Ms2ex.Packets.Dismantle.md)
   - [Ms2ex.Packets.DynamicChannel](Ms2ex.Packets.DynamicChannel.md)
   - [Ms2ex.Packets.Emote](Ms2ex.Packets.Emote.md)
@@ -292,6 +305,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.ResponseCube](Ms2ex.Packets.ResponseCube.md)
   - [Ms2ex.Packets.ResponseRide](Ms2ex.Packets.ResponseRide.md)
   - [Ms2ex.Packets.ResponseTimeSync](Ms2ex.Packets.ResponseTimeSync.md)
+  - [Ms2ex.Packets.Revival](Ms2ex.Packets.Revival.md)
   - [Ms2ex.Packets.RevivalConfirm](Ms2ex.Packets.RevivalConfirm.md)
   - [Ms2ex.Packets.RevivalCount](Ms2ex.Packets.RevivalCount.md)
   - [Ms2ex.Packets.RideSync](Ms2ex.Packets.RideSync.md)
@@ -310,6 +324,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.Stats](Ms2ex.Packets.Stats.md)
   - [Ms2ex.Packets.SyncNumber](Ms2ex.Packets.SyncNumber.md)
   - [Ms2ex.Packets.Taxi](Ms2ex.Packets.Taxi.md)
+  - [Ms2ex.Packets.Tombstone](Ms2ex.Packets.Tombstone.md)
   - [Ms2ex.Packets.Trigger](Ms2ex.Packets.Trigger.md)
   - [Ms2ex.Packets.Ugc](Ms2ex.Packets.Ugc.md)
   - [Ms2ex.Packets.UnequipItem](Ms2ex.Packets.UnequipItem.md)

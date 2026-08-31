@@ -5,6 +5,8 @@
 
 # `find`
 
+# `set`
+
 # `update`
 
 ---

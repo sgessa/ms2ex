@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-63818991.js"></script>
+    <script defer src="dist/sidebar_items-2237AFF7.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -153,6 +153,15 @@ MS2EX
   </div>
 
     <div class="summary-synopsis"><p>Context module for managing chat stickers.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Context.DailyReset.html" translate="no">Ms2ex.<wbr />Context.<wbr />DailyReset</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Resets per-character daily state when the midnight worker fires.</p></div>
 
 </div>
 <div class="summary-row">
@@ -871,6 +880,13 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.Revival.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Revival</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.Ride.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Ride</a>
 
   </div>
@@ -907,6 +923,13 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.Taxi.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Taxi</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.Tombstone.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Tombstone</a>
 
   </div>
 
@@ -1014,6 +1037,15 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
     <a href="Ms2ex.Managers.Character.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Character.Revival.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Revival</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Death and revival logic for a character.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1207,6 +1239,13 @@ every packet is written regardless of the console <code class="inline">skip_pack
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Packets.ControlNpc.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ControlNpc</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.DeadUser.html" translate="no">Ms2ex.<wbr />Packets.<wbr />DeadUser</a>
 
   </div>
 
@@ -1640,6 +1679,13 @@ every packet is written regardless of the console <code class="inline">skip_pack
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Packets.Revival.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Revival</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Packets.RevivalConfirm.html" translate="no">Ms2ex.<wbr />Packets.<wbr />RevivalConfirm</a>
 
   </div>
@@ -1760,6 +1806,13 @@ every packet is written regardless of the console <code class="inline">skip_pack
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Packets.Taxi.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Taxi</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.Tombstone.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Tombstone</a>
 
   </div>
 
@@ -2238,6 +2291,26 @@ every packet is written regardless of the console <code class="inline">skip_pack
 
     <div class="summary-synopsis"><p>Schema and functions for managing and synchronizing game state between clients.
 Provides functionality to serialize and deserialize sync state to and from packets.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Tombstone.html" translate="no">Ms2ex.<wbr />Types.<wbr />Tombstone</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Workers.DailyReset.html" translate="no">Ms2ex.<wbr />Workers.<wbr />DailyReset</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Runs at midnight (Oban crontab) to reset each character's daily meso
+instant-revive allowance. The counter is stored on the character row so it
+survives restarts; only the day roll-over (this job) clears it. Connected
+players are told immediately so their in-memory counter and the client's
+&quot;uses left&quot; gauge reset too.</p></div>
 
 </div>
 <div class="summary-row">

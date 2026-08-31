@@ -11,6 +11,10 @@
 
 # `get_portals`
 
+# `get_property`
+
+# `get_revival_return_id`
+
 # `get_spawn`
 
 ---

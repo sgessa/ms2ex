@@ -6,6 +6,7 @@ Ms2ex.Constants.html
 Ms2ex.Context.Accounts.html
 Ms2ex.Context.Characters.html
 Ms2ex.Context.ChatStickers.html
+Ms2ex.Context.DailyReset.html
 Ms2ex.Context.Damage.html
 Ms2ex.Context.Dismantle.html
 Ms2ex.Context.Emotes.html
@@ -102,12 +103,14 @@ Ms2ex.GameHandlers.ResponseClientSyncTick.html
 Ms2ex.GameHandlers.ResponseFieldEnter.html
 Ms2ex.GameHandlers.ResponseKey.html
 Ms2ex.GameHandlers.ResponseVersion.html
+Ms2ex.GameHandlers.Revival.html
 Ms2ex.GameHandlers.Ride.html
 Ms2ex.GameHandlers.RideSync.html
 Ms2ex.GameHandlers.Skill.html
 Ms2ex.GameHandlers.SkillBook.html
 Ms2ex.GameHandlers.StateSkill.html
 Ms2ex.GameHandlers.Taxi.html
+Ms2ex.GameHandlers.Tombstone.html
 Ms2ex.GameHandlers.UseItem.html
 Ms2ex.GameHandlers.UserChat.html
 Ms2ex.GameHandlers.UserEnv.html
@@ -122,6 +125,7 @@ Ms2ex.LoginHandlers.ResponseServerEnter.html
 Ms2ex.LoginHandlers.ResponseVersion.html
 Ms2ex.Lua.ItemEnchant.html
 Ms2ex.Managers.Buff.html
+Ms2ex.Managers.Character.Revival.html
 Ms2ex.Managers.Character.Skill.html
 Ms2ex.Managers.Character.Stats.html
 Ms2ex.Managers.Character.html
@@ -149,6 +153,7 @@ Ms2ex.Packets.CharacterList.html
 Ms2ex.Packets.CharacterMaxCount.html
 Ms2ex.Packets.ChatSticker.html
 Ms2ex.Packets.ControlNpc.html
+Ms2ex.Packets.DeadUser.html
 Ms2ex.Packets.Dismantle.html
 Ms2ex.Packets.DynamicChannel.html
 Ms2ex.Packets.Emote.html
@@ -210,6 +215,7 @@ Ms2ex.Packets.RequestVersion.html
 Ms2ex.Packets.ResponseCube.html
 Ms2ex.Packets.ResponseRide.html
 Ms2ex.Packets.ResponseTimeSync.html
+Ms2ex.Packets.Revival.html
 Ms2ex.Packets.RevivalConfirm.html
 Ms2ex.Packets.RevivalCount.html
 Ms2ex.Packets.RideSync.html
@@ -228,6 +234,7 @@ Ms2ex.Packets.StateSkill.html
 Ms2ex.Packets.Stats.html
 Ms2ex.Packets.SyncNumber.html
 Ms2ex.Packets.Taxi.html
+Ms2ex.Packets.Tombstone.html
 Ms2ex.Packets.Trigger.html
 Ms2ex.Packets.Ugc.html
 Ms2ex.Packets.UnequipItem.html
@@ -296,6 +303,8 @@ Ms2ex.Types.QuickSlot.html
 Ms2ex.Types.SkillCast.html
 Ms2ex.Types.SkinColor.html
 Ms2ex.Types.SyncState.html
+Ms2ex.Types.Tombstone.html
+Ms2ex.Workers.DailyReset.html
 Ms2ex.html
 Ms2exWeb.AccountSocket.html
 Ms2exWeb.Endpoint.html
@@ -312,8 +321,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-ECF8E1D4.js
-dist/sidebar_items-63818991.js
+dist/search_data-8C57A817.js
+dist/sidebar_items-2237AFF7.js
 index.html
 license.html
 readme.html

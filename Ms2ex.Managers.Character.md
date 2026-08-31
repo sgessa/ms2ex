@@ -5,6 +5,12 @@
 
 # `cast`
 
+# `check_death`
+
+```elixir
+@spec check_death(Ms2ex.Schema.Character.t()) :: Ms2ex.Schema.Character.t()
+```
+
 # `child_spec`
 
 Returns a specification to start this module under a supervisor.
@@ -32,6 +38,12 @@ See `Supervisor`.
 ```
 
 # `monitor`
+
+# `online_ids`
+
+```elixir
+@spec online_ids() :: [integer()]
+```
 
 # `save_skill_cooldown`
 

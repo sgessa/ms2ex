@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-63818991.js"></script>
+    <script defer src="dist/sidebar_items-2237AFF7.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -176,6 +176,17 @@ receiver when one is provided (nil for shared/unlocked drops).</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_tombstone/1" data-no-tooltip="" translate="no">add_tombstone(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds a tombstone for a dead character to the field, broadcasting it to the
+field so other players can hit it to revive the owner.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#broadcast/2" data-no-tooltip="" translate="no">broadcast(character, packet)</a>
 
       </div>
@@ -298,6 +309,17 @@ to every other character in the same field.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#hit_tombstone/3" data-no-tooltip="" translate="no">hit_tombstone(character, object_id, hits)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Registers a hit against a dead character's tombstone; reduces the hits
+remaining and revives the owner when it reaches zero.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#leave/1" data-no-tooltip="" translate="no">leave(character)</a>
 
       </div>
@@ -333,6 +355,26 @@ to every other character in the same field.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>Removes an NPC from the field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_owner_buffs/1" data-no-tooltip="" translate="no">remove_owner_buffs(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes all buffs owned by a character (e.g. on death).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_tombstone/1" data-no-tooltip="" translate="no">remove_tombstone(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes a character's tombstone from the field (on revive or field leave).</p></div>
 
     </div>
 
@@ -395,7 +437,7 @@ to every other character in the same field.</p></div>
 
       </div>
 
-<p>Adds a mob (Field NPC) to the field at the character's position.</p><h2 id="add_mob/2-examples" class="section-heading"><a href="#add_mob/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob</span><span class="p" data-group-id="5366142226-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">npc</span><span class="p" data-group-id="5366142226-1">)</span><span class="w">
+<p>Adds a mob (Field NPC) to the field at the character's position.</p><h2 id="add_mob/2-examples" class="section-heading"><a href="#add_mob/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob</span><span class="p" data-group-id="9419013268-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">npc</span><span class="p" data-group-id="9419013268-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -432,7 +474,7 @@ to every other character in the same field.</p></div>
       </div>
 
 <p>Drops an item from a Field NPC (mob) into the field, locked to the given
-receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mob_drop/3-examples" class="section-heading"><a href="#add_mob_drop/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob_drop</span><span class="p" data-group-id="8630093974-1">(</span><span class="n">field_npc</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="8630093974-1">)</span><span class="w">
+receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mob_drop/3-examples" class="section-heading"><a href="#add_mob_drop/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob_drop</span><span class="p" data-group-id="8214274710-1">(</span><span class="n">field_npc</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="8214274710-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -446,7 +488,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
       <h1 class="signature" translate="no">add_object(character, object)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L123" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L177" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -462,8 +504,8 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
 
       </div>
 
-<p>Adds an object to the field.</p><h2 id="add_object/2-examples" class="section-heading"><a href="#add_object/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_object</span><span class="p" data-group-id="4607587416-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object</span><span class="p" data-group-id="4607587416-1">)</span><span class="w">
-</span><span class="p" data-group-id="4607587416-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="4607587416-2">}</span></code></pre>
+<p>Adds an object to the field.</p><h2 id="add_object/2-examples" class="section-heading"><a href="#add_object/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_object</span><span class="p" data-group-id="7007451411-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object</span><span class="p" data-group-id="7007451411-1">)</span><span class="w">
+</span><span class="p" data-group-id="7007451411-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="7007451411-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="add_region_skill/2">
@@ -492,8 +534,38 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
 
       </div>
 
-<p>Adds a region skill (Skill effect) to the field.</p><h2 id="add_region_skill/2-examples" class="section-heading"><a href="#add_region_skill/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_region_skill</span><span class="p" data-group-id="8057931851-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill</span><span class="p" data-group-id="8057931851-1">)</span><span class="w">
-</span><span class="p" data-group-id="8057931851-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill_id</span><span class="p" data-group-id="8057931851-2">}</span></code></pre>
+<p>Adds a region skill (Skill effect) to the field.</p><h2 id="add_region_skill/2-examples" class="section-heading"><a href="#add_region_skill/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_region_skill</span><span class="p" data-group-id="0293650500-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill</span><span class="p" data-group-id="0293650500-1">)</span><span class="w">
+</span><span class="p" data-group-id="0293650500-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill_id</span><span class="p" data-group-id="0293650500-2">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="add_tombstone/1">
+
+  <div class="detail-header">
+    <a href="#add_tombstone/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_tombstone(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L124" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Adds a tombstone for a dead character to the field, broadcasting it to the
+field so other players can hit it to revive the owner.</p><h2 id="add_tombstone/1-examples" class="section-heading"><a href="#add_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_tombstone</span><span class="p" data-group-id="3745742508-1">(</span><span class="n">character</span><span class="p" data-group-id="3745742508-1">)</span><span class="w">
+</span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
 <section class="detail" id="broadcast/2">
@@ -506,7 +578,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
       <h1 class="signature" translate="no">broadcast(character, packet)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L165" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L219" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -521,10 +593,10 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
 
       </div>
 
-<p>Broadcasts a packet to all characters in the same field as the given character.</p><h2 id="broadcast/2-examples" class="section-heading"><a href="#broadcast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="6168614838-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="6168614838-1">)</span><span class="w">
+<p>Broadcasts a packet to all characters in the same field as the given character.</p><h2 id="broadcast/2-examples" class="section-heading"><a href="#broadcast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="1997630517-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="1997630517-1">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="6168614838-2">(</span><span class="ss">:field_123</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="6168614838-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="1997630517-2">(</span><span class="ss">:field_123</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="1997630517-2">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -538,7 +610,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
       <h1 class="signature" translate="no">broadcast_from(character, packet, from)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L199" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L253" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -554,7 +626,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
       </div>
 
 <p>Broadcasts a packet to all characters in the same field as the given character,
-except for the specified process.</p><h2 id="broadcast_from/3-examples" class="section-heading"><a href="#broadcast_from/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast_from</span><span class="p" data-group-id="4690096382-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p" data-group-id="4690096382-2">(</span><span class="p" data-group-id="4690096382-2">)</span><span class="p" data-group-id="4690096382-1">)</span><span class="w">
+except for the specified process.</p><h2 id="broadcast_from/3-examples" class="section-heading"><a href="#broadcast_from/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast_from</span><span class="p" data-group-id="7264542067-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p" data-group-id="7264542067-2">(</span><span class="p" data-group-id="7264542067-2">)</span><span class="p" data-group-id="7264542067-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -568,7 +640,7 @@ except for the specified process.</p><h2 id="broadcast_from/3-examples" class="s
       <h1 class="signature" translate="no">broadcast_stats(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L179" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L233" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -597,7 +669,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">call(pid, args)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L340" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L394" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -612,10 +684,10 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Makes a synchronous call to a field process.</p><h2 id="call/2-examples" class="section-heading"><a href="#call/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="2694613473-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2694613473-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="2694613473-2">}</span><span class="p" data-group-id="2694613473-1">)</span><span class="w">
+<p>Makes a synchronous call to a field process.</p><h2 id="call/2-examples" class="section-heading"><a href="#call/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="9261306008-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9261306008-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="9261306008-2">}</span><span class="p" data-group-id="9261306008-1">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="2694613473-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="2694613473-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="9261306008-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="9261306008-3">)</span><span class="w">
 </span><span class="ss">:error</span></code></pre>
   </section>
 </section>
@@ -629,7 +701,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">cancel_battle_stance(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L149" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L203" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -644,7 +716,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Cancels a character's battle stance.</p><h2 id="cancel_battle_stance/1-examples" class="section-heading"><a href="#cancel_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cancel_battle_stance</span><span class="p" data-group-id="3490145883-1">(</span><span class="n">character</span><span class="p" data-group-id="3490145883-1">)</span><span class="w">
+<p>Cancels a character's battle stance.</p><h2 id="cancel_battle_stance/1-examples" class="section-heading"><a href="#cancel_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cancel_battle_stance</span><span class="p" data-group-id="5401671548-1">(</span><span class="n">character</span><span class="p" data-group-id="5401671548-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -658,7 +730,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">cast(pid, args)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L356" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L410" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -673,10 +745,10 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Makes an asynchronous cast to a field process.</p><h2 id="cast/2-examples" class="section-heading"><a href="#cast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="0351934798-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0351934798-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="0351934798-2">}</span><span class="p" data-group-id="0351934798-1">)</span><span class="w">
+<p>Makes an asynchronous cast to a field process.</p><h2 id="cast/2-examples" class="section-heading"><a href="#cast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="4269965808-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4269965808-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="4269965808-2">}</span><span class="p" data-group-id="4269965808-1">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="0351934798-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="0351934798-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="4269965808-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="4269965808-3">)</span><span class="w">
 </span><span class="ss">:error</span></code></pre>
   </section>
 </section>
@@ -690,7 +762,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">change_field(character, map_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L267" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L321" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -705,7 +777,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Changes a character's field to a new map, using the map's default spawn point.</p><h2 id="change_field/2-examples" class="section-heading"><a href="#change_field/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="2421534060-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p" data-group-id="2421534060-1">)</span><span class="w">
+<p>Changes a character's field to a new map, using the map's default spawn point.</p><h2 id="change_field/2-examples" class="section-heading"><a href="#change_field/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="6533079066-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p" data-group-id="6533079066-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -719,7 +791,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">change_field(character, map_id, position, rotation)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L282" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L336" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -735,7 +807,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Changes a character's field to a new map with a specific position and rotation.</p><h2 id="change_field/4-examples" class="section-heading"><a href="#change_field/4-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="5630441836-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5630441836-2">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5630441836-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5630441836-3">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5630441836-3">}</span><span class="p" data-group-id="5630441836-1">)</span><span class="w">
+<p>Changes a character's field to a new map with a specific position and rotation.</p><h2 id="change_field/4-examples" class="section-heading"><a href="#change_field/4-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="8091201643-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8091201643-2">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="8091201643-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8091201643-3">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="8091201643-3">}</span><span class="p" data-group-id="8091201643-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -764,7 +836,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Drops an item from a character's inventory into the field.</p><h2 id="drop_item/2-examples" class="section-heading"><a href="#drop_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">drop_item</span><span class="p" data-group-id="0490854343-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="0490854343-1">)</span><span class="w">
+<p>Drops an item from a character's inventory into the field.</p><h2 id="drop_item/2-examples" class="section-heading"><a href="#drop_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">drop_item</span><span class="p" data-group-id="1347080071-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="1347080071-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -778,7 +850,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">enter(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L244" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L298" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -793,10 +865,10 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Adds a character to a field, creating the field process if it doesn't exist.</p><h2 id="enter/1-examples" class="section-heading"><a href="#enter/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="5299266226-1">(</span><span class="n">character</span><span class="p" data-group-id="5299266226-1">)</span><span class="w">
-</span><span class="p" data-group-id="5299266226-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="5299266226-2">}</span><span class="w">
+<p>Adds a character to a field, creating the field process if it doesn't exist.</p><h2 id="enter/1-examples" class="section-heading"><a href="#enter/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="3792026633-1">(</span><span class="n">character</span><span class="p" data-group-id="3792026633-1">)</span><span class="w">
+</span><span class="p" data-group-id="3792026633-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="3792026633-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="5299266226-3">(</span><span class="n">character</span><span class="p" data-group-id="5299266226-3">)</span><span class="w"> </span><span class="c1"># when field already exists</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="3792026633-3">(</span><span class="n">character</span><span class="p" data-group-id="3792026633-3">)</span><span class="w"> </span><span class="c1"># when field already exists</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -810,7 +882,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">enter_battle_stance(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L136" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L190" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -825,7 +897,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Puts a character into battle stance.</p><h2 id="enter_battle_stance/1-examples" class="section-heading"><a href="#enter_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter_battle_stance</span><span class="p" data-group-id="6549000880-1">(</span><span class="n">character</span><span class="p" data-group-id="6549000880-1">)</span><span class="w">
+<p>Puts a character into battle stance.</p><h2 id="enter_battle_stance/1-examples" class="section-heading"><a href="#enter_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter_battle_stance</span><span class="p" data-group-id="2140189761-1">(</span><span class="n">character</span><span class="p" data-group-id="2140189761-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -839,7 +911,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">field_name(map_id, channel_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L320" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L374" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -854,8 +926,38 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Generates a unique field name from a map ID and channel ID.</p><h2 id="field_name/2-examples" class="section-heading"><a href="#field_name/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">field_name</span><span class="p" data-group-id="9511009951-1">(</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="9511009951-1">)</span><span class="w">
+<p>Generates a unique field name from a map ID and channel ID.</p><h2 id="field_name/2-examples" class="section-heading"><a href="#field_name/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">field_name</span><span class="p" data-group-id="7491160838-1">(</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7491160838-1">)</span><span class="w">
 </span><span class="ss">:&quot;field:2000:channel:1&quot;</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="hit_tombstone/3">
+
+  <div class="detail-header">
+    <a href="#hit_tombstone/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">hit_tombstone(character, object_id, hits)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L164" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> hit_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Registers a hit against a dead character's tombstone; reduces the hits
+remaining and revives the owner when it reaches zero.</p><h2 id="hit_tombstone/3-examples" class="section-heading"><a href="#hit_tombstone/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">hit_tombstone</span><span class="p" data-group-id="3223567872-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p">,</span><span class="w"> </span><span class="n">hits</span><span class="p" data-group-id="3223567872-1">)</span><span class="w">
+</span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
 <section class="detail" id="leave/1">
@@ -868,7 +970,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">leave(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L307" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L361" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -883,7 +985,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Removes a character from their current field.</p><h2 id="leave/1-examples" class="section-heading"><a href="#leave/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">leave</span><span class="p" data-group-id="4664581071-1">(</span><span class="n">character</span><span class="p" data-group-id="4664581071-1">)</span><span class="w">
+<p>Removes a character from their current field.</p><h2 id="leave/1-examples" class="section-heading"><a href="#leave/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">leave</span><span class="p" data-group-id="8425040073-1">(</span><span class="n">character</span><span class="p" data-group-id="8425040073-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -913,8 +1015,8 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Looks up an NPC by object id in the character's field.</p><h2 id="lookup_npc/2-examples" class="section-heading"><a href="#lookup_npc/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">lookup_npc</span><span class="p" data-group-id="0863518214-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">10_000_001</span><span class="p" data-group-id="0863518214-1">)</span><span class="w">
-</span><span class="p" data-group-id="0863518214-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0863518214-3">%</span><span class="nc" data-group-id="0863518214-3">FieldNpc</span><span class="p" data-group-id="0863518214-3">{</span><span class="p" data-group-id="0863518214-3">}</span><span class="p" data-group-id="0863518214-2">}</span></code></pre>
+<p>Looks up an NPC by object id in the character's field.</p><h2 id="lookup_npc/2-examples" class="section-heading"><a href="#lookup_npc/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">lookup_npc</span><span class="p" data-group-id="0681770667-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">10_000_001</span><span class="p" data-group-id="0681770667-1">)</span><span class="w">
+</span><span class="p" data-group-id="0681770667-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0681770667-3">%</span><span class="nc" data-group-id="0681770667-3">FieldNpc</span><span class="p" data-group-id="0681770667-3">{</span><span class="p" data-group-id="0681770667-3">}</span><span class="p" data-group-id="0681770667-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="pickup_item/2">
@@ -943,8 +1045,8 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Picks up an item from the field.</p><h2 id="pickup_item/2-examples" class="section-heading"><a href="#pickup_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">pickup_item</span><span class="p" data-group-id="7470509554-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="7470509554-1">)</span><span class="w">
-</span><span class="p" data-group-id="7470509554-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="7470509554-2">}</span></code></pre>
+<p>Picks up an item from the field.</p><h2 id="pickup_item/2-examples" class="section-heading"><a href="#pickup_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">pickup_item</span><span class="p" data-group-id="6116996632-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="6116996632-1">)</span><span class="w">
+</span><span class="p" data-group-id="6116996632-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="6116996632-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="remove_npc/1">
@@ -972,7 +1074,65 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Removes an NPC from the field.</p><h2 id="remove_npc/1-examples" class="section-heading"><a href="#remove_npc/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_npc</span><span class="p" data-group-id="3193372914-1">(</span><span class="n">field_npc</span><span class="p" data-group-id="3193372914-1">)</span><span class="w">
+<p>Removes an NPC from the field.</p><h2 id="remove_npc/1-examples" class="section-heading"><a href="#remove_npc/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_npc</span><span class="p" data-group-id="8806960158-1">(</span><span class="n">field_npc</span><span class="p" data-group-id="8806960158-1">)</span><span class="w">
+</span><span class="ss">:ok</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="remove_owner_buffs/1">
+
+  <div class="detail-header">
+    <a href="#remove_owner_buffs/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_owner_buffs(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L150" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_owner_buffs(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Removes all buffs owned by a character (e.g. on death).</p><h2 id="remove_owner_buffs/1-examples" class="section-heading"><a href="#remove_owner_buffs/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_owner_buffs</span><span class="p" data-group-id="9070456988-1">(</span><span class="n">character</span><span class="p" data-group-id="9070456988-1">)</span><span class="w">
+</span><span class="ss">:ok</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="remove_tombstone/1">
+
+  <div class="detail-header">
+    <a href="#remove_tombstone/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_tombstone(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L137" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Removes a character's tombstone from the field (on revive or field leave).</p><h2 id="remove_tombstone/1-examples" class="section-heading"><a href="#remove_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_tombstone</span><span class="p" data-group-id="4241124621-1">(</span><span class="n">character</span><span class="p" data-group-id="4241124621-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -986,7 +1146,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">subscribe(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L213" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L267" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1001,7 +1161,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Subscribes the current process to a character's field events.</p><h2 id="subscribe/1-examples" class="section-heading"><a href="#subscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">subscribe</span><span class="p" data-group-id="7103553745-1">(</span><span class="n">character</span><span class="p" data-group-id="7103553745-1">)</span><span class="w">
+<p>Subscribes the current process to a character's field events.</p><h2 id="subscribe/1-examples" class="section-heading"><a href="#subscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">subscribe</span><span class="p" data-group-id="0221466341-1">(</span><span class="n">character</span><span class="p" data-group-id="0221466341-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1015,7 +1175,7 @@ to every other character in the same field.</p>
       <h1 class="signature" translate="no">unsubscribe(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L227" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/field.ex#L281" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1030,7 +1190,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Unsubscribes the current process from a character's field events.</p><h2 id="unsubscribe/1-examples" class="section-heading"><a href="#unsubscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unsubscribe</span><span class="p" data-group-id="5414905139-1">(</span><span class="n">character</span><span class="p" data-group-id="5414905139-1">)</span><span class="w">
+<p>Unsubscribes the current process from a character's field events.</p><h2 id="unsubscribe/1-examples" class="section-heading"><a href="#unsubscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unsubscribe</span><span class="p" data-group-id="5175388728-1">(</span><span class="n">character</span><span class="p" data-group-id="5175388728-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>

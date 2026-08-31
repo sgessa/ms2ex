@@ -5,6 +5,7 @@ Ms2ex.Constants.md
 Ms2ex.Context.Accounts.md
 Ms2ex.Context.Characters.md
 Ms2ex.Context.ChatStickers.md
+Ms2ex.Context.DailyReset.md
 Ms2ex.Context.Damage.md
 Ms2ex.Context.Dismantle.md
 Ms2ex.Context.Emotes.md
@@ -101,12 +102,14 @@ Ms2ex.GameHandlers.ResponseClientSyncTick.md
 Ms2ex.GameHandlers.ResponseFieldEnter.md
 Ms2ex.GameHandlers.ResponseKey.md
 Ms2ex.GameHandlers.ResponseVersion.md
+Ms2ex.GameHandlers.Revival.md
 Ms2ex.GameHandlers.Ride.md
 Ms2ex.GameHandlers.RideSync.md
 Ms2ex.GameHandlers.Skill.md
 Ms2ex.GameHandlers.SkillBook.md
 Ms2ex.GameHandlers.StateSkill.md
 Ms2ex.GameHandlers.Taxi.md
+Ms2ex.GameHandlers.Tombstone.md
 Ms2ex.GameHandlers.UseItem.md
 Ms2ex.GameHandlers.UserChat.md
 Ms2ex.GameHandlers.UserEnv.md
@@ -121,6 +124,7 @@ Ms2ex.LoginHandlers.ResponseServerEnter.md
 Ms2ex.LoginHandlers.ResponseVersion.md
 Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
+Ms2ex.Managers.Character.Revival.md
 Ms2ex.Managers.Character.Skill.md
 Ms2ex.Managers.Character.Stats.md
 Ms2ex.Managers.Character.md
@@ -148,6 +152,7 @@ Ms2ex.Packets.CharacterList.md
 Ms2ex.Packets.CharacterMaxCount.md
 Ms2ex.Packets.ChatSticker.md
 Ms2ex.Packets.ControlNpc.md
+Ms2ex.Packets.DeadUser.md
 Ms2ex.Packets.Dismantle.md
 Ms2ex.Packets.DynamicChannel.md
 Ms2ex.Packets.Emote.md
@@ -209,6 +214,7 @@ Ms2ex.Packets.RequestVersion.md
 Ms2ex.Packets.ResponseCube.md
 Ms2ex.Packets.ResponseRide.md
 Ms2ex.Packets.ResponseTimeSync.md
+Ms2ex.Packets.Revival.md
 Ms2ex.Packets.RevivalConfirm.md
 Ms2ex.Packets.RevivalCount.md
 Ms2ex.Packets.RideSync.md
@@ -227,6 +233,7 @@ Ms2ex.Packets.StateSkill.md
 Ms2ex.Packets.Stats.md
 Ms2ex.Packets.SyncNumber.md
 Ms2ex.Packets.Taxi.md
+Ms2ex.Packets.Tombstone.md
 Ms2ex.Packets.Trigger.md
 Ms2ex.Packets.Ugc.md
 Ms2ex.Packets.UnequipItem.md
@@ -295,6 +302,8 @@ Ms2ex.Types.QuickSlot.md
 Ms2ex.Types.SkillCast.md
 Ms2ex.Types.SkinColor.md
 Ms2ex.Types.SyncState.md
+Ms2ex.Types.Tombstone.md
+Ms2ex.Workers.DailyReset.md
 Ms2ex.md
 Ms2exWeb.AccountSocket.md
 Ms2exWeb.Endpoint.md

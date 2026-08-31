@@ -67,6 +67,20 @@ Adds a region skill (Skill effect) to the field.
     iex> add_region_skill(character, region_skill)
     {:ok, region_skill_id}
 
+# `add_tombstone`
+
+```elixir
+@spec add_tombstone(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Adds a tombstone for a dead character to the field, broadcasting it to the
+field so other players can hit it to revive the owner.
+
+## Examples
+
+    iex> add_tombstone(character)
+    :ok
+
 # `broadcast`
 
 ```elixir
@@ -233,6 +247,20 @@ Generates a unique field name from a map ID and channel ID.
     iex> field_name(2000, 1)
     :"field:2000:channel:1"
 
+# `hit_tombstone`
+
+```elixir
+@spec hit_tombstone(Ms2ex.Schema.Character.t(), integer(), integer()) :: :ok | :error
+```
+
+Registers a hit against a dead character's tombstone; reduces the hits
+remaining and revives the owner when it reaches zero.
+
+## Examples
+
+    iex> hit_tombstone(character, object_id, hits)
+    :ok
+
 # `leave`
 
 ```elixir
@@ -285,6 +313,32 @@ Removes an NPC from the field.
 ## Examples
 
     iex> remove_npc(field_npc)
+    :ok
+
+# `remove_owner_buffs`
+
+```elixir
+@spec remove_owner_buffs(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Removes all buffs owned by a character (e.g. on death).
+
+## Examples
+
+    iex> remove_owner_buffs(character)
+    :ok
+
+# `remove_tombstone`
+
+```elixir
+@spec remove_tombstone(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Removes a character's tombstone from the field (on revive or field leave).
+
+## Examples
+
+    iex> remove_tombstone(character)
     :ok
 
 # `subscribe`

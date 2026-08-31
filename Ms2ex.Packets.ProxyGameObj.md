@@ -9,6 +9,8 @@
 
 # `remove_player`
 
+# `update_dead`
+
 # `update_gear_score`
 
 # `update_npc`
