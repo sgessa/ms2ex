@@ -2,7 +2,6 @@ defmodule Ms2ex.Managers.Character do
   use GenServer
 
   alias Ms2ex.Context
-  alias Ms2ex.Context.StatPoints
   alias Ms2ex.Constants
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -102,7 +101,7 @@ defmodule Ms2ex.Managers.Character do
        AttributePointSource.default_sources(),
        &AttributePointSource.normalize/1
      )
-     |> Map.update(:stat_point_allocation, %{}, &StatPoints.normalize_allocation/1)}
+     |> Map.update(:stat_point_allocation, %{}, &Context.StatPoints.normalize_allocation/1)}
   end
 
   def handle_call(:lookup, _from, character) do
@@ -136,90 +135,23 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:add_stat_point, source, amount}, _from, character) do
-    source = if is_atom(source), do: source, else: AttributePointSource.get_key(source)
-
-    if source in AttributePointSource.all() do
-      sources = Map.update(character.stat_point_sources, source, amount, &(&1 + amount))
-
-      case Context.Characters.update_stat_points(
-             character,
-             sources,
-             character.stat_point_allocation
-           ) do
-        {:ok, _} ->
-          character = %{character | stat_point_sources: sources}
-          # sources packet triggers the "Received AP" in-game notification
-          push(character, Packets.StatPoints.sources(sources))
-          {:reply, {:ok, character}, character}
-
-        {:error, _} ->
-          {:reply, :error, character}
-      end
-    else
-      {:reply, :error, character}
+    case Character.StatPoints.add_stat_point(character, source, amount) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
     end
   end
 
   def handle_call({:allocate_stat_point, attribute}, _from, character) do
-    with {:ok, stat} <- StatPoints.attribute(attribute) do
-      total = character.stat_point_sources |> Map.values() |> Enum.sum()
-      used = character.stat_point_allocation |> Map.values() |> Enum.sum()
-      limit = Application.get_env(:ms2ex, :constants)[:stat_point_limits] |> Map.get(stat, 100)
-      current = Map.get(character.stat_point_allocation, stat, 0)
-
-      cond do
-        used >= total ->
-          # no points available — silent failure
-          {:reply, :error, character}
-
-        current >= limit ->
-          push(character, Packets.Notice.message("s_char_info_limit_stat_point"))
-          {:reply, :error, character}
-
-        true ->
-          allocation = Map.put(character.stat_point_allocation, stat, current + 1)
-
-          case Context.Characters.update_stat_points(
-                 character,
-                 character.stat_point_sources,
-                 allocation
-               ) do
-            {:ok, _} ->
-              character = StatPoints.apply_attribute(character, stat, 1)
-              character = %{character | stat_point_allocation: allocation}
-              Context.Field.broadcast(character, Packets.Stats.update_char_stats(character, stat))
-              push(character, Packets.StatPoints.allocation(allocation, total))
-              {:reply, {:ok, character}, character}
-
-            {:error, _} ->
-              {:reply, :error, character}
-          end
-      end
-    else
-      _ -> {:reply, :error, character}
+    case Character.StatPoints.allocate(character, attribute) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
     end
   end
 
   def handle_call(:reset_stat_points, _from, character) do
-    total = character.stat_point_sources |> Map.values() |> Enum.sum()
-
-    case Context.Characters.update_stat_points(character, character.stat_point_sources, %{}) do
-      {:ok, _} ->
-        # revert each allocated attribute and notify client
-        character =
-          Enum.reduce(character.stat_point_allocation, character, fn {stat, amount}, char ->
-            char = StatPoints.apply_attribute(char, stat, -amount)
-            Context.Field.broadcast(char, Packets.Stats.update_char_stats(char, stat))
-            char
-          end)
-
-        character = %{character | stat_point_allocation: %{}}
-        push(character, Packets.StatPoints.allocation(%{}, total))
-        push(character, Packets.Notice.message("s_char_info_reset_stat_pointsuccess_msg"))
-        {:reply, {:ok, character}, character}
-
-      {:error, _} ->
-        {:reply, :error, character}
+    case Character.StatPoints.reset(character) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
     end
   end
 
