@@ -40,6 +40,16 @@ config :ms2ex, :constants,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0
 
+# Maximum AP allocations per stat attribute (matches C# StatPointLimit constants)
+config :ms2ex, :stat_point_limits, %{
+  strength: 100,
+  dexterity: 100,
+  intelligence: 100,
+  luck: 100,
+  health: 100,
+  critical_rate: 100
+}
+
 if config_env() == :prod do
   config :ms2ex, Ms2ex.Repo, pool_size: 10
   config :ms2ex, Ms2exWeb.Endpoint, server: true

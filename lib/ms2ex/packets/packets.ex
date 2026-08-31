@@ -42,6 +42,7 @@ defmodule Ms2ex.Packets do
     0x6D => "REQUEST_CHANGE_FIELD",
     0x83 => "GLOBAL_FACTOR",
     0x8F => "PREMIUM_CLUB",
+    0x9A => "STAT_POINTS",
     0xA3 => "SKILL_BOOK",
     0xB2 => "RESPONSE_SERVER_ENTER",
     0xBB => "FILE_HASH",

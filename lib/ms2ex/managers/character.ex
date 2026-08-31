@@ -2,10 +2,12 @@ defmodule Ms2ex.Managers.Character do
   use GenServer
 
   alias Ms2ex.Context
+  alias Ms2ex.Context.StatPoints
   alias Ms2ex.Constants
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
+  alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -46,6 +48,23 @@ defmodule Ms2ex.Managers.Character do
     call(character_id, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
   end
 
+  @spec add_stat_point(Schema.Character.t(), AttributePointSource.t(), pos_integer()) ::
+          {:ok, Schema.Character.t()} | :error
+  def add_stat_point(%Schema.Character{} = character, source, amount) when amount > 0 do
+    call(character, {:add_stat_point, source, amount})
+  end
+
+  @spec allocate_stat_point(Schema.Character.t(), atom() | integer()) ::
+          {:ok, Schema.Character.t()} | :error
+  def allocate_stat_point(%Schema.Character{} = character, attribute) do
+    call(character, {:allocate_stat_point, attribute})
+  end
+
+  @spec reset_stat_points(Schema.Character.t()) :: {:ok, Schema.Character.t()} | :error
+  def reset_stat_points(%Schema.Character{} = character) do
+    call(character, :reset_stat_points)
+  end
+
   def monitor(%Schema.Character{} = character), do: call(character, :monitor)
 
   def call(%Schema.Character{id: id}, msg) do
@@ -77,7 +96,13 @@ defmodule Ms2ex.Managers.Character do
      |> Map.put(:regen_hp?, false)
      |> Map.put(:regen_sp?, false)
      |> Map.put(:regen_sta?, false)
-     |> Map.put(:skill_cooldowns, %{})}
+     |> Map.put(:skill_cooldowns, %{})
+     |> Map.update(
+       :stat_point_sources,
+       AttributePointSource.default_sources(),
+       &AttributePointSource.normalize/1
+     )
+     |> Map.update(:stat_point_allocation, %{}, &StatPoints.normalize_allocation/1)}
   end
 
   def handle_call(:lookup, _from, character) do
@@ -85,7 +110,11 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_call({:update, character}, _from, state) do
-    {:reply, :ok, Map.put(character, :skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))}
+    {:reply, :ok,
+     character
+     |> Map.put(:skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))
+     |> Map.put(:stat_point_sources, state.stat_point_sources)
+     |> Map.put(:stat_point_allocation, state.stat_point_allocation)}
   end
 
   def handle_call({:set_level, level}, _from, character) do
@@ -100,6 +129,98 @@ defmodule Ms2ex.Managers.Character do
   def handle_call(:monitor, {pid, _}, character) do
     Process.monitor(pid)
     {:reply, :ok, character}
+  end
+
+  # --------------------------------
+  # Stat Points (AP)
+  # --------------------------------
+
+  def handle_call({:add_stat_point, source, amount}, _from, character) do
+    source = if is_atom(source), do: source, else: AttributePointSource.get_key(source)
+
+    if source in AttributePointSource.all() do
+      sources = Map.update(character.stat_point_sources, source, amount, &(&1 + amount))
+
+      case Context.Characters.update_stat_points(
+             character,
+             sources,
+             character.stat_point_allocation
+           ) do
+        :ok ->
+          character = %{character | stat_point_sources: sources}
+          # sources packet triggers the "Received AP" in-game notification
+          push(character, Packets.StatPoints.sources(sources))
+          {:reply, {:ok, character}, character}
+
+        :error ->
+          {:reply, :error, character}
+      end
+    else
+      {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:allocate_stat_point, attribute}, _from, character) do
+    with {:ok, stat} <- StatPoints.attribute(attribute) do
+      total = character.stat_point_sources |> Map.values() |> Enum.sum()
+      used = character.stat_point_allocation |> Map.values() |> Enum.sum()
+      limit = stat_point_limit(stat)
+      current = Map.get(character.stat_point_allocation, stat, 0)
+
+      cond do
+        used >= total ->
+          # no points available — silent failure (C# returns without notice)
+          {:reply, :error, character}
+
+        current >= limit ->
+          push(character, Packets.Notice.message("s_char_info_limit_stat_point"))
+          {:reply, :error, character}
+
+        true ->
+          allocation = Map.put(character.stat_point_allocation, stat, current + 1)
+
+          case Context.Characters.update_stat_points(
+                 character,
+                 character.stat_point_sources,
+                 allocation
+               ) do
+            :ok ->
+              character = StatPoints.apply_attribute(character, stat, 1)
+              character = %{character | stat_point_allocation: allocation}
+              Context.Field.broadcast(character, Packets.Stats.update_char_stats(character, stat))
+              push(character, Packets.StatPoints.allocation(allocation, total))
+              {:reply, {:ok, character}, character}
+
+            :error ->
+              {:reply, :error, character}
+          end
+      end
+    else
+      _ -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call(:reset_stat_points, _from, character) do
+    total = character.stat_point_sources |> Map.values() |> Enum.sum()
+
+    case Context.Characters.update_stat_points(character, character.stat_point_sources, %{}) do
+      :ok ->
+        # revert each allocated attribute and notify client
+        character =
+          Enum.reduce(character.stat_point_allocation, character, fn {stat, amount}, char ->
+            char = StatPoints.apply_attribute(char, stat, -amount)
+            Context.Field.broadcast(char, Packets.Stats.update_char_stats(char, stat))
+            char
+          end)
+
+        character = %{character | stat_point_allocation: %{}}
+        push(character, Packets.StatPoints.allocation(%{}, total))
+        push(character, Packets.Notice.message("s_char_info_reset_stat_pointsuccess_msg"))
+        {:reply, {:ok, character}, character}
+
+      :error ->
+        {:reply, :error, character}
+    end
   end
 
   # --------------------------------
@@ -267,6 +388,11 @@ defmodule Ms2ex.Managers.Character do
     else
       character
     end
+  end
+
+  defp stat_point_limit(stat) do
+    Application.get_env(:ms2ex, :stat_point_limits, %{})
+    |> Map.get(stat, 100)
   end
 
   defp process_name(character_id) do
