@@ -12,14 +12,20 @@ defmodule Ms2ex.GameHandlers.Insignia do
 
     # an id absent from the table is ignored; otherwise the insignia is
     # applied and the display flag broadcast
-    with {:ok, metadata} <- Storage.Tables.Insignias.get(insignia_id) do
-      display = can_equip_insignia?(character, metadata, insignia_id)
+    case Storage.Tables.Insignias.get(insignia_id) do
+      {:ok, metadata} ->
+        display = can_equip_insignia?(character, metadata, insignia_id)
 
-      {:ok, character} = Context.Characters.update(character, %{insignia_id: insignia_id})
-      Managers.Character.update(character)
-      Context.Field.broadcast(character, Packets.Insignia.update(character, insignia_id, display))
-    else
-      _ -> :ok
+        {:ok, character} = Context.Characters.update(character, %{insignia_id: insignia_id})
+        Managers.Character.update(character)
+
+        Context.Field.broadcast(
+          character,
+          Packets.Insignia.update(character, insignia_id, display)
+        )
+
+      _ ->
+        :ok
     end
   end
 
