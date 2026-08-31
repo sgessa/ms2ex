@@ -159,7 +159,6 @@ defmodule Ms2ex.Net.Session do
     {cipher, packet} = RecvCipher.decrypt(state.recv_cipher, packet)
 
     {opcode, packet} = PacketReader.get_short(packet)
-
     PacketLog.log(:recv, opcode, packet)
 
     state = %{state | recv_cipher: cipher}
