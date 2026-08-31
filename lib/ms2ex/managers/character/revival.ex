@@ -51,9 +51,8 @@ defmodule Ms2ex.Managers.Character.Revival do
     end
   end
 
-  # the client's instant-revive price (CalcRevivalMeso for non-CN): the first
-  # meso revive of the day is flat, later ones scale with level
-  def revival_meso_cost(_level, 1), do: 10_000
+  # the client's instant-revive price (CalcRevivalMeso for non-CN) scales with
+  # level on every use; the client always displays this price
   def revival_meso_cost(level, _used), do: 10_000 + max(level - 10, 0) * 1_000
 
   defp die(character) do
@@ -61,12 +60,8 @@ defmodule Ms2ex.Managers.Character.Revival do
     end_tick = Ms2ex.sync_ticks() + Constants.get(:revival_penalty_tick)
 
     character =
-      character
+      persist_revival_state(character, %{death_count: death_count, death_tick: end_tick})
       |> Map.put(:dead?, true)
-      |> Map.put(:death_count, death_count)
-      |> Map.put(:death_tick, end_tick)
-
-    persist_revival_state(character)
 
     dark_tomb = only_dark_tomb?(character) or death_count > 1
 
@@ -107,12 +102,13 @@ defmodule Ms2ex.Managers.Character.Revival do
     character = Character.Stats.set(character, :health, max_hp)
 
     character =
-      character
+      persist_revival_state(character, %{
+        death_count: character.death_count,
+        death_tick: 0,
+        instant_revive_count: character.instant_revive_count + 1
+      })
       |> Map.put(:dead?, false)
-      |> Map.put(:death_tick, 0)
-      |> Map.update!(:instant_revive_count, &(&1 + 1))
 
-    persist_revival_state(character)
     broadcast_revive(character)
 
     push(character, Packets.RevivalCount.bytes(character.instant_revive_count))
@@ -189,13 +185,10 @@ defmodule Ms2ex.Managers.Character.Revival do
   # death penalty + the daily revive counter are persisted so a server restart
   # mid-day does not wipe them (the reference keeps these in a character-config
   # table; the daily counter is reset by a midnight worker rather than a reboot)
-  defp persist_revival_state(character) do
-    Context.Characters.update(character, %{
-      death_count: character.death_count,
-      death_tick: character.death_tick,
-      instant_revive_count: character.instant_revive_count
-    })
-
-    character
+  defp persist_revival_state(character, attrs) do
+    case Context.Characters.update(character, attrs) do
+      {:ok, updated} -> updated
+      _ -> character
+    end
   end
 end

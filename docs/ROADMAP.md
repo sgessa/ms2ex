@@ -29,11 +29,11 @@ Players can die and revive. HP reaching 0 triggers the death state and
 animation, a tombstone other players can hit to revive the owner, and the
 client's post-death HUD (`RevivalCount`/`RevivalConfirm` are now sent on death,
 not just field entry). Safe revive respawns at the map spawn (or the map's
-`revival_return_id`), instant revive costs mesos (`CalcRevivalMeso`: 10k flat
-first use, then 10k + (level-10)*1k, capped at 3/day) and keeps the player in
-place. The daily counter is reset by an Oban crontab job at midnight. The death
-penalty and daily revive counter are persisted on the character row, so they
-survive server restarts. What is still missing:
+`revival_return_id`), instant revive costs mesos (`CalcRevivalMeso`: 10k +
+(level-10)*1k, level-scaled on every use, capped at 3/day) and keeps the player
+in place. The daily counter is reset by an Oban crontab job at midnight. The
+death penalty and daily revive counter are persisted on the character row, so
+they survive server restarts. What is still missing:
 
 - **tombstone can't be hit by other players**: the tombstone renders on the
   client but has no collision, so skills pass through. `FieldAddUser` now

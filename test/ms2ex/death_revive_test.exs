@@ -10,7 +10,9 @@ defmodule Ms2ex.DeathReviveTest do
   @map_id 2000
 
   setup do
-    Mimic.stub(Ms2ex.Context.Characters, :update, fn character, _attrs -> {:ok, character} end)
+    Mimic.stub(Ms2ex.Context.Characters, :update, fn character, attrs ->
+      {:ok, Map.merge(character, attrs)}
+    end)
 
     Mimic.stub(Ms2ex.Context.Wallets, :find, fn _character ->
       %Ms2ex.Schema.Wallet{mesos: 100_000}
@@ -138,10 +140,11 @@ defmodule Ms2ex.DeathReviveTest do
       assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 0) == 60_000
     end
 
-    test "first daily revive is flat, later ones scale with level" do
-      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 1) == 10_000
+    test "scales with level on every use" do
+      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 1) == 60_000
       assert Ms2ex.Managers.Character.Revival.revival_meso_cost(20, 0) == 20_000
       assert Ms2ex.Managers.Character.Revival.revival_meso_cost(60, 0) == 60_000
+      assert Ms2ex.Managers.Character.Revival.revival_meso_cost(70, 2) == 70_000
     end
   end
 

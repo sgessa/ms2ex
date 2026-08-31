@@ -67,5 +67,46 @@ defmodule Ms2ex.Context.Wallets do
       :error
   end
 
+  def set(%Schema.Character{account_id: account_id} = char, currency, value)
+      when currency in @account_currencies do
+    Repo.transaction(fn ->
+      old =
+        Repo.get_by(Schema.AccountWallet, account_id: account_id)
+        |> Map.get(currency)
+
+      Schema.AccountWallet
+      |> where([w], w.account_id == ^account_id)
+      |> Repo.update_all(set: [{currency, value}])
+
+      wallet = Repo.get_by(Schema.AccountWallet, account_id: account_id)
+      push(char, Packets.Wallet.update(wallet, currency, value - old))
+
+      wallet
+    end)
+  rescue
+    _ ->
+      :error
+  end
+
+  def set(%Schema.Character{id: char_id} = char, currency, value) do
+    Repo.transaction(fn ->
+      old =
+        Repo.get_by(Schema.Wallet, character_id: char_id)
+        |> Map.get(currency)
+
+      Schema.Wallet
+      |> where([w], w.character_id == ^char_id)
+      |> Repo.update_all(set: [{currency, value}])
+
+      wallet = Repo.get_by(Schema.Wallet, character_id: char_id)
+      push(char, Packets.Wallet.update(wallet, currency, value - old))
+
+      wallet
+    end)
+  rescue
+    _ ->
+      :error
+  end
+
   def currency_type(currency), do: Map.get(@types, currency)
 end
