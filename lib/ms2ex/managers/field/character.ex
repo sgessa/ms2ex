@@ -9,9 +9,6 @@ defmodule Ms2ex.Managers.Field.Character do
 
   def add_character(character, state) do
     Logger.info("Field #{state.map_id} @ Channel #{state.channel_id}: #{character.name} joined")
-    # Capture before field_pid is set so we can distinguish first login from map changes.
-    initial_login? = is_nil(character.field_pid)
-
     character = Context.ItemStats.apply(character)
 
     # Load other characters
@@ -91,11 +88,9 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.RevivalCount.bytes())
     push(character, Packets.RevivalConfirm.bytes(character.object_id, tick))
 
-    if initial_login? do
-      total = character.stat_point_sources |> Map.values() |> Enum.sum()
-      push(character, Packets.StatPoints.sources(character.stat_point_sources))
-      push(character, Packets.StatPoints.allocation(character.stat_point_allocation, total))
-    end
+    total_spa = character.stat_point_sources |> Map.values() |> Enum.sum()
+    push(character, Packets.StatPoints.sources(character.stat_point_sources))
+    push(character, Packets.StatPoints.allocation(character.stat_point_allocation, total_spa))
 
     push(character, Packets.SkillPoint.sources())
 

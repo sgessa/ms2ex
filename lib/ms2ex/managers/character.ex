@@ -146,13 +146,13 @@ defmodule Ms2ex.Managers.Character do
              sources,
              character.stat_point_allocation
            ) do
-        :ok ->
+        {:ok, _} ->
           character = %{character | stat_point_sources: sources}
           # sources packet triggers the "Received AP" in-game notification
           push(character, Packets.StatPoints.sources(sources))
           {:reply, {:ok, character}, character}
 
-        :error ->
+        {:error, _} ->
           {:reply, :error, character}
       end
     else
@@ -184,14 +184,14 @@ defmodule Ms2ex.Managers.Character do
                  character.stat_point_sources,
                  allocation
                ) do
-            :ok ->
+            {:ok, _} ->
               character = StatPoints.apply_attribute(character, stat, 1)
               character = %{character | stat_point_allocation: allocation}
               Context.Field.broadcast(character, Packets.Stats.update_char_stats(character, stat))
               push(character, Packets.StatPoints.allocation(allocation, total))
               {:reply, {:ok, character}, character}
 
-            :error ->
+            {:error, _} ->
               {:reply, :error, character}
           end
       end
@@ -204,7 +204,7 @@ defmodule Ms2ex.Managers.Character do
     total = character.stat_point_sources |> Map.values() |> Enum.sum()
 
     case Context.Characters.update_stat_points(character, character.stat_point_sources, %{}) do
-      :ok ->
+      {:ok, _} ->
         # revert each allocated attribute and notify client
         character =
           Enum.reduce(character.stat_point_allocation, character, fn {stat, amount}, char ->
@@ -218,7 +218,7 @@ defmodule Ms2ex.Managers.Character do
         push(character, Packets.Notice.message("s_char_info_reset_stat_pointsuccess_msg"))
         {:reply, {:ok, character}, character}
 
-      :error ->
+      {:error, _} ->
         {:reply, :error, character}
     end
   end

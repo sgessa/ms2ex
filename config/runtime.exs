@@ -40,13 +40,13 @@ config :ms2ex, :constants,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0,
   stat_point_limits: %{
-  strength: 100,
-  dexterity: 100,
-  intelligence: 100,
-  luck: 100,
-  health: 100,
-  critical_rate: 100
-}
+    strength: 100,
+    dexterity: 100,
+    intelligence: 100,
+    luck: 100,
+    health: 100,
+    critical_rate: 100
+  }
 
 config :ms2ex, packet_log_file: System.get_env("PACKET_LOG_FILE")
 

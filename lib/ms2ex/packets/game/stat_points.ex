@@ -1,5 +1,6 @@
 defmodule Ms2ex.Packets.StatPoints do
   alias Ms2ex.Context.StatPoints
+  alias Ms2ex.Enums.BasicStatType
   alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.Packets.PacketWriter
@@ -40,7 +41,7 @@ defmodule Ms2ex.Packets.StatPoints do
     allocated = StatPoints.normalize_allocation(allocated)
 
     sorted =
-      Enum.sort_by(allocated, fn {attr, _} -> StatPoints.attribute_id(attr) end)
+      Enum.sort_by(allocated, fn {attr, _} -> BasicStatType.get_value(attr) end)
 
     __MODULE__
     |> build()
@@ -49,7 +50,7 @@ defmodule Ms2ex.Packets.StatPoints do
     |> put_int(length(sorted))
     |> reduce(sorted, fn {attr, amount}, packet ->
       packet
-      |> put_byte(StatPoints.attribute_id(attr))
+      |> put_byte(BasicStatType.get_value(attr))
       |> put_int(amount)
     end)
   end
