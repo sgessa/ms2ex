@@ -121,7 +121,7 @@ defmodule Ms2ex.Commands do
     currency = String.to_existing_atom(currency)
 
     with {amount, _} <- Integer.parse(amount),
-         {:ok, wallet} <- Context.Wallets.update(character, currency, amount) do
+         {:ok, wallet} <- Context.Wallets.set(character, currency, amount) do
       push(session, Packets.Wallet.update(wallet, currency))
     else
       _ ->

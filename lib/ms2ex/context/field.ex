@@ -112,6 +112,60 @@ defmodule Ms2ex.Context.Field do
   end
 
   @doc """
+  Adds a tombstone for a dead character to the field, broadcasting it to the
+  field so other players can hit it to revive the owner.
+
+  ## Examples
+
+      iex> add_tombstone(character)
+      :ok
+  """
+  @spec add_tombstone(Schema.Character.t()) :: :ok | :error
+  def add_tombstone(%Schema.Character{} = character) do
+    cast(character.field_pid, {:add_tombstone, character})
+  end
+
+  @doc """
+  Removes a character's tombstone from the field (on revive or field leave).
+
+  ## Examples
+
+      iex> remove_tombstone(character)
+      :ok
+  """
+  @spec remove_tombstone(Schema.Character.t()) :: :ok | :error
+  def remove_tombstone(%Schema.Character{} = character) do
+    cast(character.field_pid, {:remove_tombstone, character.id})
+  end
+
+  @doc """
+  Removes all buffs owned by a character (e.g. on death).
+
+  ## Examples
+
+      iex> remove_owner_buffs(character)
+      :ok
+  """
+  @spec remove_owner_buffs(Schema.Character.t()) :: :ok | :error
+  def remove_owner_buffs(%Schema.Character{} = character) do
+    cast(character.field_pid, {:remove_owner_buffs, character.object_id})
+  end
+
+  @doc """
+  Registers a hit against a dead character's tombstone; reduces the hits
+  remaining and revives the owner when it reaches zero.
+
+  ## Examples
+
+      iex> hit_tombstone(character, object_id, hits)
+      :ok
+  """
+  @spec hit_tombstone(Schema.Character.t(), integer(), integer()) :: :ok | :error
+  def hit_tombstone(%Schema.Character{} = character, object_id, hits) do
+    call(character.field_pid, {:hit_tombstone, object_id, hits})
+  end
+
+  @doc """
   Adds an object to the field.
 
   ## Examples

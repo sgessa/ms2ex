@@ -89,6 +89,16 @@ defmodule Ms2ex.Managers.Character do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
 
+  # ids of every online character, from the registered character processes
+  @spec online_ids() :: [integer()]
+  def online_ids do
+    :erlang.registered()
+    |> Enum.map(&Atom.to_string/1)
+    |> Enum.filter(&String.starts_with?(&1, "characters:"))
+    |> Enum.map(&String.trim_leading(&1, "characters:"))
+    |> Enum.map(&String.to_integer/1)
+  end
+
   def init(character) do
     {:ok,
      character
@@ -109,11 +119,17 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_call({:update, character}, _from, state) do
-    {:reply, :ok,
-     character
-     |> Map.put(:skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))
-     |> Map.put(:stat_point_sources, state.stat_point_sources)
-     |> Map.put(:stat_point_allocation, state.stat_point_allocation)}
+    updated =
+      character
+      |> Map.put(:skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))
+      |> Map.put(:dead?, Map.get(state, :dead?, false))
+      |> Map.put(:death_count, Map.get(state, :death_count, 0))
+      |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
+      |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
+      |> Map.put(:stat_point_sources, state.stat_point_sources)
+     |> Map.put(:stat_point_allocation, state.stat_point_allocation)
+
+    {:reply, :ok, updated}
   end
 
   def handle_call({:set_level, level}, _from, character) do
@@ -302,8 +318,42 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, character}
   end
 
+  # --------------------------------
+  # Death & revive
+  # --------------------------------
+
+  # a player dies when their health hits 0; the death is announced to the
+  # field, a tombstone is raised (teammates can hit it to revive), and the
+  # revival HUD is armed
+  def handle_cast({:revive, type}, character) do
+    {:noreply, Character.Revival.revive(character, type)}
+  end
+
+  def handle_cast({:revive, :instant, use_voucher}, character) do
+    {:noreply, Character.Revival.instant_revive(character, use_voucher)}
+  end
+
+  # the daily-reset worker bulk-zeroes the DB for every character; connected
+  # players also need their in-memory state cleared and the client gauge
+  # refreshed
+  def handle_cast(:daily_reset, character) do
+    {:noreply, Context.DailyReset.reset_character(character)}
+  end
+
+  # triggers death when a stat write brings health to 0; called from
+  # Character.Stats.set so every health-mutating path is covered
+  @spec check_death(Schema.Character.t()) :: Schema.Character.t()
+  def check_death(character), do: Character.Revival.check_death(character)
+
   def handle_info({:regen, stat_id}, character) do
-    {:noreply, Character.Stats.regen(character, stat_id)}
+    character =
+      if Map.get(character, :dead?, false) do
+        Map.put(character, :"regen_#{stat_id}?", false)
+      else
+        Character.Stats.regen(character, stat_id)
+      end
+
+    {:noreply, character}
   end
 
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do

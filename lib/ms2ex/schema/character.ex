@@ -11,10 +11,13 @@ defmodule Ms2ex.Schema.Character do
 
   @fields [
     :awakened,
+    :death_count,
+    :death_tick,
     :discovered_maps,
     :exp,
     :gender,
     :insignia_id,
+    :instant_revive_count,
     :level,
     :job,
     :map_id,
@@ -88,6 +91,10 @@ defmodule Ms2ex.Schema.Character do
     field :animation, :integer, virtual: true, default: 0
     field :change_map, :map, virtual: true
     field :channel_id, :integer, virtual: true
+    field :dead?, :boolean, virtual: true, default: false
+    field :death_count, :integer, default: 0
+    field :death_tick, :integer, default: 0
+    field :instant_revive_count, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Ms2ex.Enums.Gender, default: :male
     field :gear_score, :integer, virtual: true, default: 0

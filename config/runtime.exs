@@ -34,6 +34,13 @@ config :ms2ex, Ms2ex,
 
 config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
 
+config :ms2ex, Oban,
+  repo: Ms2ex.Repo,
+  plugins: [
+    {Oban.Plugins.Cron, crontab: [{"0 0 * * *", Ms2ex.Workers.DailyReset}]}
+  ],
+  queues: [default: 10]
+
 # Imports server constants
 config :ms2ex, :constants,
   character_max_level: 99,
@@ -46,7 +53,12 @@ config :ms2ex, :constants,
     luck: 100,
     health: 100,
     critical_rate: 100
-  }
+  },
+  revival_penalty_tick: 3_600_000,
+  revival_penalty_min_level: 10,
+  hit_per_dead_count: 5,
+  max_dead_count: 3,
+  revival_invincible_tick: 5_000
 
 config :ms2ex, packet_log_file: System.get_env("PACKET_LOG_FILE")
 

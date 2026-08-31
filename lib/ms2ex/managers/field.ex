@@ -4,6 +4,7 @@ defmodule Ms2ex.Managers.Field do
   require Logger
 
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
 
@@ -15,6 +16,7 @@ defmodule Ms2ex.Managers.Field do
 
   @splash_radius 800
   @splash_targets 8
+  @updates_intval 1000
 
   # npcs are ticked on their own faster loop; only entities flagged as changed
   # are broadcast, bumping their sequence counter:
@@ -58,6 +60,7 @@ defmodule Ms2ex.Managers.Field do
       portals: portals,
       regions: %{},
       sessions: %{},
+      tombstones: %{},
       topic: field_name
     }
 
@@ -95,6 +98,28 @@ defmodule Ms2ex.Managers.Field do
 
       item ->
         {:reply, {:ok, item}, Field.Item.pickup_item(character, item, state)}
+    end
+  end
+
+  # hitting a tombstone reduces its remaining hits; reaching zero revives the
+  # owner
+  def handle_call({:hit_tombstone, object_id, hits}, _from, state) do
+    case Enum.find(state.tombstones, fn {_id, tombstone} -> tombstone.object_id == object_id end) do
+      {owner_id, tombstone} ->
+        remaining = max(tombstone.hits_remaining - hits, 0)
+        tombstone = %{tombstone | hits_remaining: remaining}
+        Context.Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
+
+        state = put_in(state, [:tombstones, owner_id], tombstone)
+
+        if remaining == 0 do
+          Managers.Character.cast(owner_id, {:revive, :safe})
+        end
+
+        {:reply, :ok, state}
+
+      nil ->
+        {:reply, :error, state}
     end
   end
 
@@ -306,6 +331,35 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
   end
 
+  # a dead player's tombstone is broadcast so other players can hit it; the
+  # owner is keyed by character id for the revive lookup
+  def handle_cast({:add_tombstone, character}, state) do
+    tombstone =
+      Ms2ex.Types.Tombstone.new(character, Map.get(character, :death_count, 0) || 0)
+
+    Context.Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
+
+    {:noreply, put_in(state, [:tombstones, character.id], tombstone)}
+  end
+
+  def handle_cast({:remove_tombstone, character_id}, state) do
+    {:noreply, update_in(state, [:tombstones], &Map.delete(&1, character_id))}
+  end
+
+  # buffs die with their owner; remove every buff owned by the object id
+  def handle_cast({:remove_owner_buffs, owner_object_id}, state) do
+    state =
+      state.buffs
+      |> Enum.filter(fn {{owner_id, _effect, _caster}, _buff_id} ->
+        owner_id == owner_object_id
+      end)
+      |> Enum.reduce(state, fn {{_owner, _effect, _caster}, buff_id}, state ->
+        Field.Buff.remove_buff(buff_id, state)
+      end)
+
+    {:noreply, state}
+  end
+
   def handle_cast({:enter_battle_stance, character}, state) do
     # battle-start packets are emitted by the cast handler in order; the
     # field process only schedules the eventual stance drop
@@ -407,6 +461,21 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:leave_battle_stance, character}, state) do
     Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
+    {:noreply, state}
+  end
+
+  def handle_info(:send_updates, state) do
+    for char_id <- Map.keys(state.sessions) do
+      with {:ok, char} <- Managers.Character.lookup(char_id),
+           # dead players freeze in place; a position-only update would clear
+           # their dead/collision state on clients, so skip them here
+           false <- Map.get(char, :dead?, false) do
+        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+      end
+    end
+
+    Process.send_after(self(), :send_updates, @updates_intval)
+
     {:noreply, state}
   end
 
