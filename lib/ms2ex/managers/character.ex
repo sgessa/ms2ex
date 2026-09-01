@@ -3,13 +3,11 @@ defmodule Ms2ex.Managers.Character do
   use Ms2ex.Managers.Managed, prefix: "characters", key: :id
 
   alias Ms2ex.Context
-  alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
   alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
-  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   # TODO avoid SQL
   @spec lookup_by_name(String.t()) :: {:ok, Schema.Character.t()} | :error
@@ -191,5 +189,4 @@ defmodule Ms2ex.Managers.Character do
     cleanup(character)
     {:stop, :normal, character}
   end
-
 end

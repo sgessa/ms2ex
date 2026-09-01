@@ -12,7 +12,7 @@ defmodule Ms2ex.Managers.Character.Stats do
     end)
   end
 
-  def decrease(character, stat_id, amount, opts \\ []) do
+  def decrease(character, stat_id, amount, opts) do
     cur = Map.get(character.stats, :"#{stat_id}_cur")
     set(character, stat_id, cur - amount, opts)
   end
@@ -45,12 +45,6 @@ defmodule Ms2ex.Managers.Character.Stats do
   def modify_max(character, modifiers, :reduce) do
     Enum.reduce(modifiers, character, fn {stat, amount}, character ->
       modify_max(character, stat, -amount)
-    end)
-  end
-
-  def modify_max(character, stats, amount) when is_list(map) do
-    Enum.reduce(modifiers, character, fn {stat, amount}, character ->
-      modify_max(character, stat, amount)
     end)
   end
 
