@@ -1,9 +1,13 @@
-# `Ms2ex.PartyServer`
-[🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/party_server.ex#L1)
+# `Ms2ex.Managers.GroupChat`
+[🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L1)
+
+# `add_member`
 
 # `broadcast`
 
-# `broadcast_from`
+# `call`
+
+# `cast`
 
 # `child_spec`
 
@@ -13,29 +17,21 @@ See `Supervisor`.
 
 # `init`
 
-# `kick_member`
+# `load_members`
 
 # `lookup`
 
-# `lookup!`
+# `max_chats_per_user`
 
-# `member_offline`
-
-# `ready_check`
+# `max_members`
 
 # `remove_member`
 
 # `start`
 
-# `start_ready_check`
-
-# `start_vote_kick`
-
 # `subscribe`
 
 # `unsubscribe`
-
-# `update_member`
 
 ---
 

@@ -118,7 +118,6 @@ Ms2ex.GameHandlers.UserChat.md
 Ms2ex.GameHandlers.UserEnv.md
 Ms2ex.GameHandlers.UserSync.md
 Ms2ex.GameHandlers.Vibrate.md
-Ms2ex.GroupChat.md
 Ms2ex.Handlers.SendLog.md
 Ms2ex.LoginHandlers.CharacterManagement.md
 Ms2ex.LoginHandlers.ResponseKey.md
@@ -144,7 +143,12 @@ Ms2ex.Managers.Field.RegionSkill.md
 Ms2ex.Managers.Field.Tombstone.md
 Ms2ex.Managers.Field.md
 Ms2ex.Managers.GlobalCounter.md
+Ms2ex.Managers.GroupChat.md
 Ms2ex.Managers.Managed.md
+Ms2ex.Managers.PartyManager.md
+Ms2ex.Managers.PartyServer.md
+Ms2ex.Managers.Session.md
+Ms2ex.Managers.SessionManager.md
 Ms2ex.Managers.SkillCast.md
 Ms2ex.Net.PacketLog.md
 Ms2ex.Net.Router.md
@@ -261,8 +265,6 @@ Ms2ex.Packets.Wedding.md
 Ms2ex.Packets.World.md
 Ms2ex.Packets.WorldMap.md
 Ms2ex.Packets.md
-Ms2ex.PartyManager.md
-Ms2ex.PartyServer.md
 Ms2ex.Release.md
 Ms2ex.Repo.md
 Ms2ex.Schema.Account.md
@@ -281,7 +283,6 @@ Ms2ex.Schema.PremiumMembership.md
 Ms2ex.Schema.Skill.md
 Ms2ex.Schema.SkillTab.md
 Ms2ex.Schema.Wallet.md
-Ms2ex.SessionManager.md
 Ms2ex.Storage.Items.md
 Ms2ex.Storage.Maps.md
 Ms2ex.Storage.Npcs.md

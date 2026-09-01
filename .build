@@ -119,7 +119,6 @@ Ms2ex.GameHandlers.UserChat.html
 Ms2ex.GameHandlers.UserEnv.html
 Ms2ex.GameHandlers.UserSync.html
 Ms2ex.GameHandlers.Vibrate.html
-Ms2ex.GroupChat.html
 Ms2ex.Handlers.SendLog.html
 Ms2ex.LoginHandlers.CharacterManagement.html
 Ms2ex.LoginHandlers.ResponseKey.html
@@ -145,7 +144,12 @@ Ms2ex.Managers.Field.RegionSkill.html
 Ms2ex.Managers.Field.Tombstone.html
 Ms2ex.Managers.Field.html
 Ms2ex.Managers.GlobalCounter.html
+Ms2ex.Managers.GroupChat.html
 Ms2ex.Managers.Managed.html
+Ms2ex.Managers.PartyManager.html
+Ms2ex.Managers.PartyServer.html
+Ms2ex.Managers.Session.html
+Ms2ex.Managers.SessionManager.html
 Ms2ex.Managers.SkillCast.html
 Ms2ex.Net.PacketLog.html
 Ms2ex.Net.Router.html
@@ -262,8 +266,6 @@ Ms2ex.Packets.Wedding.html
 Ms2ex.Packets.World.html
 Ms2ex.Packets.WorldMap.html
 Ms2ex.Packets.html
-Ms2ex.PartyManager.html
-Ms2ex.PartyServer.html
 Ms2ex.Release.html
 Ms2ex.Repo.html
 Ms2ex.Schema.Account.html
@@ -282,7 +284,6 @@ Ms2ex.Schema.PremiumMembership.html
 Ms2ex.Schema.Skill.html
 Ms2ex.Schema.SkillTab.html
 Ms2ex.Schema.Wallet.html
-Ms2ex.SessionManager.html
 Ms2ex.Storage.Items.html
 Ms2ex.Storage.Maps.html
 Ms2ex.Storage.Npcs.html
@@ -334,8 +335,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-E7531C0D.js
-dist/sidebar_items-4A1EE06D.js
+dist/search_data-5EABBA24.js
+dist/sidebar_items-5A7586A4.js
 index.html
 license.html
 readme.html

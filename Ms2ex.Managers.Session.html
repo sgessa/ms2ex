@@ -8,11 +8,11 @@
     <meta name="project" content="MS2EX v0.1.0">
 
 
-    <title>Ms2ex.GroupChat — MS2EX v0.1.0</title>
+    <title>Ms2ex.Managers.Session — MS2EX v0.1.0</title>
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-4A1EE06D.js"></script>
+    <script defer src="dist/sidebar_items-5A7586A4.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -93,19 +93,19 @@ MS2EX
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">Ms2ex.<wbr />GroupChat</span> 
+      <span translate="no">Ms2ex.<wbr />Managers.<wbr />Session</span> 
       <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
 
     </h1>
 
-<a href="Ms2ex.GroupChat.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+<a href="Ms2ex.Managers.Session.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
   <i class="ri-markdown-line" aria-hidden="true"></i>
   <span class="sr-only">Copy Markdown</span>
 </a>
 
 
 
-      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -129,22 +129,6 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_member/2" data-no-tooltip="" translate="no">add_member(group_chat, new_member)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#broadcast/2" data-no-tooltip="" translate="no">broadcast(chat_id, packet)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#child_spec/1" data-no-tooltip="" translate="no">child_spec(init_arg)</a>
 
       </div>
@@ -155,7 +139,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip="" translate="no">init(chat)</a>
+        <a href="#init/1" data-no-tooltip="" translate="no">init(atom)</a>
 
       </div>
 
@@ -165,7 +149,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#load_members/1" data-no-tooltip="" translate="no">load_members(chat)</a>
+        <a href="#lookup/1" data-no-tooltip="" translate="no">lookup(account_id)</a>
 
       </div>
 
@@ -173,7 +157,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lookup/1" data-no-tooltip="" translate="no">lookup(chat_id)</a>
+        <a href="#register/2" data-no-tooltip="" translate="no">register(account_id, tags)</a>
 
       </div>
 
@@ -181,47 +165,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#max_chats_per_user/0" data-no-tooltip="" translate="no">max_chats_per_user()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#max_members/0" data-no-tooltip="" translate="no">max_members()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#remove_member/2" data-no-tooltip="" translate="no">remove_member(group_chat, member)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start/1" data-no-tooltip="" translate="no">start(chat)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#subscribe/1" data-no-tooltip="" translate="no">subscribe(group_chat)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#unsubscribe/1" data-no-tooltip="" translate="no">unsubscribe(group_chat)</a>
+        <a href="#start_link/1" data-no-tooltip="" translate="no">start_link(opts \\ [])</a>
 
       </div>
 
@@ -241,50 +185,6 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="add_member/2">
-
-  <div class="detail-header">
-    <a href="#add_member/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">add_member(group_chat, new_member)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L38" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="broadcast/2">
-
-  <div class="detail-header">
-    <a href="#broadcast/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">broadcast(chat_id, packet)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L86" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
@@ -295,7 +195,7 @@ MS2EX
       <h1 class="signature" translate="no">child_spec(init_arg)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -314,10 +214,10 @@ MS2EX
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">init(chat)</h1>
+      <h1 class="signature" translate="no">init(atom)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L12" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -329,28 +229,6 @@ MS2EX
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="load_members/1">
-
-  <div class="detail-header">
-    <a href="#load_members/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">load_members(chat)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L26" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="lookup/1">
 
   <div class="detail-header">
@@ -358,10 +236,10 @@ MS2EX
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">lookup(chat_id)</h1>
+      <h1 class="signature" translate="no">lookup(account_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L19" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L4" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -373,17 +251,17 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="max_chats_per_user/0">
+<section class="detail" id="register/2">
 
   <div class="detail-header">
-    <a href="#max_chats_per_user/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#register/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">max_chats_per_user()</h1>
+      <h1 class="signature" translate="no">register(account_id, tags)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L13" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L6" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -395,105 +273,19 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="max_members/0">
+<section class="detail" id="start_link/1">
+
+    <span id="start_link/0"></span>
 
   <div class="detail-header">
-    <a href="#max_members/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">max_members()</h1>
+      <h1 class="signature" translate="no">start_link(opts \\ [])</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L10" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="remove_member/2">
-
-  <div class="detail-header">
-    <a href="#remove_member/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">remove_member(group_chat, member)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="start/1">
-
-  <div class="detail-header">
-    <a href="#start/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">start(chat)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L15" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="subscribe/1">
-
-  <div class="detail-header">
-    <a href="#subscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">subscribe(group_chat)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L46" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="unsubscribe/1">
-
-  <div class="detail-header">
-    <a href="#unsubscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">unsubscribe(group_chat)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/group_chat.ex#L50" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L8" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

@@ -1,5 +1,5 @@
-# `Ms2ex.SessionManager`
-[🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session_manager.ex#L1)
+# `Ms2ex.Managers.Session`
+[🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/session.ex#L1)
 
 # `child_spec`
 
