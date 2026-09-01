@@ -5,6 +5,10 @@
 
 # `decrease`
 
+# `decrease`
+
+# `increase`
+
 # `increase`
 
 # `modify_max`

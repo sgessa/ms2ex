@@ -127,8 +127,11 @@ Ms2ex.LoginHandlers.ResponseServerEnter.md
 Ms2ex.LoginHandlers.ResponseVersion.md
 Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
+Ms2ex.Managers.Character.Experience.md
+Ms2ex.Managers.Character.FallDamage.md
 Ms2ex.Managers.Character.Revival.md
 Ms2ex.Managers.Character.Skill.md
+Ms2ex.Managers.Character.SkillCooldown.md
 Ms2ex.Managers.Character.StatPoints.md
 Ms2ex.Managers.Character.Stats.md
 Ms2ex.Managers.Character.md
@@ -139,6 +142,7 @@ Ms2ex.Managers.Field.Npc.md
 Ms2ex.Managers.Field.Portal.md
 Ms2ex.Managers.Field.md
 Ms2ex.Managers.GlobalCounter.md
+Ms2ex.Managers.Managed.md
 Ms2ex.Managers.SkillCast.md
 Ms2ex.Net.PacketLog.md
 Ms2ex.Net.Router.md
@@ -203,6 +207,8 @@ Ms2ex.Packets.MoveCharacter.md
 Ms2ex.Packets.MoveResult.md
 Ms2ex.Packets.Notice.md
 Ms2ex.Packets.NpsInfo.md
+Ms2ex.Packets.Ops.Recv.md
+Ms2ex.Packets.Ops.Send.md
 Ms2ex.Packets.PacketReader.md
 Ms2ex.Packets.PacketWriter.md
 Ms2ex.Packets.Party.md
