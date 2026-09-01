@@ -141,6 +141,8 @@ Ms2ex.Managers.Field.Character.html
 Ms2ex.Managers.Field.Item.html
 Ms2ex.Managers.Field.Npc.html
 Ms2ex.Managers.Field.Portal.html
+Ms2ex.Managers.Field.RegionSkill.html
+Ms2ex.Managers.Field.Tombstone.html
 Ms2ex.Managers.Field.html
 Ms2ex.Managers.GlobalCounter.html
 Ms2ex.Managers.Managed.html
@@ -332,8 +334,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-48CB8754.js
-dist/sidebar_items-7B021E0D.js
+dist/search_data-E7531C0D.js
+dist/sidebar_items-4A1EE06D.js
 index.html
 license.html
 readme.html

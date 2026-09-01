@@ -3,7 +3,11 @@
 
 # `add_character`
 
+# `leave_battle_stance`
+
 # `remove_character`
+
+# `send_updates`
 
 ---
 

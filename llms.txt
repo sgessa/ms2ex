@@ -94,6 +94,8 @@
 - [Ms2ex.Managers.Field.Item](Ms2ex.Managers.Field.Item.md)
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
 - [Ms2ex.Managers.Field.Portal](Ms2ex.Managers.Field.Portal.md)
+- [Ms2ex.Managers.Field.RegionSkill](Ms2ex.Managers.Field.RegionSkill.md)
+- [Ms2ex.Managers.Field.Tombstone](Ms2ex.Managers.Field.Tombstone.md)
 - [Ms2ex.Managers.GlobalCounter](Ms2ex.Managers.GlobalCounter.md)
 - [Ms2ex.Managers.Managed](Ms2ex.Managers.Managed.md)
 - [Ms2ex.Managers.SkillCast](Ms2ex.Managers.SkillCast.md)
