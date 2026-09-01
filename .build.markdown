@@ -103,6 +103,7 @@ Ms2ex.GameHandlers.RequestWorldMap.md
 Ms2ex.GameHandlers.ResponseClientSyncTick.md
 Ms2ex.GameHandlers.ResponseFieldEnter.md
 Ms2ex.GameHandlers.ResponseKey.md
+Ms2ex.GameHandlers.ResponseServerEnter.md
 Ms2ex.GameHandlers.ResponseVersion.md
 Ms2ex.GameHandlers.Revival.md
 Ms2ex.GameHandlers.Ride.md
@@ -122,7 +123,6 @@ Ms2ex.Handlers.SendLog.md
 Ms2ex.LoginHandlers.CharacterManagement.md
 Ms2ex.LoginHandlers.ResponseKey.md
 Ms2ex.LoginHandlers.ResponseLogin.md
-Ms2ex.LoginHandlers.ResponseServerEnter.md
 Ms2ex.LoginHandlers.ResponseVersion.md
 Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md

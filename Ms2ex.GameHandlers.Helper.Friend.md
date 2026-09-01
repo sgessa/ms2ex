@@ -9,6 +9,8 @@
 
 # `check_is_already_friend`
 
+# `check_not_blocked`
+
 # `find_rcpt`
 
 # `remove_friend_from_session`

@@ -104,6 +104,7 @@ Ms2ex.GameHandlers.RequestWorldMap.html
 Ms2ex.GameHandlers.ResponseClientSyncTick.html
 Ms2ex.GameHandlers.ResponseFieldEnter.html
 Ms2ex.GameHandlers.ResponseKey.html
+Ms2ex.GameHandlers.ResponseServerEnter.html
 Ms2ex.GameHandlers.ResponseVersion.html
 Ms2ex.GameHandlers.Revival.html
 Ms2ex.GameHandlers.Ride.html
@@ -123,7 +124,6 @@ Ms2ex.Handlers.SendLog.html
 Ms2ex.LoginHandlers.CharacterManagement.html
 Ms2ex.LoginHandlers.ResponseKey.html
 Ms2ex.LoginHandlers.ResponseLogin.html
-Ms2ex.LoginHandlers.ResponseServerEnter.html
 Ms2ex.LoginHandlers.ResponseVersion.html
 Ms2ex.Lua.ItemEnchant.html
 Ms2ex.Managers.Buff.html
@@ -335,8 +335,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-5EABBA24.js
-dist/sidebar_items-5A7586A4.js
+dist/search_data-AA97CB94.js
+dist/sidebar_items-9A8F583C.js
 index.html
 license.html
 readme.html
