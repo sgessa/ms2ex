@@ -4,7 +4,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
   alias Ms2ex.Context
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.SessionManager
+  alias Ms2ex.Managers.Session
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -18,7 +18,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
          :ok <- check_if_already_logged_in(account.id) do
       Logger.info("Account #{username} logged in")
 
-      SessionManager.register(account.id, %{})
+      Session.register(account.id, %{})
       send(self(), {:update, %{account: account}})
 
       account = %{account | characters: Context.Characters.list(account)}
@@ -47,7 +47,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
   end
 
   defp check_if_already_logged_in(account_id) do
-    case SessionManager.lookup(account_id) do
+    case Session.lookup(account_id) do
       :error -> :ok
       {:ok, %{pids: []}} -> :ok
       _ -> {:error, :already_logged_in}

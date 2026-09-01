@@ -22,8 +22,8 @@ defmodule Ms2ex.Application do
         {Oban, oban_config()},
         # Start Managers
         Ms2ex.Managers.GlobalCounter,
-        {Ms2ex.PartyManager, [name: Ms2ex.PartyManager]},
-        {Ms2ex.SessionManager, [name: Ms2ex.SessionManager]}
+        {Ms2ex.Managers.PartyManager, [name: Ms2ex.Managers.PartyManager]},
+        {Ms2ex.Managers.Session, [name: Ms2ex.Managers.Session]}
       ] ++ game_listeners()
 
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]

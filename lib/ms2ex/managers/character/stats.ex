@@ -1,5 +1,5 @@
 defmodule Ms2ex.Managers.Character.Stats do
-  alias Ms2ex.PartyServer
+  alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
   alias Ms2ex.Packets

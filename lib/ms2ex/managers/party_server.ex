@@ -1,8 +1,9 @@
-defmodule Ms2ex.PartyServer do
+defmodule Ms2ex.Managers.PartyServer do
   use GenServer
+  use Ms2ex.Managers.Managed, prefix: "party", key: :id
 
   alias Ms2ex.Packets
-  alias Ms2ex.PartyManager
+  alias Ms2ex.Managers.PartyManager
   alias Ms2ex.Types
   alias Phoenix.PubSub
 
@@ -212,18 +213,6 @@ defmodule Ms2ex.PartyServer do
 
     for m <- party.members, m.online? do
       send(m.sender_session_pid, {:disband_party, m})
-    end
-  end
-
-  defp call(party_id, args) do
-    with pid when is_pid(pid) <- Process.whereis(:"party:#{party_id}") do
-      GenServer.call(pid, args)
-    end
-  end
-
-  defp cast(party_id, args) do
-    with pid when is_pid(pid) <- Process.whereis(:"party:#{party_id}") do
-      GenServer.cast(pid, args)
     end
   end
 end

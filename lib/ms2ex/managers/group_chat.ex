@@ -1,5 +1,6 @@
-defmodule Ms2ex.GroupChat do
+defmodule Ms2ex.Managers.GroupChat do
   use GenServer
+  use Ms2ex.Managers.Managed, prefix: "group_chat", key: :id
 
   alias Ms2ex.Managers
   alias Phoenix.PubSub
@@ -16,12 +17,7 @@ defmodule Ms2ex.GroupChat do
     GenServer.start(__MODULE__, chat, name: process_name(chat.id))
   end
 
-  def lookup(chat_id) do
-    case Process.whereis(process_name(chat_id)) do
-      nil -> :error
-      _pid -> call(chat_id, :lookup)
-    end
-  end
+  def lookup(chat_id), do: call(chat_id, :lookup)
 
   def load_members(%__MODULE__{} = chat) do
     members =
@@ -86,10 +82,6 @@ defmodule Ms2ex.GroupChat do
   def broadcast(chat_id, packet) do
     PubSub.broadcast(Ms2ex.PubSub, topic(chat_id), {:push, packet})
   end
-
-  defp call(chat_id, msg), do: GenServer.call(process_name(chat_id), msg)
-
-  defp process_name(chat_id), do: :"group_chat:#{chat_id}"
 
   defp topic(chat_id) do
     chat_id |> process_name() |> to_string()

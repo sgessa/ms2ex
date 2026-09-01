@@ -1,7 +1,7 @@
-defmodule Ms2ex.PartyManager do
+defmodule Ms2ex.Managers.PartyManager do
   use GenServer
 
-  alias Ms2ex.PartyServer
+  alias Ms2ex.Managers.PartyServer
 
   def create(leader), do: call({:create, leader})
 
