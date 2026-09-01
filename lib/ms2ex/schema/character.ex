@@ -32,7 +32,9 @@ defmodule Ms2ex.Schema.Character do
   ]
 
   @optional_fields [
-    :active_skill_tab_id
+    :active_skill_tab_id,
+    :stat_point_sources,
+    :stat_point_allocation
   ]
 
   schema "characters" do
@@ -71,6 +73,11 @@ defmodule Ms2ex.Schema.Character do
     field :profile_url, :string, default: ""
     field :rest_exp, :integer, default: 0
     field :skin_color, EctoTypes.Term
+
+    field :stat_point_sources, EctoTypes.Term,
+      default: %{trophy: 0, quest: 0, exploration: 0, prestige: 0, command: 0}
+
+    field :stat_point_allocation, EctoTypes.Term, default: %{}
     field :taxis, {:array, :integer}, default: []
     field :title_id, :integer, default: 0
 

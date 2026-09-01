@@ -6,6 +6,7 @@ defmodule Ms2ex.Managers.Character do
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
+  alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -44,6 +45,23 @@ defmodule Ms2ex.Managers.Character do
   @spec get_skill_cooldowns(integer()) :: {:ok, [map()]} | :error
   def get_skill_cooldowns(character_id) do
     call(character_id, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
+  end
+
+  @spec add_stat_point(Schema.Character.t(), AttributePointSource.t(), pos_integer()) ::
+          {:ok, Schema.Character.t()} | :error
+  def add_stat_point(%Schema.Character{} = character, source, amount) when amount > 0 do
+    call(character, {:add_stat_point, source, amount})
+  end
+
+  @spec allocate_stat_point(Schema.Character.t(), atom() | integer()) ::
+          {:ok, Schema.Character.t()} | :error
+  def allocate_stat_point(%Schema.Character{} = character, attribute) do
+    call(character, {:allocate_stat_point, attribute})
+  end
+
+  @spec reset_stat_points(Schema.Character.t()) :: {:ok, Schema.Character.t()} | :error
+  def reset_stat_points(%Schema.Character{} = character) do
+    call(character, :reset_stat_points)
   end
 
   def monitor(%Schema.Character{} = character), do: call(character, :monitor)
@@ -87,7 +105,13 @@ defmodule Ms2ex.Managers.Character do
      |> Map.put(:regen_hp?, false)
      |> Map.put(:regen_sp?, false)
      |> Map.put(:regen_sta?, false)
-     |> Map.put(:skill_cooldowns, %{})}
+     |> Map.put(:skill_cooldowns, %{})
+     |> Map.update(
+       :stat_point_sources,
+       AttributePointSource.default_sources(),
+       &AttributePointSource.normalize/1
+     )
+     |> Map.update(:stat_point_allocation, %{}, &Context.StatPoints.normalize_allocation/1)}
   end
 
   def handle_call(:lookup, _from, character) do
@@ -102,6 +126,8 @@ defmodule Ms2ex.Managers.Character do
       |> Map.put(:death_count, Map.get(state, :death_count, 0))
       |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
       |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
+      |> Map.put(:stat_point_sources, state.stat_point_sources)
+     |> Map.put(:stat_point_allocation, state.stat_point_allocation)
 
     {:reply, :ok, updated}
   end
@@ -118,6 +144,31 @@ defmodule Ms2ex.Managers.Character do
   def handle_call(:monitor, {pid, _}, character) do
     Process.monitor(pid)
     {:reply, :ok, character}
+  end
+
+  # --------------------------------
+  # Stat Points (AP)
+  # --------------------------------
+
+  def handle_call({:add_stat_point, source, amount}, _from, character) do
+    case Character.StatPoints.add_stat_point(character, source, amount) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:allocate_stat_point, attribute}, _from, character) do
+    case Character.StatPoints.allocate(character, attribute) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call(:reset_stat_points, _from, character) do
+    case Character.StatPoints.reset(character) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
   end
 
   # --------------------------------
@@ -312,7 +363,7 @@ defmodule Ms2ex.Managers.Character do
 
   defp refresh_level(character, old_level) do
     if old_level != character.level do
-      character = Context.ItemStats.apply(character)
+      {character, _equipment_stats} = Context.CharacterStats.apply(character)
       Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
       Context.Field.broadcast_stats(character)
       character
@@ -321,7 +372,6 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
-  defp process_name(character_id) do
-    :"characters:#{character_id}"
-  end
+  defp process_name(character_id),
+    do: :"characters:#{character_id}"
 end

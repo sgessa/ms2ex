@@ -44,6 +44,15 @@ defmodule Ms2ex.Context.Characters do
     |> Repo.update()
   end
 
+  def update_stat_points(%Schema.Character{} = character, sources, allocation) do
+    character
+    |> Schema.Character.changeset(%{
+      stat_point_sources: sources,
+      stat_point_allocation: allocation
+    })
+    |> Repo.update()
+  end
+
   def delete(%Schema.Character{} = character), do: Repo.delete(character)
 
   def preload(%Schema.Character{} = character, assocs, opts \\ []) do

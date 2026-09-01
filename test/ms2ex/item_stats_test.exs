@@ -3,7 +3,6 @@ defmodule Ms2ex.ItemStatsTest do
 
   alias Ms2ex.Context.ItemStats
   alias Ms2ex.Formulas.GearScore
-  alias Ms2ex.Types
 
   defp character do
     %Ms2ex.Schema.Character{

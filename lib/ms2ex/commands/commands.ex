@@ -80,6 +80,19 @@ defmodule Ms2ex.Commands do
     end
   end
 
+  def handle(["statpoint", raw_amount], character, session) do
+    case Integer.parse(raw_amount) do
+      {amount, ""} when amount > 0 ->
+        case Managers.Character.add_stat_point(character, :command, amount) do
+          {:ok, _character} -> session
+          :error -> push_notice(session, character, "Failed to add stat point")
+        end
+
+      _ ->
+        push_notice(session, character, "Usage: !statpoint <positive integer>")
+    end
+  end
+
   def handle(["boss", mob_id], character, session) do
     with {mob_id, _} <- Integer.parse(mob_id),
          metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),

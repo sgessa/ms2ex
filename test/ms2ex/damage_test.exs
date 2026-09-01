@@ -5,13 +5,13 @@ defmodule Ms2ex.DamageTest do
   alias Ms2ex.Schema.Character
   alias Ms2ex.Types.FieldNpc
 
-  test "applies C# zero-piercing defense multiplier" do
+  test "applies zero-piercing defense multiplier" do
     damage = Damage.calculate_rate(1.0, caster(), mob(), true)
 
     assert damage.dmg == 20_000
   end
 
-  test "uses C# critical damage scaling" do
+  test "uses critical damage scaling" do
     normal = Damage.calculate_rate(1.0, caster(), mob(), true)
     critical = Damage.calculate_rate(1.0, caster(), mob(), true, true)
 

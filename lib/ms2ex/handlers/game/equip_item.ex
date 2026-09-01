@@ -79,10 +79,10 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   end
 
   defp update_stats(character) do
-    character =
+    {character, _equipment_stats} =
       character
       |> Context.Characters.load_equips()
-      |> Context.ItemStats.apply()
+      |> Context.CharacterStats.apply()
 
     Managers.Character.update(character)
     Context.Field.broadcast_stats(character)
