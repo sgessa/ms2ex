@@ -353,7 +353,7 @@ defmodule Ms2ex.Managers.Field.Buff do
       {hp, _sp, _ep} ->
         if hp > 0 and npc_alive?(state, buff.owner.object_id) do
           {_reply, state} =
-            Managers.Field.damage_npc(state, buff.caster, hp, buff.owner.object_id)
+            Managers.Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id)
 
           Context.Field.broadcast(
             state.topic,
@@ -482,5 +482,15 @@ defmodule Ms2ex.Managers.Field.Buff do
       _ ->
         :ok
     end
+  end
+
+  def remove_owner_buffs(owner_object_id, state) do
+    state.buffs
+    |> Enum.filter(fn {{owner_id, _effect, _caster}, _buff_id} ->
+      owner_id == owner_object_id
+    end)
+    |> Enum.reduce(state, fn {{_owner, _effect, _caster}, buff_id}, state ->
+      remove_buff(buff_id, state)
+    end)
   end
 end
