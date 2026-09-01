@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.Tombstone do
     {object_id, packet} = get_int(packet)
     {hits, _packet} = get_int(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id) do
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
       Context.Field.hit_tombstone(character, object_id, hits)
     end
   end

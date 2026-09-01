@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     {item_uid, packet} = get_long(packet)
     # {item_type, packet} = get_short(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %Schema.Item{} = item <- Context.Inventory.get(character, item_uid),
          item <- Context.Items.load_metadata(item) do
       # session

@@ -23,7 +23,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {sticker_id, packet} = get_int(packet)
     {script, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, sticker} <- Storage.Tables.ChatStickers.lookup(sticker_id),
          %Schema.ChatStickerGroup{} <- Context.ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.chat(sticker_id, script))
@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
     {sticker_id, packet} = get_int(packet)
     {chat_name, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, sticker} <- Storage.Tables.ChatStickers.lookup(sticker_id),
          %Schema.ChatStickerGroup{} <- Context.ChatStickers.get(character, sticker.group_id) do
       push(session, Packets.ChatSticker.group_chat(sticker_id, chat_name))
@@ -46,7 +46,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   defp handle_mode(0x5, packet, session) do
     {sticker_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, sticker} <- Storage.Tables.ChatStickers.lookup(sticker_id),
          %Schema.ChatStickerGroup{} <- Context.ChatStickers.get(character, sticker.group_id) do
       Context.ChatStickers.favorite(character, sticker_id, sticker.group_id)
@@ -58,7 +58,7 @@ defmodule Ms2ex.GameHandlers.ChatSticker do
   defp handle_mode(0x6, packet, session) do
     {sticker_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, sticker} <- Storage.Tables.ChatStickers.lookup(sticker_id),
          %Schema.ChatStickerGroup{} <- Context.ChatStickers.get(character, sticker.group_id) do
       Context.ChatStickers.unfavorite(character, sticker_id)

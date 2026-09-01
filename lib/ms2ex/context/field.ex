@@ -340,7 +340,7 @@ defmodule Ms2ex.Context.Field do
         |> Context.Characters.maybe_discover_map(map_id)
         |> Map.put(:change_map, %{id: map_id, position: position, rotation: rotation})
 
-      Managers.Character.update(character)
+      Managers.Character.call(character, {:update, character})
 
       Net.SenderSession.push(
         character,

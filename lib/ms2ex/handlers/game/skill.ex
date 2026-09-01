@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.Skill do
         {nil, nil, packet}
       end
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     skill_cast =
       Types.SkillCast.build(character, %{
@@ -75,7 +75,7 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     case Types.SkillCast.cooldown(skill_cast, Ms2ex.sync_ticks()) do
       nil -> :ok
-      cooldown -> Managers.Character.save_skill_cooldown(character, cooldown)
+      cooldown -> Managers.Character.call(character, {:save_skill_cooldown, cooldown})
     end
 
     state = {unknown, is_hold, hold_int, hold_string}

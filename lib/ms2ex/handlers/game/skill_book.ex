@@ -15,7 +15,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     handle_mode(mode, packet, character, session)
   end
 
@@ -48,7 +48,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     # TODO avoid SQL query
     character = Context.Characters.load_skills(character, force: true)
     {:ok, character} = Context.Characters.update(character, %{active_skill_tab_id: active_tab_id})
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     push(session, Packets.SkillBook.save(character, selected_tab_id, rank))
   end
@@ -64,7 +64,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     idx = Enum.find_index(character.skill_tabs, &(&1.id == tab_id))
     tabs = List.update_at(character.skill_tabs, idx, fn _ -> tab end)
 
-    Managers.Character.update(%{character | skill_tabs: tabs})
+    Managers.Character.call(character, {:update, %{character | skill_tabs: tabs}})
 
     push(session, Packets.SkillBook.rename(tab_id, new_name))
   end

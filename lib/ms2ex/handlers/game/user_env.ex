@@ -14,9 +14,9 @@ defmodule Ms2ex.GameHandlers.UserEnv do
     {title_id, _packet} = get_int(packet)
 
     if title_id >= 0 do
-      {:ok, character} = Managers.Character.lookup(session.character_id)
+      {:ok, character} = Managers.Character.call(session.character_id, :lookup)
       {:ok, character} = Context.Characters.update(character, %{title_id: title_id})
-      Managers.Character.update(character)
+      Managers.Character.call(character, {:update, character})
 
       Context.Field.broadcast(character, Packets.UserEnv.update_title(character))
     end

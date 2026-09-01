@@ -75,6 +75,6 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   def remove_friend_from_session(character, shared_id) do
     new_friends = Enum.reject(character.friends, &(&1.shared_id == shared_id))
     character = Map.put(character, :friends, new_friends)
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
   end
 end

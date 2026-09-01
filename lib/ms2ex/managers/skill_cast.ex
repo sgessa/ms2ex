@@ -8,7 +8,7 @@ defmodule Ms2ex.Managers.SkillCast do
       skill_cast = Agent.get(pid, & &1)
 
       # Reload caster
-      {:ok, caster} = Managers.Character.lookup(skill_cast.caster.id)
+      {:ok, caster} = Managers.Character.call(skill_cast.caster.id, :lookup)
       {:ok, Map.put(skill_cast, :caster, caster)}
     else
       :error

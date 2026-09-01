@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x1, packet, session) do
     {target_name, _packet} = get_ustring(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     target =
       case Managers.Character.lookup_by_name(target_name) do
@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
     {party_id, _packet} = get_int(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     case PartyServer.lookup(party_id) do
       {:ok, party} ->
@@ -63,14 +63,14 @@ defmodule Ms2ex.GameHandlers.Party do
 
   # Leave
   defp handle_mode(0x3, _packet, session) do
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, _party} <- PartyServer.lookup(character.party_id) do
       run(session, fn -> PartyServer.unsubscribe(character.party_id) end)
 
       PartyServer.remove_member(character)
 
       character = %{character | party_id: nil}
-      Managers.Character.update(character)
+      Managers.Character.call(character, {:update, character})
 
       push(session, Packets.Party.leave(character))
     end
@@ -80,7 +80,7 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x4, packet, session) do
     {target_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.lookup(character.party_id),
          true <- Types.Party.leader?(party, character),
          {:ok, target} <- PartyServer.kick_member(party, target_id) do
@@ -88,7 +88,7 @@ defmodule Ms2ex.GameHandlers.Party do
         run(target, fn -> PartyServer.unsubscribe(party.id) end)
       end
 
-      Managers.Character.update(%{target | party_id: nil})
+      Managers.Character.call(target, {:update, %{target | party_id: nil}})
     end
   end
 
@@ -96,7 +96,7 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x11, packet, session) do
     {target_name, _packet} = get_ustring(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, new_leader} <- Managers.Character.lookup_by_name(target_name),
          {:ok, party} <- PartyServer.lookup(character.party_id),
          true <- party.leader_id == character.id do
@@ -108,7 +108,7 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x2D, packet, session) do
     {target_id, _packet} = get_long(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.lookup(character.party_id) do
       if Enum.count(party.members) < 4 do
         push(session, Packets.Party.notice(:insufficient_memmber_count_for_kick_vote, character))
@@ -120,7 +120,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
   # Start Ready Check
   defp handle_mode(0x2E, _packet, session) do
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.lookup(character.party_id) do
       if Types.Party.leader?(party, character) do
         PartyServer.start_ready_check(party)
@@ -133,7 +133,7 @@ defmodule Ms2ex.GameHandlers.Party do
     {_n, packet} = get_int(packet)
     {resp, _packet} = get_bool(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.lookup(character.party_id),
          false <- Enum.member?(party.ready_check, character.id) do
       PartyServer.ready_check(party, character, resp)
@@ -161,7 +161,7 @@ defmodule Ms2ex.GameHandlers.Party do
         character = %{character | party_id: party.id}
         {:ok, party} = PartyServer.update_member(character)
 
-        Managers.Character.update(character)
+        Managers.Character.call(character, {:update, character})
         run(session, fn -> PartyServer.subscribe(party.id) end)
 
         push(session, Packets.Party.create(party))

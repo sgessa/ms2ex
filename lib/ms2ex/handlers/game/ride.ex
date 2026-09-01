@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.Ride do
     {_item_id, packet} = get_int(packet)
     {item_uid, _packet} = get_long(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     with {:ok, item} <- find_item_in_inventory(character, item_uid),
          :ok <- check_valid_item(item, ride_id) do
@@ -47,8 +47,8 @@ defmodule Ms2ex.GameHandlers.Ride do
     {_, packet} = get_byte(packet)
     {forced, _packet} = get_bool(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
-    Managers.Character.update(%{character | mount: nil})
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+    Managers.Character.call(character, {:update, %{character | mount: nil}})
 
     Context.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
   end
@@ -57,7 +57,7 @@ defmodule Ms2ex.GameHandlers.Ride do
     {item_id, packet} = get_int(packet)
     {id, _packet} = get_long(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     Context.Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
   end
 
@@ -105,7 +105,7 @@ defmodule Ms2ex.GameHandlers.Ride do
       ride_id: ride_id
     }
 
-    Managers.Character.update(%{character | mount: mount})
+    Managers.Character.call(character, {:update, %{character | mount: mount}})
 
     Context.Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
   end
