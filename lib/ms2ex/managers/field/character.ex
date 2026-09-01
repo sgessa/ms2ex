@@ -146,4 +146,20 @@ defmodule Ms2ex.Managers.Field.Character do
         push(character, Packets.MoveCharacter.bytes(character, coord))
     end
   end
+
+  def send_updates(state) do
+    for char_id <- Map.keys(state.sessions) do
+      with {:ok, char} <- Managers.Character.call(char_id, :lookup),
+           false <- Map.get(char, :dead?, false) do
+        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+      end
+    end
+
+    state
+  end
+
+  def leave_battle_stance(character) do
+    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
+  end
 end
