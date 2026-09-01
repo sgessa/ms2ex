@@ -1,9 +1,9 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
   alias Ms2ex.Context
-  alias Ms2ex.GroupChat
+  alias Ms2ex.Managers.GroupChat
   alias Ms2ex.Net.SenderSession
   alias Ms2ex.Packets
-  alias Ms2ex.PartyServer
+  alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Schema
   alias Phoenix.PubSub
 

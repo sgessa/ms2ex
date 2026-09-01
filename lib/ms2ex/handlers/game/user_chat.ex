@@ -5,7 +5,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   alias Ms2ex.Enums
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.PartyServer
+  alias Ms2ex.Managers.PartyServer
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]

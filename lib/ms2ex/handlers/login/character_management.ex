@@ -4,7 +4,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.Packets
   alias Ms2ex.Repo
   alias Ms2ex.Schema
-  alias Ms2ex.SessionManager
+  alias Ms2ex.Managers.Session
   alias Ms2ex.Types
   alias Ms2ex.Enums
 
@@ -42,7 +42,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp register_session(account_id, character_id, auth_data) do
     :ok =
-      SessionManager.register(
+      Session.register(
         account_id,
         Map.merge(auth_data, %{account_id: account_id, character_id: character_id})
       )
