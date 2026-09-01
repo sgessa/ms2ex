@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-2237AFF7.js"></script>
+    <script defer src="dist/sidebar_items-41325713.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -129,17 +129,24 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#allocation/1" data-no-tooltip="" translate="no">allocation(allocated \\ %{})</a>
+        <a href="#allocation/2" data-no-tooltip="" translate="no">allocation(allocated, total)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Sends the current AP allocation state.
+<code class="inline">allocated</code> is an atom-keyed map, e.g. <code class="inline">%{strength: 3, health: 2}</code>.
+<code class="inline">total</code> is the total available points (sum of all sources).</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sources/1" data-no-tooltip="" translate="no">sources(sources \\ %{1 =&gt; 0, 2 =&gt; 0, 3 =&gt; 0, 4 =&gt; 0, 5 =&gt; 0})</a>
+        <a href="#sources/1" data-no-tooltip="" translate="no">sources(sources)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Sends the AP source totals. Triggers the &quot;Received AP&quot; in-game notification.
+<code class="inline">sources</code> is an atom-keyed map, e.g. <code class="inline">%{trophy: 5, command: 10, ...}</code>.</p></div>
 
     </div>
 
@@ -157,19 +164,17 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="allocation/1">
-
-    <span id="allocation/0"></span>
+<section class="detail" id="allocation/2">
 
   <div class="detail-header">
-    <a href="#allocation/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#allocation/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">allocation(allocated \\ %{})</h1>
+      <h1 class="signature" translate="no">allocation(allocated, total)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/stat_points.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/stat_points.ex#L40" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -178,22 +183,22 @@ MS2EX
 
   <section class="docstring">
 
-
+<p>Sends the current AP allocation state.
+<code class="inline">allocated</code> is an atom-keyed map, e.g. <code class="inline">%{strength: 3, health: 2}</code>.
+<code class="inline">total</code> is the total available points (sum of all sources).</p>
   </section>
 </section>
 <section class="detail" id="sources/1">
-
-    <span id="sources/0"></span>
 
   <div class="detail-header">
     <a href="#sources/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">sources(sources \\ %{1 =&gt; 0, 2 =&gt; 0, 3 =&gt; 0, 4 =&gt; 0, 5 =&gt; 0})</h1>
+      <h1 class="signature" translate="no">sources(sources)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/stat_points.ex#L8" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/stat_points.ex#L15" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -202,7 +207,8 @@ MS2EX
 
   <section class="docstring">
 
-
+<p>Sends the AP source totals. Triggers the &quot;Received AP&quot; in-game notification.
+<code class="inline">sources</code> is an atom-keyed map, e.g. <code class="inline">%{trophy: 5, command: 10, ...}</code>.</p>
   </section>
 </section>
 

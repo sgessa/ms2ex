@@ -9,17 +9,11 @@ base stat values.
 
 # `apply`
 
-Rebuilds a character's stats from the persisted base plus equipped-item and
-learned-passive bonuses. The base is reloaded so repeated applications never
-stack.
+Rebuilds a character's stats and returns the derived packet data.
 
 # `apply_stats`
 
 Adds a map of stat bonuses to a character's current and maximum stats.
-
-# `apply_with_equipment_stats`
-
-Rebuilds a character's stats and returns the derived packet data.
 
 ---
 

@@ -53,6 +53,7 @@
 - [Ms2ex.GameHandlers.RideSync](Ms2ex.GameHandlers.RideSync.md)
 - [Ms2ex.GameHandlers.Skill](Ms2ex.GameHandlers.Skill.md)
 - [Ms2ex.GameHandlers.SkillBook](Ms2ex.GameHandlers.SkillBook.md)
+- [Ms2ex.GameHandlers.StatPoints](Ms2ex.GameHandlers.StatPoints.md)
 - [Ms2ex.GameHandlers.StateSkill](Ms2ex.GameHandlers.StateSkill.md)
 - [Ms2ex.GameHandlers.Taxi](Ms2ex.GameHandlers.Taxi.md)
 - [Ms2ex.GameHandlers.Tombstone](Ms2ex.GameHandlers.Tombstone.md)
@@ -73,6 +74,7 @@
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
 - [Ms2ex.Managers.Character.Revival](Ms2ex.Managers.Character.Revival.md): Death and revival logic for a character.
 - [Ms2ex.Managers.Character.Skill](Ms2ex.Managers.Character.Skill.md)
+- [Ms2ex.Managers.Character.StatPoints](Ms2ex.Managers.Character.StatPoints.md)
 - [Ms2ex.Managers.Character.Stats](Ms2ex.Managers.Character.Stats.md)
 - [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md)
 - [Ms2ex.Managers.Field.Buff](Ms2ex.Managers.Field.Buff.md)
@@ -154,6 +156,7 @@ as controllers, views, channels and so on.
   - [Ms2ex.Enums.TransferType](Ms2ex.Enums.TransferType.md)
 
 - Types
+  - [Ms2ex.Types.AttributePointSource](Ms2ex.Types.AttributePointSource.md)
   - [Ms2ex.Types.Buff](Ms2ex.Types.Buff.md)
   - [Ms2ex.Types.Color](Ms2ex.Types.Color.md)
   - [Ms2ex.Types.Coord](Ms2ex.Types.Coord.md)
@@ -177,6 +180,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
 
 - Contexts
   - [Ms2ex.Context.Accounts](Ms2ex.Context.Accounts.md): Context module for account-related operations.
+  - [Ms2ex.Context.CharacterStats](Ms2ex.Context.CharacterStats.md)
   - [Ms2ex.Context.Characters](Ms2ex.Context.Characters.md)
   - [Ms2ex.Context.ChatStickers](Ms2ex.Context.ChatStickers.md): Context module for managing chat stickers.
 
@@ -205,6 +209,7 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.PremiumMemberships](Ms2ex.Context.PremiumMemberships.md)
   - [Ms2ex.Context.SkillTabs](Ms2ex.Context.SkillTabs.md)
   - [Ms2ex.Context.Skills](Ms2ex.Context.Skills.md)
+  - [Ms2ex.Context.StatPoints](Ms2ex.Context.StatPoints.md)
   - [Ms2ex.Context.Taxi](Ms2ex.Context.Taxi.md)
   - [Ms2ex.Context.Utils](Ms2ex.Context.Utils.md): Utility functions.
   - [Ms2ex.Context.Wallets](Ms2ex.Context.Wallets.md)

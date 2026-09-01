@@ -3,6 +3,7 @@ Mix.Tasks.Maple.Server.md
 Ms2ex.Commands.md
 Ms2ex.Constants.md
 Ms2ex.Context.Accounts.md
+Ms2ex.Context.CharacterStats.md
 Ms2ex.Context.Characters.md
 Ms2ex.Context.ChatStickers.md
 Ms2ex.Context.DailyReset.md
@@ -29,6 +30,7 @@ Ms2ex.Context.Mobs.md
 Ms2ex.Context.PremiumMemberships.md
 Ms2ex.Context.SkillTabs.md
 Ms2ex.Context.Skills.md
+Ms2ex.Context.StatPoints.md
 Ms2ex.Context.Taxi.md
 Ms2ex.Context.Utils.md
 Ms2ex.Context.Wallets.md
@@ -107,6 +109,7 @@ Ms2ex.GameHandlers.Ride.md
 Ms2ex.GameHandlers.RideSync.md
 Ms2ex.GameHandlers.Skill.md
 Ms2ex.GameHandlers.SkillBook.md
+Ms2ex.GameHandlers.StatPoints.md
 Ms2ex.GameHandlers.StateSkill.md
 Ms2ex.GameHandlers.Taxi.md
 Ms2ex.GameHandlers.Tombstone.md
@@ -126,6 +129,7 @@ Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Revival.md
 Ms2ex.Managers.Character.Skill.md
+Ms2ex.Managers.Character.StatPoints.md
 Ms2ex.Managers.Character.Stats.md
 Ms2ex.Managers.Character.md
 Ms2ex.Managers.Field.Buff.md
@@ -285,6 +289,7 @@ Ms2ex.Storage.Tables.Jobs.md
 Ms2ex.Storage.Tables.UserStats.md
 Ms2ex.Storage.md
 Ms2ex.TransferFlags.md
+Ms2ex.Types.AttributePointSource.md
 Ms2ex.Types.Buff.md
 Ms2ex.Types.Color.md
 Ms2ex.Types.Coord.md

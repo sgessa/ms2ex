@@ -59,6 +59,8 @@
   skill_cast: term(),
   skill_tabs: term(),
   skin_color: term(),
+  stat_point_allocation: term(),
+  stat_point_sources: term(),
   stats: term(),
   stickers: term(),
   taxis: term(),

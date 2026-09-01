@@ -4,6 +4,7 @@ Mix.Tasks.Maple.Server.html
 Ms2ex.Commands.html
 Ms2ex.Constants.html
 Ms2ex.Context.Accounts.html
+Ms2ex.Context.CharacterStats.html
 Ms2ex.Context.Characters.html
 Ms2ex.Context.ChatStickers.html
 Ms2ex.Context.DailyReset.html
@@ -30,6 +31,7 @@ Ms2ex.Context.Mobs.html
 Ms2ex.Context.PremiumMemberships.html
 Ms2ex.Context.SkillTabs.html
 Ms2ex.Context.Skills.html
+Ms2ex.Context.StatPoints.html
 Ms2ex.Context.Taxi.html
 Ms2ex.Context.Utils.html
 Ms2ex.Context.Wallets.html
@@ -108,6 +110,7 @@ Ms2ex.GameHandlers.Ride.html
 Ms2ex.GameHandlers.RideSync.html
 Ms2ex.GameHandlers.Skill.html
 Ms2ex.GameHandlers.SkillBook.html
+Ms2ex.GameHandlers.StatPoints.html
 Ms2ex.GameHandlers.StateSkill.html
 Ms2ex.GameHandlers.Taxi.html
 Ms2ex.GameHandlers.Tombstone.html
@@ -127,6 +130,7 @@ Ms2ex.Lua.ItemEnchant.html
 Ms2ex.Managers.Buff.html
 Ms2ex.Managers.Character.Revival.html
 Ms2ex.Managers.Character.Skill.html
+Ms2ex.Managers.Character.StatPoints.html
 Ms2ex.Managers.Character.Stats.html
 Ms2ex.Managers.Character.html
 Ms2ex.Managers.Field.Buff.html
@@ -286,6 +290,7 @@ Ms2ex.Storage.Tables.Jobs.html
 Ms2ex.Storage.Tables.UserStats.html
 Ms2ex.Storage.html
 Ms2ex.TransferFlags.html
+Ms2ex.Types.AttributePointSource.html
 Ms2ex.Types.Buff.html
 Ms2ex.Types.Color.html
 Ms2ex.Types.Coord.html
@@ -321,8 +326,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-8C57A817.js
-dist/sidebar_items-2237AFF7.js
+dist/search_data-D70C77F7.js
+dist/sidebar_items-41325713.js
 index.html
 license.html
 readme.html

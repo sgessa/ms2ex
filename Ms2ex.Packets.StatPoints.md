@@ -3,7 +3,14 @@
 
 # `allocation`
 
+Sends the current AP allocation state.
+`allocated` is an atom-keyed map, e.g. `%{strength: 3, health: 2}`.
+`total` is the total available points (sum of all sources).
+
 # `sources`
+
+Sends the AP source totals. Triggers the "Received AP" in-game notification.
+`sources` is an atom-keyed map, e.g. `%{trophy: 5, command: 10, ...}`.
 
 ---
 

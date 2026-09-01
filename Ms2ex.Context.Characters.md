@@ -25,6 +25,8 @@
 
 # `update`
 
+# `update_stat_points`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*
