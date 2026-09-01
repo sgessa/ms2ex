@@ -25,6 +25,7 @@ defmodule Ms2ex.Managers.Character do
   end
 
   # ids of every online character, from the registered character processes
+  # TODO: maybe move this outside? out-of-scope
   @spec online_ids() :: [integer()]
   def online_ids do
     :erlang.registered()
@@ -136,41 +137,17 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, Character.Stats.set(character, stat_id, amount)}
   end
 
-  def handle_cast({:modify_buff_status, modifiers}, character) do
-    character =
-      Enum.reduce(modifiers, character, fn {stat, amount}, character ->
-        Character.Stats.modify_max(character, stat, amount)
-      end)
+  def handle_cast({:modify_buff_status, modifiers}, character),
+    do: {:noreply, Character.Stats.modify_max(character, modifiers, :increase)}
 
-    {:noreply, character}
-  end
+  def handle_cast({:remove_buff_status, modifiers}, character),
+    do: {:noreply, Character.Stats.modify_max(character, modifiers, :reduce)}
 
-  def handle_cast({:remove_buff_status, modifiers}, character) do
-    character =
-      Enum.reduce(modifiers, character, fn {stat, amount}, character ->
-        Character.Stats.modify_max(character, stat, -amount)
-      end)
+  def handle_cast({:increase_stats, stats}, character),
+    do: {:noreply, Character.Stats.increase(character, stats)}
 
-    {:noreply, character}
-  end
-
-  def handle_cast({:increase_stats, stats}, character) do
-    character =
-      Enum.reduce(stats, character, fn {stat, amount}, character ->
-        Character.Stats.increase(character, stat, amount)
-      end)
-
-    {:noreply, character}
-  end
-
-  def handle_cast({:decrease_stats, stats}, character) do
-    character =
-      Enum.reduce(stats, character, fn {stat, amount}, character ->
-        Character.Stats.decrease(character, stat, amount)
-      end)
-
-    {:noreply, character}
-  end
+  def handle_cast({:decrease_stats, stats}, character),
+    do: {:noreply, Character.Stats.decrease(character, stats)}
 
   # --------------------------------
   # Exp
@@ -180,15 +157,8 @@ defmodule Ms2ex.Managers.Character do
     {:noreply, Character.Experience.earn_exp(character, amount)}
   end
 
-  def handle_cast({:receive_fall_dmg, distance}, character) do
-    hp = Map.get(character.stats, :health_cur)
-    dmg = Context.Damage.calculate_fall_dmg(character, distance)
-    character = Character.Stats.set(character, :health, hp - dmg)
-
-    push(character, Packets.FallDamage.bytes(character, dmg))
-
-    {:noreply, character}
-  end
+  def handle_cast({:receive_fall_dmg, distance}, character),
+    do: {:noreply, Character.FallDamage.receive_fall_damage(character, distance)}
 
   # --------------------------------
   # Death & revive
@@ -197,36 +167,25 @@ defmodule Ms2ex.Managers.Character do
   # a player dies when their health hits 0; the death is announced to the
   # field, a tombstone is raised (teammates can hit it to revive), and the
   # revival HUD is armed
-  def handle_cast({:revive, type}, character) do
-    {:noreply, Character.Revival.revive(character, type)}
-  end
+  def handle_cast({:revive, type}, character),
+    do: {:noreply, Character.Revival.revive(character, type)}
 
-  def handle_cast({:revive, :instant, use_voucher}, character) do
-    {:noreply, Character.Revival.instant_revive(character, use_voucher)}
-  end
+  def handle_cast({:revive, :instant, use_voucher}, character),
+    do: {:noreply, Character.Revival.instant_revive(character, use_voucher)}
 
   # the daily-reset worker bulk-zeroes the DB for every character; connected
   # players also need their in-memory state cleared and the client gauge
   # refreshed
-  def handle_cast(:daily_reset, character) do
-    {:noreply, Context.DailyReset.reset_character(character)}
-  end
+  def handle_cast(:daily_reset, character),
+    do: {:noreply, Context.DailyReset.reset_character(character)}
 
   # triggers death when a stat write brings health to 0; called from
   # Character.Stats.set so every health-mutating path is covered
   @spec check_death(Schema.Character.t()) :: Schema.Character.t()
   def check_death(character), do: Character.Revival.check_death(character)
 
-  def handle_info({:regen, stat_id}, character) do
-    character =
-      if Map.get(character, :dead?, false) do
-        Map.put(character, :"regen_#{stat_id}?", false)
-      else
-        Character.Stats.regen(character, stat_id)
-      end
-
-    {:noreply, character}
-  end
+  def handle_info({:regen, stat_id}, character),
+    do: {:noreply, Character.Stats.regen(character, stat_id)}
 
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
     cleanup(character)

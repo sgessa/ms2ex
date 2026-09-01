@@ -6,9 +6,21 @@ defmodule Ms2ex.Managers.Character.Stats do
 
   @regen_stats %{health: :hp, spirit: :sp, stamina: :stamina}
 
+  def decrease(character, stats, opts \\ []) do
+    Enum.reduce(stats, character, fn {stat, amount}, character ->
+      decrease(character, stat, amount, opts)
+    end)
+  end
+
   def decrease(character, stat_id, amount, opts \\ []) do
     cur = Map.get(character.stats, :"#{stat_id}_cur")
     set(character, stat_id, cur - amount, opts)
+  end
+
+  def increase(character, stats) do
+    Enum.reduce(stats, character, fn {stat, amount}, character ->
+      increase(character, stat, amount)
+    end)
   end
 
   def increase(character, stat_id, amount) do
@@ -22,6 +34,24 @@ defmodule Ms2ex.Managers.Character.Stats do
     broadcast_new_stats(character, stat_id)
 
     character
+  end
+
+  def modify_max(character, modifiers, :increase) do
+    Enum.reduce(modifiers, character, fn {stat, amount}, character ->
+      modify_max(character, stat, amount)
+    end)
+  end
+
+  def modify_max(character, modifiers, :reduce) do
+    Enum.reduce(modifiers, character, fn {stat, amount}, character ->
+      modify_max(character, stat, -amount)
+    end)
+  end
+
+  def modify_max(character, stats, amount) when is_list(map) do
+    Enum.reduce(modifiers, character, fn {stat, amount}, character ->
+      modify_max(character, stat, amount)
+    end)
   end
 
   def modify_max(character, stat_id, amount) do
@@ -65,6 +95,9 @@ defmodule Ms2ex.Managers.Character.Stats do
       character
     end
   end
+
+  def regen(%{dead?: false} = character, stat_id),
+    do: Map.put(character, :"regen_#{stat_id}?", false)
 
   def regen(%{stats: stats} = character, stat_id) do
     intval = Map.get(character.stats, :"#{@regen_stats[stat_id]}_regen_interval_cur")
