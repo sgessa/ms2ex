@@ -8,7 +8,7 @@ defmodule Ms2ex.GameHandlers.CharacterInfo do
   def handle(packet, session) do
     {character_id, _packet} = get_long(packet)
 
-    case Managers.Character.lookup(character_id) do
+    case Managers.Character.call(character_id, :lookup) do
       {:ok, character} -> push(session, Packets.CharacterInfo.load(character))
       :error -> push(session, Packets.CharacterInfo.not_found(character_id))
     end

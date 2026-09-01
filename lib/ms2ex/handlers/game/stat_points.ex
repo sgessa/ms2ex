@@ -10,19 +10,19 @@ defmodule Ms2ex.GameHandlers.StatPoints do
 
   def handle(packet, %{character_id: character_id} = session) do
     {cmd, packet} = get_byte(packet)
-    {:ok, character} = Managers.Character.lookup(character_id)
+    {:ok, character} = Managers.Character.call(character_id, :lookup)
 
     case cmd do
       @cmd_increment ->
         {attribute_id, _packet} = get_byte(packet)
 
-        case Managers.Character.allocate_stat_point(character, attribute_id) do
+        case Managers.Character.call(character, {:allocate_stat_point, attribute_id}) do
           {:ok, _character} -> :ok
           :error -> :ok
         end
 
       @cmd_reset ->
-        case Managers.Character.reset_stat_points(character) do
+        case Managers.Character.call(character, :reset_stat_points) do
           {:ok, _character} ->
             :ok
 

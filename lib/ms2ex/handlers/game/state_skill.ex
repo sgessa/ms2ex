@@ -21,7 +21,7 @@ defmodule Ms2ex.GameHandlers.StateSkill do
       {client_tick, packet} = get_int(packet)
       {item_uid, _packet} = get_long(packet)
 
-      {:ok, character} = Managers.Character.lookup(session.character_id)
+      {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
       with true <- Storage.Skills.get_meta(skill_id) != nil,
            true <- owned_item?(character, item_uid) do

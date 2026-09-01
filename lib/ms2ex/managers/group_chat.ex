@@ -26,7 +26,7 @@ defmodule Ms2ex.GroupChat do
   def load_members(%__MODULE__{} = chat) do
     members =
       Enum.reduce(chat.member_ids, [], fn id, members ->
-        case Managers.Character.lookup(id) do
+        case Managers.Character.call(id, :lookup) do
           {:ok, member} -> [member | members]
           _ -> members
         end

@@ -17,7 +17,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {slot_name, _packet} = get_ustring(packet)
 
     with true <- Context.Equips.valid_slot?(slot_name),
-         {:ok, character} <- Managers.Character.lookup(session.character_id),
+         {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %{location: :inventory} = item <-
            Context.Inventory.get_by(character_id: character.id, id: id) do
       item = Context.Items.load_metadata(item)
@@ -30,7 +30,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp handle_mode(0x1, packet, session) do
     {id, _packet} = get_long(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %{location: :equipment} = item <-
            Context.Inventory.get_by(character_id: character.id, id: id) do
       unequip_item(character, item, session)
@@ -84,7 +84,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       |> Context.Characters.load_equips()
       |> Context.CharacterStats.apply()
 
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
     Context.Field.broadcast_stats(character)
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
   end

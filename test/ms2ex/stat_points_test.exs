@@ -86,7 +86,7 @@ defmodule Ms2ex.StatPointsTest do
     on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
 
-    assert {:ok, _char} = Managers.Character.add_stat_point(character, :command, 5)
+    assert {:ok, _char} = Managers.Character.call(character, {:add_stat_point, :command, 5})
 
     saved = Repo.get(Schema.Character, character.id)
     assert saved.stat_point_sources.command == 5
@@ -99,7 +99,7 @@ defmodule Ms2ex.StatPointsTest do
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
 
     # no sources added → total = 0
-    assert :error = Managers.Character.allocate_stat_point(character, :strength)
+    assert :error = Managers.Character.call(character, {:allocate_stat_point, :strength})
   end
 
   test "allocate_stat_point persists and applies stat delta" do
@@ -113,7 +113,7 @@ defmodule Ms2ex.StatPointsTest do
     on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
 
-    assert {:ok, updated} = Managers.Character.allocate_stat_point(character, :strength)
+    assert {:ok, updated} = Managers.Character.call(character, {:allocate_stat_point, :strength})
     assert updated.stats.strength_cur == 11
     assert updated.stat_point_allocation.strength == 1
 
@@ -135,7 +135,7 @@ defmodule Ms2ex.StatPointsTest do
     on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
 
-    assert {:ok, reset} = Managers.Character.reset_stat_points(character)
+    assert {:ok, reset} = Managers.Character.call(character, :reset_stat_points)
     assert reset.stat_point_allocation == %{}
     assert reset.stats.strength_cur == 10
 

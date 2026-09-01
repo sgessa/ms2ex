@@ -8,7 +8,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
 
   def handle(packet, session) do
     {insignia_id, _packet} = get_short(packet)
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     # an id absent from the table is ignored; otherwise the insignia is
     # applied and the display flag broadcast
@@ -17,7 +17,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
         display = can_equip_insignia?(character, metadata, insignia_id)
 
         {:ok, character} = Context.Characters.update(character, %{insignia_id: insignia_id})
-        Managers.Character.update(character)
+        Managers.Character.call(character, {:update, character})
 
         Context.Field.broadcast(
           character,

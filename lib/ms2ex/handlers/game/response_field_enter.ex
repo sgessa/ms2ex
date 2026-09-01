@@ -7,11 +7,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   import Net.SenderSession, only: [push: 2, run: 2]
 
   def handle(_packet, %{character_id: character_id} = session) do
-    {:ok, character} = Managers.Character.lookup(character_id)
+    {:ok, character} = Managers.Character.call(character_id, :lookup)
 
     # Check if character is changing map
     character = maybe_change_map(character)
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     run(session, fn -> Context.Field.subscribe(character) end)
     {:ok, _pid} = Context.Field.enter(character)
@@ -27,7 +27,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   end
 
   defp send_skill_cooldowns(session, character_id) do
-    case Managers.Character.get_skill_cooldowns(character_id) do
+    case Managers.Character.call(character_id, {:get_skill_cooldowns, Ms2ex.sync_ticks()}) do
       {:ok, []} -> :ok
       {:ok, cooldowns} -> push(session, Packets.SkillCooldown.bytes(cooldowns))
       :error -> :ok

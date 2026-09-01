@@ -74,7 +74,7 @@ defmodule Ms2ex.SkillCooldownTest do
 
     {:ok, _pid} = GenServer.start(Ms2ex.Managers.Character, character, name: :"characters:99999")
 
-    Managers.Character.save_skill_cooldown(character, %{
+    Managers.Character.call(character, {:save_skill_cooldown, %{
       skill_id: 15_000_220,
       level: 1,
       start_tick: now,
@@ -82,13 +82,13 @@ defmodule Ms2ex.SkillCooldownTest do
       group_id: 3,
       recharge_max_count: 0,
       charges: 0
-    })
+    }})
 
-    {:ok, [cooldown]} = Managers.Character.get_skill_cooldowns(99_999)
+    {:ok, [cooldown]} = Managers.Character.call(99_999, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
     assert cooldown.skill_id == 15_000_220
     assert cooldown.end_tick == now + 1000
 
-    Managers.Character.save_skill_cooldown(character, %{
+    Managers.Character.call(character, {:save_skill_cooldown, %{
       skill_id: 15_000_220,
       level: 1,
       start_tick: now + 2000,
@@ -96,9 +96,9 @@ defmodule Ms2ex.SkillCooldownTest do
       group_id: 3,
       recharge_max_count: 0,
       charges: 0
-    })
+    }})
 
-    {:ok, [cooldown]} = Managers.Character.get_skill_cooldowns(99_999)
+    {:ok, [cooldown]} = Managers.Character.call(99_999, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
     assert cooldown.end_tick == now + 3000
   end
 
@@ -109,7 +109,7 @@ defmodule Ms2ex.SkillCooldownTest do
     {:ok, _pid} =
       GenServer.start(Ms2ex.Managers.Character, character, name: :"characters:101000")
 
-    Managers.Character.save_skill_cooldown(character, %{
+    Managers.Character.call(character, {:save_skill_cooldown, %{
       skill_id: 15_000_220,
       level: 1,
       start_tick: now,
@@ -117,11 +117,11 @@ defmodule Ms2ex.SkillCooldownTest do
       group_id: 3,
       recharge_max_count: 0,
       charges: 0
-    })
+    }})
 
-    Managers.Character.update(%Ms2ex.Schema.Character{id: 101_000, stats: %{}, level: 1})
+    Managers.Character.call(101_000, {:update, %Ms2ex.Schema.Character{id: 101_000, stats: %{}, level: 1}})
 
-    {:ok, [cooldown]} = Managers.Character.get_skill_cooldowns(101_000)
+    {:ok, [cooldown]} = Managers.Character.call(101_000, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
     assert cooldown.skill_id == 15_000_220
   end
 
@@ -132,7 +132,7 @@ defmodule Ms2ex.SkillCooldownTest do
     {:ok, _pid} =
       GenServer.start(Ms2ex.Managers.Character, character, name: :"characters:102000")
 
-    Managers.Character.save_skill_cooldown(character, %{
+    Managers.Character.call(character, {:save_skill_cooldown, %{
       skill_id: 15_000_220,
       level: 1,
       start_tick: now,
@@ -140,12 +140,12 @@ defmodule Ms2ex.SkillCooldownTest do
       group_id: 3,
       recharge_max_count: 0,
       charges: 0
-    })
+    }})
 
-    {:ok, cooldown} = Managers.Character.set_skill_cooldown(character, 15_000_220, 1, 0)
+    {:ok, cooldown} = Managers.Character.call(character, {:set_skill_cooldown, 15_000_220, 1, 0})
     assert cooldown.end_tick == 0
 
-    assert {:ok, []} = Managers.Character.get_skill_cooldowns(102_000)
+    assert {:ok, []} = Managers.Character.call(102_000, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
   end
 
   test "rechargeable skills gain charges on each cast" do
@@ -156,7 +156,7 @@ defmodule Ms2ex.SkillCooldownTest do
       GenServer.start(Ms2ex.Managers.Character, character, name: :"characters:100000")
 
     for i <- [0, 1, 2] do
-      Managers.Character.save_skill_cooldown(character, %{
+      Managers.Character.call(character, {:save_skill_cooldown, %{
         skill_id: 15_000_220,
         level: 1,
         start_tick: now + i,
@@ -164,10 +164,10 @@ defmodule Ms2ex.SkillCooldownTest do
         group_id: 0,
         recharge_max_count: 2,
         charges: 0
-      })
+      }})
     end
 
-    {:ok, [cooldown]} = Managers.Character.get_skill_cooldowns(100_000)
+    {:ok, [cooldown]} = Managers.Character.call(100_000, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
     assert cooldown.charges == 2
   end
 end

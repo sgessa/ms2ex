@@ -125,7 +125,7 @@ defmodule Ms2ex.Net.SenderSession do
     send(self(), {:push, Packets.Party.disband()})
 
     character = %{character | party_id: nil}
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     {:noreply, state}
   end

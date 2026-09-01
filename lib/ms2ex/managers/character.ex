@@ -1,8 +1,8 @@
 defmodule Ms2ex.Managers.Character do
   use GenServer
+  use Ms2ex.Managers.Managed, prefix: "characters", key: :id
 
   alias Ms2ex.Context
-  alias Ms2ex.Constants
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
@@ -11,79 +11,14 @@ defmodule Ms2ex.Managers.Character do
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  @spec lookup(integer()) :: {:ok, Schema.Character.t()} | :error
-  def lookup(character_id), do: call(character_id, :lookup)
-
   # TODO avoid SQL
   @spec lookup_by_name(String.t()) :: {:ok, Schema.Character.t()} | :error
   def lookup_by_name(character_name) do
     case Context.Characters.get_by(name: character_name) do
       nil -> :error
-      %Schema.Character{id: char_id} -> lookup(char_id)
+      %Schema.Character{id: char_id} -> call(char_id, :lookup)
     end
   end
-
-  @spec update(Schema.Character.t()) :: :ok | :error
-  def update(%Schema.Character{} = character), do: call(character, {:update, character})
-
-  @spec set_level(Schema.Character.t(), integer()) :: {:ok, Schema.Character.t()} | :error
-  def set_level(%Schema.Character{} = character, level) do
-    call(character, {:set_level, level})
-  end
-
-  @spec save_skill_cooldown(Schema.Character.t(), map()) :: :ok | :error
-  def save_skill_cooldown(%Schema.Character{} = character, cooldown) do
-    call(character, {:save_skill_cooldown, cooldown})
-  end
-
-  @spec set_skill_cooldown(Schema.Character.t(), integer(), integer(), integer()) ::
-          {:ok, map()} | :error
-  def set_skill_cooldown(%Schema.Character{} = character, skill_id, level, end_tick) do
-    call(character, {:set_skill_cooldown, skill_id, level, end_tick})
-  end
-
-  @spec get_skill_cooldowns(integer()) :: {:ok, [map()]} | :error
-  def get_skill_cooldowns(character_id) do
-    call(character_id, {:get_skill_cooldowns, Ms2ex.sync_ticks()})
-  end
-
-  @spec add_stat_point(Schema.Character.t(), AttributePointSource.t(), pos_integer()) ::
-          {:ok, Schema.Character.t()} | :error
-  def add_stat_point(%Schema.Character{} = character, source, amount) when amount > 0 do
-    call(character, {:add_stat_point, source, amount})
-  end
-
-  @spec allocate_stat_point(Schema.Character.t(), atom() | integer()) ::
-          {:ok, Schema.Character.t()} | :error
-  def allocate_stat_point(%Schema.Character{} = character, attribute) do
-    call(character, {:allocate_stat_point, attribute})
-  end
-
-  @spec reset_stat_points(Schema.Character.t()) :: {:ok, Schema.Character.t()} | :error
-  def reset_stat_points(%Schema.Character{} = character) do
-    call(character, :reset_stat_points)
-  end
-
-  def monitor(%Schema.Character{} = character), do: call(character, :monitor)
-
-  def call(%Schema.Character{id: id}, msg) do
-    if pid = Process.whereis(process_name(id)) do
-      GenServer.call(pid, msg)
-    else
-      :error
-    end
-  end
-
-  def call(character_id, msg) do
-    if pid = Process.whereis(process_name(character_id)) do
-      GenServer.call(pid, msg)
-    else
-      :error
-    end
-  end
-
-  def cast(%Schema.Character{id: id}, msg), do: GenServer.cast(process_name(id), msg)
-  def cast(character_id, msg), do: GenServer.cast(process_name(character_id), msg)
 
   def start(%Schema.Character{} = character) do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
@@ -122,22 +57,18 @@ defmodule Ms2ex.Managers.Character do
     updated =
       character
       |> Map.put(:skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))
+      |> Map.put(:stat_point_sources, state.stat_point_sources)
+      |> Map.put(:stat_point_allocation, state.stat_point_allocation)
       |> Map.put(:dead?, Map.get(state, :dead?, false))
       |> Map.put(:death_count, Map.get(state, :death_count, 0))
       |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
       |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
-      |> Map.put(:stat_point_sources, state.stat_point_sources)
-     |> Map.put(:stat_point_allocation, state.stat_point_allocation)
 
     {:reply, :ok, updated}
   end
 
   def handle_call({:set_level, level}, _from, character) do
-    level = level |> max(1) |> min(Constants.get(:character_max_level))
-    old_level = character.level
-    {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
-    character = refresh_level(character, old_level)
-
+    {:ok, character} = Character.Experience.set_level(character, level)
     {:reply, {:ok, character}, character}
   end
 
@@ -176,72 +107,20 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:cast_skill, skill_cast}, _from, character) do
-    character = Character.Skill.cast_skill(character, skill_cast)
-    {:reply, {:ok, character}, character}
+    {:reply, {:ok, Character.Skill.cast_skill(character, skill_cast)}, character}
   end
 
   def handle_call({:save_skill_cooldown, cooldown}, _from, character) do
-    cooldowns = Map.get(character, :skill_cooldowns, %{})
-    existing = Map.get(cooldowns, cooldown.skill_id)
-
-    cooldown =
-      if is_nil(existing) or cooldown.start_tick > existing.end_tick do
-        %{
-          skill_id: cooldown.skill_id,
-          level: cooldown.level,
-          group_id: cooldown.group_id,
-          end_tick: cooldown.end_tick,
-          recharge_max_count: cooldown.recharge_max_count,
-          charges: 0
-        }
-      else
-        existing
-      end
-
-    cooldown =
-      if cooldown.recharge_max_count > 0 do
-        %{cooldown | charges: min(cooldown.charges + 1, cooldown.recharge_max_count)}
-      else
-        cooldown
-      end
-
-    character =
-      Map.put(character, :skill_cooldowns, Map.put(cooldowns, cooldown.skill_id, cooldown))
-
-    {:reply, :ok, character}
+    {:reply, :ok, Character.SkillCooldown.save(character, cooldown)}
   end
 
   def handle_call({:set_skill_cooldown, skill_id, level, end_tick}, _from, character) do
-    cooldown = %{
-      skill_id: skill_id,
-      level: level,
-      group_id: 0,
-      end_tick: end_tick,
-      recharge_max_count: 0,
-      charges: 0
-    }
-
-    character =
-      Map.put(
-        character,
-        :skill_cooldowns,
-        Map.put(Map.get(character, :skill_cooldowns, %{}), skill_id, cooldown)
-      )
-
+    {character, cooldown} = Character.SkillCooldown.set(character, skill_id, level, end_tick)
     {:reply, {:ok, cooldown}, character}
   end
 
   def handle_call({:get_skill_cooldowns, now}, _from, character) do
-    cooldowns = Map.get(character, :skill_cooldowns, %{})
-    active = Map.values(cooldowns) |> Enum.filter(&(&1.end_tick > now))
-
-    character =
-      Map.put(
-        character,
-        :skill_cooldowns,
-        Map.filter(cooldowns, fn {_id, cooldown} -> cooldown.end_tick > now end)
-      )
-
+    {character, active} = Character.SkillCooldown.get_active(character, now)
     {:reply, {:ok, active}, character}
   end
 
@@ -298,14 +177,7 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_cast({:earn_exp, amount}, character) do
-    old_lvl = character.level
-    cooldowns = Map.get(character, :skill_cooldowns, %{})
-    {:ok, character} = Context.Experience.maybe_add_exp(character, amount)
-    character = refresh_level(character, old_lvl)
-
-    push(character, Packets.Experience.bytes(amount, character.exp, character.rest_exp))
-
-    {:noreply, Map.put(character, :skill_cooldowns, cooldowns)}
+    {:noreply, Character.Experience.earn_exp(character, amount)}
   end
 
   def handle_cast({:receive_fall_dmg, distance}, character) do
@@ -361,17 +233,4 @@ defmodule Ms2ex.Managers.Character do
     {:stop, :normal, character}
   end
 
-  defp refresh_level(character, old_level) do
-    if old_level != character.level do
-      {character, _equipment_stats} = Context.CharacterStats.apply(character)
-      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
-      Context.Field.broadcast_stats(character)
-      character
-    else
-      character
-    end
-  end
-
-  defp process_name(character_id),
-    do: :"characters:#{character_id}"
 end

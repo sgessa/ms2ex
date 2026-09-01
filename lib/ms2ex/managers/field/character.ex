@@ -21,7 +21,7 @@ defmodule Ms2ex.Managers.Field.Character do
     character = %{character | map_id: state.map_id}
 
     character = Map.put(character, :field_pid, self())
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
     players = Map.put(state.players, character.id, character.object_id)
@@ -111,7 +111,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
   # loads a peer character (and any mount they are riding) for the joining player
   defp load_peer(character, char_id, state) do
-    with {:ok, char} <- Managers.Character.lookup(char_id) do
+    with {:ok, char} <- Managers.Character.call(char_id, :lookup) do
       push(character, Packets.FieldAddUser.bytes(char))
       push(character, Packets.ProxyGameObj.load_player(char))
 
@@ -142,7 +142,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
       coord ->
         character = %{character | update_position: nil}
-        Managers.Character.update(character)
+        Managers.Character.call(character, {:update, character})
         push(character, Packets.MoveCharacter.bytes(character, coord))
     end
   end

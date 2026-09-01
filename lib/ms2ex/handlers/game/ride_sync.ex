@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     {sync_states, _packet} = get_sync_states(segment_length, packet)
 

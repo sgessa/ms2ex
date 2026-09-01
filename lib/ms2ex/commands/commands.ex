@@ -65,7 +65,7 @@ defmodule Ms2ex.Commands do
     case Integer.parse(level) do
       {level, _} ->
         level = min(level, Constants.get(:character_max_level))
-        {:ok, _character} = Managers.Character.set_level(character, level)
+        {:ok, _character} = Managers.Character.call(character, {:set_level, level})
         push(session, Packets.Experience.bytes(0, 0, 0))
 
       _ ->
@@ -83,7 +83,7 @@ defmodule Ms2ex.Commands do
   def handle(["statpoint", raw_amount], character, session) do
     case Integer.parse(raw_amount) do
       {amount, ""} when amount > 0 ->
-        case Managers.Character.add_stat_point(character, :command, amount) do
+        case Managers.Character.call(character, {:add_stat_point, :command, amount}) do
           {:ok, _character} -> session
           :error -> push_notice(session, character, "Failed to add stat point")
         end
@@ -142,7 +142,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             target = Map.put(target, :update_position, character.position)
-            Managers.Character.update(target)
+            Managers.Character.call(target, {:update, target})
             send(target.sender_session_pid, {:summon, target, character.map_id})
         end
 
@@ -163,7 +163,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             character = Map.put(character, :update_position, target.position)
-            Managers.Character.update(character)
+            Managers.Character.call(character, {:update, character})
             Context.Field.change_field(character, target.map_id)
         end
 
@@ -191,7 +191,7 @@ defmodule Ms2ex.Commands do
     |> Enum.each(&Context.Skills.add(tab, &1))
 
     character = Context.Characters.load_skills(character, force: true)
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     session
     |> push(Packets.Job.save(character))

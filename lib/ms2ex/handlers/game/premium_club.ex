@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
     account_id = session.account.id
 
     with true <- is_map(pkg),
-         {:ok, character} <- Managers.Character.lookup(session.character_id),
+         {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, wallet} <- Context.Wallets.update(character, :merets, -pkg.cost),
          {:ok, membership} <-
            Context.PremiumMemberships.create_or_extend(account_id, pkg.expiration) do

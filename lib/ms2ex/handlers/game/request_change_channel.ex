@@ -12,10 +12,10 @@ defmodule Ms2ex.GameHandlers.RequestChangeChannel do
 
     # TODO check channel_id is valid
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     {:ok, auth_data} = SessionManager.lookup(session.account.id)
 
-    Managers.Character.update(Map.put(character, :channel_id, channel_id))
+    Managers.Character.call(character, {:update, Map.put(character, :channel_id, channel_id)})
 
     push(session, Packets.GameToGame.bytes(channel_id, character.map_id, auth_data))
   end

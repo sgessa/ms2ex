@@ -10,7 +10,7 @@ defmodule Ms2ex.Managers.Buff do
 
     # Reload caster
     {:ok, skill_cast} = Managers.SkillCast.get(buff.skill_cast.id)
-    {:ok, caster} = Managers.Character.lookup(buff.caster.id)
+    {:ok, caster} = Managers.Character.call(buff.caster.id, :lookup)
 
     buff
     |> Map.put(:caster, caster)

@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
   end
 
   defp process_segments(session, segment_length, packet) when segment_length > 0 do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     {sync_states, _packet} = get_sync_states(segment_length, packet)
 
@@ -52,7 +52,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: state, position: new_position}
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     if out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
