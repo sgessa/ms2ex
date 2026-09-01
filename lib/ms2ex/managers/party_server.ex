@@ -32,6 +32,8 @@ defmodule Ms2ex.Managers.PartyServer do
     end
   end
 
+  def member_offline(%{party_id: nil}), do: :ok
+
   def member_offline(character) do
     call(character.party_id, {:member_offline, character})
   end

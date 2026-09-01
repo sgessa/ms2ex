@@ -23,6 +23,7 @@ defmodule Ms2ex.GameHandlers.Friend do
          :ok <- check_friend_list_size(character, rcpt, :cannot_add_friends),
          :ok <- check_friend_list_size(rcpt, rcpt, :rcpt_cannot_add_friends),
          :ok <- check_block_list(character, rcpt),
+         :ok <- check_not_blocked(character, rcpt),
          :ok <- check_is_already_friend(character, rcpt),
          {:ok, {src, dst}} <- Context.Friends.send_request(character, rcpt, msg) do
       if Map.get(rcpt, :session_pid) do
@@ -32,7 +33,7 @@ defmodule Ms2ex.GameHandlers.Friend do
       end
 
       session
-      |> push(Packets.Friend.notice(:request_sent, rcpt_name))
+      |> push(Packets.Friend.notice(:request_sent, rcpt_name, msg))
       |> push(Packets.Friend.add_to_list(src))
     else
       {:error, notice_packet} ->
@@ -100,11 +101,9 @@ defmodule Ms2ex.GameHandlers.Friend do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          :ok <- check_block_list_size(character, rcpt_name, :cannot_block),
          {:ok, rcpt} <- find_rcpt(rcpt_name) do
-      if shared_id == 0 do
-        block(session, character, rcpt, reason)
-      else
-        block_friend(session, shared_id, character, rcpt, reason)
-      end
+      if shared_id == 0,
+        do: block(session, character, rcpt, reason),
+        else: block_friend(session, shared_id, character, rcpt, reason)
     end
   end
 
@@ -189,12 +188,12 @@ defmodule Ms2ex.GameHandlers.Friend do
 
   defp block(session, character, rcpt, reason) do
     with {:ok, block} <- Context.Friends.block(character, rcpt, reason) do
-      rcpt = Map.put(rcpt, :friends, [block | rcpt.friends])
-      Managers.Character.call(rcpt, {:update, rcpt})
+      character = Map.put(character, :friends, [block | character.friends])
+      Managers.Character.call(character, {:update, character})
 
       session
-      |> push(Packets.Friend.add_to_list(block))
       |> push(Packets.Friend.block(block))
+      |> push(Packets.Friend.add_to_list(block))
     end
   end
 
@@ -210,7 +209,7 @@ defmodule Ms2ex.GameHandlers.Friend do
         dst = Map.put(dst, :rcpt, character)
 
         Context.Friends.unsubscribe(rcpt, character.id)
-        send(rcpt.session_pid, {:push, Packets.Friend.remove(dst)})
+        push(rcpt, Packets.Friend.remove(dst))
       end
 
       remove_friend_from_session(character, shared_id)
@@ -218,8 +217,9 @@ defmodule Ms2ex.GameHandlers.Friend do
       Context.Friends.unsubscribe(session, rcpt.id)
 
       session
-      |> push(Packets.Friend.update(src))
       |> push(Packets.Friend.block(src))
+      |> push(Packets.Friend.remove(src))
+      |> push(Packets.Friend.add_to_list(src))
     end
   end
 end
