@@ -475,7 +475,9 @@ defmodule Ms2ex.Managers.Field.Buff do
     case get_in(buff.effect, [:update, :reset_cooldown]) do
       skill_ids when is_list(skill_ids) and skill_ids != [] ->
         Enum.each(skill_ids, fn skill_id ->
-          {:ok, cooldown} = Managers.Character.call(character, {:set_skill_cooldown, skill_id, 1, 0})
+          {:ok, cooldown} =
+            Managers.Character.call(character, {:set_skill_cooldown, skill_id, 1, 0})
+
           Net.SenderSession.push(character, Packets.SkillCooldown.bytes([cooldown]))
         end)
 

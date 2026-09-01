@@ -17,7 +17,11 @@ defmodule Ms2ex.GameHandlers.Dismantle do
   # Open
   def handle_mode(0x0, _packet, session) do
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
-    Managers.Character.call(character, {:update, %{character | dismantle_inventory: @default_inventory}})
+
+    Managers.Character.call(
+      character,
+      {:update, %{character | dismantle_inventory: @default_inventory}}
+    )
   end
 
   # Add
@@ -66,7 +70,10 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     consume_items(session, character)
     add_rewards(session, character)
 
-    Managers.Character.call(character, {:update, %{character | dismantle_inventory: @default_inventory}})
+    Managers.Character.call(
+      character,
+      {:update, %{character | dismantle_inventory: @default_inventory}}
+    )
 
     push(session, Packets.Dismantle.show_rewards(inventory.rewards))
   end

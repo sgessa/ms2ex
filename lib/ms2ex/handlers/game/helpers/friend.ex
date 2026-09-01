@@ -64,6 +64,15 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
     end
   end
 
+  # check if character has already blocked rcpt
+  def check_not_blocked(character, rcpt) do
+    if Enum.find(character.friends, &(&1.rcpt_id == rcpt.id and &1.status == :blocked)) do
+      {:error, Packets.Friend.notice(:cannot_send_request, rcpt.name)}
+    else
+      :ok
+    end
+  end
+
   def check_is_already_friend(character, rcpt) do
     if Enum.find(character.friends, &(&1.rcpt_id == rcpt.id and &1.status != :blocked)) do
       {:error, Packets.Friend.notice(:already_friends, rcpt.name)}
