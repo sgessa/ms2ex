@@ -183,7 +183,8 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> put_int(item.appearance_flag)
 
     case item.equip_slot do
-      :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13))
+      # caps carry four positions and an unknown float after the color block
+      :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13 * 4))
       :FD -> put_bytes(packet, item.data)
       :HR -> Types.Hair.put_hair(packet, item.data)
       _ -> packet
@@ -246,9 +247,7 @@ defmodule Ms2ex.Packets.InventoryItem do
 
     packet
     |> put_byte(Enum.count(enchant_stats))
-    |> reduce(enchant_stats, fn {_, stat}, packet ->
-      put_item_stat(packet, stat)
-    end)
+    |> reduce(enchant_stats, fn {_, stat}, packet -> put_enchant_stat(packet, stat) end)
     |> put_int(item.limit_break_level)
     |> put_int(Enum.count(basic_limit_break_enchants))
     |> reduce(basic_limit_break_enchants, fn {_, stat}, packet -> put_item_stat(packet, stat) end)
@@ -256,6 +255,15 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> reduce(special_limit_break_enchants, fn {_, stat}, packet ->
       put_item_stat(packet, stat)
     end)
+  end
+
+  # enchant entries carry their type as a full int, unlike the short-typed
+  # entries in the stats block
+  defp put_enchant_stat(packet, stat) do
+    packet
+    |> put_int(Enums.BasicStatType.get_value(stat.attribute))
+    |> put_int(Types.ItemStat.flat_value(stat))
+    |> put_float(Types.ItemStat.rate_value(stat))
   end
 
   defp put_item_stat(packet, %{class: :basic} = stat) do

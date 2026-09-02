@@ -26,21 +26,21 @@ Priorities:
 ### 1. Player death & revive — [Partial]
 
 Players can die and revive. HP reaching 0 triggers the death state and
-animation, a tombstone other players can hit to revive the owner, and the
-client's post-death HUD (`RevivalCount`/`RevivalConfirm` are now sent on death,
-not just field entry). Safe revive respawns at the map spawn (or the map's
-`revival_return_id`), instant revive costs mesos (`CalcRevivalMeso`: 10k +
-(level-10)*1k, level-scaled on every use, capped at 3/day) and keeps the player
-in place. The daily counter is reset by an Oban crontab job at midnight. The
-death penalty and daily revive counter are persisted on the character row, so
-they survive server restarts. What is still missing:
+animation (`SetCraftMode.Stop`, `DeadUser`, dead-flag update) and raises a
+tombstone other players can hit with skills to revive the owner (gauge packet
+at raise, decrements per hit, `hits=0` broadcast on revive). Basic attacks do
+not hit tombstones — skills only, matching the reference. The client's
+post-death HUD is armed on death (`RevivalCount`/`RevivalConfirm`). Safe
+revive respawns at the map spawn (or the map's `revival_return_id`); instant
+revive costs mesos (`CalcRevivalMeso`: 10k + (level-10)*1k, capped at 3/day)
+and keeps the player in place. Repeat deaths inside the 1-hour penalty window
+produce a dark tombstone with a doubled hit total; the count expires with the
+window and only stacks on maps with the `death_penalty` property. The death
+penalty and daily instant-revive counter are persisted on the character row
+(the counter is reset by an Oban crontab job at midnight). Death-state
+persistence differs slightly from the reference, which keeps it session-
+scoped (a relog resets it) — optional alignment. What is still missing:
 
-- **tombstone can't be hit by other players**: the tombstone renders on the
-  client but has no collision, so skills pass through. `FieldAddUser` now
-  carries the dead player's `death_count` (the reference builds the collidable
-  tombstone from it), but the in-field case is still broken — investigate how
-  the proxy dead state reaches already-connected clients against a live
-  capture of the reference death sequence.
 - party / class revive skills (reviving a fallen teammate with a skill)
 - free-revive coupon consumption
 - auto-revive maps (`auto_revival_type` / `auto_revival_time`)
@@ -139,6 +139,13 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- Tombstone hit/revive flow: peer max/current HP in `FieldAddUser` (peers were
+  built client-side as invalid 0/0-HP actors), `SetCraftMode.Stop` broadcast
+  at death, `Tombstone` gauge packet at raise plus `hits=0` on revive,
+  death-count penalty-window expiry with `death_penalty` map-property
+  semantics, revive packet order, cap appearance 52-byte layout, and enchant
+  entries with int type codes
+  (worktree `fix/tombstone-collision`; verified two-client end-to-end)
 - Player death & revive: death state + animation (`DeadUser`, dead flag),
   tombstone entity with teammate hits, post-death HUD, safe revive (map spawn /
   `revival_return_id`) and instant revive (meso cost)

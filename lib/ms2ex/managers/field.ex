@@ -141,10 +141,14 @@ defmodule Ms2ex.Managers.Field do
   def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item, receiver}, state),
     do: {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
 
-  # a dead player's tombstone is broadcast so other players can hit it; the
-  # owner is keyed by character id for the revive lookup
+  # a dead player's tombstone is announced with its hit counts so clients can
+  # render the revive gauge and hit it; the owner is keyed by character id for
+  # the revive lookup
   def handle_cast({:add_tombstone, character}, state),
     do: {:noreply, Field.Tombstone.add(character, state)}
+
+  def handle_cast({:clear_tombstone, character_id}, state),
+    do: {:noreply, Field.Tombstone.clear(character_id, state)}
 
   def handle_cast({:remove_tombstone, character_id}, state),
     do: {:noreply, Field.Tombstone.remove(character_id, state)}

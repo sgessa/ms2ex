@@ -3,6 +3,8 @@ defmodule Ms2ex.Handlers.SendLog do
 
   import Ms2ex.Packets.PacketReader
 
+  alias Ms2ex.Net.PacketLog
+
   def handle(packet, session) do
     {_, packet} = get_byte(packet)
     handle_mod(packet)
@@ -31,6 +33,7 @@ defmodule Ms2ex.Handlers.SendLog do
   def maybe_read_exception(true, _builder, msg, packet) do
     {debug, _packet} = get_ustring(packet)
     Logger.error("[CLIENT] #{msg}: #{debug}")
+    PacketLog.client_report("#{msg}: #{debug}")
     ""
   end
 
