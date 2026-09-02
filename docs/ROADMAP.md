@@ -121,10 +121,11 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
   regenerated; exposed by the Swift Swim stamina drain. Consumption now
   also suspends that stat's regen for the projected Recovery*WaitTick
   (new server.constants.xml ingest doc), so drains deplete instead of
-  racing regen
+  racing regen ([#98](https://github.com/sgessa/ms2ex/pull/98))
 - State-skill resource costs: cast validation + consumption, per-tick drain
   loop at the projected motion `sequence_speed`, cancellation on state
   mismatch / death / resource exhaustion
+  ([#98](https://github.com/sgessa/ms2ex/pull/98))
 - Tombstone hit/revive flow: peer HP in `FieldAddUser`, plus death-flow
   parity (gauge packet, revive order, penalty-window death count)
   ([#97](https://github.com/sgessa/ms2ex/pull/97))
