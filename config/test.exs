@@ -16,4 +16,4 @@ config :logger, level: :warning
 # the game/login TCP listeners never start under test
 config :ms2ex, :start_game_servers, false
 
-config :ms2ex, Oban, plugins: false, queues: false, peer: false
+config :ms2ex, Oban, testing: :manual, plugins: false
