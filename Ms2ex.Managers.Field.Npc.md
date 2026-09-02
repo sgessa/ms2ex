@@ -5,6 +5,8 @@
 
 # `damage`
 
+# `despawn`
+
 # `load_mob_spawns`
 
 # `load_npc`
@@ -14,6 +16,8 @@
 # `load_spawn`
 
 # `remove_npc`
+
+# `spawn_npc`
 
 # `tick`
 
