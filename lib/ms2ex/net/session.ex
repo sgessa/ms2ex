@@ -7,7 +7,7 @@ defmodule Ms2ex.Net.Session do
   require Logger, as: L
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
-  alias Ms2ex.Net.{Router, SenderSession, PacketLog}
+  alias Ms2ex.Net.{Router, SenderSession}
   alias Ms2ex.Packets.PacketReader
 
   import Ms2ex.Net.Utils
@@ -159,7 +159,7 @@ defmodule Ms2ex.Net.Session do
     {cipher, packet} = RecvCipher.decrypt(state.recv_cipher, packet)
 
     {opcode, packet} = PacketReader.get_short(packet)
-    PacketLog.log(:recv, opcode, packet)
+    Ms2ex.Net.Logger.log(:recv, opcode, packet)
 
     state = %{state | recv_cipher: cipher}
     Router.route(opcode, packet, state)

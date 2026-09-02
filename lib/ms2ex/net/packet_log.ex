@@ -1,4 +1,4 @@
-defmodule Ms2ex.Net.PacketLog do
+defmodule Ms2ex.Net.Logger do
   @moduledoc """
   Optional raw packet dump to disk for debugging client flows. Set `PACKET_LOG`
   to a file path to enable; without it every call is a no-op. When enabled,
