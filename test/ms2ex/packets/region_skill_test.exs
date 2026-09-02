@@ -1,14 +1,16 @@
 defmodule Ms2ex.Packets.RegionSkillTest do
   use ExUnit.Case, async: true
+  use Mimic
 
   alias Ms2ex.Packets.RegionSkill
   alias Ms2ex.Types.Coord
   alias Ms2ex.Types.SkillCast
 
   import Ms2ex.Packets.PacketReader
+  import Ms2ex.TestHelpers
 
   setup do
-    :ets.insert(:metadata, {"table:magicpath.xml", {:ok, %{table: %{entries: %{}}}}})
+    stub_metadata(%{"table:magicpath.xml" => %{table: %{entries: %{}}}})
     :ok
   end
 

@@ -98,11 +98,6 @@ The drop packet still has three deviations:
 still uses a fixed radius instead of the exact skill geometry and always lands
 the first hit immediately.
 
-### 11. RegionSkill rotation — [Done]
-
-`RegionSkill` now zeros horizontal rotation for direction-less region skills while
-keeping directional ones unchanged.
-
 ### 12. Party damage meter — [Open]
 
 The client's party DPS meter never updates because the server never feeds it.
@@ -117,6 +112,10 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- RegionSkill rotation: direction-less region skills now zero horizontal
+  rotation while directional ones keep it; region-splash damage no longer
+  crashes on hit, and regular-skill spirit drains now persist so Wizard SP
+  regen matches observed timing (immediate start, minimum 100ms tick floor)
 - Passive HP/SP/stamina regen fix: inverted dead-actor guard on
   `Character.Stats.regen/2` (from #88) meant living characters never
   regenerated; exposed by the Swift Swim stamina drain. Consumption now

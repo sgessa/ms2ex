@@ -67,6 +67,10 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
   blocks.** Copying a module there lets every test stub it; test files only
   call `Mimic.stub`. If a test needs to stub a module that isn't copied yet,
   add the `Mimic.copy` to `test_helper.exs` first.
+- **Do not seed metadata in tests by writing directly to ETS.** Use the
+  shared `stub_metadata/1` helper from `test/support/test_helpers.ex` instead
+  of `:ets.insert(:metadata, ...)` so tests go through the same storage stub
+  path consistently.
 
 ## Architecture notes
 
@@ -92,8 +96,9 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
 
 - **Update `docs/ROADMAP.md` whenever you touch a feature.** When an item is
   implemented, fixed, or advances, update its `[Open]` / `[Partial]` status or
-  move it into "Recently completed". Keep the roadmap the source of truth for
-  what is still missing.
+  move it into "Recently completed". Completed items must be moved out of the
+  numbered backlog sections into "Recently completed". Keep the roadmap the
+  source of truth for what is still missing.
 - **Leave `TODO` comments for unimplemented behavior.** When a code path is
   incomplete or stubbed, add a `# TODO` comment (with a short note on what
   remains) so unfinished work can be found by grepping for `TODO`.
