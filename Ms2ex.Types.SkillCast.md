@@ -39,6 +39,8 @@
 
 # `damage_value`
 
+# `drain_interval`
+
 # `duration`
 
 # `in_battle?`

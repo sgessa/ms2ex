@@ -291,6 +291,7 @@ Ms2ex.Storage.Npcs.html
 Ms2ex.Storage.Skills.html
 Ms2ex.Storage.Table.MagicPaths.html
 Ms2ex.Storage.Tables.ChatStickers.html
+Ms2ex.Storage.Tables.Constants.html
 Ms2ex.Storage.Tables.ExpTable.html
 Ms2ex.Storage.Tables.GlobalDropItemBox.html
 Ms2ex.Storage.Tables.IndividualDropItem.html
@@ -336,8 +337,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-21493FAC.js
-dist/sidebar_items-6E36CCEA.js
+dist/search_data-5AB1E60F.js
+dist/sidebar_items-7C733F95.js
 index.html
 license.html
 readme.html

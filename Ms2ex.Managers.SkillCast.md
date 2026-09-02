@@ -9,6 +9,8 @@
 
 # `start_link`
 
+# `stop`
+
 # `update`
 
 ---

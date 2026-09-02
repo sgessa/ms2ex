@@ -290,6 +290,7 @@ Ms2ex.Storage.Npcs.md
 Ms2ex.Storage.Skills.md
 Ms2ex.Storage.Table.MagicPaths.md
 Ms2ex.Storage.Tables.ChatStickers.md
+Ms2ex.Storage.Tables.Constants.md
 Ms2ex.Storage.Tables.ExpTable.md
 Ms2ex.Storage.Tables.GlobalDropItemBox.md
 Ms2ex.Storage.Tables.IndividualDropItem.md
