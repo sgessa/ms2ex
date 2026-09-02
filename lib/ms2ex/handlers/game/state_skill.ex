@@ -7,40 +7,52 @@ defmodule Ms2ex.GameHandlers.StateSkill do
 
   import Packets.PacketReader
 
+  @start 0x0
+
   def handle(packet, session) do
     {function, packet} = get_byte(packet)
 
-    if function != 0x0 do
-      :ok
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+
+    if function == @start do
+      start_state_skill(packet, character)
     else
-      {cast_uid, packet} = get_long(packet)
-      {server_tick, packet} = get_int(packet)
-      {skill_id, packet} = get_int(packet)
-      {skill_level, packet} = get_short(packet)
-      {state, packet} = get_int(packet)
-      {client_tick, packet} = get_int(packet)
-      {item_uid, _packet} = get_long(packet)
+      # a non-start function ends the actor's state-skill stance
+      Managers.Character.call(character, {:cancel_state_skill, :client_request})
+    end
 
-      {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+    session
+  end
 
-      with true <- Storage.Skills.get_meta(skill_id) != nil,
-           true <- owned_item?(character, item_uid) do
-        skill_cast =
-          Types.SkillCast.build(character, %{
-            id: cast_uid,
-            skill_id: skill_id,
-            skill_level: skill_level,
-            server_tick: server_tick,
-            client_tick: client_tick
-          })
+  defp start_state_skill(packet, character) do
+    {cast_uid, packet} = get_long(packet)
+    {server_tick, packet} = get_int(packet)
+    {skill_id, packet} = get_int(packet)
+    {skill_level, packet} = get_short(packet)
+    {state, packet} = get_int(packet)
+    {client_tick, packet} = get_int(packet)
+    {item_uid, _packet} = get_long(packet)
 
-        Managers.SkillCast.start_link(skill_cast)
+    with true <- Storage.Skills.get_meta(skill_id) != nil,
+         true <- owned_item?(character, item_uid),
+         skill_cast <-
+           Types.SkillCast.build(character, %{
+             id: cast_uid,
+             skill_id: skill_id,
+             skill_level: skill_level,
+             server_tick: server_tick,
+             client_tick: client_tick
+           }),
+         {:ok, character} <-
+           Managers.Character.call(character, {:cast_state_skill, skill_cast, state}) do
+      Context.Field.broadcast(
+        character,
+        Packets.StateSkill.bytes(character, skill_id, cast_uid, state)
+      )
 
-        Context.Field.broadcast(
-          character,
-          Packets.StateSkill.bytes(character, skill_id, cast_uid, state)
-        )
-      end
+      # state-skill costs are drained silently by the manager; a full stat
+      # refresh here shows the initial consumption on every client
+      Context.Field.broadcast_stats(character)
     end
   end
 

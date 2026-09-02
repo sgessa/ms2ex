@@ -15,8 +15,24 @@ defmodule Ms2ex.Managers.SkillCast do
     end
   end
 
+  # idempotent: a cast uid may legitimately arrive through more than one
+  # channel (e.g. SkillUse and StateSkill), and the second registration must
+  # not tear down the session
   def start_link(%SkillCast{} = skill_cast) do
-    Agent.start_link(fn -> skill_cast end, name: process_name(skill_cast.id))
+    case Agent.start_link(fn -> skill_cast end, name: process_name(skill_cast.id)) do
+      {:ok, _} = ok ->
+        ok
+
+      {:error, {:already_started, _pid}} ->
+        {:ok, process_name(skill_cast.id)}
+    end
+  end
+
+  def stop(skill_cast_id) do
+    case Process.whereis(process_name(skill_cast_id)) do
+      nil -> :ok
+      pid -> Agent.stop(pid)
+    end
   end
 
   def update(%SkillCast{} = skill_cast, attrs) do

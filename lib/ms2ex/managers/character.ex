@@ -40,6 +40,8 @@ defmodule Ms2ex.Managers.Character do
      |> Map.put(:regen_sp?, false)
      |> Map.put(:regen_sta?, false)
      |> Map.put(:skill_cooldowns, %{})
+     |> Map.put(:state_skill, nil)
+     |> Map.put(:regen_waits, %{})
      |> Map.update(
        :stat_point_sources,
        AttributePointSource.default_sources(),
@@ -62,6 +64,8 @@ defmodule Ms2ex.Managers.Character do
       |> Map.put(:death_count, Map.get(state, :death_count, 0))
       |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
       |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
+      |> Map.put(:state_skill, Map.get(state, :state_skill))
+      |> Map.put(:regen_waits, Map.get(state, :regen_waits, %{}))
 
     {:reply, :ok, updated}
   end
@@ -109,6 +113,28 @@ defmodule Ms2ex.Managers.Character do
     {:reply, {:ok, Character.Skill.cast_skill(character, skill_cast)}, character}
   end
 
+  def handle_call({:cast_state_skill, skill_cast, state}, _from, character) do
+    case character.state_skill do
+      %{skill_cast: %{id: active_id}, state: ^state} when active_id == skill_cast.id ->
+        # the same stance is already running: refresh without re-consuming
+        {:reply, {:ok, character}, character}
+
+      _ ->
+        case Character.Skill.cast_state_skill(character, skill_cast, state) do
+          {:ok, character} ->
+            character = Character.Skill.activate_state_skill(character, skill_cast, state)
+            {:reply, {:ok, character}, character}
+
+          :error ->
+            {:reply, :error, character}
+        end
+    end
+  end
+
+  def handle_call({:cancel_state_skill, _reason}, _from, character) do
+    {:reply, :ok, Character.Skill.cancel_state_skill(character)}
+  end
+
   def handle_call({:save_skill_cooldown, cooldown}, _from, character) do
     {:reply, :ok, Character.SkillCooldown.save(character, cooldown)}
   end
@@ -128,7 +154,7 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_cast({:consume_stat, stat_id, amount}, character) do
-    {:noreply, Character.Stats.decrease(character, stat_id, amount)}
+    {:noreply, Character.Stats.decrease(character, stat_id, amount, [])}
   end
 
   def handle_cast({:set_stat, stat_id, amount}, character) do
@@ -184,6 +210,9 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_info({:regen, stat_id}, character),
     do: {:noreply, Character.Stats.regen(character, stat_id)}
+
+  def handle_info({:state_skill_tick, cast_id}, character),
+    do: {:noreply, Character.Skill.state_skill_tick(character, cast_id)}
 
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
     cleanup(character)

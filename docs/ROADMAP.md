@@ -69,15 +69,6 @@ Applied today: `status.values` / `status.rates` stat modifiers, the
 - recovery is skipped on mob-owned buffs; empty effects are applied as no-op
   buffs
 
-### 5. Skill resource costs — [Partial]
-
-Regular skill casts validate and consume SP/stamina (the cast is gated on
-having enough, then both are drained). What remains:
-
-- state skills (recv `0x21`) validate and consume nothing
-- state skills have no per-tick re-validation/consumption loop and are never
-  cancelled when the actor state changes
-
 ### 6. SkillDamage Tile damage mode — [Partial]
 
 The DotDamage (0x3) record is implemented and driven by the buff tick loop.
@@ -125,6 +116,15 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- Passive HP/SP/stamina regen fix: inverted dead-actor guard on
+  `Character.Stats.regen/2` (from #88) meant living characters never
+  regenerated; exposed by the Swift Swim stamina drain. Consumption now
+  also suspends that stat's regen for the projected Recovery*WaitTick
+  (new server.constants.xml ingest doc), so drains deplete instead of
+  racing regen
+- State-skill resource costs: cast validation + consumption, per-tick drain
+  loop at the projected motion `sequence_speed`, cancellation on state
+  mismatch / death / resource exhaustion
 - Tombstone hit/revive flow: peer HP in `FieldAddUser`, plus death-flow
   parity (gauge packet, revive order, penalty-window death count)
   ([#97](https://github.com/sgessa/ms2ex/pull/97))

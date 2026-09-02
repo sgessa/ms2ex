@@ -3,8 +3,18 @@ defmodule Ms2ex.Managers.Character.Stats do
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
   alias Ms2ex.Packets
+  alias Ms2ex.Storage.Tables
 
   @regen_stats %{health: :hp, spirit: :sp, stamina: :stamina}
+
+  # server constants that suspend a stat's passive regen after consuming it;
+  # the fallback matches the live constants table values
+  @regen_wait_keys %{
+    health: :recovery_hp_wait_tick,
+    spirit: :recovery_sp_wait_tick,
+    stamina: :recovery_ep_wait_tick
+  }
+  @default_regen_wait 1_000
 
   def decrease(character, stats, opts \\ []) do
     Enum.reduce(stats, character, fn {stat, amount}, character ->
@@ -14,7 +24,27 @@ defmodule Ms2ex.Managers.Character.Stats do
 
   def decrease(character, stat_id, amount, opts) do
     cur = Map.get(character.stats, :"#{stat_id}_cur")
+    character = defer_regen(character, stat_id)
     set(character, stat_id, cur - amount, opts)
+  end
+
+  # every consumption pushes the stat's regen deadline back; regen resumes
+  # the stat's Recovery*WaitTick after the last consumption
+  defp defer_regen(character, stat_id) do
+    if Map.has_key?(@regen_stats, stat_id) do
+      waits = Map.get(character, :regen_waits, %{})
+      deadline = System.monotonic_time(:millisecond) + regen_wait(stat_id)
+      Map.put(character, :regen_waits, Map.put(waits, stat_id, deadline))
+    else
+      character
+    end
+  end
+
+  defp regen_wait(stat_id) do
+    case Map.get(@regen_wait_keys, stat_id) do
+      nil -> @default_regen_wait
+      key -> Tables.Constants.get(key) || @default_regen_wait
+    end
   end
 
   def increase(character, stats) do
@@ -90,10 +120,31 @@ defmodule Ms2ex.Managers.Character.Stats do
     end
   end
 
-  def regen(%{dead?: false} = character, stat_id),
+  # the dead do not regenerate; the living regen one tick per scheduled
+  # message until the stat is full or the actor dies
+  def regen(%{dead?: true} = character, stat_id),
     do: Map.put(character, :"regen_#{stat_id}?", false)
 
-  def regen(%{stats: stats} = character, stat_id) do
+  def regen(character, stat_id) do
+    case regen_remaining_wait(character, stat_id) do
+      rest when rest > 0 ->
+        # consumption suspended this stat's regen; wake when the wait expires
+        Process.send_after(self(), {:regen, stat_id}, rest)
+        Map.put(character, :"regen_#{stat_id}?", true)
+
+      _ ->
+        regen_tick(character, stat_id)
+    end
+  end
+
+  defp regen_remaining_wait(character, stat_id) do
+    case Map.get(Map.get(character, :regen_waits, %{}), stat_id) do
+      nil -> 0
+      deadline -> deadline - System.monotonic_time(:millisecond)
+    end
+  end
+
+  defp regen_tick(%{stats: stats} = character, stat_id) do
     intval = Map.get(character.stats, :"#{@regen_stats[stat_id]}_regen_interval_cur")
     cur = Map.get(character.stats, :"#{stat_id}_cur")
     max = Map.get(character.stats, :"#{stat_id}_max")
