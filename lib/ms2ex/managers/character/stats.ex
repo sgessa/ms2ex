@@ -1,7 +1,8 @@
 defmodule Ms2ex.Managers.Character.Stats do
-  alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
+  alias Ms2ex.Managers.PartyServer
+  alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Storage.Tables
 
@@ -11,10 +12,10 @@ defmodule Ms2ex.Managers.Character.Stats do
   # the fallback matches the live constants table values
   @regen_wait_keys %{
     health: :recovery_hp_wait_tick,
-    spirit: :recovery_sp_wait_tick,
     stamina: :recovery_ep_wait_tick
   }
   @default_regen_wait 1_000
+  @min_regen_interval 100
 
   def decrease(character, stats, opts \\ []) do
     Enum.reduce(stats, character, fn {stat, amount}, character ->
@@ -31,7 +32,7 @@ defmodule Ms2ex.Managers.Character.Stats do
   # every consumption pushes the stat's regen deadline back; regen resumes
   # the stat's Recovery*WaitTick after the last consumption
   defp defer_regen(character, stat_id) do
-    if Map.has_key?(@regen_stats, stat_id) do
+    if Map.has_key?(@regen_wait_keys, stat_id) do
       waits = Map.get(character, :regen_waits, %{})
       deadline = System.monotonic_time(:millisecond) + regen_wait(stat_id)
       Map.put(character, :regen_waits, Map.put(waits, stat_id, deadline))
@@ -99,13 +100,18 @@ defmodule Ms2ex.Managers.Character.Stats do
     amount = amount |> max(0) |> min(total)
     stats = Map.put(character.stats, :"#{stat_id}_cur", amount)
     regen_stat = Map.get(@regen_stats, stat_id)
-
-    if regen_stat && !Map.get(character, :"regen_#{stat_id}?") && amount < total do
-      intval = Map.get(character.stats, :"#{regen_stat}_regen_interval_cur")
-      Process.send_after(self(), {:regen, stat_id}, intval)
-    end
+    regen_key = :"regen_#{stat_id}?"
 
     character = %{character | stats: stats}
+
+    character =
+      if regen_stat && !Map.get(character, regen_key, false) && amount < total do
+        intval = regen_interval(character.stats, regen_stat)
+        Process.send_after(self(), {:regen, stat_id}, intval)
+        Map.put(character, regen_key, true)
+      else
+        character
+      end
 
     if Keyword.get(opts, :broadcast, true) do
       broadcast_new_stats(character, stat_id)
@@ -145,13 +151,12 @@ defmodule Ms2ex.Managers.Character.Stats do
   end
 
   defp regen_tick(%{stats: stats} = character, stat_id) do
-    intval = Map.get(character.stats, :"#{@regen_stats[stat_id]}_regen_interval_cur")
+    regen_stat = @regen_stats[stat_id]
+    intval = regen_interval(character.stats, regen_stat)
     cur = Map.get(character.stats, :"#{stat_id}_cur")
     max = Map.get(character.stats, :"#{stat_id}_max")
 
     if cur < max do
-      regen_stat = @regen_stats[stat_id]
-
       stat_cur = Map.get(stats, :"#{stat_id}_cur")
       stat_max = Map.get(stats, :"#{stat_id}_max")
       regen = Map.get(stats, :"#{regen_stat}_regen_cur")
@@ -160,7 +165,7 @@ defmodule Ms2ex.Managers.Character.Stats do
       stats = Map.put(stats, :"#{stat_id}_cur", post_regen)
       character = %{character | stats: stats}
 
-      broadcast_new_stats(character, stat_id)
+      send_new_stats(character, stat_id)
       Process.send_after(self(), {:regen, stat_id}, intval)
 
       Map.put(character, :"regen_#{stat_id}?", true)
@@ -174,6 +179,20 @@ defmodule Ms2ex.Managers.Character.Stats do
 
     # the party HP packet must only be emitted when health itself changed;
     # spirit/stamina drains & regen fire constantly during combat
+    if stat_id == :health do
+      PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
+    end
+  end
+
+  defp regen_interval(stats, regen_stat) do
+    stats
+    |> Map.get(:"#{regen_stat}_regen_interval_cur")
+    |> max(@min_regen_interval)
+  end
+
+  defp send_new_stats(character, stat_id) do
+    Net.SenderSession.push(character, Packets.Stats.update_char_stats(character, [stat_id]))
+
     if stat_id == :health do
       PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
     end

@@ -96,11 +96,9 @@ The drop packet still has three deviations:
 
 `ImmediateActive` / `Delay` are now projected by the ingest, but the server
 still uses a fixed radius instead of the exact skill geometry and always lands
-the first hit immediately.
-
-### 11. RegionSkill rotation — [Open]
-
-`RegionSkill` always sends rotation where direction-less skills should zero it.
+the first hit immediately. Cube-magic-path placement also still has parity
+work left: rotated `fire_offset` is applied, but source-height alignment and
+`ignore_adjust` snapping are not matched yet.
 
 ### 12. Party damage meter — [Open]
 
@@ -116,12 +114,20 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- RegionSkill rotation: direction-less region skills now zero horizontal
+  rotation while directional ones keep it; region-splash damage no longer
+  crashes on hit, and regular-skill spirit drains now persist so Wizard SP
+  regen matches observed timing (immediate start, minimum 100ms tick floor)
 - Passive HP/SP/stamina regen fix: inverted dead-actor guard on
   `Character.Stats.regen/2` (from #88) meant living characters never
   regenerated; exposed by the Swift Swim stamina drain. Consumption now
-  also suspends that stat's regen for the projected Recovery*WaitTick
+  also suspends HP/stamina regen for the projected Recovery*WaitTick
   (new server.constants.xml ingest doc), so drains deplete instead of
-  racing regen ([#98](https://github.com/sgessa/ms2ex/pull/98))
+  racing regen. Regular active-skill SP drains now persist in the
+  character manager too, so spirit regen resumes after normal casts as
+  well as state skills; passive regen ticks now also clamp to a minimum
+  interval so negative rate bonuses cannot collapse them to zero delay
+  ([#98](https://github.com/sgessa/ms2ex/pull/98))
 - State-skill resource costs: cast validation + consumption, per-tick drain
   loop at the projected motion `sequence_speed`, cancellation on state
   mismatch / death / resource exhaustion

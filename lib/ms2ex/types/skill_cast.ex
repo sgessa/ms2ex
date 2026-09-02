@@ -144,12 +144,12 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
-  # the skill fired by a region/splash attack: the first condition skill of the
-  # attack carries the splash skill id+level; returns {cast, splash} so the
-  # region can be ticked at the splash interval
+  # the skill fired by a region/splash attack: returns the linked splash skill
+  # id+level plus its splash timing so the region can be announced and ticked
+  # with the correct metadata rather than a non-splash side effect listed first
   def splash_skill_cast(%__MODULE__{} = skill_cast) do
-    case attack_skills(skill_cast) do
-      [%{id: id, level: level, splash: splash} | _] when id > 0 ->
+    case splash_effect(skill_cast) do
+      %{id: id, level: level, splash: splash} when id > 0 ->
         cast = %__MODULE__{
           id: 0,
           skill_id: id,
@@ -175,8 +175,23 @@ defmodule Ms2ex.Types.SkillCast do
   end
 
   def splash(%__MODULE__{} = skill_cast) do
-    attack_skill = attack_point(skill_cast)[:skills] |> List.first()
-    attack_skill[:splash]
+    case splash_effect(skill_cast) do
+      %{splash: splash} -> splash
+      _ -> nil
+    end
+  end
+
+  def splash_use_direction?(%__MODULE__{} = skill_cast) do
+    case splash_effect(skill_cast) do
+      %{splash: %{use_direction: false}} -> false
+      _ -> true
+    end
+  end
+
+  defp splash_effect(%__MODULE__{} = skill_cast) do
+    skill_cast
+    |> attack_skills()
+    |> Enum.find(&(Map.get(&1, :has_splash, false) and is_map(Map.get(&1, :splash))))
   end
 
   def magic_path(%__MODULE__{} = skill_cast) do
@@ -185,8 +200,7 @@ defmodule Ms2ex.Types.SkillCast do
     case Storage.Table.MagicPaths.get(cube_magic_path_id) do
       paths when is_list(paths) and paths != [] ->
         Enum.map(paths, fn path ->
-          # TODO fire_offset rotate if path.rotate?
-          fire_offset = struct(Coord, path[:fire_offset] || %{})
+          fire_offset = rotate_fire_offset(path, skill_cast.rotation)
           Coord.sum(skill_cast.position, fire_offset)
 
           # TODO align position unless path.ignoreAdjust
@@ -194,6 +208,16 @@ defmodule Ms2ex.Types.SkillCast do
 
       _ ->
         [skill_cast.position]
+    end
+  end
+
+  defp rotate_fire_offset(path, rotation) do
+    fire_offset = struct(Coord, path[:fire_offset] || %{})
+
+    if path[:rotate?] do
+      Coord.rotate(fire_offset, rotation)
+    else
+      fire_offset
     end
   end
 end
