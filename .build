@@ -151,7 +151,7 @@ Ms2ex.Managers.PartyServer.html
 Ms2ex.Managers.Session.html
 Ms2ex.Managers.SessionManager.html
 Ms2ex.Managers.SkillCast.html
-Ms2ex.Net.PacketLog.html
+Ms2ex.Net.Logger.html
 Ms2ex.Net.Router.html
 Ms2ex.Net.SenderSession.html
 Ms2ex.Net.Session.html
@@ -237,6 +237,7 @@ Ms2ex.Packets.RevivalCount.html
 Ms2ex.Packets.RideSync.html
 Ms2ex.Packets.ServerEnter.html
 Ms2ex.Packets.ServerList.html
+Ms2ex.Packets.SetCraftMode.html
 Ms2ex.Packets.SkillBook.html
 Ms2ex.Packets.SkillCancel.html
 Ms2ex.Packets.SkillCooldown.html
@@ -335,8 +336,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-AA97CB94.js
-dist/sidebar_items-6E11048C.js
+dist/search_data-21493FAC.js
+dist/sidebar_items-6E36CCEA.js
 index.html
 license.html
 readme.html

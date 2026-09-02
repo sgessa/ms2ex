@@ -224,7 +224,7 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.WorldGraph](Ms2ex.Context.WorldGraph.md)
 
 - Network
-  - [Ms2ex.Net.PacketLog](Ms2ex.Net.PacketLog.md): Optional raw packet dump to disk for debugging client flows. Set `PACKET_LOG`
+  - [Ms2ex.Net.Logger](Ms2ex.Net.Logger.md): Optional raw packet dump to disk for debugging client flows. Set `PACKET_LOG`
 to a file path to enable; without it every call is a no-op. When enabled,
 every packet is written regardless of the console `skip_packet_logs` filter.
 
@@ -316,6 +316,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.RideSync](Ms2ex.Packets.RideSync.md)
   - [Ms2ex.Packets.ServerEnter](Ms2ex.Packets.ServerEnter.md)
   - [Ms2ex.Packets.ServerList](Ms2ex.Packets.ServerList.md)
+  - [Ms2ex.Packets.SetCraftMode](Ms2ex.Packets.SetCraftMode.md)
   - [Ms2ex.Packets.SkillBook](Ms2ex.Packets.SkillBook.md)
   - [Ms2ex.Packets.SkillCancel](Ms2ex.Packets.SkillCancel.md)
   - [Ms2ex.Packets.SkillCooldown](Ms2ex.Packets.SkillCooldown.md)

@@ -150,7 +150,7 @@ Ms2ex.Managers.PartyServer.md
 Ms2ex.Managers.Session.md
 Ms2ex.Managers.SessionManager.md
 Ms2ex.Managers.SkillCast.md
-Ms2ex.Net.PacketLog.md
+Ms2ex.Net.Logger.md
 Ms2ex.Net.Router.md
 Ms2ex.Net.SenderSession.md
 Ms2ex.Net.Session.md
@@ -236,6 +236,7 @@ Ms2ex.Packets.RevivalCount.md
 Ms2ex.Packets.RideSync.md
 Ms2ex.Packets.ServerEnter.md
 Ms2ex.Packets.ServerList.md
+Ms2ex.Packets.SetCraftMode.md
 Ms2ex.Packets.SkillBook.md
 Ms2ex.Packets.SkillCancel.md
 Ms2ex.Packets.SkillCooldown.md

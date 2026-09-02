@@ -192,6 +192,20 @@ Changes a character's field to a new map with a specific position and rotation.
     iex> change_field(character, 2000, %{x: 100, y: 200, z: 0}, %{x: 0, y: 0, z: 0})
     :ok
 
+# `clear_tombstone`
+
+```elixir
+@spec clear_tombstone(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Broadcasts a tombstone with zero hits remaining and removes it from the
+field (when its owner revives); clients tear down the tombstone entity.
+
+## Examples
+
+    iex> clear_tombstone(character)
+    :ok
+
 # `drop_item`
 
 ```elixir
@@ -334,7 +348,7 @@ Removes all buffs owned by a character (e.g. on death).
 @spec remove_tombstone(Ms2ex.Schema.Character.t()) :: :ok | :error
 ```
 
-Removes a character's tombstone from the field (on revive or field leave).
+Removes a character's tombstone from the field (on field leave).
 
 ## Examples
 

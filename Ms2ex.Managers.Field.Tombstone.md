@@ -3,6 +3,8 @@
 
 # `add`
 
+# `clear`
+
 # `hit`
 
 # `remove`
