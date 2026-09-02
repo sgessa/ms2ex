@@ -1,5 +1,7 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
-  alias Ms2ex.{Managers, Context, Context, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -15,7 +17,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {slot_name, _packet} = get_ustring(packet)
 
     with true <- Context.Equips.valid_slot?(slot_name),
-         {:ok, character} <- Managers.Character.lookup(session.character_id),
+         {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %{location: :inventory} = item <-
            Context.Inventory.get_by(character_id: character.id, id: id) do
       item = Context.Items.load_metadata(item)
@@ -28,7 +30,7 @@ defmodule Ms2ex.GameHandlers.EquipItem do
   defp handle_mode(0x1, packet, session) do
     {id, _packet} = get_long(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %{location: :equipment} = item <-
            Context.Inventory.get_by(character_id: character.id, id: id) do
       unequip_item(character, item, session)
@@ -54,25 +56,36 @@ defmodule Ms2ex.GameHandlers.EquipItem do
       unequip_item(character, item, session)
     end)
 
-    # Equip new item
     with {:ok, item} <- Context.Equips.equip(item, equip_slot) do
       equip_packet = Packets.EquipItem.bytes(character, item)
       Context.Field.broadcast(character, equip_packet)
 
-      Managers.Character.update(Context.Characters.load_equips(character))
+      update_stats(character)
+
       push(session, Packets.InventoryItem.remove_item(item.id))
     end
   end
 
   defp unequip_item(character, item, session) do
     with {:ok, item} <- Context.Equips.unequip(item) do
-      Managers.Character.update(Context.Characters.load_equips(character))
-
       item = Context.Items.load_metadata(item)
       unequip_packet = Packets.UnequipItem.bytes(character, item.id)
       Context.Field.broadcast(character, unequip_packet)
 
-      push(session, Packets.InventoryItem.add_item({:create, item}))
+      update_stats(character)
+
+      push(session, Packets.InventoryItem.add_item({:create, item}, character))
     end
+  end
+
+  defp update_stats(character) do
+    {character, _equipment_stats} =
+      character
+      |> Context.Characters.load_equips()
+      |> Context.CharacterStats.apply()
+
+    Managers.Character.call(character, {:update, character})
+    Context.Field.broadcast_stats(character)
+    Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
   end
 end

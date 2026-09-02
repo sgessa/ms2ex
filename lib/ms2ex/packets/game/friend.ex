@@ -17,7 +17,7 @@ defmodule Ms2ex.Packets.Friend do
     declined_request: 0x9
   }
 
-  def notice(notice_name, rcpt_name) do
+  def notice(notice_name, rcpt_name, message \\ "") do
     notice_code = Map.get(@notices, notice_name)
 
     __MODULE__
@@ -25,7 +25,7 @@ defmodule Ms2ex.Packets.Friend do
     |> put_byte(0x2)
     |> put_byte(notice_code)
     |> put_ustring(rcpt_name)
-    |> put_ustring()
+    |> put_ustring(message)
   end
 
   def start_list() do
@@ -62,8 +62,8 @@ defmodule Ms2ex.Packets.Friend do
     |> put_byte(0x7)
     |> put_byte()
     |> put_long(friend.shared_id)
-    |> put_long(friend.rcpt.account_id)
     |> put_long(friend.rcpt.id)
+    |> put_long(friend.rcpt.account_id)
     |> put_ustring(friend.rcpt.name)
   end
 

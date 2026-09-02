@@ -1,5 +1,8 @@
 defmodule Ms2ex.GameHandlers.Dismantle do
-  alias Ms2ex.{Managers, Context, Packets, Schema}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -13,13 +16,17 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
   # Open
   def handle_mode(0x0, _packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
-    Managers.Character.update(%{character | dismantle_inventory: @default_inventory})
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+
+    Managers.Character.call(
+      character,
+      {:update, %{character | dismantle_inventory: @default_inventory}}
+    )
   end
 
   # Add
   def handle_mode(0x1, packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     inventory = character.dismantle_inventory
 
     {slot, packet} = get_int(packet)
@@ -29,7 +36,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     {slot, inventory} = Context.Dismantle.add(inventory, slot, item_uid, amount)
     inventory = Context.Dismantle.update_rewards(character, inventory)
 
-    Managers.Character.update(%{character | dismantle_inventory: inventory})
+    Managers.Character.call(character, {:update, %{character | dismantle_inventory: inventory}})
 
     session
     |> push(Packets.Dismantle.add(item_uid, slot, amount))
@@ -38,7 +45,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
   # Remove
   def handle_mode(0x2, packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     inventory = character.dismantle_inventory
 
     {item_uid, _packet} = get_long(packet)
@@ -47,7 +54,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
       inventory = Context.Dismantle.remove(inventory, slot)
       inventory = Context.Dismantle.update_rewards(character, inventory)
 
-      Managers.Character.update(%{character | dismantle_inventory: inventory})
+      Managers.Character.call(character, {:update, %{character | dismantle_inventory: inventory}})
 
       session
       |> push(Packets.Dismantle.remove(item_uid))
@@ -57,13 +64,16 @@ defmodule Ms2ex.GameHandlers.Dismantle do
 
   # Dismantle
   def handle_mode(0x3, _packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     inventory = character.dismantle_inventory
 
     consume_items(session, character)
     add_rewards(session, character)
 
-    Managers.Character.update(%{character | dismantle_inventory: @default_inventory})
+    Managers.Character.call(
+      character,
+      {:update, %{character | dismantle_inventory: @default_inventory}}
+    )
 
     push(session, Packets.Dismantle.show_rewards(inventory.rewards))
   end
@@ -73,21 +83,22 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     {inv_tab, packet} = get_byte(packet)
     {max_rarity, _packet} = get_byte(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     items = Context.Inventory.list_tab_items(character.id, inv_tab)
     inventory = auto_add(session, character, max_rarity, items)
-    Managers.Character.update(%{character | dismantle_inventory: inventory})
+    Managers.Character.call(character, {:update, %{character | dismantle_inventory: inventory}})
   end
 
   def handle_mode(_mode, _packet, session), do: session
 
+  @spec auto_add(term(), Schema.Character.t(), integer(), [Schema.Item.t()]) :: map()
   defp auto_add(session, character, max_rarity, items) do
     items
     |> Enum.take(Context.Dismantle.max_slots())
     |> Enum.map(&Context.Items.load_metadata/1)
     |> Enum.filter(&(&1.rarity <= max_rarity && &1.metadata.dismantable?))
-    |> Enum.reduce(character.inventory, fn item, inventory ->
+    |> Enum.reduce(character.dismantle_inventory, fn item, inventory ->
       {slot, inventory} = Context.Dismantle.append(inventory, item.id, item.amount)
       inventory = Context.Dismantle.update_rewards(character, inventory)
 
@@ -117,7 +128,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
       item = Context.Items.init(item_id, %{amount: amount})
 
       with {:ok, result} <- Context.Inventory.add_item(character, item) do
-        push(session, Packets.InventoryItem.add_item(result))
+        push(session, Packets.InventoryItem.add_item(result, character))
       end
     end)
   end

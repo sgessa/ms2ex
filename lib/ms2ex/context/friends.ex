@@ -5,7 +5,8 @@ defmodule Ms2ex.Context.Friends do
   This module provides functions for managing friend relationships between characters.
   """
 
-  alias Ms2ex.{Repo, Schema}
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query
 

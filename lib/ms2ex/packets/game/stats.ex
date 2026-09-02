@@ -1,10 +1,11 @@
 defmodule Ms2ex.Packets.Stats do
-  alias Ms2ex.{Enums, Packets}
+  alias Ms2ex.Enums
+  alias Ms2ex.Packets
 
   alias Ms2ex.Types.FieldNpc
   import Packets.PacketWriter
 
-  @mode %{update_char_stats: 0x1, send_stats: 0x23, update_mob_health: 0x4}
+  @mode %{update: 0x0, update_char_stats: 0x1, send_stats: 0x23}
 
   def set_character_stats(character) do
     __MODULE__
@@ -15,6 +16,14 @@ defmodule Ms2ex.Packets.Stats do
     |> put_stats(character.stats)
   end
 
+  def update_player_stats(character) do
+    __MODULE__
+    |> build()
+    |> put_int(character.object_id)
+    |> put_byte(@mode.update)
+    |> put_player_stats(character.stats)
+  end
+
   def update_char_stats(character, stat) when not is_list(stat) do
     update_char_stats(character, [stat])
   end
@@ -23,7 +32,7 @@ defmodule Ms2ex.Packets.Stats do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> put_byte(@mode.update_char_stats)
+    |> put_byte(@mode.update)
     |> put_byte(0x1)
     |> reduce(updated_stats, fn
       :health, packet ->
@@ -39,15 +48,18 @@ defmodule Ms2ex.Packets.Stats do
   end
 
   def update_mob_stat(%FieldNpc{} = mob, stat) do
+    values = mob.stats[stat]
+
     __MODULE__
     |> build()
     |> put_int(mob.object_id)
-    |> put_byte()
+    |> put_byte(@mode.update)
     |> put_byte(0x1)
     |> put_byte(Enums.BasicStatType.get_value(stat))
-    |> reduce(mob.stats[stat], fn {_stat, value}, packet ->
-      put_long(packet, value)
-    end)
+    # the client reads stat values by index: [Total, Base, Current]
+    |> put_long(values.total)
+    |> put_long(values.base)
+    |> put_long(values.current)
   end
 
   def put_stats(packet, stats) do
@@ -85,5 +97,16 @@ defmodule Ms2ex.Packets.Stats do
     |> put_int(Map.get(stats, :"#{stat}_max"))
     |> put_int(Map.get(stats, :"#{stat}_min"))
     |> put_int(Map.get(stats, :"#{stat}_cur"))
+  end
+
+  defp put_player_stats(packet, stats) do
+    Enum.reduce([:max, :min, :cur], put_byte(packet, @mode.send_stats), fn suffix, packet ->
+      packet
+      |> put_long(Map.get(stats, :"health_#{suffix}"))
+      |> put_int(Map.get(stats, :"attack_speed_#{suffix}"))
+      |> put_int(Map.get(stats, :"movement_speed_#{suffix}"))
+      |> put_int(Map.get(stats, :"jump_height_#{suffix}"))
+      |> put_int(Map.get(stats, :"mount_speed_#{suffix}"))
+    end)
   end
 end

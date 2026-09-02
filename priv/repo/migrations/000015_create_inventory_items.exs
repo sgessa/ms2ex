@@ -13,9 +13,11 @@ defmodule Ms2ex.Repo.Migrations.CreateInventory do
       add :equip_slot, :integer, null: false
       add :inventory_slot, :integer
       add :inventory_tab, :integer, null: false
+      add :is_bound, :boolean, null: false, default: false
       add :limit_break_level, :integer
       add :location, :integer, null: false
       add :rarity, :integer, null: false
+      add :remaining_trades, :integer, null: false, default: 0
       add :stats, :binary
       add :transfer_flags, :integer, null: false
 

@@ -1,19 +1,29 @@
 defmodule Ms2ex.Commands do
-  alias Ms2ex.{
-    Managers,
-    Context,
-    Net,
-    Packets,
-    Storage,
-    Constants
-  }
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Storage
+  alias Ms2ex.Constants
+  alias Ms2ex.Types
 
   import Net.SenderSession, only: [push: 2, push_notice: 3]
 
   def handle(["heal"], character, session) do
     max_hp = character.stats.health_max
-    Managers.Character.cast(character, {:increase_stat, :health, max_hp})
+    Managers.Character.cast(character, {:increase_stats, [health: max_hp]})
     session
+  end
+
+  def handle(["hp", amount], character, session) do
+    case Integer.parse(amount) do
+      {amount, _} ->
+        Managers.Character.cast(character, {:set_stat, :health, amount})
+        session
+
+      _ ->
+        push_notice(session, character, "Invalid HP: #{amount}")
+    end
   end
 
   def handle(["freecam" | args], _character, session) do
@@ -26,26 +36,36 @@ defmodule Ms2ex.Commands do
     end
   end
 
-  # !item 5 13160311
-  def handle(["item" | args], character, session) do
-    [rarity | ids] = args
+  # !item 13160311           (rarity from the item's constant option)
+  # !item 20300012 10        (10 potions)
+  # !item 13160311 1 5       (1 weapon, rarity 5)
+  def handle(["item", item_id | opts], character, session) do
+    {qty, rarity} = parse_item_opts(opts)
 
-    Enum.reduce(ids, session, fn item_id, session ->
-      case Storage.get(:item, item_id) do
-        nil -> push_notice(session, character, "Invalid Item: #{item_id}")
-        _metadata -> add_item(character, item_id, rarity, session)
-      end
-    end)
+    with {item_id, _} <- Integer.parse(item_id),
+         metadata when not is_nil(metadata) <- Storage.get(:item, item_id) do
+      item =
+        Context.Items.init(item_id, %{
+          rarity: rarity || resolve_rarity(metadata),
+          amount: qty,
+          transfer_flags: [:split, :trade]
+        })
+
+      {:ok, {_, item} = result} = Context.Inventory.add_item(character, item)
+
+      session
+      |> push(Packets.InventoryItem.add_item(result, character))
+      |> push(Packets.InventoryItem.mark_item_new(item))
+    else
+      _ -> push_notice(session, character, "Invalid Item: #{item_id}")
+    end
   end
 
   def handle(["level", level], character, session) do
     case Integer.parse(level) do
       {level, _} ->
         level = min(level, Constants.get(:character_max_level))
-        {:ok, character} = Context.Characters.update(character, %{exp: 0, level: level})
-        Managers.Character.update(character)
-
-        Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
+        {:ok, _character} = Managers.Character.call(character, {:set_level, level})
         push(session, Packets.Experience.bytes(0, 0, 0))
 
       _ ->
@@ -60,34 +80,48 @@ defmodule Ms2ex.Commands do
     end
   end
 
-  # def handle(["boss", mob_id], character, session) do
-  #   with {mob_id, _} <- Integer.parse(mob_id),
-  #        {:ok, npc} <- ProtoMetadata.Npcs.lookup(mob_id) do
-  #     npc = Map.merge(npc, %{boss?: true, respawnable?: false})
-  #     Context.Field.add_mob(character, npc)
-  #     session
-  #   else
-  #     _ ->
-  #       push_notice(session, character, "Invalid Mob: #{mob_id}")
-  #   end
-  # end
+  def handle(["statpoint", raw_amount], character, session) do
+    case Integer.parse(raw_amount) do
+      {amount, ""} when amount > 0 ->
+        case Managers.Character.call(character, {:add_stat_point, :command, amount}) do
+          {:ok, _character} -> session
+          :error -> push_notice(session, character, "Failed to add stat point")
+        end
 
-  # def handle(["mob", mob_id], character, session) do
-  #   with {mob_id, _} <- Integer.parse(mob_id),
-  #        metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id) do
-  #     Context.Field.add_mob(character, npc)
-  #     session
-  #   else
-  #     _ ->
-  #       push_notice(session, character, "Invalid Mob: #{mob_id}")
-  #   end
-  # end
+      _ ->
+        push_notice(session, character, "Usage: !statpoint <positive integer>")
+    end
+  end
+
+  def handle(["boss", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),
+         %Types.Npc{} = npc <- Types.Npc.new(%{id: mob_id, metadata: metadata}) do
+      Context.Field.add_mob(character, %{npc | boss?: true})
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
+
+  def handle(["mob", mob_id], character, session) do
+    with {mob_id, _} <- Integer.parse(mob_id),
+         metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),
+         %Types.Npc{} = npc <- Types.Npc.new(%{id: mob_id, metadata: metadata}) do
+      Context.Field.add_mob(character, npc)
+      session
+    else
+      _ ->
+        push_notice(session, character, "Invalid Mob: #{mob_id}")
+    end
+  end
 
   def handle([currency, amount], character, session) when currency in ["merets", "mesos"] do
     currency = String.to_existing_atom(currency)
 
     with {amount, _} <- Integer.parse(amount),
-         {:ok, wallet} <- Context.Wallets.update(character, currency, amount) do
+         {:ok, wallet} <- Context.Wallets.set(character, currency, amount) do
       push(session, Packets.Wallet.update(wallet, currency))
     else
       _ ->
@@ -108,7 +142,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             target = Map.put(target, :update_position, character.position)
-            Managers.Character.update(target)
+            Managers.Character.call(target, {:update, target})
             send(target.sender_session_pid, {:summon, target, character.map_id})
         end
 
@@ -129,7 +163,7 @@ defmodule Ms2ex.Commands do
 
           true ->
             character = Map.put(character, :update_position, target.position)
-            Managers.Character.update(character)
+            Managers.Character.call(character, {:update, character})
             Context.Field.change_field(character, target.map_id)
         end
 
@@ -138,20 +172,44 @@ defmodule Ms2ex.Commands do
     end
   end
 
+  # !awaken unlocks the awakening (rank 2) skill tree without completing the
+  # job quests; the awakening skills are added at level 0 so the player can
+  # spend skill points and build their own tree
+  def handle(["awaken"], character, session) do
+    {:ok, character} = Context.Characters.update(character, %{awakened: true})
+
+    tab = Context.Skills.get_active_tab(character)
+
+    awakening_skills =
+      Context.SkillTabs.set_skills(character.job, %{}, true)[:skills]
+      |> Enum.filter(&(&1.rank == :awakening))
+
+    existing_ids = Enum.map(tab.skills, & &1.skill_id)
+
+    awakening_skills
+    |> Enum.reject(&(&1.skill_id in existing_ids))
+    |> Enum.each(&Context.Skills.add(tab, &1))
+
+    character = Context.Characters.load_skills(character, force: true)
+    Managers.Character.call(character, {:update, character})
+
+    session
+    |> push(Packets.Job.save(character))
+    |> push(Packets.SkillBook.open(character))
+  end
+
   def handle(_args, character, session) do
     push_notice(session, character, "Command not found")
   end
 
-  defp add_item(character, item_id, rarity, session) do
-    flags = Ms2ex.TransferFlags.set([:splittable, :tradeable])
-
-    with {item_id, _} <- Integer.parse(item_id),
-         {rarity, _} <- Integer.parse(rarity),
-         item = Context.Items.init(item_id, %{rarity: rarity, transfer_flags: flags}),
-         {:ok, {_, item} = result} <- Context.Inventory.add_item(character, item) do
-      session
-      |> push(Packets.InventoryItem.add_item(result))
-      |> push(Packets.InventoryItem.mark_item_new(item))
+  defp parse_item_opts(opts) do
+    case Enum.map(opts, &Integer.parse/1) do
+      [{qty, _}, {rarity, _}] -> {qty, rarity}
+      [{qty, _}] -> {qty, nil}
+      _ -> {1, nil}
     end
   end
+
+  defp resolve_rarity(%{option: %{constant_id: constant}}) when constant in 1..6, do: constant
+  defp resolve_rarity(_), do: 1
 end

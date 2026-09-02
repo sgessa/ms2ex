@@ -1,14 +1,12 @@
 defmodule Ms2ex.LoginHandlers.CharacterManagement do
-  alias Ms2ex.{
-    Context,
-    Net,
-    Packets,
-    Repo,
-    Schema,
-    SessionManager,
-    Types,
-    Enums
-  }
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
+  alias Ms2ex.Managers.Session
+  alias Ms2ex.Types
+  alias Ms2ex.Enums
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -44,7 +42,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp register_session(account_id, character_id, auth_data) do
     :ok =
-      SessionManager.register(
+      Session.register(
         account_id,
         Map.merge(auth_data, %{account_id: account_id, character_id: character_id})
       )
@@ -52,7 +50,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
   defp handle_create(packet, session) do
     {gender, packet} = get_byte(packet)
-    {job, packet} = get_short(packet)
+    {job_code, packet} = get_short(packet)
     {name, packet} = get_ustring(packet)
     {skin_color, packet} = Types.SkinColor.get_skin_color(packet)
     {_, packet} = get_short(packet)
@@ -70,7 +68,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     attrs = %{
       gender: gender,
-      job: Enums.Job.get_value(job),
+      job: Enums.Job.get_key(job_code),
       map_id: 2_000_023,
       name: name,
       skin_color: skin_color

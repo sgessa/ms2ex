@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - documentation
   workflow_dispatch:
 
 jobs:
@@ -15,18 +14,45 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Elixir
+        id: beam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.18.x"
-          otp-version: "27.x"
+          elixir-version: "1.20.x"
+          otp-version: "29.x"
 
-      - name: Install LuaJIT dependencies
+      - name: Install Lua JIT dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
+
+      # Cache Hex's package tarballs and registry (~/.hex) so mix deps.get
+      # avoids re-downloading from hex.pm when the deps/_build key misses.
+      # setup-beam force-reinstalls the hex tool into ~/.mix every run, so
+      # that directory is not worth caching.
+      - name: Cache Hex
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.hex
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-hex
+          restore-keys: |
+            ${{ runner.os }}-hex-
+
+      # Cache dependencies and build artifacts. Keyed separately from the CI
+      # job (docs builds in dev env) so the two jobs don't overwrite each
+      # other's _build cache entries.
+      - name: Cache deps and _build
+        uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-docs-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-docs-
 
       - name: Install dependencies
         run: mix deps.get

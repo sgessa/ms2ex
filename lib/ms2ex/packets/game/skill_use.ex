@@ -12,7 +12,7 @@ defmodule Ms2ex.Packets.SkillUse do
       |> put_int(skill_cast.caster.object_id)
       |> put_int(skill_cast.skill_id)
       |> put_short(skill_cast.skill_level)
-      |> put_byte()
+      |> put_byte(skill_cast.motion_point)
       |> put_short_coord(skill_cast.position)
       |> put_coord(skill_cast.direction)
       |> put_coord(skill_cast.rotation)

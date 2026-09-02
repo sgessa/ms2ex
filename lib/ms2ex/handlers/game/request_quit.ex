@@ -1,7 +1,7 @@
 defmodule Ms2ex.GameHandlers.RequestQuit do
-  require Logger
-
-  alias Ms2ex.{Net, Packets, SessionManager}
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Managers.Session
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -12,7 +12,7 @@ defmodule Ms2ex.GameHandlers.RequestQuit do
   end
 
   defp handle_quit(0x0, session) do
-    {:ok, session_data} = SessionManager.lookup(session.account.id)
+    {:ok, session_data} = Session.lookup(session.account.id)
     push(session, Packets.GameToLogin.bytes(session_data))
   end
 

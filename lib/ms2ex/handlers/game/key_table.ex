@@ -1,7 +1,10 @@
 defmodule Ms2ex.GameHandlers.KeyTable do
-  require Logger
-
-  alias Ms2ex.{Managers, Context, Net, Packets, Schema, Types}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   import Net.SenderSession, only: [push: 2]
   import Packets.PacketReader
@@ -14,7 +17,7 @@ defmodule Ms2ex.GameHandlers.KeyTable do
   # Move Quick Slot
   defp handle_mode(0x3, packet, session) do
     {id, packet} = get_short(packet)
-    {:ok, char} = Managers.Character.lookup(session.character_id)
+    {:ok, char} = Managers.Character.call(session.character_id, :lookup)
     hot_bars = Context.HotBars.list(char)
 
     with %Schema.HotBar{} = active_hot_bar <- Enum.at(hot_bars, id) do
@@ -32,7 +35,7 @@ defmodule Ms2ex.GameHandlers.KeyTable do
   # Remove Quick Slot
   defp handle_mode(0x5, packet, session) do
     {id, packet} = get_short(packet)
-    {:ok, char} = Managers.Character.lookup(session.character_id)
+    {:ok, char} = Managers.Character.call(session.character_id, :lookup)
     hot_bars = Context.HotBars.list(char)
 
     with %Schema.HotBar{} = active_hot_bar <- Enum.at(hot_bars, id) do

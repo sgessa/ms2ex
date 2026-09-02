@@ -4,12 +4,10 @@ defmodule Ms2ex.Net.Session do
   """
 
   use GenServer
-
   require Logger, as: L
 
   alias Ms2ex.Crypto.{Cipher, RecvCipher, SendCipher}
   alias Ms2ex.Net.{Router, SenderSession}
-  alias Ms2ex.Packets
   alias Ms2ex.Packets.PacketReader
 
   import Ms2ex.Net.Utils
@@ -161,8 +159,7 @@ defmodule Ms2ex.Net.Session do
     {cipher, packet} = RecvCipher.decrypt(state.recv_cipher, packet)
 
     {opcode, packet} = PacketReader.get_short(packet)
-
-    log_incoming_packet(opcode, packet)
+    Ms2ex.Net.Logger.log(:recv, opcode, packet)
 
     state = %{state | recv_cipher: cipher}
     Router.route(opcode, packet, state)
@@ -192,13 +189,5 @@ defmodule Ms2ex.Net.Session do
 
   defp log_connected_client(%{channel_id: id, socket: socket, type: :channel}) do
     L.info("Client #{peername(socket)} connected to Channel #{id}")
-  end
-
-  defp log_incoming_packet(opcode, packet) do
-    name = Packets.opcode_to_name(:recv, opcode)
-
-    if name not in conf()[:skip_packet_logs] do
-      L.debug("[RECV] #{name}: #{stringify_packet(packet)}")
-    end
   end
 end

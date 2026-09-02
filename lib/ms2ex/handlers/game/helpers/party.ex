@@ -1,5 +1,9 @@
 defmodule Ms2ex.GameHandlers.Helper.Party do
-  alias Ms2ex.{Managers, Packets, PartyManager, PartyServer, Types}
+  alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.Managers.PartyManager
+  alias Ms2ex.Managers.PartyServer
+  alias Ms2ex.Types
 
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
 
@@ -7,7 +11,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
     {:ok, party} = PartyManager.create(character)
 
     character = %{character | party_id: party.id}
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
 
     run(session, fn -> PartyServer.subscribe(party.id) end)
 
@@ -22,7 +26,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
       {:ok, party} = PartyManager.create(character)
 
       character = %{character | party_id: party.id}
-      Managers.Character.update(character)
+      Managers.Character.call(character, {:update, character})
 
       push(target, Packets.Party.invite(character))
       push(character, Packets.Party.create(party))

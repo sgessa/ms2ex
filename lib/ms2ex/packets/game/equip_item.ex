@@ -12,6 +12,6 @@ defmodule Ms2ex.Packets.EquipItem do
     |> put_ustring(to_string(item.equip_slot))
     |> put_int(item.rarity)
     |> put_byte()
-    |> Packets.InventoryItem.put_item(item)
+    |> Packets.InventoryItem.put_item(item, character)
   end
 end

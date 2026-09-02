@@ -12,6 +12,7 @@ config :ms2ex,
 
 # Configures the endpoint
 config :ms2ex, Ms2exWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
   url: [host: "localhost"],
   secret_key_base: "RXZNWwLu0l2gpn74X+CcZka5hzXsVQ7sq0/sdjsiOGaH37IOK9Tvzjf4RI007BFH",
   render_errors: [view: Ms2exWeb.ErrorView, accepts: ~w(json), layout: false],

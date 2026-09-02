@@ -1,5 +1,7 @@
 defmodule Ms2ex.GameHandlers.GroupChat do
-  alias Ms2ex.{Managers, GroupChat, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Managers.GroupChat
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
@@ -13,10 +15,11 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     handle_mode(mode, packet, session)
   end
 
-  # Create
-  def handle_mode(0x1, _packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
-    maybe_create_chat(session, character)
+  # Create (optionally with an immediate invite)
+  def handle_mode(0x1, packet, session) do
+    {rcpt_name, _packet} = get_ustring(packet)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+    maybe_create_chat(session, character, rcpt_name)
   end
 
   # Invite
@@ -24,13 +27,13 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     {rcpt_name, packet} = get_ustring(packet)
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, rcpt} <- get_rcpt(character, rcpt_name),
          :ok <- validate_rcpt(character, rcpt),
          {:ok, chat} <- get_chat(character, chat_id),
          :ok <- validate_chat(chat) do
       ids = [chat.id | rcpt.group_chat_ids]
-      Managers.Character.update(%{rcpt | group_chat_ids: ids})
+      Managers.Character.call(rcpt, {:update, %{rcpt | group_chat_ids: ids}})
 
       {:ok, chat} = GroupChat.add_member(chat, rcpt)
       GroupChat.broadcast(chat.id, Packets.GroupChat.update_members(chat, rcpt))
@@ -44,14 +47,14 @@ defmodule Ms2ex.GameHandlers.GroupChat do
   def handle_mode(0x4, packet, session) do
     {chat_id, _packet} = get_int(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, chat} <- get_chat(character, chat_id),
          {:ok, chat} <- GroupChat.remove_member(chat, character) do
       run(session, fn -> GroupChat.unsubscribe(chat) end)
       GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
 
       chat_ids = Enum.reject(character.group_chat_ids, &(&1 == chat.id))
-      Managers.Character.update(%{character | group_chat_ids: chat_ids})
+      Managers.Character.call(character, {:update, %{character | group_chat_ids: chat_ids}})
 
       push(session, Packets.GroupChat.leave(chat))
     end
@@ -64,29 +67,52 @@ defmodule Ms2ex.GameHandlers.GroupChat do
 
     if msg == "boom", do: raise(msg)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, chat} <- get_chat(character, chat_id) do
       GroupChat.broadcast(chat.id, Packets.GroupChat.chat(chat, character, msg))
     end
   end
 
-  defp maybe_create_chat(session, %{group_chat_ids: ids})
+  defp maybe_create_chat(session, %{group_chat_ids: ids}, _rcpt_name)
        when length(ids) >= @max_chats_per_user do
     session
   end
 
-  defp maybe_create_chat(session, character) do
+  defp maybe_create_chat(session, character, rcpt_name) do
     chat = %GroupChat{id: Ms2ex.generate_int(), member_ids: [character.id]}
     {:ok, _} = GroupChat.start(chat)
 
     run(session, fn -> GroupChat.subscribe(chat) end)
 
     ids = [chat.id | character.group_chat_ids]
-    Managers.Character.update(%{character | group_chat_ids: ids})
+    Managers.Character.call(character, {:update, %{character | group_chat_ids: ids}})
 
-    session
-    |> push(Packets.GroupChat.update(%{chat | members: [character]}))
-    |> push(Packets.GroupChat.create(chat))
+    session =
+      session
+      |> push(Packets.GroupChat.update(%{chat | members: [character]}))
+      |> push(Packets.GroupChat.create(chat))
+
+    if rcpt_name != "" do
+      maybe_invite_to_new_chat(session, character, chat, rcpt_name)
+    else
+      session
+    end
+  end
+
+  defp maybe_invite_to_new_chat(session, character, chat, rcpt_name) do
+    with {:ok, rcpt} <- get_rcpt(character, rcpt_name),
+         :ok <- validate_rcpt(character, rcpt) do
+      ids = [chat.id | rcpt.group_chat_ids]
+      Managers.Character.call(rcpt, {:update, %{rcpt | group_chat_ids: ids}})
+
+      {:ok, chat} = GroupChat.add_member(chat, rcpt)
+      GroupChat.broadcast(chat.id, Packets.GroupChat.update_members(chat, rcpt))
+
+      send(rcpt.sender_session_pid, {:join_group_chat, character, rcpt, chat})
+      push(session, Packets.GroupChat.invite(character, rcpt, chat))
+    else
+      _ -> session
+    end
   end
 
   defp get_chat(member, chat_id) do

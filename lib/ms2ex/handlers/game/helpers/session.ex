@@ -1,5 +1,10 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
-  alias Ms2ex.{Context, Context, GroupChat, Net.SenderSession, Packets, PartyServer, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Managers.GroupChat
+  alias Ms2ex.Net.SenderSession
+  alias Ms2ex.Packets
+  alias Ms2ex.Managers.PartyServer
+  alias Ms2ex.Schema
   alias Phoenix.PubSub
 
   def init_character(%Schema.Character{} = character) do

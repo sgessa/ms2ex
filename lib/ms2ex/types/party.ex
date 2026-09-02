@@ -67,6 +67,6 @@ defmodule Ms2ex.Types.Party do
   def new?(party), do: Enum.count(party.members) == 1
 
   def ready_check_in_progress?(%__MODULE__{ready_check: r}) do
-    Enum.count(r) > 0
+    Enum.any?(r)
   end
 end

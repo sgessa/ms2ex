@@ -1,5 +1,8 @@
 defmodule Ms2ex.Packets.FieldAddUser do
-  alias Ms2ex.{Enums, Packets, Schema, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
   import Packets.PacketWriter
 
   def bytes(character) do
@@ -9,7 +12,11 @@ defmodule Ms2ex.Packets.FieldAddUser do
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> Packets.CharacterList.put_character(character)
+    |> Packets.CharacterList.put_character(
+      character,
+      Map.get(character, :death_count, 0) || 0,
+      character.stats
+    )
     |> put_int(Schema.Character.job_id(character))
     |> put_byte(0x1)
     |> put_int(real_job_id)
@@ -74,7 +81,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
   def appearance(character) do
     ""
     |> put_byte(length(character.equips))
-    |> Packets.InventoryItem.put_equips(character.equips)
+    |> Packets.InventoryItem.put_equips(character.equips, character)
     |> put_byte(0x1)
     |> put_long()
     |> put_long()

@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.ItemRandomStats do
-  alias Ms2ex.{Enums, Schema, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
   alias Ms2ex.Storage
 
   def get(%Schema.Item{} = item) do
@@ -37,12 +39,12 @@ defmodule Ms2ex.Context.ItemRandomStats do
   end
 
   defp process_stat(%{rates: values, basic_attribute: attr}) do
-    value = :rand.uniform() * (values.max - values.min) + values.max
+    value = :rand.uniform() * (values.max - values.min) + values.min
     Types.ItemStat.build(Enums.BasicStatType.get_key(attr), :rate, value, :basic)
   end
 
   defp process_stat(%{rates: values, special_attribute: attr}) do
-    value = :rand.uniform() * (values.max - values.min) + values.max
+    value = :rand.uniform() * (values.max - values.min) + values.min
     Types.ItemStat.build(Enums.SpecialStatType.get_key(attr), :rate, value, :special)
   end
 end

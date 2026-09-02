@@ -2,16 +2,22 @@ defmodule Ms2ex.Schema.Character do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ms2ex.{Enums, Context, EctoTypes, Schema}
+  alias Ms2ex.Enums
+  alias Ms2ex.Context
+  alias Ms2ex.EctoTypes
+  alias Ms2ex.Schema
 
   @type t :: %__MODULE__{}
 
   @fields [
     :awakened,
+    :death_count,
+    :death_tick,
     :discovered_maps,
     :exp,
     :gender,
     :insignia_id,
+    :instant_revive_count,
     :level,
     :job,
     :map_id,
@@ -26,7 +32,9 @@ defmodule Ms2ex.Schema.Character do
   ]
 
   @optional_fields [
-    :active_skill_tab_id
+    :active_skill_tab_id,
+    :stat_point_sources,
+    :stat_point_allocation
   ]
 
   schema "characters" do
@@ -55,7 +63,7 @@ defmodule Ms2ex.Schema.Character do
     field :exp, :integer, default: 0
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
-    field :job, Enums.Job, default: :newbie
+    field :job, Enums.Job, default: :beginner
     field :map_id, :integer
     field :motto, :string, default: "Let's Maple!"
     field :name, :string
@@ -65,6 +73,11 @@ defmodule Ms2ex.Schema.Character do
     field :profile_url, :string, default: ""
     field :rest_exp, :integer, default: 0
     field :skin_color, EctoTypes.Term
+
+    field :stat_point_sources, EctoTypes.Term,
+      default: %{trophy: 0, quest: 0, exploration: 0, prestige: 0, command: 0}
+
+    field :stat_point_allocation, EctoTypes.Term, default: %{}
     field :taxis, {:array, :integer}, default: []
     field :title_id, :integer, default: 0
 
@@ -78,8 +91,13 @@ defmodule Ms2ex.Schema.Character do
     field :animation, :integer, virtual: true, default: 0
     field :change_map, :map, virtual: true
     field :channel_id, :integer, virtual: true
+    field :dead?, :boolean, virtual: true, default: false
+    field :death_count, :integer, default: 0
+    field :death_tick, :integer, default: 0
+    field :instant_revive_count, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Ms2ex.Enums.Gender, default: :male
+    field :gear_score, :integer, virtual: true, default: 0
     field :guild_name, :string, virtual: true, default: ""
     field :home_name, :string, virtual: true, default: ""
     field :object_id, :integer, virtual: true, default: 0
@@ -91,6 +109,7 @@ defmodule Ms2ex.Schema.Character do
     field :position, EctoTypes.Term, virtual: true
     field :rotation, EctoTypes.Term, virtual: true
     field :safe_position, EctoTypes.Term, virtual: true
+    field :update_position, EctoTypes.Term, virtual: true
     field :session_pid, EctoTypes.Term, virtual: true
     field :sender_session_pid, EctoTypes.Term, virtual: true
     field :skill_cast, EctoTypes.Term, virtual: true

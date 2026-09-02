@@ -1,0 +1,14 @@
+{
+  "$schema": "https://registry.kdco.dev/schemas/worktree.json",
+
+  "sync": {
+    "copyFiles": [".env"],
+    "symlinkDirs": ["deps", "_build"],
+    "exclude": []
+  },
+
+  "hooks": {
+    "postCreate": ["npm --prefix .opencode install"],
+    "preDelete": []
+  }
+}

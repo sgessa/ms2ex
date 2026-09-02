@@ -6,7 +6,8 @@ defmodule Ms2ex.Context.Accounts do
   updating, and deletion of user accounts.
   """
 
-  alias Ms2ex.{Repo, Schema}
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   @doc """
   Authenticates a user with a username and password.

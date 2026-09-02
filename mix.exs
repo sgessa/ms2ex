@@ -7,7 +7,7 @@ defmodule Ms2ex.MixProject do
     [
       app: :ms2ex,
       version: "0.1.0",
-      elixir: "~> 1.17",
+      elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -65,21 +65,20 @@ defmodule Ms2ex.MixProject do
       {:ecto_sql, "~> 3.9"},
       {:postgrex, "~> 0.16"},
       {:redix, "~> 1.1"},
+      {:oban, "~> 2.18"},
       {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"},
+      {:bandit, "~> 1.0"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:protobuf, ">= 0.0.0"},
-      {:google_protos, "~> 0.3.0"},
-      {:varint, ">= 0.0.0"},
       {:libgraph, "~> 0.13"},
       {:ranch, "~> 2.0", override: true},
       {:luaport, "~> 1.6"},
 
       # Development and testing tools
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:mimic, "~> 2.4", only: :test}
     ]
   end
 
@@ -94,7 +93,7 @@ defmodule Ms2ex.MixProject do
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test", "credo"]
     ]
   end
 end

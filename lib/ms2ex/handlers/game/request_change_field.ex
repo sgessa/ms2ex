@@ -1,7 +1,8 @@
 defmodule Ms2ex.GameHandlers.RequestChangeField do
-  require Logger
-
-  alias Ms2ex.{Managers, Context, Packets, Storage}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Storage
 
   import Packets.PacketReader
 
@@ -11,7 +12,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
   end
 
   defp handle_change_field(0x0, packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     {current_map_id, packet} = get_int(packet)
 

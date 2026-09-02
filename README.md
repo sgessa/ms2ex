@@ -1,14 +1,10 @@
-<div>
-  <h1>MS2EX</h1>
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-light.png#gh-light-mode-only)
 
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/sgessa/ms2ex/master/assets/logo.png" alt="MS2EX Logo" width="300"/>
-  </p>
-</div>
+![Ms2Ex](https://raw.githubusercontent.com/sgessa/ms2ex/logo/assets/logo-dark.png#gh-dark-mode-only)
 
 ### MapleStory 2 Server Emulator written in Elixir
 
-[![Elixir Version](https://img.shields.io/badge/elixir-1.18-blueviolet.svg)](https://elixir-lang.org/)
+[![Elixir Version](https://img.shields.io/badge/elixir-1.20-blueviolet.svg)](https://elixir-lang.org/)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Documentation](https://img.shields.io/badge/📚_documentation-online-brightgreen.svg)](https://sgessa.github.io/ms2ex)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -147,14 +143,10 @@ See our [contributing guidelines](CONTRIBUTING.md) for detailed instructions on 
 
 ## 📋 Roadmap
 
-- [ ] Complete core server functionalities
-- [ ] Implement all game mechanics
-- [ ] Add unit and integration tests
-- [ ] Create comprehensive documentation
-- [ ] Develop admin interface
-- [ ] Support for custom plugins
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the full, prioritized roadmap of
+missing features.
 
-**Want to make an impact?** Choose an area that matches your interests and skills! Please reach out via our [Discord](https://discord.gg/P66m7cvdJp) or open an issue to discuss how you can contribute.
+**Want to make an impact?** Choose an area that matches your interests and skills! Please reach out via our [Discord](https://discord.gg/DRASSfqAKk) or open an issue to discuss how you can contribute.
 
 ## 📜 License
 
@@ -171,7 +163,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions or to connect with the community:
 
 - **Open an issue** on this repository for bug reports or feature requests
-- **Join the [MapleStory 2 Hub Discord](https://discord.gg/P66m7cvdJp)** - The community gathering spot for MS2 fans where you can also find MS2EX maintainers
+- **Join our [Discord](https://discord.gg/DRASSfqAKk)** - The community gathering spot for MS2 fans where you can also find MS2EX maintainers
 ---
 
 <div align="center">

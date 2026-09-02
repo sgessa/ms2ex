@@ -1,14 +1,14 @@
 defmodule Ms2ex.GameHandlers.PickupMoney do
-  require Logger
-
-  alias Ms2ex.{Managers, Context, Context, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
 
   def handle(packet, session) do
     {count, packet} = get_byte(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     pickup_items(packet, character, count)
   end

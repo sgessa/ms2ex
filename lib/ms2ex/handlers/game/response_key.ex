@@ -1,17 +1,13 @@
 defmodule Ms2ex.GameHandlers.ResponseKey do
-  require Logger
-
-  alias Ms2ex.{
-    Managers,
-    Context,
-    LoginHandlers,
-    Net,
-    Packets,
-    PartyManager,
-    PartyServer,
-    SessionManager,
-    Storage
-  }
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.LoginHandlers
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Managers.PartyManager
+  alias Ms2ex.Managers.PartyServer
+  alias Ms2ex.Managers.Session
+  alias Ms2ex.Storage
 
   import Net.SenderSession, only: [push: 2, run: 2]
   import Packets.PacketReader
@@ -20,10 +16,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} <- SessionManager.lookup(account_id),
+    with {:ok, auth_data} <- Session.lookup(account_id),
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
-      SessionManager.register(account.id, auth_data)
+      Session.register(account.id, auth_data)
       run(session, fn -> Context.World.subscribe() end)
 
       character =
@@ -40,8 +36,17 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character = character |> set_spawn_position() |> maybe_set_party()
 
+      # the object id must exist before ServerEnter is built: the client reads
+      # its own id from that packet and derives its session identity from it
+      character =
+        if character.object_id == 0 do
+          %{character | object_id: Managers.GlobalCounter.get_and_increment()}
+        else
+          character
+        end
+
       Managers.Character.start(character)
-      Managers.Character.monitor(character)
+      Managers.Character.call(character, :monitor)
 
       character = Context.Characters.preload(character, friends: :rcpt)
       init_character(character)
@@ -69,7 +74,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(character, account_wallet, character_wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(Context.Inventory.list_tabs(character))
+      |> push_inventory_tab(character, Context.Inventory.list_tabs(character))
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -85,7 +90,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Fishing.load_log())
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
+      |> push(Packets.InGameRank.load())
       |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
+      |> push(Packets.HomeCommand.load(account.id))
+      |> push(Packets.Mentor.load())
+      |> push(Packets.Mentor.unknown12())
+      |> push(Packets.Mail.notify())
+      |> push(Packets.World.bytes())
       |> push_party(character)
     end
   end
@@ -114,16 +125,16 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     }
   end
 
-  defp push_inventory_tab(session, []), do: session
+  defp push_inventory_tab(session, _character, []), do: session
 
-  defp push_inventory_tab(session, [inventory_tab | tabs]) do
+  defp push_inventory_tab(session, character, [inventory_tab | tabs]) do
     items = Context.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
 
     session
     |> push(Packets.InventoryItem.reset_tab(inventory_tab.tab))
     |> push(Packets.InventoryItem.load_tab(inventory_tab.tab, inventory_tab.slots))
-    |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items))
-    |> push_inventory_tab(tabs)
+    |> push(Packets.InventoryItem.load_items(inventory_tab.tab, items, character))
+    |> push_inventory_tab(character, tabs)
   end
 
   defp push_party(session, character) do

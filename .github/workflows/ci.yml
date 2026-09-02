@@ -38,14 +38,15 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Setup Elixir
       - name: Set up Elixir
+        id: beam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.18.x"
-          otp-version: "27.x"
+          elixir-version: "1.20.x"
+          otp-version: "29.x"
 
       # Install LuaJIT dependencies
       - name: Install LuaJIT dependencies
@@ -53,29 +54,62 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libluajit-5.1-dev
 
-      # Cache dependencies and build artifacts
+      # runtime config reads DB_* / SERVER_ADDRESS from .env; match the
+      # postgres service started above
+      - name: Create env file
+        run: |
+          cat > .env <<'EOF'
+          DB_USER=postgres
+          DB_PASS=postgres
+          DB_NAME=ms2ex_test
+          DB_HOST=localhost
+          SERVER_ADDRESS=127.0.0.1
+          EOF
+
+      # Cache Hex's package tarballs and registry (~/.hex) so mix deps.get
+      # avoids re-downloading from hex.pm when the deps/_build key misses.
+      # setup-beam force-reinstalls the hex tool into ~/.mix every run, so
+      # that directory is not worth caching.
+      - name: Cache Hex
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.hex
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-hex
+          restore-keys: |
+            ${{ runner.os }}-hex-
+
+      # Cache dependencies and build artifacts. The key pins the OTP/Elixir
+      # versions so _build artifacts are never reused across toolchain bumps;
+      # restore-keys lets an older mix.lock build be reused incrementally.
       - name: Cache deps and _build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-
 
       # Install dependencies
       - name: Install dependencies
         run: mix deps.get
 
-      # Compile project (with warnings as errors)
+      # Compile project in the test environment (with warnings as errors) so
+      # the cached _build only holds test artifacts and mix test reuses them
       - name: Compile
         run: mix compile --warnings-as-errors
+        env:
+          MIX_ENV: test
 
-      # Run Credo for code analysis
+      # Run Credo for code analysis. Runs under the test env (like the compile
+      # step) so it reuses the same _build instead of triggering a dev compile.
       - name: Run Credo
         run: mix credo
-        continue-on-error: true
+        env:
+          MIX_ENV: test
 
       # Run tests when available
       - name: Run tests
@@ -87,4 +121,3 @@ jobs:
           fi
         env:
           MIX_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost/ms2ex_test

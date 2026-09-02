@@ -1,9 +1,12 @@
 defmodule Ms2ex.Context.ItemEnchantStats do
-  alias Ms2ex.{Enums, Lua, Schema, Types}
+  alias Ms2ex.Enums
+  alias Ms2ex.Lua.ItemEnchant
+  alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   def get(%Schema.Item{} = item) do
     item
-    |> Lua.Items.get_enchant_values()
+    |> ItemEnchant.get_values()
     |> Enum.chunk_every(2)
     |> Enum.reduce(%{}, fn [attr_nr, value], acc ->
       if attr_nr == 0 do

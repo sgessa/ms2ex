@@ -1,6 +1,8 @@
 defmodule Ms2ex.GameHandlers.RequestCube do
   require Logger
-  alias Ms2ex.{Managers, Context, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -44,7 +46,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
   end
 
   def handle_mode(@remove_cube, _packet, session) do
-    with {:ok, character} <- Managers.Character.lookup(session.character_id) do
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
       Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
       push(session, Packets.ResponseCube.drop(character))
     end

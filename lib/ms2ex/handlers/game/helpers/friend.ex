@@ -1,5 +1,7 @@
 defmodule Ms2ex.GameHandlers.Helper.Friend do
-  alias Ms2ex.{Managers, Context, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   @friend_list_max_size 100
 
@@ -62,6 +64,15 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
     end
   end
 
+  # check if character has already blocked rcpt
+  def check_not_blocked(character, rcpt) do
+    if Enum.find(character.friends, &(&1.rcpt_id == rcpt.id and &1.status == :blocked)) do
+      {:error, Packets.Friend.notice(:cannot_send_request, rcpt.name)}
+    else
+      :ok
+    end
+  end
+
   def check_is_already_friend(character, rcpt) do
     if Enum.find(character.friends, &(&1.rcpt_id == rcpt.id and &1.status != :blocked)) do
       {:error, Packets.Friend.notice(:already_friends, rcpt.name)}
@@ -73,6 +84,6 @@ defmodule Ms2ex.GameHandlers.Helper.Friend do
   def remove_friend_from_session(character, shared_id) do
     new_friends = Enum.reject(character.friends, &(&1.shared_id == shared_id))
     character = Map.put(character, :friends, new_friends)
-    Managers.Character.update(character)
+    Managers.Character.call(character, {:update, character})
   end
 end

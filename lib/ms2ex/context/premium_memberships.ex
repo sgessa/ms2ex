@@ -1,5 +1,6 @@
 defmodule Ms2ex.Context.PremiumMemberships do
-  alias Ms2ex.{Repo, Schema}
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   def create_or_extend(account_id, expiration) do
     Repo.transaction(fn ->

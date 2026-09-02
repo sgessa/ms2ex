@@ -6,7 +6,9 @@ defmodule Ms2ex.Context.Inventory do
   including adding, removing, updating, and organizing items.
   """
 
-  alias Ms2ex.{Schema, Repo}
+  alias Ms2ex.Schema
+  alias Ms2ex.Repo
+  alias Ms2ex.Types
 
   import Ecto.Query, except: [update: 2]
 
@@ -181,9 +183,10 @@ defmodule Ms2ex.Context.Inventory do
 
   defp create(character, %{amount: n, metadata: meta} = attrs) when n > 0 do
     rarity = attrs.rarity || 1
-    slot = find_first_available_slot(character.id, meta.property.type)
+    inventory_tab = Types.Item.inventory_tab(meta)
+    slot = find_first_available_slot(character.id, inventory_tab)
 
-    attrs = %{attrs | inventory_tab: meta.property.type, rarity: rarity, inventory_slot: slot}
+    attrs = %{attrs | inventory_tab: inventory_tab, rarity: rarity, inventory_slot: slot}
     attrs = Map.from_struct(attrs)
 
     changeset =
@@ -215,10 +218,10 @@ defmodule Ms2ex.Context.Inventory do
       iex> update_item(item, %{amount: 5})
       {:ok, %Schema.Item{amount: 5}}
   """
-  @spec update_item(Schema.Item.t(), map()) ::
+  @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
           {:ok, Schema.Item.t()} | {:error, Ecto.Changeset.t()}
-  def update_item(%Schema.Item{} = item, attrs) do
-    item
+  def update_item(data, attrs) do
+    data
     |> Schema.Item.changeset(attrs)
     |> Repo.update()
   end

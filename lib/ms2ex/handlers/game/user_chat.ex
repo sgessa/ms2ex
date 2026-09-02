@@ -1,14 +1,11 @@
 defmodule Ms2ex.GameHandlers.UserChat do
-  alias Ms2ex.{
-    Managers,
-    Commands,
-    Context,
-    Enums,
-    Context,
-    Net,
-    Packets,
-    PartyServer
-  }
+  alias Ms2ex.Managers
+  alias Ms2ex.Commands
+  alias Ms2ex.Context
+  alias Ms2ex.Enums
+  alias Ms2ex.Net
+  alias Ms2ex.Packets
+  alias Ms2ex.Managers.PartyServer
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -23,7 +20,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
     {rcpt, packet} = get_ustring(packet)
     {_, _packet} = get_long(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     case msg do
       "!" <> cmd ->

@@ -97,7 +97,7 @@ defmodule Ms2ex.Crypto.TableCrypter do
 
     rand32 = Rand32.build(seed)
 
-    Enum.reduce((@table_size - 1)..0, {data, rand32}, fn idx, {data, rand32} ->
+    Enum.reduce((@table_size - 1)..0//-1, {data, rand32}, fn idx, {data, rand32} ->
       {rand32, rand} = Rand32.random(rand32)
 
       rand_idx = rem(rand, idx + 1)

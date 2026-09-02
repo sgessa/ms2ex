@@ -6,7 +6,10 @@ defmodule Ms2ex.Context.Equips do
   as well as validating equipment slots.
   """
 
-  alias Ms2ex.{Context, Schema, Repo, Enums}
+  alias Ms2ex.Context
+  alias Ms2ex.Schema
+  alias Ms2ex.Repo
+  alias Ms2ex.Enums
 
   import Ecto.Query, except: [update: 2]
   import Context.Inventory, only: [update_item: 2, find_first_available_slot: 2]
@@ -92,7 +95,9 @@ defmodule Ms2ex.Context.Equips do
   end
 
   def equip(%Schema.Item{location: :inventory} = item, equip_slot) do
-    update_item(item, %{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
+    item
+    |> Schema.Item.bind_if_needed(:equip)
+    |> update_item(%{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})
   end
 
   @doc """

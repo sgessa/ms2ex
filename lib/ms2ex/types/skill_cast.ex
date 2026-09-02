@@ -3,6 +3,8 @@ defmodule Ms2ex.Types.SkillCast do
   alias Ms2ex.Enums
   alias Ms2ex.Types.Coord
 
+  @state_skill_drain_interval 1000
+
   @type t :: %__MODULE__{}
   defstruct [
     :client_tick,
@@ -18,6 +20,8 @@ defmodule Ms2ex.Types.SkillCast do
     :direction,
     :rotate2z,
     :caster,
+    :attack_counter,
+    :item_uid,
     motion_point: 0,
     attack_point: 0
   ]
@@ -33,10 +37,49 @@ defmodule Ms2ex.Types.SkillCast do
     meta.levels["#{level}"]
   end
 
+  def use_item?(%__MODULE__{} = skill_cast) do
+    level = skill_level(skill_cast)
+    get_in(level, [:consume, :use_item]) || false
+  end
+
+  def cooldown(%__MODULE__{} = skill_cast, start_tick) do
+    level = skill_level(skill_cast)
+    state = Map.get(skill_cast.meta, :state, %{})
+
+    cooldown_time = level[:cooldown_time] || 0
+    recharge_max_count = Map.get(state, :recharge_max_count, 0)
+
+    if cooldown_time > 0 or recharge_max_count > 0 do
+      %{
+        skill_id: skill_cast.skill_id,
+        level: skill_cast.skill_level,
+        start_tick: start_tick,
+        end_tick: start_tick + trunc(cooldown_time * 1000),
+        group_id: Map.get(state, :cooldown_group_id, 0),
+        recharge_max_count: recharge_max_count,
+        charges: 0
+      }
+    end
+  end
+
   def duration(%__MODULE__{} = skill_cast) do
     case splash(skill_cast) do
       %{interval: interval} -> interval
       _ -> 0
+    end
+  end
+
+  # cadence for a state skill's resource drain: the motion sequence speed in
+  # milliseconds when projected, otherwise once per second. The fallback also
+  # covers metadata ingested before motion_property was projected.
+  def drain_interval(%__MODULE__{} = skill_cast) do
+    case skill_level(skill_cast) do
+      %{motions: [%{motion_property: %{sequence_speed: speed}} | _]}
+      when is_number(speed) and speed > 0 ->
+        trunc(speed * 1000)
+
+      _ ->
+        @state_skill_drain_interval
     end
   end
 
@@ -61,16 +104,24 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
+  def damage_value(%__MODULE__{skill_level: lvl, meta: meta}) do
+    case meta.levels["#{lvl}"] do
+      %{motions: [%{attacks: [%{damage: %{value: value}}]}]} -> value
+      _ -> 0
+    end
+  end
+
   def physical?(%__MODULE__{meta: meta}) do
-    Enums.AttackType.get_value(meta.property.attack_type) == :physical
+    meta.property.attack_type == Enums.AttackType.get_value(:physical)
+  end
+
+  def in_battle?(%__MODULE__{meta: meta}) do
+    # defaults to true for skill metadata that predates the state projection
+    Map.get(meta, :state, %{})[:in_battle] != false
   end
 
   def magic?(%__MODULE__{meta: meta}) do
-    Enums.AttackType.get_value(meta.property.attack_type) == :magic
-  end
-
-  def crit_damage_rate(%__MODULE__{} = skill_cast) do
-    damage_rate(skill_cast) * 2
+    meta.property.attack_type == Enums.AttackType.get_value(:magic)
   end
 
   def condition_skills(%__MODULE__{skill_level: lvl, meta: meta}) do
@@ -81,6 +132,42 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
+  # on-hit effects applied to targets: the attack's condition skills, both the
+  # plain ones and the dependOnDamageCount ones (skills_on_damage)
+  def attack_skills(%__MODULE__{} = skill_cast) do
+    case skill_level(skill_cast) do
+      %{motions: [%{attacks: [attack]}]} ->
+        Map.get(attack, :skills, []) ++ Map.get(attack, :skills_on_damage, [])
+
+      _ ->
+        []
+    end
+  end
+
+  # the skill fired by a region/splash attack: returns the linked splash skill
+  # id+level plus its splash timing so the region can be announced and ticked
+  # with the correct metadata rather than a non-splash side effect listed first
+  def splash_skill_cast(%__MODULE__{} = skill_cast) do
+    case splash_effect(skill_cast) do
+      %{id: id, level: level, splash: splash} when id > 0 ->
+        cast = %__MODULE__{
+          id: 0,
+          skill_id: id,
+          skill_level: level,
+          caster: skill_cast.caster,
+          meta: Storage.Skills.get_meta(id),
+          position: skill_cast.position,
+          rotation: skill_cast.rotation,
+          attack_counter: skill_cast.attack_counter
+        }
+
+        {cast, splash}
+
+      _ ->
+        nil
+    end
+  end
+
   def attack_point(%__MODULE__{motion_point: motion, attack_point: attack} = skill_cast) do
     level = skill_cast.meta[:levels]["#{skill_cast.skill_level}"]
     motion = level[:motions] |> Enum.at(motion)
@@ -88,18 +175,32 @@ defmodule Ms2ex.Types.SkillCast do
   end
 
   def splash(%__MODULE__{} = skill_cast) do
-    attack_skill = attack_point(skill_cast)[:skills] |> List.first()
-    attack_skill[:splash]
+    case splash_effect(skill_cast) do
+      %{splash: splash} -> splash
+      _ -> nil
+    end
+  end
+
+  def splash_use_direction?(%__MODULE__{} = skill_cast) do
+    case splash_effect(skill_cast) do
+      %{splash: %{use_direction: false}} -> false
+      _ -> true
+    end
+  end
+
+  defp splash_effect(%__MODULE__{} = skill_cast) do
+    skill_cast
+    |> attack_skills()
+    |> Enum.find(&(Map.get(&1, :has_splash, false) and is_map(Map.get(&1, :splash))))
   end
 
   def magic_path(%__MODULE__{} = skill_cast) do
     cube_magic_path_id = attack_point(skill_cast)[:cube_magic_path_id] || 0
 
     case Storage.Table.MagicPaths.get(cube_magic_path_id) do
-      paths when is_list(paths) and length(paths) > 0 ->
+      paths when is_list(paths) and paths != [] ->
         Enum.map(paths, fn path ->
-          # TODO fire_offset rotate if path.rotate?
-          fire_offset = struct(Coord, path[:fire_offset] || %{})
+          fire_offset = rotate_fire_offset(path, skill_cast.rotation)
           Coord.sum(skill_cast.position, fire_offset)
 
           # TODO align position unless path.ignoreAdjust
@@ -107,6 +208,16 @@ defmodule Ms2ex.Types.SkillCast do
 
       _ ->
         [skill_cast.position]
+    end
+  end
+
+  defp rotate_fire_offset(path, rotation) do
+    fire_offset = struct(Coord, path[:fire_offset] || %{})
+
+    if path[:rotate?] do
+      Coord.rotate(fire_offset, rotation)
+    else
+      fire_offset
     end
   end
 end

@@ -1,15 +1,22 @@
 defmodule Ms2ex.Context.Skills do
-  alias Ms2ex.{Context, Storage, Repo, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Storage
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
 
   def by_job(job) do
-    jobs = Storage.Tables.Jobs.all()
+    case Storage.Tables.Jobs.get(job) do
+      nil ->
+        []
 
-    basic_skills = get_in(jobs, [job, :skills, :basic]) || []
-    awakening_skills = get_in(jobs, [job, :skills, :awakening]) || []
+      job_data ->
+        basic_skills = get_in(job_data, [:skills, :basic]) || []
+        awakening_skills = get_in(job_data, [:skills, :awakening]) || []
 
-    basic_skills ++ awakening_skills
+        basic_skills ++ awakening_skills
+    end
   end
 
   def get_active_tab(%Schema.Character{active_skill_tab_id: active_tab_id, skill_tabs: tabs}) do
@@ -49,6 +56,13 @@ defmodule Ms2ex.Context.Skills do
       nil -> :error
       skill -> update(skill, attrs)
     end
+  end
+
+  def add(%Schema.SkillTab{} = tab, attrs) do
+    tab
+    |> Ecto.build_assoc(:skills)
+    |> Schema.Skill.changeset(attrs)
+    |> Repo.insert()
   end
 
   def update(%Schema.Skill{} = skill, attrs) do

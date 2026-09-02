@@ -24,6 +24,7 @@ defmodule Ms2ex.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Ms2ex.DataCase
+      import Ms2ex.TestHelpers
     end
   end
 

@@ -1,12 +1,12 @@
 defmodule Ms2ex.GameHandlers.Vibrate do
-  require Logger
-
-  alias Ms2ex.{Managers, Context, Packets}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
 
   import Packets.PacketReader
 
   def handle(packet, session) do
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     {entity_id, packet} = get_string(packet)
     {some_id, packet} = get_long(packet)

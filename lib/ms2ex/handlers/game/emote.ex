@@ -1,5 +1,8 @@
 defmodule Ms2ex.GameHandlers.Emote do
-  alias Ms2ex.{Managers, Context, Context, Packets, Schema}
+  alias Ms2ex.Managers
+  alias Ms2ex.Context
+  alias Ms2ex.Packets
+  alias Ms2ex.Schema
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -13,7 +16,7 @@ defmodule Ms2ex.GameHandlers.Emote do
   defp handle_mode(0x1, packet, session) do
     {item_uid, _packet} = get_long(packet)
 
-    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %Schema.Item{} = item <- Context.Inventory.get(character, item_uid),
          %{metadata: %{skill_id: emote_id}} <- Context.Items.load_metadata(item),
          consumed_item <- Context.Inventory.consume(item),
@@ -28,7 +31,7 @@ defmodule Ms2ex.GameHandlers.Emote do
   defp handle_mode(0x2, packet, session) do
     {emote_id, _packet} = get_int(packet)
 
-    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     Context.Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
   end
 end

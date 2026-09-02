@@ -1,5 +1,7 @@
 defmodule Ms2ex.Context.Characters do
-  alias Ms2ex.{Context, Repo, Schema}
+  alias Ms2ex.Context
+  alias Ms2ex.Repo
+  alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
 
@@ -39,6 +41,15 @@ defmodule Ms2ex.Context.Characters do
   def update(%Schema.Character{} = character, attrs) do
     character
     |> Schema.Character.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def update_stat_points(%Schema.Character{} = character, sources, allocation) do
+    character
+    |> Schema.Character.changeset(%{
+      stat_point_sources: sources,
+      stat_point_allocation: allocation
+    })
     |> Repo.update()
   end
 
