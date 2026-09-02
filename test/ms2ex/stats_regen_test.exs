@@ -61,6 +61,14 @@ defmodule Ms2ex.StatsRegenTest do
     assert character.regen_stamina? == true
   end
 
+  test "spirit consumption does not defer regen" do
+    character = character(stats: [spirit_cur: 100, spirit_max: 100])
+    character = Character.Stats.decrease(character, :spirit, 40, [])
+
+    assert character.stats.spirit_cur == 60
+    refute Map.has_key?(Map.get(character, :regen_waits, %{}), :spirit)
+  end
+
   test "regen resumes once the wait expires" do
     character = character(stats: [stamina_cur: 60, stamina_max: 100])
     character = Character.Stats.decrease(character, :stamina, 10, [])
@@ -136,6 +144,19 @@ defmodule Ms2ex.StatsRegenTest do
 
     assert character.regen_waits.stamina in (before + 1_000)..(System.monotonic_time(:millisecond) +
                                                                  1_000)
+  end
+
+  test "regen interval is clamped to a minimum" do
+    character =
+      character(
+        stats: [spirit_cur: 90, spirit_max: 100, sp_regen_cur: 2, sp_regen_interval_cur: 0]
+      )
+
+    character = Character.Stats.regen(character, :spirit)
+
+    assert character.stats.spirit_cur == 92
+    assert_receive {:regen, :spirit}, 150
+    refute_receive {:regen, :spirit}, 20
   end
 
   defp character(overrides) do

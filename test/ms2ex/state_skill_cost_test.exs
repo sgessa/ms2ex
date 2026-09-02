@@ -1,5 +1,6 @@
 defmodule Ms2ex.StateSkillCostTest do
   use ExUnit.Case, async: true
+  use Mimic
 
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Character
@@ -166,6 +167,72 @@ defmodule Ms2ex.StateSkillCostTest do
     assert switched.stats.spirit_cur == 80
   end
 
+  test "the character manager persists regular skill spirit costs and resumes regen" do
+    Mimic.stub(Ms2ex.Storage, :get, fn _set, _id -> nil end)
+
+    character =
+      character(%{
+        id: System.unique_integer([:positive]),
+        stats: %{
+          health_max: 1000,
+          health_cur: 1000,
+          spirit_max: 100,
+          spirit_cur: 100,
+          sp_regen_cur: 5,
+          sp_regen_interval_cur: 50,
+          stamina_max: 100,
+          stamina_cur: 100,
+          stamina_regen_cur: 0,
+          hp_regen_interval_cur: 1000,
+          stamina_regen_interval_cur: 1000
+        }
+      })
+
+    {:ok, pid} = Managers.Character.start(character)
+
+    on_exit(fn ->
+      Managers.SkillCast.stop(@cast_id)
+      if Process.alive?(pid), do: GenServer.stop(pid)
+    end)
+
+    assert {:ok, casted} =
+             Managers.Character.call(character, {:cast_skill, skill_cast(character)})
+
+    assert casted.stats.spirit_cur == 90
+    assert {:ok, persisted} = Managers.Character.call(character, :lookup)
+    assert persisted.stats.spirit_cur == 90
+
+    regen_to = eventually(fn -> spirit_of(character) end, &(&1 >= 100), 2_000)
+
+    assert regen_to == 100
+  end
+
+  test "repeated spirit drains arm regen only once before the first tick" do
+    character =
+      character(%{
+        stats: %{
+          health_max: 1000,
+          health_cur: 1000,
+          spirit_max: 100,
+          spirit_cur: 100,
+          sp_regen_cur: 1,
+          sp_regen_interval_cur: 20,
+          stamina_max: 100,
+          stamina_cur: 100,
+          hp_regen_interval_cur: 1000,
+          stamina_regen_interval_cur: 1000
+        }
+      })
+
+    character = Character.Stats.decrease(character, :spirit, 10, [])
+    assert character.regen_spirit? == true
+
+    _character = Character.Stats.decrease(character, :spirit, 10, [])
+
+    refute_receive {:regen, :spirit}, 50
+    assert_receive {:regen, :spirit}, 150
+  end
+
   test "the character manager rejects a state-skill cast without resources" do
     character =
       character(%{
@@ -274,7 +341,7 @@ defmodule Ms2ex.StateSkillCostTest do
       skill_id: 15_000_220,
       skill_level: 1,
       caster: caster,
-      meta: %{levels: %{"1" => %{consume: %{stat: @drain_cost}}}}
+      meta: %{levels: %{"1" => %{consume: %{stat: @drain_cost}, skills: []}}}
     }
   end
 
@@ -293,5 +360,28 @@ defmodule Ms2ex.StateSkillCostTest do
 
   defp activate(character, skill_cast, state) do
     Map.put(character, :state_skill, %{skill_cast: skill_cast, state: state})
+  end
+
+  defp spirit_of(character) do
+    case Managers.Character.call(character, :lookup) do
+      {:ok, %{stats: %{spirit_cur: cur}}} -> cur
+      _ -> -1
+    end
+  end
+
+  defp eventually(produce, done?, timeout) do
+    deadline = System.monotonic_time(:millisecond) + timeout
+    do_eventually(produce, done?, deadline)
+  end
+
+  defp do_eventually(produce, done?, deadline) do
+    value = produce.()
+
+    if done?.(value) or System.monotonic_time(:millisecond) > deadline do
+      value
+    else
+      Process.sleep(25)
+      do_eventually(produce, done?, deadline)
+    end
   end
 end

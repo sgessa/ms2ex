@@ -88,9 +88,15 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     {mobs, state} =
       Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
         dmg = Context.Damage.calculate(splash_cast, mob, false)
-        {_reply, state} = Field.Npc.damage(state, splash_cast.caster, dmg.dmg, object_id)
-        state = Field.Npc.apply_skill_effects(state, splash_cast, object_id)
-        {[{mob, dmg} | mobs], state}
+
+        case Field.Npc.damage(state, splash_cast.caster, dmg.dmg, object_id) do
+          {:ok, damaged_mob, state} ->
+            state = Field.Npc.apply_skill_effects(state, splash_cast, object_id)
+            {[{damaged_mob, dmg} | mobs], state}
+
+          {:error, state} ->
+            {mobs, state}
+        end
       end)
 
     if mobs != [] do

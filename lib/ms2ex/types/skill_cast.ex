@@ -179,6 +179,13 @@ defmodule Ms2ex.Types.SkillCast do
     attack_skill[:splash]
   end
 
+  def splash_use_direction?(%__MODULE__{} = skill_cast) do
+    case attack_skills(skill_cast) do
+      [%{splash: %{use_direction: false}} | _] -> false
+      _ -> true
+    end
+  end
+
   def magic_path(%__MODULE__{} = skill_cast) do
     cube_magic_path_id = attack_point(skill_cast)[:cube_magic_path_id] || 0
 

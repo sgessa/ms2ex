@@ -22,9 +22,17 @@ defmodule Ms2ex.Packets.RegionSkill do
     |> put_int(skill_cast.skill_id)
     |> put_short(skill_cast.skill_level)
     # RotationH
-    |> put_float(skill_cast.rotation.z)
+    |> put_float(region_rotation_z(skill_cast))
     # RotationV / 100
     |> put_float()
+  end
+
+  defp region_rotation_z(skill_cast) do
+    if SkillCast.splash_use_direction?(skill_cast) do
+      skill_cast.rotation.z
+    else
+      0.0
+    end
   end
 
   def remove(source_id) do

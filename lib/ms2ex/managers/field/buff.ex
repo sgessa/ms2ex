@@ -351,23 +351,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         state
 
       {hp, _sp, _ep} ->
-        if hp > 0 and npc_alive?(state, buff.owner.object_id) do
-          {_reply, state} =
-            Managers.Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id)
-
-          Context.Field.broadcast(
-            state.topic,
-            Packets.SkillDamage.dot_damage(%{
-              caster_id: buff.caster.object_id,
-              target_id: buff.owner.object_id,
-              proc_count: buff.proc_count,
-              type: 0,
-              hp_amount: -hp
-            })
-          )
-        end
-
-        state
+        apply_npc_dot_damage(buff, state, hp)
     end
   end
 
@@ -407,6 +391,33 @@ defmodule Ms2ex.Managers.Field.Buff do
         end
 
         state
+    end
+  end
+
+  defp apply_npc_dot_damage(_buff, state, hp) when hp <= 0, do: state
+
+  defp apply_npc_dot_damage(buff, state, hp) do
+    if npc_alive?(state, buff.owner.object_id) do
+      case Managers.Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id) do
+        {:ok, _mob, state} ->
+          Context.Field.broadcast(
+            state.topic,
+            Packets.SkillDamage.dot_damage(%{
+              caster_id: buff.caster.object_id,
+              target_id: buff.owner.object_id,
+              proc_count: buff.proc_count,
+              type: 0,
+              hp_amount: -hp
+            })
+          )
+
+          state
+
+        {:error, state} ->
+          state
+      end
+    else
+      state
     end
   end
 

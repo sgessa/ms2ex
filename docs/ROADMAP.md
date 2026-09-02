@@ -98,9 +98,10 @@ The drop packet still has three deviations:
 still uses a fixed radius instead of the exact skill geometry and always lands
 the first hit immediately.
 
-### 11. RegionSkill rotation — [Open]
+### 11. RegionSkill rotation — [Done]
 
-`RegionSkill` always sends rotation where direction-less skills should zero it.
+`RegionSkill` now zeros horizontal rotation for direction-less region skills while
+keeping directional ones unchanged.
 
 ### 12. Party damage meter — [Open]
 
@@ -119,9 +120,13 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 - Passive HP/SP/stamina regen fix: inverted dead-actor guard on
   `Character.Stats.regen/2` (from #88) meant living characters never
   regenerated; exposed by the Swift Swim stamina drain. Consumption now
-  also suspends that stat's regen for the projected Recovery*WaitTick
+  also suspends HP/stamina regen for the projected Recovery*WaitTick
   (new server.constants.xml ingest doc), so drains deplete instead of
-  racing regen ([#98](https://github.com/sgessa/ms2ex/pull/98))
+  racing regen. Regular active-skill SP drains now persist in the
+  character manager too, so spirit regen resumes after normal casts as
+  well as state skills; passive regen ticks now also clamp to a minimum
+  interval so negative rate bonuses cannot collapse them to zero delay
+  ([#98](https://github.com/sgessa/ms2ex/pull/98))
 - State-skill resource costs: cast validation + consumption, per-tick drain
   loop at the projected motion `sequence_speed`, cancellation on state
   mismatch / death / resource exhaustion

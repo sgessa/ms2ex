@@ -36,9 +36,9 @@ defmodule Ms2ex.Managers.Character do
   def init(character) do
     {:ok,
      character
-     |> Map.put(:regen_hp?, false)
-     |> Map.put(:regen_sp?, false)
-     |> Map.put(:regen_sta?, false)
+     |> Map.put(:regen_health?, false)
+     |> Map.put(:regen_spirit?, false)
+     |> Map.put(:regen_stamina?, false)
      |> Map.put(:skill_cooldowns, %{})
      |> Map.put(:state_skill, nil)
      |> Map.put(:regen_waits, %{})
@@ -66,6 +66,9 @@ defmodule Ms2ex.Managers.Character do
       |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
       |> Map.put(:state_skill, Map.get(state, :state_skill))
       |> Map.put(:regen_waits, Map.get(state, :regen_waits, %{}))
+      |> Map.put(:regen_health?, Map.get(state, :regen_health?, false))
+      |> Map.put(:regen_spirit?, Map.get(state, :regen_spirit?, false))
+      |> Map.put(:regen_stamina?, Map.get(state, :regen_stamina?, false))
 
     {:reply, :ok, updated}
   end
@@ -110,7 +113,8 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
 
   def handle_call({:cast_skill, skill_cast}, _from, character) do
-    {:reply, {:ok, Character.Skill.cast_skill(character, skill_cast)}, character}
+    character = Character.Skill.cast_skill(character, skill_cast)
+    {:reply, {:ok, character}, character}
   end
 
   def handle_call({:cast_state_skill, skill_cast, state}, _from, character) do
