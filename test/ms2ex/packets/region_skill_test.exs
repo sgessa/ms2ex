@@ -10,7 +10,18 @@ defmodule Ms2ex.Packets.RegionSkillTest do
   import Ms2ex.TestHelpers
 
   setup do
-    stub_metadata(%{"table:magicpath.xml" => %{table: %{entries: %{}}}})
+    stub_metadata(%{
+      "table:magicpath.xml" => %{
+        table: %{
+          entries: %{
+            "103000111" => [
+              %{rotate?: true, fire_offset: %{x: 0.0, y: 450.0, z: 0.0}}
+            ]
+          }
+        }
+      }
+    })
+
     :ok
   end
 
@@ -54,6 +65,21 @@ defmodule Ms2ex.Packets.RegionSkillTest do
     assert_in_delta rotation_h, 0.0, 1.0e-6
     assert_in_delta rotation_v, 0.0, 1.0e-6
     assert packet == <<>>
+  end
+
+  test "rotates region points with the caster facing" do
+    packet = RegionSkill.add(321, flame_tornado_cast())
+    {_opcode, packet} = get_short(packet)
+    {_mode, packet} = get_byte(packet)
+    {_source_id, packet} = get_int(packet)
+    {_source_id2, packet} = get_int(packet)
+    {_next_tick, packet} = get_int(packet)
+    {_point_count, packet} = get_byte(packet)
+    {point, _packet} = get_coord(packet)
+
+    assert_in_delta point.x, -317.198, 0.01
+    assert_in_delta point.y, 320.198, 0.01
+    assert_in_delta point.z, 3.0, 1.0e-6
   end
 
   test "splash_skill_cast skips non-splash side effects" do
@@ -101,7 +127,7 @@ defmodule Ms2ex.Packets.RegionSkillTest do
       motion_point: 0,
       attack_point: 0,
       position: %Coord{x: 1, y: 2, z: 3},
-      rotation: %Coord{x: 0, y: 0, z: 45.0},
+      rotation: %Coord{x: 0, y: 0, z: 225.0},
       caster: %Ms2ex.Schema.Character{id: 1},
       meta: %{
         levels: %{

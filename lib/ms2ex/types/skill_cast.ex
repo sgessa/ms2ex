@@ -200,8 +200,7 @@ defmodule Ms2ex.Types.SkillCast do
     case Storage.Table.MagicPaths.get(cube_magic_path_id) do
       paths when is_list(paths) and paths != [] ->
         Enum.map(paths, fn path ->
-          # TODO fire_offset rotate if path.rotate?
-          fire_offset = struct(Coord, path[:fire_offset] || %{})
+          fire_offset = rotate_fire_offset(path, skill_cast.rotation)
           Coord.sum(skill_cast.position, fire_offset)
 
           # TODO align position unless path.ignoreAdjust
@@ -209,6 +208,16 @@ defmodule Ms2ex.Types.SkillCast do
 
       _ ->
         [skill_cast.position]
+    end
+  end
+
+  defp rotate_fire_offset(path, rotation) do
+    fire_offset = struct(Coord, path[:fire_offset] || %{})
+
+    if path[:rotate?] do
+      Coord.rotate(fire_offset, rotation)
+    else
+      fire_offset
     end
   end
 end
