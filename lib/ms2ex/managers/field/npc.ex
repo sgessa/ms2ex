@@ -12,6 +12,8 @@ defmodule Ms2ex.Managers.Field.Npc do
   # client dropping controls sent while it asynchronously loads the entity
   @idle_control_ms 30
   @corpse_broadcast_ms 1000
+  @spawn_rate_ms 1000
+  @force_spawn_multiplier 2
 
   def load_npc_spawns(state) do
     state.map_id
@@ -38,21 +40,59 @@ defmodule Ms2ex.Managers.Field.Npc do
     {spawn_point_id, state} = Managers.Field.next_local_id(state)
     npc_spawn = Map.put(npc_spawn, :id, spawn_point_id)
 
-    state =
-      if npc_spawn[:regen_check_time] > 0 || npc_spawn[:population] > 0 do
-        put_in(state, [:npc_spawns, spawn_point_id], npc_spawn)
-      else
-        state
-      end
+    if mob_spawn?(npc_spawn) do
+      # mob spawn points fill their population through the tick-driven spawn
+      # cycle; the first cycle is due as soon as the spawn is loaded
+      npc_spawn =
+        npc_spawn
+        |> Map.put(:spawned_mobs, [])
+        |> Map.put(:spawn_tick, Ms2ex.sync_ticks())
 
-    Enum.each(npc_ids, fn npc_id ->
-      send(self(), {:add_npc, npc_id, npc_spawn})
-    end)
+      put_in(state, [:npc_spawns, spawn_point_id], npc_spawn)
+    else
+      state =
+        if npc_spawn[:regen_check_time] > 0 || npc_spawn[:population] > 0 do
+          put_in(state, [:npc_spawns, spawn_point_id], npc_spawn)
+        else
+          state
+        end
 
+      Enum.each(npc_ids, fn npc_id ->
+        send(self(), {:add_npc, npc_id, npc_spawn})
+      end)
+
+      state
+    end
+  end
+
+  # mob spawn documents carry a flat npc_ids list; friendly spawn points carry
+  # npc_list entries instead
+  defp mob_spawn?(npc_spawn), do: Map.has_key?(npc_spawn, :npc_ids)
+
+  def load_npc(state, %Types.Npc{} = npc, npc_spawn) do
+    {_field_npc, state} = spawn_npc(state, npc, npc_spawn)
     state
   end
 
-  def load_npc(state, %Types.Npc{} = npc, npc_spawn) do
+  def load_npc(state, npc_id, npc_spawn) do
+    {_field_npc, state} = spawn_npc(state, npc_id, npc_spawn)
+    state
+  end
+
+  # Creates the field entity for an npc and announces it to clients. Returns
+  # {nil, state} when the npc id has no metadata (nothing is spawned).
+  def spawn_npc(state, npc_id, npc_spawn) when is_integer(npc_id) do
+    case Storage.Npcs.get_meta(npc_id) do
+      %{} = metadata ->
+        npc = Types.Npc.new(%{id: npc_id, metadata: metadata})
+        spawn_npc(state, npc, npc_spawn)
+
+      _ ->
+        {nil, state}
+    end
+  end
+
+  def spawn_npc(state, %Types.Npc{} = npc, npc_spawn) do
     {object_id, state} = Managers.Field.next_local_id(state)
 
     field_npc =
@@ -68,15 +108,40 @@ defmodule Ms2ex.Managers.Field.Npc do
     Context.Field.broadcast(state.topic, Packets.FieldAddNpc.add_npc(field_npc))
     Context.Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
 
-    put_in(state, [:npcs, object_id], field_npc)
+    {field_npc, put_in(state, [:npcs, object_id], field_npc)}
   end
 
-  def load_npc(state, npc_id, npc_spawn) do
-    with %{} = metadata <- Storage.Npcs.get_meta(npc_id),
-         npc <- Types.Npc.new(%{id: npc_id, metadata: metadata}) do
-      load_npc(state, npc, npc_spawn)
-    else
-      _ -> state
+  # A mob death frees its population slot and schedules the next spawn cycle:
+  # a spawn wiped down to zero mobs starts its cooldown, while a partial kill
+  # (with no cycle pending) respawns at twice the cooldown. A zero cooldown
+  # means the spawn point never refills.
+  def despawn(state, %FieldNpc{} = field_npc) do
+    case get_in(state, [:npc_spawns, field_npc.spawn_point_id]) do
+      %{} = spawn when is_map_key(spawn, :npc_ids) ->
+        spawned = List.delete(spawn.spawned_mobs, field_npc.object_id)
+        spawn = %{spawn | spawned_mobs: spawned}
+        put_in(state, [:npc_spawns, spawn.id], schedule_spawn(spawn))
+
+      _ ->
+        state
+    end
+  end
+
+  defp schedule_spawn(%{regen_check_time: cooldown} = spawn) when cooldown <= 0, do: spawn
+
+  defp schedule_spawn(spawn) do
+    now = Ms2ex.sync_ticks()
+    cooldown_ms = spawn.regen_check_time * @spawn_rate_ms
+
+    cond do
+      spawn.spawned_mobs == [] ->
+        %{spawn | spawn_tick: min(spawn.spawn_tick, now + cooldown_ms)}
+
+      spawn.spawn_tick == :infinity ->
+        %{spawn | spawn_tick: now + cooldown_ms * @force_spawn_multiplier}
+
+      true ->
+        spawn
     end
   end
 
@@ -153,6 +218,42 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
 
     %{state | npcs: Map.new(npcs)}
+    |> tick_mob_spawns()
+  end
+
+  # Runs due spawn cycles for mob spawn points: every cycle fills the
+  # population back up to full, choosing a random npc id per slot. Timed on
+  # sync_ticks so scheduling never depends on the raw clock base.
+  defp tick_mob_spawns(state) do
+    now = Ms2ex.sync_ticks()
+
+    state
+    |> Map.get(:npc_spawns, %{})
+    |> Enum.reduce(state, fn {spawn_point_id, spawn}, state ->
+      if mob_spawn?(spawn) and now >= spawn.spawn_tick do
+        spawn = %{spawn | spawn_tick: :infinity}
+        {spawn, state} = spawn_missing_mobs(spawn, state)
+        put_in(state, [:npc_spawns, spawn_point_id], spawn)
+      else
+        state
+      end
+    end)
+  end
+
+  # TODO: pet spawn roll (pet_spawn_rate) — pet metadata is not projected yet
+  defp spawn_missing_mobs(spawn, state) do
+    missing = spawn.population - length(spawn.spawned_mobs)
+
+    Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
+      case spawn_npc(state, Enum.random(spawn.npc_ids), spawn) do
+        {%FieldNpc{} = field_npc, state} ->
+          spawned = spawn.spawned_mobs ++ [field_npc.object_id]
+          {%{spawn | spawned_mobs: spawned}, state}
+
+        {nil, state} ->
+          {spawn, state}
+      end
+    end)
   end
 
   defp tag_attackers(field_npc, attacker) do
@@ -171,11 +272,11 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     Context.Mobs.drop_hit_rewards(field_npc, state.map_id)
 
-    field_npc =
+    {field_npc, state} =
       if hp == 0 do
-        announce_death(%{field_npc | stats: stats}, state.topic, state.map_id)
+        announce_death(%{field_npc | stats: stats}, state)
       else
-        %{field_npc | stats: stats}
+        {%{field_npc | stats: stats}, state}
       end
 
     {:ok, field_npc, put_in(state, [:npcs, object_id], field_npc)}
@@ -185,7 +286,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   # animation on its own before the corpse is removed. The hp=0 sync must
   # reach the client BEFORE the dead control entry, otherwise it ignores
   # the state change.
-  defp announce_death(field_npc, topic, map_id) do
+  defp announce_death(field_npc, state) do
     corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
 
     field_npc =
@@ -198,8 +299,8 @@ defmodule Ms2ex.Managers.Field.Npc do
           last_control_at: System.monotonic_time(:millisecond)
       }
 
-    Context.Field.broadcast(topic, Packets.Stats.update_mob_stat(field_npc, :health))
-    Context.Field.broadcast(topic, Packets.ControlNpc.dead(field_npc))
+    Context.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
+    Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
 
     # corpse-hittable bodies stay around for their full window so players can
     # keep striking them; everyone else despawns once the animation settles
@@ -212,12 +313,14 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
 
-    Context.Mobs.drop_rewards(field_npc, map_id)
+    Context.Mobs.drop_rewards(field_npc, state.map_id)
     Context.Mobs.reward_exp(field_npc)
+
+    state = despawn(state, field_npc)
 
     # TODO: Player Condition update (quest, achievements...)
 
-    field_npc
+    {field_npc, state}
   end
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do

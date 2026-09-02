@@ -49,6 +49,22 @@ still skipped:
 Flat skill damage (`damage.value`) is applied from metadata, and DoT damage
 scales with the caster's attack via the shared formula.
 
+### 13. Mob spawn cycles — [Partial]
+
+Mob spawn points now run spawn cycles from the field tick loop: the initial
+population spawns on the first due cycle, mob deaths schedule the next cycle
+(full wipe → `regen_check_time` cooldown, partial kill → 2× cooldown while no
+cycle is pending), and every due cycle refills the population to full.
+Zero-cooldown spawns never refill. What is still missing:
+
+- pet spawn rolls for mob spawns (`pet_population` / `pet_spawn_rate`) — the
+  metadata is not projected by the ingest yet
+- navmesh-valid spawn position picking — mobs currently randomize ±250 around
+  the spawn point instead of snapping to map spawn volumes
+- friendly NPC spawn points are still spawned eagerly at field load; their
+  trigger-driven creation and `regen_check_time` top-up checks are not
+  implemented
+
 ---
 
 ## P2 — Combat systems depth
@@ -114,6 +130,9 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
+- Mob respawns: mob spawn points refill their population through tick-driven
+  spawn cycles, scheduled by mob deaths (wipe → cooldown, partial kill → 2×
+  cooldown, zero cooldown → never)
 - RegionSkill rotation: direction-less region skills now zero horizontal
   rotation while directional ones keep it; region-splash damage no longer
   crashes on hit, and regular-skill spirit drains now persist so Wizard SP
