@@ -84,6 +84,10 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
 - **Never commit without explicit approval.** Implement changes, compile,
   and verify, but leave them uncommitted so the user can test against the
   game client first. Commit only after the user confirms the fix works.
+- **Before merging and cleaning up a worktree, do a final review against the
+  reference behavior.** Re-check the full diff, look for refactor
+  opportunities, and confirm the implemented behavior matches the reference as
+  closely as possible before the branch is merged or the worktree is removed.
 
 - `lib/ms2ex/storage.ex` is a lazy, immutable cache: documents are fetched
   from Redis on first access into the `:metadata` ETS table and never

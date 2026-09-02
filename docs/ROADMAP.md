@@ -96,7 +96,9 @@ The drop packet still has three deviations:
 
 `ImmediateActive` / `Delay` are now projected by the ingest, but the server
 still uses a fixed radius instead of the exact skill geometry and always lands
-the first hit immediately.
+the first hit immediately. Cube-magic-path placement also still has parity
+work left: rotated `fire_offset` is applied, but source-height alignment and
+`ignore_adjust` snapping are not matched yet.
 
 ### 12. Party damage meter — [Open]
 
