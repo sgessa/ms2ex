@@ -25,21 +25,7 @@ Priorities:
 
 ### 1. Player death & revive — [Partial]
 
-Players can die and revive. HP reaching 0 triggers the death state and
-animation (`SetCraftMode.Stop`, `DeadUser`, dead-flag update) and raises a
-tombstone other players can hit with skills to revive the owner (gauge packet
-at raise, decrements per hit, `hits=0` broadcast on revive). Basic attacks do
-not hit tombstones — skills only, matching the reference. The client's
-post-death HUD is armed on death (`RevivalCount`/`RevivalConfirm`). Safe
-revive respawns at the map spawn (or the map's `revival_return_id`); instant
-revive costs mesos (`CalcRevivalMeso`: 10k + (level-10)*1k, capped at 3/day)
-and keeps the player in place. Repeat deaths inside the 1-hour penalty window
-produce a dark tombstone with a doubled hit total; the count expires with the
-window and only stacks on maps with the `death_penalty` property. The death
-penalty and daily instant-revive counter are persisted on the character row
-(the counter is reset by an Oban crontab job at midnight). Death-state
-persistence differs slightly from the reference, which keeps it session-
-scoped (a relog resets it) — optional alignment. What is still missing:
+What is still missing:
 
 - party / class revive skills (reviving a fallen teammate with a skill)
 - free-revive coupon consumption
@@ -139,31 +125,22 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
 ## Recently completed
 
-- Tombstone hit/revive flow: peer max/current HP in `FieldAddUser` (peers were
-  built client-side as invalid 0/0-HP actors), `SetCraftMode.Stop` broadcast
-  at death, `Tombstone` gauge packet at raise plus `hits=0` on revive,
-  death-count penalty-window expiry with `death_penalty` map-property
-  semantics, revive packet order, cap appearance 52-byte layout, and enchant
-  entries with int type codes
-  (worktree `fix/tombstone-collision`; verified two-client end-to-end)
-- Player death & revive: death state + animation (`DeadUser`, dead flag),
-  tombstone entity with teammate hits, post-death HUD, safe revive (map spawn /
-  `revival_return_id`) and instant revive (meso cost)
-  (worktree `feature/player-death-revive`)
-- Field monster HP bar: the client's own id is now sent in `ServerEnter`
-  (allocated at channel login, stable across field changes) and the
-  `RequestFieldEnter` reply carries the validated field key — the top-center
-  HP bar renders for the last hit target and fades on the client timer
+- Tombstone hit/revive flow: peer HP in `FieldAddUser`, plus death-flow
+  parity (gauge packet, revive order, penalty-window death count)
+  ([#97](https://github.com/sgessa/ms2ex/pull/97))
+- Player death & revive: death state + animation, tombstone entity, post-death
+  HUD, safe/instant revive
+  ([#80](https://github.com/sgessa/ms2ex/pull/80))
+- Field monster HP bar: player id in `ServerEnter` + validated field key in
+  `RequestFieldEnter` ([#84](https://github.com/sgessa/ms2ex/pull/84))
 - Equip stat bonuses: random options, enchant / limit-break enchants,
-  special-value / special-rate stats, and rate-type stats (e.g. perfect guard)
-  now aggregate over equipped gear and apply to the character
+  special-value / special-rate stats, rate-type stats
   ([#74](https://github.com/sgessa/ms2ex/pull/74))
 - Flat skill damage (`damage.value`) applied from metadata
   ([#71](https://github.com/sgessa/ms2ex/pull/71),
   [ingest@218025f](https://github.com/sgessa/ms2ex-file-ingest/commit/218025f))
-- On-hit skill effects: `skills_on_damage` projected and applied alongside
-  attack condition skills
-  ([#71](https://github.com/sgessa/ms2ex/pull/71),
+- On-hit skill effects: `skills_on_damage` applied alongside attack condition
+  skills ([#71](https://github.com/sgessa/ms2ex/pull/71),
   [ingest@218025f](https://github.com/sgessa/ms2ex-file-ingest/commit/218025f))
 - SkillDamage DotDamage (0x3) record
   ([#71](https://github.com/sgessa/ms2ex/pull/71))
@@ -171,19 +148,15 @@ damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
   ([ingest@50681d4](https://github.com/sgessa/ms2ex-file-ingest/commit/50681d4))
 - Region splash `ImmediateActive` / `Delay` metadata projection
   ([ingest@50681d4](https://github.com/sgessa/ms2ex-file-ingest/commit/50681d4))
-- Skill cooldowns (`0x43`), including restore on field change and
-  buff-triggered resets
+- Skill cooldowns (`0x43`), incl. restore on field change and buff resets
   ([#68](https://github.com/sgessa/ms2ex/pull/68))
-- Buff tick loop: DoT, recovery, tick skills, stacking (`overlap_count` /
-  `modify_overlap`), cancel-on-apply
+- Buff tick loop: DoT, recovery, tick skills, stacking, cancel-on-apply
   ([#73](https://github.com/sgessa/ms2ex/pull/73))
 - Monster drops: death / hit / corpse, smart-drop weighting, character
-  binding, map gating, tradeability
-  ([#64](https://github.com/sgessa/ms2ex/pull/64))
+  binding, map gating, tradeability ([#64](https://github.com/sgessa/ms2ex/pull/64))
 - Item-skill & recovery consumables; buff expiry
   ([#69](https://github.com/sgessa/ms2ex/pull/69))
-- State skills (recv `0x21`)
-  ([#66](https://github.com/sgessa/ms2ex/pull/66))
+- State skills (recv `0x21`) ([#66](https://github.com/sgessa/ms2ex/pull/66))
 - Field-load packets & skill target/damage relay
   ([#63](https://github.com/sgessa/ms2ex/pull/63))
 - Fall damage & out-of-bounds teleport
