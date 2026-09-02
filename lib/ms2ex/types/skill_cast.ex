@@ -3,6 +3,8 @@ defmodule Ms2ex.Types.SkillCast do
   alias Ms2ex.Enums
   alias Ms2ex.Types.Coord
 
+  @state_skill_drain_interval 1000
+
   @type t :: %__MODULE__{}
   defstruct [
     :client_tick,
@@ -64,6 +66,20 @@ defmodule Ms2ex.Types.SkillCast do
     case splash(skill_cast) do
       %{interval: interval} -> interval
       _ -> 0
+    end
+  end
+
+  # cadence for a state skill's resource drain: the motion sequence speed in
+  # milliseconds when projected, otherwise once per second. The fallback also
+  # covers metadata ingested before motion_property was projected.
+  def drain_interval(%__MODULE__{} = skill_cast) do
+    case skill_level(skill_cast) do
+      %{motions: [%{motion_property: %{sequence_speed: speed}} | _]}
+      when is_number(speed) and speed > 0 ->
+        trunc(speed * 1000)
+
+      _ ->
+        @state_skill_drain_interval
     end
   end
 
