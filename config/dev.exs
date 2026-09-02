@@ -26,17 +26,7 @@ config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
 # Configure your database
-# Ecto logs only errors in development; set ECTO_LOG_LEVEL (debug, info,
-# warning, ... or "false" to disable) to override.
-log_level =
-  case System.get_env("ECTO_LOG_LEVEL") do
-    nil -> :error
-    "false" -> false
-    level -> String.to_existing_atom(level)
-  end
-
 config :ms2ex, Ms2ex.Repo,
-  log: log_level,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 

@@ -8,7 +8,9 @@ source!([
   System.get_env()
 ])
 
+# Ecto query log level (warning by default; "false" disables repo logs)
 config :ms2ex, Ms2ex.Repo,
+  log: env!("ECTO_LOG_LEVEL", :existing_atom, :warning),
   username: env!("DB_USER"),
   password: env!("DB_PASS"),
   database: env!("DB_NAME"),
