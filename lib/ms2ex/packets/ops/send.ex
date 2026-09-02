@@ -66,6 +66,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x63 => "FRIEND",
     0x65 => "ADD_INTERACT_OBJECTS",
     0x67 => "FALL_DAMAGE",
+    0x6A => "SET_CRAFT_MODE",
     0x6B => "RESPONSE_CUBE",
     0x6C => "LOAD_CUBES",
     0x6D => "UGC",

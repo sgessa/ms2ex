@@ -56,14 +56,18 @@ defmodule Ms2ex.Managers.Character.Revival do
   def revival_meso_cost(level, _used), do: 10_000 + max(level - 10, 0) * 1_000
 
   defp die(character) do
-    death_count = Map.get(character, :death_count, 0) + 1
+    previous_count = previous_death_count(character)
+    death_count = previous_count + 1
     end_tick = Ms2ex.sync_ticks() + Constants.get(:revival_penalty_tick)
 
     character =
       persist_revival_state(character, %{death_count: death_count, death_tick: end_tick})
       |> Map.put(:dead?, true)
 
-    dark_tomb = only_dark_tomb?(character) or death_count > 1
+    dark_tomb = only_dark_tomb?(character) or previous_count > 0
+
+    # clear any craft/liftable pose field-wide before the corpse is posed
+    Context.Field.broadcast(character, Packets.SetCraftMode.stop(character.object_id))
 
     Context.Field.broadcast(character, Packets.DeadUser.bytes(character.object_id, dark_tomb))
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
@@ -79,6 +83,45 @@ defmodule Ms2ex.Managers.Character.Revival do
     character
   end
 
+  # reviving inside an active penalty window keeps the counter and extends the
+  # window; once the window expired the counter restarts from the next death
+  defp extend_death_penalty(character) do
+    if death_penalty?(character) do
+      end_tick = Ms2ex.sync_ticks() + Constants.get(:revival_penalty_tick)
+
+      character = persist_revival_state(character, %{death_tick: end_tick})
+
+      push(
+        character,
+        Packets.RevivalConfirm.bytes(
+          character.object_id,
+          end_tick,
+          Map.get(character, :death_count, 0)
+        )
+      )
+
+      character
+    else
+      persist_revival_state(character, %{death_count: 0, death_tick: 0})
+    end
+  end
+
+  defp death_penalty?(character) do
+    Storage.Maps.get_property(character.map_id)
+    |> Map.get(:death_penalty, false)
+  end
+
+  # the death counter restarts once the previous penalty window has expired,
+  # so repeat deaths only stack (and only darken the tomb) while a penalty is
+  # still active
+  defp previous_death_count(character) do
+    expired? =
+      Map.get(character, :death_tick, 0) in [0, nil] or
+        Ms2ex.sync_ticks() > character.death_tick
+
+    if expired?, do: 0, else: Map.get(character, :death_count, 0)
+  end
+
   defp revive_dead(character) do
     if no_revival_here?(character) do
       character
@@ -89,7 +132,7 @@ defmodule Ms2ex.Managers.Character.Revival do
       character =
         character
         |> Map.put(:dead?, false)
-        |> Map.put(:death_tick, 0)
+        |> extend_death_penalty()
 
       broadcast_revive(character)
       move_to_respawn(character)
@@ -104,10 +147,10 @@ defmodule Ms2ex.Managers.Character.Revival do
     character =
       persist_revival_state(character, %{
         death_count: character.death_count,
-        death_tick: 0,
         instant_revive_count: character.instant_revive_count + 1
       })
       |> Map.put(:dead?, false)
+      |> extend_death_penalty()
 
     broadcast_revive(character)
 
@@ -117,9 +160,9 @@ defmodule Ms2ex.Managers.Character.Revival do
   end
 
   defp broadcast_revive(character) do
-    Context.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
-    Context.Field.remove_tombstone(character)
+    Context.Field.clear_tombstone(character)
+    Context.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
 
     push(character, Packets.Stats.set_character_stats(character))
   end

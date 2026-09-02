@@ -13,7 +13,12 @@ defmodule Ms2ex.RevivalPersistTest do
   setup do
     stub_metadata(%{
       "map:#{@map_id}" => %{
-        property: %{revival_return_id: 0, no_revival_here: false, only_dark_tomb: false},
+        property: %{
+          revival_return_id: 0,
+          no_revival_here: false,
+          only_dark_tomb: false,
+          death_penalty: true
+        },
         pc_spawns: [
           %{position: %{x: 100, y: 200, z: 0}, rotation: %{x: 0, y: 0, z: 0}, enable: true}
         ]

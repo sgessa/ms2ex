@@ -77,7 +77,7 @@ defmodule Ms2ex.Net.SenderSession do
     packet = RequestVersion.build(conf[:version], recv_cipher, send_cipher, conf[:block_iv])
     {send_cipher, packet} = SendCipher.write_header(send_cipher, packet)
 
-    Net.PacketLog.log(:send, :handshake, packet)
+    Net.Logger.log(:send, :handshake, packet)
     state.transport.send(socket, packet)
 
     {:noreply, %{state | send_cipher: send_cipher}}
@@ -88,7 +88,7 @@ defmodule Ms2ex.Net.SenderSession do
     %{send_cipher: cipher, socket: socket, transport: transport} = state
 
     {opcode, data} = PacketReader.get_short(packet)
-    Net.PacketLog.log(:send, opcode, data)
+    Net.Logger.log(:send, opcode, data)
 
     {cipher, enc_packet} = SendCipher.encrypt(cipher, packet)
     transport.send(socket, enc_packet)

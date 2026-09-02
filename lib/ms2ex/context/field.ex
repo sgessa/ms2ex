@@ -126,7 +126,7 @@ defmodule Ms2ex.Context.Field do
   end
 
   @doc """
-  Removes a character's tombstone from the field (on revive or field leave).
+  Removes a character's tombstone from the field (on field leave).
 
   ## Examples
 
@@ -136,6 +136,20 @@ defmodule Ms2ex.Context.Field do
   @spec remove_tombstone(Schema.Character.t()) :: :ok | :error
   def remove_tombstone(%Schema.Character{} = character) do
     cast(character.field_pid, {:remove_tombstone, character.id})
+  end
+
+  @doc """
+  Broadcasts a tombstone with zero hits remaining and removes it from the
+  field (when its owner revives); clients tear down the tombstone entity.
+
+  ## Examples
+
+      iex> clear_tombstone(character)
+      :ok
+  """
+  @spec clear_tombstone(Schema.Character.t()) :: :ok | :error
+  def clear_tombstone(%Schema.Character{} = character) do
+    cast(character.field_pid, {:clear_tombstone, character.id})
   end
 
   @doc """
