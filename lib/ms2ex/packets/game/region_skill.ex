@@ -6,8 +6,8 @@ defmodule Ms2ex.Packets.RegionSkill do
 
   @modes %{add: 0x0, remove: 0x1}
 
-  def add(source_id, skill_cast) do
-    points = SkillCast.magic_path(skill_cast)
+  def add(source_id, skill_cast, points \\ nil) do
+    points = points || SkillCast.magic_path(skill_cast)
 
     __MODULE__
     |> build()

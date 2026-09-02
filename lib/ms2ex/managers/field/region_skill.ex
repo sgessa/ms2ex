@@ -9,11 +9,15 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
   def add(skill_cast, state) do
     source_id = Ms2ex.generate_int()
-
-    Context.Field.broadcast(state.topic, Packets.RegionSkill.add(source_id, skill_cast))
+    points = SkillCast.magic_path(skill_cast)
 
     case SkillCast.splash_skill_cast(skill_cast) do
       {splash_cast, splash} ->
+        Context.Field.broadcast(
+          state.topic,
+          Packets.RegionSkill.add(source_id, splash_cast, points)
+        )
+
         interval = Map.get(splash, :interval, 0) || 0
         fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
 
@@ -46,6 +50,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         state
 
       nil ->
+        Context.Field.broadcast(
+          state.topic,
+          Packets.RegionSkill.add(source_id, skill_cast, points)
+        )
+
         duration = SkillCast.duration(skill_cast)
         Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
         state

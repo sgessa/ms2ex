@@ -56,6 +56,15 @@ defmodule Ms2ex.Packets.RegionSkillTest do
     assert packet == <<>>
   end
 
+  test "splash_skill_cast skips non-splash side effects" do
+    {splash_cast, splash} = SkillCast.splash_skill_cast(flame_tornado_cast())
+
+    assert splash_cast.skill_id == 10_300_012
+    assert splash_cast.skill_level == 10
+    assert splash.interval == 300
+    assert splash.fire_count == 5
+  end
+
   defp skill_cast(use_direction, rotation_z) do
     %SkillCast{
       next_tick: 1234,
@@ -73,7 +82,49 @@ defmodule Ms2ex.Packets.RegionSkillTest do
                 attacks: [
                   %{
                     cube_magic_path_id: 0,
-                    skills: [%{splash: %{use_direction: use_direction}}]
+                    skills: [%{has_splash: true, splash: %{use_direction: use_direction}}]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  end
+
+  defp flame_tornado_cast do
+    %SkillCast{
+      next_tick: 1234,
+      skill_id: 10_300_011,
+      skill_level: 10,
+      motion_point: 0,
+      attack_point: 0,
+      position: %Coord{x: 1, y: 2, z: 3},
+      rotation: %Coord{x: 0, y: 0, z: 45.0},
+      caster: %Ms2ex.Schema.Character{id: 1},
+      meta: %{
+        levels: %{
+          "10" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    cube_magic_path_id: 103_000_111,
+                    skills: [
+                      %{id: 10_300_241, level: 1, has_splash: false, splash: %{}},
+                      %{
+                        id: 10_300_012,
+                        level: 10,
+                        has_splash: true,
+                        splash: %{
+                          interval: 300,
+                          fire_count: 5,
+                          remove_delay: 0,
+                          use_direction: true
+                        }
+                      }
+                    ]
                   }
                 ]
               }
