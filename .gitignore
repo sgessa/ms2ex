@@ -47,3 +47,4 @@ ms2ex-*.tar
 # client tools
 /scripts/
 __pycache__/
+packets.log
