@@ -3,6 +3,7 @@ defmodule Ms2ex.ItemStatsTest do
 
   alias Ms2ex.Context.ItemStats
   alias Ms2ex.Formulas.GearScore
+  alias Ms2ex.Formulas.ItemEnchant
 
   defp character do
     %Ms2ex.Schema.Character{
@@ -64,5 +65,17 @@ defmodule Ms2ex.ItemStatsTest do
       for item_type <- [40, 41], do: %{gear_score: 67, rarity: 4, item_type: item_type}
 
     assert GearScore.calculate(items) == 0
+  end
+
+  test "calculates enchant stat values for weapons" do
+    assert ItemEnchant.values(10, 33, 70) == [27, 0.64, 28, 0.64]
+  end
+
+  test "calculates enchant stat values for lower-level non-weapons" do
+    assert ItemEnchant.values(1, 13, 70) == [20, 0.04, 0, 0.04]
+  end
+
+  test "uses the high-level non-weapon stat at level 71" do
+    assert ItemEnchant.values(14, 19, 71) == [28, 2.0, 0, 2.0]
   end
 end
