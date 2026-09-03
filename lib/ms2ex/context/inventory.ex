@@ -280,6 +280,62 @@ defmodule Ms2ex.Context.Inventory do
   def consume(%Schema.Item{} = item, _consumed), do: delete(item)
 
   @doc """
+  Consumes an amount of an item across the character's carry stacks,
+  deleting stacks emptied by the consumption. Must run inside the caller's
+  transaction when atomicity matters. Returns per-stack results for
+  inventory packets; `{:error, :insufficient_amount}` when the character
+  holds fewer than the requested amount.
+  """
+  @spec consume_item_amount(Schema.Character.t(), integer(), integer()) ::
+          {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
+          | {:error, :insufficient_amount}
+  def consume_item_amount(%Schema.Character{id: character_id}, item_id, amount)
+      when is_integer(item_id) and is_integer(amount) and amount > 0 do
+    stacks = owned_stacks(character_id, item_id)
+    total = Enum.sum(Enum.map(stacks, & &1.amount))
+
+    if total < amount do
+      {:error, :insufficient_amount}
+    else
+      {:ok, consume_from_stacks(stacks, amount, [])}
+    end
+  end
+
+  @doc """
+  Consumes each `%{item_id, amount}` pair; pairs the inventory cannot cover
+  are skipped so callers can keep processing (the completion counter no
+  longer matches the live inventory in that case).
+  """
+  @spec consume_item_amounts(Schema.Character.t(), [map()]) ::
+          {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
+  def consume_item_amounts(character, consumables) do
+    results =
+      Enum.flat_map(consumables, fn %{item_id: item_id, amount: amount} ->
+        case consume_item_amount(character, item_id, amount) do
+          {:ok, stack_results} -> stack_results
+          {:error, :insufficient_amount} -> []
+        end
+      end)
+
+    {:ok, results}
+  end
+
+  defp owned_stacks(character_id, item_id) do
+    Schema.Item
+    |> where([i], i.character_id == ^character_id and i.item_id == ^item_id)
+    |> where([i], i.location == ^:inventory)
+    |> order_by(asc: :amount)
+    |> Repo.all()
+  end
+
+  defp consume_from_stacks(_stacks, 0, acc), do: Enum.reverse(acc)
+
+  defp consume_from_stacks([stack | rest], remaining, acc) do
+    to_take = min(stack.amount, remaining)
+    consume_from_stacks(rest, remaining - to_take, [consume(stack, to_take) | acc])
+  end
+
+  @doc """
   Deletes an item from the inventory.
 
   ## Examples

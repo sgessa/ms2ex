@@ -398,22 +398,30 @@ defmodule Ms2ex.Managers.Quest do
   defp finalize_quest_completion(quest, state) do
     {:ok, character} = Managers.Character.lookup(state.character_id)
 
-    # completion and item grants commit atomically; experience and currencies
-    # are delivered post-commit (exp lives in the character manager's state)
+    # completion, turn-in item consumption and item rewards commit atomically;
+    # experience and currencies are delivered post-commit (exp lives in the
+    # character manager's state)
     rewards = Managers.Quest.Rewards.prepare(character, quest.metadata.complete_reward)
+    consumables = quest_consumables(quest)
 
     case Repo.transaction(fn ->
-           with {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
+           with {:ok, consume_results} <-
+                  Context.Inventory.consume_item_amounts(character, consumables),
+                {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
                 {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
-             {updated_quest, results}
+             {updated_quest, consume_results, results}
            else
              {:error, reason} -> Repo.rollback(reason)
            end
          end) do
-      {:ok, {updated_quest, results}} ->
+      {:ok, {updated_quest, consume_results, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
 
         Managers.Quest.Rewards.deliver(character, quest.metadata.complete_reward, results)
+
+        Enum.each(consume_results, fn result ->
+          maybe_push_consume(character, result)
+        end)
 
         update_conditions(
           character.id,
@@ -732,6 +740,27 @@ defmodule Ms2ex.Managers.Quest do
       quest_metadata.basic.complete_npc > 0 or
       quest_metadata.basic.complete_maps != [] or
       not Managers.Quest.Requirements.can_start?(character, quest_metadata, state)
+  end
+
+  # turn-in items: item_exist conditions name the item and required amount;
+  # the held amount is consumed when the quest completes
+  defp quest_consumables(quest) do
+    Enum.flat_map(quest.conditions, fn {_index, condition} ->
+      case condition do
+        %{metadata: %{type: :item_exist, value: value, codes: %{integers: [item_id | _]}}}
+        when is_integer(item_id) and item_id > 0 and value > 0 ->
+          [%{item_id: item_id, amount: value}]
+
+        _ ->
+          []
+      end
+    end)
+  end
+
+  defp maybe_push_consume(%{session_pid: nil}, _result), do: :ok
+
+  defp maybe_push_consume(character, result) do
+    push(character, Packets.InventoryItem.consume(result))
   end
 
   defp expire_quest(quest_id, state) do
