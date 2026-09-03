@@ -72,8 +72,20 @@ defmodule Ms2ex.Managers.Character do
       |> Map.put(:regen_health?, Map.get(state, :regen_health?, false))
       |> Map.put(:regen_spirit?, Map.get(state, :regen_spirit?, false))
       |> Map.put(:regen_stamina?, Map.get(state, :regen_stamina?, false))
+      |> Map.put(:staged_ugc_item, Map.get(state, :staged_ugc_item))
 
     {:reply, :ok, updated}
+  end
+
+  # An item being created from a design template only becomes real once the
+  # client has uploaded the design and confirmed it.
+  def handle_call({:stage_ugc_item, item}, _from, character) do
+    character = Map.put(character, :staged_ugc_item, item)
+    {:reply, :ok, character}
+  end
+
+  def handle_call(:take_ugc_item, _from, character) do
+    {:reply, Map.get(character, :staged_ugc_item), Map.put(character, :staged_ugc_item, nil)}
   end
 
   def handle_call({:set_level, level}, _from, character) do

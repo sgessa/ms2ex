@@ -5,17 +5,37 @@ defmodule Ms2exWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :ugc do
+    plug :put_secure_browser_headers
+  end
+
   scope "/api", Ms2exWeb do
     pipe_through :api
   end
 
-  # Enables LiveDashboard only for development
-  #
-  # If you want to use the LiveDashboard in production, you should put
-  # it behind authentication and allow only admins to access it.
-  # If your application does not have an admins-only section yet,
-  # you can use Plug.BasicAuth to set up some basic authentication
-  # as long as you are also using SSL (which you should anyway).
+  # Every HTTP call the game client makes is resolved against the base url it is
+  # handed at login, so they all share this prefix.
+  scope "/ugc", Ms2exWeb do
+    pipe_through :ugc
+
+    post "/irrq.aspx", ClientController, :rankings
+    post "/ruq.aspx", ClientController, :info
+  end
+
+  scope "/ugc", Ms2exWeb.Ugc do
+    pipe_through :ugc
+
+    post "/urq.aspx", UploadController, :create
+
+    get "/data/profiles/avatar/:character_id/:file", ProfileController, :show
+    get "/item/ms2/01/:item_id/:file", ItemController, :show
+    get "/itemicon/ms2/01/:item_id/:file", ItemIconController, :show
+    get "/banner/ms2/01/:banner_id/:file", BannerController, :show
+    get "/blueprint/ms2/01/:blueprint_id/:file", BlueprintController, :show
+    get "/guildmark/ms2/01/:guild_id/banner/:file", GuildController, :banner
+    get "/guildmark/ms2/01/:guild_id/:file", GuildController, :emblem
+  end
+
   if Mix.env() in [:dev, :test] do
     import Phoenix.LiveDashboard.Router
 

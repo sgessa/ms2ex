@@ -32,7 +32,7 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.LoadCubes.load())
     push(character, Packets.LoadCubes.plot_state())
     push(character, Packets.LoadCubes.plot_expiry())
-    push(character, Packets.Ugc.load())
+    push(character, Packets.Ugc.load_banners())
     push(character, Packets.Breakable.load())
     push(character, Packets.Liftable.load())
     push(character, Packets.FunctionCube.load())

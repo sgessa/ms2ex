@@ -17,7 +17,8 @@ defmodule Ms2ex.MixProject do
       name: "MS2EX",
       source_url: @source_url,
       homepage_url: @source_url,
-      docs: docs()
+      docs: docs(),
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
@@ -92,7 +93,7 @@ defmodule Ms2ex.MixProject do
     [
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", &run_seeds_in_fresh_vm/1],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "ecto.reset": ["ecto.drop", "maple.ugc.clear", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test", "credo"]
     ]
   end

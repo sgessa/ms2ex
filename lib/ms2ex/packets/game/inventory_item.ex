@@ -1,5 +1,6 @@
 defmodule Ms2ex.Packets.InventoryItem do
   alias Ms2ex.Enums
+  alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.TransferFlags
   alias Ms2ex.Types
@@ -109,7 +110,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_bool(item.can_repackage)
     |> put_int(item.charges)
     |> put_item_enchant_stats(item)
-    # |> put_template(item)
+    |> put_template(item)
     # TODO put pets
     # TODO put gem slot
     |> put_int(TransferFlags.to_int(item.transfer_flags))
@@ -128,6 +129,37 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_long()
     |> put_long(if(item.is_bound, do: character.id, else: 0))
     |> put_ustring(if(item.is_bound, do: character.name, else: ""))
+  end
+
+  # design items carry a UGC descriptor and a blueprint block in place of the
+  # pet, music score and badge blocks
+  defp put_template(packet, item) do
+    if design_item?(item.metadata) do
+      packet
+      |> Packets.Ugc.put_ugc(item.ugc)
+      |> put_blueprint(item)
+    else
+      packet
+    end
+  end
+
+  defp design_item?(%{mesh: mesh, property: %{type: type}}) do
+    (is_binary(mesh) and mesh != "") or type == 22
+  end
+
+  defp design_item?(_metadata), do: false
+
+  defp put_blueprint(packet, item) do
+    packet
+    |> put_long()
+    |> put_int()
+    |> put_int()
+    |> put_int()
+    |> put_time(item.inserted_at)
+    |> put_byte()
+    |> put_long()
+    |> put_long()
+    |> put_ustring()
   end
 
   # the ItemBinding lives inside the transfer block once the item is bound

@@ -29,6 +29,9 @@ ms2ex-*.tar
 # this depending on your deployment strategy.
 /priv/static/
 
+# Ignore UGC data directory (user-generated content)
+/priv/ugc/
+
 # Ignore Redis Data (Game Client Metadata)
 /priv/redis-data/dump.rdb
 
