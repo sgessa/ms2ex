@@ -207,7 +207,7 @@ long-term model is full ownership in memory, genre-standard for MMO servers:
 - when this lands, equips fold into it (they are items with
   `location: :equipment`) rather than keeping a separate equip owner
 
-### 18. Metadata-free manager state — [Open]
+### 18. Metadata-free manager state — [Partial]
 
 Metadata documents are virtual fields on items and get embedded wherever
 structs are cached in GenServer state, so manager memory grows with document
