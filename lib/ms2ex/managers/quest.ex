@@ -343,24 +343,27 @@ defmodule Ms2ex.Managers.Quest do
     # a failing grant cannot leave a started quest without its items
     rewards = Managers.Quest.Rewards.prepare(character, quest_metadata.accept_reward)
 
-    case Repo.transaction(fn ->
-           with {:ok, quest} <- Managers.Quest.State.create_quest(character, quest_metadata),
-                {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
-             {quest, results}
-           else
-             {:error, reason} -> Repo.rollback(reason)
-           end
-         end) do
+    transaction =
+      Repo.transaction(fn ->
+        with {:ok, quest} <- Managers.Quest.State.create_quest(character, quest_metadata),
+             {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
+          {quest, results}
+        else
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
+
+    handle_accept_result(transaction, quest_metadata, character, state)
+  end
+
+  defp handle_accept_result(transaction, quest_metadata, character, state) do
+    case transaction do
       {:ok, {quest, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(quest, state)
 
         Managers.Quest.Rewards.deliver(character, quest_metadata.accept_reward, results)
         update_conditions(character.id, :quest_accept, 1, "", 0, "", quest_metadata.id)
-
-        if character.session_pid do
-          quest_with_metadata = %{quest | metadata: quest_metadata}
-          push(character, Packets.Game.Quest.start(quest_with_metadata))
-        end
+        maybe_push_quest_start(character, quest, quest_metadata)
 
         # TODO: Implement portal summoning
 
@@ -368,6 +371,13 @@ defmodule Ms2ex.Managers.Quest do
 
       {:error, _reason} ->
         {:reply, {:error, :quest_accept_fail}, state}
+    end
+  end
+
+  defp maybe_push_quest_start(character, quest, quest_metadata) do
+    if character.session_pid do
+      quest_with_metadata = %{quest | metadata: quest_metadata}
+      push(character, Packets.Game.Quest.start(quest_with_metadata))
     end
   end
 
@@ -404,24 +414,28 @@ defmodule Ms2ex.Managers.Quest do
     rewards = Managers.Quest.Rewards.prepare(character, quest.metadata.complete_reward)
     consumables = quest_consumables(quest)
 
-    case Repo.transaction(fn ->
-           with {:ok, consume_results} <-
-                  Context.Inventory.consume_item_amounts(character, consumables),
-                {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
-                {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
-             {updated_quest, consume_results, results}
-           else
-             {:error, reason} -> Repo.rollback(reason)
-           end
-         end) do
+    transaction =
+      Repo.transaction(fn ->
+        with {:ok, consume_results} <-
+               Context.Inventory.consume_item_amounts(character, consumables),
+             {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
+             {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
+          {updated_quest, consume_results, results}
+        else
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
+
+    handle_completion_result(transaction, quest, character, state)
+  end
+
+  defp handle_completion_result(transaction, quest, character, state) do
+    case transaction do
       {:ok, {updated_quest, consume_results, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
 
         Managers.Quest.Rewards.deliver(character, quest.metadata.complete_reward, results)
-
-        Enum.each(consume_results, fn result ->
-          maybe_push_consume(character, result)
-        end)
+        Enum.each(consume_results, &maybe_push_consume(character, &1))
 
         update_conditions(
           character.id,
@@ -440,10 +454,7 @@ defmodule Ms2ex.Managers.Quest do
           update_conditions(character.id, :field_mission)
         end
 
-        if character.session_pid do
-          updated_quest_with_metadata = %{updated_quest | metadata: quest.metadata}
-          push(character, Packets.Game.Quest.complete(updated_quest_with_metadata))
-        end
+        maybe_push_quest_complete(character, updated_quest, quest.metadata)
 
         # TODO: Implement job advancement and chapter completion
 
@@ -451,6 +462,13 @@ defmodule Ms2ex.Managers.Quest do
 
       {:error, _reason} ->
         {:reply, {:error, :quest_complete_fail}, state}
+    end
+  end
+
+  defp maybe_push_quest_complete(character, updated_quest, quest_metadata) do
+    if character.session_pid do
+      updated_quest_with_metadata = %{updated_quest | metadata: quest_metadata}
+      push(character, Packets.Game.Quest.complete(updated_quest_with_metadata))
     end
   end
 
