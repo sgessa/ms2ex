@@ -226,8 +226,8 @@ defmodule Ms2ex.Managers.Character.Revival do
   end
 
   # death penalty + the daily revive counter are persisted so a server restart
-  # mid-day does not wipe them (the reference keeps these in a character-config
-  # table; the daily counter is reset by a midnight worker rather than a reboot)
+  # mid-day does not wipe them; the daily counter is reset by a midnight worker
+  # rather than a reboot
   defp persist_revival_state(character, attrs) do
     case Context.Characters.update(character, attrs) do
       {:ok, updated} -> updated

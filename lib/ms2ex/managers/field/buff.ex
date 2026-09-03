@@ -114,8 +114,8 @@ defmodule Ms2ex.Managers.Field.Buff do
     previous = existing.stacks
     stacks = min(max(previous + overlap, 0), max)
 
-    # re-applying refreshes the effect's window (the reference's
-    # UpdateEndTime) and adds the condition's overlap_count stacks
+    # re-applying refreshes the effect's window and adds the condition's
+    # overlap_count stacks
     new_end = Ms2ex.sync_ticks() + get_in(buff.effect, [:property, :duration_tick])
     end_tick = if new_end > existing.end_tick, do: new_end, else: existing.end_tick
 

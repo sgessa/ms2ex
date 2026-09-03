@@ -324,7 +324,7 @@ defmodule Ms2ex.Context.Mobs do
   end
 
   # some entries carry max 0 with a positive min (the parser only clamps the
-  # min side); roll at least the minimum like the reference's Next(min, max+1)
+  # min side); the roll always lands between min and the effective max
   defp roll_count(%{min: min, max: max}), do: Enum.random(min..max(max, min))
 
   defp roll_rarity([]), do: 1
