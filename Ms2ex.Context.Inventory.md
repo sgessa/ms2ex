@@ -147,10 +147,16 @@ Checks if an item has expired.
 
 Finds the first available inventory slot in a given tab.
 
+The scan is bounded by the tab's persisted slot count (base size plus any
+expansions); when every slot is taken it returns `{:error, :full_inventory}`.
+
 ## Examples
 
     iex> find_first_available_slot(1, :outfit)
     5
+
+    iex> find_first_available_slot(1, :gear)
+    {:error, :full_inventory}
 
 # `find_stack`
 
@@ -165,6 +171,18 @@ Finds an existing stack of the same item that isn't at its stack limit.
 
     iex> find_stack(character, item)
     %Schema.Item{amount: 5}
+
+# `free_slot_count`
+
+```elixir
+@spec free_slot_count(integer(), atom()) :: non_neg_integer()
+```
+
+Counts the free inventory slots in a given tab.
+
+## Examples
+
+    iex> free_slot_count(1, :gear)
 
 # `get`
 

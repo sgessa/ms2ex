@@ -1,50 +1,27 @@
 # `Ms2ex.Context.Equips`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L1)
 
-Context module for equipment-related operations.
+Context module for equipment persistence.
 
-This module provides functions for listing, equipping, and unequipping items,
-as well as validating equipment slots.
+Provides the item-level operations behind equip transitions: reading a
+character's equipped items, moving items between inventory and equipment,
+and validating equipment slots. The equip transition itself (conflicting
+items, state refresh, notifications) is owned by the character process,
+see `Ms2ex.Managers.Character.Equips`.
 
 # `equip`
 
 ```elixir
-@spec equip(Ms2ex.Schema.Item.t()) :: {:ok, Ms2ex.Schema.Item.t()} | {:error, any()}
+@spec equip(Ms2ex.Schema.Item.t(), atom()) ::
+  {:ok, Ms2ex.Schema.Item.t()} | {:error, any()}
 ```
 
-Equips an item using its first available slot.
+Equips an item into the requested equipment slot.
 
 ## Examples
 
-    iex> equip(item)
+    iex> equip(item, :RH)
     {:ok, %Schema.Item{location: :equipment, ...}}
-
-# `equip`
-
-# `find_equipped_in_slots`
-
-```elixir
-@spec find_equipped_in_slots([Ms2ex.Schema.Item.t()], [atom()], atom(), atom() | nil) ::
-  [
-    Ms2ex.Schema.Item.t()
-  ]
-```
-
-Finds items that are equipped in specific slots.
-
-Handles special cases for pants (checking for suits) and off-hand weapons.
-
-## Parameters
-
-  * `equips` - List of equipped items to search through
-  * `slots` - List of slot types to check
-  * `inventory_tab` - The inventory tab to filter by
-  * `requested_slot` - Optional specific slot requested (used for off-hand weapons)
-
-## Examples
-
-    iex> find_equipped_in_slots(equips, [:HD], :outfit)
-    [%Schema.Item{equip_slot: :HD, ...}]
 
 # `list`
 
@@ -54,7 +31,9 @@ Handles special cases for pants (checking for suits) and off-hand weapons.
 
 Lists all equipped items for a given character.
 
-Returns a list of items with their metadata loaded.
+The rows are returned without their metadata documents; callers fetch
+metadata from the storage cache only when they need it, so cached copies
+of the list stay lean.
 
 ## Examples
 
@@ -64,21 +43,29 @@ Returns a list of items with their metadata loaded.
 # `unequip`
 
 ```elixir
-@spec unequip(Ms2ex.Schema.Item.t()) ::
-  {:ok, Ms2ex.Schema.Item.t()} | {:error, atom()}
+@spec unequip(Ms2ex.Schema.Item.t(), integer() | nil) ::
+  {:ok, Ms2ex.Schema.Item.t()}
+  | {:discard, Ms2ex.Schema.Item.t()}
+  | {:error, atom()}
 ```
 
-Unequips an item, moving it back to inventory.
+Unequips an item, moving it back to the inventory.
 
-Finds an available inventory slot and updates the item location.
+Prefers `preferred_slot` when it is free, else falls back to the first
+available slot in the tab. Items in cosmetic slots (hair, ears, face,
+face decal) are discarded instead: those looks cannot be worn again once
+removed.
 
 ## Examples
 
     iex> unequip(item)
     {:ok, %Schema.Item{location: :inventory, ...}}
 
-    iex> unequip(already_unequipped_item)
-    {:error, :item_not_equipped}
+    iex> unequip(hair_item)
+    {:discard, %Schema.Item{}}
+
+    iex> unequip(item)
+    {:error, :full_inventory}
 
 # `valid_slot?`
 

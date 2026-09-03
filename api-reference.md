@@ -77,6 +77,7 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.Lua.ItemEnchant](Ms2ex.Lua.ItemEnchant.md)
 - [Ms2ex.Managers.Buff](Ms2ex.Managers.Buff.md)
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
+- [Ms2ex.Managers.Character.Equips](Ms2ex.Managers.Character.Equips.md): Equip transitions owned by the character process.
 - [Ms2ex.Managers.Character.Experience](Ms2ex.Managers.Character.Experience.md)
 - [Ms2ex.Managers.Character.FallDamage](Ms2ex.Managers.Character.FallDamage.md)
 - [Ms2ex.Managers.Character.Revival](Ms2ex.Managers.Character.Revival.md): Death and revival logic for a character.
@@ -245,7 +246,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Context.Damage](Ms2ex.Context.Damage.md): Context module for damage calculation operations.
   - [Ms2ex.Context.Dismantle](Ms2ex.Context.Dismantle.md): Handles the item dismantling functionality.
   - [Ms2ex.Context.Emotes](Ms2ex.Context.Emotes.md): Context module for character emote-related operations.
-  - [Ms2ex.Context.Equips](Ms2ex.Context.Equips.md): Context module for equipment-related operations.
+  - [Ms2ex.Context.Equips](Ms2ex.Context.Equips.md): Context module for equipment persistence.
   - [Ms2ex.Context.Experience](Ms2ex.Context.Experience.md): Context module for character experience-related operations.
   - [Ms2ex.Context.Field](Ms2ex.Context.Field.md): Context module for field-related operations.
   - [Ms2ex.Context.Friends](Ms2ex.Context.Friends.md): Context module for friend-related operations.

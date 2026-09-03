@@ -134,6 +134,7 @@ Ms2ex.LoginHandlers.ResponseServerEnter.md
 Ms2ex.LoginHandlers.ResponseVersion.md
 Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
+Ms2ex.Managers.Character.Equips.md
 Ms2ex.Managers.Character.Experience.md
 Ms2ex.Managers.Character.FallDamage.md
 Ms2ex.Managers.Character.Revival.md

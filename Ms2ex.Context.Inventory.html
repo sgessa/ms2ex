@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A067902C.js"></script>
+    <script defer src="dist/sidebar_items-7CC802D9.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -252,6 +252,16 @@ inventory in that case).</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#free_slot_count/2" data-no-tooltip="" translate="no">free_slot_count(character_id, inventory_tab)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Counts the free inventory slots in a given tab.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get/2" data-no-tooltip="" translate="no">get(map, id)</a>
 
       </div>
@@ -384,8 +394,8 @@ inventory in that case).</p></div>
 
       </div>
 
-<p>Adds an item to a character's inventory.</p><p>Handles stackable items by finding existing stacks that can be increased.</p><h2 id="add_item/2-examples" class="section-heading"><a href="#add_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_item</span><span class="p" data-group-id="9200749947-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="9200749947-1">)</span><span class="w">
-</span><span class="p" data-group-id="9200749947-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9200749947-3">{</span><span class="ss">:create</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9200749947-4">%</span><span class="nc" data-group-id="9200749947-4">Schema.Item</span><span class="p" data-group-id="9200749947-4">{</span><span class="p" data-group-id="9200749947-4">}</span><span class="p" data-group-id="9200749947-3">}</span><span class="p" data-group-id="9200749947-2">}</span></code></pre>
+<p>Adds an item to a character's inventory.</p><p>Handles stackable items by finding existing stacks that can be increased.</p><h2 id="add_item/2-examples" class="section-heading"><a href="#add_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_item</span><span class="p" data-group-id="4168902295-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="4168902295-1">)</span><span class="w">
+</span><span class="p" data-group-id="4168902295-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4168902295-3">{</span><span class="ss">:create</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4168902295-4">%</span><span class="nc" data-group-id="4168902295-4">Schema.Item</span><span class="p" data-group-id="4168902295-4">{</span><span class="p" data-group-id="4168902295-4">}</span><span class="p" data-group-id="4168902295-3">}</span><span class="p" data-group-id="4168902295-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="all/1">
@@ -413,8 +423,8 @@ inventory in that case).</p></div>
 
       </div>
 
-<p>Gets all items belonging to a character.</p><h2 id="all/1-examples" class="section-heading"><a href="#all/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">all</span><span class="p" data-group-id="6027507986-1">(</span><span class="n">character</span><span class="p" data-group-id="6027507986-1">)</span><span class="w">
-</span><span class="p" data-group-id="6027507986-2">[</span><span class="p" data-group-id="6027507986-3">%</span><span class="nc" data-group-id="6027507986-3">Schema.Item</span><span class="p" data-group-id="6027507986-3">{</span><span class="p" data-group-id="6027507986-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6027507986-4">%</span><span class="nc" data-group-id="6027507986-4">Schema.Item</span><span class="p" data-group-id="6027507986-4">{</span><span class="p" data-group-id="6027507986-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="6027507986-2">]</span></code></pre>
+<p>Gets all items belonging to a character.</p><h2 id="all/1-examples" class="section-heading"><a href="#all/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">all</span><span class="p" data-group-id="4749507549-1">(</span><span class="n">character</span><span class="p" data-group-id="4749507549-1">)</span><span class="w">
+</span><span class="p" data-group-id="4749507549-2">[</span><span class="p" data-group-id="4749507549-3">%</span><span class="nc" data-group-id="4749507549-3">Schema.Item</span><span class="p" data-group-id="4749507549-3">{</span><span class="p" data-group-id="4749507549-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4749507549-4">%</span><span class="nc" data-group-id="4749507549-4">Schema.Item</span><span class="p" data-group-id="4749507549-4">{</span><span class="p" data-group-id="4749507549-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="4749507549-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="bind/1">
@@ -427,7 +437,7 @@ inventory in that case).</p></div>
       <h1 class="signature" translate="no">bind(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L514" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L552" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -442,8 +452,8 @@ inventory in that case).</p></div>
 
       </div>
 
-<p>Binds an item to a character (placeholder).</p><h2 id="bind/1-examples" class="section-heading"><a href="#bind/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">bind</span><span class="p" data-group-id="0939085710-1">(</span><span class="n">item</span><span class="p" data-group-id="0939085710-1">)</span><span class="w">
-</span><span class="p" data-group-id="0939085710-2">%</span><span class="nc" data-group-id="0939085710-2">Schema.Item</span><span class="p" data-group-id="0939085710-2">{</span><span class="p" data-group-id="0939085710-2">}</span></code></pre>
+<p>Binds an item to a character (placeholder).</p><h2 id="bind/1-examples" class="section-heading"><a href="#bind/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">bind</span><span class="p" data-group-id="0490150804-1">(</span><span class="n">item</span><span class="p" data-group-id="0490150804-1">)</span><span class="w">
+</span><span class="p" data-group-id="0490150804-2">%</span><span class="nc" data-group-id="0490150804-2">Schema.Item</span><span class="p" data-group-id="0490150804-2">{</span><span class="p" data-group-id="0490150804-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="consume/2">
@@ -474,11 +484,11 @@ inventory in that case).</p></div>
 
       </div>
 
-<p>Consumes a given amount of an item.</p><p>Reduces the item amount by the consumed amount, or deletes the item if amount would be zero.</p><h2 id="consume/2-examples" class="section-heading"><a href="#consume/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">consume</span><span class="p" data-group-id="2623320720-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="2623320720-1">)</span><span class="w">
-</span><span class="p" data-group-id="2623320720-2">{</span><span class="ss">:update</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2623320720-3">%</span><span class="nc" data-group-id="2623320720-3">Schema.Item</span><span class="p" data-group-id="2623320720-3">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="2623320720-3">}</span><span class="p" data-group-id="2623320720-2">}</span><span class="w">
+<p>Consumes a given amount of an item.</p><p>Reduces the item amount by the consumed amount, or deletes the item if amount would be zero.</p><h2 id="consume/2-examples" class="section-heading"><a href="#consume/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">consume</span><span class="p" data-group-id="1083793244-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="1083793244-1">)</span><span class="w">
+</span><span class="p" data-group-id="1083793244-2">{</span><span class="ss">:update</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1083793244-3">%</span><span class="nc" data-group-id="1083793244-3">Schema.Item</span><span class="p" data-group-id="1083793244-3">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="1083793244-3">}</span><span class="p" data-group-id="1083793244-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">consume</span><span class="p" data-group-id="2623320720-4">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="2623320720-4">)</span><span class="w">
-</span><span class="p" data-group-id="2623320720-5">{</span><span class="ss">:delete</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2623320720-6">%</span><span class="nc" data-group-id="2623320720-6">Schema.Item</span><span class="p" data-group-id="2623320720-6">{</span><span class="p" data-group-id="2623320720-6">}</span><span class="p" data-group-id="2623320720-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">consume</span><span class="p" data-group-id="1083793244-4">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="1083793244-4">)</span><span class="w">
+</span><span class="p" data-group-id="1083793244-5">{</span><span class="ss">:delete</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1083793244-6">%</span><span class="nc" data-group-id="1083793244-6">Schema.Item</span><span class="p" data-group-id="1083793244-6">{</span><span class="p" data-group-id="1083793244-6">}</span><span class="p" data-group-id="1083793244-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="consume_item_amount/3">
@@ -574,8 +584,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Deletes an item from the inventory.</p><h2 id="delete/1-examples" class="section-heading"><a href="#delete/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete</span><span class="p" data-group-id="5408222955-1">(</span><span class="n">item</span><span class="p" data-group-id="5408222955-1">)</span><span class="w">
-</span><span class="p" data-group-id="5408222955-2">{</span><span class="ss">:delete</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5408222955-3">%</span><span class="nc" data-group-id="5408222955-3">Schema.Item</span><span class="p" data-group-id="5408222955-3">{</span><span class="p" data-group-id="5408222955-3">}</span><span class="p" data-group-id="5408222955-2">}</span></code></pre>
+<p>Deletes an item from the inventory.</p><h2 id="delete/1-examples" class="section-heading"><a href="#delete/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete</span><span class="p" data-group-id="7221725659-1">(</span><span class="n">item</span><span class="p" data-group-id="7221725659-1">)</span><span class="w">
+</span><span class="p" data-group-id="7221725659-2">{</span><span class="ss">:delete</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7221725659-3">%</span><span class="nc" data-group-id="7221725659-3">Schema.Item</span><span class="p" data-group-id="7221725659-3">{</span><span class="p" data-group-id="7221725659-3">}</span><span class="p" data-group-id="7221725659-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="expand_tab/2">
@@ -588,7 +598,7 @@ inventory in that case).</p>
       <h1 class="signature" translate="no">expand_tab(character, tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L466" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L504" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -603,8 +613,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Expands an inventory tab by adding additional slots.</p><h2 id="expand_tab/2-examples" class="section-heading"><a href="#expand_tab/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">expand_tab</span><span class="p" data-group-id="8400054579-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="8400054579-1">)</span><span class="w">
-</span><span class="p" data-group-id="8400054579-2">%</span><span class="nc" data-group-id="8400054579-2">Schema.InventoryTab</span><span class="p" data-group-id="8400054579-2">{</span><span class="ss">slots</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span><span class="p" data-group-id="8400054579-2">}</span></code></pre>
+<p>Expands an inventory tab by adding additional slots.</p><h2 id="expand_tab/2-examples" class="section-heading"><a href="#expand_tab/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">expand_tab</span><span class="p" data-group-id="6981030370-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="6981030370-1">)</span><span class="w">
+</span><span class="p" data-group-id="6981030370-2">%</span><span class="nc" data-group-id="6981030370-2">Schema.InventoryTab</span><span class="p" data-group-id="6981030370-2">{</span><span class="ss">slots</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span><span class="p" data-group-id="6981030370-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="expired?/1">
@@ -632,7 +642,7 @@ inventory in that case).</p>
 
       </div>
 
-<p>Checks if an item has expired.</p><h2 id="expired?/1-examples" class="section-heading"><a href="#expired?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">expired?</span><span class="p" data-group-id="0539258351-1">(</span><span class="n">item</span><span class="p" data-group-id="0539258351-1">)</span><span class="w">
+<p>Checks if an item has expired.</p><h2 id="expired?/1-examples" class="section-heading"><a href="#expired?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">expired?</span><span class="p" data-group-id="0391186349-1">(</span><span class="n">item</span><span class="p" data-group-id="0391186349-1">)</span><span class="w">
 </span><span class="no">true</span></code></pre>
   </section>
 </section>
@@ -646,7 +656,7 @@ inventory in that case).</p>
       <h1 class="signature" translate="no">find_first_available_slot(character_id, inventory_tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L399" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L405" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -662,8 +672,12 @@ inventory in that case).</p>
 
       </div>
 
-<p>Finds the first available inventory slot in a given tab.</p><h2 id="find_first_available_slot/2-examples" class="section-heading"><a href="#find_first_available_slot/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_first_available_slot</span><span class="p" data-group-id="6502485187-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="6502485187-1">)</span><span class="w">
-</span><span class="mi">5</span></code></pre>
+<p>Finds the first available inventory slot in a given tab.</p><p>The scan is bounded by the tab's persisted slot count (base size plus any
+expansions); when every slot is taken it returns <code class="inline">{:error, :full_inventory}</code>.</p><h2 id="find_first_available_slot/2-examples" class="section-heading"><a href="#find_first_available_slot/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_first_available_slot</span><span class="p" data-group-id="8808713209-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="8808713209-1">)</span><span class="w">
+</span><span class="mi">5</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="n">find_first_available_slot</span><span class="p" data-group-id="8808713209-2">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:gear</span><span class="p" data-group-id="8808713209-2">)</span><span class="w">
+</span><span class="p" data-group-id="8808713209-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:full_inventory</span><span class="p" data-group-id="8808713209-3">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="find_stack/2">
@@ -692,8 +706,36 @@ inventory in that case).</p>
 
       </div>
 
-<p>Finds an existing stack of the same item that isn't at its stack limit.</p><h2 id="find_stack/2-examples" class="section-heading"><a href="#find_stack/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_stack</span><span class="p" data-group-id="6582832716-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="6582832716-1">)</span><span class="w">
-</span><span class="p" data-group-id="6582832716-2">%</span><span class="nc" data-group-id="6582832716-2">Schema.Item</span><span class="p" data-group-id="6582832716-2">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="6582832716-2">}</span></code></pre>
+<p>Finds an existing stack of the same item that isn't at its stack limit.</p><h2 id="find_stack/2-examples" class="section-heading"><a href="#find_stack/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_stack</span><span class="p" data-group-id="2070142036-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="2070142036-1">)</span><span class="w">
+</span><span class="p" data-group-id="2070142036-2">%</span><span class="nc" data-group-id="2070142036-2">Schema.Item</span><span class="p" data-group-id="2070142036-2">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="2070142036-2">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="free_slot_count/2">
+
+  <div class="detail-header">
+    <a href="#free_slot_count/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">free_slot_count(character_id, inventory_tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L422" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> free_slot_count(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+<p>Counts the free inventory slots in a given tab.</p><h2 id="free_slot_count/2-examples" class="section-heading"><a href="#free_slot_count/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">free_slot_count</span><span class="p" data-group-id="4229024022-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:gear</span><span class="p" data-group-id="4229024022-1">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get/2">
@@ -721,8 +763,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Gets an item by ID for a character.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="9178011393-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">123</span><span class="p" data-group-id="9178011393-1">)</span><span class="w">
-</span><span class="p" data-group-id="9178011393-2">%</span><span class="nc" data-group-id="9178011393-2">Schema.Item</span><span class="p" data-group-id="9178011393-2">{</span><span class="p" data-group-id="9178011393-2">}</span></code></pre>
+<p>Gets an item by ID for a character.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="7447933616-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">123</span><span class="p" data-group-id="7447933616-1">)</span><span class="w">
+</span><span class="p" data-group-id="7447933616-2">%</span><span class="nc" data-group-id="7447933616-2">Schema.Item</span><span class="p" data-group-id="7447933616-2">{</span><span class="p" data-group-id="7447933616-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get_by/1">
@@ -750,10 +792,10 @@ inventory in that case).</p>
 
       </div>
 
-<p>Gets an item from the inventory by the given attributes.</p><h2 id="get_by/1-examples" class="section-heading"><a href="#get_by/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="6146050666-1">(</span><span class="p" data-group-id="6146050666-2">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p" data-group-id="6146050666-2">}</span><span class="p" data-group-id="6146050666-1">)</span><span class="w">
-</span><span class="p" data-group-id="6146050666-3">%</span><span class="nc" data-group-id="6146050666-3">Schema.Item</span><span class="p" data-group-id="6146050666-3">{</span><span class="p" data-group-id="6146050666-3">}</span><span class="w">
+<p>Gets an item from the inventory by the given attributes.</p><h2 id="get_by/1-examples" class="section-heading"><a href="#get_by/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="0103193417-1">(</span><span class="p" data-group-id="0103193417-2">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p" data-group-id="0103193417-2">}</span><span class="p" data-group-id="0103193417-1">)</span><span class="w">
+</span><span class="p" data-group-id="0103193417-3">%</span><span class="nc" data-group-id="0103193417-3">Schema.Item</span><span class="p" data-group-id="0103193417-3">{</span><span class="p" data-group-id="0103193417-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="6146050666-4">(</span><span class="p" data-group-id="6146050666-5">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">999</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">456</span><span class="p" data-group-id="6146050666-5">}</span><span class="p" data-group-id="6146050666-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="0103193417-4">(</span><span class="p" data-group-id="0103193417-5">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">999</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">456</span><span class="p" data-group-id="0103193417-5">}</span><span class="p" data-group-id="0103193417-4">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -767,7 +809,7 @@ inventory in that case).</p>
       <h1 class="signature" translate="no">item_in_slot(char_id, tab, slot)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L421" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L459" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -782,8 +824,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Gets the item in a specific inventory slot.</p><h2 id="item_in_slot/3-examples" class="section-heading"><a href="#item_in_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">item_in_slot</span><span class="p" data-group-id="3510492073-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3510492073-1">)</span><span class="w">
-</span><span class="p" data-group-id="3510492073-2">%</span><span class="nc" data-group-id="3510492073-2">Schema.Item</span><span class="p" data-group-id="3510492073-2">{</span><span class="ss">inventory_slot</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3510492073-2">}</span></code></pre>
+<p>Gets the item in a specific inventory slot.</p><h2 id="item_in_slot/3-examples" class="section-heading"><a href="#item_in_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">item_in_slot</span><span class="p" data-group-id="5727214770-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="5727214770-1">)</span><span class="w">
+</span><span class="p" data-group-id="5727214770-2">%</span><span class="nc" data-group-id="5727214770-2">Schema.Item</span><span class="p" data-group-id="5727214770-2">{</span><span class="ss">inventory_slot</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="5727214770-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_items/1">
@@ -811,8 +853,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Lists all items in a character's inventory (excluding equipped items).</p><p>Returns items sorted by inventory slot.</p><h2 id="list_items/1-examples" class="section-heading"><a href="#list_items/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_items</span><span class="p" data-group-id="3486244671-1">(</span><span class="n">character</span><span class="p" data-group-id="3486244671-1">)</span><span class="w">
-</span><span class="p" data-group-id="3486244671-2">[</span><span class="p" data-group-id="3486244671-3">%</span><span class="nc" data-group-id="3486244671-3">Schema.Item</span><span class="p" data-group-id="3486244671-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p" data-group-id="3486244671-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3486244671-2">]</span></code></pre>
+<p>Lists all items in a character's inventory (excluding equipped items).</p><p>Returns items sorted by inventory slot.</p><h2 id="list_items/1-examples" class="section-heading"><a href="#list_items/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_items</span><span class="p" data-group-id="1195929750-1">(</span><span class="n">character</span><span class="p" data-group-id="1195929750-1">)</span><span class="w">
+</span><span class="p" data-group-id="1195929750-2">[</span><span class="p" data-group-id="1195929750-3">%</span><span class="nc" data-group-id="1195929750-3">Schema.Item</span><span class="p" data-group-id="1195929750-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p" data-group-id="1195929750-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="1195929750-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_tab_items/2">
@@ -840,8 +882,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Lists items in a specific inventory tab.</p><h2 id="list_tab_items/2-examples" class="section-heading"><a href="#list_tab_items/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_tab_items</span><span class="p" data-group-id="1171959397-1">(</span><span class="n">character_id</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1171959397-1">)</span><span class="w">
-</span><span class="p" data-group-id="1171959397-2">[</span><span class="p" data-group-id="1171959397-3">%</span><span class="nc" data-group-id="1171959397-3">Schema.Item</span><span class="p" data-group-id="1171959397-3">{</span><span class="ss">inventory_tab</span><span class="p">:</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1171959397-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="1171959397-2">]</span></code></pre>
+<p>Lists items in a specific inventory tab.</p><h2 id="list_tab_items/2-examples" class="section-heading"><a href="#list_tab_items/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_tab_items</span><span class="p" data-group-id="9525542329-1">(</span><span class="n">character_id</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="9525542329-1">)</span><span class="w">
+</span><span class="p" data-group-id="9525542329-2">[</span><span class="p" data-group-id="9525542329-3">%</span><span class="nc" data-group-id="9525542329-3">Schema.Item</span><span class="p" data-group-id="9525542329-3">{</span><span class="ss">inventory_tab</span><span class="p">:</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="9525542329-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="9525542329-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_tabs/1">
@@ -869,8 +911,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Lists all inventory tabs for a character.</p><h2 id="list_tabs/1-examples" class="section-heading"><a href="#list_tabs/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_tabs</span><span class="p" data-group-id="4324876045-1">(</span><span class="n">character</span><span class="p" data-group-id="4324876045-1">)</span><span class="w">
-</span><span class="p" data-group-id="4324876045-2">[</span><span class="p" data-group-id="4324876045-3">%</span><span class="nc" data-group-id="4324876045-3">Schema.InventoryTab</span><span class="p" data-group-id="4324876045-3">{</span><span class="ss">tab</span><span class="p">:</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="4324876045-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="4324876045-2">]</span></code></pre>
+<p>Lists all inventory tabs for a character.</p><h2 id="list_tabs/1-examples" class="section-heading"><a href="#list_tabs/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_tabs</span><span class="p" data-group-id="5692516396-1">(</span><span class="n">character</span><span class="p" data-group-id="5692516396-1">)</span><span class="w">
+</span><span class="p" data-group-id="5692516396-2">[</span><span class="p" data-group-id="5692516396-3">%</span><span class="nc" data-group-id="5692516396-3">Schema.InventoryTab</span><span class="p" data-group-id="5692516396-3">{</span><span class="ss">tab</span><span class="p">:</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="5692516396-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="5692516396-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="sort_tab/2">
@@ -883,7 +925,7 @@ inventory in that case).</p>
       <h1 class="signature" translate="no">sort_tab(character, inventory_tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L485" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L523" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -899,8 +941,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Sorts items in a tab by item ID.</p><h2 id="sort_tab/2-examples" class="section-heading"><a href="#sort_tab/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">sort_tab</span><span class="p" data-group-id="5039491087-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="5039491087-1">)</span><span class="w">
-</span><span class="p" data-group-id="5039491087-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5039491087-3">[</span><span class="p" data-group-id="5039491087-4">%</span><span class="nc" data-group-id="5039491087-4">Schema.Item</span><span class="p" data-group-id="5039491087-4">{</span><span class="p" data-group-id="5039491087-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="5039491087-3">]</span><span class="p" data-group-id="5039491087-2">}</span></code></pre>
+<p>Sorts items in a tab by item ID.</p><h2 id="sort_tab/2-examples" class="section-heading"><a href="#sort_tab/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">sort_tab</span><span class="p" data-group-id="0266033951-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="0266033951-1">)</span><span class="w">
+</span><span class="p" data-group-id="0266033951-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0266033951-3">[</span><span class="p" data-group-id="0266033951-4">%</span><span class="nc" data-group-id="0266033951-4">Schema.Item</span><span class="p" data-group-id="0266033951-4">{</span><span class="p" data-group-id="0266033951-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="0266033951-3">]</span><span class="p" data-group-id="0266033951-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="swap/2">
@@ -913,7 +955,7 @@ inventory in that case).</p>
       <h1 class="signature" translate="no">swap(src_item, dst_slot)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L438" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L476" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -928,8 +970,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Swaps an item to a new slot, handling any item that might already be in that slot.</p><h2 id="swap/2-examples" class="section-heading"><a href="#swap/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">swap</span><span class="p" data-group-id="1135350177-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p" data-group-id="1135350177-1">)</span><span class="w">
-</span><span class="p" data-group-id="1135350177-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="1135350177-2">}</span></code></pre>
+<p>Swaps an item to a new slot, handling any item that might already be in that slot.</p><h2 id="swap/2-examples" class="section-heading"><a href="#swap/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">swap</span><span class="p" data-group-id="1358389840-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p" data-group-id="1358389840-1">)</span><span class="w">
+</span><span class="p" data-group-id="1358389840-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="1358389840-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="update_item/2">
@@ -958,8 +1000,8 @@ inventory in that case).</p>
 
       </div>
 
-<p>Updates an item with the given attributes.</p><h2 id="update_item/2-examples" class="section-heading"><a href="#update_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_item</span><span class="p" data-group-id="3020483961-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3020483961-2">%{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3020483961-2">}</span><span class="p" data-group-id="3020483961-1">)</span><span class="w">
-</span><span class="p" data-group-id="3020483961-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3020483961-4">%</span><span class="nc" data-group-id="3020483961-4">Schema.Item</span><span class="p" data-group-id="3020483961-4">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3020483961-4">}</span><span class="p" data-group-id="3020483961-3">}</span></code></pre>
+<p>Updates an item with the given attributes.</p><h2 id="update_item/2-examples" class="section-heading"><a href="#update_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_item</span><span class="p" data-group-id="1754882562-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1754882562-2">%{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="1754882562-2">}</span><span class="p" data-group-id="1754882562-1">)</span><span class="w">
+</span><span class="p" data-group-id="1754882562-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1754882562-4">%</span><span class="nc" data-group-id="1754882562-4">Schema.Item</span><span class="p" data-group-id="1754882562-4">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="1754882562-4">}</span><span class="p" data-group-id="1754882562-3">}</span></code></pre>
   </section>
 </section>
 

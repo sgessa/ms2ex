@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A067902C.js"></script>
+    <script defer src="dist/sidebar_items-7CC802D9.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,8 +114,11 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Context module for equipment-related operations.</p><p>This module provides functions for listing, equipping, and unequipping items,
-as well as validating equipment slots.</p>
+<p>Context module for equipment persistence.</p><p>Provides the item-level operations behind equip transitions: reading a
+character's equipped items, moving items between inventory and equipment,
+and validating equipment slots. The equip transition itself (conflicting
+items, state refresh, notifications) is owned by the character process,
+see <a href="Ms2ex.Managers.Character.Equips.html"><code class="inline">Ms2ex.Managers.Character.Equips</code></a>.</p>
     </section>
 
 </div>
@@ -134,29 +137,11 @@ as well as validating equipment slots.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#equip/1" data-no-tooltip="" translate="no">equip(item)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Equips an item using its first available slot.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#equip/2" data-no-tooltip="" translate="no">equip(item, equip_slot)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#find_equipped_in_slots/4" data-no-tooltip="" translate="no">find_equipped_in_slots(equips, slots, inventory_tab, requested_slot \\ nil)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Finds items that are equipped in specific slots.</p></div>
+        <div class="summary-synopsis"><p>Equips an item into the requested equipment slot.</p></div>
 
     </div>
 
@@ -172,11 +157,11 @@ as well as validating equipment slots.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unequip/1" data-no-tooltip="" translate="no">unequip(item)</a>
+        <a href="#unequip/2" data-no-tooltip="" translate="no">unequip(item, preferred_slot \\ nil)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Unequips an item, moving it back to inventory.</p></div>
+        <div class="summary-synopsis"><p>Unequips an item, moving it back to the inventory.</p></div>
 
     </div>
 
@@ -204,35 +189,6 @@ as well as validating equipment slots.</p>
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="equip/1">
-
-  <div class="detail-header">
-    <a href="#equip/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">equip(item)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L93" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> equip(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) :: {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
-
-      </div>
-
-<p>Equips an item using its first available slot.</p><h2 id="equip/1-examples" class="section-heading"><a href="#equip/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">equip</span><span class="p" data-group-id="0547112600-1">(</span><span class="n">item</span><span class="p" data-group-id="0547112600-1">)</span><span class="w">
-</span><span class="p" data-group-id="0547112600-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0547112600-3">%</span><span class="nc" data-group-id="0547112600-3">Schema.Item</span><span class="p" data-group-id="0547112600-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="0547112600-3">}</span><span class="p" data-group-id="0547112600-2">}</span></code></pre>
-  </section>
-</section>
 <section class="detail" id="equip/2">
 
   <div class="detail-header">
@@ -243,31 +199,7 @@ as well as validating equipment slots.</p>
       <h1 class="signature" translate="no">equip(item, equip_slot)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L97" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="find_equipped_in_slots/4">
-
-    <span id="find_equipped_in_slots/3"></span>
-
-  <div class="detail-header">
-    <a href="#find_equipped_in_slots/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">find_equipped_in_slots(equips, slots, inventory_tab, requested_slot \\ nil)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L58" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L52" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -278,15 +210,13 @@ as well as validating equipment slots.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> find_equipped_in_slots([<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()], [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()], <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil) ::
-  [
-    <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()
-  ]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> equip(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
-<p>Finds items that are equipped in specific slots.</p><p>Handles special cases for pants (checking for suits) and off-hand weapons.</p><h2 id="find_equipped_in_slots/4-parameters" class="section-heading"><a href="#find_equipped_in_slots/4-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">equips</code> - List of equipped items to search through</li><li><code class="inline">slots</code> - List of slot types to check</li><li><code class="inline">inventory_tab</code> - The inventory tab to filter by</li><li><code class="inline">requested_slot</code> - Optional specific slot requested (used for off-hand weapons)</li></ul><h2 id="find_equipped_in_slots/4-examples" class="section-heading"><a href="#find_equipped_in_slots/4-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_equipped_in_slots</span><span class="p" data-group-id="3338471108-1">(</span><span class="n">equips</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3338471108-2">[</span><span class="ss">:HD</span><span class="p" data-group-id="3338471108-2">]</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="3338471108-1">)</span><span class="w">
-</span><span class="p" data-group-id="3338471108-3">[</span><span class="p" data-group-id="3338471108-4">%</span><span class="nc" data-group-id="3338471108-4">Schema.Item</span><span class="p" data-group-id="3338471108-4">{</span><span class="ss">equip_slot</span><span class="p">:</span><span class="w"> </span><span class="ss">:HD</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3338471108-4">}</span><span class="p" data-group-id="3338471108-3">]</span></code></pre>
+<p>Equips an item into the requested equipment slot.</p><h2 id="equip/2-examples" class="section-heading"><a href="#equip/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">equip</span><span class="p" data-group-id="4490153945-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="ss">:RH</span><span class="p" data-group-id="4490153945-1">)</span><span class="w">
+</span><span class="p" data-group-id="4490153945-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4490153945-3">%</span><span class="nc" data-group-id="4490153945-3">Schema.Item</span><span class="p" data-group-id="4490153945-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="4490153945-3">}</span><span class="p" data-group-id="4490153945-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list/1">
@@ -299,7 +229,7 @@ as well as validating equipment slots.</p>
       <h1 class="signature" translate="no">list(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -314,21 +244,25 @@ as well as validating equipment slots.</p>
 
       </div>
 
-<p>Lists all equipped items for a given character.</p><p>Returns a list of items with their metadata loaded.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="3208562651-1">(</span><span class="n">character</span><span class="p" data-group-id="3208562651-1">)</span><span class="w">
-</span><span class="p" data-group-id="3208562651-2">[</span><span class="p" data-group-id="3208562651-3">%</span><span class="nc" data-group-id="3208562651-3">Schema.Item</span><span class="p" data-group-id="3208562651-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3208562651-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3208562651-2">]</span></code></pre>
+<p>Lists all equipped items for a given character.</p><p>The rows are returned without their metadata documents; callers fetch
+metadata from the storage cache only when they need it, so cached copies
+of the list stay lean.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="3776207588-1">(</span><span class="n">character</span><span class="p" data-group-id="3776207588-1">)</span><span class="w">
+</span><span class="p" data-group-id="3776207588-2">[</span><span class="p" data-group-id="3776207588-3">%</span><span class="nc" data-group-id="3776207588-3">Schema.Item</span><span class="p" data-group-id="3776207588-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3776207588-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3776207588-2">]</span></code></pre>
   </section>
 </section>
-<section class="detail" id="unequip/1">
+<section class="detail" id="unequip/2">
+
+    <span id="unequip/1"></span>
 
   <div class="detail-header">
-    <a href="#unequip/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#unequip/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">unequip(item)</h1>
+      <h1 class="signature" translate="no">unequip(item, preferred_slot \\ nil)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L117" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L79" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -339,16 +273,24 @@ as well as validating equipment slots.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> unequip(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> unequip(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+  | {:discard, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+  | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
 
       </div>
 
-<p>Unequips an item, moving it back to inventory.</p><p>Finds an available inventory slot and updates the item location.</p><h2 id="unequip/1-examples" class="section-heading"><a href="#unequip/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="8113426085-1">(</span><span class="n">item</span><span class="p" data-group-id="8113426085-1">)</span><span class="w">
-</span><span class="p" data-group-id="8113426085-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8113426085-3">%</span><span class="nc" data-group-id="8113426085-3">Schema.Item</span><span class="p" data-group-id="8113426085-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="8113426085-3">}</span><span class="p" data-group-id="8113426085-2">}</span><span class="w">
+<p>Unequips an item, moving it back to the inventory.</p><p>Prefers <code class="inline">preferred_slot</code> when it is free, else falls back to the first
+available slot in the tab. Items in cosmetic slots (hair, ears, face,
+face decal) are discarded instead: those looks cannot be worn again once
+removed.</p><h2 id="unequip/2-examples" class="section-heading"><a href="#unequip/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="3415172984-1">(</span><span class="n">item</span><span class="p" data-group-id="3415172984-1">)</span><span class="w">
+</span><span class="p" data-group-id="3415172984-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3415172984-3">%</span><span class="nc" data-group-id="3415172984-3">Schema.Item</span><span class="p" data-group-id="3415172984-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3415172984-3">}</span><span class="p" data-group-id="3415172984-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="8113426085-4">(</span><span class="n">already_unequipped_item</span><span class="p" data-group-id="8113426085-4">)</span><span class="w">
-</span><span class="p" data-group-id="8113426085-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:item_not_equipped</span><span class="p" data-group-id="8113426085-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="3415172984-4">(</span><span class="n">hair_item</span><span class="p" data-group-id="3415172984-4">)</span><span class="w">
+</span><span class="p" data-group-id="3415172984-5">{</span><span class="ss">:discard</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3415172984-6">%</span><span class="nc" data-group-id="3415172984-6">Schema.Item</span><span class="p" data-group-id="3415172984-6">{</span><span class="p" data-group-id="3415172984-6">}</span><span class="p" data-group-id="3415172984-5">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="3415172984-7">(</span><span class="n">item</span><span class="p" data-group-id="3415172984-7">)</span><span class="w">
+</span><span class="p" data-group-id="3415172984-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:full_inventory</span><span class="p" data-group-id="3415172984-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="valid_slot?/1">
@@ -361,7 +303,7 @@ as well as validating equipment slots.</p>
       <h1 class="signature" translate="no">valid_slot?(slot_name)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L143" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/equips.ex#L132" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -376,10 +318,10 @@ as well as validating equipment slots.</p>
 
       </div>
 
-<p>Validates if a given slot name is a valid equipment slot.</p><h2 id="valid_slot?/1-examples" class="section-heading"><a href="#valid_slot?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="3107942807-1">(</span><span class="s">&quot;HD&quot;</span><span class="p" data-group-id="3107942807-1">)</span><span class="w">
+<p>Validates if a given slot name is a valid equipment slot.</p><h2 id="valid_slot?/1-examples" class="section-heading"><a href="#valid_slot?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="8226797025-1">(</span><span class="s">&quot;HD&quot;</span><span class="p" data-group-id="8226797025-1">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="3107942807-2">(</span><span class="s">&quot;invalid&quot;</span><span class="p" data-group-id="3107942807-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="8226797025-2">(</span><span class="s">&quot;invalid&quot;</span><span class="p" data-group-id="8226797025-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
