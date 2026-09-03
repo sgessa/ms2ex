@@ -210,7 +210,11 @@ defmodule Ms2ex.Context.ItemStats do
         _ -> Context.Equips.list(character)
       end
 
-    Enum.filter(equips, &(&1.inventory_tab == :gear))
+    # metadata is not cached on the character; it is read from the storage
+    # cache while the stats are rebuilt
+    equips
+    |> Enum.filter(&(&1.inventory_tab == :gear))
+    |> Enum.map(&Context.Items.load_metadata(&1))
   end
 
   defp calculate_gear_score(equips) do

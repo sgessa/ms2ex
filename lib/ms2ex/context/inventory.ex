@@ -390,23 +390,61 @@ defmodule Ms2ex.Context.Inventory do
   @doc """
   Finds the first available inventory slot in a given tab.
 
+  The scan is bounded by the tab's persisted slot count (base size plus any
+  expansions); when every slot is taken it returns `{:error, :full_inventory}`.
+
   ## Examples
 
       iex> find_first_available_slot(1, :outfit)
       5
+
+      iex> find_first_available_slot(1, :gear)
+      {:error, :full_inventory}
   """
   @spec find_first_available_slot(integer(), atom()) :: integer() | {:error, :full_inventory}
   def find_first_available_slot(character_id, inventory_tab) do
-    slots =
-      Schema.Item
-      |> select([i], i.inventory_slot)
-      |> where([i], i.character_id == ^character_id)
-      |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
-      |> order_by(asc: :inventory_slot)
-      |> Repo.all()
+    last_slot = tab_size(character_id, inventory_tab) - 1
 
-    # TODO read inventory slots from DB
-    Enum.find(0..149, fn slot -> not Enum.member?(slots, slot) end) || {:error, :full_inventory}
+    occupied = occupied_slots(character_id, inventory_tab)
+
+    Enum.find(0..last_slot, fn slot -> not Enum.member?(occupied, slot) end) ||
+      {:error, :full_inventory}
+  end
+
+  @doc """
+  Counts the free inventory slots in a given tab.
+
+  ## Examples
+
+      iex> free_slot_count(1, :gear)
+  """
+  @spec free_slot_count(integer(), atom()) :: non_neg_integer()
+  def free_slot_count(character_id, inventory_tab) do
+    size = tab_size(character_id, inventory_tab)
+    occupied = Enum.count(occupied_slots(character_id, inventory_tab), &(&1 >= 0 and &1 < size))
+
+    max(size - occupied, 0)
+  end
+
+  defp occupied_slots(character_id, inventory_tab) do
+    Schema.Item
+    |> select([i], i.inventory_slot)
+    |> where([i], i.character_id == ^character_id)
+    |> where([i], i.location == ^:inventory and i.inventory_tab == ^inventory_tab)
+    |> order_by(asc: :inventory_slot)
+    |> Repo.all()
+  end
+
+  # the tab row carries the character's current slot count for the tab
+  # (base size plus expansions purchased in game)
+  defp tab_size(character_id, inventory_tab) do
+    case Repo.get_by(Schema.InventoryTab, character_id: character_id, tab: inventory_tab) do
+      %Schema.InventoryTab{slots: slots} when is_integer(slots) and slots > 0 ->
+        slots
+
+      _ ->
+        Map.get(Schema.InventoryTab.default_slots(), inventory_tab, 48)
+    end
   end
 
   @doc """

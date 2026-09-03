@@ -17,10 +17,9 @@ defmodule Ms2ex.Packets.CharacterInfo do
   end
 
   def load(%Schema.Character{} = character) do
-    {character, equipment_stats} =
-      character
-      |> Context.Characters.load_equips()
-      |> Context.CharacterStats.apply()
+    # the character comes from the manager, so its equip list is already
+    # current; only the derived stats need rebuilding
+    {character, equipment_stats} = Context.CharacterStats.apply(character)
 
     __MODULE__
     |> build()

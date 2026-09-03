@@ -1,10 +1,7 @@
 defmodule Ms2ex.GameHandlers.EquipItem do
   alias Ms2ex.Managers
-  alias Ms2ex.Context
-  alias Ms2ex.Packets
 
-  import Packets.PacketReader
-  import Ms2ex.Net.SenderSession, only: [push: 2]
+  import Ms2ex.Packets.PacketReader
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -16,76 +13,18 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {id, packet} = get_long(packet)
     {slot_name, _packet} = get_ustring(packet)
 
-    with true <- Context.Equips.valid_slot?(slot_name),
-         {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %{location: :inventory} = item <-
-           Context.Inventory.get_by(character_id: character.id, id: id) do
-      item = Context.Items.load_metadata(item)
-      equip_slot = String.to_existing_atom(slot_name)
-      equip_item(character, equip_slot, item, session)
-    end
+    Managers.Character.call(session.character_id, {:equip_item, id, slot_name})
+    session
   end
 
   # Unequip
   defp handle_mode(0x1, packet, session) do
     {id, _packet} = get_long(packet)
 
-    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %{location: :equipment} = item <-
-           Context.Inventory.get_by(character_id: character.id, id: id) do
-      unequip_item(character, item, session)
-    end
+    Managers.Character.call(session.character_id, {:unequip_item, id})
+    session
   end
 
   # Swap
   defp handle_mode(0x2, _packet, session), do: session
-
-  defp equip_item(character, equip_slot, %{location: :inventory} = item, session) do
-    equips = Context.Equips.list(character)
-
-    # find currently equipped item in the same slot and unequip it
-    equipped_items =
-      Context.Equips.find_equipped_in_slots(
-        equips,
-        item.metadata.slots,
-        item.inventory_tab,
-        equip_slot
-      )
-
-    Enum.each(equipped_items, fn item ->
-      unequip_item(character, item, session)
-    end)
-
-    with {:ok, item} <- Context.Equips.equip(item, equip_slot) do
-      equip_packet = Packets.EquipItem.bytes(character, item)
-      Context.Field.broadcast(character, equip_packet)
-
-      update_stats(character)
-
-      push(session, Packets.InventoryItem.remove_item(item.id))
-    end
-  end
-
-  defp unequip_item(character, item, session) do
-    with {:ok, item} <- Context.Equips.unequip(item) do
-      item = Context.Items.load_metadata(item)
-      unequip_packet = Packets.UnequipItem.bytes(character, item.id)
-      Context.Field.broadcast(character, unequip_packet)
-
-      update_stats(character)
-
-      push(session, Packets.InventoryItem.add_item({:create, item}, character))
-    end
-  end
-
-  defp update_stats(character) do
-    {character, _equipment_stats} =
-      character
-      |> Context.Characters.load_equips()
-      |> Context.CharacterStats.apply()
-
-    Managers.Character.call(character, {:update, character})
-    Context.Field.broadcast_stats(character)
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
-  end
 end

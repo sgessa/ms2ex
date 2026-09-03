@@ -83,6 +83,8 @@ Applied today: `status.values` / `status.rates` stat modifiers, the
 - condition and immune-category checks are not evaluated
 - recovery is skipped on mob-owned buffs; empty effects are applied as no-op
   buffs
+- item-granted buffs (equip effects with buff payloads) are not applied or
+  removed on unequip
 
 ### 6. SkillDamage Tile damage mode — [Partial]
 
@@ -92,6 +94,16 @@ The Tile (0x6) mode, tied to tile skills, is still unimplemented.
 ---
 
 ## P3 — Client parity & serialization
+
+### 17. Item systems: gem sockets, pet items, gacha — [Open]
+
+The item packet writes the reference defaults for three systems ms2ex does
+not implement, so every item currently serializes identically to an item
+without those features: the gacha dismantle id (always 0), the pet info
+block (never written), and gemstone sockets (empty socket block only;
+socket unlocking and gemstones are unimplemented). Implementing any of
+these needs the feature system plus, for pets, ingest projection of pet
+metadata.
 
 ### 7. Join-flow packet audit — [Open]
 
@@ -181,7 +193,9 @@ long-term model is full ownership in memory, genre-standard for MMO servers:
   on logout
 - every call site routed through it: pickup/drop, consume, move/split/merge,
   equip changes, rewards, and shops/trades/storage/mail as those features
-  arrive
+  arrive; slot allocation (`find_first_available_slot`) becomes a scan over
+  the owned item list bounded by the tab's persisted slot count instead of a
+  per-write query against hardcoded slot ranges
 - the completion-time `Repo.transaction` atomicity (quest row + turn-in
   consumption + rewards) becomes in-process ordering inside the manager, since
   a DB transaction cannot span its memory
@@ -193,27 +207,47 @@ long-term model is full ownership in memory, genre-standard for MMO servers:
 - when this lands, equips fold into it (they are items with
   `location: :equipment`) rather than keeping a separate equip owner
 
-### 16. Equipment state extraction — [Open]
+### 18. Metadata-free manager state — [Partial]
 
-`character.equips` is kept fresh in the character manager, but only through
-handler-level orchestration: equip/unequip handlers query the inventory,
-mutate via `Context.Equips`, re-query the equip list, re-apply stats, push
-the whole struct back into the manager, and broadcast packets — while
-`character_info` and `item_stats` re-query equips independently.
+Metadata documents are virtual fields on items and get embedded wherever
+structs are cached in GenServer state, so manager memory grows with document
+sizes instead of entity counts. The item side is lean now: the character
+manager's cached equip list and the field manager's dropped items hold rows
+without metadata and re-read the storage cache at point of use (stat
+rebuilds, pickup). Still holding documents in state:
 
-Extract the domain into a `Managers.Character.Equips` submodule (like
-`.Experience` / `.Stats`): the character process owns the transition and
-returns fresh state, and handlers issue one call instead of orchestrating
-half a dozen context calls. Deliberately a module split, **not** a separate
-GenServer: equips are read constantly by field serialization of other
-players, they are items (see item 15), and a standalone equip process would
-fragment item state across two owners with the sync boundary exactly at the
-hot equip↔inventory transitions.
+- `Types.Npc` keeps npc metadata per field NPC (mob AI, spawns, drop rolls
+  and corpses read it)
+- the quest manager caches the quest metadata document on every active quest
+- `Types.Buff` keeps the full effect document on every active buff
+
+Replacing those with fetch-from-cache-at-use keeps long-lived fields and
+combat-heavy characters from accumulating document copies.
 
 ---
 
 ## Recently completed
 
+- Equipment state extraction: equip transitions moved into the character
+  process (`Managers.Character.Equips`, like `.Experience` / `.Stats`) — one
+  manager call runs the whole equip/unequip and returns fresh state, and
+  character info reads the manager's equip list instead of re-querying.
+  Deliberately a module split, **not** a separate GenServer: equips are read
+  constantly by field serialization of other players and are items (see
+  item 15), so a standalone equip process would fragment item state across
+  two owners
+- Equip parity & slot allocation: slot scans are bounded by the tab's
+  persisted slot count (base + expansions) instead of a hardcoded range, and
+  free-slot counting feeds the multi-slot equip pre-check; the equip
+  transition now validates the request (target slot must be the item's
+  primary slot, level/expiry/job limits, localized error boxes), resolves
+  conflicts and unequips in the reference order (vacated slot preferred,
+  full-inventory refusal), and discards cosmetic looks (hair/ears/face/face
+  decal) on unequip. Pickups no longer lose the drop when the inventory is
+  full — the field item stays
+- Manager state carries no item metadata: the cached equip list and field
+  drops hold plain item rows, and stat rebuilds, gear score, and pickup
+  re-read the storage cache (ETS) at point of use
 - Quest command surface: forfeit enforcement (non-forfeitable quests refuse
   abandon), the client expiration sweep (drops persisted rows and acknowledges
   with the expired-quest packet), and go-to-npc travel to a started quest's
