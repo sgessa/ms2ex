@@ -4,6 +4,7 @@ defmodule Ms2ex.Managers.Inventory do
 
   alias Ms2ex.Repo
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
   alias Ms2ex.Types
 
   import Ecto.Query, except: [update: 2]
@@ -606,12 +607,24 @@ defmodule Ms2ex.Managers.Inventory do
 
     case update_item(state, item, %{is_locked: locked?}) do
       {{:ok, updated}, state} ->
-        updated = Map.put(updated, :unlocks_at, DateTime.utc_now() |> DateTime.truncate(:second))
-        {[updated], state}
+        {[Map.put(updated, :unlocks_at, unlock_time(unlock))], state}
 
       {_error, state} ->
         {[], state}
     end
+  end
+
+  # locking stamps now; unlocking stamps the 72-hour unlock-process window
+  # the client renders while the item counts down
+  defp unlock_time(unlock) do
+    seconds =
+      if unlock do
+        Storage.Tables.Constants.get(:item_un_lock_time) || 259_200
+      else
+        0
+      end
+
+    DateTime.utc_now() |> DateTime.add(seconds, :second) |> DateTime.truncate(:second)
   end
 
   defp sort_by_slot(items), do: Enum.sort_by(items, & &1.inventory_slot)
