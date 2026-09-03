@@ -118,7 +118,7 @@ defmodule Ms2ex.Managers.Quest.Conditions do
       metadata_matches?(condition.metadata, target_string, target_long, code_string, code_long)
   end
 
-  defp metadata_matches?(metadata, _target_string, target_long, _code_string, code_long) do
+  def metadata_matches?(metadata, _target_string, target_long, _code_string, code_long) do
     code_ok?(metadata, code_long) and target_ok?(metadata, target_long)
   end
 

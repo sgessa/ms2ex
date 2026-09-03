@@ -112,8 +112,14 @@ defmodule Ms2ex.Context.Achievements do
         :ok
 
       condition ->
-        if Conditions.metadata_matches?(condition, target_string, target_long, code_string, code_long),
-          do: update_progress(character, metadata, count)
+        if Conditions.metadata_matches?(
+             condition,
+             target_string,
+             target_long,
+             code_string,
+             code_long
+           ),
+           do: update_progress(character, metadata, count)
     end
   end
 
@@ -129,7 +135,7 @@ defmodule Ms2ex.Context.Achievements do
 
   defp deliver_reward(_character, nil), do: :ok
 
-  defp deliver_reward(character, %{type: 1, code: item_id, value: amount, rank: rarity}) do
+  defp deliver_reward(character, %{type: :item, code: item_id, value: amount, rank: rarity}) do
     item = Ms2ex.Context.Items.init(item_id, %{amount: amount, rarity: rarity})
 
     case Ms2ex.Context.Inventory.add_item(character, item) do
@@ -142,14 +148,14 @@ defmodule Ms2ex.Context.Achievements do
     end
   end
 
-  defp deliver_reward(character, %{type: 3, value: amount}) do
+  defp deliver_reward(character, %{type: :stat_point, value: amount}) do
     case Ms2ex.Managers.Character.call(character, {:add_stat_point, :trophy, amount}) do
       {:ok, _character} -> :ok
       _ -> :error
     end
   end
 
-  defp deliver_reward(character, %{type: 2, code: title_id}) do
+  defp deliver_reward(character, %{type: :title, code: title_id}) do
     title = Ecto.build_assoc(character, :titles, %{title_id: title_id})
 
     case Repo.insert(title, on_conflict: :nothing) do
