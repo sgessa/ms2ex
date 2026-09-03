@@ -6,52 +6,68 @@ defmodule Ms2ex.Managers.Field.Item do
   alias Ms2ex.Packets
 
   def pickup_item(character, item, state) do
-    cond do
-      Context.Items.mesos?(item) ->
-        Context.Wallets.update(character, :mesos, item.amount)
+    credit = consumable_credit(item)
 
-      Context.Items.valor_token?(item) ->
-        Context.Wallets.update(character, :valor_tokens, item.amount)
-
-      Context.Items.merets?(item) ->
-        Context.Wallets.update(character, :merets, item.amount)
-
-      Context.Items.rue?(item) ->
-        Context.Wallets.update(character, :rues, item.amount)
-
-      Context.Items.havi_fruit?(item) ->
-        Context.Wallets.update(character, :havi_fruits, item.amount)
-
-      Context.Items.sp?(item) ->
-        Managers.Character.cast(character, {:increase_stats, [spirit: item.amount]})
-
-      Context.Items.stamina?(item) ->
-        Managers.Character.cast(character, {:increase_stats, [stamina: item.amount]})
-
-      true ->
-        item =
-          item
-          |> Context.Items.load_metadata()
-          |> Context.Items.bind_if_needed(:loot)
-
-        with {:ok, result} <- Context.Inventory.add_item(character, item) do
-          {_status, item} = result
-          push(character, Packets.InventoryItem.add_item(result, character))
-          push(character, Packets.InventoryItem.mark_item_new(item))
-
-          # pickup-count quest conditions; code param carries the item id
-          Managers.Quest.update_conditions(
-            character.id,
-            :item_pickup,
-            item.amount,
-            "",
-            0,
-            "",
-            item.item_id
-          )
-        end
+    if credit do
+      apply_credit(character, credit, item.amount)
+      remove_item(character, item, state)
+    else
+      pickup_inventory_item(character, item, state)
     end
+  end
 
+  # field items that convert directly into a wallet balance or a stat
+  defp consumable_credit(item) do
+    cond do
+      Context.Items.mesos?(item) -> {:wallet, :mesos}
+      Context.Items.valor_token?(item) -> {:wallet, :valor_tokens}
+      Context.Items.merets?(item) -> {:wallet, :merets}
+      Context.Items.rue?(item) -> {:wallet, :rues}
+      Context.Items.havi_fruit?(item) -> {:wallet, :havi_fruits}
+      Context.Items.sp?(item) -> {:stat, :spirit}
+      Context.Items.stamina?(item) -> {:stat, :stamina}
+      true -> nil
+    end
+  end
+
+  defp apply_credit(character, {:wallet, currency}, amount),
+    do: Context.Wallets.update(character, currency, amount)
+
+  defp apply_credit(character, {:stat, stat}, amount),
+    do: Managers.Character.cast(character, {:increase_stats, [{stat, amount}]})
+
+  defp pickup_inventory_item(character, item, state) do
+    item =
+      item
+      |> Context.Items.load_metadata()
+      |> Context.Items.bind_if_needed(:loot)
+
+    case Context.Inventory.add_item(character, item) do
+      {:ok, result} ->
+        {_status, inventory_item} = result
+        push(character, Packets.InventoryItem.add_item(result, character))
+        push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+
+        # pickup-count quest conditions; code param carries the item id
+        Managers.Quest.update_conditions(
+          character.id,
+          :item_pickup,
+          inventory_item.amount,
+          "",
+          0,
+          "",
+          inventory_item.item_id
+        )
+
+        remove_item(character, item, state)
+
+      # the inventory cannot hold the item; it stays on the field
+      {:error, _changeset} ->
+        state
+    end
+  end
+
+  defp remove_item(character, item, state) do
     Context.Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
     Context.Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
 
@@ -70,9 +86,7 @@ defmodule Ms2ex.Managers.Field.Item do
     }
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
-
-    items = Map.put(state.items, object_id, item)
-    %{state | items: items}
+    store(state, item)
   end
 
   def add_mob_drop(mob, item, receiver \\ nil, state) do
@@ -90,8 +104,13 @@ defmodule Ms2ex.Managers.Field.Item do
     }
 
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    store(state, item)
+  end
 
-    items = Map.put(state.items, object_id, item)
+  # metadata is re-read from the storage cache when the item is picked up;
+  # it is not kept in the field state
+  defp store(state, item) do
+    items = Map.put(state.items, item.object_id, %{item | metadata: nil})
     %{state | items: items}
   end
 

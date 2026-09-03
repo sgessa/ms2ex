@@ -97,7 +97,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_time(item.unlocks_at)
     |> put_short(item.glamor_forges_left)
     |> put_bool(false)
-    # TODO gacha dismantle id
+    # TODO gacha dismantle id (always 0 until gacha items are supported)
     |> put_int()
     |> put_appearance(item)
     |> put_item_stats(item)
@@ -111,8 +111,9 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(item.charges)
     |> put_item_enchant_stats(item)
     |> put_template(item)
-    # TODO put pets
-    # TODO put gem slot
+    # TODO put pets (no pet support yet: pet items would write their info block here)
+    # TODO put gem slot (socket unlock and gemstones unimplemented; only the
+    #      empty socket block is written)
     |> put_int(TransferFlags.to_int(item.transfer_flags))
     |> put_byte()
     |> put_int(item.remaining_trades)

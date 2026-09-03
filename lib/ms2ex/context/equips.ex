@@ -1,9 +1,12 @@
 defmodule Ms2ex.Context.Equips do
   @moduledoc """
-  Context module for equipment-related operations.
+  Context module for equipment persistence.
 
-  This module provides functions for listing, equipping, and unequipping items,
-  as well as validating equipment slots.
+  Provides the item-level operations behind equip transitions: reading a
+  character's equipped items, moving items between inventory and equipment,
+  and validating equipment slots. The equip transition itself (conflicting
+  items, state refresh, notifications) is owned by the character process,
+  see `Ms2ex.Managers.Character.Equips`.
   """
 
   alias Ms2ex.Context
@@ -14,10 +17,16 @@ defmodule Ms2ex.Context.Equips do
   import Ecto.Query, except: [update: 2]
   import Context.Inventory, only: [update_item: 2, find_first_available_slot: 2]
 
+  # looks worn in these slots are discarded when unequipped rather than
+  # returned to the inventory
+  @discard_on_unequip_slots [:HR, :ER, :FA, :FD]
+
   @doc """
   Lists all equipped items for a given character.
 
-  Returns a list of items with their metadata loaded.
+  The rows are returned without their metadata documents; callers fetch
+  metadata from the storage cache only when they need it, so cached copies
+  of the list stay lean.
 
   ## Examples
 
@@ -29,71 +38,17 @@ defmodule Ms2ex.Context.Equips do
     Schema.Item
     |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
     |> Repo.all()
-    |> Enum.map(&Context.Items.load_metadata(&1))
   end
 
   @doc """
-  Finds items that are equipped in specific slots.
-
-  Handles special cases for pants (checking for suits) and off-hand weapons.
-
-  ## Parameters
-
-    * `equips` - List of equipped items to search through
-    * `slots` - List of slot types to check
-    * `inventory_tab` - The inventory tab to filter by
-    * `requested_slot` - Optional specific slot requested (used for off-hand weapons)
+  Equips an item into the requested equipment slot.
 
   ## Examples
 
-      iex> find_equipped_in_slots(equips, [:HD], :outfit)
-      [%Schema.Item{equip_slot: :HD, ...}]
-  """
-  @spec find_equipped_in_slots(
-          [Schema.Item.t()],
-          [atom()],
-          atom(),
-          atom() | nil
-        ) :: [Schema.Item.t()]
-  def find_equipped_in_slots(equips, slots, inventory_tab, requested_slot \\ nil)
-
-  # When we are equipping pants, we need to check if we have a suit (CL) equipped
-  def find_equipped_in_slots(equips, [:PA], inventory_tab, _requested_slot) do
-    suit =
-      Enum.find(equips, &(&1.metadata.slots == [:CL, :PA] and &1.inventory_tab == inventory_tab))
-
-    slots =
-      if suit do
-        [:CL, :PA]
-      else
-        [:PA]
-      end
-
-    Enum.filter(equips, &(&1.equip_slot in slots and &1.inventory_tab == inventory_tab))
-  end
-
-  # When we are equipping off-hand weapons, we need to check against the slot requested by the client
-  def find_equipped_in_slots(equips, slots, inventory_tab, requested_slot) when slots == [:OH] do
-    Enum.filter(equips, &(&1.equip_slot == requested_slot and &1.inventory_tab == inventory_tab))
-  end
-
-  def find_equipped_in_slots(equips, slots, inventory_tab, _requested_slot) do
-    Enum.filter(equips, &(&1.equip_slot in slots and &1.inventory_tab == inventory_tab))
-  end
-
-  @doc """
-  Equips an item using its first available slot.
-
-  ## Examples
-
-      iex> equip(item)
+      iex> equip(item, :RH)
       {:ok, %Schema.Item{location: :equipment, ...}}
   """
-  @spec equip(Schema.Item.t()) :: {:ok, Schema.Item.t()} | {:error, any()}
-  def equip(%Schema.Item{metadata: meta} = item) do
-    equip(item, List.first(meta.slot_names))
-  end
-
+  @spec equip(Schema.Item.t(), atom()) :: {:ok, Schema.Item.t()} | {:error, any()}
   def equip(%Schema.Item{location: :inventory} = item, equip_slot) do
     item
     |> Schema.Item.bind_if_needed(:equip)
@@ -101,30 +56,64 @@ defmodule Ms2ex.Context.Equips do
   end
 
   @doc """
-  Unequips an item, moving it back to inventory.
+  Unequips an item, moving it back to the inventory.
 
-  Finds an available inventory slot and updates the item location.
+  Prefers `preferred_slot` when it is free, else falls back to the first
+  available slot in the tab. Items in cosmetic slots (hair, ears, face,
+  face decal) are discarded instead: those looks cannot be worn again once
+  removed.
 
   ## Examples
 
       iex> unequip(item)
       {:ok, %Schema.Item{location: :inventory, ...}}
 
-      iex> unequip(already_unequipped_item)
-      {:error, :item_not_equipped}
-  """
-  @spec unequip(Schema.Item.t()) :: {:ok, Schema.Item.t()} | {:error, atom()}
-  def unequip(%Schema.Item{} = item) do
-    with slot <- find_first_available_slot(item.character_id, item.inventory_tab),
-         {:ok, item} <-
-           update_item(item, %{equip_slot: :NONE, inventory_slot: slot, location: :inventory}) do
-      {:ok, item}
-    else
-      %Schema.Item{location: :inventory} ->
-        {:error, :item_not_equipped}
+      iex> unequip(hair_item)
+      {:discard, %Schema.Item{}}
 
-      nil ->
-        {:error, :item_not_found}
+      iex> unequip(item)
+      {:error, :full_inventory}
+  """
+  @spec unequip(Schema.Item.t(), integer() | nil) ::
+          {:ok, Schema.Item.t()} | {:discard, Schema.Item.t()} | {:error, atom()}
+  def unequip(%Schema.Item{} = item, preferred_slot \\ nil) do
+    if item.equip_slot in @discard_on_unequip_slots do
+      discard(item)
+    else
+      move_to_inventory(item, preferred_slot)
+    end
+  end
+
+  defp discard(%Schema.Item{} = item) do
+    case Context.Inventory.delete(item) do
+      {:delete, item} -> {:discard, item}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  defp move_to_inventory(item, preferred_slot) do
+    case available_slot(item, preferred_slot) do
+      {:ok, slot} ->
+        update_item(item, %{equip_slot: :NONE, inventory_slot: slot, location: :inventory})
+
+      error ->
+        error
+    end
+  end
+
+  # prefers the given slot while it is still free, else falls back to the
+  # first open slot in the tab
+  defp available_slot(item, preferred_slot) when is_integer(preferred_slot) do
+    case Context.Inventory.item_in_slot(item.character_id, item.inventory_tab, preferred_slot) do
+      nil -> {:ok, preferred_slot}
+      _item -> available_slot(item, nil)
+    end
+  end
+
+  defp available_slot(item, _preferred_slot) do
+    case find_first_available_slot(item.character_id, item.inventory_tab) do
+      slot when is_integer(slot) -> {:ok, slot}
+      error -> error
     end
   end
 
