@@ -43,6 +43,8 @@ defmodule Ms2exWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
+    body_reader: {Ms2exWeb.CacheBodyReader, :read_body, []},
+    length: 5_000_000,
     json_decoder: Phoenix.json_library()
 
   plug Plug.MethodOverride

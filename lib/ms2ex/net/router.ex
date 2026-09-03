@@ -33,6 +33,7 @@ defmodule Ms2ex.Net.Router do
   end
 
   defp handler_module_prefix("SEND_LOG", _session_type), do: "Elixir.Ms2ex.Handlers."
+  defp handler_module_prefix("RESPONSE_SERVER_ENTER", _session_type), do: "Elixir.Ms2ex.Handlers."
   defp handler_module_prefix(_handler, :channel), do: "Elixir.Ms2ex.GameHandlers."
   defp handler_module_prefix(_handler, :login_server), do: "Elixir.Ms2ex.LoginHandlers."
   defp handler_module_prefix(_handler, :world_login), do: "Elixir.Ms2ex.LoginHandlers."

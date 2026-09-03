@@ -19,10 +19,9 @@ defmodule Ms2exWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: Ms2exWeb
+      use Phoenix.Controller, formats: []
 
       import Plug.Conn
-      alias Ms2exWeb.Router.Helpers, as: Routes
     end
   end
 

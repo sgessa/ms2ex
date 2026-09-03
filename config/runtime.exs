@@ -29,9 +29,12 @@ config :ms2ex, Ms2ex,
     ]
   },
   ugc: %{
-    endpoint: "http://#{server_address}/ws.asmx?wsdl",
-    resource: "http://#{server_address}",
-    locale: "na"
+    # the client resolves upload paths relative to this url, so it must keep a
+    # trailing file segment for the /ugc prefix to survive
+    endpoint: "http://#{server_address}:4000/ugc/ws.asmx?wsdl",
+    resource: "http://#{server_address}:4000/ugc",
+    locale: "na",
+    data_dir: env!("UGC_DATA_DIR", :string, Path.expand("priv/ugc", env_dir_prefix))
   }
 
 config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
