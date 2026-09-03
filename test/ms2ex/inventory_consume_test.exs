@@ -65,10 +65,12 @@ defmodule Ms2ex.Context.InventoryTest do
 
     {:ok, results} = Context.Inventory.consume_item_amounts(character, consumables)
 
-    # the 2-stack covers the first and third pairs; the middle pair is skipped
-    assert [{:delete, deleted}, {:delete, deleted2}] = results
+    # the 2-stack covers the first pair (1 left) and the third pair (emptied);
+    # the middle pair is skipped as uncovered
+    assert [{:update, updated}, {:delete, deleted}] = results
+    assert updated.id == first.id
+    assert updated.amount == 1
     assert deleted.id == first.id
-    assert deleted2.id == first.id
 
     refute Context.Inventory.get(character, first.id)
   end
