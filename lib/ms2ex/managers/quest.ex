@@ -18,6 +18,7 @@ defmodule Ms2ex.Managers.Quest do
   # Constants
   @batch_size 200
   @default_timeout 5000
+  @throttled_conditions [:fall, :swim, :swimtime, :run, :stay_cube, :crawl, :glide, :climb, :ropetime, :laddertime, :holdtime, :riding, :emotiontime]
 
   # Client API
 
@@ -450,7 +451,7 @@ defmodule Ms2ex.Managers.Quest do
         update_conditions(character.id, :quest_clear, 1, "", 0, "", quest.metadata.id)
 
         if quest.metadata.basic.type == :field_mission do
-          update_conditions(character.id, :field_mission)
+          update_conditions(character.id, :field_mission, 1, "", 0, "", quest.metadata.id)
           handle_exploration_completion(character, state, new_state)
         end
 
@@ -702,13 +703,13 @@ defmodule Ms2ex.Managers.Quest do
     else
       case Context.Quests.update_quest(updated_quest, %{conditions: updated_quest.conditions}) do
         {:ok, persisted_quest} ->
-          maybe_push_update(character, persisted_quest)
+          maybe_push_condition_update(character, quest, persisted_quest, condition_type)
           handle_auto_completion(persisted_quest, character.id)
           {:updated, persisted_quest}
 
         {:error, _changeset} ->
           # keep gameplay moving on the in-memory state even if the write fails
-          maybe_push_update(character, updated_quest)
+          maybe_push_condition_update(character, quest, updated_quest, condition_type)
           {:updated, updated_quest}
       end
     end
@@ -716,6 +717,24 @@ defmodule Ms2ex.Managers.Quest do
 
   defp maybe_push_update(%{session_pid: nil}, _quest), do: :ok
   defp maybe_push_update(character, quest), do: push(character, Packets.Game.Quest.update(quest))
+
+  defp maybe_push_condition_update(character, previous_quest, quest, condition_type)
+       when condition_type in @throttled_conditions do
+    if condition_bucket(quest) > condition_bucket(previous_quest) or
+         Managers.Quest.Conditions.all_met?(quest) do
+      maybe_push_update(character, quest)
+    end
+  end
+
+  defp maybe_push_condition_update(character, _previous_quest, quest, _condition_type),
+    do: maybe_push_update(character, quest)
+
+  defp condition_bucket(quest) do
+    quest.conditions
+    |> Map.values()
+    |> Enum.map(&div(&1.counter, 5))
+    |> Enum.max(fn -> 0 end)
+  end
 
   defp maybe_push_tracking(%{session_pid: nil}, _quest), do: :ok
 

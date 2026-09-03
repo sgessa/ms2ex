@@ -9,6 +9,16 @@ defmodule Ms2ex.GameHandlers.UserSync do
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
+  @ladder_state 8
+  @rope_state 9
+  @hold_state 32
+  @walk_state 2
+  @crawl_state 3
+  @fall_state 5
+  @swim_states [27, 28]
+  @climb_state 29
+  @glide_state 30
+
   def handle(packet, session) do
     {_unknown, packet} = get_byte(packet)
     {_server_ticks, packet} = get_int(packet)
@@ -26,6 +36,13 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     sync_packet = Packets.UserSync.bytes(character, sync_states)
     Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
+
+    Managers.Character.cast(
+      character.id,
+      {:set_time_condition, time_condition(List.first(sync_states).state)}
+    )
+
+    track_distance_condition(character, List.first(sync_states))
 
     ensure_safe_position(session, character, sync_states)
   end
@@ -61,6 +78,42 @@ defmodule Ms2ex.GameHandlers.UserSync do
       push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
     end
   end
+
+  defp time_condition(@ladder_state), do: :laddertime
+  defp time_condition(@rope_state), do: :ropetime
+  defp time_condition(@hold_state), do: :holdtime
+  defp time_condition(_state), do: nil
+
+  defp track_distance_condition(%{position: nil}, _sync_state), do: :ok
+
+  defp track_distance_condition(character, sync_state) do
+    case distance_condition(sync_state.state) do
+      nil -> :ok
+      condition_type ->
+        distance =
+          Context.MapBlock.subtract(sync_state.position, character.position)
+          |> Context.MapBlock.length()
+
+        distances = Map.get(character, :condition_distances, %{})
+        total = Map.get(distances, condition_type, 0) + distance
+        block_size = Context.MapBlock.block_size()
+        progress = trunc(total / block_size)
+        distances = Map.put(distances, condition_type, total - progress * block_size)
+        Managers.Character.call(character, {:update, %{character | condition_distances: distances}})
+
+        if progress > 0 do
+          Managers.Quest.update_conditions(character.id, condition_type, progress, "", 0, "", character.map_id)
+        end
+    end
+  end
+
+  defp distance_condition(@walk_state), do: :run
+  defp distance_condition(@crawl_state), do: :crawl
+  defp distance_condition(@fall_state), do: :fall
+  defp distance_condition(state) when state in @swim_states, do: :swim
+  defp distance_condition(@climb_state), do: :climb
+  defp distance_condition(@glide_state), do: :glide
+  defp distance_condition(_state), do: nil
 
   defp maybe_set_safe_position(character, new_position, closest_block) do
     if coord_safe?(character, new_position, closest_block) do

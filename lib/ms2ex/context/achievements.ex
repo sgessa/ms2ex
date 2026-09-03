@@ -10,7 +10,8 @@ defmodule Ms2ex.Context.Achievements do
   def all(owner_id),
     do: Repo.all(from achievement in Schema.Achievement, where: achievement.owner_id == ^owner_id)
 
-  def get(owner_id, achievement_id), do: Repo.get(Schema.Achievement, [owner_id, achievement_id])
+  def get(owner_id, achievement_id),
+    do: Repo.get_by(Schema.Achievement, %{owner_id: owner_id, achievement_id: achievement_id})
 
   def create(attrs) do
     %Schema.Achievement{}
@@ -35,12 +36,22 @@ defmodule Ms2ex.Context.Achievements do
       ) do
     Storage.Achievements.for_condition(condition_type)
     |> Enum.each(
-      &progress_metadata(&1, character, count, target_string, target_long, code_string, code_long)
+      &progress_metadata(
+        &1,
+        character,
+        condition_type,
+        count,
+        target_string,
+        target_long,
+        code_string,
+        code_long
+      )
     )
   end
 
   def load(character) do
     [character.account_id, character.id]
+    |> Enum.uniq()
     |> Enum.flat_map(&all/1)
     |> Enum.map(fn achievement ->
       Map.put(achievement, :metadata, Storage.Achievements.get(achievement.achievement_id))
@@ -48,6 +59,22 @@ defmodule Ms2ex.Context.Achievements do
     |> then(fn achievements ->
       Ms2ex.Net.SenderSession.push(character, Packets.Achievement.initialize())
       Ms2ex.Net.SenderSession.push(character, Packets.Achievement.load(achievements))
+    end)
+  end
+
+  def trophy_counts(character) do
+    [character.account_id, character.id]
+    |> Enum.uniq()
+    |> Enum.flat_map(&all/1)
+    |> Enum.reduce([0, 0, 0], fn achievement, counts ->
+      completed = map_size(achievement.grades)
+      index = achievement.category - 1
+
+      if index in 0..2 do
+        List.update_at(counts, index, &(&1 + completed))
+      else
+        counts
+      end
     end)
   end
 
@@ -88,6 +115,8 @@ defmodule Ms2ex.Context.Achievements do
 
     case persist(existing, achievement, attrs) do
       {:ok, updated} ->
+        refresh_trophy_counts(character, achievement, updated)
+
         if updated.counter != achievement.counter do
           Packets.Achievement.update(Map.put(updated, :metadata, metadata))
           |> send_packet(character)
@@ -101,6 +130,7 @@ defmodule Ms2ex.Context.Achievements do
   defp progress_metadata(
          metadata,
          character,
+      condition_type,
          count,
          target_string,
          target_long,
@@ -112,13 +142,14 @@ defmodule Ms2ex.Context.Achievements do
         :ok
 
       condition ->
-        if Conditions.metadata_matches?(
-             condition,
-             target_string,
-             target_long,
-             code_string,
-             code_long
-           ),
+        if condition.type == condition_type and
+             Conditions.metadata_matches?(
+               condition,
+               target_string,
+               target_long,
+               code_string,
+               code_long
+             ),
            do: update_progress(character, metadata, count)
     end
   end
@@ -148,7 +179,7 @@ defmodule Ms2ex.Context.Achievements do
     end
   end
 
-  defp deliver_reward(character, %{type: :stat_point, value: amount}) do
+  defp deliver_reward(character, %{type: :statpoint, value: amount}) do
     case Ms2ex.Managers.Character.call(character, {:add_stat_point, :trophy, amount}) do
       {:ok, _character} -> :ok
       _ -> :error
@@ -227,6 +258,15 @@ defmodule Ms2ex.Context.Achievements do
     do: create(Map.merge(Map.from_struct(achievement), attrs))
 
   defp persist(_existing, achievement, attrs), do: update(achievement, attrs)
+
+  defp refresh_trophy_counts(_character, previous, updated)
+       when map_size(updated.grades) == map_size(previous.grades),
+       do: :ok
+
+  defp refresh_trophy_counts(character, _previous, _updated) do
+    character = %{character | trophies: trophy_counts(character)}
+    Ms2ex.Managers.Character.call(character, {:update, character})
+  end
 
   defp send_packet(_packet, %{session_pid: nil}), do: :ok
   defp send_packet(packet, character), do: Ms2ex.Net.SenderSession.push(character, packet)

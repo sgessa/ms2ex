@@ -5,6 +5,7 @@ defmodule Ms2ex.Application do
 
   def start(_type, _args) do
     :ets.new(:metadata, [:named_table, :set, :public, read_concurrency: true])
+    Ms2ex.Context.WorldGraph.store()
 
     children =
       [

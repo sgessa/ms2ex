@@ -45,6 +45,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x6A => "USER_ENV",
     0x6C => "INSIGNIA",
     0x6D => "REQUEST_CHANGE_FIELD",
+    0x81 => "STATE",
     0x83 => "GLOBAL_FACTOR",
     0x8F => "PREMIUM_CLUB",
     0x9A => "STAT_POINTS",

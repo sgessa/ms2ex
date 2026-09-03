@@ -184,16 +184,48 @@ deliver configured item or stat-point rewards. Achievement state persists per
 account or character, loads on field entry, receives the existing gameplay
 condition events, records completed grades, supports favorite toggles, and
 allows manual claims for item, title, and stat-point rewards. A claim request
-processes every pending grade.
+processes every pending grade. Riding distance is tracked from mounted sync
+updates and advances `riding` conditions per 150 units travelled.
 
 What is still missing:
 
+- inventory collection counters (`item_collect` and `item_collect_revise`):
+  these need a persisted collected-item map and `USER_ENV` updates; ordinary
+  acquisition currently emits only `item_add` and `item_exist`
+- movement and map sources now cover map, continent, exploration, running,
+  crawling, falling, swimming, climbing, gliding, riding, rope, ladder, hold,
+  and jump; `stay_map`, `stay_cube`, `emotiontime`, and music time conditions
+  still need their own timers or field collision data
+- combat sources still missing: no-damage kills, time attacks, last-hit/buff
+  variants, spawner/race/event-tag kills, boss/elite/dungeon classifications,
+  assist bonuses, and damage-based skill conditions require combat attribution
+  that the current field combat model does not retain
+- economy and item-operation sources still missing: item destroy/break/gear
+  score, shop buys/sells, token currencies, enchant/merge/remake/socket/gem
+  results, and limited bundles require their corresponding inventory, shop,
+  currency, and upgrade systems to emit condition events
+- social and world sources still missing: guild, club, marriage, mentor,
+  mail, house, banner, UGC, and profile conditions require those owning
+  systems; PvP, survival, dungeon, festival, and minigame conditions require
+  their event/match state and result handlers
+- life-skill sources still missing: fishing, instruments, mastery, gathering,
+  farming, crafting, and pet actions require their activity and completion
+  systems, including their metadata-specific code/target values
+- collected-item exploration progress: the trophy UI now receives the required
+  `USER_ENV` response, but collected item quantities are not yet persisted or
+  updated when inventory items are acquired
+- exploration tasks backed by gathering, fishing, breakables, housing, pets,
+  dungeons, PvP, guilds, and masteries: their systems do not yet emit the
+  condition updates needed to advance field missions
 - persistence tests for account-wide versus character achievements, progress,
   completion, and idempotent reward claims
 - emote and skill-point rewards: emotes need an achievement-aware unlock path,
   while skill points need a trophy source in the character skill-point state
 - client-side unlock rewards (beauty, coloring, and shop unlocks): their
   persistent unlock models and client update packets are not implemented
+- reward types not yet delivered: `skillpoint`, `shop_weapon`, `shop_build`,
+  `shop_ride`, `itemcoloring`, `beauty_makeup`, `beauty_skin`, `beauty_hair`,
+  `dynamicaction`, and `etc`; they need their owning unlock/persistence APIs
 - inventory-full fallback for item rewards: mail has notification packets only;
   no mail, attachment, or item-delivery persistence exists
 - achievement counters in character/field profile packets and trophy rankings:

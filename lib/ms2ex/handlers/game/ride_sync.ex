@@ -1,8 +1,8 @@
 defmodule Ms2ex.GameHandlers.RideSync do
+  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Types
-  alias Ms2ex.Context
 
   import Packets.PacketReader
 
@@ -28,6 +28,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
 
     sync_packet = Packets.RideSync.bytes(character, sync_states)
     Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
+    track_riding_distance(character, sync_states)
   end
 
   defp process_segments(_session, _segment_length, packet), do: packet
@@ -48,4 +49,43 @@ defmodule Ms2ex.GameHandlers.RideSync do
   end
 
   defp maybe_relabel_ride(sync_state), do: sync_state
+
+  defp track_riding_distance(%{mount: nil}, _sync_states), do: :ok
+
+  defp track_riding_distance(character, sync_states) do
+    positions = Enum.map(sync_states, & &1.position)
+
+    case Map.get(character.mount, :last_position, character.position) do
+      nil ->
+        mount = Map.merge(character.mount, %{last_position: List.last(positions), ride_distance: 0})
+        Managers.Character.call(character, {:update, %{character | mount: mount}})
+
+      previous_position ->
+        update_riding_distance(character, positions, previous_position)
+    end
+  end
+
+  defp update_riding_distance(character, positions, previous_position) do
+    {distance, last_position} =
+      Enum.reduce(positions, {Map.get(character.mount, :ride_distance, 0), previous_position}, fn position,
+                                                                                                  {distance, previous} ->
+        travelled = Context.MapBlock.subtract(position, previous) |> Context.MapBlock.length()
+        {distance + travelled, position}
+      end)
+
+    block_size = Context.MapBlock.block_size()
+    progress = trunc(distance / block_size)
+    mount =
+      Map.merge(character.mount, %{
+        last_position: last_position,
+        ride_distance: rem(trunc(distance), block_size)
+      })
+
+    character = %{character | mount: mount, position: last_position}
+    Managers.Character.call(character, {:update, character})
+
+    if progress > 0 do
+      Managers.Quest.update_conditions(character.id, :riding, progress, "", 0, "", character.map_id)
+    end
+  end
 end
