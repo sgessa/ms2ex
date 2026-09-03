@@ -59,6 +59,7 @@
   skill_cast: term(),
   skill_tabs: term(),
   skin_color: term(),
+  staged_ugc_item: term(),
   stat_point_allocation: term(),
   stat_point_sources: term(),
   stats: term(),

@@ -14,6 +14,8 @@ Callback invoked by Plug on every request.
 Callback required by Plug that initializes the router
 for serving web requests.
 
+# `ugc`
+
 # `verified_route?`
 
 ---

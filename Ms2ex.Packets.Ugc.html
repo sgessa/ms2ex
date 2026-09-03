@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-7CC802D9.js"></script>
+    <script defer src="dist/sidebar_items-858ECED7.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -129,7 +129,18 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#load/0" data-no-tooltip="" translate="no">load()</a>
+        <a href="#load_banners/1" data-no-tooltip="" translate="no">load_banners(banners \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Advertising banners placed on the field: rolling images, the slot currently
+displayed on each banner and the reservation schedule per banner.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#profile_picture/1" data-no-tooltip="" translate="no">profile_picture(character)</a>
 
       </div>
 
@@ -137,9 +148,12 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_ugc/1" data-no-tooltip="" translate="no">put_ugc(packet)</a>
+        <a href="#put_ugc/2" data-no-tooltip="" translate="no">put_ugc(packet, look \\ nil)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Appends a user generated content descriptor. Items without one still need the
+fields written, so <code class="inline">nil</code> writes an empty descriptor.</p></div>
 
     </div>
 
@@ -148,6 +162,46 @@ MS2EX
         <a href="#set_endpoint/0" data-no-tooltip="" translate="no">set_endpoint()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Tells the client which host to upload user generated content to and where to
+fetch it back from.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_item/6" data-no-tooltip="" translate="no">update_item(object_id, item_uid, item, look, create_price, type)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_layout_blueprint/4" data-no-tooltip="" translate="no">update_layout_blueprint(object_id, blueprint_uid, item, look)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_path/1" data-no-tooltip="" translate="no">update_path(resource)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Points the client at the stored file once the upload completed.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#upload/1" data-no-tooltip="" translate="no">upload(resource)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Acknowledges an announced upload. The client uses the returned id as the file
+name when it posts the payload to the web server.</p></div>
 
     </div>
 
@@ -165,17 +219,42 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="load/0">
+<section class="detail" id="load_banners/1">
+
+    <span id="load_banners/0"></span>
 
   <div class="detail-header">
-    <a href="#load/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#load_banners/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">load()</h1>
+      <h1 class="signature" translate="no">load_banners(banners \\ [])</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L32" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L95" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Advertising banners placed on the field: rolling images, the slot currently
+displayed on each banner and the reservation schedule per banner.</p>
+  </section>
+</section>
+<section class="detail" id="profile_picture/1">
+
+  <div class="detail-header">
+    <a href="#profile_picture/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">profile_picture(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L55" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -187,17 +266,19 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="put_ugc/1">
+<section class="detail" id="put_ugc/2">
+
+    <span id="put_ugc/1"></span>
 
   <div class="detail-header">
-    <a href="#put_ugc/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#put_ugc/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">put_ugc(packet)</h1>
+      <h1 class="signature" translate="no">put_ugc(packet, look \\ nil)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L16" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L119" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -206,7 +287,8 @@ MS2EX
 
   <section class="docstring">
 
-
+<p>Appends a user generated content descriptor. Items without one still need the
+fields written, so <code class="inline">nil</code> writes an empty descriptor.</p>
   </section>
 </section>
 <section class="detail" id="set_endpoint/0">
@@ -219,7 +301,30 @@ MS2EX
       <h1 class="signature" translate="no">set_endpoint()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L4" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L20" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Tells the client which host to upload user generated content to and where to
+fetch it back from.</p>
+  </section>
+</section>
+<section class="detail" id="update_item/6">
+
+  <div class="detail-header">
+    <a href="#update_item/6" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_item(object_id, item_uid, item, look, create_price, type)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L64" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -229,6 +334,73 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="update_layout_blueprint/4">
+
+  <div class="detail-header">
+    <a href="#update_layout_blueprint/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_layout_blueprint(object_id, blueprint_uid, item, look)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L79" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="update_path/1">
+
+  <div class="detail-header">
+    <a href="#update_path/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_path(resource)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L46" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Points the client at the stored file once the upload completed.</p>
+  </section>
+</section>
+<section class="detail" id="upload/1">
+
+  <div class="detail-header">
+    <a href="#upload/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">upload(resource)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/ugc.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Acknowledges an announced upload. The client uses the returned id as the file
+name when it posts the payload to the web server.</p>
   </section>
 </section>
 

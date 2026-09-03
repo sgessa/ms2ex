@@ -41,6 +41,7 @@
   target_object_id: term(),
   times_attr_changed: term(),
   transfer_flags: term(),
+  ugc: term(),
   unlocks_at: term(),
   updated_at: term()
 }

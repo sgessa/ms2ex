@@ -1,5 +1,6 @@
 Mix.Tasks.Maple.Game.md
 Mix.Tasks.Maple.Server.md
+Mix.Tasks.Maple.Ugc.Clear.md
 Ms2ex.Commands.md
 Ms2ex.Constants.md
 Ms2ex.Context.Accounts.md
@@ -33,6 +34,7 @@ Ms2ex.Context.SkillTabs.md
 Ms2ex.Context.Skills.md
 Ms2ex.Context.StatPoints.md
 Ms2ex.Context.Taxi.md
+Ms2ex.Context.Ugc.md
 Ms2ex.Context.Utils.md
 Ms2ex.Context.Wallets.md
 Ms2ex.Context.World.md
@@ -50,6 +52,7 @@ Ms2ex.EctoTypes.TransferFlags.md
 Ms2ex.Enum.md
 Ms2ex.Enums.AttackType.md
 Ms2ex.Enums.BasicStatType.md
+Ms2ex.Enums.BlueprintType.md
 Ms2ex.Enums.ChatType.md
 Ms2ex.Enums.EquipSlot.md
 Ms2ex.Enums.FieldProperty.md
@@ -58,6 +61,7 @@ Ms2ex.Enums.InsigniaType.md
 Ms2ex.Enums.InventoryTab.md
 Ms2ex.Enums.ItemType.md
 Ms2ex.Enums.Job.md
+Ms2ex.Enums.MeretMarketCurrency.md
 Ms2ex.Enums.PartyNotice.md
 Ms2ex.Enums.QuestConditionType.md
 Ms2ex.Enums.QuestError.md
@@ -69,6 +73,7 @@ Ms2ex.Enums.SpecialStatType.md
 Ms2ex.Enums.StringCode.md
 Ms2ex.Enums.SystemNotice.md
 Ms2ex.Enums.TransferType.md
+Ms2ex.Enums.UgcType.md
 Ms2ex.Formulas.AttackStats.md
 Ms2ex.Formulas.BaseStats.md
 Ms2ex.Formulas.GearScore.md
@@ -121,17 +126,19 @@ Ms2ex.GameHandlers.StatPoints.md
 Ms2ex.GameHandlers.StateSkill.md
 Ms2ex.GameHandlers.Taxi.md
 Ms2ex.GameHandlers.Tombstone.md
+Ms2ex.GameHandlers.Ugc.md
 Ms2ex.GameHandlers.UseItem.md
 Ms2ex.GameHandlers.UserChat.md
 Ms2ex.GameHandlers.UserEnv.md
 Ms2ex.GameHandlers.UserSync.md
 Ms2ex.GameHandlers.Vibrate.md
+Ms2ex.Handlers.ResponseServerEnter.md
 Ms2ex.Handlers.SendLog.md
 Ms2ex.LoginHandlers.CharacterManagement.md
 Ms2ex.LoginHandlers.ResponseKey.md
 Ms2ex.LoginHandlers.ResponseLogin.md
-Ms2ex.LoginHandlers.ResponseServerEnter.md
 Ms2ex.LoginHandlers.ResponseVersion.md
+Ms2ex.LoginHandlers.Ugc.md
 Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Equips.md
@@ -301,6 +308,7 @@ Ms2ex.Schema.Item.md
 Ms2ex.Schema.PremiumMembership.md
 Ms2ex.Schema.Skill.md
 Ms2ex.Schema.SkillTab.md
+Ms2ex.Schema.UgcResource.md
 Ms2ex.Schema.Wallet.md
 Ms2ex.Storage.Items.md
 Ms2ex.Storage.Maps.md
@@ -318,6 +326,7 @@ Ms2ex.Storage.Tables.Insignias.md
 Ms2ex.Storage.Tables.InteractObjects.md
 Ms2ex.Storage.Tables.ItemOptions.md
 Ms2ex.Storage.Tables.Jobs.md
+Ms2ex.Storage.Tables.UgcDesign.md
 Ms2ex.Storage.Tables.UserStats.md
 Ms2ex.Storage.md
 Ms2ex.TransferFlags.md
@@ -354,9 +363,19 @@ Ms2ex.Types.Tombstone.md
 Ms2ex.Workers.DailyReset.md
 Ms2ex.md
 Ms2exWeb.AccountSocket.md
+Ms2exWeb.CacheBodyReader.md
+Ms2exWeb.ClientController.md
 Ms2exWeb.Endpoint.md
+Ms2exWeb.Helpers.Ugc.md
 Ms2exWeb.Router.md
 Ms2exWeb.Telemetry.md
+Ms2exWeb.Ugc.BannerController.md
+Ms2exWeb.Ugc.BlueprintController.md
+Ms2exWeb.Ugc.GuildController.md
+Ms2exWeb.Ugc.ItemController.md
+Ms2exWeb.Ugc.ItemIconController.md
+Ms2exWeb.Ugc.ProfileController.md
+Ms2exWeb.Ugc.UploadController.md
 Ms2exWeb.md
 api-reference.md
 client_metadata.md

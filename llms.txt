@@ -72,17 +72,19 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.StateSkill](Ms2ex.GameHandlers.StateSkill.md)
 - [Ms2ex.GameHandlers.Taxi](Ms2ex.GameHandlers.Taxi.md)
 - [Ms2ex.GameHandlers.Tombstone](Ms2ex.GameHandlers.Tombstone.md)
+- [Ms2ex.GameHandlers.Ugc](Ms2ex.GameHandlers.Ugc.md)
 - [Ms2ex.GameHandlers.UseItem](Ms2ex.GameHandlers.UseItem.md)
 - [Ms2ex.GameHandlers.UserChat](Ms2ex.GameHandlers.UserChat.md)
 - [Ms2ex.GameHandlers.UserEnv](Ms2ex.GameHandlers.UserEnv.md)
 - [Ms2ex.GameHandlers.UserSync](Ms2ex.GameHandlers.UserSync.md)
 - [Ms2ex.GameHandlers.Vibrate](Ms2ex.GameHandlers.Vibrate.md)
+- [Ms2ex.Handlers.ResponseServerEnter](Ms2ex.Handlers.ResponseServerEnter.md)
 - [Ms2ex.Handlers.SendLog](Ms2ex.Handlers.SendLog.md)
 - [Ms2ex.LoginHandlers.CharacterManagement](Ms2ex.LoginHandlers.CharacterManagement.md)
 - [Ms2ex.LoginHandlers.ResponseKey](Ms2ex.LoginHandlers.ResponseKey.md)
 - [Ms2ex.LoginHandlers.ResponseLogin](Ms2ex.LoginHandlers.ResponseLogin.md)
-- [Ms2ex.LoginHandlers.ResponseServerEnter](Ms2ex.LoginHandlers.ResponseServerEnter.md)
 - [Ms2ex.LoginHandlers.ResponseVersion](Ms2ex.LoginHandlers.ResponseVersion.md)
+- [Ms2ex.LoginHandlers.Ugc](Ms2ex.LoginHandlers.Ugc.md)
 - [Ms2ex.Lua.ItemEnchant](Ms2ex.Lua.ItemEnchant.md)
 - [Ms2ex.Managers.Buff](Ms2ex.Managers.Buff.md)
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
@@ -140,6 +142,8 @@ configured. Normal objects return to Reactable after their reset time.
 - [Ms2ex.Storage.Tables.InteractObjects](Ms2ex.Storage.Tables.InteractObjects.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
+- [Ms2ex.Storage.Tables.UgcDesign](Ms2ex.Storage.Tables.UgcDesign.md): Cost and rarity of the design shop templates a player can turn into an item.
+
 - [Ms2ex.Storage.Tables.UserStats](Ms2ex.Storage.Tables.UserStats.md)
 - [Ms2ex.TransferFlags](Ms2ex.TransferFlags.md)
 - [Ms2ex.Workers.DailyReset](Ms2ex.Workers.DailyReset.md): Runs at midnight (Oban crontab) to reset each character's daily meso
@@ -151,9 +155,25 @@ players are told immediately so their in-memory counter and the client's
 - [Ms2exWeb](Ms2exWeb.md): The entrypoint for defining your web interface, such
 as controllers, views, channels and so on.
 - [Ms2exWeb.AccountSocket](Ms2exWeb.AccountSocket.md)
+- [Ms2exWeb.CacheBodyReader](Ms2exWeb.CacheBodyReader.md): Keeps the raw request body around. The game client posts binary payloads that
+the parsers would otherwise consume before a controller can read them.
+
+- [Ms2exWeb.ClientController](Ms2exWeb.ClientController.md): Binary endpoints the game client polls outside of the TCP session. Requests
+and responses are raw packets; responses are zlib compressed.
+
 - [Ms2exWeb.Endpoint](Ms2exWeb.Endpoint.md)
+- [Ms2exWeb.Helpers.Ugc](Ms2exWeb.Helpers.Ugc.md): Shared plumbing for the user generated content endpoints: reading the binary
+upload envelope, storing files inside the data directory and serving them back.
 - [Ms2exWeb.Router](Ms2exWeb.Router.md)
 - [Ms2exWeb.Telemetry](Ms2exWeb.Telemetry.md)
+- [Ms2exWeb.Ugc.BannerController](Ms2exWeb.Ugc.BannerController.md): Artwork displayed on field advertising banners.
+- [Ms2exWeb.Ugc.BlueprintController](Ms2exWeb.Ugc.BlueprintController.md): Previews of saved housing layouts.
+- [Ms2exWeb.Ugc.GuildController](Ms2exWeb.Ugc.GuildController.md): Guild emblems and the posters hung in guild halls.
+- [Ms2exWeb.Ugc.ItemController](Ms2exWeb.Ugc.ItemController.md): Meshes of items designed by players.
+- [Ms2exWeb.Ugc.ItemIconController](Ms2exWeb.Ugc.ItemIconController.md): Icons rendered by the client for player designed items.
+- [Ms2exWeb.Ugc.ProfileController](Ms2exWeb.Ugc.ProfileController.md): Character profile pictures.
+- [Ms2exWeb.Ugc.UploadController](Ms2exWeb.Ugc.UploadController.md): Single entry point the game client posts every kind of user generated content
+to. The type in the envelope decides which resource the payload belongs to.
 
 - Schema
   - [Ms2ex.Schema.Account](Ms2ex.Schema.Account.md)
@@ -172,11 +192,13 @@ as controllers, views, channels and so on.
   - [Ms2ex.Schema.PremiumMembership](Ms2ex.Schema.PremiumMembership.md)
   - [Ms2ex.Schema.Skill](Ms2ex.Schema.Skill.md)
   - [Ms2ex.Schema.SkillTab](Ms2ex.Schema.SkillTab.md)
+  - [Ms2ex.Schema.UgcResource](Ms2ex.Schema.UgcResource.md)
   - [Ms2ex.Schema.Wallet](Ms2ex.Schema.Wallet.md)
 
 - Enums
   - [Ms2ex.Enums.AttackType](Ms2ex.Enums.AttackType.md)
   - [Ms2ex.Enums.BasicStatType](Ms2ex.Enums.BasicStatType.md)
+  - [Ms2ex.Enums.BlueprintType](Ms2ex.Enums.BlueprintType.md)
   - [Ms2ex.Enums.ChatType](Ms2ex.Enums.ChatType.md)
   - [Ms2ex.Enums.EquipSlot](Ms2ex.Enums.EquipSlot.md)
   - [Ms2ex.Enums.FieldProperty](Ms2ex.Enums.FieldProperty.md)
@@ -185,6 +207,7 @@ as controllers, views, channels and so on.
   - [Ms2ex.Enums.InventoryTab](Ms2ex.Enums.InventoryTab.md)
   - [Ms2ex.Enums.ItemType](Ms2ex.Enums.ItemType.md)
   - [Ms2ex.Enums.Job](Ms2ex.Enums.Job.md)
+  - [Ms2ex.Enums.MeretMarketCurrency](Ms2ex.Enums.MeretMarketCurrency.md)
   - [Ms2ex.Enums.PartyNotice](Ms2ex.Enums.PartyNotice.md)
   - [Ms2ex.Enums.QuestConditionType](Ms2ex.Enums.QuestConditionType.md): Quest/achievement condition type ids as used in metadata documents.
 
@@ -199,6 +222,7 @@ as controllers, views, channels and so on.
   - [Ms2ex.Enums.StringCode](Ms2ex.Enums.StringCode.md)
   - [Ms2ex.Enums.SystemNotice](Ms2ex.Enums.SystemNotice.md)
   - [Ms2ex.Enums.TransferType](Ms2ex.Enums.TransferType.md)
+  - [Ms2ex.Enums.UgcType](Ms2ex.Enums.UgcType.md)
 
 - Types
   - [Ms2ex.Types.AttributePointSource](Ms2ex.Types.AttributePointSource.md)
@@ -280,6 +304,11 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.Skills](Ms2ex.Context.Skills.md)
   - [Ms2ex.Context.StatPoints](Ms2ex.Context.StatPoints.md)
   - [Ms2ex.Context.Taxi](Ms2ex.Context.Taxi.md)
+  - [Ms2ex.Context.Ugc](Ms2ex.Context.Ugc.md): Persistence for user generated content resources and the files uploaded for
+them. A resource row is created by the game server when a client announces an
+upload; the web server then stores the file and records the path the client
+should fetch it back from.
+
   - [Ms2ex.Context.Utils](Ms2ex.Context.Utils.md): Utility functions.
   - [Ms2ex.Context.Wallets](Ms2ex.Context.Wallets.md)
   - [Ms2ex.Context.World](Ms2ex.Context.World.md)
@@ -429,4 +458,5 @@ cryptographic sequences and managing initialization vectors (IVs).
 channel servers) without serving the Phoenix web endpoint.
 - [mix maple.server](Mix.Tasks.Maple.Server.md): Starts the application with both its game TCP listeners (login, world login
 and channel servers) and the Phoenix web endpoint.
+- [mix maple.ugc.clear](Mix.Tasks.Maple.Ugc.Clear.md): Removes the configured UGC data directory.
 
