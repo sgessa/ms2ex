@@ -16,18 +16,26 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
 
     {current_map_id, packet} = get_int(packet)
 
-    with true <- current_map_id == character.map_id,
-         portals <- Storage.Maps.get_portals(current_map_id),
-         {src_portal_id, _packet} = get_int(packet),
-         %{target_map_id: dst_map_id} <- find_portal(portals, src_portal_id),
-         dst_map_portals <- Storage.Maps.get_portals(dst_map_id),
-         spawn_point <- find_spawn_point(dst_map_portals, current_map_id) do
-      Context.Field.change_field(
-        character,
-        dst_map_id,
-        spawn_point.position,
-        spawn_point.rotation
-      )
+    if current_map_id == character.map_id do
+      portals = Storage.Maps.get_portals(current_map_id)
+      {src_portal_id, _packet} = get_int(packet)
+
+      case find_portal(portals, src_portal_id) do
+        %{target_map_id: dst_map_id} ->
+          spawn_point = arrival_point(dst_map_id, current_map_id)
+
+          Context.Field.change_field(
+            character,
+            dst_map_id,
+            spawn_point.position,
+            spawn_point.rotation
+          )
+
+        _ ->
+          session
+      end
+    else
+      session
     end
   end
 
@@ -37,7 +45,14 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
     Enum.find(portals, &(&1.id == portal_id))
   end
 
-  defp find_spawn_point(portals, map_id) do
-    Enum.find(portals, &(&1.target_map_id == map_id))
+  # the destination's portal leading back to the current map is the arrival
+  # point; maps without a return portal use their default spawn point
+  defp arrival_point(dst_map_id, current_map_id) do
+    portal =
+      dst_map_id
+      |> Storage.Maps.get_portals()
+      |> Enum.find(&(&1.target_map_id == current_map_id))
+
+    portal || Storage.Maps.get_spawn(dst_map_id)
   end
 end
