@@ -168,6 +168,32 @@ What is still missing:
 
 ---
 
+## P4 — Architecture
+
+### 15. Character-owned inventory — [Open]
+
+Inventory lives in Postgres behind stateless `Context.Inventory` calls today;
+every item interaction pays a query round-trip and read paths (e.g.
+`item_exist` conditions) re-query rather than trust a cached copy. The
+long-term model is full ownership in memory, genre-standard for MMO servers:
+
+- an `inventory_manager:<char_id>` GenServer (like the quest manager) owning
+  all item reads/writes, loaded on login, write-through on mutation, flushed
+  on logout
+- every call site routed through it: pickup/drop, consume, move/split/merge,
+  equip changes, rewards, and shops/trades/storage/mail as those features
+  arrive
+- the completion-time `Repo.transaction` atomicity (quest row + turn-in
+  consumption + rewards) becomes in-process ordering inside the manager, since
+  a DB transaction cannot span its memory
+- trigger points for doing this: item-flow features landing (shops, trades,
+  storage, mail), `item_exist` checks feeling heavy, or growth beyond a
+  single node
+- explicitly rejected: read-caches layered over the DB — two sources of truth
+  with the classic invalidation bugs, and none of the ownership benefits
+
+---
+
 ## Recently completed
 
 - Quest command surface: forfeit enforcement (non-forfeitable quests refuse
