@@ -80,6 +80,7 @@ Ms2ex.Formulas.BaseStats.html
 Ms2ex.Formulas.GearScore.html
 Ms2ex.Formulas.ItemBasicStats.html
 Ms2ex.Formulas.ItemDefense.html
+Ms2ex.Formulas.ItemEnchant.html
 Ms2ex.Formulas.ItemRates.html
 Ms2ex.Formulas.ItemStaticStats.html
 Ms2ex.Formulas.ItemWeaponAttack.html
@@ -140,7 +141,6 @@ Ms2ex.LoginHandlers.ResponseKey.html
 Ms2ex.LoginHandlers.ResponseLogin.html
 Ms2ex.LoginHandlers.ResponseVersion.html
 Ms2ex.LoginHandlers.Ugc.html
-Ms2ex.Lua.ItemEnchant.html
 Ms2ex.Managers.Buff.html
 Ms2ex.Managers.Character.Equips.html
 Ms2ex.Managers.Character.Experience.html
@@ -388,8 +388,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-F0B00CD1.js
-dist/sidebar_items-858ECED7.js
+dist/search_data-49A751FB.js
+dist/sidebar_items-B0ADB922.js
 index.html
 license.html
 readme.html

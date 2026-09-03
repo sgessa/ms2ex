@@ -79,6 +79,7 @@ Ms2ex.Formulas.BaseStats.md
 Ms2ex.Formulas.GearScore.md
 Ms2ex.Formulas.ItemBasicStats.md
 Ms2ex.Formulas.ItemDefense.md
+Ms2ex.Formulas.ItemEnchant.md
 Ms2ex.Formulas.ItemRates.md
 Ms2ex.Formulas.ItemStaticStats.md
 Ms2ex.Formulas.ItemWeaponAttack.md
@@ -139,7 +140,6 @@ Ms2ex.LoginHandlers.ResponseKey.md
 Ms2ex.LoginHandlers.ResponseLogin.md
 Ms2ex.LoginHandlers.ResponseVersion.md
 Ms2ex.LoginHandlers.Ugc.md
-Ms2ex.Lua.ItemEnchant.md
 Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Equips.md
 Ms2ex.Managers.Character.Experience.md

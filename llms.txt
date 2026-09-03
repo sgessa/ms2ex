@@ -22,6 +22,7 @@
 - [Ms2ex.Formulas.GearScore](Ms2ex.Formulas.GearScore.md)
 - [Ms2ex.Formulas.ItemBasicStats](Ms2ex.Formulas.ItemBasicStats.md)
 - [Ms2ex.Formulas.ItemDefense](Ms2ex.Formulas.ItemDefense.md)
+- [Ms2ex.Formulas.ItemEnchant](Ms2ex.Formulas.ItemEnchant.md)
 - [Ms2ex.Formulas.ItemRates](Ms2ex.Formulas.ItemRates.md)
 - [Ms2ex.Formulas.ItemStaticStats](Ms2ex.Formulas.ItemStaticStats.md)
 - [Ms2ex.Formulas.ItemWeaponAttack](Ms2ex.Formulas.ItemWeaponAttack.md)
@@ -85,7 +86,6 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.LoginHandlers.ResponseLogin](Ms2ex.LoginHandlers.ResponseLogin.md)
 - [Ms2ex.LoginHandlers.ResponseVersion](Ms2ex.LoginHandlers.ResponseVersion.md)
 - [Ms2ex.LoginHandlers.Ugc](Ms2ex.LoginHandlers.Ugc.md)
-- [Ms2ex.Lua.ItemEnchant](Ms2ex.Lua.ItemEnchant.md)
 - [Ms2ex.Managers.Buff](Ms2ex.Managers.Buff.md)
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
 - [Ms2ex.Managers.Character.Equips](Ms2ex.Managers.Character.Equips.md): Equip transitions owned by the character process.
