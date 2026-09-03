@@ -33,7 +33,7 @@ staff = Context.Items.init(15260310, %{rarity: 5})
 
 {:ok, char} =
   Context.Characters.create(account, %{
-    name: "steve1337",
+    name: "enki",
     level: 70,
     map_id: 2_000_023,
     title_id: 10000503,

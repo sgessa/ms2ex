@@ -37,7 +37,7 @@ dagger = Context.Items.init(13_160_311, %{rarity: 5})
 
 {:ok, char} =
   Context.Characters.create(account, %{
-    name: "icra1337",
+    name: "icra",
     level: 70,
     map_id: 2_000_023,
     job: :thief,
