@@ -146,8 +146,9 @@ tombstone hits, buddy requests and exp gain. Progress matching follows the
 metadata layout: code-parameter id/string containment plus target
 minimum-value / allowed-value gates.
 
-Completion and acceptance commit the quest row and item rewards atomically
-in one transaction; exp and currencies are granted post-commit. Non-
+Completion and acceptance commit the quest row, turn-in item consumption
+(`item_exist` conditions) and item rewards atomically in one transaction;
+exp and currencies are granted post-commit. Non-
 forfeitable quests refuse abandon, the expiration sweep drops rows and
 notifies the client, and go-to-npc travel moves the character to the quest's
 destination map.
@@ -155,9 +156,11 @@ What is still missing:
 
 - multi-page npc dialogue walking (Continue tracking) and script functions
   (rewards/portal/cutscene side effects inside dialogues)
-- condition sources for interact objects / breakables (`interact_object`,
-  `interact_object_rep`, `breakable_object`), triggers, fishing, and the
-  long-tail condition types
+- interact object lifecycle beyond the state machine: gathering/mastery
+  yields, telescope unlock exp, drop tables and additional effects on
+  interact
+- condition sources for breakables (`breakable_object`), triggers, fishing,
+  and the long-tail condition types
 - selective rewards, mail fallback for full inventories, and the remaining
   reward-side edge cases
 - field-mission exploration progress, chapter rewards, job-advance hooks, and

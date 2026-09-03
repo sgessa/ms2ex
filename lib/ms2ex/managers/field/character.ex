@@ -35,7 +35,6 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.Ugc.load())
     push(character, Packets.Breakable.load())
     push(character, Packets.Liftable.load())
-    push(character, Packets.AddInteractObjects.bytes([]))
     push(character, Packets.FunctionCube.load())
 
     # Load NPCs
@@ -50,10 +49,7 @@ defmodule Ms2ex.Managers.Field.Character do
     end
 
     # Load Interactable Objects
-    if map_size(state.interactable) > 0 do
-      objects = Map.values(state.interactable)
-      push(character, Packets.AddInteractObjects.bytes(objects))
-    end
+    push(character, Packets.InteractObject.load(Map.values(state.interactable)))
 
     # Tell other characters in the map to load the new player
     Context.Field.broadcast(character, Packets.FieldAddUser.bytes(character))

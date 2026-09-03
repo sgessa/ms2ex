@@ -39,6 +39,17 @@ defmodule Ms2ex.Storage.Maps do
     |> Map.get(:mob_spawns)
   end
 
+  def get_interact_objects(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:interact_objects, [])
+    |> Enum.map(fn object ->
+      object
+      |> Map.put(:position, struct(Coord, Map.get(object, :position, %{})))
+      |> Map.put(:rotation, struct(Coord, Map.get(object, :rotation, %{})))
+    end)
+  end
+
   def get_portals(map_id) do
     map_id
     |> get_meta()

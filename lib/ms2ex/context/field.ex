@@ -33,6 +33,17 @@ defmodule Ms2ex.Context.Field do
   end
 
   @doc """
+  Completes a player's interaction with a field interact object.
+
+  Returns `{:ok, interact_id}` when the object exists on the field so callers
+  can progress interact-object quest conditions.
+  """
+  @spec interact_object(Schema.Character.t(), String.t()) :: {:ok, integer()} | :error
+  def interact_object(%Schema.Character{} = character, uuid) do
+    call(character.field_pid, {:interact_object, character, uuid})
+  end
+
+  @doc """
   Drops an item from a character's inventory into the field.
 
   ## Examples
