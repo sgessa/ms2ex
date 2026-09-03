@@ -43,14 +43,33 @@ defmodule Ms2ex.Packets.Achievement do
 
   defp put_achievement(packet, achievement) do
     packet
-    |> put_byte(if(map_size(achievement.grades) == map_size(achievement.metadata.grades), do: 3, else: 2))
-    |> put_int(if(map_size(achievement.grades) == map_size(achievement.metadata.grades), do: 1, else: 0))
+    |> put_achievement_status(achievement.grades, achievement.metadata.grades)
+    |> put_achievement_completed(achievement.grades, achievement.metadata.grades)
     |> put_int(achievement.current_grade)
     |> put_int(achievement.reward_grade)
     |> put_bool(achievement.favorite)
     |> put_long(achievement.counter)
     |> put_int(map_size(achievement.grades))
-    |> reduce(Enum.sort_by(achievement.grades, &elem(&1, 0)), fn {grade, acquired_at}, acc ->
+    |> put_grades(achievement.grades)
+  end
+
+  defp put_achievement_status(packet, l, r) when map_size(l) == map_size(r),
+    do: put_byte(packet, 3)
+
+  defp put_achievement_status(packet, _, _),
+    do: put_byte(packet, 2)
+
+  defp put_achievement_completed(packet, l, r) when map_size(l) == map_size(r),
+    do: put_int(packet, 1)
+
+  defp put_achievement_completed(packet, _, _),
+    do: put_int(packet, 0)
+
+  defp put_grades(packet, grades) do
+    grades = Enum.sort_by(grades, &elem(&1, 0))
+
+    packet
+    |> reduce(grades, fn {grade, acquired_at}, acc ->
       acc
       |> put_int(String.to_integer("#{grade}"))
       |> put_long(acquired_at)

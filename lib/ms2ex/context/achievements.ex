@@ -7,7 +7,8 @@ defmodule Ms2ex.Context.Achievements do
 
   import Ecto.Query, only: [from: 2]
 
-  def all(owner_id), do: Repo.all(from achievement in Schema.Achievement, where: achievement.owner_id == ^owner_id)
+  def all(owner_id),
+    do: Repo.all(from achievement in Schema.Achievement, where: achievement.owner_id == ^owner_id)
 
   def get(owner_id, achievement_id), do: Repo.get(Schema.Achievement, [owner_id, achievement_id])
 
@@ -23,15 +24,27 @@ defmodule Ms2ex.Context.Achievements do
     |> Repo.update()
   end
 
-  def progress(character, condition_type, count, target_string, target_long, code_string, code_long) do
+  def progress(
+        character,
+        condition_type,
+        count,
+        target_string,
+        target_long,
+        code_string,
+        code_long
+      ) do
     Storage.Achievements.for_condition(condition_type)
-    |> Enum.each(&progress_metadata(&1, character, count, target_string, target_long, code_string, code_long))
+    |> Enum.each(
+      &progress_metadata(&1, character, count, target_string, target_long, code_string, code_long)
+    )
   end
 
   def load(character) do
     [character.account_id, character.id]
     |> Enum.flat_map(&all/1)
-    |> Enum.map(fn achievement -> Map.put(achievement, :metadata, Storage.Achievements.get(achievement.achievement_id)) end)
+    |> Enum.map(fn achievement ->
+      Map.put(achievement, :metadata, Storage.Achievements.get(achievement.achievement_id))
+    end)
     |> then(fn achievements ->
       Ms2ex.Net.SenderSession.push(character, Packets.Achievement.initialize())
       Ms2ex.Net.SenderSession.push(character, Packets.Achievement.load(achievements))
@@ -39,14 +52,14 @@ defmodule Ms2ex.Context.Achievements do
   end
 
   def toggle_favorite(character, achievement_id, favorite) do
-    [character.account_id, character.id]
-    |> Enum.find_value(fn owner_id -> get(owner_id, achievement_id) end)
-    |> case do
+    achievement = Enum.find_value([character.account_id, character.id], &get(&1, achievement_id))
+
+    with %Schema.Achievement{} = achievement <- achievement,
+         {:ok, updated} <- update(achievement, %{favorite: favorite}) do
+      Ms2ex.Net.SenderSession.push(character, Packets.Achievement.favorite(updated))
+    else
       nil -> :ok
-      achievement ->
-        with {:ok, updated} <- update(achievement, %{favorite: favorite}) do
-          Ms2ex.Net.SenderSession.push(character, Packets.Achievement.favorite(updated))
-        end
+      error -> error
     end
   end
 
@@ -85,13 +98,22 @@ defmodule Ms2ex.Context.Achievements do
     end
   end
 
-  defp progress_metadata(metadata, character, count, target_string, target_long, code_string, code_long) do
+  defp progress_metadata(
+         metadata,
+         character,
+         count,
+         target_string,
+         target_long,
+         code_string,
+         code_long
+       ) do
     case active_condition(metadata, character) do
-      nil -> :ok
+      nil ->
+        :ok
+
       condition ->
-        if Conditions.matches?(condition, target_string, target_long, code_string, code_long) do
-          update_progress(character, metadata, count)
-        end
+        if Conditions.metadata_matches?(condition, target_string, target_long, code_string, code_long),
+          do: update_progress(character, metadata, count)
     end
   end
 
@@ -156,14 +178,24 @@ defmodule Ms2ex.Context.Achievements do
   end
 
   defp active_condition(metadata, character) do
-    achievement = get(if(metadata.account_wide, do: character.account_id, else: character.id), metadata.id)
+    achievement =
+      get(if(metadata.account_wide, do: character.account_id, else: character.id), metadata.id)
+
     grade = active_grade(achievement, metadata)
     get_in(metadata, [:grades, Integer.to_string(grade), :condition])
   end
 
   defp new_achievement(owner_id, metadata) do
     grade = metadata.grades |> Map.keys() |> Enum.map(&String.to_integer/1) |> Enum.min()
-    %Schema.Achievement{owner_id: owner_id, achievement_id: metadata.id, current_grade: grade, reward_grade: grade, category: metadata.category, grades: %{}}
+
+    %Schema.Achievement{
+      owner_id: owner_id,
+      achievement_id: metadata.id,
+      current_grade: grade,
+      reward_grade: grade,
+      category: metadata.category,
+      grades: %{}
+    }
   end
 
   defp active_grade(nil, metadata), do: new_achievement(0, metadata).current_grade
@@ -171,7 +203,9 @@ defmodule Ms2ex.Context.Achievements do
 
   defp complete_grades(grades, metadata_grades, counter) do
     Enum.reduce(metadata_grades, grades, fn {grade, %{condition: %{value: value}}}, result ->
-      if counter >= value, do: Map.put_new(result, grade, System.system_time(:second)), else: result
+      if counter >= value,
+        do: Map.put_new(result, grade, System.system_time(:second)),
+        else: result
     end)
   end
 
@@ -183,7 +217,9 @@ defmodule Ms2ex.Context.Achievements do
     |> Enum.find(current_grade, &(not Map.has_key?(grades, Integer.to_string(&1))))
   end
 
-  defp persist(nil, achievement, attrs), do: create(Map.merge(Map.from_struct(achievement), attrs))
+  defp persist(nil, achievement, attrs),
+    do: create(Map.merge(Map.from_struct(achievement), attrs))
+
   defp persist(_existing, achievement, attrs), do: update(achievement, attrs)
 
   defp send_packet(_packet, %{session_pid: nil}), do: :ok

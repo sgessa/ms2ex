@@ -32,8 +32,13 @@ defmodule Ms2ex.Packets.AchievementTest do
     {second_time, packet} = get_long(packet)
 
     assert {opcode, command, achievement_id} == {0x5F, 0x02, 101}
-    assert {status, completed, current_grade, reward_grade, favorite, counter} == {3, 1, 2, 1, true, 20}
-    assert {grade_count, first_grade, first_time, second_grade, second_time} == {2, 1, 100, 2, 200}
+
+    assert {status, completed, current_grade, reward_grade, favorite, counter} ==
+             {3, 1, 2, 1, true, 20}
+
+    assert {grade_count, first_grade, first_time, second_grade, second_time} ==
+             {2, 1, 100, 2, 200}
+
     assert packet == <<>>
   end
 end

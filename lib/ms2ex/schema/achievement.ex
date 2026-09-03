@@ -19,7 +19,23 @@ defmodule Ms2ex.Schema.Achievement do
 
   def changeset(achievement, attrs) do
     achievement
-    |> cast(attrs, [:owner_id, :achievement_id, :current_grade, :reward_grade, :favorite, :counter, :category, :grades])
-    |> validate_required([:owner_id, :achievement_id, :current_grade, :reward_grade, :category, :grades])
+    |> cast(attrs, [
+      :owner_id,
+      :achievement_id,
+      :current_grade,
+      :reward_grade,
+      :favorite,
+      :counter,
+      :category,
+      :grades
+    ])
+    |> validate_required([
+      :owner_id,
+      :achievement_id,
+      :current_grade,
+      :reward_grade,
+      :category,
+      :grades
+    ])
   end
 end

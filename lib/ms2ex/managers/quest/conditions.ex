@@ -61,10 +61,6 @@ defmodule Ms2ex.Managers.Quest.Conditions do
     end)
   end
 
-  def matches?(metadata, target_string, target_long, code_string, code_long) do
-    metadata_matches?(metadata, target_string, target_long, code_string, code_long)
-  end
-
   def update(
         quest,
         condition_type,
