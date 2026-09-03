@@ -126,9 +126,51 @@ never implements them either). Field `SkillDamage` broadcasts already reach
 party members byte-correctly, so this is purely the missing server-side
 damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
+### 14. Quest flow — [Partial]
+
+A first quest baseline is wired: quest recv/send opcodes are registered,
+quest-state packets can serialize, character/account quest rows can persist
+(including live condition-counter updates), quest metadata is projected into
+Redis with a quest index, field-enter
+restores quest state plus the basic `map` condition update, NPC interact can
+surface the available-quest list, quest talk scripts drive the dialogue state
+selection (accept/progress/complete), basic auto-start quests are seeded, and
+common reward delivery now covers exp, mesos, treva, rue, and essential item
+grants.
+
+Condition hooks now fire from gameplay: mob kills (`npc`), skill casts
+(`skill`), level ups (`level` / `level_up`), field pickups (`item_pickup`),
+inventory acquisition (`item_add` / `item_exist`), emote use (`emotion`,
+matched on the client-sent animation key), taxi rides, meso pickups, chat,
+tombstone hits, buddy requests and exp gain. Progress matching follows the
+metadata layout: code-parameter id/string containment plus target
+minimum-value / allowed-value gates.
+
+Completion and acceptance commit the quest row and item rewards atomically
+in one transaction; exp and currencies are granted post-commit. Non-
+forfeitable quests refuse abandon, the expiration sweep drops rows and
+notifies the client, and go-to-npc travel moves the character to the quest's
+destination map.
+What is still missing:
+
+- multi-page npc dialogue walking (Continue tracking) and script functions
+  (rewards/portal/cutscene side effects inside dialogues)
+- condition sources for interact objects / breakables (`interact_object`,
+  `interact_object_rep`, `breakable_object`), triggers, fishing, and the
+  long-tail condition types
+- selective rewards, mail fallback for full inventories, and the remaining
+  reward-side edge cases
+- field-mission exploration progress, chapter rewards, job-advance hooks, and
+  the remaining quest subcommands
+
 ---
 
 ## Recently completed
+
+- Quest command surface: forfeit enforcement (non-forfeitable quests refuse
+  abandon), the client expiration sweep (drops persisted rows and acknowledges
+  with the expired-quest packet), and go-to-npc travel to a started quest's
+  destination map
 
 - Mob respawns: mob spawn points refill their population through tick-driven
   spawn cycles, scheduled by mob deaths (wipe → cooldown, partial kill → 2×

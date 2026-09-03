@@ -10,10 +10,10 @@ defmodule Ms2ex.Repo.Migrations.CreateCharacterQuests do
       add :end_time, :bigint, default: 0, null: false
       add :track, :boolean, default: false, null: false
       add :conditions, :map, default: %{}, null: false
-      add :owner_id, :binary_id, null: false
+      add :owner_id, :integer, null: false
       add :is_account_quest, :boolean, default: false, null: false
 
-      timestamps()
+      timestamps(type: :timestamptz)
     end
 
     create index(:character_quests, [:owner_id])

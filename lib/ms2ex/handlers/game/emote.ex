@@ -29,9 +29,14 @@ defmodule Ms2ex.GameHandlers.Emote do
 
   # Use
   defp handle_mode(0x2, packet, session) do
-    {emote_id, _packet} = get_int(packet)
+    {emote_id, packet} = get_int(packet)
+    {ani_key, _packet} = get_ustring(packet)
 
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+
+    # emote quest conditions match on the animation key the client sends
+    Managers.Quest.update_conditions(character.id, :emotion, 1, "", character.map_id, ani_key, 0)
+
     Context.Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
   end
 end

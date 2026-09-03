@@ -9,13 +9,13 @@ defmodule Ms2ex.Schema.CharacterQuest do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
+  alias Ms2ex.Enums
+
+  @primary_key {:id, :id, autogenerate: true}
   schema "character_quests" do
     field :quest_id, :integer
 
-    field :state, Ecto.Enum,
-      values: [:none, :started, :completed, :failed, :abandoned],
-      default: :none
+    field :state, Enums.QuestState, default: :none
 
     field :completion_count, :integer, default: 0
     field :start_time, :integer
@@ -23,13 +23,13 @@ defmodule Ms2ex.Schema.CharacterQuest do
     field :track, :boolean, default: false
     field :conditions, :map, default: %{}
 
-    field :owner_id, :binary_id
+    field :owner_id, :integer
     field :is_account_quest, :boolean, default: false
 
     # Virtual field for quest metadata
     field :metadata, :any, virtual: true
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @required_fields [:quest_id, :state, :owner_id, :is_account_quest]

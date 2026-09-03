@@ -1,7 +1,6 @@
 defmodule Ms2ex.Enums.QuestConditionType do
   @moduledoc """
-  Enum for quest condition types.
-  Ported from Maple2's ConditionType enum.
+  Quest/achievement condition type ids as used in metadata documents.
   """
 
   use Ms2ex.Enum, %{

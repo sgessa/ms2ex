@@ -316,9 +316,21 @@ defmodule Ms2ex.Managers.Field.Npc do
     Context.Mobs.drop_rewards(field_npc, state.map_id)
     Context.Mobs.reward_exp(field_npc)
 
-    state = despawn(state, field_npc)
+    # kill-count quest conditions (`npc`) credit every player who damaged the
+    # mob; code param carries the npc id, target param the map id
+    Enum.each(field_npc.damage_dealers, fn {_character_id, character} ->
+      Managers.Quest.update_conditions(
+        character.id,
+        :npc,
+        1,
+        "",
+        state.map_id,
+        "",
+        field_npc.npc.id
+      )
+    end)
 
-    # TODO: Player Condition update (quest, achievements...)
+    state = despawn(state, field_npc)
 
     {field_npc, state}
   end

@@ -1,7 +1,6 @@
 defmodule Ms2ex.Enums.QuestError do
   @moduledoc """
-  Enum for quest error codes.
-  Ported from Maple2's QuestError enum.
+  Quest error codes sent to the client when quest operations fail.
   """
 
   use Ms2ex.Enum, %{

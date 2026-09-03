@@ -1,6 +1,8 @@
 defmodule Ms2ex.Managers.Character.Experience do
   alias Ms2ex.Constants
   alias Ms2ex.Context
+  alias Ms2ex.Enums
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -26,6 +28,20 @@ defmodule Ms2ex.Managers.Character.Experience do
       {character, _equipment_stats} = Context.CharacterStats.apply(character)
       Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
       Context.Field.broadcast_stats(character)
+
+      # level-reach quest conditions; the level_up code param carries the job id
+      Managers.Quest.update_conditions(character.id, :level, 1, "", character.level, "", 0)
+
+      Managers.Quest.update_conditions(
+        character.id,
+        :level_up,
+        1,
+        "",
+        character.level,
+        "",
+        Enums.Job.get_value(character.job)
+      )
+
       character
     else
       character

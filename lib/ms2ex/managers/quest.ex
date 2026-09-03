@@ -8,11 +8,15 @@ defmodule Ms2ex.Managers.Quest do
 
   use GenServer
 
-  alias Ms2ex.{Context, Managers, Packets, Storage}
+  alias Ms2ex.Context
+  alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.Repo
+  alias Ms2ex.Storage
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
   # Constants
-  @batch_size 20
+  @batch_size 200
   @default_timeout 5000
 
   # Client API
@@ -84,6 +88,29 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   @doc """
+  Removes the given quests from the character (expiration sweep from the
+  client) and drops their persisted rows.
+  """
+  def expire_quests(character_id, quest_ids) do
+    GenServer.call(process_name(character_id), {:expire_quests, quest_ids}, @default_timeout)
+  end
+
+  @doc """
+  Moves the character to a started quest's go-to-npc destination map.
+  """
+  def go_to_npc(character_id, quest_id) do
+    GenServer.call(process_name(character_id), {:go_to_npc, quest_id}, @default_timeout)
+  end
+
+  @doc """
+  Moves the character to a quest's dispatch destination (the "do you want to
+  travel?" prompt from quest dialogues).
+  """
+  def dispatch(character_id, quest_id) do
+    GenServer.call(process_name(character_id), {:dispatch, quest_id}, @default_timeout)
+  end
+
+  @doc """
   Updates tracking status for a quest.
   """
   def update_tracking(character_id, quest_id, tracking) do
@@ -149,7 +176,7 @@ defmodule Ms2ex.Managers.Quest do
       account_id: character.account_id
     }
 
-    {:ok, state}
+    {:ok, initialize_auto_start_quests(character, state)}
   end
 
   #
@@ -218,9 +245,60 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   @impl true
+  def handle_call({:expire_quests, quest_ids}, _from, state) do
+    {new_state, removed_ids} =
+      Enum.reduce(quest_ids, {state, []}, fn quest_id, {acc_state, removed} ->
+        case expire_quest(quest_id, acc_state) do
+          {acc_state, quest_id} when is_integer(quest_id) -> {acc_state, [quest_id | removed]}
+          {acc_state, nil} -> {acc_state, removed}
+        end
+      end)
+
+    removed_ids = Enum.reverse(removed_ids)
+
+    with {:ok, character} <- Managers.Character.lookup(state.character_id),
+         true <- character.session_pid != nil do
+      push(character, Packets.Game.Quest.expired(removed_ids))
+    end
+
+    {:reply, :ok, new_state}
+  end
+
+  @impl true
+  def handle_call({:go_to_npc, quest_id}, _from, state) do
+    reply =
+      case Managers.Quest.State.get_quest_from_state(quest_id, state) do
+        %{metadata: %{go_to_npc: %{enabled: true, map_id: map_id}}} ->
+          {:ok, character} = Managers.Character.lookup(state.character_id)
+          Context.Field.change_field(character, map_id)
+
+        _ ->
+          :ok
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:dispatch, quest_id}, _from, state) do
+    reply =
+      case Managers.Quest.State.get_quest_from_state(quest_id, state) do
+        %{state: quest_state, metadata: %{dispatch: %{map_id: map_id}}}
+        when quest_state != :completed and map_id > 0 ->
+          {:ok, character} = Managers.Character.lookup(state.character_id)
+          Context.Field.change_field(character, map_id)
+
+        _ ->
+          :ok
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
   def handle_call({:load_quests, session}, _from, state) do
-    # Send exploration data (placeholder until exploration system is implemented)
-    push(session, Packets.Game.Quest.load_exploration(%{}))
+    # TODO load the persisted exploration progress once field missions land.
+    push(session, Packets.Game.Quest.load_exploration(0))
 
     # Send quests in batches to avoid large packets
     state.account_quests
@@ -261,25 +339,34 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   defp create_and_start_quest(quest_metadata, character, state) do
-    case Managers.Quest.State.create_quest(character, quest_metadata) do
-      {:ok, quest} ->
+    # accept rewards are granted in the same transaction as the quest row so
+    # a failing grant cannot leave a started quest without its items
+    rewards = Managers.Quest.Rewards.prepare(character, quest_metadata.accept_reward)
+
+    case Repo.transaction(fn ->
+           with {:ok, quest} <- Managers.Quest.State.create_quest(character, quest_metadata),
+                {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
+             {quest, results}
+           else
+             {:error, reason} -> Repo.rollback(reason)
+           end
+         end) do
+      {:ok, {quest, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(quest, state)
 
-        # Handle quest accept rewards if any
-        Managers.Quest.Rewards.distribute_accept_rewards(character, quest_metadata)
+        Managers.Quest.Rewards.deliver(character, quest_metadata.accept_reward, results)
+        update_conditions(character.id, :quest_accept, 1, "", 0, "", quest_metadata.id)
 
-        # Send quest accept packet
         if character.session_pid do
           quest_with_metadata = %{quest | metadata: quest_metadata}
           push(character, Packets.Game.Quest.start(quest_with_metadata))
         end
 
-        # Handle quest portal summoning if needed
         # TODO: Implement portal summoning
 
         {:reply, {:ok, quest}, new_state}
 
-      {:error, _changeset} ->
+      {:error, _reason} ->
         {:reply, {:error, :quest_accept_fail}, state}
     end
   end
@@ -309,27 +396,52 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   defp finalize_quest_completion(quest, state) do
-    case Managers.Quest.State.complete_quest(quest) do
-      {:ok, updated_quest} ->
+    {:ok, character} = Managers.Character.lookup(state.character_id)
+
+    # completion and item grants commit atomically; experience and currencies
+    # are delivered post-commit (exp lives in the character manager's state)
+    rewards = Managers.Quest.Rewards.prepare(character, quest.metadata.complete_reward)
+
+    case Repo.transaction(fn ->
+           with {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
+                {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
+             {updated_quest, results}
+           else
+             {:error, reason} -> Repo.rollback(reason)
+           end
+         end) do
+      {:ok, {updated_quest, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
 
-        # Distribute rewards
-        {:ok, character} = Managers.Character.lookup(state.character_id)
-        Managers.Quest.Rewards.distribute_completion_rewards(character, quest)
+        Managers.Quest.Rewards.deliver(character, quest.metadata.complete_reward, results)
 
-        # Notify client
+        update_conditions(
+          character.id,
+          :quest_clear_by_chapter,
+          1,
+          "",
+          0,
+          "",
+          quest.metadata.basic.chapter_id
+        )
+
+        update_conditions(character.id, :quest, 1, "", 0, "", quest.metadata.id)
+        update_conditions(character.id, :quest_clear, 1, "", 0, "", quest.metadata.id)
+
+        if quest.metadata.basic.type == :field_mission do
+          update_conditions(character.id, :field_mission)
+        end
+
         if character.session_pid do
-          # Need to use the updated quest with metadata attached
           updated_quest_with_metadata = %{updated_quest | metadata: quest.metadata}
           push(character, Packets.Game.Quest.complete(updated_quest_with_metadata))
         end
 
-        # Handle job advancement and chapter completion
         # TODO: Implement job advancement and chapter completion
 
         {:reply, {:ok, updated_quest}, new_state}
 
-      {:error, _changeset} ->
+      {:error, _reason} ->
         {:reply, {:error, :quest_complete_fail}, state}
     end
   end
@@ -345,27 +457,30 @@ defmodule Ms2ex.Managers.Quest do
     end
   end
 
+  defp process_quest_abandonment(%{state: :completed}, state) do
+    {:reply, {:error, :quest_already_done}, state}
+  end
+
+  defp process_quest_abandonment(%{metadata: %{basic: %{forfeitable: false}}}, state) do
+    {:reply, {:error, :quest_abandon_restrict}, state}
+  end
+
   defp process_quest_abandonment(quest, state) do
-    if quest.state == :completed do
-      {:reply, {:error, :quest_already_done}, state}
-    else
-      case Managers.Quest.State.abandon_quest(quest) do
-        {:ok, updated_quest} ->
-          # Update state by removing the quest
-          new_state = Managers.Quest.State.remove_quest_from_state(updated_quest, state)
+    case Managers.Quest.State.abandon_quest(quest) do
+      {:ok, updated_quest} ->
+        Context.Quests.delete_quest(
+          updated_quest.owner_id,
+          updated_quest.quest_id,
+          updated_quest.is_account_quest
+        )
 
-          # Notify client
-          {:ok, character} = Managers.Character.lookup(state.character_id)
+        new_state = Managers.Quest.State.remove_quest_from_state(updated_quest, state)
+        {:ok, character} = Managers.Character.lookup(state.character_id)
+        maybe_push_abandon(character, updated_quest.quest_id)
+        {:reply, {:ok, updated_quest}, new_state}
 
-          if character.session_pid do
-            push(character, Packets.Game.Quest.abandon(updated_quest.quest_id))
-          end
-
-          {:reply, {:ok, updated_quest}, new_state}
-
-        {:error, _changeset} ->
-          {:reply, {:error, :quest_abandon_fail}, state}
-      end
+      {:error, _changeset} ->
+        {:reply, {:error, :quest_abandon_fail}, state}
     end
   end
 
@@ -380,39 +495,30 @@ defmodule Ms2ex.Managers.Quest do
     end
   end
 
+  defp process_tracking_update(%{state: state}, _tracking, current_state)
+       when state != :started do
+    {:reply, {:error, :quest_not_active}, current_state}
+  end
+
   defp process_tracking_update(quest, tracking, state) do
-    if quest.state != :started do
-      {:reply, {:error, :quest_not_active}, state}
-    else
-      case Managers.Quest.State.update_tracking(quest, tracking) do
-        {:ok, updated_quest} ->
-          new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
+    case Managers.Quest.State.update_tracking(quest, tracking) do
+      {:ok, updated_quest} ->
+        new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
+        {:ok, character} = Managers.Character.lookup(state.character_id)
+        maybe_push_tracking(character, updated_quest)
+        {:reply, {:ok, updated_quest}, new_state}
 
-          # Notify client
-          {:ok, character} = Managers.Character.lookup(state.character_id)
-
-          if character.session_pid do
-            push(
-              character,
-              Packets.Game.Quest.set_tracking(updated_quest.quest_id, updated_quest.track)
-            )
-          end
-
-          {:reply, {:ok, updated_quest}, new_state}
-
-        {:error, _changeset} ->
-          {:reply, {:error, :quest_update_fail}, state}
-      end
+      {:error, _changeset} ->
+        {:reply, {:error, :quest_update_fail}, state}
     end
   end
 
   # Helper functions for get_available_quests
   defp get_all_npc_quests(npc_id, character, state) do
     available_quests = get_available_new_quests(npc_id, character, state)
-    in_progress_quests = get_completable_character_quests(npc_id, state)
-    account_quests = get_completable_account_quests(npc_id, state)
+    in_progress_quests = get_active_character_quests(npc_id, state)
+    account_quests = get_active_account_quests(npc_id, state)
 
-    # Merge all quest types
     Map.merge(available_quests, Map.merge(in_progress_quests, account_quests))
   end
 
@@ -428,23 +534,18 @@ defmodule Ms2ex.Managers.Quest do
     |> Enum.into(%{})
   end
 
-  defp get_completable_character_quests(npc_id, state) do
-    state.character_quests
-    |> Enum.filter(fn {_id, quest} ->
-      quest.state == :started and
-        quest.metadata.basic.complete_npc == npc_id and
-        Managers.Quest.Conditions.all_met?(quest)
-    end)
-    |> Enum.map(fn {id, quest} -> {id, quest.metadata} end)
-    |> Enum.into(%{})
+  defp get_active_character_quests(npc_id, state) do
+    active_npc_quests(state.character_quests, npc_id)
   end
 
-  defp get_completable_account_quests(npc_id, state) do
-    state.account_quests
+  defp get_active_account_quests(npc_id, state) do
+    active_npc_quests(state.account_quests, npc_id)
+  end
+
+  defp active_npc_quests(quests, npc_id) do
+    quests
     |> Enum.filter(fn {_id, quest} ->
-      quest.state == :started and
-        quest.metadata.basic.complete_npc == npc_id and
-        Managers.Quest.Conditions.all_met?(quest)
+      quest.state == :started and quest.metadata.basic.complete_npc == npc_id
     end)
     |> Enum.map(fn {id, quest} -> {id, quest.metadata} end)
     |> Enum.into(%{})
@@ -510,32 +611,76 @@ defmodule Ms2ex.Managers.Quest do
          code_long
        ) do
     Enum.reduce(quests, {quests, false}, fn {quest_id, quest}, {acc_quests, any_updated} ->
-      updated_quest =
-        Managers.Quest.Conditions.update(
-          quest,
-          condition_type,
-          counter,
-          target_string,
-          target_long,
-          code_string,
-          code_long
-        )
+      case update_single_quest_condition(
+             quest,
+             character,
+             condition_type,
+             counter,
+             target_string,
+             target_long,
+             code_string,
+             code_long
+           ) do
+        {:updated, updated_quest} ->
+          {Map.put(acc_quests, quest_id, updated_quest), true}
 
-      if updated_quest != quest do
-        # Send update packet to client
-        if character.session_pid do
-          push(character, Packets.Game.Quest.update(updated_quest))
-        end
-
-        # Auto-complete field missions if all conditions are met
-        handle_auto_completion(updated_quest, character.id)
-
-        {Map.put(acc_quests, quest_id, updated_quest), true}
-      else
-        {acc_quests, any_updated}
+        :unchanged ->
+          {acc_quests, any_updated}
       end
     end)
   end
+
+  defp update_single_quest_condition(
+         quest,
+         character,
+         condition_type,
+         counter,
+         target_string,
+         target_long,
+         code_string,
+         code_long
+       ) do
+    updated_quest =
+      Managers.Quest.Conditions.update(
+        quest,
+        condition_type,
+        counter,
+        target_string,
+        target_long,
+        code_string,
+        code_long
+      )
+
+    if updated_quest == quest do
+      :unchanged
+    else
+      case Context.Quests.update_quest(updated_quest, %{conditions: updated_quest.conditions}) do
+        {:ok, persisted_quest} ->
+          maybe_push_update(character, persisted_quest)
+          handle_auto_completion(persisted_quest, character.id)
+          {:updated, persisted_quest}
+
+        {:error, _changeset} ->
+          # keep gameplay moving on the in-memory state even if the write fails
+          maybe_push_update(character, updated_quest)
+          {:updated, updated_quest}
+      end
+    end
+  end
+
+  defp maybe_push_update(%{session_pid: nil}, _quest), do: :ok
+  defp maybe_push_update(character, quest), do: push(character, Packets.Game.Quest.update(quest))
+
+  defp maybe_push_tracking(%{session_pid: nil}, _quest), do: :ok
+
+  defp maybe_push_tracking(character, quest) do
+    push(character, Packets.Game.Quest.set_tracking(quest.quest_id, quest.track))
+  end
+
+  defp maybe_push_abandon(%{session_pid: nil}, _quest_id), do: :ok
+
+  defp maybe_push_abandon(character, quest_id),
+    do: push(character, Packets.Game.Quest.abandon(quest_id))
 
   # Helper function to handle auto-completion of field missions
   defp handle_auto_completion(quest, character_id) do
@@ -546,6 +691,57 @@ defmodule Ms2ex.Managers.Quest do
       spawn(fn ->
         complete(quest.quest_id, character_id)
       end)
+    end
+  end
+
+  defp initialize_auto_start_quests(character, state) do
+    Storage.Quests.auto_start_quests()
+    |> Enum.reduce(state, fn quest_metadata, acc ->
+      maybe_auto_start_quest(character, acc, quest_metadata)
+    end)
+  end
+
+  defp maybe_auto_start_quest(character, state, quest_metadata) do
+    if skip_auto_start?(character, state, quest_metadata) do
+      state
+    else
+      case Managers.Quest.State.create_quest(character, quest_metadata) do
+        {:ok, quest} ->
+          announce_auto_start(character, quest, quest_metadata)
+          Managers.Quest.State.add_quest_to_state(quest, state)
+
+        {:error, _changeset} ->
+          state
+      end
+    end
+  end
+
+  # auto-started quests never went through the accept flow, so the client
+  # learns about them from a Start frame (before the state list loads)
+  defp announce_auto_start(character, quest, quest_metadata) do
+    if character.session_pid do
+      quest_with_metadata = %{quest | metadata: quest_metadata}
+      push(character, Packets.Game.Quest.start(quest_with_metadata))
+    end
+  end
+
+  defp skip_auto_start?(character, state, quest_metadata) do
+    quest_exists?(quest_metadata.id, state) or
+      quest_metadata.event_mission_type != :none or
+      quest_metadata.basic.type == :field_mission or
+      quest_metadata.basic.complete_npc > 0 or
+      quest_metadata.basic.complete_maps != [] or
+      not Managers.Quest.Requirements.can_start?(character, quest_metadata, state)
+  end
+
+  defp expire_quest(quest_id, state) do
+    case Managers.Quest.State.get_quest_from_state(quest_id, state) do
+      nil ->
+        {state, nil}
+
+      quest ->
+        Context.Quests.delete_quest(quest.owner_id, quest.quest_id, quest.is_account_quest)
+        {Managers.Quest.State.remove_quest_from_state(quest, state), quest_id}
     end
   end
 

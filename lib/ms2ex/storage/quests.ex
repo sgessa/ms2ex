@@ -2,69 +2,86 @@ defmodule Ms2ex.Storage.Quests do
   alias Ms2ex.Schema
   alias Ms2ex.Storage
 
-  @doc """
-  Retrieves quest metadata by quest ID.
-  """
-  def get_meta(quest_id) do
+  @spec get_meta(integer()) :: map() | nil
+  def get_meta(quest_id) when is_integer(quest_id) do
     Storage.get(:quest, quest_id)
   end
 
-  @doc """
-  Retrieves all quest metadata.
-  """
+  def get_meta(_quest_id), do: nil
+
+  @spec get_all() :: [map()]
   def get_all() do
-    # TODO
-    []
+    index_ids()
+    |> Enum.map(&get_meta/1)
+    |> Enum.reject(&is_nil/1)
   end
 
-  @doc """
-  Retrieves quests by NPC ID.
-  Returns quests where the NPC is either the start or complete NPC.
-  """
+  @spec get_quests_by_npc(integer()) :: [map()]
   def get_quests_by_npc(npc_id) do
-    get_all()
-    |> Enum.filter(fn quest ->
-      get_in(quest, [:basic, :complete_npc]) == npc_id
-    end)
+    indexed_quests(:by_npc, npc_id)
   end
 
-  @doc """
-  Retrieves quests by type.
-  """
+  @spec get_quests_by_type(atom()) :: [map()]
   def get_quests_by_type(type) do
-    get_all()
-    |> Enum.filter(fn quest ->
-      get_in(quest, [:basic, :type]) == type
-    end)
+    indexed_quests(:by_type, type)
   end
 
-  @doc """
-  Retrieves quests by chapter.
-  """
+  @spec get_quests_by_chapter(integer()) :: [map()]
   def get_quests_by_chapter(chapter_id) do
-    get_all()
-    |> Enum.filter(fn quest ->
-      get_in(quest, [:basic, :chapter_id]) == chapter_id
-    end)
+    indexed_quests(:by_chapter, chapter_id)
   end
 
-  @doc """
-  Determines if a quest is an account quest based on its metadata.
-  """
+  @spec auto_start_quests() :: [map()]
+  def auto_start_quests() do
+    index_list(:auto_start_ids)
+    |> hydrate_quests()
+  end
+
   @spec account_quest?(map()) :: boolean()
   def account_quest?(quest) do
     get_in(quest, [:basic, :account]) > 0
   end
 
-  @doc """
-  Gets the owner ID for a quest based on whether it is an account quest or character quest.
-  """
-  @spec get_owner_id(Schema.Character.t(), map()) :: binary()
+  @spec get_owner_id(Schema.Character.t(), map()) :: integer()
   def get_owner_id(character, quest) do
-    if Storage.Quests.account_quest?(quest) do
+    if account_quest?(quest) do
       character.account_id
     else
       character.id
     end
+  end
+
+  defp indexed_quests(bucket, key) do
+    bucket
+    |> index_lookup(key)
+    |> hydrate_quests()
+  end
+
+  defp hydrate_quests(quest_ids) do
+    quest_ids
+    |> Enum.map(&get_meta/1)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp index_ids do
+    index_list(:ids)
+  end
+
+  defp index_lookup(bucket, key) do
+    index = index()
+    values = Map.get(index, bucket, %{})
+    Map.get(values, key) || Map.get(values, normalize_index_key(key)) || []
+  end
+
+  defp index_list(key) do
+    index()
+    |> Map.get(key, [])
+  end
+
+  defp normalize_index_key(key) when is_integer(key), do: Integer.to_string(key)
+  defp normalize_index_key(key), do: key
+
+  defp index do
+    Storage.get(:quest, "index") || %{}
   end
 end

@@ -1,6 +1,8 @@
 defmodule Ms2ex.Packets.Game.Quest do
   import Ms2ex.Packets.PacketWriter
 
+  alias Ms2ex.Enums
+
   @error 0x00
   @talk 0x01
   @start 0x02
@@ -38,8 +40,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_int(npc_object_id)
       |> put_int(Enum.count(quests))
 
-    Enum.reduce(quests, packet, fn quest, packet ->
-      put_int(packet, quest.id)
+    Enum.reduce(quests, packet, fn quest, acc ->
+      put_int(acc, quest.id)
     end)
   end
 
@@ -53,8 +55,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_bool(quest.track)
       |> put_int(map_size(quest.conditions))
 
-    Enum.reduce(quest.conditions, packet, fn {_index, condition}, packet ->
-      put_int(packet, condition.counter)
+    Enum.reduce(condition_entries(quest), packet, fn {_index, condition}, acc ->
+      put_int(acc, condition.counter)
     end)
   end
 
@@ -66,8 +68,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_int(quest.quest_id)
       |> put_int(map_size(quest.conditions))
 
-    Enum.reduce(quest.conditions, packet, fn {_index, condition}, packet ->
-      put_int(packet, condition.counter)
+    Enum.reduce(condition_entries(quest), packet, fn {_index, condition}, acc ->
+      put_int(acc, condition.counter)
     end)
   end
 
@@ -76,7 +78,6 @@ defmodule Ms2ex.Packets.Game.Quest do
     |> build()
     |> put_byte(@complete)
     |> put_int(quest.quest_id)
-    # quest.state
     |> put_int(1)
     |> put_long(quest.end_time)
   end
@@ -103,8 +104,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_byte(@expired)
       |> put_int(Enum.count(quest_ids))
 
-    Enum.reduce(quest_ids, packet, fn quest_id, packet ->
-      put_int(packet, quest_id)
+    Enum.reduce(quest_ids, packet, fn quest_id, acc ->
+      put_int(acc, quest_id)
     end)
   end
 
@@ -140,17 +141,17 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_byte(@load_quest_states)
       |> put_int(Enum.count(quests))
 
-    Enum.reduce(quests, packet, fn quest, packet ->
-      packet
+    Enum.reduce(quests, packet, fn quest, acc ->
+      acc
       |> put_int(quest.quest_id)
-      |> put_byte(quest.state)
+      |> put_int(Enums.QuestState.get_value(quest.state))
       |> put_int(quest.completion_count)
       |> put_long(quest.start_time)
       |> put_long(quest.end_time)
       |> put_bool(quest.track)
       |> put_int(map_size(quest.conditions))
-      |> reduce(quest.conditions, fn {_index, condition}, packet ->
-        put_int(packet, condition.counter)
+      |> reduce(condition_entries(quest), fn {_index, condition}, packet_acc ->
+        put_int(packet_acc, condition.counter)
       end)
     end)
   end
@@ -162,8 +163,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_byte(@load_quests)
       |> put_int(Enum.count(quest_ids))
 
-    Enum.reduce(quest_ids, packet, fn quest_id, packet ->
-      put_int(packet, quest_id)
+    Enum.reduce(quest_ids, packet, fn quest_id, acc ->
+      put_int(acc, quest_id)
     end)
   end
 
@@ -195,8 +196,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_bool(true)
       |> put_int(Enum.count(quest_ids))
 
-    Enum.reduce(quest_ids, packet, fn quest_id, packet ->
-      put_int(packet, quest_id)
+    Enum.reduce(quest_ids, packet, fn quest_id, acc ->
+      put_int(acc, quest_id)
     end)
   end
 
@@ -208,8 +209,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_bool(true)
       |> put_int(Enum.count(quest_ids))
 
-    Enum.reduce(quest_ids, packet, fn quest_id, packet ->
-      put_int(packet, quest_id)
+    Enum.reduce(quest_ids, packet, fn quest_id, acc ->
+      put_int(acc, quest_id)
     end)
   end
 
@@ -231,5 +232,10 @@ defmodule Ms2ex.Packets.Game.Quest do
     __MODULE__
     |> build()
     |> put_byte(@unknown38)
+  end
+
+  defp condition_entries(quest) do
+    quest.conditions
+    |> Enum.sort_by(&elem(&1, 0))
   end
 end

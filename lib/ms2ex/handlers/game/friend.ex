@@ -26,6 +26,8 @@ defmodule Ms2ex.GameHandlers.Friend do
          :ok <- check_not_blocked(character, rcpt),
          :ok <- check_is_already_friend(character, rcpt),
          {:ok, {src, dst}} <- Context.Friends.send_request(character, rcpt, msg) do
+      Managers.Quest.update_conditions(character.id, :buddy_request)
+
       if Map.get(rcpt, :session_pid) do
         rcpt = Map.put(rcpt, :friends, [dst | rcpt.friends])
         Managers.Character.call(rcpt, {:update, rcpt})

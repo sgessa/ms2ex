@@ -91,6 +91,17 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     Context.Field.broadcast_stats(character)
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
+
+    # skill-use quest conditions track casts per skill id
+    Managers.Quest.update_conditions(
+      character.id,
+      :skill,
+      1,
+      "",
+      character.map_id,
+      "",
+      skill_cast.skill_id
+    )
   end
 
   def handle_mode(@attack, packet, session) do

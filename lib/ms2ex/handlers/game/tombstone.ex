@@ -11,6 +11,7 @@ defmodule Ms2ex.GameHandlers.Tombstone do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
       Context.Field.hit_tombstone(character, object_id, hits)
+      Managers.Quest.update_conditions(character.id, :hit_tombstone)
     end
   end
 end

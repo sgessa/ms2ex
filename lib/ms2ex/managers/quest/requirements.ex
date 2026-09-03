@@ -20,7 +20,7 @@ defmodule Ms2ex.Managers.Quest.Requirements do
     * `true` - Character meets all requirements
     * `false` - Character does not meet all requirements
   """
-  def can_start?(_character, %{disabled: true}) do
+  def can_start?(_character, %{basic: %{disabled: true}}, _state) do
     false
   end
 

@@ -1,7 +1,6 @@
 defmodule Ms2ex.Enums.QuestState do
   @moduledoc """
-  Enum for quest states.
-  Ported from Maple2's QuestState enum.
+  Quest progression states as serialized in quest packets and rows.
   """
 
   use Ms2ex.Enum, %{

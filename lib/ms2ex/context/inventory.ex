@@ -6,6 +6,7 @@ defmodule Ms2ex.Context.Inventory do
   including adding, removing, updating, and organizing items.
   """
 
+  alias Ms2ex.Managers
   alias Ms2ex.Schema
   alias Ms2ex.Repo
   alias Ms2ex.Types
@@ -123,22 +124,51 @@ defmodule Ms2ex.Context.Inventory do
   # Item is stackable
   def add_item(%Schema.Character{} = character, %Schema.Item{metadata: %{stack_limit: n}} = attrs)
       when n > 1 do
-    Repo.transaction(fn ->
-      case find_stack(character, attrs) do
-        %Schema.Item{} = item ->
-          update_or_create(character, item, attrs)
+    result =
+      Repo.transaction(fn ->
+        case find_stack(character, attrs) do
+          %Schema.Item{} = item ->
+            update_or_create(character, item, attrs)
 
-        nil ->
-          create(character, attrs)
-      end
-    end)
+          nil ->
+            create(character, attrs)
+        end
+      end)
+
+    notify_item_added(character, result)
+    result
   end
 
   # Item is not stackable
   def add_item(%Schema.Character{} = character, %Schema.Item{} = attrs) do
-    with {:create, item} <- create(character, attrs) do
-      {:ok, {:create, item}}
+    case create(character, attrs) do
+      {:create, item} ->
+        result = {:ok, {:create, item}}
+        notify_item_added(character, result)
+        result
+
+      other ->
+        other
     end
+  end
+
+  # acquisition-driven quest conditions (`item_add`, `item_exist`); pushed
+  # for every successful inventory insert/stack so progress tracks amount
+  defp notify_item_added(character, {:ok, {_kind, item}}) do
+    notify_item_conditions(character, item)
+  end
+
+  defp notify_item_added(character, {:ok, {_kind, {_updated, _amount}, item}}) do
+    notify_item_conditions(character, item)
+  end
+
+  defp notify_item_added(_character, _result), do: :ok
+
+  defp notify_item_conditions(character, item) do
+    amount = Map.get(item, :amount, 0)
+
+    Managers.Quest.update_conditions(character.id, :item_add, amount, "", 0, "", item.item_id)
+    Managers.Quest.update_conditions(character.id, :item_exist, amount, "", 0, "", item.item_id)
   end
 
   @doc """

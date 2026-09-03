@@ -1,44 +1,66 @@
 defmodule Ms2ex.Managers.Quest.Conditions do
   @moduledoc """
-  Functions for managing quest conditions and checking their status.
+  Quest condition helpers.
 
-  This module provides utilities to check and update quest conditions
-  based on various player actions and game events.
+  Progress matching follows the metadata layout: `codes` carry the event id
+  the condition is gated on (npc id, item id, skill id, map id, ...), while
+  `target` optionally carries a minimum-value gate the pushed value must
+  reach for the progress to count.
   """
 
-  # No aliases needed
+  # condition types whose progress is gated on the code parameter matching
+  # one of the configured integers (or falling inside a configured range)
+  @code_types [
+    :continent,
+    :dialogue,
+    :explore,
+    :explore_continent,
+    :fish,
+    :interact_object,
+    :interact_object_rep,
+    :item_add,
+    :item_destroy,
+    :item_exist,
+    :item_pickup,
+    :job,
+    :job_change,
+    :level,
+    :level_up,
+    :map,
+    :npc,
+    :quest,
+    :quest_accept,
+    :quest_clear,
+    :quest_clear_by_chapter,
+    :skill,
+    :stay_cube,
+    :stay_map,
+    :talk_in
+  ]
 
-  @doc """
-  Checks if all conditions for a quest are met.
+  # condition types whose target parameter acts as a minimum-value gate: the
+  # pushed value must reach at least one of the configured integers
+  @target_min_types [
+    :enchant_result,
+    :gemstone_upgrade,
+    :install_billboard,
+    :item_move,
+    :level,
+    :level_up,
+    :npc,
+    :socket_unlock
+  ]
 
-  ## Parameters
-    * `quest` - The quest to check conditions for
+  # condition types whose target integers enumerate allowed values (e.g. map
+  # ids) that the pushed value must match exactly
+  @target_equality_types [:chat, :emotion]
 
-  ## Returns
-    * `true` - All conditions are met
-    * `false` - At least one condition is not met
-  """
   def all_met?(quest) do
     Enum.all?(quest.conditions, fn {_idx, condition} ->
       condition.counter >= condition.metadata.value
     end)
   end
 
-  @doc """
-  Updates quest conditions based on a condition type.
-
-  ## Parameters
-    * `quest` - The quest to update
-    * `condition_type` - The type of condition being updated
-    * `counter` - The amount to increase the condition counter by
-    * `target_string` - String target parameter (depends on condition type)
-    * `target_long` - Integer target parameter (depends on condition type)
-    * `code_string` - String code parameter (depends on condition type)
-    * `code_long` - Integer code parameter (depends on condition type)
-
-  ## Returns
-    * The original quest if no changes were made, or an updated quest
-  """
   def update(
         quest,
         condition_type,
@@ -48,124 +70,117 @@ defmodule Ms2ex.Managers.Quest.Conditions do
         code_string,
         code_long
       ) do
-    # Skip if quest isn't active
-    if quest.state != :started do
+    if quest.state != :started or mentoring_locked?(quest) do
       quest
     else
-      # Special handling for mentoring quests
-      if quest.metadata && quest.metadata.basic && quest.metadata.basic.type == :mentoring_mission &&
-           quest.metadata.mentoring do
-        # Check if required opening days haven't passed
-        now = :os.system_time(:second)
-        # seconds in a day
-        days_passed = (now - quest.start_time) / 86400
-
-        if days_passed < quest.metadata.mentoring.opening_day do
-          quest
-        end
-      end
-
-      # Find conditions that match the condition type
-      matching_conditions =
+      matching_indexes =
         quest.conditions
         |> Enum.filter(fn {_idx, condition} ->
-          # Only update if condition type matches and not already completed
-          condition.metadata.type == condition_type &&
-            condition.counter < condition.metadata.value
-        end)
-        |> Enum.filter(fn {_idx, condition} ->
-          # Additional check based on metadata
-          valid_condition_type?(
-            condition.metadata,
+          condition_matches?(
+            condition,
+            condition_type,
             target_string,
             target_long,
             code_string,
             code_long
           )
         end)
+        |> Enum.map(&elem(&1, 0))
 
-      # If no matching conditions, return original quest
-      if Enum.empty?(matching_conditions) do
-        quest
-      else
-        # Update the condition counters
-        updated_conditions =
-          Enum.reduce(matching_conditions, quest.conditions, fn {idx, _condition}, acc ->
-            Map.update!(acc, idx, fn condition ->
-              new_counter = min(condition.metadata.value, condition.counter + counter)
-              %{condition | counter: new_counter}
-            end)
-          end)
+      apply_updates(quest, matching_indexes, counter)
+    end
+  end
 
-        # Return updated quest with new conditions
-        %{quest | conditions: updated_conditions}
+  defp apply_updates(quest, [], _counter), do: quest
+
+  defp apply_updates(quest, indexes, counter) do
+    updated_conditions =
+      Enum.reduce(indexes, quest.conditions, fn index, conditions ->
+        Map.update!(conditions, index, fn condition ->
+          new_counter = min(condition.metadata.value, condition.counter + counter)
+          %{condition | counter: new_counter}
+        end)
+      end)
+
+    %{quest | conditions: updated_conditions}
+  end
+
+  defp condition_matches?(
+         condition,
+         condition_type,
+         target_string,
+         target_long,
+         code_string,
+         code_long
+       ) do
+    condition.metadata.type == condition_type and
+      condition.counter < condition.metadata.value and
+      metadata_matches?(condition.metadata, target_string, target_long, code_string, code_long)
+  end
+
+  defp metadata_matches?(metadata, _target_string, target_long, _code_string, code_long) do
+    code_ok?(metadata, code_long) and target_ok?(metadata, target_long)
+  end
+
+  defp code_ok?(%{type: type} = metadata, code_long) do
+    if type in @code_types do
+      strings = parameter_strings(metadata[:codes])
+      integers = parameter_integers(metadata[:codes])
+      range = parameter_range(metadata[:codes])
+
+      cond do
+        strings != [] ->
+          Enum.member?(strings, code_long)
+
+        integers != [] or range != nil ->
+          Enum.member?(integers, code_long) or in_range?(range, code_long)
+
+        true ->
+          true
       end
+    else
+      true
     end
   end
 
-  @doc """
-  Validates if a condition's metadata matches the given parameters.
+  defp target_ok?(%{type: type} = metadata, target_long) do
+    integers = parameter_integers(metadata[:target])
 
-  ## Parameters
-    * `metadata` - The condition metadata
-    * `target_string` - String target parameter
-    * `target_long` - Integer target parameter
-    * `code_string` - String code parameter
-    * `code_long` - Integer code parameter
+    cond do
+      type in @target_min_types -> integers == [] or Enum.any?(integers, &(&1 <= target_long))
+      type in @target_equality_types -> integers == [] or Enum.member?(integers, target_long)
+      true -> true
+    end
+  end
 
-  ## Returns
-    * `true` - The condition matches the parameters
-    * `false` - The condition does not match the parameters
-  """
-  def valid_condition_type?(metadata, target_string, target_long, _code_string, code_long) do
-    case metadata.type do
-      # Using atoms with values that directly match Maple2's ConditionType enum
-      :hunt_monster ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, target_long)
+  defp mentoring_locked?(quest) do
+    case quest.metadata do
+      %{basic: %{type: :mentoring_mission}, mentoring: %{opening_day: opening_day}} ->
+        now = :os.system_time(:second)
+        days_passed = (now - quest.start_time) / 86_400
+        days_passed < opening_day
 
-      :complete_map_all ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, target_long)
-
-      :collect_item ->
-        Enum.empty?(metadata.target_ids) || Enum.member?(metadata.target_ids, target_long)
-
-      :harvest_all ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, target_long)
-
-      :skill_use ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, target_long)
-
-      :talk_npc ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, target_long)
-
-      :visit_npc ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, target_long)
-
-      :quest ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, code_long)
-
-      :quest_clear ->
-        metadata.target_ids == [] || Enum.member?(metadata.target_ids, code_long)
-
-      :interact_object ->
-        check_string_match(metadata.target_ids_str, target_string) ||
-          check_number_match(metadata.target_ids, target_long)
-
-      # Add other condition types as needed
       _ ->
-        true
+        false
     end
   end
 
-  # Helper functions
+  defp parameter_strings(nil), do: []
+  defp parameter_strings(%{strings: strings}) when is_list(strings), do: strings
+  defp parameter_strings(_value), do: []
 
-  defp check_string_match(nil, _target), do: false
-  defp check_string_match([], _target), do: false
-  defp check_string_match(list, target) when is_list(list), do: Enum.member?(list, target)
-  defp check_string_match(_list, _target), do: false
+  defp parameter_integers(nil), do: []
+  defp parameter_integers(%{integers: integers}) when is_list(integers), do: integers
+  defp parameter_integers(_value), do: []
 
-  defp check_number_match(nil, _target), do: false
-  defp check_number_match([], _target), do: false
-  defp check_number_match(list, target) when is_list(list), do: Enum.member?(list, target)
-  defp check_number_match(_list, _target), do: false
+  defp parameter_range(nil), do: nil
+
+  defp parameter_range(%{range: %{min: min, max: max}}) do
+    %{min: min, max: max}
+  end
+
+  defp parameter_range(_value), do: nil
+
+  defp in_range?(nil, _value), do: false
+  defp in_range?(%{min: min, max: max}, value), do: value >= min and value <= max
 end

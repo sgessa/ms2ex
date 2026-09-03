@@ -1,7 +1,6 @@
 defmodule Ms2ex.Types.Quest.Metadata do
   @moduledoc """
-  Defines the structure of quest metadata.
-  Ported from Maple2's QuestMetadata.cs
+  Structure of quest metadata documents projected into Redis.
   """
 
   defmodule Basic do

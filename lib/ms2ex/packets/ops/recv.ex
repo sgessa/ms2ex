@@ -25,6 +25,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x34 => "FALL_DAMAGE",
     0x25 => "JOB",
     0x26 => "VIBRATE",
+    0x29 => "QUEST",
     0x2A => "TOMBSTONE",
     0x2C => "PARTY",
     0x30 => "FRIEND",

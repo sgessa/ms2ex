@@ -1,137 +1,124 @@
 defmodule Ms2ex.Managers.Quest.Rewards do
   @moduledoc """
-  Functions for distributing quest rewards.
+  Quest reward helpers.
 
-  This module handles reward distribution for both quest acceptance and completion.
-  It manages experience, mesos, items, and other currencies that are granted to players.
+  Reward delivery is split so callers can make quest completion and item
+  grants atomic:
+
+    * `prepare/2` resolves and filters a reward document into grantable items
+      (no writes)
+    * `grant_items/2` performs the inventory writes; call it inside the
+      caller's transaction so a failure rolls back the quest state change
+    * `deliver/3` fires the post-commit effects (experience, currency
+      updates and inventory packets)
   """
 
+  alias Ms2ex.Context.Inventory
+  alias Ms2ex.Context.Items
+  alias Ms2ex.Context.Wallets
+  alias Ms2ex.Enums
   alias Ms2ex.Managers
+  alias Ms2ex.Packets
+  alias Ms2ex.Repo
+  alias Ms2ex.Storage
+
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @doc """
-  Distributes rewards when accepting a quest.
-
-  ## Parameters
-    * `character` - The character to receive rewards
-    * `quest_metadata` - The quest metadata containing reward information
-
-  ## Returns
-    * `:ok` - Successfully distributed rewards
+  Resolves a reward document into grantable items: zero-filled entries and
+  items without projected metadata are dropped, job-gated items are matched
+  against the character's job. Performs no writes.
   """
-  def distribute_accept_rewards(character, quest_metadata) do
-    reward = quest_metadata.accept_reward
+  def prepare(character, reward) do
+    job_items = filter_job_items(reward.essential_job_items, character)
+    items = Enum.filter(reward.essential_items ++ job_items, &grantable?/1)
 
-    # Handle essential items
-    if reward.essential_items && length(reward.essential_items) > 0 do
-      # Enum.each(reward.essential_items, fn item ->
-
-      # TODO: Add implementation for item creation and distribution
-      # Create item and add to inventory, similar to C# implementation:
-      # Item? reward = session.Field.ItemDrop.CreateItem(acceptReward.Id, acceptReward.Rarity, acceptReward.Amount);
-      # session.Item.Inventory.Add(reward, true)
-      # end)
-      :ok
-    end
-
-    # Handle job items if applicable
-    if reward.essential_job_items && length(reward.essential_job_items) > 0 do
-      job_items = filter_job_items(character, reward.essential_job_items)
-      distribute_items(character, job_items)
-    end
-
-    :ok
+    %{items: items}
   end
 
   @doc """
-  Distributes rewards when completing a quest.
-
-  ## Parameters
-    * `character` - The character to receive rewards
-    * `quest` - The completed quest with metadata
-
-  ## Returns
-    * `:ok` - Successfully distributed rewards
+  Inserts the prepared items into the character's inventory. Must run inside
+  a `Repo.transaction` so a failing grant rolls back the surrounding quest
+  state change. Returns `{:ok, inventory results}` for post-commit delivery.
   """
-  def distribute_completion_rewards(character, quest) do
-    metadata = quest.metadata
-    reward = metadata.complete_reward
+  def grant_items(character, %{items: items}) do
+    results =
+      Enum.map(items, fn reward_item ->
+        metadata = Storage.Items.get_meta(reward_item.id)
 
-    # Experience
-    if reward.exp && reward.exp > 0 do
-      Managers.Character.cast(character.id, {:earn_exp, reward.exp})
-    end
+        item =
+          Items.init(reward_item.id, %{amount: reward_item.amount, rarity: reward_item.rarity})
 
-    # Mesos
-    if reward.meso && reward.meso > 0 do
-      # TODO: Add implementation for adding mesos
-      # Managers.Currency.add_mesos(character.id, reward.meso)
-    end
+        case Inventory.add_item(character, %{item | metadata: metadata}) do
+          {:ok, result} -> result
+          other -> Repo.rollback({:reward_item_failed, reward_item.id, other})
+        end
+      end)
 
-    # Other currencies
-    distribute_currencies(character, reward)
+    {:ok, results}
+  end
 
-    # Add essential items
-    if reward.essential_items && length(reward.essential_items) > 0 do
-      distribute_items(character, reward.essential_items)
-    end
-
-    # Add job items if they match character's job
-    if reward.essential_job_items && length(reward.essential_job_items) > 0 do
-      # Filter items based on character job
-      job_items = filter_job_items(character, reward.essential_job_items)
-      distribute_items(character, job_items)
-    end
-
-    # Handle selective items (items player can choose from)
-    if reward.selective_items && length(reward.selective_items) > 0 do
-      # TODO: Implement selective item UI and handling
-    end
+  @doc """
+  Post-commit delivery: experience through the character manager (it owns the
+  live exp/level state), currency wallet updates, and the inventory packets
+  for the granted items.
+  """
+  def deliver(character, reward, results) do
+    grant_exp(character, reward.exp)
+    grant_currencies(character, reward)
+    Enum.each(results, &maybe_push_inventory_result(character, &1))
 
     :ok
   end
 
-  defp distribute_items(_character, _items) do
-    # Enum.each(items, fn item ->
+  defp grant_exp(_character, exp) when exp <= 0, do: :ok
+  defp grant_exp(character, exp), do: Managers.Character.cast(character.id, {:earn_exp, exp})
 
-    # TODO: Add implementation for item creation and adding to inventory
-
-    # 1. Create item
-    # item = create_item(item.id, item.rarity, item.amount)
-    #
-    # 2. Try to add to inventory, fallback to mail
-    # if !can_add_to_inventory(character, item) do
-    #   send_item_to_mail(character, item)
-    # else
-    #   add_item_to_inventory(character, item)
-    # end
-    # end)
-
-    :ok
+  defp grant_currencies(character, reward) do
+    maybe_add_currency(character, :mesos, reward.meso)
+    maybe_add_currency(character, :trevas, reward.treva)
+    maybe_add_currency(character, :rues, reward.rue)
   end
 
-  defp filter_job_items(_character, _items) do
-    # Filter items based on character's job
+  defp maybe_add_currency(_character, _currency, amount) when amount <= 0, do: :ok
 
-    # Enum.filter(items, fn item ->
-    # TODO: Add proper job filtering logic
-    # 1. Get item metadata
-    # 2. Check if job_recommends includes character's job or is empty
-    # Temporary - return all items until job filtering is implemented
-    # true
-    # end)
+  defp maybe_add_currency(character, currency, amount),
+    do: Wallets.update(character, currency, amount)
+
+  defp maybe_push_inventory_result(%{session_pid: nil}, _result), do: :ok
+
+  defp maybe_push_inventory_result(character, result) do
+    push(character, Packets.InventoryItem.add_item(result, character))
   end
 
-  defp distribute_currencies(_character, _reward) do
-    # Handle additional currencies like treva, rue, etc.
-    # Example:
-    # if reward.treva && reward.treva > 0 do
-    #   Managers.Currency.add(character.id, :treva, reward.treva)
-    # end
-    #
-    # if reward.rue && reward.rue > 0 do
-    #   Managers.Currency.add(character.id, :rue, reward.rue)
-    # end
+  defp grantable?(%{id: id}) when id <= 0, do: false
 
-    :ok
+  defp grantable?(%{id: id}) do
+    case Storage.Items.get_meta(id) do
+      nil -> false
+      _metadata -> true
+    end
+  end
+
+  defp grantable?(_reward_item), do: false
+
+  defp filter_job_items([], _character), do: []
+
+  defp filter_job_items(items, character) do
+    job_id = Enums.Job.get_value(character.job)
+
+    Enum.filter(items, fn reward_item ->
+      case Storage.Items.get_meta(reward_item.id) do
+        %{limit: %{job_recommends: []}} ->
+          true
+
+        %{limit: %{job_recommends: recommends}} ->
+          Enum.member?(recommends, 0) or Enum.member?(recommends, job_id)
+
+        # zero-filled / unresolvable reward entries are not grantable
+        _ ->
+          false
+      end
+    end)
   end
 end
