@@ -202,7 +202,7 @@ defmodule Ms2ex.Managers.Character.Equips do
   end
 
   defp get_item(character, item_id) do
-    Context.Inventory.get_by(character_id: character.id, id: item_id)
+    Context.Inventory.get_by(%{character_id: character.id, id: item_id})
   end
 
   # refreshes the cached equip list and derived stats once for the whole

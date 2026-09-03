@@ -127,7 +127,7 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec get(Schema.Character.t(), integer()) :: Schema.Item.t() | nil
   def get(%{id: char_id}, id) do
-    get_by(character_id: char_id, id: id)
+    get_by(%{character_id: char_id, id: id})
   end
 
   @doc """
