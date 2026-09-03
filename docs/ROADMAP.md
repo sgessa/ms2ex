@@ -177,7 +177,7 @@ What is still missing:
 - field-mission exploration progress, chapter rewards, job-advance hooks, and
   the remaining quest subcommands
 
-### 17. User generated content — [Partial]
+### 20. User generated content — [Partial]
 
 The upload pipeline is in place end to end: the client is pointed at the
 `/ugc` prefix at login, announces an upload over the game session, posts the
@@ -256,20 +256,13 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
-- User generated content pipeline: UGC send packets (upload, path update,
-  profile picture, design item, layout blueprint, banners), login and game
-  handlers, an owned `ugc_resources` table, and a Phoenix web surface under
-  `/ugc` split per resource with path-traversal, size and ownership guards.
-  Design-shop items are charged, staged and added to the inventory with their
-  descriptor serialized alongside the item
-
-- User generated content: HTTP upload/download endpoints (`/urq.aspx` plus the
-  profile, item, item icon, banner, guild mark and blueprint fetch routes),
-  persisted `ugc_resources` rows, and the UGC packet surface (upload
-  acknowledgement, path update, profile picture, item/mount/furnishing and
-  layout blueprint updates, banner list). Still open: attaching a stored path
-  to the staged item/banner/guild mark on confirmation, design-table pricing
-  and currency checks, and banner slot reservations
+- User generated content pipeline: UGC send packets (upload acknowledgement,
+  path update, profile picture, item/mount/furnishing updates, banner list),
+  login and game handlers, an owned `ugc_resources` table, and a Phoenix web
+  surface under `/ugc` (`/urq.aspx` upload plus the profile, item, item icon,
+  banner, guild mark and blueprint fetch routes) with path-traversal, size and
+  ownership guards. Design-shop items are charged, staged and added to the
+  inventory with their descriptor persisted and serialized alongside the item
 
 - Equipment state extraction: equip transitions moved into the character
   process (`Managers.Character.Equips`, like `.Experience` / `.Stats`) — one

@@ -123,8 +123,9 @@ defmodule Ms2ex.Packets.Ugc do
     |> put_long()
     |> put_ustring()
     |> put_ustring()
-    |> put_byte()
-    |> put_int()
+    # the client only renders the custom icon when this is set
+    |> put_byte(1)
+    |> put_int(1)
     |> put_long()
     |> put_long()
     |> put_ustring()
