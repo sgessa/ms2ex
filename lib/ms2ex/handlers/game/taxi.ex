@@ -60,6 +60,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
   defp ride_taxi(map_id, currency, cost, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, _wallet} <- Context.Wallets.update(character, currency, cost) do
+      Managers.Quest.update_conditions(character.id, :taxiuse)
       Context.Field.change_field(character, map_id)
     end
   end
