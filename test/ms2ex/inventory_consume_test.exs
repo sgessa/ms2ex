@@ -52,6 +52,27 @@ defmodule Ms2ex.Context.InventoryTest do
     assert Context.Inventory.get(character, item.id).amount == 1
   end
 
+  test "batch consumption spans pairs sharing stacks and skips uncovered ones", %{
+    character: character
+  } do
+    {:ok, {:create, first}} = Context.Inventory.add_item(character, pudding(2))
+
+    consumables = [
+      %{item_id: 30_000_122, amount: 1},
+      %{item_id: 30_000_122, amount: 5},
+      %{item_id: 30_000_122, amount: 1}
+    ]
+
+    {:ok, results} = Context.Inventory.consume_item_amounts(character, consumables)
+
+    # the 2-stack covers the first and third pairs; the middle pair is skipped
+    assert [{:delete, deleted}, {:delete, deleted2}] = results
+    assert deleted.id == first.id
+    assert deleted2.id == first.id
+
+    refute Context.Inventory.get(character, first.id)
+  end
+
   defp pudding(amount) do
     Context.Items.init(30_000_122, %{amount: amount, rarity: 1})
   end

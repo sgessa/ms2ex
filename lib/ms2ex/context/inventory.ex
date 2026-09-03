@@ -289,50 +289,72 @@ defmodule Ms2ex.Context.Inventory do
   @spec consume_item_amount(Schema.Character.t(), integer(), integer()) ::
           {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
           | {:error, :insufficient_amount}
-  def consume_item_amount(%Schema.Character{id: character_id}, item_id, amount)
+  def consume_item_amount(%Schema.Character{} = character, item_id, amount)
       when is_integer(item_id) and is_integer(amount) and amount > 0 do
-    stacks = owned_stacks(character_id, item_id)
-    total = Enum.sum(Enum.map(stacks, & &1.amount))
-
-    if total < amount do
-      {:error, :insufficient_amount}
-    else
-      {:ok, consume_from_stacks(stacks, amount, [])}
+    case consume_item_amounts(character, [%{item_id: item_id, amount: amount}]) do
+      {:ok, []} -> {:error, :insufficient_amount}
+      {:ok, results} -> {:ok, results}
     end
   end
 
   @doc """
-  Consumes each `%{item_id, amount}` pair; pairs the inventory cannot cover
-  are skipped so callers can keep processing (the completion counter no
-  longer matches the live inventory in that case).
+  Consumes each `%{item_id, amount}` pair from the character's carry stacks,
+  loading every needed stack with a single query and deleting stacks emptied
+  by the consumption. Pairs the inventory cannot cover are skipped so callers
+  can keep processing (the completion counter no longer matches the live
+  inventory in that case).
   """
   @spec consume_item_amounts(Schema.Character.t(), [map()]) ::
           {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
-  def consume_item_amounts(character, consumables) do
-    results =
-      Enum.flat_map(consumables, fn %{item_id: item_id, amount: amount} ->
-        case consume_item_amount(character, item_id, amount) do
-          {:ok, stack_results} -> stack_results
-          {:error, :insufficient_amount} -> []
+  def consume_item_amounts(%Schema.Character{} = character, consumables) do
+    stacks =
+      character
+      |> owned_stacks(Enum.map(consumables, & &1.item_id))
+      |> Enum.group_by(& &1.item_id)
+
+    {results, _stacks} =
+      Enum.flat_map_reduce(consumables, stacks, fn %{item_id: item_id, amount: amount}, stacks ->
+        item_stacks = Map.get(stacks, item_id, [])
+
+        if amount > 0 and total_amount(item_stacks) >= amount do
+          {taken, remaining} = take_from_stacks(item_stacks, amount, [], [])
+          {taken, Map.put(stacks, item_id, remaining)}
+        else
+          {[], stacks}
         end
       end)
 
     {:ok, results}
   end
 
-  defp owned_stacks(character_id, item_id) do
+  defp owned_stacks(%Schema.Character{id: character_id}, item_ids) do
     Schema.Item
-    |> where([i], i.character_id == ^character_id and i.item_id == ^item_id)
+    |> where([i], i.character_id == ^character_id and i.item_id in ^item_ids)
     |> where([i], i.location == ^:inventory)
     |> order_by(asc: :amount)
     |> Repo.all()
   end
 
-  defp consume_from_stacks(_stacks, 0, acc), do: Enum.reverse(acc)
+  defp total_amount(stacks), do: Enum.reduce(stacks, 0, &(&1.amount + &2))
 
-  defp consume_from_stacks([stack | rest], remaining, acc) do
-    to_take = min(stack.amount, remaining)
-    consume_from_stacks(rest, remaining - to_take, [consume(stack, to_take) | acc])
+  # Splits the consumption across stacks (smallest first); `consume/2` writes
+  # each partial update or deletion and returns its inventory packet entry
+  defp take_from_stacks([], _amount, results, remaining),
+    do: {Enum.reverse(results), Enum.reverse(remaining)}
+
+  defp take_from_stacks([stack | rest], amount, results, remaining) do
+    to_take = min(stack.amount, amount)
+    result = consume(stack, to_take)
+
+    case stack.amount - to_take do
+      0 ->
+        take_from_stacks(rest, amount - to_take, [result | results], remaining)
+
+      left ->
+        take_from_stacks(rest, amount - to_take, [result | results], [
+          %{stack | amount: left} | remaining
+        ])
+    end
   end
 
   @doc """
