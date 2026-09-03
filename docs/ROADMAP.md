@@ -248,7 +248,6 @@ combat-heavy characters from accumulating document copies.
 - Manager state carries no item metadata: the cached equip list and field
   drops hold plain item rows, and stat rebuilds, gear score, and pickup
   re-read the storage cache (ETS) at point of use
-
 - Quest command surface: forfeit enforcement (non-forfeitable quests refuse
   abandon), the client expiration sweep (drops persisted rows and acknowledges
   with the expired-quest packet), and go-to-npc travel to a started quest's
