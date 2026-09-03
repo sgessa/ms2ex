@@ -57,7 +57,9 @@ defmodule Ms2ex.GameHandlers.RideSync do
 
     case Map.get(character.mount, :last_position, character.position) do
       nil ->
-        mount = Map.merge(character.mount, %{last_position: List.last(positions), ride_distance: 0})
+        mount =
+          Map.merge(character.mount, %{last_position: List.last(positions), ride_distance: 0})
+
         Managers.Character.call(character, {:update, %{character | mount: mount}})
 
       previous_position ->
@@ -67,14 +69,18 @@ defmodule Ms2ex.GameHandlers.RideSync do
 
   defp update_riding_distance(character, positions, previous_position) do
     {distance, last_position} =
-      Enum.reduce(positions, {Map.get(character.mount, :ride_distance, 0), previous_position}, fn position,
-                                                                                                  {distance, previous} ->
-        travelled = Context.MapBlock.subtract(position, previous) |> Context.MapBlock.length()
-        {distance + travelled, position}
-      end)
+      Enum.reduce(
+        positions,
+        {Map.get(character.mount, :ride_distance, 0), previous_position},
+        fn position, {distance, previous} ->
+          travelled = Context.MapBlock.subtract(position, previous) |> Context.MapBlock.length()
+          {distance + travelled, position}
+        end
+      )
 
     block_size = Context.MapBlock.block_size()
     progress = trunc(distance / block_size)
+
     mount =
       Map.merge(character.mount, %{
         last_position: last_position,
@@ -85,7 +91,15 @@ defmodule Ms2ex.GameHandlers.RideSync do
     Managers.Character.call(character, {:update, character})
 
     if progress > 0 do
-      Managers.Quest.update_conditions(character.id, :riding, progress, "", 0, "", character.map_id)
+      Managers.Quest.update_conditions(
+        character.id,
+        :riding,
+        progress,
+        "",
+        0,
+        "",
+        character.map_id
+      )
     end
   end
 end

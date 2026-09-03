@@ -39,9 +39,8 @@ defmodule Ms2ex.Managers.Character do
   def init(character) do
     {:ok,
      character
-    |> Map.put(:condition_state, nil)
-    |> Map.put(:condition_distances, %{})
-     |> Map.put(:trophies, Context.Achievements.trophy_counts(character))
+     |> Map.put(:condition_state, nil)
+     |> Map.put(:condition_distances, %{})
      |> Map.put(:regen_health?, false)
      |> Map.put(:regen_spirit?, false)
      |> Map.put(:regen_stamina?, false)
@@ -226,10 +225,14 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:receive_fall_dmg, distance}, character),
     do: {:noreply, Character.FallDamage.receive_fall_damage(character, distance)}
 
-  def handle_cast({:set_time_condition, condition_type}, %{condition_state: condition_type} = character),
-    do: {:noreply, character}
+  def handle_cast(
+        {:set_time_condition, condition_type},
+        %{condition_state: condition_type} = character
+      ),
+      do: {:noreply, character}
 
-  def handle_cast({:set_time_condition, nil}, character), do: {:noreply, %{character | condition_state: nil}}
+  def handle_cast({:set_time_condition, nil}, character),
+    do: {:noreply, %{character | condition_state: nil}}
 
   def handle_cast({:set_time_condition, condition_type}, character) do
     Process.send_after(self(), {:time_condition_tick, condition_type}, 1000)
@@ -263,7 +266,10 @@ defmodule Ms2ex.Managers.Character do
   def handle_info({:regen, stat_id}, character),
     do: {:noreply, Character.Stats.regen(character, stat_id)}
 
-  def handle_info({:time_condition_tick, condition_type}, %{condition_state: condition_type} = character) do
+  def handle_info(
+        {:time_condition_tick, condition_type},
+        %{condition_state: condition_type} = character
+      ) do
     Ms2ex.Managers.Quest.update_conditions(character.id, condition_type, 1, "", character.map_id)
     Process.send_after(self(), {:time_condition_tick, condition_type}, 1000)
     {:noreply, character}

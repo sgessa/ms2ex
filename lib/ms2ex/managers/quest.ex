@@ -18,7 +18,21 @@ defmodule Ms2ex.Managers.Quest do
   # Constants
   @batch_size 200
   @default_timeout 5000
-  @throttled_conditions [:fall, :swim, :swimtime, :run, :stay_cube, :crawl, :glide, :climb, :ropetime, :laddertime, :holdtime, :riding, :emotiontime]
+  @throttled_conditions [
+    :fall,
+    :swim,
+    :swimtime,
+    :run,
+    :stay_cube,
+    :crawl,
+    :glide,
+    :climb,
+    :ropetime,
+    :laddertime,
+    :holdtime,
+    :riding,
+    :emotiontime
+  ]
 
   # Client API
 

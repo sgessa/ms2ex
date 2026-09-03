@@ -88,7 +88,9 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
   defp track_distance_condition(character, sync_state) do
     case distance_condition(sync_state.state) do
-      nil -> :ok
+      nil ->
+        :ok
+
       condition_type ->
         distance =
           Context.MapBlock.subtract(sync_state.position, character.position)
@@ -99,10 +101,22 @@ defmodule Ms2ex.GameHandlers.UserSync do
         block_size = Context.MapBlock.block_size()
         progress = trunc(total / block_size)
         distances = Map.put(distances, condition_type, total - progress * block_size)
-        Managers.Character.call(character, {:update, %{character | condition_distances: distances}})
+
+        Managers.Character.call(
+          character,
+          {:update, %{character | condition_distances: distances}}
+        )
 
         if progress > 0 do
-          Managers.Quest.update_conditions(character.id, condition_type, progress, "", 0, "", character.map_id)
+          Managers.Quest.update_conditions(
+            character.id,
+            condition_type,
+            progress,
+            "",
+            0,
+            "",
+            character.map_id
+          )
         end
     end
   end

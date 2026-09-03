@@ -64,6 +64,7 @@ defmodule Ms2ex.Context.Achievements do
 
   def trophy_counts(character) do
     [character.account_id, character.id]
+    |> Enum.reject(&is_nil/1)
     |> Enum.uniq()
     |> Enum.flat_map(&all/1)
     |> Enum.reduce([0, 0, 0], fn achievement, counts ->
@@ -130,7 +131,7 @@ defmodule Ms2ex.Context.Achievements do
   defp progress_metadata(
          metadata,
          character,
-      condition_type,
+         condition_type,
          count,
          target_string,
          target_long,

@@ -174,6 +174,8 @@ What is still missing:
   and the long-tail condition types
 - selective rewards, mail fallback for full inventories, and the remaining
   reward-side edge cases
+- Maple Navigator: audit request/response packets, remote completion, and map
+  guidance flow against client behavior
 - chapter rewards, job-advance hooks, and the remaining quest subcommands
 
 ### 15. Achievements — [Partial]
@@ -189,6 +191,16 @@ updates and advances `riding` conditions per 150 units travelled.
 
 What is still missing:
 
+- condition matching limitations shared by quests, exploration, and
+  achievements: `party_count` and `guild_party_count` gates are ignored;
+  string-code conditions (`emotion`, `emotiontime`, `trigger`, `npc_race`) and
+  target ranges are not evaluated; `stay_cube` needs surface/material checks;
+  unique collection conditions need persisted item/fish albums; and
+  field-mission `progress_maps` / exploration-type restrictions are not
+  enforced
+- movement/time update throttling must compare the changed condition's counter
+  rather than the highest counter on the quest, so an unrelated condition
+  cannot suppress a five-step client update
 - inventory collection counters (`item_collect` and `item_collect_revise`):
   these need a persisted collected-item map and `USER_ENV` updates; ordinary
   acquisition currently emits only `item_add` and `item_exist`
@@ -226,6 +238,9 @@ What is still missing:
 - reward types not yet delivered: `skillpoint`, `shop_weapon`, `shop_build`,
   `shop_ride`, `itemcoloring`, `beauty_makeup`, `beauty_skin`, `beauty_hair`,
   `dynamicaction`, and `etc`; they need their owning unlock/persistence APIs
+- audit every achievement reward definition against the live client metadata,
+  including item ids, quantities, rarity/rank semantics, automatic versus
+  manual claims, and each reward type's client update
 - inventory-full fallback for item rewards: mail has notification packets only;
   no mail, attachment, or item-delivery persistence exists
 - achievement counters in character/field profile packets and trophy rankings:
