@@ -6,7 +6,6 @@ ordered by priority.
 
 Status markers:
 
-- **[Done]** — implemented and wired through metadata + server.
 - **[Partial]** — some pieces are in place; the rest is tracked under the item.
 - **[Open]** — not started.
 
