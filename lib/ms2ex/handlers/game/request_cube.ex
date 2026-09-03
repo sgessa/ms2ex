@@ -52,7 +52,7 @@ defmodule Ms2ex.GameHandlers.RequestCube do
     end
   end
 
-  def handle_mode(_, _, _) do
-    Logger.warning("Unhandled request cube mode")
+  def handle_mode(mode, _packet, _session) do
+    Logger.warning("Unhandled request cube mode 0x#{Integer.to_string(mode, 16)}")
   end
 end

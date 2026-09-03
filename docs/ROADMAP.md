@@ -95,6 +95,18 @@ The Tile (0x6) mode, tied to tile skills, is still unimplemented.
 
 ## P3 — Client parity & serialization
 
+### 19. Housing & UGC cube system — [Open]
+
+The cube packet surface is almost entirely unimplemented: `RequestCube`
+handles only `remove_cube` (0x0C); every other mode falls into the
+unhandled-mode warning — hold cube, buy/forfeit/extend plot, place/rotate/
+replace cube, liftup object / liftup drop (0x11 is what the client sends
+when a player grabs a placed furnishing), home name / passcode / vote /
+message, clear cubes, plot area and height changes, design rank rewards,
+permissions, save/load home, blueprints, kick out, and background /
+lighting / camera. Plots, furnishings and home ownership have no server
+model yet; the field-load cube packets send empty data.
+
 ### 17. Item systems: gem sockets, pet items, gacha — [Open]
 
 The item packet writes the reference defaults for three systems ms2ex does
