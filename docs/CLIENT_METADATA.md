@@ -28,6 +28,43 @@ docker compose build
 docker compose run --rm ms2ex-file-ingest
 ```
 
+### Running on the host (no Docker)
+
+Docker is often unavailable on this machine (restricted docker.sock). The tool
+runs directly with the .NET SDK:
+
+```bash
+cd ../ms2ex-file-ingest
+set -a && source .env && set +a   # MS2_DATA_FOLDER, LANGUAGE, REDIS_*
+dotnet run --project src          # REDIS_HOST defaults to localhost
+```
+
+- Re-runs are incremental (CRC32C checksum per set).
+- Probe flags: `dotnet run --project src -- --probe-skill <ids>`.
+- If `src/obj` / `src/bin` are root-owned (container leftovers), redirect the
+  build output and disable assembly-info generation:
+
+  ```bash
+  dotnet run --project src \
+    -p:BaseIntermediateOutputPath=/tmp/ingest-obj/ \
+    -p:OutputPath=/tmp/ingest-bin/ \
+    -p:GenerateAssemblyInfo=false \
+    -p:GenerateTargetFrameworkAttribute=false
+  ```
+
+### Verifying ingested content
+
+From the ms2ex worktree (Redis settings come from `.env`):
+
+```bash
+mix run -e '
+{:ok, keys} = Redix.command(Ms2ex.Redix, ["KEYS", "script:*"])
+IO.puts("script docs: #{length(keys)}")
+'
+```
+
+(If mix complains about an old Elixir version, prefix with `mise exec --`.)
+
 Re-runs are incremental: each set carries a CRC32C checksum in the Redis hash
 `ingest:checksum` and unchanged sets are skipped. Use `--drop-data` to force a
 full re-write.
@@ -42,8 +79,10 @@ See [ms2ex-file-ingest README](../ms2ex-file-ingest/README.md) for details.
 | `npc:<id>`           | basic/class/level, model, stats                 |
 | `skill:<id>`         | properties + per-level data                     |
 | `additional-effect:` | buff properties, shield, status values          |
+| `quest:<id>` + `quest:index` | quest metadata, rewards, conditions, npc/type/chapter/auto-start index |
+| `script:<id>`        | npc + quest talk scripts: states, contents, buttons |
 | `map:<id>`           | boundings, spawns, portals                      |
-| `table:<filename>`   | job.xml, itemoption\*.xml, nametagsymbol.xml, magicpath.xml, chatemoticon.xml, exp\*.xml |
+| `table:<filename>`   | job.xml, itemoption\*.xml, nametagsymbol.xml, magicpath.xml, chatemoticon.xml, exp\*.xml, drop tables, userstat, server.constants |
 
 Values are Erlang external term format (ETF) with atom keys, decoded with
 `:erlang.binary_to_term/1`. The map encoding follows OTP 28's layout — the
