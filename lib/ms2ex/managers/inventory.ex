@@ -495,7 +495,6 @@ defmodule Ms2ex.Managers.Inventory do
         clear_slots(tab_items)
         sorted = Enum.sort_by(tab_items, & &1.item_id)
         assign_slots(sorted)
-        sorted
       end)
 
     case result do
@@ -517,9 +516,11 @@ defmodule Ms2ex.Managers.Inventory do
   defp assign_slots(sorted) do
     sorted
     |> Enum.with_index()
-    |> Enum.each(fn {item, idx} ->
+    |> Enum.map(fn {item, idx} ->
       from(i in Schema.Item, where: i.id == ^item.id)
       |> Repo.update_all(set: [inventory_slot: idx])
+
+      %{item | inventory_slot: idx}
     end)
   end
 

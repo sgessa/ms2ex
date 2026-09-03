@@ -22,6 +22,18 @@ defmodule Ms2ex.InventoryManagerTest do
         property: %{type: 1},
         slot_names: [5],
         option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
+      },
+      "item:6000001" => %{
+        limit: %{level: 1, transfer_type: 3},
+        property: %{type: 1},
+        slot_names: [11],
+        option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
+      },
+      "item:6000002" => %{
+        limit: %{level: 1, transfer_type: 3},
+        property: %{type: 1},
+        slot_names: [11],
+        option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
       }
     })
 
@@ -95,6 +107,20 @@ defmodule Ms2ex.InventoryManagerTest do
 
     remaining = Context.Inventory.list_tab_items(character.id, :consumable)
     assert Enum.sum(Enum.map(remaining, & &1.amount)) == 1
+  end
+
+  test "sort_tab reassigns slots by item id", %{character: character} do
+    # inserted in reverse so the sort has to move both rows
+    {:ok, {:create, b}} = add_item(character, 6_000_002, 1)
+    {:ok, {:create, a}} = add_item(character, 6_000_001, 1)
+
+    assert {:ok, sorted} = Context.Inventory.sort_tab(character, :gear)
+
+    assert Enum.map(sorted, & &1.item_id) == [6_000_001, 6_000_002]
+    assert Enum.map(sorted, & &1.inventory_slot) == [0, 1]
+
+    assert Repo.reload!(a).inventory_slot == 0
+    assert Repo.reload!(b).inventory_slot == 1
   end
 
   test "moving an item to equipment keeps the manager and rows coherent", %{

@@ -1,4 +1,5 @@
 defmodule Ms2ex.GameHandlers.Inventory do
+  alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Net
@@ -55,7 +56,8 @@ defmodule Ms2ex.GameHandlers.Inventory do
   defp handle_mode(0xA, packet, session) do
     {tab, _packet} = get_short(packet)
 
-    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+    with tab when not is_nil(tab) <- Enums.InventoryTab.get_key(tab),
+         {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, items} <- Context.Inventory.sort_tab(character, tab) do
       session
       |> push(Packets.InventoryItem.reset_tab(tab))
@@ -66,6 +68,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
   # Expand
   defp handle_mode(0xB, packet, session) do
     {tab, _packet} = get_byte(packet)
+    tab = Enums.InventoryTab.get_key(tab)
 
     meret_price = -390
 
