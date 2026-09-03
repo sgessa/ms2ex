@@ -17,6 +17,7 @@ config :ms2ex, Ms2ex.Repo,
   hostname: env!("DB_HOST")
 
 server_address = env!("SERVER_ADDRESS", :string)
+web_port = env!("WEB_PORT", :integer, 4000)
 
 config :ms2ex, Ms2ex,
   login: %{host: server_address, port: 8531},
@@ -31,13 +32,13 @@ config :ms2ex, Ms2ex,
   ugc: %{
     # the client resolves upload paths relative to this url, so it must keep a
     # trailing file segment for the /ugc prefix to survive
-    endpoint: "http://#{server_address}:4000/ugc/ws.asmx?wsdl",
-    resource: "http://#{server_address}:4000/ugc",
+    endpoint: "http://#{server_address}:#{web_port}/ugc/ws.asmx?wsdl",
+    resource: "http://#{server_address}:#{web_port}/ugc",
     locale: "na",
     data_dir: env!("UGC_DATA_DIR", :string, Path.expand("priv/ugc", env_dir_prefix))
   }
 
-config :ms2ex, Ms2exWeb.Endpoint, http: [port: env!("WEB_PORT", :integer, 4000)]
+config :ms2ex, Ms2exWeb.Endpoint, http: [port: web_port]
 
 config :ms2ex, Oban,
   repo: Ms2ex.Repo,
