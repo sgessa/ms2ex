@@ -604,10 +604,11 @@ defmodule Ms2ex.Managers.Inventory do
 
   defp set_lock(state, item, unlock) do
     locked? = not unlock
+    attrs = %{is_locked: locked?, unlocks_at: unlock_time(unlock)}
 
-    case update_item(state, item, %{is_locked: locked?}) do
+    case update_item(state, item, attrs) do
       {{:ok, updated}, state} ->
-        {[Map.put(updated, :unlocks_at, unlock_time(unlock))], state}
+        {[updated], state}
 
       {_error, state} ->
         {[], state}

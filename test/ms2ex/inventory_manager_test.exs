@@ -145,6 +145,14 @@ defmodule Ms2ex.InventoryManagerTest do
     {:ok, [unlocked]} = Managers.Inventory.call(character.id, {:lock_commit, true})
     refute unlocked.is_locked
     refute Repo.reload!(b).is_locked
+
+    # the unlock window is stamped on the item and survives reloads and sorts
+    assert unlocked.unlocks_at != nil
+    assert Repo.reload!(b).unlocks_at != nil
+
+    {:ok, sorted} = Context.Inventory.sort_tab(character, :gear)
+    sorted_b = Enum.find(sorted, &(&1.id == b.id))
+    assert sorted_b.unlocks_at == unlocked.unlocks_at
   end
 
   test "moving an item to equipment keeps the manager and rows coherent", %{

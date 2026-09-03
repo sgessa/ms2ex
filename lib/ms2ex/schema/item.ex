@@ -26,6 +26,7 @@ defmodule Ms2ex.Schema.Item do
     :remaining_trades,
     :stats,
     :transfer_flags,
+    :unlocks_at,
     :ugc
   ]
 
@@ -67,7 +68,7 @@ defmodule Ms2ex.Schema.Item do
     field :times_attr_changed, :integer, virtual: true, default: 0
     field :transfer_flags, EctoTypes.TransferFlags, default: []
     field :ugc, EctoTypes.Term
-    field :unlocks_at, :utc_datetime, virtual: true
+    field :unlocks_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
   end
