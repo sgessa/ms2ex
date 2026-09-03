@@ -1,6 +1,8 @@
 defmodule Ms2exWeb.Ugc.UploadControllerTest do
   use Ms2exWeb.ConnCase, async: false
 
+  import ExUnit.CaptureLog
+
   alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Repo
@@ -124,7 +126,9 @@ defmodule Ms2exWeb.Ugc.UploadControllerTest do
       body =
         envelope(:item, character_id: attacker.id, resource_id: resource.id, id: 11_050_001)
 
-      assert post_upload(conn, body).status == 403
+      log = capture_log(fn -> assert post_upload(conn, body).status == 403 end)
+
+      assert log =~ "Character #{attacker.id} may not write UGC resource #{resource.id}"
       assert Context.Ugc.get(resource.id).path == ""
     end
 
@@ -135,7 +139,7 @@ defmodule Ms2exWeb.Ugc.UploadControllerTest do
       body =
         envelope(:banner, character_id: character.id, resource_id: resource.id, id: 1)
 
-      assert post_upload(conn, body).status == 403
+      capture_log(fn -> assert post_upload(conn, body).status == 403 end)
     end
 
     test "refuses an unknown resource", %{conn: conn} do
