@@ -1,5 +1,21 @@
 defmodule Ms2ex.Formulas.ItemEnchant do
-  @bonus_factors [0.02, 0.04, 0.07, 0.1, 0.14, 0.19, 0.25, 0.32, 0.4, 0.5, 0.64, 0.84, 1.12, 1.5, 2.0]
+  @bonus_factors [
+    0.02,
+    0.04,
+    0.07,
+    0.1,
+    0.14,
+    0.19,
+    0.25,
+    0.32,
+    0.4,
+    0.5,
+    0.64,
+    0.84,
+    1.12,
+    1.5,
+    2.0
+  ]
 
   @spec values(integer(), integer(), integer()) :: [integer() | float()]
   def values(enchant_level, item_type, item_level) do
