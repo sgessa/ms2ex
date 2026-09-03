@@ -273,6 +273,24 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Character-owned inventory manager: `Managers.Inventory`
+  (`inventories:<char_id>`, like the quest manager) owns every item row and
+  tab size of a character in memory — reads from memory, write-through
+  mutations, in-memory slot allocation; `Context.Inventory` delegates to it
+  when alive and falls back to the database otherwise; started at login,
+  stopped on disconnect (item 15 continues from here)
+- Item locks: the inventory lock-mode flow (stage / unstage / commit on
+  recv 0x88) with `is_locked` persisted via a new migration, and the 72-hour
+  unlock window stamped from the server constants on unlock
+- Equip flow fixes found in testing: the displaced item's bag Add is sent
+  after the equipped item's Remove (the swapped order made the client hide
+  the displaced item and later duplicate entries), and the sort/expand
+  handlers resolve the wire tab integer to the tab atom (sorting wiped the
+  tab client-side)
+- Seed test bag: mounts, unequipped gear, spare weapons, consumables and
+  misc stacks for both seeded characters; seeds equip items by explicit slot
+- Dead session returns removed from the game handlers
+
 - User generated content pipeline: UGC send packets (upload acknowledgement,
   path update, profile picture, item/mount/furnishing updates, banner list),
   login and game handlers, an owned `ugc_resources` table, and a Phoenix web
