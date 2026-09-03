@@ -36,6 +36,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x3C => "REQUEST_CHANGE_CHANNEL",
     0x41 => "RIDE",
     0x42 => "RIDE_SYNC",
+    0x47 => "ACHIEVEMENT",
     0x49 => "TAXI",
     0x4B => "REQUEST_WORLD_MAP",
     0x4D => "GROUP_CHAT",

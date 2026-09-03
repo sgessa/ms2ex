@@ -297,8 +297,7 @@ defmodule Ms2ex.Managers.Quest do
 
   @impl true
   def handle_call({:load_quests, session}, _from, state) do
-    # TODO load the persisted exploration progress once field missions land.
-    push(session, Packets.Game.Quest.load_exploration(0))
+    push(session, Packets.Game.Quest.load_exploration(exploration_progress(state)))
 
     # Send quests in batches to avoid large packets
     state.account_quests
@@ -452,6 +451,7 @@ defmodule Ms2ex.Managers.Quest do
 
         if quest.metadata.basic.type == :field_mission do
           update_conditions(character.id, :field_mission)
+          handle_exploration_completion(character, state, new_state)
         end
 
         maybe_push_quest_complete(character, updated_quest, quest.metadata)
@@ -469,6 +469,16 @@ defmodule Ms2ex.Managers.Quest do
     if character.session_pid do
       updated_quest_with_metadata = %{updated_quest | metadata: quest_metadata}
       push(character, Packets.Game.Quest.complete(updated_quest_with_metadata))
+    end
+  end
+
+  defp handle_exploration_completion(character, state, new_state) do
+    progress = exploration_progress(state)
+    new_progress = exploration_progress(new_state)
+
+    if new_progress > progress do
+      push_exploration_progress(character, new_progress)
+      award_exploration_reward(character, new_progress)
     end
   end
 
@@ -585,6 +595,16 @@ defmodule Ms2ex.Managers.Quest do
       ) do
     # Get character for sending packets
     {:ok, character} = Managers.Character.lookup(state.character_id)
+
+    Context.Achievements.progress(
+      character,
+      condition_type,
+      counter,
+      target_string,
+      target_long,
+      code_string,
+      code_long
+    )
 
     # Process character and account quests
     {updated_character_quests, character_updated} =
@@ -717,6 +737,37 @@ defmodule Ms2ex.Managers.Quest do
       spawn(fn ->
         complete(quest.quest_id, character_id)
       end)
+    end
+  end
+
+  defp push_exploration_progress(%{session_pid: nil}, _progress), do: :ok
+
+  defp push_exploration_progress(character, progress) do
+    push(character, Packets.Game.Quest.update_exploration(progress))
+  end
+
+  defp exploration_progress(state) do
+    [state.account_quests, state.character_quests]
+    |> Enum.flat_map(&Map.values/1)
+    |> Enum.count(&(&1.state == :completed and &1.metadata.basic.type == :field_mission))
+    |> Ms2ex.Storage.Tables.FieldMission.reached_progress()
+  end
+
+  defp award_exploration_reward(character, progress) do
+    case Ms2ex.Storage.Tables.FieldMission.get(progress) do
+      %{item: %{id: item_id, amount: amount, rarity: rarity}} when item_id > 0 and amount > 0 ->
+        item = Context.Items.init(item_id, %{amount: amount, rarity: rarity})
+
+        case Context.Inventory.add_item(character, item) do
+          {:ok, result} -> push(character, Packets.InventoryItem.add_item(result, character))
+          _ -> :ok
+        end
+
+      %{stat_points: stat_points} when stat_points > 0 ->
+        Managers.Character.StatPoints.add_stat_point(character, :exploration, stat_points)
+
+      _ ->
+        :ok
     end
   end
 

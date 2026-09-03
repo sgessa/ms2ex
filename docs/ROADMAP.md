@@ -174,8 +174,36 @@ What is still missing:
   and the long-tail condition types
 - selective rewards, mail fallback for full inventories, and the remaining
   reward-side edge cases
-- field-mission exploration progress, chapter rewards, job-advance hooks, and
-  the remaining quest subcommands
+- chapter rewards, job-advance hooks, and the remaining quest subcommands
+
+### 15. Achievements — [Partial]
+
+Achievement metadata is ingested with a condition-type index, and completed
+field missions now activate exploration quests, advance milestone progress and
+deliver configured item or stat-point rewards. Achievement state persists per
+account or character, loads on field entry, receives the existing gameplay
+condition events, records completed grades, supports favorite toggles, and
+allows manual claims for item, title, and stat-point rewards. A claim request
+processes every pending grade.
+
+What is still missing:
+
+- persistence tests for account-wide versus character achievements, progress,
+  completion, and idempotent reward claims
+- emote and skill-point rewards: emotes need an achievement-aware unlock path,
+  while skill points need a trophy source in the character skill-point state
+- client-side unlock rewards (beauty, coloring, and shop unlocks): their
+  persistent unlock models and client update packets are not implemented
+- inventory-full fallback for item rewards: mail has notification packets only;
+  no mail, attachment, or item-delivery persistence exists
+- achievement counters in character/field profile packets and trophy rankings:
+  character trophy aggregates and ranking queries/packets are not implemented
+- condition sources not yet emitted by gameplay systems, including gathering,
+  fishing, breakables, housing, pets, dungeons, PvP, guilds, and masteries
+- achievements tied to those sources cannot progress until their owning
+  gameplay systems emit condition updates
+- applying the `achievements` migration and re-ingesting metadata in each
+  deployment before the feature is enabled
 
 ### 20. User generated content — [Partial]
 

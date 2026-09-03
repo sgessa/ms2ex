@@ -21,6 +21,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
       :ok -> :ok
     end
 
+    Context.Achievements.load(character)
+
     hot_bars = Context.HotBars.list(character)
     push(session, Packets.KeyTable.send_hot_bars(hot_bars))
 
