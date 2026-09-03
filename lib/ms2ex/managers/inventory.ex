@@ -339,7 +339,7 @@ defmodule Ms2ex.Managers.Inventory do
     stacks =
       state.items
       |> Enum.filter(&(&1.location == :inventory and &1.item_id in item_ids))
-      |> Enum.sort_by(& &1.amount)
+      |> Enum.sort_by(&{&1.amount, &1.id})
       |> Enum.group_by(& &1.item_id)
 
     {results, stacks} = take_consumables(consumables, stacks, [])
@@ -356,7 +356,8 @@ defmodule Ms2ex.Managers.Inventory do
       {taken, remaining} = take_from_stacks(item_stacks, amount, [], [])
       stacks = Map.put(stacks, item_id, remaining)
 
-      take_consumables(rest, stacks, [Enum.reverse(taken) | results])
+      # take_from_stacks already returns its results chronologically
+      take_consumables(rest, stacks, [taken | results])
     else
       take_consumables(rest, stacks, results)
     end

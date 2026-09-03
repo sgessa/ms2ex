@@ -5,6 +5,8 @@ defmodule Ms2ex.InventoryManagerTest do
   alias Ms2ex.Managers
   alias Ms2ex.Schema
 
+  setup {Mimic, :set_mimic_global}
+
   @potion_id 5_000_001
   @gear_id 5_000_002
 

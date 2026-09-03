@@ -12,10 +12,8 @@ defmodule Ms2ex.Context.Equips do
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Schema
-  alias Ms2ex.Repo
   alias Ms2ex.Enums
 
-  import Ecto.Query, except: [update: 2]
   import Context.Inventory, only: [update_item: 2, find_first_available_slot: 2]
 
   # looks worn in these slots are discarded when unequipped rather than
@@ -36,13 +34,7 @@ defmodule Ms2ex.Context.Equips do
   """
   @spec list(Schema.Character.t()) :: [Schema.Item.t()]
   def list(%Schema.Character{id: char_id}) do
-    if Managers.Inventory.alive?(char_id) do
-      Managers.Inventory.call(char_id, :list_equips)
-    else
-      Schema.Item
-      |> where([i], i.character_id == ^char_id and i.location == ^:equipment)
-      |> Repo.all()
-    end
+    Managers.Inventory.call(char_id, :list_equips)
   end
 
   @doc """

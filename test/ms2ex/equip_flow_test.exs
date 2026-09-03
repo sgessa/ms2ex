@@ -32,10 +32,10 @@ defmodule Ms2ex.EquipFlowTest do
   end
 
   test "equip then replace keeps bag and equips coherent", %{character: character} do
+    start_managers(character)
+
     a = add_item(character, @gear_a)
     b = add_item(character, @gear_b)
-
-    start_managers(character)
 
     # equip A into its primary slot (7 = SH)
     assert {:ok, char} = Managers.Character.call(character, {:equip_item, a.id, "SH"})
@@ -96,10 +96,11 @@ defmodule Ms2ex.EquipFlowTest do
   end
 
   defp start_managers(character) do
-    # prime the cached equip list the same way login does
-    character = %{character | equips: Context.Equips.list(character)}
     :ok = Managers.Inventory.start(character)
     inv_pid = :erlang.whereis(:"inventories:#{character.id}")
+
+    # prime the cached equip list the same way login does
+    character = %{character | equips: Context.Equips.list(character)}
     {:ok, char_pid} = Managers.Character.start(character)
 
     on_exit(fn ->

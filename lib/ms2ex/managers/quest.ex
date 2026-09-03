@@ -160,6 +160,17 @@ defmodule Ms2ex.Managers.Quest do
     )
   end
 
+  @doc """
+  Stops the quest manager. Quest progress is written through on every
+  mutation, so a plain stop loses nothing.
+  """
+  def stop(character_id) do
+    case Process.whereis(process_name(character_id)) do
+      nil -> :ok
+      pid -> GenServer.stop(pid)
+    end
+  end
+
   # Server Callbacks
 
   @impl true

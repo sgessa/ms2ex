@@ -1,5 +1,6 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Managers.GroupChat
   alias Ms2ex.Managers.Inventory
   alias Ms2ex.Net.SenderSession
@@ -24,6 +25,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
   def cleanup(character) do
     character = %{character | online?: false}
     Inventory.stop(character)
+    Managers.Quest.stop(character.id)
     Context.Field.leave(character)
     notify_party_presence(character)
     notify_friend_presence(character)

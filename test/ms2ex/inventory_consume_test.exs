@@ -1,7 +1,9 @@
 defmodule Ms2ex.Context.InventoryTest do
-  use Ms2ex.DataCase, async: true
+  use Ms2ex.DataCase, async: false
 
   alias Ms2ex.Context
+  alias Ms2ex.Managers
+  alias Ms2ex.Repo
   alias Ms2ex.Schema
 
   setup do
@@ -26,6 +28,22 @@ defmodule Ms2ex.Context.InventoryTest do
       })
 
     %{character: character}
+  end
+
+  # the inventory manager owns the item rows; writes from its process need
+  # sandbox access
+  setup %{character: character} do
+    :ok = Managers.Inventory.start(character)
+
+    Ecto.Adapters.SQL.Sandbox.allow(
+      Repo,
+      self(),
+      :erlang.whereis(:"inventories:#{character.id}")
+    )
+
+    on_exit(fn -> Managers.Inventory.stop(character.id) end)
+
+    :ok
   end
 
   test "consuming an amount spans stacks and deletes emptied ones", %{character: character} do

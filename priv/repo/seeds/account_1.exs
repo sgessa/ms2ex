@@ -42,6 +42,9 @@ staff = Context.Items.init(15260310, %{rarity: 5})
     skin_color: skin_color
   })
 
+# item seeding goes through the inventory manager, like in-game writes
+:ok = Ms2ex.Managers.Inventory.start(char)
+
 {:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
 {:ok, _equip} = Context.Equips.equip(item, :ER)
 
@@ -71,3 +74,5 @@ titles = [10000569, 10000152, 10000570, 10000171, 10000196, 10000195, 10000571, 
 10000603, 10000638, 10000644]
 
 Enum.each(titles, &Ms2ex.Repo.insert(%Schema.CharacterTitle{character_id: char.id, title_id: &1}))
+
+Ms2ex.Managers.Inventory.stop(char.id)

@@ -1,7 +1,7 @@
 # A bag of test items for every seeded character: mounts to ride, unequipped
 # gear to try on, and consumables / misc stacks to use.
 
-alias Ms2ex.{Context, Repo, Schema}
+alias Ms2ex.{Context, Managers, Repo, Schema}
 
 test_bag = [
   # mounts
@@ -21,8 +21,11 @@ test_bag = [
   {:misc, 59_200_001, 99}
 ]
 
+# item seeding goes through the inventory manager, like in-game writes
 Repo.all(Schema.Character)
 |> Enum.each(fn character ->
+  :ok = Managers.Inventory.start(character)
+
   Enum.each(test_bag, fn
     {_kind, item_id} ->
       item = Context.Items.init(item_id, %{rarity: 4, amount: 1})
@@ -32,4 +35,6 @@ Repo.all(Schema.Character)
       item = Context.Items.init(item_id, %{rarity: 4, amount: amount})
       Context.Inventory.add_item(character, item)
   end)
+
+  Managers.Inventory.stop(character.id)
 end)

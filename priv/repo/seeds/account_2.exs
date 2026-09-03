@@ -44,6 +44,9 @@ dagger = Context.Items.init(13_160_311, %{rarity: 5})
     skin_color: skin_color
   })
 
+# item seeding goes through the inventory manager, like in-game writes
+:ok = Ms2ex.Managers.Inventory.start(char)
+
 {:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
 {:ok, _equip} = Context.Equips.equip(item, :ER)
 
@@ -70,3 +73,5 @@ dagger = Context.Items.init(13_160_311, %{rarity: 5})
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, dagger)
 {:ok, _equip} = Context.Equips.equip(item, :RH)
+
+Ms2ex.Managers.Inventory.stop(char.id)

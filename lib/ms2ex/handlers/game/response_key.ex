@@ -25,12 +25,19 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       character =
         auth_data[:character_id]
         |> Context.Characters.get()
-        |> Context.Characters.load_equips()
-        |> Context.Characters.preload([:friends, :stats])
-        |> Context.Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
         |> Map.put(:sender_session_pid, session.sender_pid)
+
+      # the inventory manager must own the item rows before anything reads
+      # them: every Context.Inventory/Equips call below goes through it
+      :ok = Managers.Inventory.start(character)
+
+      character =
+        character
+        |> Context.Characters.load_equips()
+        |> Context.Characters.preload([:friends, :stats])
+        |> Context.Characters.load_skills()
 
       tick = Ms2ex.sync_ticks()
 
@@ -46,7 +53,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end
 
       Managers.Character.start(character)
-      Managers.Inventory.start(character)
       Managers.Character.call(character, :monitor)
 
       character = Context.Characters.preload(character, friends: :rcpt)
