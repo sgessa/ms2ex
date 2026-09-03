@@ -3,11 +3,14 @@ defmodule Ms2ex.Managers.Character do
   use Ms2ex.Managers.Managed, prefix: "characters", key: :id
 
   alias Ms2ex.Context
-  alias Ms2ex.Schema
   alias Ms2ex.Managers.Character
+  alias Ms2ex.Schema
   alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
+
+  @spec lookup(integer()) :: {:ok, Schema.Character.t()} | :error
+  def lookup(character_id), do: call(character_id, :lookup)
 
   # TODO avoid SQL
   @spec lookup_by_name(String.t()) :: {:ok, Schema.Character.t()} | :error

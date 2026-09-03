@@ -38,6 +38,17 @@ defmodule Ms2ex.Managers.Field.Item do
           {_status, item} = result
           push(character, Packets.InventoryItem.add_item(result, character))
           push(character, Packets.InventoryItem.mark_item_new(item))
+
+          # pickup-count quest conditions; code param carries the item id
+          Managers.Quest.update_conditions(
+            character.id,
+            :item_pickup,
+            item.amount,
+            "",
+            0,
+            "",
+            item.item_id
+          )
         end
     end
 

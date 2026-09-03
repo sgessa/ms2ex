@@ -6,7 +6,6 @@ ordered by priority.
 
 Status markers:
 
-- **[Done]** — implemented and wired through metadata + server.
 - **[Partial]** — some pieces are in place; the rest is tracked under the item.
 - **[Open]** — not started.
 
@@ -126,9 +125,99 @@ never implements them either). Field `SkillDamage` broadcasts already reach
 party members byte-correctly, so this is purely the missing server-side
 damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
+### 14. Quest flow — [Partial]
+
+A first quest baseline is wired: quest recv/send opcodes are registered,
+quest-state packets can serialize, character/account quest rows can persist
+(including live condition-counter updates), quest metadata is projected into
+Redis with a quest index, field-enter
+restores quest state plus the basic `map` condition update, NPC interact can
+surface the available-quest list, quest talk scripts drive the dialogue state
+selection (accept/progress/complete), basic auto-start quests are seeded, and
+common reward delivery now covers exp, mesos, treva, rue, and essential item
+grants.
+
+Condition hooks now fire from gameplay: mob kills (`npc`), skill casts
+(`skill`), level ups (`level` / `level_up`), field pickups (`item_pickup`),
+inventory acquisition (`item_add` / `item_exist`), emote use (`emotion`,
+matched on the client-sent animation key), taxi rides, meso pickups, chat,
+tombstone hits, buddy requests and exp gain. Progress matching follows the
+metadata layout: code-parameter id/string containment plus target
+minimum-value / allowed-value gates.
+
+Completion and acceptance commit the quest row, turn-in item consumption
+(`item_exist` conditions) and item rewards atomically in one transaction;
+exp and currencies are granted post-commit. Non-
+forfeitable quests refuse abandon, the expiration sweep drops rows and
+notifies the client, and go-to-npc travel moves the character to the quest's
+destination map.
+What is still missing:
+
+- multi-page npc dialogue walking (Continue tracking) and script functions
+  (rewards/portal/cutscene side effects inside dialogues)
+- interact object lifecycle beyond the state machine: gathering/mastery
+  yields, telescope unlock exp, drop tables and additional effects on
+  interact
+- condition sources for breakables (`breakable_object`), triggers, fishing,
+  and the long-tail condition types
+- selective rewards, mail fallback for full inventories, and the remaining
+  reward-side edge cases
+- field-mission exploration progress, chapter rewards, job-advance hooks, and
+  the remaining quest subcommands
+
+---
+
+## P4 — Architecture
+
+### 15. Character-owned inventory — [Open]
+
+Inventory lives in Postgres behind stateless `Context.Inventory` calls today;
+every item interaction pays a query round-trip and read paths (e.g.
+`item_exist` conditions) re-query rather than trust a cached copy. The
+long-term model is full ownership in memory, genre-standard for MMO servers:
+
+- an `inventory_manager:<char_id>` GenServer (like the quest manager) owning
+  all item reads/writes, loaded on login, write-through on mutation, flushed
+  on logout
+- every call site routed through it: pickup/drop, consume, move/split/merge,
+  equip changes, rewards, and shops/trades/storage/mail as those features
+  arrive
+- the completion-time `Repo.transaction` atomicity (quest row + turn-in
+  consumption + rewards) becomes in-process ordering inside the manager, since
+  a DB transaction cannot span its memory
+- trigger points for doing this: item-flow features landing (shops, trades,
+  storage, mail), `item_exist` checks feeling heavy, or growth beyond a
+  single node
+- explicitly rejected: read-caches layered over the DB — two sources of truth
+  with the classic invalidation bugs, and none of the ownership benefits
+- when this lands, equips fold into it (they are items with
+  `location: :equipment`) rather than keeping a separate equip owner
+
+### 16. Equipment state extraction — [Open]
+
+`character.equips` is kept fresh in the character manager, but only through
+handler-level orchestration: equip/unequip handlers query the inventory,
+mutate via `Context.Equips`, re-query the equip list, re-apply stats, push
+the whole struct back into the manager, and broadcast packets — while
+`character_info` and `item_stats` re-query equips independently.
+
+Extract the domain into a `Managers.Character.Equips` submodule (like
+`.Experience` / `.Stats`): the character process owns the transition and
+returns fresh state, and handlers issue one call instead of orchestrating
+half a dozen context calls. Deliberately a module split, **not** a separate
+GenServer: equips are read constantly by field serialization of other
+players, they are items (see item 15), and a standalone equip process would
+fragment item state across two owners with the sync boundary exactly at the
+hot equip↔inventory transitions.
+
 ---
 
 ## Recently completed
+
+- Quest command surface: forfeit enforcement (non-forfeitable quests refuse
+  abandon), the client expiration sweep (drops persisted rows and acknowledges
+  with the expired-quest packet), and go-to-npc travel to a started quest's
+  destination map
 
 - Mob respawns: mob spawn points refill their population through tick-driven
   spawn cycles, scheduled by mob deaths (wipe → cooldown, partial kill → 2×

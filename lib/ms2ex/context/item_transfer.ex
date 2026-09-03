@@ -9,9 +9,8 @@ defmodule Ms2ex.Context.ItemTransfer do
   `Ms2ex.TransferFlags` and `Ms2ex.EctoTypes.TransferFlags`.
 
   Flags are derived from item metadata (transfer type, trade count, rarity
-  vs trade-max rarity), mirroring the reference `GetTransferFlag` logic.
-  Binding marks an item bound (zeroing remaining trades) when its transfer
-  type requires it.
+  vs trade-max rarity). Binding marks an item bound (zeroing remaining
+  trades) when its transfer type requires it.
   """
 
   alias Ms2ex.Schema

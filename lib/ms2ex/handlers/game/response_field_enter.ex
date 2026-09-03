@@ -1,6 +1,6 @@
 defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
-  alias Ms2ex.Managers
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
 
@@ -16,6 +16,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     run(session, fn -> Context.Field.subscribe(character) end)
     {:ok, _pid} = Context.Field.enter(character)
 
+    case start_quest_manager(character.id) do
+      {:ok, _pid} -> Managers.Quest.load_quests(session)
+      :ok -> :ok
+    end
+
     hot_bars = Context.HotBars.list(character)
     push(session, Packets.KeyTable.send_hot_bars(hot_bars))
 
@@ -24,6 +29,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     favorite_stickers = Context.ChatStickers.list_favorited(character)
     sticker_groups = Context.ChatStickers.list_groups(character)
     push(session, Packets.ChatSticker.load(favorite_stickers, sticker_groups))
+
+    Managers.Quest.update_conditions(character_id, :map, 1, "", 0, "", character.map_id)
   end
 
   defp send_skill_cooldowns(session, character_id) do
@@ -46,5 +53,12 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     |> Map.put(:change_map, nil)
     |> Map.put(:position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
+  end
+
+  defp start_quest_manager(character_id) do
+    case Process.whereis(:"quest_manager:#{character_id}") do
+      nil -> Managers.Quest.start_link(character_id)
+      _ -> :ok
+    end
   end
 end

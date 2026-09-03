@@ -18,11 +18,17 @@ mix format       # format code — ALWAYS run before committing
 ```
 
 Game client metadata comes from Redis, populated by the sibling
-`../ms2ex-file-ingest` Docker tool (see `docs/CLIENT_METADATA.md`). Local runs
+`../ms2ex-file-ingest` tool (see `docs/CLIENT_METADATA.md`). Local runs
 expect a `.env` (see `.env-example`) and a running Redis.
 
+```bash
+cd ../ms2ex-file-ingest
+dotnet run --project src   # re-runs are incremental (checksum per set)
+```
+
 The ingest tool also ships probe flags for inspecting raw client data without
-re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
+re-ingesting (`--probe-...`; prefix with `dotnet run --project src --` for
+host runs):
 
 - `--probe-skill <id,id>` — full skill levels/motions/attacks, incl. each
   on-hit effect's `splash`/`overlap_count`/`fireCount`
@@ -74,12 +80,15 @@ re-ingesting (`docker compose run --rm ms2ex-file-ingest --probe-...`):
 
 ## Architecture notes
 
-- **Never mention the reference implementation in comments or code.**
-  Comments must describe behavior in domain terms only. Never name another
-  implementation, its classes, methods, files, or identifiers (packet
-  builders, serializers, counter names, etc.) anywhere in `lib/` or
-  `config/`. Cross-implementation comparison notes live in a local,
-  git-ignored directory (`docs/internal/`) and must never be committed.
+- **Matching the reference implementation's behavior is the standing,
+  assumed goal — never mention it in comments or code.** Comments must
+  describe behavior in domain terms only (what the server does and why),
+  never attribute it to "the reference", "matching", "mirroring", or any
+  other implementation. Never name another implementation, its classes,
+  methods, files, or identifiers (packet builders, serializers, counter
+  names, etc.) anywhere in `lib/` or `config/`. Cross-implementation
+  comparison notes live in a local, git-ignored directory (`docs/internal/`)
+  and must never be committed.
 
 - **Never commit without explicit approval.** Implement changes, compile,
   and verify, but leave them uncommitted so the user can test against the

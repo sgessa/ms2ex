@@ -3,9 +3,10 @@ defmodule Ms2ex.Storage.Items do
   alias Ms2ex.Storage
 
   def get_meta(item_id) do
-    Storage.get(:item, item_id)
-    |> load_slots()
-    |> load_transfer_type()
+    case Storage.get(:item, item_id) do
+      nil -> nil
+      metadata -> metadata |> load_slots() |> load_transfer_type()
+    end
   end
 
   defp load_slots(%{slot_names: slots} = metadata) do

@@ -16,9 +16,10 @@ defmodule Ms2ex.Context.Taxi do
     |> Kernel.*(-1)
   end
 
+  # costs are negative deltas: the wallet update increments by the value
   def calc_rotor_cost(char_level) do
     level = char_level - 10
     level = if level > 0, do: level, else: 0
-    30_000 + level * 500
+    (30_000 + level * 500) * -1
   end
 end

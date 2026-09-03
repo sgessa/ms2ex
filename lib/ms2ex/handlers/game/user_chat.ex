@@ -30,6 +30,8 @@ defmodule Ms2ex.GameHandlers.UserChat do
         |> Commands.handle(character, session)
 
       _ ->
+        # chat quest conditions gate on the map the message was sent from
+        Managers.Quest.update_conditions(character.id, :chat, 1, "", character.map_id, "", 0)
         handle_message({type, msg, rcpt}, character, session)
     end
   end

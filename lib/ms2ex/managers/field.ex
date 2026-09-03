@@ -31,13 +31,13 @@ defmodule Ms2ex.Managers.Field do
     field_name = Context.Field.field_name(map_id, channel_id)
 
     {local_id_counter, portals} = Field.Portal.load(map_id, @local_id_counter)
-    # {counter, interactable} = load_interactable(map, counter)
+    interactable = Field.InteractObject.load(map_id)
 
     state = %{
       buffs: %{},
       channel_id: channel_id,
       local_id_counter: local_id_counter,
-      interactable: %{},
+      interactable: interactable,
       items: %{},
       map_id: map_id,
       mounts: %{},
@@ -56,14 +56,6 @@ defmodule Ms2ex.Managers.Field do
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
-
-  # defp load_interactable(map, counter) do
-  #   # TODO group these objects by their correct packet type
-  #   Enum.reduce(map.interactable_objects, {counter, %{}}, fn object, {counter, objects} ->
-  #     object = Map.put(object, :object_id, counter)
-  #     {counter + 1, Map.put(objects, object.uuid, object)}
-  #   end)
-  # end
 
   def handle_continue({:add_character, character}, state),
     do: {:noreply, Field.Character.add_character(character, state)}
@@ -91,6 +83,16 @@ defmodule Ms2ex.Managers.Field do
     case Field.Tombstone.hit(object_id, hits, state) do
       {:ok, state} ->
         {:reply, :ok, state}
+
+      {:error, state} ->
+        {:reply, :error, state}
+    end
+  end
+
+  def handle_call({:interact_object, character, uuid}, _from, state) do
+    case Field.InteractObject.react(character, uuid, state) do
+      {:ok, interact_id, state} ->
+        {:reply, {:ok, interact_id}, state}
 
       {:error, state} ->
         {:reply, :error, state}
@@ -192,6 +194,7 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
+    state = Field.InteractObject.tick(state)
     {:noreply, Field.Npc.tick(state)}
   end
 

@@ -129,7 +129,7 @@ defmodule Ms2ex.Packets.Party do
     |> put_short(death_state(character))
   end
 
-  # the reference writes the member's death state (alive, first death, metal);
+  # the packet carries the member's death state (alive, first death, metal);
   # the client uses it to render the party tombstone icon
   defp death_state(%{dead?: false}), do: 0
   defp death_state(%{death_count: count}) when count > 1, do: 2

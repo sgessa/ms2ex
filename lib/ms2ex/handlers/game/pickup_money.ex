@@ -21,6 +21,9 @@ defmodule Ms2ex.GameHandlers.PickupMoney do
     with {:ok, item} <- Context.Field.pickup_item(character, object_id),
          true <- Context.Items.mesos?(item) do
       Context.Wallets.update(character, :mesos, item.amount)
+
+      # meso quest conditions track the picked-up amount
+      Managers.Quest.update_conditions(character.id, :meso, item.amount)
     end
 
     pickup_items(packet, character, count - 1)
