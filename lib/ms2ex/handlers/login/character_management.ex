@@ -33,6 +33,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       %Schema.Character{} ->
         auth_data = %{token_a: Ms2ex.generate_int(), token_b: Ms2ex.generate_int()}
         register_session(account.id, char_id, auth_data)
+        send(self(), {:update, %{character_id: char_id}})
         push(session, Packets.LoginToGame.login(auth_data))
 
       _ ->
@@ -89,6 +90,9 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
     case result do
       {:ok, character} ->
+        # the client uploads the avatar right after creation, against this character
+        send(self(), {:update, %{character_id: character.id}})
+
         session
         |> push(Packets.CharacterMaxCount.set_max(4, 6))
         |> push(Packets.CharacterList.append(character))

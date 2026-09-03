@@ -49,14 +49,9 @@ defmodule Ms2ex.Enum do
       end
 
       def get_key(value) do
-        item =
-          unquote(values)
-          |> Enum.filter(fn {_, v} -> v == value end)
-          |> hd()
-
-        case item do
-          {k, _} -> k
-          _ -> :invalid_enum
+        case Enum.find(unquote(values), fn {_key, val} -> val == value end) do
+          {key, _value} -> key
+          nil -> :invalid_enum
         end
       end
     end

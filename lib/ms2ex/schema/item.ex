@@ -24,7 +24,8 @@ defmodule Ms2ex.Schema.Item do
     :rarity,
     :remaining_trades,
     :stats,
-    :transfer_flags
+    :transfer_flags,
+    :ugc
   ]
 
   @required [:amount, :item_id, :location]
@@ -64,6 +65,7 @@ defmodule Ms2ex.Schema.Item do
     field :target_object_id, :integer, virtual: true
     field :times_attr_changed, :integer, virtual: true, default: 0
     field :transfer_flags, EctoTypes.TransferFlags, default: []
+    field :ugc, EctoTypes.Term
     field :unlocks_at, :utc_datetime, virtual: true
 
     timestamps(type: :utc_datetime)
