@@ -1,0 +1,32 @@
+[33mcommit 91c01219d30d8f7ebf0e7c90477d47cb59cbbf93[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/inventory-manager[m[33m, [m[1;31morigin/feat/inventory-manager[m[33m)[m
+Author: Stefano Gessa <stefano@bootando.com>
+Date:   Fri Sep 4 03:04:43 2026 +0700
+
+    Restore Context.Equips.equip/1 for the seeds
+    
+    The primary-slot convenience was dropped during the equipment state
+    extraction; the seeds equip items without naming a slot. Restored as
+    equip into the first slot the item occupies.
+
+[1mdiff --git a/lib/ms2ex/context/equips.ex b/lib/ms2ex/context/equips.ex[m
+[1mindex 4b425247..8ecaaf0c 100644[m
+[1m--- a/lib/ms2ex/context/equips.ex[m
+[1m+++ b/lib/ms2ex/context/equips.ex[m
+[36m@@ -60,6 +60,17 @@[m [mdefmodule Ms2ex.Context.Equips do[m
+     |> update_item(%{equip_slot: equip_slot, inventory_slot: nil, location: :equipment})[m
+   end[m
+ [m
+[32m+[m[32m  @doc """[m
+[32m+[m[32m  Equips an item into its primary slot (the first slot it occupies).[m
+[32m+[m
+[32m+[m[32m  ## Examples[m
+[32m+[m
+[32m+[m[32m      iex> equip(item)[m
+[32m+[m[32m      {:ok, %Schema.Item{location: :equipment, ...}}[m
+[32m+[m[32m  """[m
+[32m+[m[32m  @spec equip(Schema.Item.t()) :: {:ok, Schema.Item.t()} | {:error, any()}[m
+[32m+[m[32m  def equip(%Schema.Item{metadata: %{slots: [slot | _]}} = item), do: equip(item, slot)[m
+[32m+[m
+   @doc """[m
+   Unequips an item, moving it back to the inventory.[m
+ [m
