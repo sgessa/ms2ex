@@ -46,6 +46,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end
 
       Managers.Character.start(character)
+      Managers.Inventory.start(character)
       Managers.Character.call(character, :monitor)
 
       character = Context.Characters.preload(character, friends: :rcpt)

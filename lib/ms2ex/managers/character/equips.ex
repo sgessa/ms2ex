@@ -241,8 +241,9 @@ defmodule Ms2ex.Managers.Character.Equips do
   end
 
   defp refresh(character) do
-    character
-    |> Context.Characters.load_equips()
+    equips = Context.Equips.list(character)
+
+    %{character | equips: equips}
     |> Context.CharacterStats.apply()
     |> elem(0)
   end

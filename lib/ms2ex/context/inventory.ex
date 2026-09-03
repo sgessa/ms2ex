@@ -25,6 +25,14 @@ defmodule Ms2ex.Context.Inventory do
       nil
   """
   @spec get_by(map()) :: Schema.Item.t() | nil
+  def get_by(%{character_id: character_id, id: id} = attrs) when map_size(attrs) == 2 do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:get, id})
+    else
+      Repo.get_by(Schema.Item, attrs)
+    end
+  end
+
   def get_by(attrs), do: Repo.get_by(Schema.Item, attrs)
 
   @doc """
@@ -37,9 +45,13 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec all(Schema.Character.t()) :: [Schema.Item.t()]
   def all(%Schema.Character{id: character_id}) do
-    Schema.Item
-    |> where([i], i.character_id == ^character_id)
-    |> Repo.all()
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, :all)
+    else
+      Schema.Item
+      |> where([i], i.character_id == ^character_id)
+      |> Repo.all()
+    end
   end
 
   @doc """
@@ -54,10 +66,14 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec list_items(Schema.Character.t()) :: [Schema.Item.t()]
   def list_items(%Schema.Character{id: character_id}) do
-    Schema.Item
-    |> where([i], i.character_id == ^character_id and i.location == ^:inventory)
-    |> order_by(asc: :inventory_slot)
-    |> Repo.all()
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, :list_items)
+    else
+      Schema.Item
+      |> where([i], i.character_id == ^character_id and i.location == ^:inventory)
+      |> order_by(asc: :inventory_slot)
+      |> Repo.all()
+    end
   end
 
   @doc """
@@ -70,10 +86,14 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec list_tabs(Schema.Character.t()) :: [Schema.InventoryTab.t()]
   def list_tabs(%Schema.Character{id: character_id}) do
-    Schema.InventoryTab
-    |> where([i], i.character_id == ^character_id)
-    |> order_by(asc: :tab)
-    |> Repo.all()
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, :list_tabs)
+    else
+      Schema.InventoryTab
+      |> where([i], i.character_id == ^character_id)
+      |> order_by(asc: :tab)
+      |> Repo.all()
+    end
   end
 
   @doc """
@@ -86,11 +106,15 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec list_tab_items(integer(), atom()) :: [Schema.Item.t()]
   def list_tab_items(character_id, tab) do
-    Schema.Item
-    |> where([i], i.character_id == ^character_id)
-    |> where([i], i.location == ^:inventory and i.inventory_tab == ^tab)
-    |> order_by(asc: :inventory_slot)
-    |> Repo.all()
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:list_tab_items, tab})
+    else
+      Schema.Item
+      |> where([i], i.character_id == ^character_id)
+      |> where([i], i.location == ^:inventory and i.inventory_tab == ^tab)
+      |> order_by(asc: :inventory_slot)
+      |> Repo.all()
+    end
   end
 
   @doc """
@@ -121,34 +145,42 @@ defmodule Ms2ex.Context.Inventory do
            {:create, Schema.Item.t()}
            | {:update, Schema.Item.t()}
            | {:update_and_create, {Schema.Item.t(), integer()}, Schema.Item.t()}}
-  # Item is stackable
-  def add_item(%Schema.Character{} = character, %Schema.Item{metadata: %{stack_limit: n}} = attrs)
-      when n > 1 do
-    result =
-      Repo.transaction(fn ->
-        case find_stack(character, attrs) do
-          %Schema.Item{} = item ->
-            update_or_create(character, item, attrs)
-
-          nil ->
-            create(character, attrs)
-        end
-      end)
-
+  def add_item(%Schema.Character{} = character, item) do
+    result = add_item_result(character, item)
     notify_item_added(character, result)
     result
   end
 
-  # Item is not stackable
-  def add_item(%Schema.Character{} = character, %Schema.Item{} = attrs) do
-    case create(character, attrs) do
-      {:create, item} ->
-        result = {:ok, {:create, item}}
-        notify_item_added(character, result)
-        result
+  defp add_item_result(%Schema.Character{id: character_id} = character, item) do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:add_item, item})
+    else
+      add_item_direct(character, item)
+    end
+  end
 
-      other ->
-        other
+  # stackable items merge onto existing stacks
+  defp add_item_direct(
+         %Schema.Character{} = character,
+         %Schema.Item{metadata: %{stack_limit: n}} = attrs
+       )
+       when n > 1 do
+    Repo.transaction(fn ->
+      case find_stack(character, attrs) do
+        %Schema.Item{} = item ->
+          update_or_create(character, item, attrs)
+
+        nil ->
+          create(character, attrs)
+      end
+    end)
+  end
+
+  # Item is not stackable
+  defp add_item_direct(%Schema.Character{} = character, %Schema.Item{} = attrs) do
+    case create(character, attrs) do
+      {:create, item} -> {:ok, {:create, item}}
+      other -> other
     end
   end
 
@@ -250,10 +282,33 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
           {:ok, Schema.Item.t()} | {:error, Ecto.Changeset.t()}
-  def update_item(data, attrs) do
-    data
-    |> Schema.Item.changeset(attrs)
-    |> Repo.update()
+  def update_item(%Schema.Item{id: id, character_id: character_id}, attrs) do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:update_item, id, attrs})
+    else
+      Schema.Item
+      |> where([i], i.id == ^id)
+      |> select([i], i)
+      |> limit(1)
+      |> Repo.one()
+      |> case do
+        %Schema.Item{} = item -> item |> Schema.Item.changeset(attrs) |> Repo.update()
+        nil -> {:error, :not_found}
+      end
+    end
+  end
+
+  def update_item(
+        %Ecto.Changeset{data: %Schema.Item{character_id: character_id}} = changeset,
+        attrs
+      ) do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:update_item_changeset, changeset, attrs})
+    else
+      changeset
+      |> Schema.Item.changeset(attrs)
+      |> Repo.update()
+    end
   end
 
   @doc """
@@ -271,13 +326,19 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec consume(Schema.Item.t(), integer()) ::
           {:update, Schema.Item.t()} | {:delete, Schema.Item.t()}
-  def consume(item, consumed \\ 1)
+  def consume(%Schema.Item{} = item, consumed \\ 1) do
+    if Managers.Inventory.alive?(item.character_id) do
+      Managers.Inventory.call(item.character_id, {:consume, item, consumed})
+    else
+      consume_direct(item, consumed)
+    end
+  end
 
-  def consume(%Schema.Item{amount: amount} = item, consumed) when amount > consumed do
+  defp consume_direct(%Schema.Item{amount: amount} = item, consumed) when amount > consumed do
     update_qty(item, -consumed)
   end
 
-  def consume(%Schema.Item{} = item, _consumed), do: delete(item)
+  defp consume_direct(%Schema.Item{} = item, _consumed), do: delete(item)
 
   @doc """
   Consumes an amount of an item across the character's carry stacks,
@@ -306,7 +367,15 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec consume_item_amounts(Schema.Character.t(), [map()]) ::
           {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
-  def consume_item_amounts(%Schema.Character{} = character, consumables) do
+  def consume_item_amounts(%Schema.Character{id: character_id} = character, consumables) do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:consume_item_amounts, consumables})
+    else
+      consume_item_amounts_direct(character, consumables)
+    end
+  end
+
+  defp consume_item_amounts_direct(%Schema.Character{} = character, consumables) do
     stacks =
       character
       |> owned_stacks(Enum.map(consumables, & &1.item_id))
@@ -366,9 +435,13 @@ defmodule Ms2ex.Context.Inventory do
       {:delete, %Schema.Item{}}
   """
   @spec delete(Schema.Item.t()) :: {:delete, Schema.Item.t()} | {:error, Ecto.Changeset.t()}
-  def delete(%Schema.Item{} = item) do
-    with {:ok, item} <- Repo.delete(item) do
-      {:delete, item}
+  def delete(%Schema.Item{id: id, character_id: character_id} = item) do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:delete, id})
+    else
+      with {:ok, item} <- Repo.delete(item) do
+        {:delete, item}
+      end
     end
   end
 
@@ -420,10 +493,15 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec free_slot_count(integer(), atom()) :: non_neg_integer()
   def free_slot_count(character_id, inventory_tab) do
-    size = tab_size(character_id, inventory_tab)
-    occupied = Enum.count(occupied_slots(character_id, inventory_tab), &(&1 >= 0 and &1 < size))
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:free_slot_count, inventory_tab})
+    else
+      size = tab_size(character_id, inventory_tab)
 
-    max(size - occupied, 0)
+      occupied = Enum.count(occupied_slots(character_id, inventory_tab), &(&1 >= 0 and &1 < size))
+
+      max(size - occupied, 0)
+    end
   end
 
   defp occupied_slots(character_id, inventory_tab) do
@@ -457,11 +535,15 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec item_in_slot(integer(), atom(), integer()) :: Schema.Item.t() | nil
   def item_in_slot(char_id, tab, slot) do
-    Schema.Item
-    |> where([i], i.character_id == ^char_id)
-    |> where([i], i.inventory_tab == ^tab and i.inventory_slot == ^slot)
-    |> limit(1)
-    |> Repo.one()
+    if Managers.Inventory.alive?(char_id) do
+      Managers.Inventory.call(char_id, {:item_in_slot, tab, slot})
+    else
+      Schema.Item
+      |> where([i], i.character_id == ^char_id)
+      |> where([i], i.inventory_tab == ^tab and i.inventory_slot == ^slot)
+      |> limit(1)
+      |> Repo.one()
+    end
   end
 
   @doc """
@@ -473,20 +555,28 @@ defmodule Ms2ex.Context.Inventory do
       {:ok, 0}
   """
   @spec swap(Schema.Item.t(), integer()) :: {:ok, integer()} | {:error, any()}
-  def swap(%Schema.Item{} = src_item, dst_slot) do
-    Repo.transaction(fn ->
-      case item_in_slot(src_item.character_id, src_item.inventory_tab, dst_slot) do
-        %Schema.Item{} = dst_item ->
-          src_slot = src_item.inventory_slot
+  def swap(%Schema.Item{id: id, character_id: character_id} = item, dst_slot) do
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:swap, id, dst_slot})
+    else
+      swap_direct(item, dst_slot)
+    end
+  end
 
-          {:ok, src_item} = update_item(src_item, %{inventory_slot: nil})
-          {:ok, dst_item} = update_item(dst_item, %{inventory_slot: src_slot})
-          {:ok, _src_item} = update_item(src_item, %{inventory_slot: dst_slot})
+  defp swap_direct(%Schema.Item{} = item, dst_slot) do
+    Repo.transaction(fn ->
+      case item_in_slot(item.character_id, item.inventory_tab, dst_slot) do
+        %Schema.Item{} = dst_item ->
+          src_slot = item.inventory_slot
+
+          {:ok, _} = update_item(item, %{inventory_slot: nil})
+          {:ok, _} = update_item(dst_item, %{inventory_slot: src_slot})
+          {:ok, _} = update_item(item, %{inventory_slot: dst_slot})
 
           dst_item.id
 
         nil ->
-          {:ok, _src_item} = update_item(src_item, %{inventory_slot: dst_slot})
+          {:ok, _} = update_item(item, %{inventory_slot: dst_slot})
           0
       end
     end)
@@ -502,13 +592,15 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec expand_tab(Schema.Character.t(), atom()) :: Schema.InventoryTab.t()
   def expand_tab(%Schema.Character{id: character_id}, tab) do
-    extra_slots = 6
+    if Managers.Inventory.alive?(character_id) do
+      Managers.Inventory.call(character_id, {:expand_tab, tab})
+    else
+      Schema.InventoryTab
+      |> where([i], i.character_id == ^character_id and i.tab == ^tab)
+      |> Repo.update_all(inc: [slots: 6])
 
-    Schema.InventoryTab
-    |> where([i], i.character_id == ^character_id and i.tab == ^tab)
-    |> Repo.update_all(inc: [slots: extra_slots])
-
-    Repo.get_by(Schema.InventoryTab, character_id: character_id, tab: tab)
+      Repo.get_by(Schema.InventoryTab, character_id: character_id, tab: tab)
+    end
   end
 
   @doc """
@@ -520,7 +612,15 @@ defmodule Ms2ex.Context.Inventory do
       {:ok, [%Schema.Item{}, ...]}
   """
   @spec sort_tab(Schema.Character.t(), atom()) :: {:ok, [Schema.Item.t()]} | {:error, any()}
-  def sort_tab(%Schema.Character{id: character_id}, inventory_tab) do
+  def sort_tab(%Schema.Character{} = character, inventory_tab) do
+    if Managers.Inventory.alive?(character.id) do
+      Managers.Inventory.call(character.id, {:sort_tab, inventory_tab})
+    else
+      sort_tab_direct(character, inventory_tab)
+    end
+  end
+
+  defp sort_tab_direct(%Schema.Character{id: character_id}, inventory_tab) do
     Repo.transaction(fn ->
       Schema.Item
       |> where([i], i.character_id == ^character_id)
