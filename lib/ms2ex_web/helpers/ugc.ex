@@ -59,7 +59,7 @@ defmodule Ms2exWeb.Helpers.Ugc do
       true ->
         {:ok,
          %{
-           type: ugc_type(type),
+           type: Enums.UgcType.get_key(type),
            character_id: character_id,
            resource_id: resource_id,
            id: id,
@@ -69,10 +69,6 @@ defmodule Ms2exWeb.Helpers.Ugc do
   end
 
   defp parse_upload(_body), do: {:error, :malformed}
-
-  defp ugc_type(value) do
-    Enum.find_value(Enums.UgcType.all_map(), :none, fn {key, val} -> val == value && key end)
-  end
 
   @doc """
   Loads the resource an upload targets, refusing to write to content owned by a

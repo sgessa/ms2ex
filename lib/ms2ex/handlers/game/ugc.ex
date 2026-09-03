@@ -230,10 +230,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
     {account_id, packet} = get_long(packet)
     {character_id, packet} = get_long(packet)
 
-    {%{type: ugc_type(type), account_id: account_id, character_id: character_id}, packet}
-  end
-
-  defp ugc_type(value) do
-    Enum.find_value(Enums.UgcType.all_map(), :none, fn {key, val} -> val == value && key end)
+    {%{type: Enums.UgcType.get_key(type), account_id: account_id, character_id: character_id},
+     packet}
   end
 end
