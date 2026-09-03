@@ -40,7 +40,7 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
       _ -> :ok
     end
 
-    session
+    :ok
   end
 
   # Talk: npc interaction entry point

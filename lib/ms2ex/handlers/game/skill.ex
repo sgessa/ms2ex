@@ -278,7 +278,7 @@ defmodule Ms2ex.GameHandlers.Skill do
         push(session, Packets.InventoryItem.consume(consumed_item))
 
       _ ->
-        session
+        :ok
     end
   end
 end

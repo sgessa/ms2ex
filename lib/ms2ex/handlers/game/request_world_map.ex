@@ -14,5 +14,5 @@ defmodule Ms2ex.GameHandlers.RequestWorldMap do
     push(session, Packets.WorldMap.open())
   end
 
-  defp handle_mode(_mode, session), do: session
+  defp handle_mode(_mode, _session), do: :ok
 end

@@ -32,14 +32,14 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
           )
 
         _ ->
-          session
+          :ok
       end
     else
-      session
+      :ok
     end
   end
 
-  defp handle_change_field(_mode, _packet, session), do: session
+  defp handle_change_field(_mode, _packet, _session), do: :ok
 
   defp find_portal(portals, portal_id) do
     Enum.find(portals, &(&1.id == portal_id))

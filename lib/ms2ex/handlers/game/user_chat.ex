@@ -75,5 +75,5 @@ defmodule Ms2ex.GameHandlers.UserChat do
     end
   end
 
-  defp handle_message(_msg, _character, session), do: session
+  defp handle_message(_msg, _character, _session), do: :ok
 end

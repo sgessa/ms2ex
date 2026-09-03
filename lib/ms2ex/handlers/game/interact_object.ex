@@ -25,7 +25,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
       end
     end
 
-    session
+    :ok
   end
 
   defp complete_interaction(character, uuid) do

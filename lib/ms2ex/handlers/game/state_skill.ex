@@ -21,7 +21,7 @@ defmodule Ms2ex.GameHandlers.StateSkill do
       Managers.Character.call(character, {:cancel_state_skill, :client_request})
     end
 
-    session
+    :ok
   end
 
   defp start_state_skill(packet, character) do

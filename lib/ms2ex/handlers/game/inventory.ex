@@ -80,7 +80,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     end
   end
 
-  defp handle_mode(_mode, _packet, session), do: session
+  defp handle_mode(_mode, _packet, _session), do: :ok
 
   defp update_inventory(session, {:update, item}) do
     push(session, Packets.InventoryItem.update_item(item.id, item.amount))

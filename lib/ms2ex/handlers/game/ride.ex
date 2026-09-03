@@ -61,8 +61,8 @@ defmodule Ms2ex.GameHandlers.Ride do
     Context.Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
   end
 
-  defp handle_mode(_mode, _packet, session) do
-    session
+  defp handle_mode(_mode, _packet, _session) do
+    :ok
   end
 
   defp find_item_in_inventory(character, item_uid) do

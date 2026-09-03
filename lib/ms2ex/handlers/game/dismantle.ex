@@ -90,7 +90,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     Managers.Character.call(character, {:update, %{character | dismantle_inventory: inventory}})
   end
 
-  def handle_mode(_mode, _packet, session), do: session
+  def handle_mode(_mode, _packet, _session), do: :ok
 
   @spec auto_add(term(), Schema.Character.t(), integer(), [Schema.Item.t()]) :: map()
   defp auto_add(session, character, max_rarity, items) do

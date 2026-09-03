@@ -22,5 +22,5 @@ defmodule Ms2ex.GameHandlers.UserEnv do
     end
   end
 
-  defp handle_mode(_mode, _packet, session), do: session
+  defp handle_mode(_mode, _packet, _session), do: :ok
 end

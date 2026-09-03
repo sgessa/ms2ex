@@ -14,7 +14,6 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {slot_name, _packet} = get_ustring(packet)
 
     Managers.Character.call(session.character_id, {:equip_item, id, slot_name})
-    session
   end
 
   # Unequip
@@ -22,9 +21,8 @@ defmodule Ms2ex.GameHandlers.EquipItem do
     {id, _packet} = get_long(packet)
 
     Managers.Character.call(session.character_id, {:unequip_item, id})
-    session
   end
 
   # Swap
-  defp handle_mode(0x2, _packet, session), do: session
+  defp handle_mode(0x2, _packet, _session), do: :ok
 end

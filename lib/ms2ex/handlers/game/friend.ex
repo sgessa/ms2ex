@@ -186,7 +186,7 @@ defmodule Ms2ex.GameHandlers.Friend do
     end
   end
 
-  defp handle_mode(_mode, _packet, session), do: session
+  defp handle_mode(_mode, _packet, _session), do: :ok
 
   defp block(session, character, rcpt, reason) do
     with {:ok, block} <- Context.Friends.block(character, rcpt, reason) do

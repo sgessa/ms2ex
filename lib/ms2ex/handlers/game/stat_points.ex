@@ -34,6 +34,6 @@ defmodule Ms2ex.GameHandlers.StatPoints do
         :ok
     end
 
-    session
+    :ok
   end
 end
