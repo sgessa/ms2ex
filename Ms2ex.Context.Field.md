@@ -275,6 +275,18 @@ remaining and revives the owner when it reaches zero.
     iex> hit_tombstone(character, object_id, hits)
     :ok
 
+# `interact_object`
+
+```elixir
+@spec interact_object(Ms2ex.Schema.Character.t(), String.t()) ::
+  {:ok, integer()} | :error
+```
+
+Completes a player's interaction with a field interact object.
+
+Returns `{:ok, interact_id}` when the object exists on the field so callers
+can progress interact-object quest conditions.
+
 # `leave`
 
 ```elixir

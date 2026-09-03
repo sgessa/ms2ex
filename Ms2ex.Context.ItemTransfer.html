@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-858AE494.js"></script>
+    <script defer src="dist/sidebar_items-740A8587.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -119,9 +119,8 @@ keys (<code class="inline">:tradeable</code>, <code class="inline">:bind_on_loot
 flag atoms (<code class="inline">[:trade, :split]</code>, <code class="inline">[:bind, :limit_trade]</code>, ...). The
 integer bitmask is a storage/packet concern handled by
 <a href="Ms2ex.TransferFlags.html"><code class="inline">Ms2ex.TransferFlags</code></a> and <a href="Ms2ex.EctoTypes.TransferFlags.html"><code class="inline">Ms2ex.EctoTypes.TransferFlags</code></a>.</p><p>Flags are derived from item metadata (transfer type, trade count, rarity
-vs trade-max rarity), mirroring the reference <code class="inline">GetTransferFlag</code> logic.
-Binding marks an item bound (zeroing remaining trades) when its transfer
-type requires it.</p>
+vs trade-max rarity). Binding marks an item bound (zeroing remaining
+trades) when its transfer type requires it.</p>
     </section>
 
 </div>
@@ -187,7 +186,7 @@ trade-max rarity.</p></div>
       <h1 class="signature" translate="no">apply(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_transfer.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_transfer.ex#L27" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -218,7 +217,7 @@ flags (e.g. from commands) are preserved.</p>
       <h1 class="signature" translate="no">flags(transfer_type, zero_trades, below_rarity)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_transfer.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/item_transfer.ex#L50" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

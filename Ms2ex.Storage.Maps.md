@@ -3,6 +3,8 @@
 
 # `get_bounds`
 
+# `get_interact_objects`
+
 # `get_meta`
 
 # `get_mob_spawns`

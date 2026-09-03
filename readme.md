@@ -32,7 +32,7 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ### Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) 1.18
+- [Elixir](https://elixir-lang.org/install.html) 1.20
 - [Docker & Docker Compose](https://docs.docker.com/compose) (optional, but recommended)
 - [PostgreSQL](https://www.postgresql.org/download)
 - [Redis](https://redis.io/download) - Required for game client metadata

@@ -10,9 +10,8 @@ integer bitmask is a storage/packet concern handled by
 `Ms2ex.TransferFlags` and `Ms2ex.EctoTypes.TransferFlags`.
 
 Flags are derived from item metadata (transfer type, trade count, rarity
-vs trade-max rarity), mirroring the reference `GetTransferFlag` logic.
-Binding marks an item bound (zeroing remaining trades) when its transfer
-type requires it.
+vs trade-max rarity). Binding marks an item bound (zeroing remaining
+trades) when its transfer type requires it.
 
 # `apply`
 

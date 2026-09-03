@@ -39,14 +39,20 @@
 - [Ms2ex.GameHandlers.Helper.Party](Ms2ex.GameHandlers.Helper.Party.md)
 - [Ms2ex.GameHandlers.Helper.Session](Ms2ex.GameHandlers.Helper.Session.md)
 - [Ms2ex.GameHandlers.Insignia](Ms2ex.GameHandlers.Insignia.md)
+- [Ms2ex.GameHandlers.InteractObject](Ms2ex.GameHandlers.InteractObject.md): Player interactions with field objects (weeds, telescopes, gathering
+nodes, ...). The client opens the interaction with Start and completes it
+with End; End is what counts towards interact-object quest conditions.
+
 - [Ms2ex.GameHandlers.Inventory](Ms2ex.GameHandlers.Inventory.md)
 - [Ms2ex.GameHandlers.Job](Ms2ex.GameHandlers.Job.md)
 - [Ms2ex.GameHandlers.KeyTable](Ms2ex.GameHandlers.KeyTable.md)
 - [Ms2ex.GameHandlers.LoadUgcMap](Ms2ex.GameHandlers.LoadUgcMap.md)
+- [Ms2ex.GameHandlers.NpcTalk](Ms2ex.GameHandlers.NpcTalk.md): NPC interaction flow (talk + quest selection).
 - [Ms2ex.GameHandlers.Party](Ms2ex.GameHandlers.Party.md)
 - [Ms2ex.GameHandlers.PickupItem](Ms2ex.GameHandlers.PickupItem.md)
 - [Ms2ex.GameHandlers.PickupMoney](Ms2ex.GameHandlers.PickupMoney.md)
 - [Ms2ex.GameHandlers.PremiumClub](Ms2ex.GameHandlers.PremiumClub.md)
+- [Ms2ex.GameHandlers.Quest](Ms2ex.GameHandlers.Quest.md)
 - [Ms2ex.GameHandlers.RequestChangeChannel](Ms2ex.GameHandlers.RequestChangeChannel.md)
 - [Ms2ex.GameHandlers.RequestChangeField](Ms2ex.GameHandlers.RequestChangeField.md)
 - [Ms2ex.GameHandlers.RequestCube](Ms2ex.GameHandlers.RequestCube.md)
@@ -90,6 +96,11 @@
 - [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md)
 - [Ms2ex.Managers.Field.Buff](Ms2ex.Managers.Field.Buff.md)
 - [Ms2ex.Managers.Field.Character](Ms2ex.Managers.Field.Character.md)
+- [Ms2ex.Managers.Field.InteractObject](Ms2ex.Managers.Field.InteractObject.md): Interact-object lifecycle: objects start Normal, become Reactable on the
+first tick, and flip back to Normal when a player interacts. Exhausted
+objects (react count reached) hide permanently, unless a hide delay is
+configured. Normal objects return to Reactable after their reset time.
+
 - [Ms2ex.Managers.Field.Item](Ms2ex.Managers.Field.Item.md)
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
 - [Ms2ex.Managers.Field.Portal](Ms2ex.Managers.Field.Portal.md)
@@ -100,6 +111,11 @@
 - [Ms2ex.Managers.Managed](Ms2ex.Managers.Managed.md)
 - [Ms2ex.Managers.PartyManager](Ms2ex.Managers.PartyManager.md)
 - [Ms2ex.Managers.PartyServer](Ms2ex.Managers.PartyServer.md)
+- [Ms2ex.Managers.Quest](Ms2ex.Managers.Quest.md): GenServer to manage quest state for a character.
+- [Ms2ex.Managers.Quest.Conditions](Ms2ex.Managers.Quest.Conditions.md): Quest condition helpers.
+- [Ms2ex.Managers.Quest.Requirements](Ms2ex.Managers.Quest.Requirements.md): Functions for checking if quest requirements are met.
+- [Ms2ex.Managers.Quest.Rewards](Ms2ex.Managers.Quest.Rewards.md): Quest reward helpers.
+- [Ms2ex.Managers.Quest.State](Ms2ex.Managers.Quest.State.md): Helper functions for managing quest state.
 - [Ms2ex.Managers.Session](Ms2ex.Managers.Session.md)
 - [Ms2ex.Managers.SessionManager](Ms2ex.Managers.SessionManager.md)
 - [Ms2ex.Managers.SkillCast](Ms2ex.Managers.SkillCast.md)
@@ -110,6 +126,8 @@
 - [Ms2ex.Storage.Items](Ms2ex.Storage.Items.md)
 - [Ms2ex.Storage.Maps](Ms2ex.Storage.Maps.md)
 - [Ms2ex.Storage.Npcs](Ms2ex.Storage.Npcs.md)
+- [Ms2ex.Storage.Quests](Ms2ex.Storage.Quests.md)
+- [Ms2ex.Storage.Scripts](Ms2ex.Storage.Scripts.md): NPC / quest talk-script metadata lookups (`script:<id>` documents).
 - [Ms2ex.Storage.Skills](Ms2ex.Storage.Skills.md)
 - [Ms2ex.Storage.Table.MagicPaths](Ms2ex.Storage.Table.MagicPaths.md)
 - [Ms2ex.Storage.Tables.ChatStickers](Ms2ex.Storage.Tables.ChatStickers.md)
@@ -118,6 +136,7 @@
 - [Ms2ex.Storage.Tables.GlobalDropItemBox](Ms2ex.Storage.Tables.GlobalDropItemBox.md)
 - [Ms2ex.Storage.Tables.IndividualDropItem](Ms2ex.Storage.Tables.IndividualDropItem.md)
 - [Ms2ex.Storage.Tables.Insignias](Ms2ex.Storage.Tables.Insignias.md)
+- [Ms2ex.Storage.Tables.InteractObjects](Ms2ex.Storage.Tables.InteractObjects.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
 - [Ms2ex.Storage.Tables.UserStats](Ms2ex.Storage.Tables.UserStats.md)
@@ -139,6 +158,7 @@ as controllers, views, channels and so on.
   - [Ms2ex.Schema.Account](Ms2ex.Schema.Account.md)
   - [Ms2ex.Schema.AccountWallet](Ms2ex.Schema.AccountWallet.md)
   - [Ms2ex.Schema.Character](Ms2ex.Schema.Character.md)
+  - [Ms2ex.Schema.CharacterQuest](Ms2ex.Schema.CharacterQuest.md): Schema for character quests.
   - [Ms2ex.Schema.CharacterStats](Ms2ex.Schema.CharacterStats.md)
   - [Ms2ex.Schema.CharacterTitle](Ms2ex.Schema.CharacterTitle.md)
   - [Ms2ex.Schema.ChatStickerGroup](Ms2ex.Schema.ChatStickerGroup.md)
@@ -165,6 +185,13 @@ as controllers, views, channels and so on.
   - [Ms2ex.Enums.ItemType](Ms2ex.Enums.ItemType.md)
   - [Ms2ex.Enums.Job](Ms2ex.Enums.Job.md)
   - [Ms2ex.Enums.PartyNotice](Ms2ex.Enums.PartyNotice.md)
+  - [Ms2ex.Enums.QuestConditionType](Ms2ex.Enums.QuestConditionType.md): Quest/achievement condition type ids as used in metadata documents.
+
+  - [Ms2ex.Enums.QuestError](Ms2ex.Enums.QuestError.md): Quest error codes sent to the client when quest operations fail.
+
+  - [Ms2ex.Enums.QuestRemoteType](Ms2ex.Enums.QuestRemoteType.md)
+  - [Ms2ex.Enums.QuestState](Ms2ex.Enums.QuestState.md): Quest progression states as serialized in quest packets and rows.
+
   - [Ms2ex.Enums.RegionType](Ms2ex.Enums.RegionType.md)
   - [Ms2ex.Enums.SkillRank](Ms2ex.Enums.SkillRank.md)
   - [Ms2ex.Enums.SpecialStatType](Ms2ex.Enums.SpecialStatType.md)
@@ -187,6 +214,28 @@ as controllers, views, channels and so on.
   - [Ms2ex.Types.ItemStats](Ms2ex.Types.ItemStats.md)
   - [Ms2ex.Types.Npc](Ms2ex.Types.Npc.md)
   - [Ms2ex.Types.Party](Ms2ex.Types.Party.md)
+  - [Ms2ex.Types.Quest.Metadata](Ms2ex.Types.Quest.Metadata.md): Structure of quest metadata documents projected into Redis.
+
+  - [Ms2ex.Types.Quest.Metadata.Basic](Ms2ex.Types.Quest.Metadata.Basic.md): Basic quest information.
+
+  - [Ms2ex.Types.Quest.Metadata.ConditionMetadata](Ms2ex.Types.Quest.Metadata.ConditionMetadata.md): Quest condition metadata.
+
+  - [Ms2ex.Types.Quest.Metadata.Dispatch](Ms2ex.Types.Quest.Metadata.Dispatch.md): Quest dispatch configuration.
+
+  - [Ms2ex.Types.Quest.Metadata.GoToNpc](Ms2ex.Types.Quest.Metadata.GoToNpc.md): Go to NPC quest configuration.
+
+  - [Ms2ex.Types.Quest.Metadata.RemoteAccept](Ms2ex.Types.Quest.Metadata.RemoteAccept.md): Remote quest accept configuration.
+
+  - [Ms2ex.Types.Quest.Metadata.RemoteComplete](Ms2ex.Types.Quest.Metadata.RemoteComplete.md): Remote quest completion configuration.
+
+  - [Ms2ex.Types.Quest.Metadata.Require](Ms2ex.Types.Quest.Metadata.Require.md): Quest requirements.
+
+  - [Ms2ex.Types.Quest.Metadata.Reward](Ms2ex.Types.Quest.Metadata.Reward.md): Quest reward information.
+
+  - [Ms2ex.Types.Quest.Metadata.Reward.Item](Ms2ex.Types.Quest.Metadata.Reward.Item.md): Quest item reward.
+
+  - [Ms2ex.Types.Quest.Metadata.SummonPortal](Ms2ex.Types.Quest.Metadata.SummonPortal.md): Portal summoning configuration.
+
   - [Ms2ex.Types.QuickSlot](Ms2ex.Types.QuickSlot.md)
   - [Ms2ex.Types.SkillCast](Ms2ex.Types.SkillCast.md)
   - [Ms2ex.Types.SkinColor](Ms2ex.Types.SkinColor.md)
@@ -224,6 +273,8 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.MapBlock](Ms2ex.Context.MapBlock.md)
   - [Ms2ex.Context.Mobs](Ms2ex.Context.Mobs.md)
   - [Ms2ex.Context.PremiumMemberships](Ms2ex.Context.PremiumMemberships.md)
+  - [Ms2ex.Context.Quests](Ms2ex.Context.Quests.md): Quest persistence helpers.
+
   - [Ms2ex.Context.SkillTabs](Ms2ex.Context.SkillTabs.md)
   - [Ms2ex.Context.Skills](Ms2ex.Context.Skills.md)
   - [Ms2ex.Context.StatPoints](Ms2ex.Context.StatPoints.md)
@@ -245,7 +296,6 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Net.Utils](Ms2ex.Net.Utils.md)
 
 - Packets
-  - [Ms2ex.Packets.AddInteractObjects](Ms2ex.Packets.AddInteractObjects.md)
   - [Ms2ex.Packets.AddPortal](Ms2ex.Packets.AddPortal.md)
   - [Ms2ex.Packets.BannerList](Ms2ex.Packets.BannerList.md)
   - [Ms2ex.Packets.Breakable](Ms2ex.Packets.Breakable.md)
@@ -277,12 +327,16 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.Friend](Ms2ex.Packets.Friend.md)
   - [Ms2ex.Packets.FunctionCube](Ms2ex.Packets.FunctionCube.md)
   - [Ms2ex.Packets.FurnishingInventory](Ms2ex.Packets.FurnishingInventory.md)
+  - [Ms2ex.Packets.Game.Quest](Ms2ex.Packets.Game.Quest.md)
   - [Ms2ex.Packets.GameToGame](Ms2ex.Packets.GameToGame.md)
   - [Ms2ex.Packets.GameToLogin](Ms2ex.Packets.GameToLogin.md)
   - [Ms2ex.Packets.GroupChat](Ms2ex.Packets.GroupChat.md)
   - [Ms2ex.Packets.HomeCommand](Ms2ex.Packets.HomeCommand.md)
   - [Ms2ex.Packets.InGameRank](Ms2ex.Packets.InGameRank.md)
   - [Ms2ex.Packets.Insignia](Ms2ex.Packets.Insignia.md)
+  - [Ms2ex.Packets.InteractObject](Ms2ex.Packets.InteractObject.md): Interact-object frames: field objects the client renders and lets players
+interact with (weeds, telescopes, gathering nodes, ...).
+
   - [Ms2ex.Packets.InventoryItem](Ms2ex.Packets.InventoryItem.md)
   - [Ms2ex.Packets.Job](Ms2ex.Packets.Job.md)
   - [Ms2ex.Packets.KeyTable](Ms2ex.Packets.KeyTable.md)
@@ -302,6 +356,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.MoveCharacter](Ms2ex.Packets.MoveCharacter.md)
   - [Ms2ex.Packets.MoveResult](Ms2ex.Packets.MoveResult.md)
   - [Ms2ex.Packets.Notice](Ms2ex.Packets.Notice.md)
+  - [Ms2ex.Packets.NpcTalk](Ms2ex.Packets.NpcTalk.md): NpcTalk packet builders.
   - [Ms2ex.Packets.NpsInfo](Ms2ex.Packets.NpsInfo.md)
   - [Ms2ex.Packets.Ops.Recv](Ms2ex.Packets.Ops.Recv.md)
   - [Ms2ex.Packets.Ops.Send](Ms2ex.Packets.Ops.Send.md)

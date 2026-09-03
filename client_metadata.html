@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-858AE494.js"></script>
+    <script defer src="dist/sidebar_items-740A8587.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -113,15 +113,18 @@ MS2EX
 extracted from Maple2's <code class="inline">Maple2.File.Ingest</code>) parses the client archives and
 writes ETF-encoded documents <strong>directly to Redis</strong> — no MySQL involved.</p></li><li><p><strong>Server Usage</strong>: MS2EX lazily loads documents from Redis into ETS on first
 access (<a href="Ms2ex.Storage.html"><code class="inline">Ms2ex.Storage</code></a>). Data is immutable while the server runs; keys
-missing from Redis are negatively cached.</p></li></ol><pre><code class="makeup elixir" translate="no"><span class="n">client</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="p" data-group-id="4837518549-1">(</span><span class="n">m2d</span><span class="p" data-group-id="4837518549-1">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">ingest</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nc">Redis</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span></code></pre><h2 id="setup" class="section-heading"><a href="#setup" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Setup</span></h2><pre><code class="makeup bash" translate="no"><span class="">cd ms2ex-file-ingest
-</span><span class="">cp .env-example .env    # point MS2_DATA_FOLDER at your client folder
-</span><span class="">docker compose build
-</span><span class="">docker compose run --rm ms2ex-file-ingest
+missing from Redis are negatively cached.</p></li></ol><pre><code class="makeup elixir" translate="no"><span class="n">client</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="p" data-group-id="1702564842-1">(</span><span class="n">m2d</span><span class="p" data-group-id="1702564842-1">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">ingest</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nc">Redis</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ms2ex</span></code></pre><h2 id="setup" class="section-heading"><a href="#setup" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Setup</span></h2><pre><code class="makeup bash" translate="no"><span class="">  cd ms2ex-file-ingest
+</span><span class="">  cp .env-example .env
+</span><span class="">  dotnet run --project src
+</span></code></pre><p>See <a href="readme.html">ms2ex-file-ingest README</a> for details.</p><h3 id="verifying-ingested-content" class="section-heading"><a href="#verifying-ingested-content" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Verifying ingested content</span></h3><p>From the ms2ex worktree (Redis settings come from <code class="inline">.env</code>):</p><pre><code class="makeup bash" translate="no"><span class="">mix run -e &#39;
+</span><span class="">{:ok, keys} = Redix.command(Ms2ex.Redix, [&quot;KEYS&quot;, &quot;script:*&quot;])
+</span><span class="">IO.puts(&quot;script docs: #{length(keys)}&quot;)
+</span><span class="">&#39;
 </span></code></pre><p>Re-runs are incremental: each set carries a CRC32C checksum in the Redis hash
 <code class="inline">ingest:checksum</code> and unchanged sets are skipped. Use <code class="inline">--drop-data</code> to force a
-full re-write.</p><p>See <a href="readme.html">ms2ex-file-ingest README</a> for details.</p><h2 id="what-gets-ingested" class="section-heading"><a href="#what-gets-ingested" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">What gets ingested</span></h2><table><thead><tr><th style="text-align: left;">Redis set</th><th style="text-align: left;">Contents</th></tr></thead><tbody><tr><td style="text-align: left;"><code class="inline">item:&lt;id&gt;</code></td><td style="text-align: left;">slots, limits, options, functions, box contents</td></tr><tr><td style="text-align: left;"><code class="inline">npc:&lt;id&gt;</code></td><td style="text-align: left;">basic/class/level, model, stats</td></tr><tr><td style="text-align: left;"><code class="inline">skill:&lt;id&gt;</code></td><td style="text-align: left;">properties + per-level data</td></tr><tr><td style="text-align: left;"><code class="inline">additional-effect:</code></td><td style="text-align: left;">buff properties, shield, status values</td></tr><tr><td style="text-align: left;"><code class="inline">map:&lt;id&gt;</code></td><td style="text-align: left;">boundings, spawns, portals</td></tr><tr><td style="text-align: left;"><code class="inline">table:&lt;filename&gt;</code></td><td style="text-align: left;">job.xml, itemoption*.xml, nametagsymbol.xml, magicpath.xml, chatemoticon.xml, exp*.xml</td></tr></tbody></table><p>Values are Erlang external term format (ETF) with atom keys, decoded with
+full re-write.</p><p>Values are Erlang external term format (ETF) with atom keys, decoded with
 <a href="https://www.erlang.org/doc/apps/erts/erlang.html#binary_to_term/1"><code class="inline">:erlang.binary_to_term/1</code></a>. The map encoding follows OTP 28's layout — the
-server must run on OTP &gt;= 28.</p><h2 id="troubleshooting" class="section-heading"><a href="#troubleshooting" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Troubleshooting</span></h2><p>If MS2EX fails to start or exhibits unexpected behavior, verify that:</p><ul><li>Redis is running and accessible (connection settings in <code class="inline">config/dev.exs</code>)</li><li>The ingest has been run against that Redis instance</li><li>The client data folder contains all three m2d archives</li></ul>
+server must run on OTP &gt;= 28.</p>
 
 </div>
 

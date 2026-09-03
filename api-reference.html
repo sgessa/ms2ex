@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-858AE494.js"></script>
+    <script defer src="dist/sidebar_items-740A8587.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -343,6 +343,15 @@ skills, then applies them to a character's stats.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Context.Quests.html" translate="no">Ms2ex.<wbr />Context.<wbr />Quests</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest persistence helpers.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Context.SkillTabs.html" translate="no">Ms2ex.<wbr />Context.<wbr />SkillTabs</a>
 
   </div>
@@ -572,6 +581,40 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Enums.QuestConditionType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />QuestConditionType</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest/achievement condition type ids as used in metadata documents.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.QuestError.html" translate="no">Ms2ex.<wbr />Enums.<wbr />QuestError</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest error codes sent to the client when quest operations fail.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.QuestRemoteType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />QuestRemoteType</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.QuestState.html" translate="no">Ms2ex.<wbr />Enums.<wbr />QuestState</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest progression states as serialized in quest packets and rows.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Enums.RegionType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />RegionType</a>
 
   </div>
@@ -768,6 +811,17 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.InteractObject.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />InteractObject</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Player interactions with field objects (weeds, telescopes, gathering
+nodes, ...). The client opens the interaction with Start and completes it
+with End; End is what counts towards interact-object quest conditions.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.Inventory.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Inventory</a>
 
   </div>
@@ -796,6 +850,15 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.NpcTalk.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />NpcTalk</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>NPC interaction flow (talk + quest selection).</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.Party.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Party</a>
 
   </div>
@@ -818,6 +881,13 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.PremiumClub.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />PremiumClub</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.Quest.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Quest</a>
 
   </div>
 
@@ -1127,6 +1197,18 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Managers.Field.InteractObject.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />InteractObject</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Interact-object lifecycle: objects start Normal, become Reactable on the
+first tick, and flip back to Normal when a player interacts. Exhausted
+objects (react count reached) hide permanently, unless a hide delay is
+configured. Normal objects return to Reactable after their reset time.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Managers.Field.Item.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Item</a>
 
   </div>
@@ -1197,6 +1279,51 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Managers.Quest.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Quest</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>GenServer to manage quest state for a character.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Quest.Conditions.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Quest.<wbr />Conditions</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest condition helpers.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Quest.Requirements.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Quest.<wbr />Requirements</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Functions for checking if quest requirements are met.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Quest.Rewards.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Quest.<wbr />Rewards</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest reward helpers.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Quest.State.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Quest.<wbr />State</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Helper functions for managing quest state.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Managers.Session.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Session</a>
 
   </div>
@@ -1260,13 +1387,6 @@ every packet is written regardless of the console <code class="inline">skip_pack
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Packets.html" translate="no">Ms2ex.<wbr />Packets</a>
-
-  </div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Ms2ex.Packets.AddInteractObjects.html" translate="no">Ms2ex.<wbr />Packets.<wbr />AddInteractObjects</a>
 
   </div>
 
@@ -1490,6 +1610,13 @@ every packet is written regardless of the console <code class="inline">skip_pack
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Packets.Game.Quest.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Game.<wbr />Quest</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Packets.GameToGame.html" translate="no">Ms2ex.<wbr />Packets.<wbr />GameToGame</a>
 
   </div>
@@ -1528,6 +1655,16 @@ every packet is written regardless of the console <code class="inline">skip_pack
     <a href="Ms2ex.Packets.Insignia.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Insignia</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.InteractObject.html" translate="no">Ms2ex.<wbr />Packets.<wbr />InteractObject</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Interact-object frames: field objects the client renders and lets players
+interact with (weeds, telescopes, gathering nodes, ...).</p></div>
 
 </div>
 <div class="summary-row">
@@ -1661,6 +1798,15 @@ every packet is written regardless of the console <code class="inline">skip_pack
     <a href="Ms2ex.Packets.Notice.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Notice</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.NpcTalk.html" translate="no">Ms2ex.<wbr />Packets.<wbr />NpcTalk</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>NpcTalk packet builders.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2071,6 +2217,15 @@ every packet is written regardless of the console <code class="inline">skip_pack
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Schema.CharacterQuest.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterQuest</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Schema for character quests.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Schema.CharacterStats.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterStats</a>
 
   </div>
@@ -2192,6 +2347,22 @@ every packet is written regardless of the console <code class="inline">skip_pack
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Storage.Quests.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Quests</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Storage.Scripts.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Scripts</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>NPC / quest talk-script metadata lookups (<code class="inline">script:&lt;id&gt;</code> documents).</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Storage.Skills.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Skills</a>
 
   </div>
@@ -2242,6 +2413,13 @@ every packet is written regardless of the console <code class="inline">skip_pack
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Storage.Tables.Insignias.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />Insignias</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Storage.Tables.InteractObjects.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />InteractObjects</a>
 
   </div>
 
@@ -2372,6 +2550,105 @@ every packet is written regardless of the console <code class="inline">skip_pack
     <a href="Ms2ex.Types.Party.html" translate="no">Ms2ex.<wbr />Types.<wbr />Party</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Structure of quest metadata documents projected into Redis.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.Basic.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />Basic</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Basic quest information.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.ConditionMetadata.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />ConditionMetadata</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest condition metadata.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.Dispatch.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />Dispatch</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest dispatch configuration.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.GoToNpc.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />GoToNpc</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Go to NPC quest configuration.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.RemoteAccept.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />RemoteAccept</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Remote quest accept configuration.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.RemoteComplete.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />RemoteComplete</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Remote quest completion configuration.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.Require.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />Require</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest requirements.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.Reward.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />Reward</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest reward information.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.Reward.Item.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />Reward.<wbr />Item</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Quest item reward.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.Quest.Metadata.SummonPortal.html" translate="no">Ms2ex.<wbr />Types.<wbr />Quest.<wbr />Metadata.<wbr />SummonPortal</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Portal summoning configuration.</p></div>
 
 </div>
 <div class="summary-row">

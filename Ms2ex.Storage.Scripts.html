@@ -8,11 +8,11 @@
     <meta name="project" content="MS2EX v0.1.0">
 
 
-    <title>Ms2ex.Packets.AddInteractObjects — MS2EX v0.1.0</title>
+    <title>Ms2ex.Storage.Scripts — MS2EX v0.1.0</title>
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-858AE494.js"></script>
+    <script defer src="dist/sidebar_items-740A8587.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -93,25 +93,29 @@ MS2EX
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">Ms2ex.<wbr />Packets.<wbr />AddInteractObjects</span> 
+      <span translate="no">Ms2ex.<wbr />Storage.<wbr />Scripts</span> 
       <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
 
     </h1>
 
-<a href="Ms2ex.Packets.AddInteractObjects.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+<a href="Ms2ex.Storage.Scripts.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
   <i class="ri-markdown-line" aria-hidden="true"></i>
   <span class="sr-only">Copy Markdown</span>
 </a>
 
 
 
-      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/add_interact_objects.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/scripts.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
   </div>
 
+
+    <section id="moduledoc">
+<p>NPC / quest talk-script metadata lookups (<code class="inline">script:&lt;id&gt;</code> documents).</p><p>NPC scripts are keyed by npc id, quest scripts by quest id.</p>
+    </section>
 
 </div>
 
@@ -129,9 +133,39 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bytes/1" data-no-tooltip="" translate="no">bytes(objects)</a>
+        <a href="#get_meta/1" data-no-tooltip="" translate="no">get_meta(id)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#quest_state/3" data-no-tooltip="" translate="no">quest_state(script, lower_bound, upper_bound)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Finds the first state in <code class="inline">lower_bound..upper_bound</code> (matching the quest
+script state-id convention: 100s accept, 200s progress, 300s complete).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#states/1" data-no-tooltip="" translate="no">states(script)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#states_of_type/2" data-no-tooltip="" translate="no">states_of_type(script, type)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists states of the given script-type atom (<code class="inline">:quest</code>, <code class="inline">:script</code>, <code class="inline">:select</code>,
+<code class="inline">:job</code>), sorted by state id.</p></div>
 
     </div>
 
@@ -149,17 +183,17 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="bytes/1">
+<section class="detail" id="get_meta/1">
 
   <div class="detail-header">
-    <a href="#bytes/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#get_meta/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">bytes(objects)</h1>
+      <h1 class="signature" translate="no">get_meta(id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/add_interact_objects.ex#L4" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/scripts.ex#L11" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -168,7 +202,99 @@ MS2EX
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> get_meta(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="quest_state/3">
+
+  <div class="detail-header">
+    <a href="#quest_state/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">quest_state(script, lower_bound, upper_bound)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/scripts.ex#L22" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> quest_state(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil</pre>
+
+      </div>
+
+<p>Finds the first state in <code class="inline">lower_bound..upper_bound</code> (matching the quest
+script state-id convention: 100s accept, 200s progress, 300s complete).</p>
+  </section>
+</section>
+<section class="detail" id="states/1">
+
+  <div class="detail-header">
+    <a href="#states/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">states(script)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/scripts.ex#L52" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> states(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="states_of_type/2">
+
+  <div class="detail-header">
+    <a href="#states_of_type/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">states_of_type(script, type)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/scripts.ex#L44" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> states_of_type(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]</pre>
+
+      </div>
+
+<p>Lists states of the given script-type atom (<code class="inline">:quest</code>, <code class="inline">:script</code>, <code class="inline">:select</code>,
+<code class="inline">:job</code>), sorted by state id.</p>
   </section>
 </section>
 

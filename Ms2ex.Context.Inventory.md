@@ -71,6 +71,33 @@ Reduces the item amount by the consumed amount, or deletes the item if amount wo
     iex> consume(item, 5)
     {:delete, %Schema.Item{}}
 
+# `consume_item_amount`
+
+```elixir
+@spec consume_item_amount(Ms2ex.Schema.Character.t(), integer(), integer()) ::
+  {:ok, update: Ms2ex.Schema.Item.t(), delete: Ms2ex.Schema.Item.t()}
+  | {:error, :insufficient_amount}
+```
+
+Consumes an amount of an item across the character's carry stacks,
+deleting stacks emptied by the consumption. Must run inside the caller's
+transaction when atomicity matters. Returns per-stack results for
+inventory packets; `{:error, :insufficient_amount}` when the character
+holds fewer than the requested amount.
+
+# `consume_item_amounts`
+
+```elixir
+@spec consume_item_amounts(Ms2ex.Schema.Character.t(), [map()]) ::
+  {:ok, update: Ms2ex.Schema.Item.t(), delete: Ms2ex.Schema.Item.t()}
+```
+
+Consumes each `%{item_id, amount}` pair from the character's carry stacks,
+loading every needed stack with a single query and deleting stacks emptied
+by the consumption. Pairs the inventory cannot cover are skipped so callers
+can keep processing (the completion counter no longer matches the live
+inventory in that case).
+
 # `delete`
 
 ```elixir

@@ -19,6 +19,12 @@ See `Supervisor`.
 
 # `init`
 
+# `lookup`
+
+```elixir
+@spec lookup(integer()) :: {:ok, Ms2ex.Schema.Character.t()} | :error
+```
+
 # `lookup_by_name`
 
 ```elixir
