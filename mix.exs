@@ -91,9 +91,19 @@ defmodule Ms2ex.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      "ecto.setup": ["ecto.create", "ecto.migrate", &run_seeds_in_fresh_vm/1],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test", "credo"]
     ]
+  end
+
+  defp run_seeds_in_fresh_vm(_args) do
+    env = [{"MIX_ENV", Atom.to_string(Mix.env())}]
+    opts = [env: env, into: IO.stream(:stdio, :line), stderr_to_stdout: true]
+
+    case System.cmd("mix", ["run", "priv/repo/seeds.exs"], opts) do
+      {_output, 0} -> :ok
+      {_output, status} -> Mix.raise("seed command failed with status #{status}")
+    end
   end
 end
