@@ -10,7 +10,8 @@ defmodule Ms2ex.GameHandlers.PickupItem do
 
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
-    # TODO check that user inventory is not full
+    # a full inventory leaves the drop on the field; the field manager
+    # removes it only when the pickup succeeded
     Context.Field.pickup_item(character, object_id)
   end
 end

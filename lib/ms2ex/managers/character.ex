@@ -112,6 +112,24 @@ defmodule Ms2ex.Managers.Character do
   end
 
   # --------------------------------
+  # Equips
+  # --------------------------------
+
+  def handle_call({:equip_item, item_id, slot_name}, _from, character) do
+    case Character.Equips.equip(character, item_id, slot_name) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:unequip_item, item_id}, _from, character) do
+    case Character.Equips.unequip(character, item_id) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  # --------------------------------
   # Skills
   # --------------------------------
 
