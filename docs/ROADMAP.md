@@ -191,6 +191,25 @@ long-term model is full ownership in memory, genre-standard for MMO servers:
   single node
 - explicitly rejected: read-caches layered over the DB — two sources of truth
   with the classic invalidation bugs, and none of the ownership benefits
+- when this lands, equips fold into it (they are items with
+  `location: :equipment`) rather than keeping a separate equip owner
+
+### 16. Equipment state extraction — [Open]
+
+`character.equips` is kept fresh in the character manager, but only through
+handler-level orchestration: equip/unequip handlers query the inventory,
+mutate via `Context.Equips`, re-query the equip list, re-apply stats, push
+the whole struct back into the manager, and broadcast packets — while
+`character_info` and `item_stats` re-query equips independently.
+
+Extract the domain into a `Managers.Character.Equips` submodule (like
+`.Experience` / `.Stats`): the character process owns the transition and
+returns fresh state, and handlers issue one call instead of orchestrating
+half a dozen context calls. Deliberately a module split, **not** a separate
+GenServer: equips are read constantly by field serialization of other
+players, they are items (see item 15), and a standalone equip process would
+fragment item state across two owners with the sync boundary exactly at the
+hot equip↔inventory transitions.
 
 ---
 
