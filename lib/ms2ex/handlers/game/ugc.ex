@@ -8,6 +8,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
+  alias Ms2ex.Types
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
@@ -46,10 +47,14 @@ defmodule Ms2ex.GameHandlers.Ugc do
     {_file_name, packet} = get_ustring(packet)
     {_unknown, _packet} = get_short(packet)
 
-    if info.character_id == session.character_id do
+    if info.account_id == session.account.id and info.character_id == session.character_id and
+         resource_id != 0 do
       confirm(resource_id, info.type, session)
     else
-      Logger.warning("Rejecting UGC confirmation for character #{info.character_id}")
+      Logger.warning(
+        "Rejecting UGC confirmation for account #{info.account_id} character #{info.character_id}"
+      )
+
       session
     end
   end
@@ -95,12 +100,11 @@ defmodule Ms2ex.GameHandlers.Ugc do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          design when not is_nil(design) <- Storage.Tables.UgcDesign.get(item_id),
+         {:ok, item} <- design_item(item_id, design),
+         :ok <- ensure_free_slot(character, item),
          :ok <- charge(character, design),
          {:ok, resource} <- Context.Ugc.create(character.id, type) do
-      item =
-        item_id
-        |> Context.Items.init(%{rarity: design.item_rarity, amount: 1})
-        |> Map.put(:ugc, look(resource, character, name))
+      item = Map.put(item, :ugc, look(resource, character, name))
 
       Managers.Character.call(character.id, {:stage_ugc_item, item})
       push(session, Packets.Ugc.upload(resource))
@@ -121,6 +125,8 @@ defmodule Ms2ex.GameHandlers.Ugc do
   end
 
   defp handle_upload(type, _packet, session) do
+    # TODO: handle :layout_blueprint uploads once housing cubes exist; the
+    #       payload carries the blueprint/item ids and the layout name
     Logger.warning("Unhandled UGC upload type #{inspect(type)}")
     session
   end
@@ -185,12 +191,34 @@ defmodule Ms2ex.GameHandlers.Ugc do
 
   defp charge(character, %{currency_type: currency_type, create_price: price}) do
     # TODO: consume a free design coupon when the client asked to use one
+    # TODO: answer with the localized lack-of-currency notice on failure
     with currency when not is_nil(currency) <- Map.get(@currencies, currency_type),
          true <- balance(character, currency) >= price,
          {:ok, _wallet} <- Context.Wallets.update(character, currency, -price) do
       :ok
     else
       _ -> :error
+    end
+  end
+
+  # The design item lands in the outfit tab; refuse the upload while there is
+  # no room for it instead of charging a player who cannot receive the item.
+  defp ensure_free_slot(character, item) do
+    tab = Types.Item.inventory_tab(item.metadata)
+
+    case Context.Inventory.find_first_available_slot(character.id, tab) do
+      {:error, :full_inventory} -> :error
+      _slot -> :ok
+    end
+  end
+
+  defp design_item(item_id, design) do
+    item = Context.Items.init(item_id, %{rarity: design.item_rarity, amount: 1})
+
+    if item.metadata do
+      {:ok, item}
+    else
+      :error
     end
   end
 

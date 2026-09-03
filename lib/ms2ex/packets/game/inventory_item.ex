@@ -157,7 +157,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int()
     |> put_int()
     |> put_time(item.inserted_at)
-    |> put_byte()
+    |> put_int(1)
     |> put_long()
     |> put_long()
     |> put_ustring()
