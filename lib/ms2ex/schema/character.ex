@@ -33,6 +33,7 @@ defmodule Ms2ex.Schema.Character do
 
   @optional_fields [
     :active_skill_tab_id,
+    :profile_url,
     :stat_point_sources,
     :stat_point_allocation
   ]
@@ -113,6 +114,7 @@ defmodule Ms2ex.Schema.Character do
     field :session_pid, EctoTypes.Term, virtual: true
     field :sender_session_pid, EctoTypes.Term, virtual: true
     field :skill_cast, EctoTypes.Term, virtual: true
+    field :staged_ugc_item, EctoTypes.Term, virtual: true
     field :unknown_id, :integer, virtual: true, default: 0x01EF80C2
 
     timestamps(type: :utc_datetime)

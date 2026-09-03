@@ -189,6 +189,33 @@ What is still missing:
 - field-mission exploration progress, chapter rewards, job-advance hooks, and
   the remaining quest subcommands
 
+### 20. User generated content — [Partial]
+
+The upload pipeline is in place end to end: the client is pointed at the
+`/ugc` prefix at login, announces an upload over the game session, posts the
+payload to the web server, and confirms it once stored. Resources are owned
+rows in `ugc_resources`, files land under the configured UGC data directory,
+and the design-shop flow charges the player, stages the item and adds it to
+the inventory with its descriptor persisted on `inventory_items.ugc`.
+
+What is still missing:
+
+- **Guild emblems and guild posters** — the packets, upload handling and the
+  `/guildmark` routes are wired, but there is no guild system for them to
+  attach to, so a confirmation only records the stored path
+- **Field advertising banners** — banners are never spawned on a field and
+  `load_banners` always sends an empty list. Needs a `banner.xml` accessor, a
+  reservation table keyed by date/hour, and the `activate_banner`,
+  `update_banner` and `reserve_banner_slots` send packets
+- **Layout blueprints** — depend on the housing cube system; the blueprint
+  block written next to the UGC descriptor is currently all zeroes
+- **Free design coupons** — `use_voucher` is parsed but ignored, so the player
+  is always charged the design's currency cost
+- **UGC housing maps** — `LOAD_UGC_MAP` still answers with a fixed empty payload
+- **UGC market** — the resale side of designed items is untouched
+- **Ranking and mentor boards** — `/irrq.aspx` and `/ruq.aspx` answer with a
+  well-formed but empty payload
+
 ---
 
 ## P4 — Architecture
@@ -245,6 +272,14 @@ combat-heavy characters from accumulating document copies.
 ---
 
 ## Recently completed
+
+- User generated content pipeline: UGC send packets (upload acknowledgement,
+  path update, profile picture, item/mount/furnishing updates, banner list),
+  login and game handlers, an owned `ugc_resources` table, and a Phoenix web
+  surface under `/ugc` (`/urq.aspx` upload plus the profile, item, item icon,
+  banner, guild mark and blueprint fetch routes) with path-traversal, size and
+  ownership guards. Design-shop items are charged, staged and added to the
+  inventory with their descriptor persisted and serialized alongside the item
 
 - Equipment state extraction: equip transitions moved into the character
   process (`Managers.Character.Equips`, like `.Experience` / `.Stats`) — one

@@ -38,6 +38,6 @@ defmodule Ms2ex.Packets.ResponseRide do
     |> put_int(mount.object_id)
     |> put_int(mount.item_id)
     |> put_long(mount.item_uid)
-    |> Packets.Ugc.put_ugc()
+    |> Packets.Ugc.put_ugc(Map.get(mount, :ugc))
   end
 end
