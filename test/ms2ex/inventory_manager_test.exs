@@ -123,6 +123,30 @@ defmodule Ms2ex.InventoryManagerTest do
     assert Repo.reload!(b).inventory_slot == 1
   end
 
+  test "item locks stage and commit is_locked", %{character: character} do
+    {:ok, {:create, a}} = add_item(character, @gear_id, 1)
+    {:ok, {:create, b}} = add_item(character, @gear_id, 1)
+
+    assert {:ok, 0} = Managers.Inventory.call(character.id, {:lock_stage, a.id})
+    assert {:ok, 1} = Managers.Inventory.call(character.id, {:lock_stage, b.id})
+
+    # unstaging removes the item from the staging list
+    assert :ok = Managers.Inventory.call(character.id, {:lock_unstage, a.id})
+
+    {:ok, [updated]} = Managers.Inventory.call(character.id, {:lock_commit, false})
+    assert updated.id == b.id
+    assert updated.is_locked
+    assert Repo.reload!(b).is_locked
+    refute Repo.reload!(a).is_locked
+
+    # the staging list is cleared after a commit
+    assert {:ok, 0} = Managers.Inventory.call(character.id, {:lock_stage, b.id})
+
+    {:ok, [unlocked]} = Managers.Inventory.call(character.id, {:lock_commit, true})
+    refute unlocked.is_locked
+    refute Repo.reload!(b).is_locked
+  end
+
   test "moving an item to equipment keeps the manager and rows coherent", %{
     character: character
   } do

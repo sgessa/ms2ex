@@ -50,7 +50,8 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0xA3 => "SKILL_BOOK",
     0xB2 => "RESPONSE_SERVER_ENTER",
     0xBB => "FILE_HASH",
-    0xB9 => "CHAT_STICKER"
+    0xB9 => "CHAT_STICKER",
+    0x88 => "ITEM_LOCK"
   }
 
   def all_map(), do: @recv_ops

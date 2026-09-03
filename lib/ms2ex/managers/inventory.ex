@@ -40,7 +40,7 @@ defmodule Ms2ex.Managers.Inventory do
     items = Repo.all(from i in Schema.Item, where: i.character_id == ^character_id)
     tabs = Repo.all(from t in Schema.InventoryTab, where: t.character_id == ^character_id)
 
-    {:ok, %{character_id: character_id, items: items, tabs: tabs}}
+    {:ok, %{character_id: character_id, items: items, tabs: tabs, lock_staging: []}}
   end
 
   # ---- reads ----
@@ -159,6 +159,39 @@ defmodule Ms2ex.Managers.Inventory do
   def handle_call({:sort_tab, tab}, _from, state) do
     {result, state} = sort_tab(state, tab)
     {:reply, result, state}
+  end
+
+  # ---- item locks ----
+
+  def handle_call(:lock_reset, _from, state),
+    do: {:reply, :ok, %{state | lock_staging: []}}
+
+  def handle_call({:lock_stage, uid}, _from, state) do
+    case get_item(state, uid) do
+      %Schema.Item{} ->
+        index = first_free_index(state.lock_staging)
+        state = %{state | lock_staging: state.lock_staging ++ [{index, uid}]}
+        {:reply, {:ok, index}, state}
+
+      nil ->
+        {:reply, {:error, :not_found}, state}
+    end
+  end
+
+  def handle_call({:lock_unstage, uid}, _from, state) do
+    case Enum.find(state.lock_staging, fn {_index, staged_uid} -> staged_uid == uid end) do
+      staged when staged != nil ->
+        {_index, _} = staged
+        {:reply, :ok, %{state | lock_staging: List.delete(state.lock_staging, staged)}}
+
+      nil ->
+        {:reply, :error, state}
+    end
+  end
+
+  def handle_call({:lock_commit, unlock}, _from, state) do
+    {updated, state} = lock_commit(state, unlock)
+    {:reply, {:ok, updated}, state}
   end
 
   def handle_call({:expand_tab, tab}, _from, state) do
@@ -540,6 +573,45 @@ defmodule Ms2ex.Managers.Inventory do
 
   defp tab_items(state, tab) do
     Enum.filter(state.items, &(&1.location == :inventory and &1.inventory_tab == tab))
+  end
+
+  # ---- item locks ----
+
+  defp first_free_index(staging) do
+    used = MapSet.new(Enum.map(staging, fn {index, _uid} -> index end))
+
+    Enum.find(0..255, fn index -> not MapSet.member?(used, index) end) || 255
+  end
+
+  # applies the staged lock requests: items are locked or unlocked and the
+  # staging list is cleared; unlock marks the item with an unlock timestamp
+  defp lock_commit(state, unlock) do
+    {updated, state} =
+      Enum.flat_map_reduce(state.lock_staging, state, fn {_index, uid}, state ->
+        case get_item(state, uid) do
+          %Schema.Item{} = item ->
+            {changed, state} = set_lock(state, item, unlock)
+            {changed, state}
+
+          nil ->
+            {[], state}
+        end
+      end)
+
+    {updated, %{state | lock_staging: []}}
+  end
+
+  defp set_lock(state, item, unlock) do
+    locked? = not unlock
+
+    case update_item(state, item, %{is_locked: locked?}) do
+      {{:ok, updated}, state} ->
+        updated = Map.put(updated, :unlocks_at, DateTime.utc_now() |> DateTime.truncate(:second))
+        {[updated], state}
+
+      {_error, state} ->
+        {[], state}
+    end
   end
 
   defp sort_by_slot(items), do: Enum.sort_by(items, & &1.inventory_slot)
