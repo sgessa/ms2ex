@@ -150,17 +150,17 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   defp design_item?(_metadata), do: false
 
-  defp put_blueprint(packet, item) do
+  defp put_blueprint(packet, %{ugc: %{blueprint: blueprint}}) do
     packet
-    |> put_long()
-    |> put_int()
-    |> put_int()
-    |> put_int()
-    |> put_time(item.inserted_at)
-    |> put_byte()
-    |> put_long()
-    |> put_long()
-    |> put_ustring()
+    |> put_long(blueprint.uid)
+    |> put_int(blueprint.length)
+    |> put_int(blueprint.width)
+    |> put_int(blueprint.height)
+    |> put_long(blueprint.created_at)
+    |> put_int(Enums.BlueprintType.get_value(blueprint.type))
+    |> put_long(blueprint.account_id)
+    |> put_long(blueprint.character_id)
+    |> put_ustring(blueprint.character_name)
   end
 
   # the ItemBinding lives inside the transfer block once the item is bound
