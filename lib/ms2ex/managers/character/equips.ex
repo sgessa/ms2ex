@@ -222,6 +222,12 @@ defmodule Ms2ex.Managers.Character.Equips do
     Context.Field.broadcast_stats(character)
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
 
+    # the bag slot of the equipped item frees up before the displaced items
+    # are added, so the client never sees two items in one slot
+    if equipped do
+      Net.SenderSession.push(character, Packets.InventoryItem.remove_item(elem(equipped, 1).id))
+    end
+
     Enum.each(removed, fn
       {:unequipped, item} ->
         Net.SenderSession.push(
@@ -232,10 +238,6 @@ defmodule Ms2ex.Managers.Character.Equips do
       {:discarded, _item} ->
         :ok
     end)
-
-    if equipped do
-      Net.SenderSession.push(character, Packets.InventoryItem.remove_item(elem(equipped, 1).id))
-    end
 
     character
   end
