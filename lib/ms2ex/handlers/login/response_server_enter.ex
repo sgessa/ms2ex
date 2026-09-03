@@ -1,4 +1,4 @@
-defmodule Ms2ex.GameHandlers.ResponseServerEnter do
+defmodule Ms2ex.LoginHandlers.ResponseServerEnter do
   alias Ms2ex.Context
   alias Ms2ex.Net
   alias Ms2ex.Packets
