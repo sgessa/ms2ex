@@ -5,13 +5,16 @@ defmodule Ms2ex.Packets.Ugc do
 
   @upload 0x02
   @update_path 0x04
+  @enable_banner 0x07
   @profile_picture 0x0B
+  @update_banner 0x08
   @update_item 0x0D
   @update_furnishing 0x0E
   @update_mount 0x0F
   @update_layout_blueprint 0x10
   @set_endpoint 0x11
   @load_banner 0x12
+  @reserve_banners 0x14
 
   @doc """
   Tells the client which host to upload user generated content to and where to
@@ -100,16 +103,100 @@ defmodule Ms2ex.Packets.Ugc do
     |> put_int(length(banners))
     # TODO: write the active slot once banner reservations are stored
     |> reduce(banners, fn banner, packet ->
-      packet
-      |> put_long(banner.id)
-      |> put_bool(false)
+      case Enum.find(banner.slots, & &1.active) do
+        nil ->
+          packet
+          |> put_long(banner.id)
+          |> put_bool(false)
+
+        slot ->
+          packet
+          |> put_long(banner.id)
+          |> put_bool(true)
+          |> put_active_banner_slot(slot)
+      end
     end)
     |> put_int(length(banners))
     |> reduce(banners, fn banner, packet ->
       packet
       |> put_long(banner.id)
-      |> put_int(0)
+      |> put_int(length(banner.slots))
+      |> reduce(banner.slots, fn slot, packet ->
+        packet
+        |> put_long(slot.date * 100_000 + slot.hour)
+        |> put_ustring(get_in(slot, [:ugc, :author]) || "")
+        |> put_bool(true)
+      end)
     end)
+  end
+
+  def reserve_banner_slots(banner_id, slots) do
+    __MODULE__
+    |> build()
+    |> put_byte(@reserve_banners)
+    |> put_long(banner_id)
+    |> put_int(length(slots))
+    |> reduce(slots, fn slot, packet ->
+      packet
+      |> put_long(slot.id)
+      |> put_int(if(slot.active, do: 2, else: 1))
+      |> put_long(slot.banner_id)
+      |> put_int(slot.date)
+      |> put_int(slot.hour)
+      |> put_long()
+    end)
+  end
+
+  def activate_banner(banner) do
+    active_slot = Enum.find(banner.slots, & &1.active)
+
+    __MODULE__
+    |> build()
+    |> put_byte(@enable_banner)
+    |> put_long(banner.id)
+    |> put_active_banner(active_slot)
+  end
+
+  defp put_active_banner(packet, nil), do: put_bool(packet, false)
+
+  defp put_active_banner(packet, slot),
+    do: packet |> put_bool(true) |> put_active_banner_slot(slot)
+
+  def update_banner(banner) do
+    __MODULE__
+    |> build()
+    |> put_byte(@update_banner)
+    |> put_long(banner.id)
+    |> put_int(length(banner.slots))
+    |> reduce(banner.slots, fn slot, packet ->
+      packet
+      |> put_long(slot.date * 100_000 + slot.hour)
+      |> put_ustring(get_in(slot, [:ugc, :author]) || "")
+      |> put_bool(true)
+    end)
+  end
+
+  defp put_active_banner_slot(packet, slot) do
+    packet
+    |> put_ecto_enum(Enums.UgcType, :banner)
+    |> put_int(2)
+    |> put_long(slot.ugc.account_id)
+    |> put_long(slot.ugc.character_id)
+    |> put_ustring()
+    |> put_ustring(slot.ugc.author)
+    |> put_long(slot.ugc.id)
+    |> put_ustring(to_string(slot.ugc.id))
+    |> put_byte(3)
+    |> put_byte(1)
+    |> put_long(slot.banner_id)
+    |> put_byte(1)
+    |> put_long(slot.id)
+    |> put_int(2)
+    |> put_long(slot.banner_id)
+    |> put_int(slot.date)
+    |> put_int(slot.hour)
+    |> put_long()
+    |> put_ustring(slot.ugc.url)
   end
 
   @doc """

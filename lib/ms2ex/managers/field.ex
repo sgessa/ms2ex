@@ -14,8 +14,8 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Managers.Field
 
   @updates_intval 1000
-
   @npc_tick_intval 15
+  @banner_tick_intval :timer.seconds(30)
 
   # one app-wide counter feeds players and mounts, while each field instance
   # owns a local counter for npcs, portals, spawn points and items
@@ -24,6 +24,110 @@ defmodule Ms2ex.Managers.Field do
   def next_local_id(state) do
     id = state.local_id_counter + 1
     {id, %{state | local_id_counter: id}}
+  end
+
+  defp banners(map_id) do
+    banners = Ms2ex.Storage.Tables.Banners.for_map(map_id)
+    slots = Ms2ex.Context.BannerSlots.list(Enum.map(banners, & &1.id))
+
+    banners
+    |> Map.new(fn banner ->
+      {banner.id, Map.put(banner, :slots, Enum.filter(slots, &(&1.banner_id == banner.id)))}
+    end)
+  end
+
+  defp activate_banners(state) do
+    now = DateTime.utc_now()
+    state = expire_banner_slots(state, now)
+
+    {banners, changed} =
+      Enum.map_reduce(state.banners, [], fn {banner_id, banner}, changed ->
+        active_slot = Enum.find(banner.slots, &current_slot?(&1, now))
+
+        slots =
+          Enum.map(banner.slots, &update_slot_active(&1, active_slot, now))
+
+        updated_banner = %{banner | slots: slots}
+        changed = if slots == banner.slots, do: changed, else: [updated_banner | changed]
+        {{banner_id, updated_banner}, changed}
+      end)
+
+    {%{state | banners: Map.new(banners)}, changed}
+  end
+
+  defp expire_banner_slots(state, now) do
+    {banners, expired_slots} =
+      Enum.map_reduce(state.banners, [], fn {banner_id, banner}, expired_slots ->
+        {expired, slots} = Enum.split_with(banner.slots, &expired?(&1, now))
+        {{banner_id, %{banner | slots: slots}}, expired ++ expired_slots}
+      end)
+
+    case expired_slots do
+      [] ->
+        state
+
+      _ ->
+        Ms2ex.Context.BannerSlots.expire(expired_slots)
+        %{state | banners: Map.new(banners)}
+    end
+  end
+
+  defp current_slot?(
+         %{starts_at: %DateTime{} = starts_at, ends_at: %DateTime{} = ends_at} = slot,
+         now
+       ) do
+    not is_nil(slot.ugc) and DateTime.compare(starts_at, now) != :gt and
+      DateTime.compare(now, ends_at) == :lt
+  end
+
+  defp current_slot?(slot, now) do
+    (slot.ugc && slot.date == now.year * 10_000 + now.month * 100 + now.day) and
+      slot.hour == now.hour
+  end
+
+  defp update_slot_active(slot, nil, _now), do: Map.put(slot, :active, false)
+
+  defp update_slot_active(slot, %{id: id}, now) when slot.id == id do
+    slot
+    |> Map.put(:active, true)
+    |> Map.put_new(:activated_at, now)
+  end
+
+  defp update_slot_active(slot, _active_slot, _now), do: Map.put(slot, :active, false)
+
+  defp expired?(%{ends_at: %DateTime{} = ends_at}, now), do: DateTime.compare(now, ends_at) != :lt
+  defp expired?(_slot, _now), do: false
+
+  defp attach_banner(banner, slot_ids, ugc) do
+    with true <- Enum.all?(slot_ids, &slot_exists?(banner.slots, &1)) do
+      {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_ugc(&1, slot_ids, ugc))}}
+    end
+  end
+
+  defp confirm_banner(banner, resource_id, path) do
+    with true <- Enum.any?(banner.slots, &slot_resource?(&1, resource_id)) do
+      {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_path(&1, resource_id, path))}}
+    end
+  end
+
+  defp slot_exists?(slots, id), do: Enum.any?(slots, &(&1.id == id))
+  defp slot_resource?(slot, resource_id), do: get_in(slot, [:ugc, :id]) == resource_id
+
+  defp put_slot_ugc(slot, ids, ugc) do
+    if slot.id in ids, do: Map.put(slot, :ugc, ugc), else: slot
+  end
+
+  defp put_slot_path(slot, resource_id, path) do
+    if slot_resource?(slot, resource_id), do: put_in(slot, [:ugc, :url], path), else: slot
+  end
+
+  defp find_confirmed_banner(banners, resource_id, path) do
+    Enum.find_value(banners, fn {banner_id, banner} ->
+      case confirm_banner(banner, resource_id, path) do
+        {:ok, banner} -> {banner_id, banner}
+        _ -> nil
+      end
+    end)
   end
 
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
@@ -36,6 +140,7 @@ defmodule Ms2ex.Managers.Field do
 
     state = %{
       buffs: %{},
+      banners: banners(map_id),
       channel_id: channel_id,
       local_id_counter: local_id_counter,
       interactable: interactable,
@@ -60,6 +165,8 @@ defmodule Ms2ex.Managers.Field do
 
     send(self(), :load_npc_spawns)
     send(self(), :tick_npcs)
+    send(self(), :send_updates)
+    send(self(), :tick_banners)
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
@@ -114,6 +221,45 @@ defmodule Ms2ex.Managers.Field do
       instrument -> {:reply, {:ok, instrument}, Field.Instrument.remove(character_id, state)}
     end
   end
+
+  def handle_call({:reserve_banner_slots, character, banner_id, reservations}, _from, state) do
+    case Map.fetch(state.banners, banner_id) do
+      :error ->
+        {:reply, :error, state}
+
+      {:ok, banner} ->
+        case Ms2ex.Context.BannerSlots.reserve(character, banner_id, reservations) do
+          {:ok, slots} ->
+            banners = Map.put(state.banners, banner_id, %{banner | slots: banner.slots ++ slots})
+            {:reply, {:ok, slots}, %{state | banners: banners}}
+
+          :error ->
+            {:reply, :error, state}
+        end
+    end
+  end
+
+  def handle_call({:attach_banner, banner_id, slot_ids, ugc}, _from, state) do
+    with {:ok, banner} <- Map.fetch(state.banners, banner_id),
+         {:ok, banner} <- attach_banner(banner, slot_ids, ugc),
+         {_count, _slots} <- Ms2ex.Context.BannerSlots.attach(slot_ids, ugc) do
+      {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
+    else
+      _ -> {:reply, :error, state}
+    end
+  end
+
+  def handle_call({:confirm_banner, resource_id, path}, _from, state) do
+    case find_confirmed_banner(state.banners, resource_id, path) do
+      nil ->
+        {:reply, :error, state}
+
+      {banner_id, banner} ->
+        {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
+    end
+  end
+
+  def handle_call(:banners, _from, state), do: {:reply, Map.values(state.banners), state}
 
   def handle_call(:performance_stage?, _from, state),
     do: {:reply, Field.PerformanceStage.stage?(state), state}
@@ -281,6 +427,13 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(:send_updates, state) do
     Process.send_after(self(), :send_updates, @updates_intval)
     {:noreply, Field.Character.send_updates(state)}
+  end
+
+  def handle_info(:tick_banners, state) do
+    Process.send_after(self(), :tick_banners, @banner_tick_intval)
+    {state, changed} = activate_banners(state)
+    Enum.each(changed, &Context.Field.broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
+    {:noreply, state}
   end
 
   def handle_info(:maybe_stop, state) do

@@ -70,6 +70,26 @@ defmodule Ms2ex.Context.Field do
     call(character.field_pid, {:pickup_item, character, object_id})
   end
 
+  @spec reserve_banner_slots(Schema.Character.t(), integer(), [map()]) ::
+          {:ok, [map()]} | :error
+  def reserve_banner_slots(%Schema.Character{} = character, banner_id, reservations) do
+    call(character.field_pid, {:reserve_banner_slots, character, banner_id, reservations})
+  end
+
+  @spec attach_banner(Schema.Character.t(), integer(), [integer()], map()) ::
+          {:ok, map()} | :error
+  def attach_banner(%Schema.Character{} = character, banner_id, slot_ids, ugc) do
+    call(character.field_pid, {:attach_banner, banner_id, slot_ids, ugc})
+  end
+
+  @spec confirm_banner(Schema.Character.t(), integer(), String.t()) :: {:ok, map()} | :error
+  def confirm_banner(%Schema.Character{} = character, resource_id, path) do
+    call(character.field_pid, {:confirm_banner, resource_id, path})
+  end
+
+  @spec banners(Schema.Character.t()) :: [map()] | :error
+  def banners(%Schema.Character{} = character), do: call(character.field_pid, :banners)
+
   @doc """
   Adds a region skill (Skill effect) to the field.
 
@@ -520,9 +540,18 @@ defmodule Ms2ex.Context.Field do
       :error
   """
   @spec call(Schema.Character.t() | pid() | nil, term()) :: term() | :error
-  def call(%Schema.Character{field_pid: field_pid}, args), do: GenServer.call(field_pid, args)
+  def call(%Schema.Character{field_pid: field_pid}, args), do: call(field_pid, args)
   def call(nil, _args), do: :error
-  def call(pid, args), do: GenServer.call(pid, args)
+
+  def call(pid, args) when is_pid(pid) do
+    if Process.alive?(pid) do
+      GenServer.call(pid, args)
+    else
+      :error
+    end
+  catch
+    :exit, _reason -> :error
+  end
 
   @doc """
   Makes an asynchronous cast to a field process.

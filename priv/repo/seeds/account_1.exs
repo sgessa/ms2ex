@@ -39,7 +39,8 @@ staff = Context.Items.init(15260310, %{rarity: 5})
     title_id: 10000503,
     insignia_id: 33,
     job: :wizard,
-    skin_color: skin_color
+    skin_color: skin_color,
+    guide_records: %{}
   })
 
 # seeding persists straight to the database; no game session exists
