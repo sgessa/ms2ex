@@ -96,6 +96,19 @@ field so other players can hit it to revive the owner.
     iex> add_tombstone(character)
     :ok
 
+# `attach_banner`
+
+```elixir
+@spec attach_banner(Ms2ex.Schema.Character.t(), integer(), [integer()], map()) ::
+  {:ok, map()} | :error
+```
+
+# `banners`
+
+```elixir
+@spec banners(Ms2ex.Schema.Character.t()) :: [map()] | :error
+```
+
 # `broadcast`
 
 ```elixir
@@ -220,6 +233,13 @@ field (when its owner revives); clients tear down the tombstone entity.
 
     iex> clear_tombstone(character)
     :ok
+
+# `confirm_banner`
+
+```elixir
+@spec confirm_banner(Ms2ex.Schema.Character.t(), integer(), String.t()) ::
+  {:ok, map()} | :error
+```
 
 # `drop_item`
 
@@ -454,6 +474,13 @@ Removes a character's tombstone from the field (on field leave).
 
     iex> remove_tombstone(character)
     :ok
+
+# `reserve_banner_slots`
+
+```elixir
+@spec reserve_banner_slots(Ms2ex.Schema.Character.t(), integer(), [map()]) ::
+  {:ok, [map()]} | :error
+```
 
 # `start_performance`
 

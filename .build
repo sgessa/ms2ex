@@ -6,6 +6,7 @@ Ms2ex.Commands.html
 Ms2ex.Constants.html
 Ms2ex.Context.Accounts.html
 Ms2ex.Context.Achievements.html
+Ms2ex.Context.BannerSlots.html
 Ms2ex.Context.Buffs.html
 Ms2ex.Context.CharacterStats.html
 Ms2ex.Context.Characters.html
@@ -322,6 +323,7 @@ Ms2ex.Repo.html
 Ms2ex.Schema.Account.html
 Ms2ex.Schema.AccountWallet.html
 Ms2ex.Schema.Achievement.html
+Ms2ex.Schema.BannerSlot.html
 Ms2ex.Schema.Character.html
 Ms2ex.Schema.CharacterBuff.html
 Ms2ex.Schema.CharacterQuest.html
@@ -348,6 +350,7 @@ Ms2ex.Storage.Scripts.html
 Ms2ex.Storage.Skills.html
 Ms2ex.Storage.Table.MagicPaths.html
 Ms2ex.Storage.Tables.AutoActions.html
+Ms2ex.Storage.Tables.Banners.html
 Ms2ex.Storage.Tables.ChatStickers.html
 Ms2ex.Storage.Tables.Constants.html
 Ms2ex.Storage.Tables.ExpTable.html
@@ -422,8 +425,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-B1439226.js
-dist/sidebar_items-9FBDE840.js
+dist/search_data-332FBDA9.js
+dist/sidebar_items-DE200E8E.js
 index.html
 license.html
 readme.html

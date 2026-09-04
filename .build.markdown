@@ -5,6 +5,7 @@ Ms2ex.Commands.md
 Ms2ex.Constants.md
 Ms2ex.Context.Accounts.md
 Ms2ex.Context.Achievements.md
+Ms2ex.Context.BannerSlots.md
 Ms2ex.Context.Buffs.md
 Ms2ex.Context.CharacterStats.md
 Ms2ex.Context.Characters.md
@@ -321,6 +322,7 @@ Ms2ex.Repo.md
 Ms2ex.Schema.Account.md
 Ms2ex.Schema.AccountWallet.md
 Ms2ex.Schema.Achievement.md
+Ms2ex.Schema.BannerSlot.md
 Ms2ex.Schema.Character.md
 Ms2ex.Schema.CharacterBuff.md
 Ms2ex.Schema.CharacterQuest.md
@@ -347,6 +349,7 @@ Ms2ex.Storage.Scripts.md
 Ms2ex.Storage.Skills.md
 Ms2ex.Storage.Table.MagicPaths.md
 Ms2ex.Storage.Tables.AutoActions.md
+Ms2ex.Storage.Tables.Banners.md
 Ms2ex.Storage.Tables.ChatStickers.md
 Ms2ex.Storage.Tables.Constants.md
 Ms2ex.Storage.Tables.ExpTable.md

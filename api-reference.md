@@ -151,6 +151,7 @@ clients light up the stage and show the performance timer.
 - [Ms2ex.Storage.Skills](Ms2ex.Storage.Skills.md)
 - [Ms2ex.Storage.Table.MagicPaths](Ms2ex.Storage.Table.MagicPaths.md)
 - [Ms2ex.Storage.Tables.AutoActions](Ms2ex.Storage.Tables.AutoActions.md)
+- [Ms2ex.Storage.Tables.Banners](Ms2ex.Storage.Tables.Banners.md)
 - [Ms2ex.Storage.Tables.ChatStickers](Ms2ex.Storage.Tables.ChatStickers.md)
 - [Ms2ex.Storage.Tables.Constants](Ms2ex.Storage.Tables.Constants.md)
 - [Ms2ex.Storage.Tables.ExpTable](Ms2ex.Storage.Tables.ExpTable.md)
@@ -200,6 +201,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Schema.Account](Ms2ex.Schema.Account.md)
   - [Ms2ex.Schema.AccountWallet](Ms2ex.Schema.AccountWallet.md)
   - [Ms2ex.Schema.Achievement](Ms2ex.Schema.Achievement.md)
+  - [Ms2ex.Schema.BannerSlot](Ms2ex.Schema.BannerSlot.md)
   - [Ms2ex.Schema.Character](Ms2ex.Schema.Character.md)
   - [Ms2ex.Schema.CharacterBuff](Ms2ex.Schema.CharacterBuff.md)
   - [Ms2ex.Schema.CharacterQuest](Ms2ex.Schema.CharacterQuest.md): Schema for character quests.
@@ -299,6 +301,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
 - Contexts
   - [Ms2ex.Context.Accounts](Ms2ex.Context.Accounts.md): Context module for account-related operations.
   - [Ms2ex.Context.Achievements](Ms2ex.Context.Achievements.md)
+  - [Ms2ex.Context.BannerSlots](Ms2ex.Context.BannerSlots.md)
   - [Ms2ex.Context.Buffs](Ms2ex.Context.Buffs.md): Buffs that outlive the field they were cast in.
   - [Ms2ex.Context.CharacterStats](Ms2ex.Context.CharacterStats.md)
   - [Ms2ex.Context.Characters](Ms2ex.Context.Characters.md)
