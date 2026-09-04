@@ -83,11 +83,16 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
         {@error_inventory_fail, 0, session}
 
       true ->
-        key_box = fn ->
-          open_with_key(session, character, item, params, positions, key_item_id, key_amount)
-        end
-
-        iterate(session, count, key_box)
+        open_key_boxes(
+          session,
+          character,
+          item,
+          params,
+          positions,
+          count,
+          key_item_id,
+          key_amount
+        )
     end
   end
 
