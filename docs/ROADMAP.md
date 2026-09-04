@@ -416,6 +416,17 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Quest condition batching: quest condition counters accumulate in memory
+  in the quest manager and mark quests dirty for a periodic flush (also
+  flushed on demand and on stop) — ordinary gameplay events (kills,
+  movement, pickups) no longer write one UPDATE per matching quest per
+  event. Quest transitions that own their persistence (start, complete,
+  abandon, expire) still write through
+- Equipped items are no longer mirrored on the character struct: field
+  appearance, character info, stat rebuilds and conflict resolution read
+  the inventory manager at point of use, and `Context.ItemStats` takes
+  the equipped items as an argument so contexts stay free of manager
+  reads (same treatment as the mirrored trophy counts before them)
 - Achievement manager: `Managers.Achievement`
   (`achievements:<char_id>`, like the quest manager) owns every achievement
   row in memory — condition events walk the metadata index without touching

@@ -35,7 +35,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character =
         character
-        |> Map.put(:equips, Managers.Inventory.list_equips(character))
         |> Context.Characters.preload([:friends, :stats])
         |> Context.Characters.load_skills()
 

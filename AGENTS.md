@@ -88,7 +88,10 @@ host runs):
   disconnect (the quest, inventory, and achievement managers are the model).
   Handlers orchestrate through managers and never run queries directly;
   pre-session flows (character creation, login listings, seeds) write the
-  database through contexts.
+  database through contexts. State owned by a manager is never mirrored
+  onto the character struct — readers query the owning manager, and
+  contexts receive the data they need as arguments (see `Context.ItemStats`
+  taking the equipped items).
 - **Matching the reference implementation's behavior is the standing,
   assumed goal — never mention it in comments or code.** Comments must
   describe behavior in domain terms only (what the server does and why),

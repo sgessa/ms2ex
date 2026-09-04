@@ -1,4 +1,5 @@
 defmodule Ms2ex.Packets.CharacterInfo do
+  alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
@@ -19,7 +20,8 @@ defmodule Ms2ex.Packets.CharacterInfo do
   def load(%Schema.Character{} = character) do
     # the character comes from the manager, so its equip list is already
     # current; only the derived stats need rebuilding
-    {character, equipment_stats} = Context.CharacterStats.apply(character)
+    equips = Managers.Inventory.list_equips(character)
+    {character, equipment_stats} = Context.CharacterStats.apply(character, equips)
 
     __MODULE__
     |> build()
@@ -118,7 +120,10 @@ defmodule Ms2ex.Packets.CharacterInfo do
   defp put_buffer(packet, buffer), do: put_int(packet, byte_size(buffer)) <> buffer
 
   defp equips(character) do
-    equips = Enum.filter(character.equips, &(&1.inventory_tab in [:gear, :outfit]))
+    equips =
+      character
+      |> Managers.Inventory.list_equips()
+      |> Enum.filter(&(&1.inventory_tab in [:gear, :outfit]))
 
     ""
     |> put_byte(length(equips))

@@ -16,6 +16,8 @@ defmodule Ms2ex.Managers.Quest do
   alias Ms2ex.Storage
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
+  @flush_interval :timer.minutes(1)
+
   # Constants
   @batch_size 200
   @default_timeout 5000
@@ -201,9 +203,12 @@ defmodule Ms2ex.Managers.Quest do
     update_conditions(character.id, :item_exist, amount, "", 0, "", item.item_id)
   end
 
+  @doc "Persists every pending condition-counter change."
+  def flush(character_id), do: GenServer.call(process_name(character_id), :flush)
+
   @doc """
-  Stops the quest manager. Quest progress is written through on every
-  mutation, so a plain stop loses nothing.
+  Stops the quest manager. Quest transitions write through, and pending
+  condition-counter changes are flushed on stop, so nothing is lost.
   """
   def stop(character_id) do
     case Process.whereis(process_name(character_id)) do
@@ -225,9 +230,11 @@ defmodule Ms2ex.Managers.Quest do
       account_quests: account_quests,
       character_quests: character_quests,
       character_id: character.id,
-      account_id: character.account_id
+      account_id: character.account_id,
+      dirty: MapSet.new()
     }
 
+    Process.send_after(self(), :flush, @flush_interval)
     {:ok, initialize_auto_start_quests(character, state)}
   end
 
@@ -245,6 +252,9 @@ defmodule Ms2ex.Managers.Quest do
     quest = Managers.Quest.State.get_quest_from_state(quest_id, state)
     {:reply, quest, state}
   end
+
+  @impl true
+  def handle_call(:flush, _from, state), do: {:reply, :ok, flush_dirty(state)}
 
   @impl true
   def handle_call({:start_quest, quest_metadata, character}, _from, state) do
@@ -658,111 +668,99 @@ defmodule Ms2ex.Managers.Quest do
       code_long
     )
 
-    # Process character and account quests
-    {updated_character_quests, character_updated} =
-      update_quest_conditions(
-        state.character_quests,
-        character,
-        condition_type,
-        counter,
-        target_string,
-        target_long,
-        code_string,
-        code_long
-      )
+    # Process character and account quests; condition counters accumulate
+    # in memory and mark quests dirty for the periodic flush
+    event = %{
+      type: condition_type,
+      count: counter,
+      target_string: target_string,
+      target_long: target_long,
+      code_string: code_string,
+      code_long: code_long
+    }
 
-    {updated_account_quests, account_updated} =
-      update_quest_conditions(
-        state.account_quests,
-        character,
-        condition_type,
-        counter,
-        target_string,
-        target_long,
-        code_string,
-        code_long
-      )
+    {updated_character_quests, dirty, character_updated} =
+      update_quest_conditions(state.character_quests, character, event, state.dirty)
 
-    # Only update state if any quests were actually updated
+    {updated_account_quests, dirty, account_updated} =
+      update_quest_conditions(state.account_quests, character, event, dirty)
+
     if character_updated || account_updated do
-      new_state = %{
-        state
-        | character_quests: updated_character_quests,
-          account_quests: updated_account_quests
-      }
-
-      {:noreply, new_state}
+      {:noreply,
+       %{
+         state
+         | character_quests: updated_character_quests,
+           account_quests: updated_account_quests,
+           dirty: dirty
+       }}
     else
       {:noreply, state}
     end
   end
 
-  # Helper function to update conditions for a set of quests
-  defp update_quest_conditions(
-         quests,
-         character,
-         condition_type,
-         counter,
-         target_string,
-         target_long,
-         code_string,
-         code_long
-       ) do
-    Enum.reduce(quests, {quests, false}, fn {quest_id, quest}, {acc_quests, any_updated} ->
-      case update_single_quest_condition(
-             quest,
-             character,
-             condition_type,
-             counter,
-             target_string,
-             target_long,
-             code_string,
-             code_long
-           ) do
-        {:updated, updated_quest} ->
-          {Map.put(acc_quests, quest_id, updated_quest), true}
+  @impl true
+  def handle_info(:flush, state) do
+    Process.send_after(self(), :flush, @flush_interval)
+    {:noreply, flush_dirty(state)}
+  end
 
-        :unchanged ->
-          {acc_quests, any_updated}
+  @impl true
+  def terminate(_reason, state) do
+    flush_dirty(state)
+  end
+
+  # Quest transitions that own their persistence (start, complete, abandon,
+  # expire) keep writing through; condition counters accumulate in memory
+  # and batch into the periodic flush below, so ordinary gameplay events
+  # never touch the database.
+  defp flush_dirty(state) do
+    state.dirty
+    |> Enum.reduce(state, fn quest_id, state ->
+      case Managers.Quest.State.get_quest_from_state(quest_id, state) do
+        nil ->
+          state
+
+        quest ->
+          Context.Quests.update_quest(quest, %{conditions: quest.conditions})
+          %{state | dirty: MapSet.delete(state.dirty, quest_id)}
       end
     end)
   end
 
-  defp update_single_quest_condition(
-         quest,
-         character,
-         condition_type,
-         counter,
-         target_string,
-         target_long,
-         code_string,
-         code_long
-       ) do
+  # Helper function to update conditions for a set of quests. Condition
+  # counters only touch memory here; the quest is marked dirty for the
+  # periodic flush instead of being written back per event.
+  defp update_quest_conditions(quests, character, event, dirty) do
+    Enum.reduce(quests, {quests, dirty, false}, fn {quest_id, quest},
+                                                   {acc_quests, dirty, any_updated} ->
+      case update_single_quest_condition(quest, character, event) do
+        {:updated, updated_quest} ->
+          {Map.put(acc_quests, quest_id, updated_quest), MapSet.put(dirty, quest_id), true}
+
+        :unchanged ->
+          {acc_quests, dirty, any_updated}
+      end
+    end)
+  end
+
+  defp update_single_quest_condition(quest, character, event) do
     updated_quest =
       Managers.Quest.Conditions.update(
         quest,
-        condition_type,
-        counter,
-        target_string,
-        target_long,
-        code_string,
-        code_long
+        event.type,
+        event.count,
+        event.target_string,
+        event.target_long,
+        event.code_string,
+        event.code_long
       )
 
     if updated_quest == quest do
       :unchanged
     else
-      case Context.Quests.update_quest(updated_quest, %{conditions: updated_quest.conditions}) do
-        {:ok, persisted_quest} ->
-          maybe_push_condition_update(character, quest, persisted_quest, condition_type)
-          handle_auto_completion(persisted_quest, character.id)
-          {:updated, persisted_quest}
-
-        {:error, _changeset} ->
-          # keep gameplay moving on the in-memory state even if the write fails
-          maybe_push_condition_update(character, quest, updated_quest, condition_type)
-          {:updated, updated_quest}
-      end
+      maybe_push_condition_update(character, quest, updated_quest, event.type)
+      handle_auto_completion(updated_quest, character.id)
+      {:updated, updated_quest}
     end
   end
 

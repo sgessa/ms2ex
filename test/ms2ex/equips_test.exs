@@ -332,5 +332,6 @@ defmodule Ms2ex.EquipsTest do
     })
   end
 
-  defp equips(character), do: Enum.map(character.equips, & &1.equip_slot)
+  defp equips(character),
+    do: character |> Managers.Inventory.list_equips() |> Enum.map(& &1.equip_slot)
 end
