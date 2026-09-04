@@ -17,6 +17,8 @@ spawn point and falls the short distance.
 
 # `get_meta`
 
+# `get_mob_gates`
+
 # `get_mob_spawns`
 
 # `get_npc_spawns`

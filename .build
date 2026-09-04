@@ -100,6 +100,7 @@ Ms2ex.GameHandlers.FallDamage.html
 Ms2ex.GameHandlers.FileHash.html
 Ms2ex.GameHandlers.Friend.html
 Ms2ex.GameHandlers.GroupChat.html
+Ms2ex.GameHandlers.GuideRecord.html
 Ms2ex.GameHandlers.Helper.Friend.html
 Ms2ex.GameHandlers.Helper.ItemBox.html
 Ms2ex.GameHandlers.Helper.Party.html
@@ -125,6 +126,7 @@ Ms2ex.GameHandlers.RequestCube.html
 Ms2ex.GameHandlers.RequestItemBox.html
 Ms2ex.GameHandlers.RequestQuit.html
 Ms2ex.GameHandlers.RequestTimeSync.html
+Ms2ex.GameHandlers.RequestTutorialItem.html
 Ms2ex.GameHandlers.RequestWorldMap.html
 Ms2ex.GameHandlers.ResponseClientSyncTick.html
 Ms2ex.GameHandlers.ResponseFieldEnter.html
@@ -231,6 +233,7 @@ Ms2ex.Packets.Game.Quest.html
 Ms2ex.Packets.GameToGame.html
 Ms2ex.Packets.GameToLogin.html
 Ms2ex.Packets.GroupChat.html
+Ms2ex.Packets.GuideRecord.html
 Ms2ex.Packets.HomeCommand.html
 Ms2ex.Packets.InGameRank.html
 Ms2ex.Packets.Insignia.html
@@ -419,8 +422,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-CB8F4D7F.js
-dist/sidebar_items-40F0B4DB.js
+dist/search_data-B1439226.js
+dist/sidebar_items-9FBDE840.js
 index.html
 license.html
 readme.html

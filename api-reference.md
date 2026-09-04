@@ -27,6 +27,7 @@
 - [Ms2ex.GameHandlers.FileHash](Ms2ex.GameHandlers.FileHash.md)
 - [Ms2ex.GameHandlers.Friend](Ms2ex.GameHandlers.Friend.md)
 - [Ms2ex.GameHandlers.GroupChat](Ms2ex.GameHandlers.GroupChat.md)
+- [Ms2ex.GameHandlers.GuideRecord](Ms2ex.GameHandlers.GuideRecord.md)
 - [Ms2ex.GameHandlers.Helper.Friend](Ms2ex.GameHandlers.Helper.Friend.md)
 - [Ms2ex.GameHandlers.Helper.ItemBox](Ms2ex.GameHandlers.Helper.ItemBox.md): Item box opening: resolves the box's function parameters against the
 server drop tables, rolls the contents for the opening character, grants
@@ -62,6 +63,7 @@ picked entry index as a string.
 
 - [Ms2ex.GameHandlers.RequestQuit](Ms2ex.GameHandlers.RequestQuit.md)
 - [Ms2ex.GameHandlers.RequestTimeSync](Ms2ex.GameHandlers.RequestTimeSync.md)
+- [Ms2ex.GameHandlers.RequestTutorialItem](Ms2ex.GameHandlers.RequestTutorialItem.md)
 - [Ms2ex.GameHandlers.RequestWorldMap](Ms2ex.GameHandlers.RequestWorldMap.md)
 - [Ms2ex.GameHandlers.ResponseClientSyncTick](Ms2ex.GameHandlers.ResponseClientSyncTick.md)
 - [Ms2ex.GameHandlers.ResponseFieldEnter](Ms2ex.GameHandlers.ResponseFieldEnter.md)
@@ -393,6 +395,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.GameToGame](Ms2ex.Packets.GameToGame.md)
   - [Ms2ex.Packets.GameToLogin](Ms2ex.Packets.GameToLogin.md)
   - [Ms2ex.Packets.GroupChat](Ms2ex.Packets.GroupChat.md)
+  - [Ms2ex.Packets.GuideRecord](Ms2ex.Packets.GuideRecord.md)
   - [Ms2ex.Packets.HomeCommand](Ms2ex.Packets.HomeCommand.md)
   - [Ms2ex.Packets.InGameRank](Ms2ex.Packets.InGameRank.md)
   - [Ms2ex.Packets.Insignia](Ms2ex.Packets.Insignia.md)

@@ -99,6 +99,7 @@ Ms2ex.GameHandlers.FallDamage.md
 Ms2ex.GameHandlers.FileHash.md
 Ms2ex.GameHandlers.Friend.md
 Ms2ex.GameHandlers.GroupChat.md
+Ms2ex.GameHandlers.GuideRecord.md
 Ms2ex.GameHandlers.Helper.Friend.md
 Ms2ex.GameHandlers.Helper.ItemBox.md
 Ms2ex.GameHandlers.Helper.Party.md
@@ -124,6 +125,7 @@ Ms2ex.GameHandlers.RequestCube.md
 Ms2ex.GameHandlers.RequestItemBox.md
 Ms2ex.GameHandlers.RequestQuit.md
 Ms2ex.GameHandlers.RequestTimeSync.md
+Ms2ex.GameHandlers.RequestTutorialItem.md
 Ms2ex.GameHandlers.RequestWorldMap.md
 Ms2ex.GameHandlers.ResponseClientSyncTick.md
 Ms2ex.GameHandlers.ResponseFieldEnter.md
@@ -230,6 +232,7 @@ Ms2ex.Packets.Game.Quest.md
 Ms2ex.Packets.GameToGame.md
 Ms2ex.Packets.GameToLogin.md
 Ms2ex.Packets.GroupChat.md
+Ms2ex.Packets.GuideRecord.md
 Ms2ex.Packets.HomeCommand.md
 Ms2ex.Packets.InGameRank.md
 Ms2ex.Packets.Insignia.md

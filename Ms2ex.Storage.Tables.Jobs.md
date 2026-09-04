@@ -5,6 +5,11 @@
 
 # `get`
 
+# `tutorial`
+
+The per-job character tutorial: the starting field, the skip field/item,
+the maps and taxis unlocked on completion, and the starter/reward items.
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*
