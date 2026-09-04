@@ -125,6 +125,7 @@ defmodule Ms2ex.Context.BannerSlots do
       banner_id: slot.banner_id,
       date: slot.date,
       hour: slot.hour,
+      character_id: slot.character_id,
       starts_at: slot.starts_at,
       ends_at: slot.ends_at,
       active: false,

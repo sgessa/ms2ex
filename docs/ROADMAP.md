@@ -372,11 +372,6 @@ What is still missing:
 - **Guild emblems and guild posters** — the packets, upload handling and the
   `/guildmark` routes are wired, but there is no guild system for them to
   attach to, so a confirmation only records the stored path
-- **Field advertising banners** — banner metadata is loaded per field;
-  reservations are persisted by banner/date/hour, charged in Merets, restored
-  after relog, and activated at their scheduled UTC hour. Expiring old slots,
-  rotating active banners, and enforcing banner-specific access restrictions
-  are still unimplemented
 - **Layout blueprints** — depend on the housing cube system; the blueprint
   block written next to the UGC descriptor is currently all zeroes
 - **Free design coupons** — `use_voucher` is parsed but ignored, so the player
@@ -402,10 +397,6 @@ What is still missing:
   mastery scaled by play time (capped by the score's `mastery_value_max`) and
   exp from the `musicMastery1-4` tables. There is no mastery system, so
   stopping only fires the quest condition
-- **Remaining uses on a dedicated column** — the count lives in the item's
-  `data` term to avoid a migration; it should be a real column alongside the
-  other item fields, and the `remaining_uses` send packet is only pushed on
-  play, never on load
 - **Stage geometry** — enter/exit stage toggles between portals 802 and 803
   from a server-side membership set. The reference decides from trigger box
   101 containment, which needs trigger box geometry in the map projection
