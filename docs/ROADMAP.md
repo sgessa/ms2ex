@@ -193,10 +193,17 @@ minimum-value / allowed-value gates.
 
 Completion and acceptance commit the quest row, turn-in item consumption
 (`item_exist` conditions) and item rewards atomically in one transaction;
-exp and currencies are granted post-commit. Non-
-forfeitable quests refuse abandon, the expiration sweep drops rows and
-notifies the client, and go-to-npc travel moves the character to the quest's
-destination map.
+exp and currencies are granted post-commit. Condition-counter changes from
+gameplay events accumulate in memory and batch into a periodic flush (also
+on demand and on stop) instead of one UPDATE per matching quest per event.
+Non-forfeitable quests refuse abandon, the expiration sweep drops expired
+rows in one statement per owner scope and notifies the client, and
+go-to-npc travel moves the character to the quest's destination map.
+Event-tagged quests never start on their own: event content starts only
+through a matching server event, so stale event quests no longer churn
+through auto-start plus client-side expiry at login. Event-tagged quests never start on their own: event
+content starts only through a matching server event, so stale event quests
+no longer churn through auto-start plus client-side expiry at login.
 What is still missing:
 
 - multi-page npc dialogue walking (Continue tracking) and script functions
@@ -221,8 +228,9 @@ deliver configured item or stat-point rewards. Achievement state is owned by
 disconnect): rows load once, condition events walk the storage index in
 memory, new rows are inserted as they are created, and updates batch into a
 periodic flush (also flushed on demand and on stop) — no per-event queries.
-Trophy counts per category are kept in memory and pushed onto the character,
-grade completions feed back into quest conditions (`revise_achieve_*`,
+Trophy counts per category live on the manager and are read from it (the
+character struct keeps no mirrored copy), grade completions feed back into
+quest conditions (`revise_achieve_*`,
 `hero_achieve`), stat-point and emote rewards are granted automatically on
 rank-up while item and title rewards wait for the manual claim, and load
 packets are batched per 60 entries. Riding distance is tracked from mounted
