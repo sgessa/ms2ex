@@ -19,7 +19,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     end
   end
 
-  def add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0) do
+  def add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0, opts \\ []) do
     if effect_available?(effect_id, effect_level) do
       {object_id, state} = Managers.Field.next_local_id(state)
       skill = %{id: effect_id, level: effect_level, overlap_count: overlap_count}
@@ -31,7 +31,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         caster: character
       }
 
-      buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
+      buff = Types.Buff.new(object_id, skill_cast, skill, character, character, opts)
       apply_buff(buff, state, true)
     else
       {nil, state}
@@ -504,6 +504,43 @@ defmodule Ms2ex.Managers.Field.Buff do
     end)
     |> Enum.reduce(state, fn {{_owner, _effect, _caster}, buff_id}, state ->
       remove_buff(buff_id, state)
+    end)
+  end
+
+  @doc """
+  Stores the character's still-running buffs so they can be restored on the
+  next field they enter, including after a relog.
+  """
+  def save_owner_buffs(character, state) do
+    buffs =
+      state.buffs
+      |> Enum.filter(fn {{owner_id, _effect, _caster}, _buff_id} ->
+        owner_id == character.object_id
+      end)
+      |> Enum.flat_map(fn {_key, buff_id} ->
+        case Managers.Buff.fetch(buff_id) do
+          nil -> []
+          buff -> [buff]
+        end
+      end)
+
+    Context.Buffs.save(character.id, buffs)
+    state
+  end
+
+  @doc """
+  Re-applies the character's stored buffs for the remainder of their duration.
+  """
+  def restore_buffs(character, state) do
+    character.id
+    |> Context.Buffs.load()
+    |> Enum.reduce(state, fn stored, state ->
+      {_buff, state} =
+        add_effect_buff(stored.effect_id, stored.effect_level, character, state, 0,
+          duration_tick: stored.remaining_ms
+        )
+
+      state
     end)
   end
 end

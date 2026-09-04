@@ -24,7 +24,7 @@ defmodule Ms2ex.Types.Buff do
     removal_timer: nil
   ]
 
-  def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner) do
+  def new(object_id, %SkillCast{} = skill_cast, skill, caster, owner, opts \\ []) do
     effect =
       Storage.Skills.get_effect(skill[:id], skill[:level])
 
@@ -41,9 +41,17 @@ defmodule Ms2ex.Types.Buff do
     __MODULE__
     |> struct(attrs)
     |> stack()
+    |> override_duration(Keyword.get(opts, :duration_tick))
     |> set_shield_health()
     |> tick_state()
   end
+
+  # purchased buffs run for the length the player paid for, not the effect's
+  # metadata duration
+  defp override_duration(%__MODULE__{} = buff, nil), do: buff
+
+  defp override_duration(%__MODULE__{} = buff, duration_tick),
+    do: %{buff | end_tick: buff.start_tick + duration_tick}
 
   def stack(%__MODULE__{} = buff) do
     stacks = min(buff.stacks, buff.effect.property.max_count)

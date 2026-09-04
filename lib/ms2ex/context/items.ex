@@ -115,4 +115,18 @@ defmodule Ms2ex.Context.Items do
   def load_metadata(%Schema.Item{item_id: id} = item) do
     %{item | metadata: Storage.Items.get_meta(id)}
   end
+
+  @doc """
+  Plays a music score has left. Scores start at their metadata play count and
+  the remainder is persisted on the item so it survives relogs.
+  """
+  @spec remaining_uses(Schema.Item.t()) :: integer()
+  def remaining_uses(%Schema.Item{data: %{remaining_uses: remaining}}) when is_integer(remaining),
+    do: remaining
+
+  def remaining_uses(%Schema.Item{metadata: %{music: %{play_count: play_count}}})
+      when is_integer(play_count),
+      do: play_count
+
+  def remaining_uses(%Schema.Item{}), do: 0
 end

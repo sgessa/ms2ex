@@ -1,4 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
+  alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -84,6 +85,10 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   def put_item(packet, item, character) do
+    # metadata drives which optional blocks the body carries, so items read
+    # straight from the database must resolve it before being written
+    item = if item.metadata, do: item, else: Context.Items.load_metadata(item)
+
     packet
     |> put_int(item.amount)
     |> put_int()
@@ -92,7 +97,7 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_time(item.expires_at)
     |> put_long()
     |> put_int(item.times_attr_changed)
-    |> put_int()
+    |> put_int(Context.Items.remaining_uses(item))
     |> put_bool(item.is_locked)
     |> put_time(item.unlocks_at)
     |> put_short(item.glamor_forges_left)
@@ -135,13 +140,37 @@ defmodule Ms2ex.Packets.InventoryItem do
   # design items carry a UGC descriptor and a blueprint block in place of the
   # pet, music score and badge blocks
   defp put_template(packet, item) do
-    if design_item?(item.metadata) do
-      packet
-      |> Packets.Ugc.put_ugc(item.ugc)
-      |> put_blueprint(item)
-    else
-      packet
+    cond do
+      design_item?(item.metadata) ->
+        packet
+        |> Packets.Ugc.put_ugc(item.ugc)
+        |> put_blueprint(item)
+
+      custom_music_score?(item.metadata) ->
+        put_music_score(packet, item)
+
+      true ->
+        packet
     end
+  end
+
+  defp custom_music_score?(%{music: %{is_custom_note: true}}), do: true
+  defp custom_music_score?(_metadata), do: false
+
+  # composable scores carry their composition; blank until the player writes it
+  defp put_music_score(packet, item) do
+    music = Map.get(item.data || %{}, :music) || %{}
+
+    packet
+    |> put_int(Map.get(music, :length, 0))
+    |> put_int(Map.get(music, :instrument, 0))
+    |> put_ustring(Map.get(music, :title, ""))
+    |> put_ustring(Map.get(music, :author, ""))
+    |> put_int(1)
+    |> put_long(Map.get(music, :author_id, 0))
+    |> put_bool(Map.get(music, :locked?, false))
+    |> put_long()
+    |> put_long()
   end
 
   defp design_item?(%{mesh: mesh, property: %{type: type}}) do
@@ -161,6 +190,21 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_long(blueprint.account_id)
     |> put_long(blueprint.character_id)
     |> put_ustring(blueprint.character_name)
+  end
+
+  # a design item without a stored blueprint still needs the block, or the
+  # rest of the item body decodes at the wrong offset
+  defp put_blueprint(packet, _item) do
+    packet
+    |> put_long()
+    |> put_int()
+    |> put_int()
+    |> put_int()
+    |> put_long()
+    |> put_int()
+    |> put_long()
+    |> put_long()
+    |> put_ustring()
   end
 
   # the ItemBinding lives inside the transfer block once the item is bound

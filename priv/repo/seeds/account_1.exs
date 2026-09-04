@@ -43,28 +43,28 @@ staff = Context.Items.init(15260310, %{rarity: 5})
   })
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, hair)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, face)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, face_decor)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, top)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, bottom)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, shoes)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 {:ok, {:create, item}} = Context.Inventory.add_item(char, staff)
-{:ok, _equip} = Context.Equips.equip(item)
+{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
 
 titles = [10000569, 10000152, 10000570, 10000171, 10000196, 10000195, 10000571, 10000331, 10000190,
 10000458, 10000465, 10000503, 10000512, 10000513, 10000514, 10000537, 10000565, 10000602,
