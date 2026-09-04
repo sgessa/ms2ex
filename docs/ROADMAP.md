@@ -434,7 +434,9 @@ combat-heavy characters from accumulating document copies.
   supervisor (`Ms2ex.Managers.ManagerSupervisor`), so the application
   teardown shuts every live one down instead of killing it silently —
   the quest and achievement managers trap the shutdown signal and flush
-  their pending batches from their terminate callback
+  their pending batches from their terminate callback. The game session
+  monitors its managers and disconnects the client if one of them dies —
+  the game either works or the character relogs, never half-works
 - Auto-start gating: quests carrying an event tag never start on their own
   (event content starts only through a matching server event, and stale
   event quests would otherwise be auto-started at login and immediately

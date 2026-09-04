@@ -63,7 +63,13 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
   defp start_quest_manager(character_id) do
     case Process.whereis(:"quest_manager:#{character_id}") do
-      nil -> Managers.Quest.start(character_id)
+      nil ->
+        Managers.Quest.start(character_id)
+
+        case Process.whereis(:"quest_manager:#{character_id}") do
+          nil -> :ok
+          pid -> Process.monitor(pid)
+        end
       _ -> :ok
     end
   end

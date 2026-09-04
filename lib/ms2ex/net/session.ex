@@ -122,6 +122,19 @@ defmodule Ms2ex.Net.Session do
     {:stop, :normal, state}
   end
 
+  # a per-character manager dying takes the session with it: the game
+  # either works or it does not, so instead of degrading into a partially
+  # broken session the client is disconnected and asked to relog
+  def handle_info({:DOWN, _ref, :process, pid, reason}, state) do
+    L.error(fn ->
+      "Manager #{inspect(pid)} died (#{inspect(reason)}) — disconnecting session"
+    end)
+
+    shutdown(state.socket, state.transport, state.sender_pid)
+
+    {:stop, :shutdown, state}
+  end
+
   def handle_info({:update, attrs}, state), do: {:noreply, Map.merge(state, attrs)}
 
   def handle_info({:EXIT, _port, _reason}, state), do: {:noreply, state}
