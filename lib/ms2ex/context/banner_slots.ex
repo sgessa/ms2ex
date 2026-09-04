@@ -13,19 +13,21 @@ defmodule Ms2ex.Context.BannerSlots do
   end
 
   def reserve(character, banner_id, reservations) do
-    Repo.transaction(fn ->
-      Enum.reduce(reservations, [], fn reservation, slots ->
-        case insert_slot(character, banner_id, reservation) do
-          {:ok, slot} -> [to_slot(%{slot | character: character}) | slots]
-          :error -> Repo.rollback(:conflict)
-        end
-      end)
-      |> Enum.reverse()
-    end)
+    Repo.transaction(fn -> reserve_slots(character, banner_id, reservations) end)
     |> case do
       {:ok, slots} -> {:ok, slots}
       {:error, _reason} -> :error
     end
+  end
+
+  defp reserve_slots(character, banner_id, reservations) do
+    Enum.reduce(reservations, [], fn reservation, slots ->
+      case insert_slot(character, banner_id, reservation) do
+        {:ok, slot} -> [to_slot(%{slot | character: character}) | slots]
+        :error -> Repo.rollback(:conflict)
+      end
+    end)
+    |> Enum.reverse()
   end
 
   defp insert_slot(character, banner_id, reservation) do

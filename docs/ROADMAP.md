@@ -372,10 +372,11 @@ What is still missing:
 - **Guild emblems and guild posters** — the packets, upload handling and the
   `/guildmark` routes are wired, but there is no guild system for them to
   attach to, so a confirmation only records the stored path
-- **Field advertising banners** — banners are never spawned on a field and
-  `load_banners` always sends an empty list. Needs a `banner.xml` accessor, a
-  reservation table keyed by date/hour, and the `activate_banner`,
-  `update_banner` and `reserve_banner_slots` send packets
+- **Field advertising banners** — banner metadata is loaded per field;
+  reservations are persisted by banner/date/hour, charged in Merets, restored
+  after relog, and activated at their scheduled UTC hour. Expiring old slots,
+  rotating active banners, and enforcing banner-specific access restrictions
+  are still unimplemented
 - **Layout blueprints** — depend on the housing cube system; the blueprint
   block written next to the UGC descriptor is currently all zeroes
 - **Free design coupons** — `use_voucher` is parsed but ignored, so the player
@@ -543,7 +544,9 @@ combat-heavy characters from accumulating document copies.
   surface under `/ugc` (`/urq.aspx` upload plus the profile, item, item icon,
   banner, guild mark and blueprint fetch routes) with path-traversal, size and
   ownership guards. Design-shop items are charged, staged and added to the
-  inventory with their descriptor persisted and serialized alongside the item
+  inventory with their descriptor persisted and serialized alongside the item.
+  Field banners persist reservations, upload their artwork, restore schedules
+  on relog, and activate at the scheduled UTC hour
 
 - Equipment state extraction: equip transitions moved into the character
   process (`Managers.Character.Equips`, like `.Experience` / `.Stats`) — one
