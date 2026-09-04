@@ -1,4 +1,5 @@
 defmodule Ms2ex.Packets.FieldAddUser do
+  alias Ms2ex.Managers
   alias Ms2ex.Enums
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -79,9 +80,11 @@ defmodule Ms2ex.Packets.FieldAddUser do
   end
 
   def appearance(character) do
+    equips = Managers.Inventory.list_equips(character)
+
     ""
-    |> put_byte(length(character.equips))
-    |> Packets.InventoryItem.put_equips(character.equips, character)
+    |> put_byte(length(equips))
+    |> Packets.InventoryItem.put_equips(equips, character)
     |> put_byte(0x1)
     |> put_long()
     |> put_long()

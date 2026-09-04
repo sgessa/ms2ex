@@ -25,7 +25,8 @@ defmodule Ms2ex.Managers.Character.Experience do
 
   def refresh_level(character, old_level) do
     if old_level != character.level do
-      {character, _equipment_stats} = Context.CharacterStats.apply(character)
+      equips = Managers.Inventory.list_equips(character)
+      {character, _equipment_stats} = Context.CharacterStats.apply(character, equips)
       Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
       Context.Field.broadcast_stats(character)
 

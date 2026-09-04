@@ -51,7 +51,10 @@ defmodule Ms2ex.Managers.Quest.Rewards do
 
         case Inventory.add_item(character, %{item | metadata: metadata}) do
           {:ok, result} ->
+            # the bare add result ({:create, item} / {:update, item}) is what
+            # post-commit delivery serializes into add-item packets
             Managers.Quest.notify_item_acquired(character, added_item(result))
+            result
 
           other ->
             Repo.rollback({:reward_item_failed, reward_item.id, other})

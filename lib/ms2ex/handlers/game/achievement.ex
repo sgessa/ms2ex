@@ -1,5 +1,4 @@
 defmodule Ms2ex.GameHandlers.Achievement do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
 
   import Ms2ex.Packets.PacketReader
@@ -15,13 +14,13 @@ defmodule Ms2ex.GameHandlers.Achievement do
 
   defp handle_command(@claim_reward, packet, character) do
     {achievement_id, _packet} = get_int(packet)
-    Context.Achievements.claim_reward(character, achievement_id)
+    Managers.Achievement.claim_reward(character, achievement_id)
   end
 
   defp handle_command(@toggle_favorite, packet, character) do
     {achievement_id, packet} = get_int(packet)
     {favorite, _packet} = get_bool(packet)
-    Context.Achievements.toggle_favorite(character, achievement_id, favorite)
+    Managers.Achievement.toggle_favorite(character, achievement_id, favorite)
   end
 
   defp handle_command(_command, _packet, _character), do: :ok

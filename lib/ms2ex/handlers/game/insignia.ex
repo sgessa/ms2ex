@@ -41,7 +41,10 @@ defmodule Ms2ex.GameHandlers.Insignia do
   end
 
   defp can_equip_insignia?(character, %{type: :trophy_point}, _insignia_id) do
-    Enum.sum(character.trophies) >= 1000
+    case Managers.Achievement.trophy_counts(character) do
+      [combat, adventure, lifestyle] -> combat + adventure + lifestyle >= 1000
+      _ -> false
+    end
   end
 
   defp can_equip_insignia?(character, %{type: :title, title_id: title_id}, _insignia_id) do
