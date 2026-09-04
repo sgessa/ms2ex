@@ -8,18 +8,36 @@ defmodule Ms2ex.QuestManagerTest do
 
   import Ms2ex.TestHelpers
 
-  # a world quest with one map condition worth 2 visits
+  # a world quest with one map condition worth 2 visits, rewarding potions
   @quest_id 2_001_045
   @quest_metadata %{
     id: @quest_id,
-    basic: %{type: :world_quest},
-    conditions: [%{type: :map, value: 2, codes: %{range: nil, strings: [], integers: []}}]
+    basic: %{type: :world_quest, chapter_id: 0},
+    conditions: [%{type: :map, value: 2, codes: %{range: nil, strings: [], integers: []}}],
+    complete_reward: %{
+      exp: 0,
+      meso: 0,
+      treva: 0,
+      rue: 0,
+      essential_items: [],
+      essential_job_items: [],
+      selective_items: []
+    }
   }
 
   setup {Mimic, :set_mimic_global}
 
   setup do
-    stub_metadata(%{"quest:#{@quest_id}" => @quest_metadata})
+    stub_metadata(%{
+      "quest:#{@quest_id}" => @quest_metadata,
+      "item:20000022" => %{
+        id: 20_000_022,
+        limit: %{level: 0},
+        option: %{constant_id: 0},
+        property: %{type: 2, subtype: 2, stack_limit: 999},
+        slot_names: []
+      }
+    })
 
     account =
       Repo.insert!(%Schema.Account{
@@ -53,6 +71,7 @@ defmodule Ms2ex.QuestManagerTest do
       })
 
     {:ok, char_pid} = Managers.Character.start(character)
+    :ok = Managers.Inventory.start(character)
     {:ok, quest_pid} = Managers.Quest.start_link(character.id)
 
     on_exit(fn ->
@@ -100,5 +119,47 @@ defmodule Ms2ex.QuestManagerTest do
     :ok = Managers.Quest.flush(character.id)
 
     assert %{"0" => 2} = quest_conditions(character.id)
+  end
+
+  test "completing a quest marks it completed", %{character: character} do
+    Managers.Quest.update_conditions(character.id, :map, 1, "", 0, "", 2_000_062)
+    Managers.Quest.update_conditions(character.id, :map, 1, "", 0, "", 2_000_062)
+
+    wait_until(fn ->
+      {_account, character_quests} = Managers.Quest.get_all_quests(character.id)
+      assert character_quests[@quest_id].conditions[0].counter == 2
+    end)
+
+    assert {:ok, _quest} = Managers.Quest.complete(@quest_id, character.id)
+
+    assert %Schema.CharacterQuest{state: :completed} =
+             Repo.get_by(Schema.CharacterQuest, %{owner_id: character.id, quest_id: @quest_id})
+  end
+
+  # regression: grant_items must return the inventory add results (not the
+  # acquisition notification's :ok) so post-commit delivery can push the
+  # add-item packets
+  test "item rewards grant through the inventory and report their results", %{
+    character: character
+  } do
+    reward = %{
+      exp: 0,
+      meso: 0,
+      treva: 0,
+      rue: 0,
+      essential_items: [%{id: 20_000_022, amount: 3, rarity: 1}],
+      essential_job_items: [],
+      selective_items: []
+    }
+
+    prepared = Ms2ex.Managers.Quest.Rewards.prepare(character, reward)
+    {:ok, results} = Ms2ex.Managers.Quest.Rewards.grant_items(character, prepared)
+
+    assert [create: %Schema.Item{item_id: 20_000_022, amount: 3}] = results
+
+    :ok = Ms2ex.Managers.Quest.Rewards.deliver(character, reward, results)
+
+    assert %Schema.Item{amount: 3} =
+             Repo.get_by(Schema.Item, %{character_id: character.id, item_id: 20_000_022})
   end
 end
