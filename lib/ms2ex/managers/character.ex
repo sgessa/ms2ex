@@ -119,6 +119,11 @@ defmodule Ms2ex.Managers.Character do
     {:reply, :ok, character}
   end
 
+  # trophies are a virtual field serialized straight from character structs
+  # (friend lists include offline characters, where no achievement manager
+  # exists); the achievement manager owns the authoritative counts and is
+  # the single writer of this copy — same pattern as the equips copy, owned
+  # by the inventory manager
   def handle_call({:update_trophies, trophies}, _from, character) do
     {:reply, :ok, %{character | trophies: trophies}}
   end
