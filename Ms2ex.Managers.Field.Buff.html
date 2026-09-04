@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-B6A11D8C.js"></script>
+    <script defer src="dist/sidebar_items-FE61EC29.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -137,7 +137,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_effect_buff/5" data-no-tooltip="" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0)</a>
+        <a href="#add_effect_buff/6" data-no-tooltip="" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0, opts \\ [])</a>
 
       </div>
 
@@ -148,6 +148,17 @@ MS2EX
         <a href="#add_mob_buff/6" data-no-tooltip="" translate="no">add_mob_buff(caster, effect_id, effect_level, mob, state, overlap_count \\ 0)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#owner_has_buff?/3" data-no-tooltip="" translate="no">owner_has_buff?(owner_object_id, effect_id, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether an actor currently has the given effect active, regardless of who
+cast it.</p></div>
 
     </div>
 
@@ -164,6 +175,27 @@ MS2EX
         <a href="#remove_owner_buffs/2" data-no-tooltip="" translate="no">remove_owner_buffs(owner_object_id, state)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#restore_buffs/2" data-no-tooltip="" translate="no">restore_buffs(character, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Re-applies the character's stored buffs for the remainder of their duration.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#save_owner_buffs/2" data-no-tooltip="" translate="no">save_owner_buffs(character, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Stores the character's still-running buffs so they can be restored on the
+next field they enter, including after a relog.</p></div>
 
     </div>
 
@@ -211,16 +243,18 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="add_effect_buff/5">
+<section class="detail" id="add_effect_buff/6">
 
     <span id="add_effect_buff/4"></span>
 
+    <span id="add_effect_buff/5"></span>
+
   <div class="detail-header">
-    <a href="#add_effect_buff/5" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#add_effect_buff/6" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0)</h1>
+      <h1 class="signature" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0, opts \\ [])</h1>
 
 
         <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L22" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -257,6 +291,29 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="owner_has_buff?/3">
+
+  <div class="detail-header">
+    <a href="#owner_has_buff?/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">owner_has_buff?(owner_object_id, effect_id, state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L514" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Whether an actor currently has the given effect active, regardless of who
+cast it.</p>
   </section>
 </section>
 <section class="detail" id="remove_buff/3">
@@ -303,6 +360,51 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="restore_buffs/2">
+
+  <div class="detail-header">
+    <a href="#restore_buffs/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">restore_buffs(character, state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L544" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Re-applies the character's stored buffs for the remainder of their duration.</p>
+  </section>
+</section>
+<section class="detail" id="save_owner_buffs/2">
+
+  <div class="detail-header">
+    <a href="#save_owner_buffs/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">save_owner_buffs(character, state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L524" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Stores the character's still-running buffs so they can be restored on the
+next field they enter, including after a relog.</p>
   </section>
 </section>
 <section class="detail" id="tick/2">

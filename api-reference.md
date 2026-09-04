@@ -44,6 +44,8 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.Party](Ms2ex.GameHandlers.Party.md)
 - [Ms2ex.GameHandlers.PickupItem](Ms2ex.GameHandlers.PickupItem.md)
 - [Ms2ex.GameHandlers.PickupMoney](Ms2ex.GameHandlers.PickupMoney.md)
+- [Ms2ex.GameHandlers.PlayInstrument](Ms2ex.GameHandlers.PlayInstrument.md): Instrument performances: freestyle improvising, playing music scores and
+reading a composed score's notes.
 - [Ms2ex.GameHandlers.PremiumClub](Ms2ex.GameHandlers.PremiumClub.md)
 - [Ms2ex.GameHandlers.Quest](Ms2ex.GameHandlers.Quest.md)
 - [Ms2ex.GameHandlers.RequestChangeChannel](Ms2ex.GameHandlers.RequestChangeChannel.md)
@@ -61,6 +63,10 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.RideSync](Ms2ex.GameHandlers.RideSync.md)
 - [Ms2ex.GameHandlers.Skill](Ms2ex.GameHandlers.Skill.md)
 - [Ms2ex.GameHandlers.SkillBook](Ms2ex.GameHandlers.SkillBook.md)
+- [Ms2ex.GameHandlers.SmartPush](Ms2ex.GameHandlers.SmartPush.md): Smart Push: the paid conveniences the client offers mid-activity, such as
+extending an instrument performance or keeping a mount from throwing its
+rider. Paying grants an additional effect.
+
 - [Ms2ex.GameHandlers.StatPoints](Ms2ex.GameHandlers.StatPoints.md)
 - [Ms2ex.GameHandlers.State](Ms2ex.GameHandlers.State.md)
 - [Ms2ex.GameHandlers.StateSkill](Ms2ex.GameHandlers.StateSkill.md)
@@ -92,6 +98,7 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md)
 - [Ms2ex.Managers.Field.Buff](Ms2ex.Managers.Field.Buff.md)
 - [Ms2ex.Managers.Field.Character](Ms2ex.Managers.Field.Character.md)
+- [Ms2ex.Managers.Field.Instrument](Ms2ex.Managers.Field.Instrument.md)
 - [Ms2ex.Managers.Field.InteractObject](Ms2ex.Managers.Field.InteractObject.md): Interact-object lifecycle: objects start Normal, become Reactable on the
 first tick, and flip back to Normal when a player interacts. Exhausted
 objects (react count reached) hide permanently, unless a hide delay is
@@ -99,6 +106,9 @@ configured. Normal objects return to Reactable after their reset time.
 
 - [Ms2ex.Managers.Field.Item](Ms2ex.Managers.Field.Item.md)
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
+- [Ms2ex.Managers.Field.PerformanceStage](Ms2ex.Managers.Field.PerformanceStage.md): The Queenstown concert stage: one player (or their party) holds the stage
+at a time, announced to the field as the `music_concert` field property so
+clients light up the stage and show the performance timer.
 - [Ms2ex.Managers.Field.Portal](Ms2ex.Managers.Field.Portal.md)
 - [Ms2ex.Managers.Field.RegionSkill](Ms2ex.Managers.Field.RegionSkill.md)
 - [Ms2ex.Managers.Field.Tombstone](Ms2ex.Managers.Field.Tombstone.md)
@@ -127,6 +137,7 @@ configured. Normal objects return to Reactable after their reset time.
 - [Ms2ex.Storage.Scripts](Ms2ex.Storage.Scripts.md): NPC / quest talk-script metadata lookups (`script:<id>` documents).
 - [Ms2ex.Storage.Skills](Ms2ex.Storage.Skills.md)
 - [Ms2ex.Storage.Table.MagicPaths](Ms2ex.Storage.Table.MagicPaths.md)
+- [Ms2ex.Storage.Tables.AutoActions](Ms2ex.Storage.Tables.AutoActions.md)
 - [Ms2ex.Storage.Tables.ChatStickers](Ms2ex.Storage.Tables.ChatStickers.md)
 - [Ms2ex.Storage.Tables.Constants](Ms2ex.Storage.Tables.Constants.md)
 - [Ms2ex.Storage.Tables.ExpTable](Ms2ex.Storage.Tables.ExpTable.md)
@@ -134,9 +145,11 @@ configured. Normal objects return to Reactable after their reset time.
 - [Ms2ex.Storage.Tables.GlobalDropItemBox](Ms2ex.Storage.Tables.GlobalDropItemBox.md)
 - [Ms2ex.Storage.Tables.IndividualDropItem](Ms2ex.Storage.Tables.IndividualDropItem.md)
 - [Ms2ex.Storage.Tables.Insignias](Ms2ex.Storage.Tables.Insignias.md)
+- [Ms2ex.Storage.Tables.Instruments](Ms2ex.Storage.Tables.Instruments.md)
 - [Ms2ex.Storage.Tables.InteractObjects](Ms2ex.Storage.Tables.InteractObjects.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
+- [Ms2ex.Storage.Tables.SmartPush](Ms2ex.Storage.Tables.SmartPush.md)
 - [Ms2ex.Storage.Tables.UgcDesign](Ms2ex.Storage.Tables.UgcDesign.md): Cost and rarity of the design shop templates a player can turn into an item.
 
 - [Ms2ex.Storage.Tables.UserStats](Ms2ex.Storage.Tables.UserStats.md)
@@ -175,6 +188,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Schema.AccountWallet](Ms2ex.Schema.AccountWallet.md)
   - [Ms2ex.Schema.Achievement](Ms2ex.Schema.Achievement.md)
   - [Ms2ex.Schema.Character](Ms2ex.Schema.Character.md)
+  - [Ms2ex.Schema.CharacterBuff](Ms2ex.Schema.CharacterBuff.md)
   - [Ms2ex.Schema.CharacterQuest](Ms2ex.Schema.CharacterQuest.md): Schema for character quests.
   - [Ms2ex.Schema.CharacterStats](Ms2ex.Schema.CharacterStats.md)
   - [Ms2ex.Schema.CharacterTitle](Ms2ex.Schema.CharacterTitle.md)
@@ -215,6 +229,7 @@ to. The type in the envelope decides which resource the payload belongs to.
 
   - [Ms2ex.Enums.RegionType](Ms2ex.Enums.RegionType.md)
   - [Ms2ex.Enums.SkillRank](Ms2ex.Enums.SkillRank.md)
+  - [Ms2ex.Enums.SmartPushCurrencyType](Ms2ex.Enums.SmartPushCurrencyType.md)
   - [Ms2ex.Enums.SpecialStatType](Ms2ex.Enums.SpecialStatType.md)
   - [Ms2ex.Enums.StringCode](Ms2ex.Enums.StringCode.md)
   - [Ms2ex.Enums.SystemNotice](Ms2ex.Enums.SystemNotice.md)
@@ -227,6 +242,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Types.Color](Ms2ex.Types.Color.md)
   - [Ms2ex.Types.Coord](Ms2ex.Types.Coord.md)
   - [Ms2ex.Types.CoordF](Ms2ex.Types.CoordF.md)
+  - [Ms2ex.Types.FieldInstrument](Ms2ex.Types.FieldInstrument.md)
   - [Ms2ex.Types.FieldNpc](Ms2ex.Types.FieldNpc.md)
   - [Ms2ex.Types.Hair](Ms2ex.Types.Hair.md)
   - [Ms2ex.Types.HairData](Ms2ex.Types.HairData.md)
@@ -269,6 +285,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
 - Contexts
   - [Ms2ex.Context.Accounts](Ms2ex.Context.Accounts.md): Context module for account-related operations.
   - [Ms2ex.Context.Achievements](Ms2ex.Context.Achievements.md)
+  - [Ms2ex.Context.Buffs](Ms2ex.Context.Buffs.md): Buffs that outlive the field they were cast in.
   - [Ms2ex.Context.CharacterStats](Ms2ex.Context.CharacterStats.md)
   - [Ms2ex.Context.Characters](Ms2ex.Context.Characters.md)
   - [Ms2ex.Context.ChatStickers](Ms2ex.Context.ChatStickers.md): Context module for managing chat stickers.
@@ -392,6 +409,7 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.PacketReader](Ms2ex.Packets.PacketReader.md)
   - [Ms2ex.Packets.PacketWriter](Ms2ex.Packets.PacketWriter.md)
   - [Ms2ex.Packets.Party](Ms2ex.Packets.Party.md)
+  - [Ms2ex.Packets.PlayInstrument](Ms2ex.Packets.PlayInstrument.md)
   - [Ms2ex.Packets.PremiumClub](Ms2ex.Packets.PremiumClub.md)
   - [Ms2ex.Packets.Prestige](Ms2ex.Packets.Prestige.md)
   - [Ms2ex.Packets.ProxyGameObj](Ms2ex.Packets.ProxyGameObj.md)
@@ -419,6 +437,7 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.SkillPoint](Ms2ex.Packets.SkillPoint.md)
   - [Ms2ex.Packets.SkillSync](Ms2ex.Packets.SkillSync.md)
   - [Ms2ex.Packets.SkillUse](Ms2ex.Packets.SkillUse.md)
+  - [Ms2ex.Packets.SmartPush](Ms2ex.Packets.SmartPush.md)
   - [Ms2ex.Packets.StatPoints](Ms2ex.Packets.StatPoints.md)
   - [Ms2ex.Packets.StateSkill](Ms2ex.Packets.StateSkill.md)
   - [Ms2ex.Packets.Stats](Ms2ex.Packets.Stats.md)

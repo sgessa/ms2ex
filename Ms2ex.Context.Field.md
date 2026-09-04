@@ -7,6 +7,21 @@ This module provides functions for managing field interactions, including
 character movement between maps, object and mob interactions, item pickups,
 and field broadcasts.
 
+# `add_instrument`
+
+```elixir
+@spec add_instrument(Ms2ex.Schema.Character.t(), Ms2ex.Types.FieldInstrument.t()) ::
+  {:ok, Ms2ex.Types.FieldInstrument.t()} | :error
+```
+
+Spawns the instrument a character is playing, assigning it a field object
+id.
+
+## Examples
+
+    iex> add_instrument(character, instrument)
+    {:ok, %FieldInstrument{}}
+
 # `add_mob`
 
 ```elixir
@@ -219,6 +234,15 @@ Drops an item from a character's inventory into the field.
     iex> drop_item(character, item)
     :ok
 
+# `end_performance`
+
+```elixir
+@spec end_performance(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Releases the performance stage; ignored when the character is not the
+current performer.
+
 # `enter`
 
 ```elixir
@@ -261,6 +285,20 @@ Generates a unique field name from a map ID and channel ID.
     iex> field_name(2000, 1)
     :"field:2000:channel:1"
 
+# `has_buff?`
+
+```elixir
+@spec has_buff?(Ms2ex.Schema.Character.t(), integer()) :: boolean()
+```
+
+Whether the character currently has the given effect active, whoever cast
+it.
+
+## Examples
+
+    iex> has_buff?(character, 100_000_013)
+    true
+
 # `hit_tombstone`
 
 ```elixir
@@ -300,6 +338,20 @@ Removes a character from their current field.
     iex> leave(character)
     :ok
 
+# `lookup_instrument`
+
+```elixir
+@spec lookup_instrument(Ms2ex.Schema.Character.t()) ::
+  {:ok, Ms2ex.Types.FieldInstrument.t()} | :error
+```
+
+Looks up the instrument a character is currently playing.
+
+## Examples
+
+    iex> lookup_instrument(character)
+    {:ok, %FieldInstrument{}}
+
 # `lookup_npc`
 
 ```elixir
@@ -314,6 +366,14 @@ Looks up an NPC by object id in the character's field.
     iex> lookup_npc(character, 10_000_001)
     {:ok, %FieldNpc{}}
 
+# `performance_stage?`
+
+```elixir
+@spec performance_stage?(Ms2ex.Schema.Character.t()) :: boolean()
+```
+
+Whether the character's field has a performance stage (the concert map).
+
 # `pickup_item`
 
 ```elixir
@@ -327,6 +387,21 @@ Picks up an item from the field.
 
     iex> pickup_item(character, object_id)
     {:ok, item}
+
+# `remove_instrument`
+
+```elixir
+@spec remove_instrument(Ms2ex.Schema.Character.t()) ::
+  {:ok, Ms2ex.Types.FieldInstrument.t()} | :error
+```
+
+Despawns a character's instrument, returning it so callers can announce the
+stop.
+
+## Examples
+
+    iex> remove_instrument(character)
+    {:ok, %FieldInstrument{}}
 
 # `remove_npc`
 
@@ -367,6 +442,15 @@ Removes a character's tombstone from the field (on field leave).
     iex> remove_tombstone(character)
     :ok
 
+# `start_performance`
+
+```elixir
+@spec start_performance(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Claims the performance stage for the character, announcing the concert to
+everyone on the map.
+
 # `subscribe`
 
 ```elixir
@@ -379,6 +463,14 @@ Subscribes the current process to a character's field events.
 
     iex> subscribe(character)
     :ok
+
+# `toggle_stage`
+
+```elixir
+@spec toggle_stage(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+Moves the character on or off the concert stage.
 
 # `unsubscribe`
 

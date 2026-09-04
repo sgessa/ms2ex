@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-B6A11D8C.js"></script>
+    <script defer src="dist/sidebar_items-FE61EC29.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -215,8 +215,8 @@ see <a href="Ms2ex.Managers.Character.Equips.html"><code class="inline">Ms2ex.Ma
 
       </div>
 
-<p>Equips an item into the requested equipment slot.</p><h2 id="equip/2-examples" class="section-heading"><a href="#equip/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">equip</span><span class="p" data-group-id="7329138490-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="ss">:RH</span><span class="p" data-group-id="7329138490-1">)</span><span class="w">
-</span><span class="p" data-group-id="7329138490-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7329138490-3">%</span><span class="nc" data-group-id="7329138490-3">Schema.Item</span><span class="p" data-group-id="7329138490-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="7329138490-3">}</span><span class="p" data-group-id="7329138490-2">}</span></code></pre>
+<p>Equips an item into the requested equipment slot.</p><h2 id="equip/2-examples" class="section-heading"><a href="#equip/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">equip</span><span class="p" data-group-id="0786436923-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="ss">:RH</span><span class="p" data-group-id="0786436923-1">)</span><span class="w">
+</span><span class="p" data-group-id="0786436923-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0786436923-3">%</span><span class="nc" data-group-id="0786436923-3">Schema.Item</span><span class="p" data-group-id="0786436923-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="0786436923-3">}</span><span class="p" data-group-id="0786436923-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list/1">
@@ -246,8 +246,8 @@ see <a href="Ms2ex.Managers.Character.Equips.html"><code class="inline">Ms2ex.Ma
 
 <p>Lists all equipped items for a given character.</p><p>The rows are returned without their metadata documents; callers fetch
 metadata from the storage cache only when they need it, so cached copies
-of the list stay lean.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="9115849488-1">(</span><span class="n">character</span><span class="p" data-group-id="9115849488-1">)</span><span class="w">
-</span><span class="p" data-group-id="9115849488-2">[</span><span class="p" data-group-id="9115849488-3">%</span><span class="nc" data-group-id="9115849488-3">Schema.Item</span><span class="p" data-group-id="9115849488-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="9115849488-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="9115849488-2">]</span></code></pre>
+of the list stay lean.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="7752370164-1">(</span><span class="n">character</span><span class="p" data-group-id="7752370164-1">)</span><span class="w">
+</span><span class="p" data-group-id="7752370164-2">[</span><span class="p" data-group-id="7752370164-3">%</span><span class="nc" data-group-id="7752370164-3">Schema.Item</span><span class="p" data-group-id="7752370164-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:equipment</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="7752370164-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="7752370164-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="unequip/2">
@@ -283,14 +283,14 @@ of the list stay lean.</p><h2 id="list/1-examples" class="section-heading"><a hr
 <p>Unequips an item, moving it back to the inventory.</p><p>Prefers <code class="inline">preferred_slot</code> when it is free, else falls back to the first
 available slot in the tab. Items in cosmetic slots (hair, ears, face,
 face decal) are discarded instead: those looks cannot be worn again once
-removed.</p><h2 id="unequip/2-examples" class="section-heading"><a href="#unequip/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="4381835813-1">(</span><span class="n">item</span><span class="p" data-group-id="4381835813-1">)</span><span class="w">
-</span><span class="p" data-group-id="4381835813-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4381835813-3">%</span><span class="nc" data-group-id="4381835813-3">Schema.Item</span><span class="p" data-group-id="4381835813-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="4381835813-3">}</span><span class="p" data-group-id="4381835813-2">}</span><span class="w">
+removed.</p><h2 id="unequip/2-examples" class="section-heading"><a href="#unequip/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="6163606498-1">(</span><span class="n">item</span><span class="p" data-group-id="6163606498-1">)</span><span class="w">
+</span><span class="p" data-group-id="6163606498-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6163606498-3">%</span><span class="nc" data-group-id="6163606498-3">Schema.Item</span><span class="p" data-group-id="6163606498-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="6163606498-3">}</span><span class="p" data-group-id="6163606498-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="4381835813-4">(</span><span class="n">hair_item</span><span class="p" data-group-id="4381835813-4">)</span><span class="w">
-</span><span class="p" data-group-id="4381835813-5">{</span><span class="ss">:discard</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4381835813-6">%</span><span class="nc" data-group-id="4381835813-6">Schema.Item</span><span class="p" data-group-id="4381835813-6">{</span><span class="p" data-group-id="4381835813-6">}</span><span class="p" data-group-id="4381835813-5">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="6163606498-4">(</span><span class="n">hair_item</span><span class="p" data-group-id="6163606498-4">)</span><span class="w">
+</span><span class="p" data-group-id="6163606498-5">{</span><span class="ss">:discard</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6163606498-6">%</span><span class="nc" data-group-id="6163606498-6">Schema.Item</span><span class="p" data-group-id="6163606498-6">{</span><span class="p" data-group-id="6163606498-6">}</span><span class="p" data-group-id="6163606498-5">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="4381835813-7">(</span><span class="n">item</span><span class="p" data-group-id="4381835813-7">)</span><span class="w">
-</span><span class="p" data-group-id="4381835813-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:full_inventory</span><span class="p" data-group-id="4381835813-8">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">unequip</span><span class="p" data-group-id="6163606498-7">(</span><span class="n">item</span><span class="p" data-group-id="6163606498-7">)</span><span class="w">
+</span><span class="p" data-group-id="6163606498-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:full_inventory</span><span class="p" data-group-id="6163606498-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="valid_slot?/1">
@@ -318,10 +318,10 @@ removed.</p><h2 id="unequip/2-examples" class="section-heading"><a href="#unequi
 
       </div>
 
-<p>Validates if a given slot name is a valid equipment slot.</p><h2 id="valid_slot?/1-examples" class="section-heading"><a href="#valid_slot?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="1815854211-1">(</span><span class="s">&quot;HD&quot;</span><span class="p" data-group-id="1815854211-1">)</span><span class="w">
+<p>Validates if a given slot name is a valid equipment slot.</p><h2 id="valid_slot?/1-examples" class="section-heading"><a href="#valid_slot?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="5175920570-1">(</span><span class="s">&quot;HD&quot;</span><span class="p" data-group-id="5175920570-1">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="1815854211-2">(</span><span class="s">&quot;invalid&quot;</span><span class="p" data-group-id="1815854211-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_slot?</span><span class="p" data-group-id="5175920570-2">(</span><span class="s">&quot;invalid&quot;</span><span class="p" data-group-id="5175920570-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>

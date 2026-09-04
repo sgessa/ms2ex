@@ -49,6 +49,15 @@ constant option, else rank 1. Returns `nil` when the item has no metadata.
 
 # `mesos?`
 
+# `remaining_uses`
+
+```elixir
+@spec remaining_uses(Ms2ex.Schema.Item.t()) :: integer()
+```
+
+Plays a music score has left. Scores start at their metadata play count and
+the remainder is persisted on the item so it survives relogs.
+
 # `rue`
 
 # `rue?`
