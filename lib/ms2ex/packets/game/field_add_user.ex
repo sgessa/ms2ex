@@ -69,8 +69,8 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_byte()
     |> put_int(character.title_id)
     |> put_short(character.insignia_id)
-    # the reference always writes 0 here, so peers already on the field never
-    # learn the symbol should be drawn
+    # whether the wearer still meets the insignia's condition, so peers
+    # already on the field know whether to draw the symbol
     |> put_bool(Context.Insignias.display?(character))
     |> put_int()
     |> put_byte()

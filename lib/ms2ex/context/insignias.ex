@@ -109,8 +109,11 @@ defmodule Ms2ex.Context.Insignias do
     end
   end
 
+  # the buff itself lives in the field's state and the field replies :ok,
+  # so the response carries nothing worth keeping
   defp apply_buff(character, %{buff_id: buff_id, buff_level: buff_level}) when buff_id > 0 do
     Context.Field.call(character, {:add_effect_buff, buff_id, buff_level, character})
+    :ok
   end
 
   defp apply_buff(_character, _metadata), do: :ok

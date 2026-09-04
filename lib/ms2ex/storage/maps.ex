@@ -13,6 +13,11 @@ defmodule Ms2ex.Storage.Maps do
     |> then(&Map.put(&1, :position2, struct(Coord, &1.position2)))
   end
 
+  @doc """
+  One of the map's enabled spawn points, picked at random. Respawns use it
+  directly (the player is placed on the exact coordinate); field entry
+  builds on it (see `get_field_spawn/1`) so the player drops in from above.
+  """
   def get_spawn(map_id) do
     map_id
     |> get_meta()
