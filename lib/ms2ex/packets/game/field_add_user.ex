@@ -1,4 +1,5 @@
 defmodule Ms2ex.Packets.FieldAddUser do
+  alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -67,7 +68,9 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_byte()
     |> put_int(character.title_id)
     |> put_short(character.insignia_id)
-    |> put_byte()
+    # the reference always writes 0 here, so peers already on the field never
+    # learn the symbol should be drawn
+    |> put_bool(Context.Insignias.display?(character))
     |> put_int()
     |> put_byte()
     |> put_time()

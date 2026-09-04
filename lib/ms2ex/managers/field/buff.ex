@@ -468,10 +468,15 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp schedule(buff) do
-    if Types.Buff.ticks?(buff) do
-      Process.send_after(self(), {:buff_tick, buff.object_id}, buff.next_proc_tick)
-    else
-      schedule_removal(buff)
+    cond do
+      Types.Buff.ticks?(buff) ->
+        Process.send_after(self(), {:buff_tick, buff.object_id}, buff.next_proc_tick)
+
+      Types.Buff.unlimited?(buff) ->
+        :ok
+
+      true ->
+        schedule_removal(buff)
     end
   end
 

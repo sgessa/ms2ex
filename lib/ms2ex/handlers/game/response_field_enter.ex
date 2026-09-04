@@ -55,9 +55,12 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     new_map = character.change_map
     {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
 
+    # the safe position has to follow the map: out-of-bounds recovery teleports
+    # to it, and a coordinate from the previous map is out of bounds here too
     character
     |> Map.put(:change_map, nil)
     |> Map.put(:position, new_map.position)
+    |> Map.put(:safe_position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
   end
 

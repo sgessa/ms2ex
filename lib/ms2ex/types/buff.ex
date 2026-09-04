@@ -68,6 +68,14 @@ defmodule Ms2ex.Types.Buff do
     |> Map.put(:end_tick, end_tick)
   end
 
+  @doc """
+  Buffs that never time out, such as the passive an insignia grants. Their
+  metadata carries no duration, so an expiry would land on the start tick.
+  """
+  def unlimited?(%__MODULE__{} = buff) do
+    get_in(buff.effect, [:property, :keep_condition]) == :unlimited_duration
+  end
+
   def set_shield_health(%__MODULE__{} = buff) do
     shield = buff.effect[:shield]
 

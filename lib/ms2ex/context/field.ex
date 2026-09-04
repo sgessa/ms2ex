@@ -448,7 +448,7 @@ defmodule Ms2ex.Context.Field do
   """
   @spec change_field(Schema.Character.t(), integer()) :: :ok | {:error, term()}
   def change_field(character, map_id) do
-    with %{} = spawn_point <- Storage.Maps.get_spawn(map_id) do
+    with %{} = spawn_point <- Storage.Maps.get_field_spawn(map_id) do
       change_field(character, map_id, spawn_point.position, spawn_point.rotation)
     end
   end

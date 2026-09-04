@@ -85,8 +85,8 @@ defmodule Ms2ex.Managers.Character.Stats do
 
     stats =
       character.stats
-      |> Map.put(:"#{stat_id}_max", max + amount)
-      |> Map.put(:"#{stat_id}_cur", min(cur, max + amount))
+      |> Map.put(:"#{stat_id}_max", max(max + amount, 0))
+      |> Map.put(:"#{stat_id}_cur", max(cur + amount, 0))
 
     character = %{character | stats: stats}
 
