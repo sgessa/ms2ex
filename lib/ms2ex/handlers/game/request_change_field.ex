@@ -77,6 +77,11 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
   end
 
   defp unlock_tutorial_maps_and_taxis(character, tutorial) do
+    # TODO: while every exit portal stays enabled (no trigger runtime), all
+    # jobs leave through the portal to the skip destination and the client
+    # discovers that map's taxi on entry anyway, so this credit is mostly
+    # redundant. It matters once the tutorial's per-job exit portals open
+    # only the job's route (knights never visit the destination hub).
     discovered_maps = Enum.uniq(character.discovered_maps ++ tutorial[:open_maps])
 
     new_taxis = Enum.reject(tutorial[:open_taxis], &Enum.member?(character.taxis, &1))
