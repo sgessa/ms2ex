@@ -1,298 +1,105 @@
 # `Ms2ex.Context.Inventory`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L1)
 
-Context module for inventory-related operations.
+Item persistence helpers.
 
-This module provides functions for managing character inventories,
-including adding, removing, updating, and organizing items.
+Reads load the rows a manager needs to build its state, and writes
+persist the mutations a manager has already applied to memory. All the
+gameplay flows go through `Ms2ex.Managers.Inventory`; this module is its
+database layer. The one flow that runs before any session exists —
+character creation — inserts its starting outfit here directly.
 
-# `add_item`
-
-```elixir
-@spec add_item(Ms2ex.Schema.Character.t(), Ms2ex.Schema.Item.t()) ::
-  {:ok,
-   {:create, Ms2ex.Schema.Item.t()}
-   | {:update, Ms2ex.Schema.Item.t()}
-   | {:update_and_create, {Ms2ex.Schema.Item.t(), integer()},
-      Ms2ex.Schema.Item.t()}}
-```
-
-Adds an item to a character's inventory.
-
-Handles stackable items by finding existing stacks that can be increased.
-
-## Examples
-
-    iex> add_item(character, item)
-    {:ok, {:create, %Schema.Item{}}}
-
-# `all`
+# `assign_slot`
 
 ```elixir
-@spec all(Ms2ex.Schema.Character.t()) :: [Ms2ex.Schema.Item.t()]
+@spec assign_slot(integer(), integer() | nil) :: :ok
 ```
 
-Gets all items belonging to a character.
+Writes an item's inventory slot.
 
-## Examples
-
-    iex> all(character)
-    [%Schema.Item{}, %Schema.Item{}, ...]
-
-# `bind`
+# `clear_slots`
 
 ```elixir
-@spec bind(Ms2ex.Schema.Item.t()) :: Ms2ex.Schema.Item.t()
+@spec clear_slots([integer()]) :: :ok
 ```
 
-Binds an item to a character (placeholder).
+Clears the inventory slot of the given items (making them sortable).
 
-## Examples
-
-    iex> bind(item)
-    %Schema.Item{}
-
-# `consume`
+# `delete_item`
 
 ```elixir
-@spec consume(Ms2ex.Schema.Item.t(), integer()) ::
-  {:update, Ms2ex.Schema.Item.t()} | {:delete, Ms2ex.Schema.Item.t()}
+@spec delete_item(Ms2ex.Schema.Item.t()) ::
+  {:ok, Ms2ex.Schema.Item.t()} | {:error, Ecto.Changeset.t()}
 ```
 
-Consumes a given amount of an item.
+Deletes an item row.
 
-Reduces the item amount by the consumed amount, or deletes the item if amount would be zero.
-
-## Examples
-
-    iex> consume(item, 2)
-    {:update, %Schema.Item{amount: 3}}
-
-    iex> consume(item, 5)
-    {:delete, %Schema.Item{}}
-
-# `consume_item_amount`
+# `delete_items`
 
 ```elixir
-@spec consume_item_amount(Ms2ex.Schema.Character.t(), integer(), integer()) ::
-  {:ok, update: Ms2ex.Schema.Item.t(), delete: Ms2ex.Schema.Item.t()}
-  | {:error, :insufficient_amount}
+@spec delete_items([integer()]) :: :ok
 ```
 
-Consumes an amount of an item across the character's carry stacks,
-deleting stacks emptied by the consumption. Must run inside the caller's
-transaction when atomicity matters. Returns per-stack results for
-inventory packets; `{:error, :insufficient_amount}` when the character
-holds fewer than the requested amount.
-
-# `consume_item_amounts`
-
-```elixir
-@spec consume_item_amounts(Ms2ex.Schema.Character.t(), [map()]) ::
-  {:ok, update: Ms2ex.Schema.Item.t(), delete: Ms2ex.Schema.Item.t()}
-```
-
-Consumes each `%{item_id, amount}` pair from the character's carry stacks,
-loading every needed stack with a single query and deleting stacks emptied
-by the consumption. Pairs the inventory cannot cover are skipped so callers
-can keep processing (the completion counter no longer matches the live
-inventory in that case).
-
-# `delete`
-
-```elixir
-@spec delete(Ms2ex.Schema.Item.t()) ::
-  {:delete, Ms2ex.Schema.Item.t()} | {:error, Ecto.Changeset.t()}
-```
-
-Deletes an item from the inventory.
-
-## Examples
-
-    iex> delete(item)
-    {:delete, %Schema.Item{}}
+Deletes item rows by id.
 
 # `expand_tab`
 
 ```elixir
-@spec expand_tab(Ms2ex.Schema.Character.t(), atom()) :: Ms2ex.Schema.InventoryTab.t()
+@spec expand_tab(integer(), integer()) :: :ok
 ```
 
-Expands an inventory tab by adding additional slots.
+Adds extra slots to an inventory tab row.
 
-## Examples
-
-    iex> expand_tab(character, :outfit)
-    %Schema.InventoryTab{slots: 36}
-
-# `expired?`
+# `insert_item`
 
 ```elixir
-@spec expired?(Ms2ex.Schema.Item.t()) :: boolean()
+@spec insert_item(integer(), Ms2ex.Schema.Item.t() | map()) ::
+  {:ok, Ms2ex.Schema.Item.t()} | {:error, Ecto.Changeset.t()}
 ```
 
-Checks if an item has expired.
+Inserts a new item row. The attributes must already carry the inventory
+tab, slot and rarity; the tab is derived from the item's metadata when
+not given.
 
-## Examples
-
-    iex> expired?(item)
-    true
-
-# `find_first_available_slot`
+# `list_equipped`
 
 ```elixir
-@spec find_first_available_slot(integer(), atom()) ::
-  integer() | {:error, :full_inventory}
+@spec list_equipped(integer()) :: [Ms2ex.Schema.Item.t()]
 ```
 
-Finds the first available inventory slot in a given tab.
-
-The scan is bounded by the tab's persisted slot count (base size plus any
-expansions); when every slot is taken it returns `{:error, :full_inventory}`.
-
-## Examples
-
-    iex> find_first_available_slot(1, :outfit)
-    5
-
-    iex> find_first_available_slot(1, :gear)
-    {:error, :full_inventory}
-
-# `find_stack`
-
-```elixir
-@spec find_stack(Ms2ex.Schema.Character.t(), Ms2ex.Schema.Item.t()) ::
-  Ms2ex.Schema.Item.t() | nil
-```
-
-Finds an existing stack of the same item that isn't at its stack limit.
-
-## Examples
-
-    iex> find_stack(character, item)
-    %Schema.Item{amount: 5}
-
-# `free_slot_count`
-
-```elixir
-@spec free_slot_count(integer(), atom()) :: non_neg_integer()
-```
-
-Counts the free inventory slots in a given tab.
-
-## Examples
-
-    iex> free_slot_count(1, :gear)
-
-# `get`
-
-```elixir
-@spec get(Ms2ex.Schema.Character.t(), integer()) :: Ms2ex.Schema.Item.t() | nil
-```
-
-Gets an item by ID for a character.
-
-## Examples
-
-    iex> get(character, 123)
-    %Schema.Item{}
-
-# `get_by`
-
-```elixir
-@spec get_by(map()) :: Ms2ex.Schema.Item.t() | nil
-```
-
-Gets an item from the inventory by the given attributes.
-
-## Examples
-
-    iex> get_by(%{character_id: 1, id: 123})
-    %Schema.Item{}
-
-    iex> get_by(%{character_id: 999, id: 456})
-    nil
-
-# `item_in_slot`
-
-```elixir
-@spec item_in_slot(integer(), atom(), integer()) :: Ms2ex.Schema.Item.t() | nil
-```
-
-Gets the item in a specific inventory slot.
-
-## Examples
-
-    iex> item_in_slot(1, :outfit, 5)
-    %Schema.Item{inventory_slot: 5}
+Lists a character's equipped item rows.
 
 # `list_items`
 
 ```elixir
-@spec list_items(Ms2ex.Schema.Character.t()) :: [Ms2ex.Schema.Item.t()]
+@spec list_items(integer()) :: [Ms2ex.Schema.Item.t()]
 ```
 
-Lists all items in a character's inventory (excluding equipped items).
-
-Returns items sorted by inventory slot.
-
-## Examples
-
-    iex> list_items(character)
-    [%Schema.Item{location: :inventory}, ...]
-
-# `list_tab_items`
-
-```elixir
-@spec list_tab_items(integer(), atom()) :: [Ms2ex.Schema.Item.t()]
-```
-
-Lists items in a specific inventory tab.
-
-## Examples
-
-    iex> list_tab_items(character_id, :outfit)
-    [%Schema.Item{inventory_tab: :outfit}, ...]
+Lists every item row of a character (equipped and carried).
 
 # `list_tabs`
 
 ```elixir
-@spec list_tabs(Ms2ex.Schema.Character.t()) :: [Ms2ex.Schema.InventoryTab.t()]
+@spec list_tabs(integer()) :: [Ms2ex.Schema.InventoryTab.t()]
 ```
 
-Lists all inventory tabs for a character.
+Lists a character's inventory tab rows.
 
-## Examples
-
-    iex> list_tabs(character)
-    [%Schema.InventoryTab{tab: :outfit}, ...]
-
-# `sort_tab`
+# `set_amount`
 
 ```elixir
-@spec sort_tab(Ms2ex.Schema.Character.t(), atom()) ::
-  {:ok, [Ms2ex.Schema.Item.t()]} | {:error, any()}
+@spec set_amount(integer(), integer()) :: :ok
 ```
 
-Sorts items in a tab by item ID.
+Overwrites an item's amount.
 
-## Examples
-
-    iex> sort_tab(character, :outfit)
-    {:ok, [%Schema.Item{}, ...]}
-
-# `swap`
+# `update_amount`
 
 ```elixir
-@spec swap(Ms2ex.Schema.Item.t(), integer()) :: {:ok, integer()} | {:error, any()}
+@spec update_amount(integer(), integer()) :: :ok
 ```
 
-Swaps an item to a new slot, handling any item that might already be in that slot.
-
-## Examples
-
-    iex> swap(item, 10)
-    {:ok, 0}
+Adds a delta to an item's amount.
 
 # `update_item`
 
@@ -301,12 +108,7 @@ Swaps an item to a new slot, handling any item that might already be in that slo
   {:ok, Ms2ex.Schema.Item.t()} | {:error, Ecto.Changeset.t()}
 ```
 
-Updates an item with the given attributes.
-
-## Examples
-
-    iex> update_item(item, %{amount: 5})
-    {:ok, %Schema.Item{amount: 5}}
+Updates an item row from a struct or changeset plus attributes.
 
 ---
 

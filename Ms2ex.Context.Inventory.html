@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FE61EC29.js"></script>
+    <script defer src="dist/sidebar_items-35D8E775.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,8 +114,11 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Context module for inventory-related operations.</p><p>This module provides functions for managing character inventories,
-including adding, removing, updating, and organizing items.</p>
+<p>Item persistence helpers.</p><p>Reads load the rows a manager needs to build its state, and writes
+persist the mutations a manager has already applied to memory. All the
+gameplay flows go through <a href="Ms2ex.Managers.Inventory.html"><code class="inline">Ms2ex.Managers.Inventory</code></a>; this module is its
+database layer. The one flow that runs before any session exists —
+character creation — inserts its starting outfit here directly.</p>
     </section>
 
 </div>
@@ -134,219 +137,123 @@ including adding, removing, updating, and organizing items.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_item/2" data-no-tooltip="" translate="no">add_item(character, attrs)</a>
+        <a href="#assign_slot/2" data-no-tooltip="" translate="no">assign_slot(item_id, slot)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Adds an item to a character's inventory.</p></div>
+        <div class="summary-synopsis"><p>Writes an item's inventory slot.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#all/1" data-no-tooltip="" translate="no">all(character)</a>
+        <a href="#clear_slots/1" data-no-tooltip="" translate="no">clear_slots(item_ids)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Gets all items belonging to a character.</p></div>
+        <div class="summary-synopsis"><p>Clears the inventory slot of the given items (making them sortable).</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bind/1" data-no-tooltip="" translate="no">bind(item)</a>
+        <a href="#delete_item/1" data-no-tooltip="" translate="no">delete_item(item)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Binds an item to a character (placeholder).</p></div>
+        <div class="summary-synopsis"><p>Deletes an item row.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#consume/2" data-no-tooltip="" translate="no">consume(item, consumed \\ 1)</a>
+        <a href="#delete_items/1" data-no-tooltip="" translate="no">delete_items(ids)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Consumes a given amount of an item.</p></div>
+        <div class="summary-synopsis"><p>Deletes item rows by id.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#consume_item_amount/3" data-no-tooltip="" translate="no">consume_item_amount(character, item_id, amount)</a>
+        <a href="#expand_tab/2" data-no-tooltip="" translate="no">expand_tab(tab_id, extra_slots)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Consumes an amount of an item across the character's carry stacks,
-deleting stacks emptied by the consumption. Must run inside the caller's
-transaction when atomicity matters. Returns per-stack results for
-inventory packets; <code class="inline">{:error, :insufficient_amount}</code> when the character
-holds fewer than the requested amount.</p></div>
+        <div class="summary-synopsis"><p>Adds extra slots to an inventory tab row.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#consume_item_amounts/2" data-no-tooltip="" translate="no">consume_item_amounts(character, consumables)</a>
+        <a href="#insert_item/2" data-no-tooltip="" translate="no">insert_item(character_id, attrs)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Consumes each <code class="inline">%{item_id, amount}</code> pair from the character's carry stacks,
-loading every needed stack with a single query and deleting stacks emptied
-by the consumption. Pairs the inventory cannot cover are skipped so callers
-can keep processing (the completion counter no longer matches the live
-inventory in that case).</p></div>
+        <div class="summary-synopsis"><p>Inserts a new item row. The attributes must already carry the inventory
+tab, slot and rarity; the tab is derived from the item's metadata when
+not given.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete/1" data-no-tooltip="" translate="no">delete(item)</a>
+        <a href="#list_equipped/1" data-no-tooltip="" translate="no">list_equipped(character_id)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Deletes an item from the inventory.</p></div>
+        <div class="summary-synopsis"><p>Lists a character's equipped item rows.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expand_tab/2" data-no-tooltip="" translate="no">expand_tab(character, tab)</a>
+        <a href="#list_items/1" data-no-tooltip="" translate="no">list_items(character_id)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Expands an inventory tab by adding additional slots.</p></div>
+        <div class="summary-synopsis"><p>Lists every item row of a character (equipped and carried).</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expired?/1" data-no-tooltip="" translate="no">expired?(item)</a>
+        <a href="#list_tabs/1" data-no-tooltip="" translate="no">list_tabs(character_id)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Checks if an item has expired.</p></div>
+        <div class="summary-synopsis"><p>Lists a character's inventory tab rows.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#find_first_available_slot/2" data-no-tooltip="" translate="no">find_first_available_slot(character_id, inventory_tab)</a>
+        <a href="#set_amount/2" data-no-tooltip="" translate="no">set_amount(item_id, amount)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Finds the first available inventory slot in a given tab.</p></div>
+        <div class="summary-synopsis"><p>Overwrites an item's amount.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#find_stack/2" data-no-tooltip="" translate="no">find_stack(map1, map2)</a>
+        <a href="#update_amount/2" data-no-tooltip="" translate="no">update_amount(item_id, delta)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Finds an existing stack of the same item that isn't at its stack limit.</p></div>
+        <div class="summary-synopsis"><p>Adds a delta to an item's amount.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#free_slot_count/2" data-no-tooltip="" translate="no">free_slot_count(character_id, inventory_tab)</a>
+        <a href="#update_item/2" data-no-tooltip="" translate="no">update_item(item, attrs)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Counts the free inventory slots in a given tab.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get/2" data-no-tooltip="" translate="no">get(map, id)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Gets an item by ID for a character.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_by/1" data-no-tooltip="" translate="no">get_by(attrs)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Gets an item from the inventory by the given attributes.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#item_in_slot/3" data-no-tooltip="" translate="no">item_in_slot(char_id, tab, slot)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Gets the item in a specific inventory slot.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#list_items/1" data-no-tooltip="" translate="no">list_items(character)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Lists all items in a character's inventory (excluding equipped items).</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#list_tab_items/2" data-no-tooltip="" translate="no">list_tab_items(character_id, tab)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Lists items in a specific inventory tab.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#list_tabs/1" data-no-tooltip="" translate="no">list_tabs(character)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Lists all inventory tabs for a character.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#sort_tab/2" data-no-tooltip="" translate="no">sort_tab(character, inventory_tab)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Sorts items in a tab by item ID.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#swap/2" data-no-tooltip="" translate="no">swap(src_item, dst_slot)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Swaps an item to a new slot, handling any item that might already be in that slot.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#update_item/2" data-no-tooltip="" translate="no">update_item(data, attrs)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Updates an item with the given attributes.</p></div>
+        <div class="summary-synopsis"><p>Updates an item row from a struct or changeset plus attributes.</p></div>
 
     </div>
 
@@ -364,17 +271,17 @@ inventory in that case).</p></div>
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="add_item/2">
+<section class="detail" id="assign_slot/2">
 
   <div class="detail-header">
-    <a href="#add_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#assign_slot/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">add_item(character, attrs)</h1>
+      <h1 class="signature" translate="no">assign_slot(item_id, slot)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L125" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L151" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -385,30 +292,24 @@ inventory in that case).</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> add_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
-  {:ok,
-   {:create, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
-   | {:update, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
-   | {:update_and_create, {<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()},
-      <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> assign_slot(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil) :: :ok</pre>
 
       </div>
 
-<p>Adds an item to a character's inventory.</p><p>Handles stackable items by finding existing stacks that can be increased.</p><h2 id="add_item/2-examples" class="section-heading"><a href="#add_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_item</span><span class="p" data-group-id="0025349249-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="0025349249-1">)</span><span class="w">
-</span><span class="p" data-group-id="0025349249-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0025349249-3">{</span><span class="ss">:create</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0025349249-4">%</span><span class="nc" data-group-id="0025349249-4">Schema.Item</span><span class="p" data-group-id="0025349249-4">{</span><span class="p" data-group-id="0025349249-4">}</span><span class="p" data-group-id="0025349249-3">}</span><span class="p" data-group-id="0025349249-2">}</span></code></pre>
+<p>Writes an item's inventory slot.</p>
   </section>
 </section>
-<section class="detail" id="all/1">
+<section class="detail" id="clear_slots/1">
 
   <div class="detail-header">
-    <a href="#all/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#clear_slots/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">all(character)</h1>
+      <h1 class="signature" translate="no">clear_slots(item_ids)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L39" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L140" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -419,25 +320,24 @@ inventory in that case).</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> all(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> clear_slots([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()]) :: :ok</pre>
 
       </div>
 
-<p>Gets all items belonging to a character.</p><h2 id="all/1-examples" class="section-heading"><a href="#all/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">all</span><span class="p" data-group-id="5895317536-1">(</span><span class="n">character</span><span class="p" data-group-id="5895317536-1">)</span><span class="w">
-</span><span class="p" data-group-id="5895317536-2">[</span><span class="p" data-group-id="5895317536-3">%</span><span class="nc" data-group-id="5895317536-3">Schema.Item</span><span class="p" data-group-id="5895317536-3">{</span><span class="p" data-group-id="5895317536-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5895317536-4">%</span><span class="nc" data-group-id="5895317536-4">Schema.Item</span><span class="p" data-group-id="5895317536-4">{</span><span class="p" data-group-id="5895317536-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="5895317536-2">]</span></code></pre>
+<p>Clears the inventory slot of the given items (making them sortable).</p>
   </section>
 </section>
-<section class="detail" id="bind/1">
+<section class="detail" id="delete_item/1">
 
   <div class="detail-header">
-    <a href="#bind/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#delete_item/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">bind(item)</h1>
+      <h1 class="signature" translate="no">delete_item(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L552" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L123" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -448,27 +348,25 @@ inventory in that case).</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> bind(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) :: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> delete_item(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Binds an item to a character (placeholder).</p><h2 id="bind/1-examples" class="section-heading"><a href="#bind/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">bind</span><span class="p" data-group-id="2846333683-1">(</span><span class="n">item</span><span class="p" data-group-id="2846333683-1">)</span><span class="w">
-</span><span class="p" data-group-id="2846333683-2">%</span><span class="nc" data-group-id="2846333683-2">Schema.Item</span><span class="p" data-group-id="2846333683-2">{</span><span class="p" data-group-id="2846333683-2">}</span></code></pre>
+<p>Deletes an item row.</p>
   </section>
 </section>
-<section class="detail" id="consume/2">
-
-    <span id="consume/1"></span>
+<section class="detail" id="delete_items/1">
 
   <div class="detail-header">
-    <a href="#consume/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#delete_items/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">consume(item, consumed \\ 1)</h1>
+      <h1 class="signature" translate="no">delete_items(ids)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L274" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L129" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -479,113 +377,11 @@ inventory in that case).</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> consume(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  {:update, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:delete, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> delete_items([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()]) :: :ok</pre>
 
       </div>
 
-<p>Consumes a given amount of an item.</p><p>Reduces the item amount by the consumed amount, or deletes the item if amount would be zero.</p><h2 id="consume/2-examples" class="section-heading"><a href="#consume/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">consume</span><span class="p" data-group-id="0817994038-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="0817994038-1">)</span><span class="w">
-</span><span class="p" data-group-id="0817994038-2">{</span><span class="ss">:update</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0817994038-3">%</span><span class="nc" data-group-id="0817994038-3">Schema.Item</span><span class="p" data-group-id="0817994038-3">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="0817994038-3">}</span><span class="p" data-group-id="0817994038-2">}</span><span class="w">
-
-</span><span class="gp unselectable">iex&gt; </span><span class="n">consume</span><span class="p" data-group-id="0817994038-4">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="0817994038-4">)</span><span class="w">
-</span><span class="p" data-group-id="0817994038-5">{</span><span class="ss">:delete</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0817994038-6">%</span><span class="nc" data-group-id="0817994038-6">Schema.Item</span><span class="p" data-group-id="0817994038-6">{</span><span class="p" data-group-id="0817994038-6">}</span><span class="p" data-group-id="0817994038-5">}</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="consume_item_amount/3">
-
-  <div class="detail-header">
-    <a href="#consume_item_amount/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">consume_item_amount(character, item_id, amount)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L292" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> consume_item_amount(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  {:ok, update: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), delete: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
-  | {:error, :insufficient_amount}</pre>
-
-      </div>
-
-<p>Consumes an amount of an item across the character's carry stacks,
-deleting stacks emptied by the consumption. Must run inside the caller's
-transaction when atomicity matters. Returns per-stack results for
-inventory packets; <code class="inline">{:error, :insufficient_amount}</code> when the character
-holds fewer than the requested amount.</p>
-  </section>
-</section>
-<section class="detail" id="consume_item_amounts/2">
-
-  <div class="detail-header">
-    <a href="#consume_item_amounts/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">consume_item_amounts(character, consumables)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L309" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> consume_item_amounts(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]) ::
-  {:ok, update: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), delete: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}</pre>
-
-      </div>
-
-<p>Consumes each <code class="inline">%{item_id, amount}</code> pair from the character's carry stacks,
-loading every needed stack with a single query and deleting stacks emptied
-by the consumption. Pairs the inventory cannot cover are skipped so callers
-can keep processing (the completion counter no longer matches the live
-inventory in that case).</p>
-  </section>
-</section>
-<section class="detail" id="delete/1">
-
-  <div class="detail-header">
-    <a href="#delete/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">delete(item)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L369" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> delete(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
-  {:delete, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
-
-      </div>
-
-<p>Deletes an item from the inventory.</p><h2 id="delete/1-examples" class="section-heading"><a href="#delete/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete</span><span class="p" data-group-id="1360199608-1">(</span><span class="n">item</span><span class="p" data-group-id="1360199608-1">)</span><span class="w">
-</span><span class="p" data-group-id="1360199608-2">{</span><span class="ss">:delete</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1360199608-3">%</span><span class="nc" data-group-id="1360199608-3">Schema.Item</span><span class="p" data-group-id="1360199608-3">{</span><span class="p" data-group-id="1360199608-3">}</span><span class="p" data-group-id="1360199608-2">}</span></code></pre>
+<p>Deletes item rows by id.</p>
   </section>
 </section>
 <section class="detail" id="expand_tab/2">
@@ -595,10 +391,10 @@ inventory in that case).</p>
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">expand_tab(character, tab)</h1>
+      <h1 class="signature" translate="no">expand_tab(tab_id, extra_slots)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L504" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L162" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -609,25 +405,24 @@ inventory in that case).</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok</pre>
 
       </div>
 
-<p>Expands an inventory tab by adding additional slots.</p><h2 id="expand_tab/2-examples" class="section-heading"><a href="#expand_tab/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">expand_tab</span><span class="p" data-group-id="1870632003-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1870632003-1">)</span><span class="w">
-</span><span class="p" data-group-id="1870632003-2">%</span><span class="nc" data-group-id="1870632003-2">Schema.InventoryTab</span><span class="p" data-group-id="1870632003-2">{</span><span class="ss">slots</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span><span class="p" data-group-id="1870632003-2">}</span></code></pre>
+<p>Adds extra slots to an inventory tab row.</p>
   </section>
 </section>
-<section class="detail" id="expired?/1">
+<section class="detail" id="insert_item/2">
 
   <div class="detail-header">
-    <a href="#expired?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#insert_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">expired?(item)</h1>
+      <h1 class="signature" translate="no">insert_item(character_id, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L384" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L60" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -638,25 +433,27 @@ inventory in that case).</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> insert_item(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Checks if an item has expired.</p><h2 id="expired?/1-examples" class="section-heading"><a href="#expired?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">expired?</span><span class="p" data-group-id="0932139626-1">(</span><span class="n">item</span><span class="p" data-group-id="0932139626-1">)</span><span class="w">
-</span><span class="no">true</span></code></pre>
+<p>Inserts a new item row. The attributes must already carry the inventory
+tab, slot and rarity; the tab is derived from the item's metadata when
+not given.</p>
   </section>
 </section>
-<section class="detail" id="find_first_available_slot/2">
+<section class="detail" id="list_equipped/1">
 
   <div class="detail-header">
-    <a href="#find_first_available_slot/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#list_equipped/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">find_first_available_slot(character_id, inventory_tab)</h1>
+      <h1 class="signature" translate="no">list_equipped(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L405" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L45" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -667,165 +464,11 @@ inventory in that case).</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> find_first_available_slot(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | {:error, :full_inventory}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_equipped(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]</pre>
 
       </div>
 
-<p>Finds the first available inventory slot in a given tab.</p><p>The scan is bounded by the tab's persisted slot count (base size plus any
-expansions); when every slot is taken it returns <code class="inline">{:error, :full_inventory}</code>.</p><h2 id="find_first_available_slot/2-examples" class="section-heading"><a href="#find_first_available_slot/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_first_available_slot</span><span class="p" data-group-id="1708911676-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1708911676-1">)</span><span class="w">
-</span><span class="mi">5</span><span class="w">
-
-</span><span class="gp unselectable">iex&gt; </span><span class="n">find_first_available_slot</span><span class="p" data-group-id="1708911676-2">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:gear</span><span class="p" data-group-id="1708911676-2">)</span><span class="w">
-</span><span class="p" data-group-id="1708911676-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:full_inventory</span><span class="p" data-group-id="1708911676-3">}</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="find_stack/2">
-
-  <div class="detail-header">
-    <a href="#find_stack/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">find_stack(map1, map2)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L183" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> find_stack(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
-  <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | nil</pre>
-
-      </div>
-
-<p>Finds an existing stack of the same item that isn't at its stack limit.</p><h2 id="find_stack/2-examples" class="section-heading"><a href="#find_stack/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">find_stack</span><span class="p" data-group-id="3316263420-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="3316263420-1">)</span><span class="w">
-</span><span class="p" data-group-id="3316263420-2">%</span><span class="nc" data-group-id="3316263420-2">Schema.Item</span><span class="p" data-group-id="3316263420-2">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3316263420-2">}</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="free_slot_count/2">
-
-  <div class="detail-header">
-    <a href="#free_slot_count/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">free_slot_count(character_id, inventory_tab)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L422" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> free_slot_count(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
-
-      </div>
-
-<p>Counts the free inventory slots in a given tab.</p><h2 id="free_slot_count/2-examples" class="section-heading"><a href="#free_slot_count/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">free_slot_count</span><span class="p" data-group-id="2691840141-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:gear</span><span class="p" data-group-id="2691840141-1">)</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="get/2">
-
-  <div class="detail-header">
-    <a href="#get/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get(map, id)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L105" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | nil</pre>
-
-      </div>
-
-<p>Gets an item by ID for a character.</p><h2 id="get/2-examples" class="section-heading"><a href="#get/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get</span><span class="p" data-group-id="2845463472-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">123</span><span class="p" data-group-id="2845463472-1">)</span><span class="w">
-</span><span class="p" data-group-id="2845463472-2">%</span><span class="nc" data-group-id="2845463472-2">Schema.Item</span><span class="p" data-group-id="2845463472-2">{</span><span class="p" data-group-id="2845463472-2">}</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="get_by/1">
-
-  <div class="detail-header">
-    <a href="#get_by/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_by(attrs)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_by(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | nil</pre>
-
-      </div>
-
-<p>Gets an item from the inventory by the given attributes.</p><h2 id="get_by/1-examples" class="section-heading"><a href="#get_by/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="3134924526-1">(</span><span class="p" data-group-id="3134924526-2">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p" data-group-id="3134924526-2">}</span><span class="p" data-group-id="3134924526-1">)</span><span class="w">
-</span><span class="p" data-group-id="3134924526-3">%</span><span class="nc" data-group-id="3134924526-3">Schema.Item</span><span class="p" data-group-id="3134924526-3">{</span><span class="p" data-group-id="3134924526-3">}</span><span class="w">
-
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="3134924526-4">(</span><span class="p" data-group-id="3134924526-5">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">999</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">456</span><span class="p" data-group-id="3134924526-5">}</span><span class="p" data-group-id="3134924526-4">)</span><span class="w">
-</span><span class="no">nil</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="item_in_slot/3">
-
-  <div class="detail-header">
-    <a href="#item_in_slot/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">item_in_slot(char_id, tab, slot)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L459" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> item_in_slot(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | nil</pre>
-
-      </div>
-
-<p>Gets the item in a specific inventory slot.</p><h2 id="item_in_slot/3-examples" class="section-heading"><a href="#item_in_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">item_in_slot</span><span class="p" data-group-id="6415178991-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="6415178991-1">)</span><span class="w">
-</span><span class="p" data-group-id="6415178991-2">%</span><span class="nc" data-group-id="6415178991-2">Schema.Item</span><span class="p" data-group-id="6415178991-2">{</span><span class="ss">inventory_slot</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="6415178991-2">}</span></code></pre>
+<p>Lists a character's equipped item rows.</p>
   </section>
 </section>
 <section class="detail" id="list_items/1">
@@ -835,10 +478,10 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">list_items(character)</h1>
+      <h1 class="signature" translate="no">list_items(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L56" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -849,41 +492,11 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_items(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_items(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]</pre>
 
       </div>
 
-<p>Lists all items in a character's inventory (excluding equipped items).</p><p>Returns items sorted by inventory slot.</p><h2 id="list_items/1-examples" class="section-heading"><a href="#list_items/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_items</span><span class="p" data-group-id="9053307345-1">(</span><span class="n">character</span><span class="p" data-group-id="9053307345-1">)</span><span class="w">
-</span><span class="p" data-group-id="9053307345-2">[</span><span class="p" data-group-id="9053307345-3">%</span><span class="nc" data-group-id="9053307345-3">Schema.Item</span><span class="p" data-group-id="9053307345-3">{</span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="ss">:inventory</span><span class="p" data-group-id="9053307345-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="9053307345-2">]</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="list_tab_items/2">
-
-  <div class="detail-header">
-    <a href="#list_tab_items/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">list_tab_items(character_id, tab)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L88" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> list_tab_items(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]</pre>
-
-      </div>
-
-<p>Lists items in a specific inventory tab.</p><h2 id="list_tab_items/2-examples" class="section-heading"><a href="#list_tab_items/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_tab_items</span><span class="p" data-group-id="1324386358-1">(</span><span class="n">character_id</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1324386358-1">)</span><span class="w">
-</span><span class="p" data-group-id="1324386358-2">[</span><span class="p" data-group-id="1324386358-3">%</span><span class="nc" data-group-id="1324386358-3">Schema.Item</span><span class="p" data-group-id="1324386358-3">{</span><span class="ss">inventory_tab</span><span class="p">:</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1324386358-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="1324386358-2">]</span></code></pre>
+<p>Lists every item row of a character (equipped and carried).</p>
   </section>
 </section>
 <section class="detail" id="list_tabs/1">
@@ -893,10 +506,10 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">list_tabs(character)</h1>
+      <h1 class="signature" translate="no">list_tabs(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L72" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L34" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -907,25 +520,24 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_tabs(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: [<a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_tabs(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: [<a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>()]</pre>
 
       </div>
 
-<p>Lists all inventory tabs for a character.</p><h2 id="list_tabs/1-examples" class="section-heading"><a href="#list_tabs/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_tabs</span><span class="p" data-group-id="3983003869-1">(</span><span class="n">character</span><span class="p" data-group-id="3983003869-1">)</span><span class="w">
-</span><span class="p" data-group-id="3983003869-2">[</span><span class="p" data-group-id="3983003869-3">%</span><span class="nc" data-group-id="3983003869-3">Schema.InventoryTab</span><span class="p" data-group-id="3983003869-3">{</span><span class="ss">tab</span><span class="p">:</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="3983003869-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3983003869-2">]</span></code></pre>
+<p>Lists a character's inventory tab rows.</p>
   </section>
 </section>
-<section class="detail" id="sort_tab/2">
+<section class="detail" id="set_amount/2">
 
   <div class="detail-header">
-    <a href="#sort_tab/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#set_amount/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">sort_tab(character, inventory_tab)</h1>
+      <h1 class="signature" translate="no">set_amount(item_id, amount)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L523" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L112" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -936,26 +548,24 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> sort_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
-  {:ok, [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> set_amount(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok</pre>
 
       </div>
 
-<p>Sorts items in a tab by item ID.</p><h2 id="sort_tab/2-examples" class="section-heading"><a href="#sort_tab/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">sort_tab</span><span class="p" data-group-id="1046760718-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="ss">:outfit</span><span class="p" data-group-id="1046760718-1">)</span><span class="w">
-</span><span class="p" data-group-id="1046760718-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1046760718-3">[</span><span class="p" data-group-id="1046760718-4">%</span><span class="nc" data-group-id="1046760718-4">Schema.Item</span><span class="p" data-group-id="1046760718-4">{</span><span class="p" data-group-id="1046760718-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="1046760718-3">]</span><span class="p" data-group-id="1046760718-2">}</span></code></pre>
+<p>Overwrites an item's amount.</p>
   </section>
 </section>
-<section class="detail" id="swap/2">
+<section class="detail" id="update_amount/2">
 
   <div class="detail-header">
-    <a href="#swap/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#update_amount/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">swap(src_item, dst_slot)</h1>
+      <h1 class="signature" translate="no">update_amount(item_id, delta)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L476" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L101" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -966,12 +576,11 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> swap(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> update_amount(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok</pre>
 
       </div>
 
-<p>Swaps an item to a new slot, handling any item that might already be in that slot.</p><h2 id="swap/2-examples" class="section-heading"><a href="#swap/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">swap</span><span class="p" data-group-id="4733334002-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p" data-group-id="4733334002-1">)</span><span class="w">
-</span><span class="p" data-group-id="4733334002-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4733334002-2">}</span></code></pre>
+<p>Adds a delta to an item's amount.</p>
   </section>
 </section>
 <section class="detail" id="update_item/2">
@@ -981,10 +590,10 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">update_item(data, attrs)</h1>
+      <h1 class="signature" translate="no">update_item(item, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L253" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/inventory.ex#L85" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1000,8 +609,7 @@ expansions); when every slot is taken it returns <code class="inline">{:error, :
 
       </div>
 
-<p>Updates an item with the given attributes.</p><h2 id="update_item/2-examples" class="section-heading"><a href="#update_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_item</span><span class="p" data-group-id="4152761735-1">(</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4152761735-2">%{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="4152761735-2">}</span><span class="p" data-group-id="4152761735-1">)</span><span class="w">
-</span><span class="p" data-group-id="4152761735-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4152761735-4">%</span><span class="nc" data-group-id="4152761735-4">Schema.Item</span><span class="p" data-group-id="4152761735-4">{</span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="4152761735-4">}</span><span class="p" data-group-id="4152761735-3">}</span></code></pre>
+<p>Updates an item row from a struct or changeset plus attributes.</p>
   </section>
 </section>
 

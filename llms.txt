@@ -37,7 +37,9 @@
 - [Ms2ex.GameHandlers.Friend](Ms2ex.GameHandlers.Friend.md)
 - [Ms2ex.GameHandlers.GroupChat](Ms2ex.GameHandlers.GroupChat.md)
 - [Ms2ex.GameHandlers.Helper.Friend](Ms2ex.GameHandlers.Helper.Friend.md)
-- [Ms2ex.GameHandlers.Helper.ItemBox](Ms2ex.GameHandlers.Helper.ItemBox.md)
+- [Ms2ex.GameHandlers.Helper.ItemBox](Ms2ex.GameHandlers.Helper.ItemBox.md): Item box opening: resolves the box's function parameters against the
+server drop tables, rolls the contents for the opening character, grants
+them, and consumes the box (plus any key items) per open.
 - [Ms2ex.GameHandlers.Helper.Party](Ms2ex.GameHandlers.Helper.Party.md)
 - [Ms2ex.GameHandlers.Helper.Session](Ms2ex.GameHandlers.Helper.Session.md)
 - [Ms2ex.GameHandlers.Insignia](Ms2ex.GameHandlers.Insignia.md)
@@ -46,6 +48,7 @@ nodes, ...). The client opens the interaction with Start and completes it
 with End; End is what counts towards interact-object quest conditions.
 
 - [Ms2ex.GameHandlers.Inventory](Ms2ex.GameHandlers.Inventory.md)
+- [Ms2ex.GameHandlers.ItemLock](Ms2ex.GameHandlers.ItemLock.md)
 - [Ms2ex.GameHandlers.Job](Ms2ex.GameHandlers.Job.md)
 - [Ms2ex.GameHandlers.KeyTable](Ms2ex.GameHandlers.KeyTable.md)
 - [Ms2ex.GameHandlers.LoadUgcMap](Ms2ex.GameHandlers.LoadUgcMap.md)
@@ -60,6 +63,10 @@ reading a composed score's notes.
 - [Ms2ex.GameHandlers.RequestChangeChannel](Ms2ex.GameHandlers.RequestChangeChannel.md)
 - [Ms2ex.GameHandlers.RequestChangeField](Ms2ex.GameHandlers.RequestChangeField.md)
 - [Ms2ex.GameHandlers.RequestCube](Ms2ex.GameHandlers.RequestCube.md)
+- [Ms2ex.GameHandlers.RequestItemBox](Ms2ex.GameHandlers.RequestItemBox.md): Opens an item box. The client addresses the box by its item id (not the
+inventory uid), sends how many copies to open and, for select boxes, the
+picked entry index as a string.
+
 - [Ms2ex.GameHandlers.RequestQuit](Ms2ex.GameHandlers.RequestQuit.md)
 - [Ms2ex.GameHandlers.RequestTimeSync](Ms2ex.GameHandlers.RequestTimeSync.md)
 - [Ms2ex.GameHandlers.RequestWorldMap](Ms2ex.GameHandlers.RequestWorldMap.md)
@@ -123,6 +130,7 @@ clients light up the stage and show the performance timer.
 - [Ms2ex.Managers.Field.Tombstone](Ms2ex.Managers.Field.Tombstone.md)
 - [Ms2ex.Managers.GlobalCounter](Ms2ex.Managers.GlobalCounter.md)
 - [Ms2ex.Managers.GroupChat](Ms2ex.Managers.GroupChat.md)
+- [Ms2ex.Managers.Inventory](Ms2ex.Managers.Inventory.md)
 - [Ms2ex.Managers.Managed](Ms2ex.Managers.Managed.md)
 - [Ms2ex.Managers.PartyManager](Ms2ex.Managers.PartyManager.md)
 - [Ms2ex.Managers.PartyServer](Ms2ex.Managers.PartyServer.md)
@@ -302,13 +310,14 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Context.DailyReset](Ms2ex.Context.DailyReset.md): Resets per-character daily state when the midnight worker fires.
   - [Ms2ex.Context.Damage](Ms2ex.Context.Damage.md): Context module for damage calculation operations.
   - [Ms2ex.Context.Dismantle](Ms2ex.Context.Dismantle.md): Handles the item dismantling functionality.
+  - [Ms2ex.Context.Drops](Ms2ex.Context.Drops.md): Rolls items from the server drop tables (individual drop boxes and global
+drop boxes), shared by mob loot and item boxes.
   - [Ms2ex.Context.Emotes](Ms2ex.Context.Emotes.md): Context module for character emote-related operations.
-  - [Ms2ex.Context.Equips](Ms2ex.Context.Equips.md): Context module for equipment persistence.
   - [Ms2ex.Context.Experience](Ms2ex.Context.Experience.md): Context module for character experience-related operations.
   - [Ms2ex.Context.Field](Ms2ex.Context.Field.md): Context module for field-related operations.
   - [Ms2ex.Context.Friends](Ms2ex.Context.Friends.md): Context module for friend-related operations.
   - [Ms2ex.Context.HotBars](Ms2ex.Context.HotBars.md): Context module for hot bar-related operations.
-  - [Ms2ex.Context.Inventory](Ms2ex.Context.Inventory.md): Context module for inventory-related operations.
+  - [Ms2ex.Context.Inventory](Ms2ex.Context.Inventory.md): Item persistence helpers.
   - [Ms2ex.Context.ItemConstantStats](Ms2ex.Context.ItemConstantStats.md)
   - [Ms2ex.Context.ItemEnchantStats](Ms2ex.Context.ItemEnchantStats.md)
   - [Ms2ex.Context.ItemRandomStats](Ms2ex.Context.ItemRandomStats.md)
@@ -393,6 +402,8 @@ every packet is written regardless of the console `skip_packet_logs` filter.
 interact with (weeds, telescopes, gathering nodes, ...).
 
   - [Ms2ex.Packets.InventoryItem](Ms2ex.Packets.InventoryItem.md)
+  - [Ms2ex.Packets.ItemBox](Ms2ex.Packets.ItemBox.md)
+  - [Ms2ex.Packets.ItemLock](Ms2ex.Packets.ItemLock.md)
   - [Ms2ex.Packets.Job](Ms2ex.Packets.Job.md)
   - [Ms2ex.Packets.KeyTable](Ms2ex.Packets.KeyTable.md)
   - [Ms2ex.Packets.Lapenshard](Ms2ex.Packets.Lapenshard.md)

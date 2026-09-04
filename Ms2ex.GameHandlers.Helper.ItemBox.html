@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FE61EC29.js"></script>
+    <script defer src="dist/sidebar_items-35D8E775.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -113,6 +113,17 @@ MS2EX
   </div>
 
 
+    <section id="moduledoc">
+<p>Item box opening: resolves the box's function parameters against the
+server drop tables, rolls the contents for the opening character, grants
+them, and consumes the box (plus any key items) per open.</p><p>Mirrors the reference ItemBoxManager: OpenItemBox (drop tables plus an
+optional direct item), SelectItemBox (player picks an entry by index
+from one drop group) and OpenItemBoxWithKey (consumes key items). The
+reference mails rewards that do not fit the inventory; there is no mail
+system yet, so a failed grant stops the open with the inventory-full
+error and leaves the remaining boxes unopened.</p>
+    </section>
+
 </div>
 
   <section id="summary" class="details-list">
@@ -129,17 +140,12 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_item/3" data-no-tooltip="" translate="no">add_item(session, character, content)</a>
+        <a href="#open/5" data-no-tooltip="" translate="no">open(session, character, item, count, index)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#open/3" data-no-tooltip="" translate="no">open(session, character, contents)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Opens <code class="inline">count</code> copies of the box, pushing an <code class="inline">ItemBox.Open</code> response with
+the number of successful opens and the resulting error code.</p></div>
 
     </div>
 
@@ -157,17 +163,17 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="add_item/3">
+<section class="detail" id="open/5">
 
   <div class="detail-header">
-    <a href="#add_item/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#open/5" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">add_item(session, character, content)</h1>
+      <h1 class="signature" translate="no">open(session, character, item, count, index)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/handlers/game/helpers/item_box.ex#L74" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/handlers/game/helpers/item_box.ex#L40" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -176,29 +182,8 @@ MS2EX
 
   <section class="docstring">
 
-
-  </section>
-</section>
-<section class="detail" id="open/3">
-
-  <div class="detail-header">
-    <a href="#open/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">open(session, character, contents)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/handlers/game/helpers/item_box.ex#L8" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
+<p>Opens <code class="inline">count</code> copies of the box, pushing an <code class="inline">ItemBox.Open</code> response with
+the number of successful opens and the resulting error code.</p>
   </section>
 </section>
 

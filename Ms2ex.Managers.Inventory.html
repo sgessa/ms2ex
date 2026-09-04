@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.40.3">
+    <meta name="project" content="MS2EX v0.1.0">
+
+
+    <title>Ms2ex.Managers.Inventory — MS2EX v0.1.0</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
+
+    <script defer src="dist/sidebar_items-35D8E775.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="https://github.com/sgessa/ms2ex" class="sidebar-projectName" translate="no">
+MS2EX
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.1.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of MS2EX</span>
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
+          </label>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Ms2ex.<wbr />Managers.<wbr />Inventory</span> 
+      <small class="app-vsn" translate="no">(MS2EX v0.1.0)</small>
+
+    </h1>
+
+<a href="Ms2ex.Managers.Inventory.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
+
+
+
+      <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+  </div>
+
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h2>
+<div class="summary-functions summary">
+  <h3>
+    <a href="#functions">Functions</a>
+  </h3>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_item/2" data-no-tooltip="" translate="no">add_item(character, item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds an item, merging onto existing stacks when stackable. Acquisition
+flows notify the quest manager themselves (see
+<a href="Ms2ex.Managers.Quest.html#notify_item_acquired/2"><code class="inline">Ms2ex.Managers.Quest.notify_item_acquired/2</code></a>).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#alive?/1" data-no-tooltip="" translate="no">alive?(id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all/1" data-no-tooltip="" translate="no">all(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists every item of a character, equipped and carried.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#bind/1" data-no-tooltip="" translate="no">bind(item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Placeholder bind marker.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#call/2" data-no-tooltip="" translate="no">call(id, msg)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cast/2" data-no-tooltip="" translate="no">cast(id, msg)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#child_spec/1" data-no-tooltip="" translate="no">child_spec(init_arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#consume/2" data-no-tooltip="" translate="no">consume(item, consumed \\ 1)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Consumes an amount of an item, deleting it when emptied.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#consume_item_amount/3" data-no-tooltip="" translate="no">consume_item_amount(character, item_id, amount)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Consumes an amount across the character's carry stacks; returns
+<code class="inline">{:error, :insufficient_amount}</code> when the stacks cannot cover it.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#consume_item_amounts/2" data-no-tooltip="" translate="no">consume_item_amounts(character, consumables)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Consumes each <code class="inline">%{item_id, amount}</code> pair from the carry stacks. Pairs the
+inventory cannot cover are skipped so callers can keep processing (the
+completion counter no longer matches the live inventory in that case).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete/1" data-no-tooltip="" translate="no">delete(item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Deletes an item.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#equip/2" data-no-tooltip="" translate="no">equip(item, equip_slot)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Equips an item into the requested slot, binding it first when its
+metadata marks it bind-on-equip.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#expand_tab/2" data-no-tooltip="" translate="no">expand_tab(character, tab)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Expands a tab by six slots.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#expired?/1" data-no-tooltip="" translate="no">expired?(item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks whether an item's expiry date has passed.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#find_first_available_slot/2" data-no-tooltip="" translate="no">find_first_available_slot(character_id, tab)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Finds the first free slot of a tab.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#free_slot_count/2" data-no-tooltip="" translate="no">free_slot_count(character_id, tab)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Counts the free slots of a tab.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get/2" data-no-tooltip="" translate="no">get(character, uid)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets an item by uid.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_equips/1" data-no-tooltip="" translate="no">list_equips(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists a character's equipped items.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_items/1" data-no-tooltip="" translate="no">list_items(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists a character's carried items, sorted by slot.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_tab_items/2" data-no-tooltip="" translate="no">list_tab_items(character_id, tab)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists a character's carried items in a tab, sorted by slot.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_tabs/1" data-no-tooltip="" translate="no">list_tabs(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists a character's inventory tab rows.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#move_to_inventory/2" data-no-tooltip="" translate="no">move_to_inventory(item, preferred_slot \\ nil)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Moves an equipped item back to the inventory. Prefers <code class="inline">preferred_slot</code>
+while it is free, else the first open slot in the tab; the item's equip
+slot is cleared.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sort_tab/2" data-no-tooltip="" translate="no">sort_tab(character, tab)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Sorts a tab's carried items by item id.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start/1" data-no-tooltip="" translate="no">start(character)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#stop/1" data-no-tooltip="" translate="no">stop(id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#swap/2" data-no-tooltip="" translate="no">swap(item, dst_slot)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Swaps an item into a slot, displacing whatever occupies it.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_item/2" data-no-tooltip="" translate="no">update_item(changeset, attrs)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Updates an item's fields, writing through.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h2>
+
+    <div class="functions-list">
+<section class="detail" id="add_item/2">
+
+  <div class="detail-header">
+    <a href="#add_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_item(character, item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L78" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
+  {:ok,
+   {:create, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+   | {:update, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+   | {:update_and_create, {<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()},
+      <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}}</pre>
+
+      </div>
+
+<p>Adds an item, merging onto existing stacks when stackable. Acquisition
+flows notify the quest manager themselves (see
+<a href="Ms2ex.Managers.Quest.html#notify_item_acquired/2"><code class="inline">Ms2ex.Managers.Quest.notify_item_acquired/2</code></a>).</p>
+  </section>
+</section>
+<section class="detail" id="alive?/1">
+
+  <div class="detail-header">
+    <a href="#alive?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">alive?(id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="all/1">
+
+  <div class="detail-header">
+    <a href="#all/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">all(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L45" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Lists every item of a character, equipped and carried.</p>
+  </section>
+</section>
+<section class="detail" id="bind/1">
+
+  <div class="detail-header">
+    <a href="#bind/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">bind(item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L191" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bind(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) :: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()</pre>
+
+      </div>
+
+<p>Placeholder bind marker.</p>
+  </section>
+</section>
+<section class="detail" id="call/2">
+
+  <div class="detail-header">
+    <a href="#call/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">call(id, msg)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L3" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="cast/2">
+
+  <div class="detail-header">
+    <a href="#cast/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">cast(id, msg)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L3" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="consume/2">
+
+    <span id="consume/1"></span>
+
+  <div class="detail-header">
+    <a href="#consume/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">consume(item, consumed \\ 1)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L101" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> consume(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  {:update, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+  | {:delete, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+  | {:error, :not_found}</pre>
+
+      </div>
+
+<p>Consumes an amount of an item, deleting it when emptied.</p>
+  </section>
+</section>
+<section class="detail" id="consume_item_amount/3">
+
+  <div class="detail-header">
+    <a href="#consume_item_amount/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">consume_item_amount(character, item_id, amount)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L112" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> consume_item_amount(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  {:ok, update: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), delete: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+  | {:error, :insufficient_amount}</pre>
+
+      </div>
+
+<p>Consumes an amount across the character's carry stacks; returns
+<code class="inline">{:error, :insufficient_amount}</code> when the stacks cannot cover it.</p>
+  </section>
+</section>
+<section class="detail" id="consume_item_amounts/2">
+
+  <div class="detail-header">
+    <a href="#consume_item_amounts/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">consume_item_amounts(character, consumables)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L127" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> consume_item_amounts(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]) ::
+  {:ok, update: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), delete: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}</pre>
+
+      </div>
+
+<p>Consumes each <code class="inline">%{item_id, amount}</code> pair from the carry stacks. Pairs the
+inventory cannot cover are skipped so callers can keep processing (the
+completion counter no longer matches the live inventory in that case).</p>
+  </section>
+</section>
+<section class="detail" id="delete/1">
+
+  <div class="detail-header">
+    <a href="#delete/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete(item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L133" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
+  {:delete, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Deletes an item.</p>
+  </section>
+</section>
+<section class="detail" id="equip/2">
+
+  <div class="detail-header">
+    <a href="#equip/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">equip(item, equip_slot)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L160" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> equip(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Equips an item into the requested slot, binding it first when its
+metadata marks it bind-on-equip.</p>
+  </section>
+</section>
+<section class="detail" id="expand_tab/2">
+
+  <div class="detail-header">
+    <a href="#expand_tab/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">expand_tab(character, tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L151" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>()</pre>
+
+      </div>
+
+<p>Expands a tab by six slots.</p>
+  </section>
+</section>
+<section class="detail" id="expired?/1">
+
+  <div class="detail-header">
+    <a href="#expired?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">expired?(item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L183" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Checks whether an item's expiry date has passed.</p>
+  </section>
+</section>
+<section class="detail" id="find_first_available_slot/2">
+
+  <div class="detail-header">
+    <a href="#find_first_available_slot/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">find_first_available_slot(character_id, tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L61" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> find_first_available_slot(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | {:error, :full_inventory}</pre>
+
+      </div>
+
+<p>Finds the first free slot of a tab.</p>
+  </section>
+</section>
+<section class="detail" id="free_slot_count/2">
+
+  <div class="detail-header">
+    <a href="#free_slot_count/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">free_slot_count(character_id, tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L66" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> free_slot_count(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+<p>Counts the free slots of a tab.</p>
+  </section>
+</section>
+<section class="detail" id="get/2">
+
+  <div class="detail-header">
+    <a href="#get/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get(character, uid)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | nil</pre>
+
+      </div>
+
+<p>Gets an item by uid.</p>
+  </section>
+</section>
+<section class="detail" id="list_equips/1">
+
+  <div class="detail-header">
+    <a href="#list_equips/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_equips(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L57" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Lists a character's equipped items.</p>
+  </section>
+</section>
+<section class="detail" id="list_items/1">
+
+  <div class="detail-header">
+    <a href="#list_items/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_items(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L48" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Lists a character's carried items, sorted by slot.</p>
+  </section>
+</section>
+<section class="detail" id="list_tab_items/2">
+
+  <div class="detail-header">
+    <a href="#list_tab_items/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_tab_items(character_id, tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Lists a character's carried items in a tab, sorted by slot.</p>
+  </section>
+</section>
+<section class="detail" id="list_tabs/1">
+
+  <div class="detail-header">
+    <a href="#list_tabs/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_tabs(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Lists a character's inventory tab rows.</p>
+  </section>
+</section>
+<section class="detail" id="move_to_inventory/2">
+
+    <span id="move_to_inventory/1"></span>
+
+  <div class="detail-header">
+    <a href="#move_to_inventory/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">move_to_inventory(item, preferred_slot \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L177" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> move_to_inventory(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()}
+  | {:error, :full_inventory}
+  | {:error, :not_found}</pre>
+
+      </div>
+
+<p>Moves an equipped item back to the inventory. Prefers <code class="inline">preferred_slot</code>
+while it is free, else the first open slot in the tab; the item's equip
+slot is cleared.</p>
+  </section>
+</section>
+<section class="detail" id="sort_tab/2">
+
+  <div class="detail-header">
+    <a href="#sort_tab/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">sort_tab(character, tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L145" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sort_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, [<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()]} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Sorts a tab's carried items by item id.</p>
+  </section>
+</section>
+<section class="detail" id="start/1">
+
+  <div class="detail-header">
+    <a href="#start/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">start(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L19" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="stop/1">
+
+  <div class="detail-header">
+    <a href="#stop/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">stop(id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L27" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="swap/2">
+
+  <div class="detail-header">
+    <a href="#swap/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">swap(item, dst_slot)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L139" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> swap(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Swaps an item into a slot, displacing whatever occupies it.</p>
+  </section>
+</section>
+<section class="detail" id="update_item/2">
+
+  <div class="detail-header">
+    <a href="#update_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_item(changeset, attrs)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L85" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update_item(<a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>() | <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Updates an item's fields, writing through.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
+
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
+
+
+              <a href="MS2EX.epub">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

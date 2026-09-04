@@ -63,6 +63,17 @@ Moves the character to a started quest's go-to-npc destination map.
 
 Loads all quests for a character and sends to client.
 
+# `notify_item_acquired`
+
+Updates the acquisition-driven conditions (`item_add`, `item_exist`) for
+an item a flow granted to a character; pushed for every successful
+inventory insert/stack so progress tracks amount.
+
+Calls made from inside the quest manager itself — reward grants during
+quest completion — are skipped: they would round-trip a `GenServer.call`
+back into this same process, and reward grants are the result of a
+completion rather than an acquisition a quest tracks.
+
 # `start`
 
 Starts a new quest for a character.
@@ -70,6 +81,11 @@ Starts a new quest for a character.
 # `start_link`
 
 Starts a quest manager for a character.
+
+# `stop`
+
+Stops the quest manager. Quest progress is written through on every
+mutation, so a plain stop loses nothing.
 
 # `update_conditions`
 

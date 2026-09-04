@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FE61EC29.js"></script>
+    <script defer src="dist/sidebar_items-35D8E775.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -207,20 +207,21 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Context.Drops.html" translate="no">Ms2ex.<wbr />Context.<wbr />Drops</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Rolls items from the server drop tables (individual drop boxes and global
+drop boxes), shared by mob loot and item boxes.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Context.Emotes.html" translate="no">Ms2ex.<wbr />Context.<wbr />Emotes</a>
 
   </div>
 
     <div class="summary-synopsis"><p>Context module for character emote-related operations.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Ms2ex.Context.Equips.html" translate="no">Ms2ex.<wbr />Context.<wbr />Equips</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Context module for equipment persistence.</p></div>
 
 </div>
 <div class="summary-row">
@@ -265,7 +266,7 @@ MS2EX
 
   </div>
 
-    <div class="summary-synopsis"><p>Context module for inventory-related operations.</p></div>
+    <div class="summary-synopsis"><p>Item persistence helpers.</p></div>
 
 </div>
 <div class="summary-row">
@@ -864,6 +865,10 @@ cryptographic sequences and managing initialization vectors (IVs).</p></div>
 
   </div>
 
+    <div class="summary-synopsis"><p>Item box opening: resolves the box's function parameters against the
+server drop tables, rolls the contents for the opening character, grants
+them, and consumes the box (plus any key items) per open.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -900,6 +905,13 @@ with End; End is what counts towards interact-object quest conditions.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.Inventory.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Inventory</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.ItemLock.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />ItemLock</a>
 
   </div>
 
@@ -998,6 +1010,17 @@ reading a composed score's notes.</p></div>
     <a href="Ms2ex.GameHandlers.RequestCube.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestCube</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.RequestItemBox.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestItemBox</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Opens an item box. The client addresses the box by its item id (not the
+inventory uid), sends how many copies to open and, for select boxes, the
+picked entry index as a string.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1391,6 +1414,13 @@ clients light up the stage and show the performance timer.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Managers.GroupChat.html" translate="no">Ms2ex.<wbr />Managers.<wbr />GroupChat</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Inventory.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Inventory</a>
 
   </div>
 
@@ -1816,6 +1846,20 @@ interact with (weeds, telescopes, gathering nodes, ...).</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Packets.InventoryItem.html" translate="no">Ms2ex.<wbr />Packets.<wbr />InventoryItem</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.ItemBox.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ItemBox</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.ItemLock.html" translate="no">Ms2ex.<wbr />Packets.<wbr />ItemLock</a>
 
   </div>
 

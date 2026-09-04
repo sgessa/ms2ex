@@ -86,8 +86,9 @@ This function:
 
 ## Parameters
 
-  * `character` - The character whose inventory contains the items
   * `inventory` - The current dismantle inventory
+  * `item_resolver` - Resolves an item uid to the character's item (the
+    flow reads it from the character's inventory manager)
 
 ## Returns
 

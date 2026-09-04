@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-FE61EC29.js"></script>
+    <script defer src="dist/sidebar_items-35D8E775.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -175,7 +175,7 @@ be obtained from dismantling those items.</p><p>The dismantling process in MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#update_rewards/2" data-no-tooltip="" translate="no">update_rewards(character, inventory)</a>
+        <a href="#update_rewards/2" data-no-tooltip="" translate="no">update_rewards(inventory, item_resolver)</a>
 
       </div>
 
@@ -294,10 +294,10 @@ the item there.</p><h2 id="append/3-parameters" class="section-heading"><a href=
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">update_rewards(character, inventory)</h1>
+      <h1 class="signature" translate="no">update_rewards(inventory, item_resolver)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/dismantle.ex#L121" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/dismantle.ex#L122" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -307,7 +307,8 @@ the item there.</p><h2 id="append/3-parameters" class="section-heading"><a href=
   <section class="docstring">
 
 <p>Calculates the rewards that would be obtained from dismantling the items
-currently in the dismantle inventory.</p><p>This function:</p><ol><li>Iterates through all items in the dismantle inventory</li><li>Retrieves the dismantle rewards metadata for each item</li><li>Calculates the total rewards based on the quantity of each item</li><li>Updates the inventory with the calculated rewards</li></ol><h2 id="update_rewards/2-parameters" class="section-heading"><a href="#update_rewards/2-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">character</code> - The character whose inventory contains the items</li><li><code class="inline">inventory</code> - The current dismantle inventory</li></ul><h2 id="update_rewards/2-returns" class="section-heading"><a href="#update_rewards/2-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>Updated dismantle inventory with the <code class="inline">rewards</code> field populated</li></ul>
+currently in the dismantle inventory.</p><p>This function:</p><ol><li>Iterates through all items in the dismantle inventory</li><li>Retrieves the dismantle rewards metadata for each item</li><li>Calculates the total rewards based on the quantity of each item</li><li>Updates the inventory with the calculated rewards</li></ol><h2 id="update_rewards/2-parameters" class="section-heading"><a href="#update_rewards/2-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">inventory</code> - The current dismantle inventory</li><li><code class="inline">item_resolver</code> - Resolves an item uid to the character's item (the
+flow reads it from the character's inventory manager)</li></ul><h2 id="update_rewards/2-returns" class="section-heading"><a href="#update_rewards/2-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>Updated dismantle inventory with the <code class="inline">rewards</code> field populated</li></ul>
   </section>
 </section>
 

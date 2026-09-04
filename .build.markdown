@@ -12,8 +12,8 @@ Ms2ex.Context.ChatStickers.md
 Ms2ex.Context.DailyReset.md
 Ms2ex.Context.Damage.md
 Ms2ex.Context.Dismantle.md
+Ms2ex.Context.Drops.md
 Ms2ex.Context.Emotes.md
-Ms2ex.Context.Equips.md
 Ms2ex.Context.Experience.md
 Ms2ex.Context.Field.md
 Ms2ex.Context.Friends.md
@@ -104,6 +104,7 @@ Ms2ex.GameHandlers.Helper.Session.md
 Ms2ex.GameHandlers.Insignia.md
 Ms2ex.GameHandlers.InteractObject.md
 Ms2ex.GameHandlers.Inventory.md
+Ms2ex.GameHandlers.ItemLock.md
 Ms2ex.GameHandlers.Job.md
 Ms2ex.GameHandlers.KeyTable.md
 Ms2ex.GameHandlers.LoadUgcMap.md
@@ -117,6 +118,7 @@ Ms2ex.GameHandlers.Quest.md
 Ms2ex.GameHandlers.RequestChangeChannel.md
 Ms2ex.GameHandlers.RequestChangeField.md
 Ms2ex.GameHandlers.RequestCube.md
+Ms2ex.GameHandlers.RequestItemBox.md
 Ms2ex.GameHandlers.RequestQuit.md
 Ms2ex.GameHandlers.RequestTimeSync.md
 Ms2ex.GameHandlers.RequestWorldMap.md
@@ -171,6 +173,7 @@ Ms2ex.Managers.Field.Tombstone.md
 Ms2ex.Managers.Field.md
 Ms2ex.Managers.GlobalCounter.md
 Ms2ex.Managers.GroupChat.md
+Ms2ex.Managers.Inventory.md
 Ms2ex.Managers.Managed.md
 Ms2ex.Managers.PartyManager.md
 Ms2ex.Managers.PartyServer.md
@@ -228,6 +231,8 @@ Ms2ex.Packets.InGameRank.md
 Ms2ex.Packets.Insignia.md
 Ms2ex.Packets.InteractObject.md
 Ms2ex.Packets.InventoryItem.md
+Ms2ex.Packets.ItemBox.md
+Ms2ex.Packets.ItemLock.md
 Ms2ex.Packets.Job.md
 Ms2ex.Packets.KeyTable.md
 Ms2ex.Packets.Lapenshard.md

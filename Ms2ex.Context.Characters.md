@@ -15,8 +15,6 @@
 
 # `list_titles`
 
-# `load_equips`
-
 # `load_skills`
 
 # `maybe_discover_map`
