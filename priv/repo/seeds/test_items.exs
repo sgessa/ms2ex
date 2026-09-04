@@ -16,7 +16,11 @@ test_bag = [
   {:gear, 15_200_001},
   {:gear, 13_100_001},
   # consumables & misc
-  {:consumable, 20_300_001, 99},
+  # basic HP/SP potions — consumable-tab items ({type 2, subtype 2});
+  # 20300001 sits in the misc tab ({type 4, subtype 15}) like every other
+  # misc item, so it is not a potion for bag-layout purposes
+  {:consumable, 20_000_013, 99},
+  {:consumable, 20_000_014, 99},
   # 20_300_002 welcome pack — no drop table content on this client
   {:consumable, 20_302_000, 3},
   {:misc, 59_200_001, 99}
