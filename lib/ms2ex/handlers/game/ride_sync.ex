@@ -2,6 +2,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
+  alias Ms2ex.Storage
   alias Ms2ex.Types
 
   import Packets.PacketReader
@@ -10,6 +11,10 @@ defmodule Ms2ex.GameHandlers.RideSync do
   # mounted animation instead of walking legs
   @walk_state 2
   @ride_state 33
+  @swim_states [27, 28]
+
+  # the smart push players buy to keep their mount in water
+  @safe_water_riding "SafeWaterRiding"
 
   def handle(packet, session) do
     {_mode, packet} = get_byte(packet)
@@ -28,10 +33,33 @@ defmodule Ms2ex.GameHandlers.RideSync do
 
     sync_packet = Packets.RideSync.bytes(character, sync_states)
     Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
-    track_riding_distance(character, sync_states)
+
+    unless dismount_in_water(character, sync_states) do
+      track_riding_distance(character, sync_states)
+    end
   end
 
   defp process_segments(_session, _segment_length, packet), do: packet
+
+  # water throws the rider unless they paid to stay mounted
+  defp dismount_in_water(%{mount: nil}, _sync_states), do: false
+
+  defp dismount_in_water(character, sync_states) do
+    if Enum.any?(sync_states, &(&1.state in @swim_states)) and not safe_water_riding?(character) do
+      Managers.Character.call(character, {:update, %{character | mount: nil}})
+      Context.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, true))
+      true
+    else
+      false
+    end
+  end
+
+  defp safe_water_riding?(character) do
+    case Storage.Tables.SmartPush.effect_id(@safe_water_riding) do
+      nil -> false
+      effect_id -> Context.Field.has_buff?(character, effect_id)
+    end
+  end
 
   defp get_sync_states(segment_count, packet) do
     Enum.reduce(1..segment_count, {[], packet}, fn _, {sync_states, packet} ->

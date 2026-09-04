@@ -41,6 +41,7 @@ defmodule Ms2ex.Managers.Character do
      character
      |> Map.put(:condition_state, nil)
      |> Map.put(:condition_distances, %{})
+     |> Map.put(:ensemble, nil)
      |> Map.put(:regen_health?, false)
      |> Map.put(:regen_spirit?, false)
      |> Map.put(:regen_stamina?, false)
@@ -75,6 +76,7 @@ defmodule Ms2ex.Managers.Character do
       |> Map.put(:regen_spirit?, Map.get(state, :regen_spirit?, false))
       |> Map.put(:regen_stamina?, Map.get(state, :regen_stamina?, false))
       |> Map.put(:staged_ugc_item, Map.get(state, :staged_ugc_item))
+      |> Map.put(:ensemble, Map.get(state, :ensemble))
       |> Map.put(:condition_state, Map.get(state, :condition_state))
       |> Map.put(:condition_distances, Map.get(state, :condition_distances, %{}))
 
@@ -90,6 +92,21 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_call(:take_ugc_item, _from, character) do
     {:reply, Map.get(character, :staged_ugc_item), Map.put(character, :staged_ugc_item, nil)}
+  end
+
+  # a player joining an ensemble queues their instrument and score until the
+  # party leader kicks the performance off for everyone at once
+  def handle_call({:join_ensemble, instrument_uid, score_uid}, _from, character) do
+    ensemble = %{instrument_uid: instrument_uid, score_uid: score_uid}
+    {:reply, :ok, Map.put(character, :ensemble, ensemble)}
+  end
+
+  def handle_call(:take_ensemble, _from, character) do
+    {:reply, Map.get(character, :ensemble), Map.put(character, :ensemble, nil)}
+  end
+
+  def handle_call(:leave_ensemble, _from, character) do
+    {:reply, :ok, Map.put(character, :ensemble, nil)}
   end
 
   def handle_call({:set_level, level}, _from, character) do

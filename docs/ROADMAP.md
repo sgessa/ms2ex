@@ -85,6 +85,9 @@ Applied today: `status.values` / `status.rates` stat modifiers, the
   buffs
 - item-granted buffs (equip effects with buff payloads) are not applied or
   removed on unequip
+- buffs are restored per character, but not per **account** — buffs are not
+  carried between characters on the same account, and a buff whose caster was
+  another player is restored as if the owner had cast it
 
 ### 6. SkillDamage Tile damage mode — [Partial]
 
@@ -237,7 +240,8 @@ What is still missing:
   persistent unlock models and client update packets are not implemented
 - reward types not yet delivered: `skillpoint`, `shop_weapon`, `shop_build`,
   `shop_ride`, `itemcoloring`, `beauty_makeup`, `beauty_skin`, `beauty_hair`,
-  `dynamicaction`, and `etc`; they need their owning unlock/persistence APIs
+  and `etc`; they need their owning unlock/persistence APIs. `itemcoloring`
+  and the `beauty_*` / `shop_*` types are no-ops in the reference too
 - audit every achievement reward definition against the live client metadata,
   including item ids, quantities, rarity/rank semantics, automatic versus
   manual claims, and each reward type's client update
@@ -278,6 +282,45 @@ What is still missing:
 - **UGC market** — the resale side of designed items is untouched
 - **Ranking and mentor boards** — `/irrq.aspx` and `/ruq.aspx` answer with a
   well-formed but empty payload
+
+### 21. Music performances — [Partial]
+
+Instruments are field objects owned by the performer: improvising relays midi
+notes to the map, scores play from their metadata file name or a composed MML
+string, composing writes the score onto the item, and plays are debited from
+the score's remaining uses. Party ensembles start every ready member on the
+leader's tick. The Queenstown stage tracks one performer at a time behind the
+`music_concert` field property, and Smart Push grants the paid additional
+effects (auto-play extension, mount stability).
+
+What is still missing:
+
+- **Music mastery and performance exp** — stopping a score should award
+  mastery scaled by play time (capped by the score's `mastery_value_max`) and
+  exp from the `musicMastery1-4` tables. There is no mastery system, so
+  stopping only fires the quest condition
+- **Remaining uses on a dedicated column** — the count lives in the item's
+  `data` term to avoid a migration; it should be a real column alongside the
+  other item fields, and the `remaining_uses` send packet is only pushed on
+  play, never on load
+- **Stage geometry** — enter/exit stage toggles between portals 802 and 803
+  from a server-side membership set. The reference decides from trigger box
+  101 containment, which needs trigger box geometry in the map projection
+- **Performance stage extras** — the applaud and glowstick emotes (skills
+  90210001 / 90210002) are parsed and dropped, and party members of the
+  performer are not treated as co-performers
+- **Smart Push gaps** — `autoInteraction` (bulk gathering) needs the mastery
+  recipe system; entries with a tag-based item cost are refused because item
+  tags are not projected; the `SaleAutoFishing` / `SaleAutoPlayInstrument`
+  game-event content override is skipped. Two deliberate divergences: a
+  purchase the player cannot afford answers with the lack-of-currency notice
+  (the reference silently drops it), and entering water without the
+  `SafeWaterRiding` effect throws the rider server-side (the reference leaves
+  the dismount to the client)
+- **Score expiry** — the reference refuses expired scores; ms2ex only checks
+  remaining uses
+- **Ensemble room check** — members are matched on map and channel; the
+  reference also compares the instanced room id, which ms2ex has no concept of
 
 ---
 
@@ -330,6 +373,12 @@ combat-heavy characters from accumulating document copies.
 ---
 
 ## Recently completed
+
+- Buff persistence: buffs whose effect metadata does not set
+  `remove_on_logout` are stored in `character_buffs` with an absolute expiry
+  and re-applied for their remaining duration on the next field the character
+  enters, so long-running effects survive map changes, channel switches and
+  relogs. Expiry is wall-clock because the tick base is per-VM
 
 - User generated content pipeline: UGC send packets (upload acknowledgement,
   path update, profile picture, item/mount/furnishing updates, banner list),

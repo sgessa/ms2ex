@@ -2,6 +2,7 @@ defmodule Ms2ex.Managers.Field.Character do
   alias Ms2ex.Packets
   alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Schema
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -62,7 +63,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # trigger/ui state finalizes before the player stats load
     push(character, Packets.Trigger.load())
-    push(character, Packets.FieldProperty.load())
+    push(character, Packets.FieldProperty.load(Field.PerformanceStage.properties(state)))
 
     # Load Emotes and Player Stats after Player Object is loaded
     push(character, Packets.Stats.set_character_stats(character))
@@ -102,7 +103,7 @@ defmodule Ms2ex.Managers.Field.Character do
     # If character teleported or was summoned by an other user
     maybe_teleport_character(character)
 
-    state
+    Field.Buff.restore_buffs(character, state)
   end
 
   # loads a peer character (and any mount they are riding) for the joining player
@@ -120,15 +121,28 @@ defmodule Ms2ex.Managers.Field.Character do
   def remove_character(character, state) do
     Logger.info("Field #{state.map_id} @ Channel #{state.channel_id}: #{character.name} left")
 
+    state =
+      character
+      |> Field.Buff.save_owner_buffs(state)
+      |> then(&Field.PerformanceStage.leave(character.id, &1))
+
     mounts = Map.delete(state.mounts, character.id)
     sessions = Map.delete(state.sessions, character.id)
     players = Map.delete(state.players, character.id)
     tombstones = Map.delete(state.tombstones, character.id)
+    instruments = Map.delete(state.instruments, character.id)
 
     Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
     Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
 
-    %{state | mounts: mounts, sessions: sessions, players: players, tombstones: tombstones}
+    %{
+      state
+      | mounts: mounts,
+        sessions: sessions,
+        players: players,
+        tombstones: tombstones,
+        instruments: instruments
+    }
   end
 
   defp maybe_teleport_character(character) do

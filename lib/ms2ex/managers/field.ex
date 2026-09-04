@@ -38,15 +38,18 @@ defmodule Ms2ex.Managers.Field do
       channel_id: channel_id,
       local_id_counter: local_id_counter,
       interactable: interactable,
+      instruments: %{},
       items: %{},
       map_id: map_id,
       mounts: %{},
       npcs: %{},
       npc_spawns: %{},
+      performance: nil,
       players: %{},
       portals: portals,
       regions: %{},
       sessions: %{},
+      stage: MapSet.new(),
       tombstones: %{},
       topic: field_name
     }
@@ -89,6 +92,28 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
+  def handle_call({:add_instrument, instrument}, _from, state) do
+    {instrument, state} = Field.Instrument.add(instrument, state)
+    {:reply, {:ok, instrument}, state}
+  end
+
+  def handle_call({:lookup_instrument, character_id}, _from, state) do
+    case Field.Instrument.get(character_id, state) do
+      nil -> {:reply, :error, state}
+      instrument -> {:reply, {:ok, instrument}, state}
+    end
+  end
+
+  def handle_call({:remove_instrument, character_id}, _from, state) do
+    case Field.Instrument.get(character_id, state) do
+      nil -> {:reply, :error, state}
+      instrument -> {:reply, {:ok, instrument}, Field.Instrument.remove(character_id, state)}
+    end
+  end
+
+  def handle_call(:performance_stage?, _from, state),
+    do: {:reply, Field.PerformanceStage.stage?(state), state}
+
   def handle_call({:interact_object, character, uuid}, _from, state) do
     case Field.InteractObject.react(character, uuid, state) do
       {:ok, interact_id, state} ->
@@ -112,10 +137,18 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  def handle_call({:add_effect_buff, effect_id, effect_level, character}, _from, state) do
-    {_buff, state} = Field.Buff.add_effect_buff(effect_id, effect_level, character, state)
+  def handle_call({:add_effect_buff, effect_id, effect_level, character}, from, state),
+    do: handle_call({:add_effect_buff, effect_id, effect_level, character, []}, from, state)
+
+  def handle_call({:add_effect_buff, effect_id, effect_level, character, opts}, _from, state) do
+    {_buff, state} =
+      Field.Buff.add_effect_buff(effect_id, effect_level, character, state, 0, opts)
+
     {:reply, :ok, state}
   end
+
+  def handle_call({:has_buff?, owner_object_id, effect_id}, _from, state),
+    do: {:reply, Field.Buff.owner_has_buff?(owner_object_id, effect_id, state), state}
 
   def handle_call({:lookup_npc, object_id}, _from, state) do
     case Map.get(state.npcs, object_id) do
@@ -158,6 +191,15 @@ defmodule Ms2ex.Managers.Field do
   # buffs die with their owner; remove every buff owned by the object id
   def handle_cast({:remove_owner_buffs, owner_object_id}, state),
     do: {:noreply, Field.Buff.remove_owner_buffs(owner_object_id, state)}
+
+  def handle_cast({:start_performance, character}, state),
+    do: {:noreply, Field.PerformanceStage.start(character, state)}
+
+  def handle_cast({:end_performance, character_id}, state),
+    do: {:noreply, Field.PerformanceStage.stop(character_id, state)}
+
+  def handle_cast({:toggle_stage, character}, state),
+    do: {:noreply, Field.PerformanceStage.toggle_stage(character, state)}
 
   def handle_cast({:enter_battle_stance, character}, state) do
     # battle-start packets are emitted by the cast handler in order; the
@@ -225,6 +267,9 @@ defmodule Ms2ex.Managers.Field do
     Field.Character.leave_battle_stance(character)
     {:noreply, state}
   end
+
+  def handle_info({:end_performance, character_id}, state),
+    do: {:noreply, Field.PerformanceStage.release(character_id, state)}
 
   def handle_info(:send_updates, state) do
     Process.send_after(self(), :send_updates, @updates_intval)
