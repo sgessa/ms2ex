@@ -468,10 +468,15 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp schedule(buff) do
-    if Types.Buff.ticks?(buff) do
-      Process.send_after(self(), {:buff_tick, buff.object_id}, buff.next_proc_tick)
-    else
-      schedule_removal(buff)
+    cond do
+      Types.Buff.ticks?(buff) ->
+        Process.send_after(self(), {:buff_tick, buff.object_id}, buff.next_proc_tick)
+
+      Types.Buff.unlimited?(buff) ->
+        :ok
+
+      true ->
+        schedule_removal(buff)
     end
   end
 
@@ -515,6 +520,17 @@ defmodule Ms2ex.Managers.Field.Buff do
     Enum.any?(state.buffs, fn {{owner_id, effect, _caster_id}, _buff_id} ->
       owner_id == owner_object_id and effect == effect_id
     end)
+  end
+
+  @doc """
+  Removes a single effect from an actor, whoever cast it.
+  """
+  def remove_owner_effect(owner_object_id, effect_id, state) do
+    state.buffs
+    |> Enum.filter(fn {{owner_id, effect, _caster_id}, _buff_id} ->
+      owner_id == owner_object_id and effect == effect_id
+    end)
+    |> Enum.reduce(state, fn {_key, buff_id}, state -> remove_buff(buff_id, state, true) end)
   end
 
   @doc """

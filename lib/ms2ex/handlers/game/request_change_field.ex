@@ -53,6 +53,6 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
       |> Storage.Maps.get_portals()
       |> Enum.find(&(&1.target_map_id == current_map_id))
 
-    portal || Storage.Maps.get_spawn(dst_map_id)
+    portal || Storage.Maps.get_field_spawn(dst_map_id)
   end
 end
