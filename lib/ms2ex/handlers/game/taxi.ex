@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
         ride_taxi(map_id, :mesos, cost, session)
 
       :error ->
-        session
+        :ok
     end
   end
 
@@ -46,7 +46,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
     if Enum.member?(character.taxis, character.map_id) do
-      session
+      :ok
     else
       taxis = [character.map_id | character.taxis]
       {:ok, character} = Context.Characters.update(character, %{taxis: taxis})
@@ -55,7 +55,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
     end
   end
 
-  def handle_mode(_mode, _packet, session), do: session
+  def handle_mode(_mode, _packet, _session), do: :ok
 
   defp ride_taxi(map_id, currency, cost, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),

@@ -1,7 +1,9 @@
 defmodule Ms2ex.Context.InventoryTest do
-  use Ms2ex.DataCase, async: true
+  use Ms2ex.DataCase, async: false
 
   alias Ms2ex.Context
+  alias Ms2ex.Managers
+  alias Ms2ex.Repo
   alias Ms2ex.Schema
 
   setup do
@@ -28,34 +30,50 @@ defmodule Ms2ex.Context.InventoryTest do
     %{character: character}
   end
 
-  test "consuming an amount spans stacks and deletes emptied ones", %{character: character} do
-    {:ok, {:create, first}} = Context.Inventory.add_item(character, pudding(1))
-    {:ok, {:create, second}} = Context.Inventory.add_item(character, pudding(2))
+  # the inventory manager owns the item rows; writes from its process need
+  # sandbox access
+  setup %{character: character} do
+    :ok = Managers.Inventory.start(character)
 
-    {:ok, results} = Context.Inventory.consume_item_amount(character, 30_000_122, 2)
+    Ecto.Adapters.SQL.Sandbox.allow(
+      Repo,
+      self(),
+      :erlang.whereis(:"inventories:#{character.id}")
+    )
+
+    on_exit(fn -> Managers.Inventory.stop(character.id) end)
+
+    :ok
+  end
+
+  test "consuming an amount spans stacks and deletes emptied ones", %{character: character} do
+    {:ok, {:create, first}} = Managers.Inventory.add_item(character, pudding(1))
+    {:ok, {:create, second}} = Managers.Inventory.add_item(character, pudding(2))
+
+    {:ok, results} = Managers.Inventory.consume_item_amount(character, 30_000_122, 2)
 
     assert [{:delete, deleted}, {:update, updated}] = results
     assert deleted.id == first.id
     assert updated.id == second.id
     assert updated.amount == 1
 
-    refute Context.Inventory.get(character, first.id)
-    assert Context.Inventory.get(character, second.id).amount == 1
+    refute Managers.Inventory.get(character, first.id)
+    assert Managers.Inventory.get(character, second.id).amount == 1
   end
 
   test "consuming more than owned fails without changing stacks", %{character: character} do
-    {:ok, {:create, item}} = Context.Inventory.add_item(character, pudding(1))
+    {:ok, {:create, item}} = Managers.Inventory.add_item(character, pudding(1))
 
     assert {:error, :insufficient_amount} =
-             Context.Inventory.consume_item_amount(character, 30_000_122, 2)
+             Managers.Inventory.consume_item_amount(character, 30_000_122, 2)
 
-    assert Context.Inventory.get(character, item.id).amount == 1
+    assert Managers.Inventory.get(character, item.id).amount == 1
   end
 
   test "batch consumption spans pairs sharing stacks and skips uncovered ones", %{
     character: character
   } do
-    {:ok, {:create, first}} = Context.Inventory.add_item(character, pudding(2))
+    {:ok, {:create, first}} = Managers.Inventory.add_item(character, pudding(2))
 
     consumables = [
       %{item_id: 30_000_122, amount: 1},
@@ -63,7 +81,7 @@ defmodule Ms2ex.Context.InventoryTest do
       %{item_id: 30_000_122, amount: 1}
     ]
 
-    {:ok, results} = Context.Inventory.consume_item_amounts(character, consumables)
+    {:ok, results} = Managers.Inventory.consume_item_amounts(character, consumables)
 
     # the 2-stack covers the first pair (1 left) and the third pair (emptied);
     # the middle pair is skipped as uncovered
@@ -72,7 +90,7 @@ defmodule Ms2ex.Context.InventoryTest do
     assert updated.amount == 1
     assert deleted.id == first.id
 
-    refute Context.Inventory.get(character, first.id)
+    refute Managers.Inventory.get(character, first.id)
   end
 
   defp pudding(amount) do

@@ -57,7 +57,7 @@ defmodule Ms2ex.GameHandlers.Job do
     |> push(Packets.KeyTable.send_hot_bars(hot_bars))
   end
 
-  defp handle_mode(_mode, _character, session), do: session
+  defp handle_mode(_mode, _character, _session), do: :ok
 
   defp save_skills(character, _tab, len, _packet) when len < 1 do
     Context.Characters.load_skills(character, force: true)

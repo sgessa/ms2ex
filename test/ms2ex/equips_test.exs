@@ -23,7 +23,10 @@ defmodule Ms2ex.EquipsTest do
         property: %{type: 1, ride: 0, tradable_count: 1},
         slot_names: [5, 4],
         option: %{constant_id: 15_260_310, pick_id: 0, static_id: 0, random_id: 0}
-      }
+      },
+      # generic items used by the allocation / preference tests
+      "item:4001" => item_meta([11]),
+      "item:4002" => item_meta([11])
     })
 
     :ok
@@ -41,11 +44,13 @@ defmodule Ms2ex.EquipsTest do
         skin_color: {}
       })
 
+    start_inventory(character)
+
     staff = Context.Items.init(15_260_310, %{rarity: 5, amount: 1})
-    {:ok, {:create, item}} = Context.Inventory.add_item(character, staff)
+    {:ok, {:create, item}} = Managers.Inventory.add_item(character, staff)
     assert item.is_bound == false
 
-    {:ok, equipped} = Context.Equips.equip(item |> Context.Items.load_metadata(), :RH)
+    {:ok, equipped} = Managers.Inventory.equip(item |> Context.Items.load_metadata(), :RH)
     assert equipped.is_bound == true
 
     reloaded = Repo.get(Schema.Item, item.id)
@@ -63,21 +68,22 @@ defmodule Ms2ex.EquipsTest do
     insert_gear_item(character.id, 0)
     insert_gear_item(character.id, 1)
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) == 2
+    start_inventory(character)
 
-    insert_gear_item(character.id, 2)
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) == 2
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) ==
+    add_inventory_item(character, 4002)
+
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) ==
              {:error, :full_inventory}
 
-    assert Context.Inventory.free_slot_count(character.id, :gear) == 0
+    assert Managers.Inventory.free_slot_count(character.id, :gear) == 0
 
     # expanding the tab raises the bound
-    tab = Repo.get_by(Schema.InventoryTab, character_id: character.id, tab: :gear)
-    Repo.update!(Schema.InventoryTab.changeset(tab, %{slots: 5}))
+    Managers.Inventory.expand_tab(character, :gear)
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) == 3
-    assert Context.Inventory.free_slot_count(character.id, :gear) == 2
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) == 3
+    assert Managers.Inventory.free_slot_count(character.id, :gear) == 6
   end
 
   test "unequip prefers a free slot and falls back when it is taken" do
@@ -86,13 +92,15 @@ defmodule Ms2ex.EquipsTest do
 
     insert_gear_item(character.id, 0)
 
-    equipped = insert_equip_item(character.id, :RH)
-    {:ok, item} = Context.Equips.unequip(equipped, 0)
+    start_inventory(character)
+
+    equipped = equip_item(character, 4001, :RH)
+    {:ok, item} = Managers.Inventory.move_to_inventory(equipped, 0)
     # slot 0 is occupied, so the item lands in the first open slot
     assert item.inventory_slot == 1
 
-    equipped = insert_equip_item(character.id, :RH)
-    {:ok, item} = Context.Equips.unequip(equipped, 2)
+    equipped = equip_item(character, 4001, :RH)
+    {:ok, item} = Managers.Inventory.move_to_inventory(equipped, 2)
     # slot 2 is free, so the preference is honored
     assert item.inventory_slot == 2
   end
@@ -108,11 +116,13 @@ defmodule Ms2ex.EquipsTest do
 
     character = insert_character()
 
+    start_inventory(character)
+
     staff = add_inventory_item(character, 3001)
     sword = equip_item(character, 3002, :RH)
     shield = equip_item(character, 3003, :LH)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert {:ok, character} = Managers.Character.call(character, {:equip_item, staff.id, "RH"})
@@ -139,11 +149,12 @@ defmodule Ms2ex.EquipsTest do
     })
 
     character = insert_character()
+    start_inventory(character)
 
     suit = equip_item(character, 3101, :CL)
     pants = add_inventory_item(character, 3102)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert {:ok, character} = Managers.Character.call(character, {:equip_item, pants.id, "PA"})
@@ -163,9 +174,11 @@ defmodule Ms2ex.EquipsTest do
     stub_metadata(%{"item:3101" => item_meta([8, 9], %{level: 10, is_skin: true})})
 
     character = insert_character()
+    start_inventory(character)
+
     suit = add_inventory_item(character, 3101)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     # the suit occupies clothing first; the pants slot is not a valid target
@@ -179,9 +192,11 @@ defmodule Ms2ex.EquipsTest do
     stub_metadata(%{"item:3201" => item_meta([6], %{level: 999})})
 
     character = insert_character(level: 10)
+    start_inventory(character)
+
     hat = add_inventory_item(character, 3201)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert :error = Managers.Character.call(character, {:equip_item, hat.id, "CP"})
@@ -194,9 +209,11 @@ defmodule Ms2ex.EquipsTest do
     stub_metadata(%{"item:3202" => item_meta([5], %{level: 10, job_limits: [30]})})
 
     character = insert_character(job: :knight)
+    start_inventory(character)
+
     blade = add_inventory_item(character, 3202)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert :error = Managers.Character.call(character, {:equip_item, blade.id, "RH"})
@@ -207,9 +224,10 @@ defmodule Ms2ex.EquipsTest do
     stub_metadata(%{"item:3301" => item_meta([1], %{level: 10})})
 
     character = insert_character()
+    start_inventory(character)
     hair = equip_item(character, 3301, :HR)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert {:ok, character} = Managers.Character.call(character, {:unequip_item, hair.id})
@@ -222,7 +240,7 @@ defmodule Ms2ex.EquipsTest do
 
   # ---- helpers ----
 
-  defp item_meta(slot_names, limit_overrides) do
+  defp item_meta(slot_names, limit_overrides \\ %{}) do
     limit =
       Map.merge(
         %{
@@ -267,7 +285,8 @@ defmodule Ms2ex.EquipsTest do
       })
 
     stats = Repo.insert!(%Schema.CharacterStats{character_id: character.id})
-    %{character | stats: stats, sender_session_pid: self()}
+    character = %{character | stats: stats, sender_session_pid: self()}
+    Repo.preload(character, skill_tabs: :skills)
   end
 
   defp start_character(character) do
@@ -279,26 +298,26 @@ defmodule Ms2ex.EquipsTest do
 
   defp add_inventory_item(character, item_id) do
     item = Context.Items.init(item_id, %{rarity: 1, amount: 1})
-    {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
+    {:ok, {:create, item}} = Managers.Inventory.add_item(character, item)
     item
   end
 
   defp equip_item(character, item_id, equip_slot) do
     item = add_inventory_item(character, item_id)
-    {:ok, item} = Context.Equips.equip(item |> Context.Items.load_metadata(), equip_slot)
+    {:ok, item} = Managers.Inventory.equip(item |> Context.Items.load_metadata(), equip_slot)
     item
   end
 
-  defp insert_equip_item(character_id, equip_slot, overrides \\ []) do
-    Repo.insert!(%Schema.Item{
-      character_id: character_id,
-      item_id: Keyword.get(overrides, :item_id, 4001),
-      amount: 1,
-      rarity: 1,
-      location: :equipment,
-      inventory_tab: Keyword.get(overrides, :inventory_tab, :gear),
-      equip_slot: equip_slot
-    })
+  defp start_inventory(character) do
+    :ok = Managers.Inventory.start(character)
+
+    on_exit(fn -> Managers.Inventory.stop(character.id) end)
+
+    Ecto.Adapters.SQL.Sandbox.allow(
+      Repo,
+      self(),
+      :erlang.whereis(:"inventories:#{character.id}")
+    )
   end
 
   defp insert_gear_item(character_id, slot) do

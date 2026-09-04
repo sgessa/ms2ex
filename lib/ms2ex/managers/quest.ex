@@ -12,6 +12,7 @@ defmodule Ms2ex.Managers.Quest do
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Repo
+  alias Ms2ex.Schema
   alias Ms2ex.Storage
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
@@ -173,6 +174,42 @@ defmodule Ms2ex.Managers.Quest do
       {:load_quests, session},
       @default_timeout
     )
+  end
+
+  @doc """
+  Updates the acquisition-driven conditions (`item_add`, `item_exist`) for
+  an item a flow granted to a character; pushed for every successful
+  inventory insert/stack so progress tracks amount.
+
+  Calls made from inside the quest manager itself — reward grants during
+  quest completion — are skipped: they would round-trip a `GenServer.call`
+  back into this same process, and reward grants are the result of a
+  completion rather than an acquisition a quest tracks.
+  """
+  def notify_item_acquired(%Schema.Character{id: character_id} = character, item) do
+    case Process.whereis(process_name(character_id)) do
+      nil -> :ok
+      pid when pid == self() -> :ok
+      _pid -> do_notify_item_acquired(character, item)
+    end
+  end
+
+  defp do_notify_item_acquired(character, item) do
+    amount = Map.get(item, :amount, 0)
+
+    update_conditions(character.id, :item_add, amount, "", 0, "", item.item_id)
+    update_conditions(character.id, :item_exist, amount, "", 0, "", item.item_id)
+  end
+
+  @doc """
+  Stops the quest manager. Quest progress is written through on every
+  mutation, so a plain stop loses nothing.
+  """
+  def stop(character_id) do
+    case Process.whereis(process_name(character_id)) do
+      nil -> :ok
+      pid -> GenServer.stop(pid)
+    end
   end
 
   # Server Callbacks
@@ -431,7 +468,7 @@ defmodule Ms2ex.Managers.Quest do
     transaction =
       Repo.transaction(fn ->
         with {:ok, consume_results} <-
-               Context.Inventory.consume_item_amounts(character, consumables),
+               Managers.Inventory.consume_item_amounts(character, consumables),
              {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
              {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
           {updated_quest, consume_results, results}
@@ -791,10 +828,11 @@ defmodule Ms2ex.Managers.Quest do
       %{item: %{id: item_id, amount: amount, rarity: rarity}} when item_id > 0 and amount > 0 ->
         item = Context.Items.init(item_id, %{amount: amount, rarity: rarity})
 
-        case Context.Inventory.add_item(character, item) do
+        case Managers.Inventory.add_item(character, item) do
           {:ok, {_status, inventory_item} = result} ->
             push(character, Packets.InventoryItem.add_item(result, character))
             push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+            notify_item_acquired(character, inventory_item)
 
           _ ->
             :ok

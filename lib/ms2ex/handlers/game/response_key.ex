@@ -25,12 +25,19 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       character =
         auth_data[:character_id]
         |> Context.Characters.get()
-        |> Context.Characters.load_equips()
-        |> Context.Characters.preload([:friends, :stats])
-        |> Context.Characters.load_skills()
         |> Map.put(:channel_id, session.channel_id)
         |> Map.put(:session_pid, session.pid)
         |> Map.put(:sender_session_pid, session.sender_pid)
+
+      # the inventory manager must own the item rows before anything reads
+      # them: every Context.Inventory/Equips call below goes through it
+      :ok = Managers.Inventory.start(character)
+
+      character =
+        character
+        |> Map.put(:equips, Managers.Inventory.list_equips(character))
+        |> Context.Characters.preload([:friends, :stats])
+        |> Context.Characters.load_skills()
 
       tick = Ms2ex.sync_ticks()
 
@@ -77,7 +84,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push_achievements(character)
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(character, Context.Inventory.list_tabs(character))
+      |> push_inventory_tab(character, Managers.Inventory.list_tabs(character))
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -136,7 +143,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   defp push_inventory_tab(session, _character, []), do: session
 
   defp push_inventory_tab(session, character, [inventory_tab | tabs]) do
-    items = Context.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
+    items = Managers.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
 
     session
     |> push(Packets.InventoryItem.reset_tab(inventory_tab.tab))

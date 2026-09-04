@@ -272,13 +272,13 @@ defmodule Ms2ex.GameHandlers.Skill do
   end
 
   defp consume_used_item(session, character, item_uid) do
-    case Context.Inventory.get(character, item_uid) do
+    case Managers.Inventory.get(character, item_uid) do
       %Ms2ex.Schema.Item{} = item ->
-        consumed_item = Context.Inventory.consume(item)
+        consumed_item = Managers.Inventory.consume(item)
         push(session, Packets.InventoryItem.consume(consumed_item))
 
       _ ->
-        session
+        :ok
     end
   end
 end

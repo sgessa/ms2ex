@@ -1,4 +1,5 @@
 defmodule Ms2ex.Context.Achievements do
+  alias Ms2ex.Managers
   alias Ms2ex.Managers.Quest.Conditions
   alias Ms2ex.Packets
   alias Ms2ex.Repo
@@ -170,7 +171,7 @@ defmodule Ms2ex.Context.Achievements do
   defp deliver_reward(character, %{type: :item, code: item_id, value: amount, rank: rarity}) do
     item = Ms2ex.Context.Items.init(item_id, %{amount: amount, rarity: rarity})
 
-    case Ms2ex.Context.Inventory.add_item(character, item) do
+    case Managers.Inventory.add_item(character, item) do
       {:ok, {_status, inventory_item} = result} ->
         Ms2ex.Net.SenderSession.push(character, Packets.InventoryItem.add_item(result, character))
 
@@ -178,6 +179,8 @@ defmodule Ms2ex.Context.Achievements do
           character,
           Packets.InventoryItem.mark_item_new(inventory_item)
         )
+
+        Managers.Quest.notify_item_acquired(character, inventory_item)
 
         :ok
 
@@ -187,7 +190,7 @@ defmodule Ms2ex.Context.Achievements do
   end
 
   defp deliver_reward(character, %{type: :statpoint, value: amount}) do
-    case Ms2ex.Managers.Character.call(character, {:add_stat_point, :trophy, amount}) do
+    case Managers.Character.call(character, {:add_stat_point, :trophy, amount}) do
       {:ok, _character} -> :ok
       _ -> :error
     end
@@ -284,7 +287,7 @@ defmodule Ms2ex.Context.Achievements do
 
   defp refresh_trophy_counts(character, _previous, _updated) do
     character = %{character | trophies: trophy_counts(character)}
-    Ms2ex.Managers.Character.call(character, {:update, character})
+    Managers.Character.call(character, {:update, character})
   end
 
   defp send_packet(_packet, %{session_pid: nil}), do: :ok

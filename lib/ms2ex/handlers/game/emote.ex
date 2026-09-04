@@ -17,9 +17,9 @@ defmodule Ms2ex.GameHandlers.Emote do
     {item_uid, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %Schema.Item{} = item <- Context.Inventory.get(character, item_uid),
+         %Schema.Item{} = item <- Managers.Inventory.get(character, item_uid),
          %{metadata: %{skill_id: emote_id}} <- Context.Items.load_metadata(item),
-         consumed_item <- Context.Inventory.consume(item),
+         consumed_item <- Managers.Inventory.consume(item),
          {:ok, _emote} <- Context.Emotes.learn(character, emote_id) do
       session
       |> push(Packets.InventoryItem.consume(consumed_item))

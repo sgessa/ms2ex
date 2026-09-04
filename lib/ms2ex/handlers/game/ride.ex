@@ -61,12 +61,12 @@ defmodule Ms2ex.GameHandlers.Ride do
     Context.Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
   end
 
-  defp handle_mode(_mode, _packet, session) do
-    session
+  defp handle_mode(_mode, _packet, _session) do
+    :ok
   end
 
   defp find_item_in_inventory(character, item_uid) do
-    case Context.Inventory.get(character, item_uid) do
+    case Managers.Inventory.get(character, item_uid) do
       nil ->
         {:error, :item_not_found}
 
@@ -78,7 +78,7 @@ defmodule Ms2ex.GameHandlers.Ride do
   defp check_valid_item(item, ride_id) do
     ride_property = get_in(item.metadata, [:property, :ride])
 
-    if Context.Inventory.expired?(item) || ride_property != ride_id do
+    if Managers.Inventory.expired?(item) || ride_property != ride_id do
       {:error, :invalid_item}
     else
       :ok
@@ -87,7 +87,7 @@ defmodule Ms2ex.GameHandlers.Ride do
 
   defp maybe_bind_on_use(item) do
     if item.metadata.limit.transfer_type == Enums.TransferType.get_value(:bind_on_use) do
-      Context.Inventory.bind(item)
+      Managers.Inventory.bind(item)
     else
       item
     end

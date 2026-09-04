@@ -98,6 +98,18 @@ The Tile (0x6) mode, tied to tile skills, is still unimplemented.
 
 ## P3 — Client parity & serialization
 
+### 19. Housing & UGC cube system — [Open]
+
+The cube packet surface is almost entirely unimplemented: `RequestCube`
+handles only `remove_cube` (0x0C); every other mode falls into the
+unhandled-mode warning — hold cube, buy/forfeit/extend plot, place/rotate/
+replace cube, liftup object / liftup drop (0x11 is what the client sends
+when a player grabs a placed furnishing), home name / passcode / vote /
+message, clear cubes, plot area and height changes, design rank rewards,
+permissions, save/load home, blueprints, kick out, and background /
+lighting / camera. Plots, furnishings and home ownership have no server
+model yet; the field-load cube packets send empty data.
+
 ### 17. Item systems: gem sockets, pet items, gacha — [Open]
 
 The item packet writes the reference defaults for three systems ms2ex does
@@ -107,6 +119,25 @@ block (never written), and gemstone sockets (empty socket block only;
 socket unlocking and gemstones are unimplemented). Implementing any of
 these needs the feature system plus, for pets, ingest projection of pet
 metadata.
+
+### 21. Item boxes & use-item functions — [Partial]
+
+Boxes open through the dedicated `RequestItemBox` handler with the
+`ItemBox.Open` response packet: contents are resolved from the box's
+function parameters against the individual/global drop tables at open
+time and rolled through the shared drop logic (`Context.Drops`, also
+used by mob loot — level gates, gender filters, job weighting, smart
+drop). OpenItemBox, SelectItemBox and OpenItemBoxWithKey are
+implemented with multi-open counts, reference error codes, and correct
+currency drops (meso/meret/valor/rue/havi/treva wallets, experience
+orbs); a failed grant stops the open instead of losing the box.
+
+Remaining: gacha and Lullu box variants (need the gacha tables and
+`ItemScript.Gacha`), mail-overflow of rewards when the inventory is
+full (no mail system yet), spirit/stamina orbs, and the transcendence
+crystal special case. Some boxes have no drop-table content in this
+client's data (e.g. the welcome pack 20300002) — those refuse to open,
+matching the reference.
 
 ### 7. Join-flow packet audit — [Open]
 
@@ -326,32 +357,37 @@ What is still missing:
 
 ## P4 — Architecture
 
+### 15. Character-owned inventory — [Partial]
 
-### 15. Character-owned inventory — [Open]
+The ownership model is in place: `Ms2ex.Managers.Inventory`
+(`inventories:<char_id>`, like the quest manager) owns every item row and tab
+size of a character in memory — lean rows without metadata documents (see
+item 18) — started at login and stopped on disconnect. `Context.Inventory`
+delegates reads and mutations (add/stack, consume, cross-stack consumption,
+delete, generic updates, swap, sort, tab expansion) and slot allocation to
+the manager when it is alive, falling back to the direct DB path otherwise
+(login-server flows, tests); write-through keeps rows and memory coherent.
+Equip transitions already route their item moves through the manager, and
+the character's cached equip list is refreshed from it.
 
-Inventory lives in Postgres behind stateless `Context.Inventory` calls today;
-every item interaction pays a query round-trip and read paths (e.g.
-`item_exist` conditions) re-query rather than trust a cached copy. The
-long-term model is full ownership in memory, genre-standard for MMO servers:
+What is still missing:
 
-- an `inventory_manager:<char_id>` GenServer (like the quest manager) owning
-  all item reads/writes, loaded on login, write-through on mutation, flushed
-  on logout
-- every call site routed through it: pickup/drop, consume, move/split/merge,
-  equip changes, rewards, and shops/trades/storage/mail as those features
-  arrive; slot allocation (`find_first_available_slot`) becomes a scan over
-  the owned item list bounded by the tab's persisted slot count instead of a
-  per-write query against hardcoded slot ranges
-- the completion-time `Repo.transaction` atomicity (quest row + turn-in
-  consumption + rewards) becomes in-process ordering inside the manager, since
-  a DB transaction cannot span its memory
-- trigger points for doing this: item-flow features landing (shops, trades,
-  storage, mail), `item_exist` checks feeling heavy, or growth beyond a
-  single node
-- explicitly rejected: read-caches layered over the DB — two sources of truth
-  with the classic invalidation bugs, and none of the ownership benefits
-- when this lands, equips fold into it (they are items with
-  `location: :equipment`) rather than keeping a separate equip owner
+- quest completion still wraps turn-in consumption in a caller-side
+  `Repo.transaction`; with the manager alive, item writes no longer join
+  that transaction, so completion should be restructured into in-process
+  ordering inside the manager (consume turn-ins + grant item rewards as one
+  manager call) instead of cross-table DB atomicity
+- the character manager's cached equip list is a second copy of the equip
+  subset — it could be dropped in favor of reading the inventory owner's
+  state once field serialization tolerates it
+- shops / trades / storage / mail item flows are not implemented yet and
+  should route through the manager as they arrive
+- trigger points for finishing this: item-flow features landing (shops,
+  trades, storage, mail), `item_exist` checks feeling heavy, or growth
+  beyond a single node
+- explicitly rejected: read-caches layered over the DB — two sources of
+  truth with the classic invalidation bugs, and none of the ownership
+  benefits
 
 ### 18. Metadata-free manager state — [Partial]
 
@@ -374,6 +410,23 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Character-owned inventory manager: `Managers.Inventory`
+  (`inventories:<char_id>`, like the quest manager) owns every item row and
+  tab size of a character in memory — reads from memory, write-through
+  mutations, in-memory slot allocation; `Context.Inventory` delegates to it
+  when alive and falls back to the database otherwise; started at login,
+  stopped on disconnect (item 15 continues from here)
+- Item locks: the inventory lock-mode flow (stage / unstage / commit on
+  recv 0x88) with `is_locked` persisted via a new migration, and the 72-hour
+  unlock window stamped from the server constants on unlock
+- Equip flow fixes found in testing: the displaced item's bag Add is sent
+  after the equipped item's Remove (the swapped order made the client hide
+  the displaced item and later duplicate entries), and the sort/expand
+  handlers resolve the wire tab integer to the tab atom (sorting wiped the
+  tab client-side)
+- Seed test bag: mounts, unequipped gear, spare weapons, consumables and
+  misc stacks for both seeded characters; seeds equip items by explicit slot
+- Dead session returns removed from the game handlers
 - Buff persistence: buffs whose effect metadata does not set
   `remove_on_logout` are stored in `character_buffs` with an absolute expiry
   and re-applied for their remaining duration on the next field the character

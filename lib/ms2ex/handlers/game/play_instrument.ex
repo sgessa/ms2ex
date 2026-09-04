@@ -155,7 +155,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
            mml: mml
          },
          data <- Map.put(score.data || %{}, :music, music),
-         {:ok, score} <- Context.Inventory.update_item(score, %{data: data}) do
+         {:ok, score} <- Managers.Inventory.update_item(score, %{data: data}) do
       score = Context.Items.load_metadata(score)
       push(session, Packets.PlayInstrument.compose_score(score, character))
     else
@@ -169,7 +169,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %Schema.Item{data: %{music: %{mml: mml, author_id: author_id}}}
-         when author_id != 0 <- Context.Inventory.get(character, score_uid) do
+         when author_id != 0 <- Managers.Inventory.get(character, score_uid) do
       push(session, Packets.PlayInstrument.view_score(score_uid, mml))
     else
       _ -> :ok
@@ -265,7 +265,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
   end
 
   defp get_instrument(character, item_uid) do
-    case Context.Inventory.get(character, item_uid) do
+    case Managers.Inventory.get(character, item_uid) do
       %Schema.Item{inventory_tab: :fishing_music} = item ->
         {:ok, Context.Items.load_metadata(item)}
 
@@ -276,7 +276,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
 
   defp get_score(character, score_uid) do
     with %Schema.Item{inventory_tab: :fishing_music} = score <-
-           Context.Inventory.get(character, score_uid),
+           Managers.Inventory.get(character, score_uid),
          %{metadata: %{music: %{}}} = score <- Context.Items.load_metadata(score),
          true <- Context.Items.remaining_uses(score) > 0 do
       {:ok, score}
@@ -287,7 +287,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
 
   defp get_blank_score(character, score_uid) do
     with %Schema.Item{inventory_tab: :fishing_music} = score <-
-           Context.Inventory.get(character, score_uid),
+           Managers.Inventory.get(character, score_uid),
          %{metadata: %{music: %{is_custom_note: true}}} = score <-
            Context.Items.load_metadata(score),
          nil <- get_in(score.data || %{}, [:music]) do
@@ -307,7 +307,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
     remaining = Context.Items.remaining_uses(score) - 1
     data = Map.put(score.data || %{}, :remaining_uses, remaining)
 
-    case Context.Inventory.update_item(score, %{data: data}) do
+    case Managers.Inventory.update_item(score, %{data: data}) do
       {:ok, score} -> {:ok, score, remaining}
       _ -> :error
     end

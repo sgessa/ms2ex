@@ -1,6 +1,7 @@
 defmodule Ms2ex.FieldItemPickupTest do
-  use Ms2ex.DataCase, async: true
+  use Ms2ex.DataCase, async: false
 
+  alias Ms2ex.Managers
   alias Ms2ex.Managers.Field.Item
   alias Ms2ex.Schema
   alias Ms2ex.Types
@@ -19,6 +20,17 @@ defmodule Ms2ex.FieldItemPickupTest do
     })
 
     character = insert_character()
+
+    # pickup writes go through the character's inventory manager
+    :ok = Managers.Inventory.start(character)
+
+    Ecto.Adapters.SQL.Sandbox.allow(
+      Ms2ex.Repo,
+      self(),
+      :erlang.whereis(:"inventories:#{character.id}")
+    )
+
+    on_exit(fn -> Managers.Inventory.stop(character.id) end)
 
     # the removal packets are broadcast on the field topic
     Phoenix.PubSub.subscribe(Ms2ex.PubSub, "field:1:channel:1")

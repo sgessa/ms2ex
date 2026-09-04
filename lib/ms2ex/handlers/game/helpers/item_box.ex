@@ -1,138 +1,352 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
+  @moduledoc """
+  Item box opening: resolves the box's function parameters against the
+  server drop tables, rolls the contents for the opening character, grants
+  them, and consumes the box (plus any key items) per open.
+
+  Mirrors the reference ItemBoxManager: OpenItemBox (drop tables plus an
+  optional direct item), SelectItemBox (player picks an entry by index
+  from one drop group) and OpenItemBoxWithKey (consumes key items). The
+  reference mails rewards that do not fit the inventory; there is no mail
+  system yet, so a failed grant stops the open with the inventory-full
+  error and leaves the remaining boxes unopened.
+  """
+
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  def open(session, _character, []), do: session
+  # function parameter layouts (reference ItemBoxManager.Open)
+  #   OpenItemBox:        globalDropBoxId, unknownId, itemId, dropBoxId, requiredAmount?
+  #   SelectItemBox:      dropGroupId, dropBoxId
+  #   OpenItemBoxWithKey: keyItemId, keyAmount, itemId, _, _, dropBoxId
+  @type_param_positions %{
+    "OpenItemBox" => %{global_box: 0, item_id: 2, box_id: 3, required_amount: 4},
+    "SelectItemBox" => %{group: 0, box_id: 1},
+    "OpenItemBoxWithKey" => %{key_item_id: 0, key_amount: 1, item_id: 2, box_id: 5}
+  }
 
-  def open(session, character, contents) do
-    drop_groups = contents |> Enum.map(& &1.drop_group) |> Enum.uniq()
-    one_group? = if length(drop_groups) == 1, do: true, else: false
+  @error_ok 2
+  @error_inventory_fail 3
+  @error_inventory_full 4
 
-    if one_group? do
-      handle_one_group(session, character, contents)
+  @doc """
+  Opens `count` copies of the box, pushing an `ItemBox.Open` response with
+  the number of successful opens and the resulting error code.
+  """
+  def open(session, character, %Schema.Item{} = item, count, index)
+      when is_integer(count) and count > 0 do
+    type = item.metadata.function_name
+    positions = Map.get(@type_param_positions, type)
+    params = parse_params(item.metadata.function_parameters)
+
+    {error, box_count, session} =
+      open_box(session, character, item, type, params, positions, count, index)
+
+    push(session, Packets.ItemBox.open(item.item_id, box_count, error))
+  end
+
+  def open(session, _character, _item, _count, _index), do: session
+
+  # an unknown function type cannot be opened
+  defp open_box(_session, _character, _item, _type, _params, nil, _count, _index),
+    do: {@error_inventory_fail, 0, nil}
+
+  # the player picks an entry by index from the box's drop group; each open
+  # grants the picked entry and consumes one box
+  defp open_box(session, character, item, "SelectItemBox", params, positions, count, index) do
+    if index < 0 do
+      {@error_inventory_fail, 0, session}
     else
-      handle_groups(session, character, contents)
-    end
-  end
+      group = param(params, positions.group, -1)
+      box_id = param(params, positions.box_id, 0)
 
-  defp handle_one_group(session, character, [%{smart_drop_rate: smart_drop_rate} | _] = contents) do
-    handle_smart_drop_rate(session, smart_drop_rate, character, contents)
-  end
-
-  defp handle_groups(session, character, contents) do
-    Enum.reduce(contents, session, fn content, session ->
-      %{metadata: %{jobs: jobs}} =
-        Context.Items.load_metadata(%Schema.Item{item_id: content.id})
-
-      if character.job in jobs or :none in jobs do
-        add_item(session, character, content)
-      else
-        session
-      end
-    end)
-  end
-
-  defp handle_smart_drop_rate(session, 0, character, contents) do
-    content = Enum.random(contents)
-    add_item(session, character, content)
-  end
-
-  defp handle_smart_drop_rate(session, 100, character, contents) do
-    Enum.reduce(contents, session, fn content, session ->
-      %{metadata: %{jobs: jobs}} = Context.Items.load_metadata(%Schema.Item{item_id: content.id})
-
-      if character.job in jobs or :none in jobs do
-        add_item(session, character, content)
-      else
-        session
-      end
-    end)
-  end
-
-  defp handle_smart_drop_rate(session, smart_drop_rate, character, contents) do
-    success = Enum.random(0..100) > smart_drop_rate
-
-    contents =
-      Enum.filter(contents, fn content ->
-        %{metadata: %{jobs: jobs}} =
-          Context.Items.load_metadata(%Schema.Item{item_id: content.id})
-
-        if success do
-          character.job in jobs or :none in jobs
-        else
-          character.job not in jobs or :none in jobs
-        end
+      iterate(session, count, fn ->
+        open_select(session, character, item, box_id, group, index)
       end)
-
-    content = Enum.random(contents)
-    add_item(session, character, content)
-  end
-
-  def add_item(session, _character, nil), do: session
-
-  def add_item(session, character, content) do
-    session
-    |> process_item(character, content.id, content)
-    |> process_item(character, content.id2, content)
-  end
-
-  defp process_item(session, character, id, content) when id != 0 do
-    if currency?(id) do
-      handle_currency(session, character, id, content)
-    else
-      handle_items(session, character, id, content)
     end
   end
 
-  defp process_item(session, _character, _id, _content), do: session
+  # each open consumes the key items alongside the box
+  defp open_box(session, character, item, "OpenItemBoxWithKey", params, positions, count, _index) do
+    key_item_id = param(params, positions.key_item_id, 0)
+    key_amount = param(params, positions.key_amount, 1)
 
-  @currency_id_prefix "9"
-  defp currency?(id) do
-    id
-    |> to_string()
-    |> String.starts_with?(@currency_id_prefix)
-  end
-
-  defp handle_currency(session, character, id, content) do
     cond do
-      merets?(id) -> add_currency(session, character, :merets, content)
-      mesos?(id) -> add_currency(session, character, :mesos, content)
-      true -> session
+      key_item_id == 0 ->
+        {@error_inventory_fail, 0, session}
+
+      not owns_amount?(character, key_item_id, key_amount * count) ->
+        {@error_inventory_fail, 0, session}
+
+      true ->
+        open_key_boxes(
+          session,
+          character,
+          item,
+          params,
+          positions,
+          count,
+          key_item_id,
+          key_amount
+        )
     end
   end
 
-  @merets_ids [90_000_004, 90_000_011, 90_000_011, 90_000_015, 90_000_016]
-  defp merets?(id), do: Enum.member?(@merets_ids, id)
+  # requiredAmount gates how many boxes one open consumes (default 1)
+  defp open_box(session, character, item, "OpenItemBox", params, positions, count, _index) do
+    required_amount = param(params, positions.required_amount, 1)
 
-  @mesos_id 90_000_011
-  defp mesos?(id), do: id == @mesos_id
+    box_id = param(params, positions.box_id, 0)
 
-  defp add_currency(session, character, currency, content) do
-    amount = Enum.random(content.min_amount..content.max_amount)
+    cond do
+      required_amount > -1 and
+          not owns_amount?(character, item.item_id, max(required_amount, 1) * count) ->
+        {@error_inventory_fail, 0, session}
 
+      box_id > 0 and not Ms2ex.Storage.Tables.IndividualDropItem.has_entries?(box_id) ->
+        {@error_inventory_fail, 0, session}
+
+      true ->
+        open_plain_boxes(
+          session,
+          character,
+          item,
+          params,
+          positions,
+          count,
+          required_amount,
+          box_id
+        )
+    end
+  end
+
+  defp open_box(session, _character, _item, _type, _params, _positions, _count, _index),
+    do: {@error_inventory_fail, 0, session}
+
+  # runs `count` opens; the fun performs one open and returns :ok |
+  # {:error, code}; the first failure stops the remaining opens
+  defp iterate(session, count, fun) do
+    Enum.reduce_while(1..count, {@error_ok, 0, session}, fn _open, {_error, box_count, session} ->
+      case fun.() do
+        :ok ->
+          {:cont, {@error_ok, box_count + 1, session}}
+
+        {:error, code} ->
+          {:halt, {code, box_count, session}}
+      end
+    end)
+  end
+
+  # ---- grants: each returns :ok | {:error, code} ----
+
+  defp open_key_boxes(session, character, item, params, positions, count, key_item_id, key_amount) do
+    iterate(session, count, fn ->
+      open_with_key(session, character, item, params, positions, key_item_id, key_amount)
+    end)
+  end
+
+  defp open_plain_boxes(
+         session,
+         character,
+         item,
+         params,
+         positions,
+         count,
+         required_amount,
+         box_id
+       ) do
+    iterate(session, count, fn ->
+      open_plain(session, character, item, params, positions, required_amount, box_id)
+    end)
+  end
+
+  # one open of each box type; every step returns :ok | {:error, code} and
+  # a failed step short-circuits the with, stopping the remaining opens
+
+  defp open_select(session, character, item, box_id, group, index) do
+    with :ok <- grant_select(session, character, box_id, group, index) do
+      consume(session, character, item, 1)
+    end
+  end
+
+  defp open_with_key(session, character, item, params, positions, key_item_id, key_amount) do
+    with :ok <- consume_key(session, character, key_item_id, key_amount),
+         :ok <- grant_direct_item(session, character, param(params, positions.item_id, 0)),
+         :ok <- grant_box(session, character, param(params, positions.box_id, 0)) do
+      consume(session, character, item, 1)
+    end
+  end
+
+  defp open_plain(session, character, item, params, positions, required_amount, box_id) do
+    with :ok <- consume(session, character, item, max(required_amount, 1)),
+         :ok <- grant_direct_item(session, character, param(params, positions.item_id, 0)),
+         :ok <- grant_global(session, character, param(params, positions.global_box, 0)) do
+      grant_box(session, character, box_id)
+    end
+  end
+
+  # rolls one open of the individual drop box and grants every rolled item;
+  # a box without drop groups cannot be opened
+  defp grant_box(session, character, box_id) when box_id > 0 do
+    if Ms2ex.Storage.Tables.IndividualDropItem.has_entries?(box_id) do
+      box_id
+      |> Context.Drops.individual_items(character, character.map_id)
+      |> grant_items(session, character)
+    else
+      {:error, @error_inventory_fail}
+    end
+  end
+
+  defp grant_box(_session, _character, _box_id), do: :ok
+
+  defp grant_global(session, character, global_box_id) when global_box_id > 0 do
+    global_box_id
+    |> Context.Drops.global_items(character.level, character.map_id)
+    |> grant_items(session, character)
+  end
+
+  defp grant_global(_session, _character, _global_box_id), do: :ok
+
+  # select boxes: the picked ordinal is granted without requirement filters
+  defp grant_select(session, character, box_id, group, index) do
+    box_id
+    |> Context.Drops.individual_items(character, character.map_id, index: index, group: group)
+    |> grant_items(session, character)
+  end
+
+  defp grant_direct_item(session, character, item_id) when item_id > 0 do
+    case Context.Items.drop_item(item_id, 1, 1) do
+      %Schema.Item{} = item -> grant_items(session, character, [item])
+      nil -> {:error, @error_inventory_fail}
+    end
+  end
+
+  defp grant_direct_item(_session, _character, _item_id), do: :ok
+
+  defp grant_items(items, session, character) do
+    Enum.reduce_while(items, :ok, fn item, acc ->
+      case add_item(session, character, item) do
+        :ok -> {:cont, acc}
+        {:error, _code} = error -> {:halt, error}
+      end
+    end)
+  end
+
+  # currency drops become wallet or experience updates instead of items
+  defp add_item(session, character, %Schema.Item{item_id: item_id, amount: amount} = item) do
+    cond do
+      exp_orb?(item_id) ->
+        Managers.Character.cast(character, {:earn_exp, amount})
+        :ok
+
+      currency_type(item_id) ->
+        add_currency(session, character, currency_type(item_id), amount)
+
+      true ->
+        case Managers.Inventory.add_item(character, item) do
+          {:ok, result} ->
+            push(session, Packets.InventoryItem.add_item(result, character))
+            Managers.Quest.notify_item_acquired(character, added_item(result))
+            :ok
+
+          _ ->
+            {:error, @error_inventory_full}
+        end
+    end
+  end
+
+  defp add_currency(_session, character, currency, amount) do
     case Context.Wallets.update(character, currency, amount) do
-      {:ok, wallet} ->
-        push(session, Packets.Wallet.update(wallet, currency))
+      {:ok, _wallet} -> :ok
+      _ -> {:error, @error_inventory_fail}
+    end
+  end
+
+  # the created or updated stack an add result carries (the update_and_create
+  # split carries the created overflow stack last)
+  defp added_item(result), do: elem(result, tuple_size(result) - 1)
+
+  # ---- consumption: returns :ok | {:error, code} ----
+
+  defp consume(session, _character, item, amount) do
+    case Managers.Inventory.consume(item, amount) do
+      {:update, _item} = consumed ->
+        push(session, Packets.InventoryItem.consume(consumed))
+        :ok
+
+      {:delete, _item} = consumed ->
+        push(session, Packets.InventoryItem.consume(consumed))
+        :ok
 
       _ ->
-        session
+        {:error, @error_inventory_fail}
     end
   end
 
-  defp handle_items(session, character, id, content) do
-    amount = Enum.random(content.min_amount..content.max_amount)
-    rarity = content.rarity
-    enchant_lvl = content.enchant_level
-
-    item = %Schema.Item{item_id: id, rarity: rarity, amount: amount, enchant_level: enchant_lvl}
-    item = Context.Items.load_metadata(item)
-
-    case Context.Inventory.add_item(character, item) do
-      {:ok, result} -> push(session, Packets.InventoryItem.add_item(result, character))
-      _ -> session
+  defp consume_key(session, character, key_item_id, key_amount) do
+    case find_carried(character, key_item_id) do
+      %Schema.Item{} = key_item -> consume(session, character, key_item, key_amount)
+      nil -> {:error, @error_inventory_fail}
     end
   end
+
+  defp owns_amount?(character, item_id, amount) do
+    case find_carried(character, item_id) do
+      %Schema.Item{amount: owned} -> owned >= amount
+      nil -> false
+    end
+  end
+
+  defp find_carried(character, item_id) do
+    character
+    |> Managers.Inventory.list_items()
+    |> Enum.find(&(&1.item_id == item_id))
+  end
+
+  # ---- function parameters ----
+
+  defp parse_params(nil), do: []
+
+  defp parse_params(parameters) when is_binary(parameters) do
+    parameters
+    |> String.split(",")
+    |> Enum.map(fn param ->
+      case Integer.parse(String.trim(param)) do
+        {value, ""} -> value
+        _ -> 0
+      end
+    end)
+  end
+
+  defp param(params, position, default) when position != nil do
+    Enum.at(params, position, default)
+  end
+
+  defp param(_params, nil, default), do: default
+
+  # ---- currency drops (reference InventoryManager.AddCurrency) ----
+
+  @currency_types %{
+    90_000_001 => :mesos,
+    90_000_002 => :mesos,
+    90_000_003 => :mesos,
+    90_000_004 => :merets,
+    90_000_006 => :valor_tokens,
+    90_000_013 => :rues,
+    90_000_014 => :havi_fruits,
+    90_000_016 => :merets,
+    90_000_017 => :trevas,
+    90_000_020 => :merets
+  }
+
+  defp exp_orb?(90_000_008), do: true
+  defp exp_orb?(_), do: false
+
+  defp currency_type(item_id), do: Map.get(@currency_types, item_id)
+
+  # TODO spirit (90000009) and stamina (90000010) orbs need stat updates
 end

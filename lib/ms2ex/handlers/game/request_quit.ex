@@ -16,5 +16,5 @@ defmodule Ms2ex.GameHandlers.RequestQuit do
     push(session, Packets.GameToLogin.bytes(session_data))
   end
 
-  defp handle_quit(_mode, session), do: session
+  defp handle_quit(_mode, _session), do: :ok
 end

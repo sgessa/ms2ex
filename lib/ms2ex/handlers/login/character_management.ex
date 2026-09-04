@@ -80,8 +80,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
         case Context.Characters.create(session.account, attrs) do
           {:ok, character} ->
             add_equips(character, equips)
-            equips = Context.Equips.list(character)
-            %{character | equips: equips}
+            %{character | equips: Context.Inventory.list_equipped(character.id)}
 
           error ->
             Repo.rollback(error)
@@ -102,10 +101,18 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     end
   end
 
+  # character creation runs before any game session, so the starting outfit
+  # is inserted directly: one row per equipped item, already in place
   defp add_equips(character, equips) do
     Enum.each(equips, fn {equip_slot, item} ->
-      {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
-      {:ok, _equip} = Context.Equips.equip(item, equip_slot)
+      {:ok, item} = Context.Inventory.insert_item(character.id, item)
+
+      Schema.Item.bind_if_needed(item, :equip)
+      |> Context.Inventory.update_item(%{
+        equip_slot: equip_slot,
+        inventory_slot: nil,
+        location: :equipment
+      })
     end)
   end
 

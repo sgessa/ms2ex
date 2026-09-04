@@ -73,9 +73,9 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     end
   end
 
-  defp maybe_create_chat(session, %{group_chat_ids: ids}, _rcpt_name)
+  defp maybe_create_chat(_session, %{group_chat_ids: ids}, _rcpt_name)
        when length(ids) >= @max_chats_per_user do
-    session
+    :ok
   end
 
   defp maybe_create_chat(session, character, rcpt_name) do
@@ -95,7 +95,7 @@ defmodule Ms2ex.GameHandlers.GroupChat do
     if rcpt_name != "" do
       maybe_invite_to_new_chat(session, character, chat, rcpt_name)
     else
-      session
+      :ok
     end
   end
 

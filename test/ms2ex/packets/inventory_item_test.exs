@@ -54,4 +54,28 @@ defmodule Ms2ex.Packets.InventoryItemTest do
 
     assert :binary.match(packet, blueprint) != :nomatch
   end
+
+  # hats in the bag (equip_slot :NONE) still write the 52-byte cap
+  # appearance block the client reads; the slot comes from metadata
+  test "bag items serialize the cap appearance block" do
+    base = %Schema.Item{
+      id: 2,
+      amount: 1,
+      inventory_slot: 0,
+      rarity: 1,
+      inserted_at: DateTime.from_unix!(1_700_000_000),
+      equip_slot: :NONE,
+      stats: %Types.ItemStats{},
+      color: nil
+    }
+
+    hat = %{base | item_id: 11_300_063, metadata: %{slots: [:CP]}}
+    plain = %{base | item_id: 20_000_013, metadata: %{slots: []}}
+
+    hat_packet = InventoryItem.put_item(<<>>, hat, nil)
+    plain_packet = InventoryItem.put_item(<<>>, plain, nil)
+
+    # the cap block adds exactly 52 bytes over the plain appearance
+    assert byte_size(hat_packet) - byte_size(plain_packet) == 52
+  end
 end

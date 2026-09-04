@@ -19,12 +19,14 @@ defmodule Ms2ex.Schema.Item do
     :inventory_slot,
     :inventory_tab,
     :is_bound,
+    :is_locked,
     :limit_break_level,
     :location,
     :rarity,
     :remaining_trades,
     :stats,
     :transfer_flags,
+    :unlocks_at,
     :ugc
   ]
 
@@ -47,7 +49,7 @@ defmodule Ms2ex.Schema.Item do
     field :enchant_level, :integer, default: 0
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
-    field :is_locked, :boolean, virtual: true, default: false
+    field :is_locked, :boolean, default: false
     field :inventory_slot, :integer
     field :inventory_tab, Enums.InventoryTab
     field :is_bound, :boolean, default: false
@@ -66,7 +68,7 @@ defmodule Ms2ex.Schema.Item do
     field :times_attr_changed, :integer, virtual: true, default: 0
     field :transfer_flags, EctoTypes.TransferFlags, default: []
     field :ugc, EctoTypes.Term
-    field :unlocks_at, :utc_datetime, virtual: true
+    field :unlocks_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
   end

@@ -1,9 +1,8 @@
 defmodule Ms2ex.GameHandlers.Helper.Session do
   alias Ms2ex.Context
-  alias Ms2ex.Managers.GroupChat
+  alias Ms2ex.Managers
   alias Ms2ex.Net.SenderSession
   alias Ms2ex.Packets
-  alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Schema
   alias Phoenix.PubSub
 
@@ -16,12 +15,14 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
     if character.party_id do
       notify_party_presence(character)
-      SenderSession.run(character, fn -> PartyServer.subscribe(character.party_id) end)
+      SenderSession.run(character, fn -> Managers.PartyServer.subscribe(character.party_id) end)
     end
   end
 
   def cleanup(character) do
     character = %{character | online?: false}
+    Managers.Inventory.stop(character)
+    Managers.Quest.stop(character.id)
     Context.Field.leave(character)
     notify_party_presence(character)
     notify_friend_presence(character)
@@ -30,8 +31,8 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
   defp leave_group_chats(character) do
     Enum.each(character.group_chat_ids, fn chat_id ->
-      {:ok, chat} = GroupChat.remove_member(%GroupChat{id: chat_id}, character)
-      GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
+      {:ok, chat} = Managers.GroupChat.remove_member(%Managers.GroupChat{id: chat_id}, character)
+      Managers.GroupChat.broadcast(chat.id, Packets.GroupChat.leave_notice(chat, character))
     end)
   end
 
@@ -43,10 +44,10 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
   end
 
   defp notify_party_presence(%{online?: true} = character) do
-    PartyServer.broadcast(character.party_id, Packets.Party.login_notice(character))
+    Managers.PartyServer.broadcast(character.party_id, Packets.Party.login_notice(character))
   end
 
   defp notify_party_presence(character) do
-    PartyServer.member_offline(character)
+    Managers.PartyServer.member_offline(character)
   end
 end

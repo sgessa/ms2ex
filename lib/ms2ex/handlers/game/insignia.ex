@@ -36,7 +36,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
   end
 
   defp can_equip_insignia?(character, %{type: :enchant}, _insignia_id) do
-    items = Context.Inventory.all(character)
+    items = Managers.Inventory.all(character)
     if Enum.find(items, &(&1.enchant_level >= 12)), do: true, else: false
   end
 

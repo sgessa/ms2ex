@@ -33,7 +33,7 @@ staff = Context.Items.init(15260310, %{rarity: 5})
 
 {:ok, char} =
   Context.Characters.create(account, %{
-    name: "steve1337",
+    name: "enki",
     level: 70,
     map_id: 2_000_023,
     title_id: 10000503,
@@ -42,29 +42,21 @@ staff = Context.Items.init(15260310, %{rarity: 5})
     skin_color: skin_color
   })
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
+# seeding persists straight to the database; no game session exists
+outfit = [
+  {ears, :ER},
+  {hair, :HR},
+  {face, :FA},
+  {face_decor, :FD},
+  {top, :CL},
+  {bottom, :PA},
+  {shoes, :SH},
+  {staff, :RH}
+]
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, hair)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
-
-{:ok, {:create, item}} = Context.Inventory.add_item(char, face)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
-
-{:ok, {:create, item}} = Context.Inventory.add_item(char, face_decor)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
-
-{:ok, {:create, item}} = Context.Inventory.add_item(char, top)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
-
-{:ok, {:create, item}} = Context.Inventory.add_item(char, bottom)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
-
-{:ok, {:create, item}} = Context.Inventory.add_item(char, shoes)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
-
-{:ok, {:create, item}} = Context.Inventory.add_item(char, staff)
-{:ok, _equip} = Context.Equips.equip(item, hd(item.metadata.slots))
+Enum.each(outfit, fn {item, equip_slot} ->
+  {:ok, _item} = Context.Inventory.insert_item(char.id, %{item | equip_slot: equip_slot, location: :equipment})
+end)
 
 titles = [10000569, 10000152, 10000570, 10000171, 10000196, 10000195, 10000571, 10000331, 10000190,
 10000458, 10000465, 10000503, 10000512, 10000513, 10000514, 10000537, 10000565, 10000602,

@@ -51,7 +51,8 @@ defmodule Ms2ex.Commands do
           transfer_flags: [:split, :trade]
         })
 
-      {:ok, {_, item} = result} = Context.Inventory.add_item(character, item)
+      {:ok, {_, item} = result} = Managers.Inventory.add_item(character, item)
+      Managers.Quest.notify_item_acquired(character, item)
 
       session
       |> push(Packets.InventoryItem.add_item(result, character))

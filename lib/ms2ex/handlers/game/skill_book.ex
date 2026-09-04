@@ -80,7 +80,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
     end
   end
 
-  defp handle_mode(_mode, _packet, _character, session), do: session
+  defp handle_mode(_mode, _packet, _character, _session), do: :ok
 
   defp add_or_update_tab(character, nil, attrs) do
     Context.Skills.add_tab(character, attrs)
