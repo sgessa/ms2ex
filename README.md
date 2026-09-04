@@ -124,7 +124,6 @@ ms2ex-server/
 - **[Ecto](https://hexdocs.pm/ecto/Ecto.html)** - Database wrapper and query generator
 - **[PostgreSQL](https://www.postgresql.org/)** - Persistent data storage
 - **[Redis](https://redis.io/)** - In-memory data structure store
-- **[LuaPort](https://hexdocs.pm/luaport/api-reference.html)** - Lua integration
 - **[Ranch](https://ninenines.eu/docs/en/ranch/2.0/guide/)** - TCP socket acceptor pool
 
 ## 🤝 Contributing
