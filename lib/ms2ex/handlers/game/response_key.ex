@@ -54,8 +54,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       :ok = Managers.Achievement.start(character)
 
-      character = %{character | trophies: Managers.Achievement.trophy_counts(character)}
-
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
 

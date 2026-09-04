@@ -195,13 +195,9 @@ defmodule Ms2ex.Managers.Achievement do
       code_long: code_long
     }
 
-    {state, trophies_changed?} =
+    state =
       Storage.Achievements.for_condition(type)
-      |> Enum.reduce({state, false}, &progress(&1, event, character, &2))
-
-    if trophies_changed? do
-      Managers.Character.call(state.character_id, {:update_trophies, state.trophies})
-    end
+      |> Enum.reduce(state, &progress(&1, event, character, &2))
 
     {:noreply, state}
   end
@@ -219,11 +215,11 @@ defmodule Ms2ex.Managers.Achievement do
 
   # ---- progress ----
 
-  defp progress(metadata, event, character, {state, trophies_changed?}) do
+  defp progress(metadata, event, character, state) do
     if matches?(metadata, Map.get(state.achievements, metadata.id), event) do
-      advance(metadata, event, character, state, trophies_changed?)
+      advance(metadata, event, character, state)
     else
-      {state, trophies_changed?}
+      state
     end
   end
 
@@ -243,7 +239,7 @@ defmodule Ms2ex.Managers.Achievement do
     end
   end
 
-  defp advance(metadata, event, character, state, trophies_changed?) do
+  defp advance(metadata, event, character, state) do
     case ensure_achievement(metadata, state) do
       {:ok, achievement, state} ->
         {achievement, ranked_up?, trophies} =
@@ -254,10 +250,10 @@ defmodule Ms2ex.Managers.Achievement do
         unless ranked_up?,
           do: maybe_push_update(character, achievement, metadata)
 
-        {state, trophies_changed? or ranked_up?}
+        state
 
       :error ->
-        {state, trophies_changed?}
+        state
     end
   end
 

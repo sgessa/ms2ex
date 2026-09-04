@@ -421,7 +421,8 @@ combat-heavy characters from accumulating document copies.
   row in memory — condition events walk the metadata index without touching
   the database, new rows insert on creation, updates batch into a periodic
   flush (and a flush on disconnect). Trophy counts live on the manager and
-  sync onto the character, grade completions notify quest conditions, stat
+  are read from it — the character struct keeps no mirrored copy — grade
+  completions notify quest conditions, stat
   point and emote rewards apply on rank-up while item and title rewards wait
   for the claim, and `Context.Achievements` shrank to pure persistence.
   Meta-trophies that track other achievements (`revise_achieve_*`,
