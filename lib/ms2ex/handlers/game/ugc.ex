@@ -72,14 +72,28 @@ defmodule Ms2ex.GameHandlers.Ugc do
   end
 
   defp handle_command(@load_banners, _packet, session) do
-    # TODO: send the advertising banners placed on the current field
-    push(session, Packets.Ugc.load_banners())
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+         banners when is_list(banners) <- Context.Field.banners(character) do
+      push(session, Packets.Ugc.load_banners(banners))
+    else
+      _ -> session
+    end
   end
 
-  defp handle_command(@reserve_banner, _packet, session) do
-    # TODO: reserve advertising banner slots
-    Logger.warning("Unhandled UGC banner reservation")
-    session
+  defp handle_command(@reserve_banner, packet, session) do
+    {banner_id, packet} = get_long(packet)
+    {count, packet} = get_int(packet)
+
+    with true <- count in 0..24,
+         {:ok, reservations} <- read_banner_reservations(packet, count),
+         {:ok, character} <- Managers.Character.lookup(session.character_id),
+         {:ok, slots} <- Context.Field.reserve_banner_slots(character, banner_id, reservations) do
+      push(session, Packets.Ugc.reserve_banner_slots(banner_id, slots))
+    else
+      _ ->
+        Logger.warning("Cannot reserve UGC banner slots for banner #{banner_id}")
+        session
+    end
   end
 
   defp handle_command(command, _packet, session) do
@@ -115,9 +129,35 @@ defmodule Ms2ex.GameHandlers.Ugc do
     end
   end
 
-  defp handle_upload(type, _packet, session)
-       when type in [:banner, :guild_emblem, :guild_banner] do
-    # TODO: banners and guild marks still need their owning systems
+  defp handle_upload(:banner, packet, session) do
+    {banner_id, packet} = get_long(packet)
+    {count, packet} = get_byte(packet)
+
+    with true <- count in 1..24,
+         {:ok, reservations} <- read_banner_reservations(packet, count),
+         :ok <- validate_banner_reservations(reservations),
+         {:ok, character} <- Managers.Character.lookup(session.character_id),
+         banner when not is_nil(banner) <- Storage.Tables.Banners.get(banner_id),
+         {:ok, price} <- banner_price(banner, reservations),
+         :ok <- charge_banner(character, price),
+         {:ok, resource} <- Context.Ugc.create(character.id, :banner),
+         {:ok, _banner} <-
+           Context.Field.attach_banner(
+             character,
+             banner_id,
+             slot_ids(reservations),
+             look(resource, character, "AD Banner #{banner_id}")
+           ) do
+      push(session, Packets.Ugc.upload(resource))
+    else
+      _ ->
+        Logger.warning("Cannot start UGC banner upload for banner #{banner_id}")
+        session
+    end
+  end
+
+  defp handle_upload(type, _packet, session) when type in [:guild_emblem, :guild_banner] do
+    # TODO: guild marks still need their owning systems
     case Context.Ugc.create(session.character_id, type) do
       {:ok, resource} -> push(session, Packets.Ugc.upload(resource))
       {:error, _changeset} -> session
@@ -155,8 +195,17 @@ defmodule Ms2ex.GameHandlers.Ugc do
         Logger.warning("Cannot find UGC resource #{resource_id}")
         session
 
+      resource when type == :banner ->
+        with {:ok, character} <- Managers.Character.lookup(session.character_id),
+             {:ok, banner} <- Context.Field.confirm_banner(character, resource.id, resource.path) do
+          push(session, Packets.Ugc.update_banner(banner))
+        else
+          _ ->
+            Logger.warning("Cannot confirm UGC banner resource #{resource_id}")
+            session
+        end
+
       resource ->
-        # TODO: attach the stored path to the banner or guild mark it belongs to
         Logger.warning("Unhandled UGC confirmation for #{inspect(type)}")
         push(session, Packets.Ugc.update_path(resource))
     end
@@ -197,6 +246,15 @@ defmodule Ms2ex.GameHandlers.Ugc do
     with currency when not is_nil(currency) <- Map.get(@currencies, currency_type),
          true <- balance(character, currency) >= price,
          {:ok, _wallet} <- Context.Wallets.update(character, currency, -price) do
+      :ok
+    else
+      _ -> :error
+    end
+  end
+
+  defp charge_banner(character, price) do
+    with true <- balance(character, :merets) >= price,
+         {:ok, _wallet} <- Context.Wallets.update(character, :merets, -price) do
       :ok
     else
       _ -> :error
@@ -250,6 +308,72 @@ defmodule Ms2ex.GameHandlers.Ugc do
       url: ""
     }
   end
+
+  defp read_banner_reservations(packet, count) do
+    {reservations, _packet} =
+      Enum.reduce(List.duplicate(:reservation, count), {[], packet}, fn _,
+                                                                        {reservations, packet} ->
+        {uid, packet} = get_long(packet)
+        {_state, packet} = get_int(packet)
+        {_banner_id, packet} = get_long(packet)
+        {date, packet} = get_int(packet)
+        {hour, packet} = get_int(packet)
+        {_reserved, packet} = get_long(packet)
+        {[%{id: uid, date: date, hour: hour} | reservations], packet}
+      end)
+
+    {:ok, Enum.reverse(reservations)}
+  rescue
+    MatchError -> :error
+  end
+
+  defp slot_ids(reservations), do: Enum.map(reservations, & &1.id)
+
+  defp validate_banner_reservations(reservations) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    if Enum.all?(reservations, &valid_banner_reservation?(&1, now)) do
+      :ok
+    else
+      :error
+    end
+  end
+
+  defp valid_banner_reservation?(%{date: date, hour: hour}, now) when hour in 0..23 do
+    with {:ok, day} <- Date.new(div(date, 10_000), rem(div(date, 100), 100), rem(date, 100)),
+         {:ok, time} <- Time.new(hour, 0, 0),
+         {:ok, starts_at} <- DateTime.new(day, time, "Etc/UTC") do
+      DateTime.compare(starts_at, now) == :gt
+    else
+      _ -> false
+    end
+  end
+
+  defp valid_banner_reservation?(_, _now), do: false
+
+  defp banner_price(%{prices: prices}, reservations) do
+    prices
+    |> Enum.map(&normalize_price/1)
+    |> sum_banner_prices(reservations)
+  end
+
+  defp banner_price(_, _reservations), do: :error
+
+  defp sum_banner_prices(prices, reservations) do
+    Enum.reduce_while(reservations, {:ok, 0}, fn %{hour: hour}, {:ok, total} ->
+      add_banner_price(prices, hour, total)
+    end)
+  end
+
+  defp add_banner_price(prices, hour, total) do
+    case Enum.at(prices, hour) do
+      price when is_integer(price) and price >= 0 -> {:cont, {:ok, total + price}}
+      _ -> {:halt, :error}
+    end
+  end
+
+  defp normalize_price(price) when is_integer(price), do: price
+  defp normalize_price(_price), do: nil
 
   # Fixed-size header identifying the owner of the content being uploaded.
   defp get_info(packet) do

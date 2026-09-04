@@ -70,6 +70,26 @@ defmodule Ms2ex.Context.Field do
     call(character.field_pid, {:pickup_item, character, object_id})
   end
 
+  @spec reserve_banner_slots(Schema.Character.t(), integer(), [map()]) ::
+          {:ok, [map()]} | :error
+  def reserve_banner_slots(%Schema.Character{} = character, banner_id, reservations) do
+    call(character.field_pid, {:reserve_banner_slots, character, banner_id, reservations})
+  end
+
+  @spec attach_banner(Schema.Character.t(), integer(), [integer()], map()) ::
+          {:ok, map()} | :error
+  def attach_banner(%Schema.Character{} = character, banner_id, slot_ids, ugc) do
+    call(character.field_pid, {:attach_banner, banner_id, slot_ids, ugc})
+  end
+
+  @spec confirm_banner(Schema.Character.t(), integer(), String.t()) :: {:ok, map()} | :error
+  def confirm_banner(%Schema.Character{} = character, resource_id, path) do
+    call(character.field_pid, {:confirm_banner, resource_id, path})
+  end
+
+  @spec banners(Schema.Character.t()) :: [map()] | :error
+  def banners(%Schema.Character{} = character), do: call(character.field_pid, :banners)
+
   @doc """
   Adds a region skill (Skill effect) to the field.
 

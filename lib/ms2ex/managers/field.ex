@@ -25,6 +25,48 @@ defmodule Ms2ex.Managers.Field do
     {id, %{state | local_id_counter: id}}
   end
 
+  defp banners(map_id) do
+    banners = Ms2ex.Storage.Tables.Banners.for_map(map_id)
+    slots = Ms2ex.Context.BannerSlots.list(Enum.map(banners, & &1.id))
+
+    banners
+    |> Map.new(fn banner ->
+      {banner.id, Map.put(banner, :slots, Enum.filter(slots, &(&1.banner_id == banner.id)))}
+    end)
+  end
+
+  defp attach_banner(banner, slot_ids, ugc) do
+    with true <- Enum.all?(slot_ids, &slot_exists?(banner.slots, &1)) do
+      {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_ugc(&1, slot_ids, ugc))}}
+    end
+  end
+
+  defp confirm_banner(banner, resource_id, path) do
+    with true <- Enum.any?(banner.slots, &slot_resource?(&1, resource_id)) do
+      {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_path(&1, resource_id, path))}}
+    end
+  end
+
+  defp slot_exists?(slots, id), do: Enum.any?(slots, &(&1.id == id))
+  defp slot_resource?(slot, resource_id), do: get_in(slot, [:ugc, :id]) == resource_id
+
+  defp put_slot_ugc(slot, ids, ugc) do
+    if slot.id in ids, do: Map.put(slot, :ugc, ugc), else: slot
+  end
+
+  defp put_slot_path(slot, resource_id, path) do
+    if slot_resource?(slot, resource_id), do: put_in(slot, [:ugc, :url], path), else: slot
+  end
+
+  defp find_confirmed_banner(banners, resource_id, path) do
+    Enum.find_value(banners, fn {banner_id, banner} ->
+      case confirm_banner(banner, resource_id, path) do
+        {:ok, banner} -> {banner_id, banner}
+        _ -> nil
+      end
+    end)
+  end
+
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
@@ -35,6 +77,7 @@ defmodule Ms2ex.Managers.Field do
 
     state = %{
       buffs: %{},
+      banners: banners(map_id),
       channel_id: channel_id,
       local_id_counter: local_id_counter,
       interactable: interactable,
@@ -110,6 +153,45 @@ defmodule Ms2ex.Managers.Field do
       instrument -> {:reply, {:ok, instrument}, Field.Instrument.remove(character_id, state)}
     end
   end
+
+  def handle_call({:reserve_banner_slots, character, banner_id, reservations}, _from, state) do
+    case Map.fetch(state.banners, banner_id) do
+      :error ->
+        {:reply, :error, state}
+
+      {:ok, banner} ->
+        case Ms2ex.Context.BannerSlots.reserve(character, banner_id, reservations) do
+          {:ok, slots} ->
+            banners = Map.put(state.banners, banner_id, %{banner | slots: banner.slots ++ slots})
+            {:reply, {:ok, slots}, %{state | banners: banners}}
+
+          :error ->
+            {:reply, :error, state}
+        end
+    end
+  end
+
+  def handle_call({:attach_banner, banner_id, slot_ids, ugc}, _from, state) do
+    with {:ok, banner} <- Map.fetch(state.banners, banner_id),
+         {:ok, banner} <- attach_banner(banner, slot_ids, ugc),
+         {_count, _slots} <- Ms2ex.Context.BannerSlots.attach(slot_ids, ugc) do
+      {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
+    else
+      _ -> {:reply, :error, state}
+    end
+  end
+
+  def handle_call({:confirm_banner, resource_id, path}, _from, state) do
+    case find_confirmed_banner(state.banners, resource_id, path) do
+      nil ->
+        {:reply, :error, state}
+
+      {banner_id, banner} ->
+        {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
+    end
+  end
+
+  def handle_call(:banners, _from, state), do: {:reply, Map.values(state.banners), state}
 
   def handle_call(:performance_stage?, _from, state),
     do: {:reply, Field.PerformanceStage.stage?(state), state}

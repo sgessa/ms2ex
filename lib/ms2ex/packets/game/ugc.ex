@@ -6,12 +6,14 @@ defmodule Ms2ex.Packets.Ugc do
   @upload 0x02
   @update_path 0x04
   @profile_picture 0x0B
+  @update_banner 0x08
   @update_item 0x0D
   @update_furnishing 0x0E
   @update_mount 0x0F
   @update_layout_blueprint 0x10
   @set_endpoint 0x11
   @load_banner 0x12
+  @reserve_banners 0x14
 
   @doc """
   Tells the client which host to upload user generated content to and where to
@@ -108,7 +110,44 @@ defmodule Ms2ex.Packets.Ugc do
     |> reduce(banners, fn banner, packet ->
       packet
       |> put_long(banner.id)
-      |> put_int(0)
+      |> put_int(length(banner.slots))
+      |> reduce(banner.slots, fn slot, packet ->
+        packet
+        |> put_long(slot.date * 100_000 + slot.hour)
+        |> put_ustring(get_in(slot, [:ugc, :author]) || "")
+        |> put_bool(true)
+      end)
+    end)
+  end
+
+  def reserve_banner_slots(banner_id, slots) do
+    __MODULE__
+    |> build()
+    |> put_byte(@reserve_banners)
+    |> put_long(banner_id)
+    |> put_int(length(slots))
+    |> reduce(slots, fn slot, packet ->
+      packet
+      |> put_long(slot.id)
+      |> put_int(if(slot.active, do: 2, else: 1))
+      |> put_long(slot.banner_id)
+      |> put_int(slot.date)
+      |> put_int(slot.hour)
+      |> put_long()
+    end)
+  end
+
+  def update_banner(banner) do
+    __MODULE__
+    |> build()
+    |> put_byte(@update_banner)
+    |> put_long(banner.id)
+    |> put_int(length(banner.slots))
+    |> reduce(banner.slots, fn slot, packet ->
+      packet
+      |> put_long(slot.date * 100_000 + slot.hour)
+      |> put_ustring(get_in(slot, [:ugc, :author]) || "")
+      |> put_bool(true)
     end)
   end
 
