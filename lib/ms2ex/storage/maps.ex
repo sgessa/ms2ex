@@ -59,6 +59,13 @@ defmodule Ms2ex.Storage.Maps do
     |> Map.get(:mob_spawns)
   end
 
+  def get_mob_gates(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:mob_gates, [])
+    |> Map.new(fn gate -> {gate.spawn_point_id, gate} end)
+  end
+
   def get_interact_objects(map_id) do
     map_id
     |> get_meta()

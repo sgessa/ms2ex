@@ -54,7 +54,12 @@ Mob spawn points now run spawn cycles from the field tick loop: the initial
 population spawns on the first due cycle, mob deaths schedule the next cycle
 (full wipe → `regen_check_time` cooldown, partial kill → 2× cooldown while no
 cycle is pending), and every due cycle refills the population to full.
-Zero-cooldown spawns never refill. What is still missing:
+Zero-cooldown spawns never refill. Mob bodies now stay for their `dead.time`
+window before removal. Monster gates are data-driven from the map's trigger
+script (ingested as `mob_gates`): when the last mob of a gated spawn point
+dies, the blocking trigger meshes drop (update packets broadcast, the gate
+stays latched open across respawns, late joiners load the meshes hidden) and
+the gate's guide event fires. What is still missing:
 
 - pet spawn rolls for mob spawns (`pet_population` / `pet_spawn_rate`) — the
   metadata is not projected by the ingest yet
@@ -63,6 +68,9 @@ Zero-cooldown spawns never refill. What is still missing:
 - friendly NPC spawn points are still spawned eagerly at field load; their
   trigger-driven creation and `regen_check_time` top-up checks are not
   implemented
+- a general trigger-script runtime (states, conditions, cinematic/movie
+  actions, per-job portal enables) — only the monster-gate pattern is
+  projected and replayed today
 
 ---
 
@@ -172,13 +180,21 @@ idempotently (level-1 characters on the start field only, topping up
 what they do not already hold), walking out of the start field at
 level 1 grants the tutorial reward items and unlocks the tutorial's maps
 and taxis (persisted, with taxi-discover packets), and the tutorial skip
-item teleports to the skip destination when used on the start field.
+item teleports to the skip destination when used on the start field. Guide
+pop-up progress (`GuideRecord`) is persisted per character and replayed to
+the client on field enter. The final barrier guarding the exit is a monster
+gate: killing the guard dummy drops the steel-barrier meshes (with the
+guide event that moves the tutorial ui to its last step), opening the way
+to the exit portal.
 
-What is still missing:
-
-- the ingest change adding the `tutorial` block to the `table:job.xml`
-  projection must be re-run before this works on a fresh database
-- guide records (`GuideRecord`) are accepted but not persisted
+The newer-class tutorials (runeblade 63000006-chain, striker
+63000015-chain, soulbinder 63000035-chain) are scripted quest campaigns
+(walk-and-talk states, movies, npc choreography, quest-state gates —
+e.g. striker's `63000015_cs/intro01.xml` has 37 states around quest
+90000430) and do not run: they need a trigger-script runtime (states,
+box/user/quest detection conditions, cinematic ui and movie actions,
+npc movement). Until then those characters skip via the job's skip item
+(`!item 15500095` for a striker, then use it on the start field).
 
 ### 7. Join-flow packet audit — [Open]
 

@@ -38,7 +38,13 @@ defmodule Ms2ex.GameHandlers.UseItem do
       consumed_item = Managers.Inventory.consume(item)
 
       push(session, Packets.InventoryItem.consume(consumed_item))
-      Context.Field.change_field(character, skip_field, spawn_point.position, spawn_point.rotation)
+
+      Context.Field.change_field(
+        character,
+        skip_field,
+        spawn_point.position,
+        spawn_point.rotation
+      )
 
       :skipped
     else
