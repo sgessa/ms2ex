@@ -46,7 +46,14 @@ defmodule Ms2ex.Managers.Quest.Conditions do
     :skill,
     :stay_cube,
     :stay_map,
-    :talk_in
+    :talk_in,
+    # meta-trophies tracking other achievements: the pushed code is the
+    # completing achievement id; without the gate every grade completion
+    # counts into every meta-trophy
+    :revise_achieve_multi_grade,
+    :revise_achieve_single_grade,
+    :hero_achieve,
+    :hero_achieve_grade
   ]
 
   # condition types whose target parameter acts as a minimum-value gate: the
@@ -64,7 +71,18 @@ defmodule Ms2ex.Managers.Quest.Conditions do
 
   # condition types whose target integers enumerate allowed values (e.g. map
   # ids) that the pushed value must match exactly
-  @target_equality_types [:chat, :emotion, :holdtime, :laddertime, :ropetime]
+  @target_equality_types [
+    :chat,
+    :emotion,
+    :holdtime,
+    :laddertime,
+    :ropetime,
+    # the pushed target is the achieved grade of the tracked trophy
+    :revise_achieve_multi_grade,
+    :revise_achieve_single_grade,
+    :hero_achieve,
+    :hero_achieve_grade
+  ]
 
   def all_met?(quest) do
     Enum.all?(quest.conditions, fn {_idx, condition} ->
