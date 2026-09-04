@@ -117,6 +117,23 @@ socket unlocking and gemstones are unimplemented). Implementing any of
 these needs the feature system plus, for pets, ingest projection of pet
 metadata.
 
+### 21. Item boxes & use-item functions — [Open]
+
+Opening a box consumes it but grants nothing on this client: real boxes
+carry no `content` list (the ingest's drop-table join is empty for their
+box ids on this client version — the shared parser expects
+`individualItemDrop_Final.xml`, which this archive lacks), so the
+`UseItem` handler's `ItemBox.open/3` matches the empty-list clause and
+returns immediately. The reference instead ignores per-item content and
+resolves the box's function parameters against the individual/global
+drop tables at open time, rolling rewards through the shared ItemDrop
+system (level rarity, job weights, smart drop). Missing pieces: a
+dedicated `RequestItemBox` recv handler with the `ItemBoxPacket.Open`
+response, drop-table-driven rewards, the key/gacha/Lullu box types,
+multi-open count, error codes to the client, mail-overflow of rewards
+when the inventory is full, and correct currency ids (ms2ex marks mesos
+id 90000011 as merets and skips valor/exp/stamina orbs).
+
 ### 7. Join-flow packet audit — [Open]
 
 `FieldAddUser`, `AddPortal` and the battle-join packet set have not been
