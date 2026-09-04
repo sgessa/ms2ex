@@ -16,6 +16,10 @@ cast it.
 
 # `remove_owner_buffs`
 
+# `remove_owner_effect`
+
+Removes a single effect from an actor, whoever cast it.
+
 # `restore_buffs`
 
 Re-applies the character's stored buffs for the remainder of their duration.

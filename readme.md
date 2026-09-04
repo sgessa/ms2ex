@@ -36,7 +36,6 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 - [Docker & Docker Compose](https://docs.docker.com/compose) (optional, but recommended)
 - [PostgreSQL](https://www.postgresql.org/download)
 - [Redis](https://redis.io/download) - Required for game client metadata
-- LuaJIT dependencies - Required to run Game Client scripts
 
 ### Installation
 
@@ -57,23 +56,14 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    asdf install
    ```
 
-3. **Install Lua dependencies**
-   ```bash
-   # For Ubuntu/Debian
-   apt install libluajit-5.1-dev
-
-   # For OSX
-   brew install luajit
-   ```
-
-4. **Configure environment variables**
+3. **Configure environment variables**
    ```bash
    # Copy the example .env file and modify if needed
    cp .env-example .env
    ```
    The default values are configured to work with the Docker Compose setup.
 
-5. **Set up PostgreSQL and Redis**
+4. **Set up PostgreSQL and Redis**
 
    **Download Game Client Metadata**
 
@@ -93,12 +83,12 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    - Copy `dump.rdb` to `/var/lib/redis/dump.rdb`
    - Start Redis
 
-6. **Install Elixir dependencies and set-up the database**
+5. **Install Elixir dependencies and set-up the database**
    ```bash
    mix setup
    ```
 
-7. **Start the server**
+6. **Start the server**
    ```bash
    mix phx.server
    ```
@@ -124,7 +114,6 @@ ms2ex-server/
 - **[Ecto](https://hexdocs.pm/ecto/Ecto.html)** - Database wrapper and query generator
 - **[PostgreSQL](https://www.postgresql.org/)** - Persistent data storage
 - **[Redis](https://redis.io/)** - In-memory data structure store
-- **[LuaPort](https://hexdocs.pm/luaport/api-reference.html)** - Lua integration
 - **[Ranch](https://ninenines.eu/docs/en/ranch/2.0/guide/)** - TCP socket acceptor pool
 
 ## 🤝 Contributing

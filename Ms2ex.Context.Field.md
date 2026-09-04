@@ -388,6 +388,19 @@ Picks up an item from the field.
     iex> pickup_item(character, object_id)
     {:ok, item}
 
+# `remove_effect_buff`
+
+```elixir
+@spec remove_effect_buff(Ms2ex.Schema.Character.t(), integer()) :: :ok | :error
+```
+
+Removes a single effect from the character, whoever cast it.
+
+## Examples
+
+    iex> remove_effect_buff(character, 70_000_086)
+    :ok
+
 # `remove_instrument`
 
 ```elixir

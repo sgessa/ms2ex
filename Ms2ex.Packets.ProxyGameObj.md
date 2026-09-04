@@ -13,6 +13,8 @@
 
 # `update_gear_score`
 
+# `update_motto`
+
 # `update_npc`
 
 # `update_player`

@@ -52,6 +52,8 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.Job](Ms2ex.GameHandlers.Job.md)
 - [Ms2ex.GameHandlers.KeyTable](Ms2ex.GameHandlers.KeyTable.md)
 - [Ms2ex.GameHandlers.LoadUgcMap](Ms2ex.GameHandlers.LoadUgcMap.md)
+- [Ms2ex.GameHandlers.MyInfo](Ms2ex.GameHandlers.MyInfo.md): The motto shown on the player's profile and above their head.
+
 - [Ms2ex.GameHandlers.NpcTalk](Ms2ex.GameHandlers.NpcTalk.md): NPC interaction flow (talk + quest selection).
 - [Ms2ex.GameHandlers.Party](Ms2ex.GameHandlers.Party.md)
 - [Ms2ex.GameHandlers.PickupItem](Ms2ex.GameHandlers.PickupItem.md)
@@ -237,6 +239,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Enums.ItemType](Ms2ex.Enums.ItemType.md)
   - [Ms2ex.Enums.Job](Ms2ex.Enums.Job.md)
   - [Ms2ex.Enums.MeretMarketCurrency](Ms2ex.Enums.MeretMarketCurrency.md)
+  - [Ms2ex.Enums.MyInfoError](Ms2ex.Enums.MyInfoError.md)
   - [Ms2ex.Enums.PartyNotice](Ms2ex.Enums.PartyNotice.md)
   - [Ms2ex.Enums.QuestConditionType](Ms2ex.Enums.QuestConditionType.md): Quest/achievement condition type ids as used in metadata documents.
 
@@ -318,6 +321,9 @@ drop boxes), shared by mob loot and item boxes.
   - [Ms2ex.Context.Field](Ms2ex.Context.Field.md): Context module for field-related operations.
   - [Ms2ex.Context.Friends](Ms2ex.Context.Friends.md): Context module for friend-related operations.
   - [Ms2ex.Context.HotBars](Ms2ex.Context.HotBars.md): Context module for hot bar-related operations.
+  - [Ms2ex.Context.Insignias](Ms2ex.Context.Insignias.md): Name tag symbols. Each insignia is gated on a condition the wearer has to
+keep meeting, so the symbol is only drawn while the condition holds.
+
   - [Ms2ex.Context.Inventory](Ms2ex.Context.Inventory.md): Item persistence helpers.
   - [Ms2ex.Context.ItemConstantStats](Ms2ex.Context.ItemConstantStats.md)
   - [Ms2ex.Context.ItemEnchantStats](Ms2ex.Context.ItemEnchantStats.md)
@@ -422,6 +428,7 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.Mesos](Ms2ex.Packets.Mesos.md)
   - [Ms2ex.Packets.MoveCharacter](Ms2ex.Packets.MoveCharacter.md)
   - [Ms2ex.Packets.MoveResult](Ms2ex.Packets.MoveResult.md)
+  - [Ms2ex.Packets.MyInfo](Ms2ex.Packets.MyInfo.md)
   - [Ms2ex.Packets.Notice](Ms2ex.Packets.Notice.md)
   - [Ms2ex.Packets.NpcTalk](Ms2ex.Packets.NpcTalk.md): NpcTalk packet builders.
   - [Ms2ex.Packets.NpsInfo](Ms2ex.Packets.NpsInfo.md)

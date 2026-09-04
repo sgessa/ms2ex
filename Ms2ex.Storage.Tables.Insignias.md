@@ -3,6 +3,10 @@
 
 # `get`
 
+```elixir
+@spec get(integer()) :: {:ok, map()} | :error
+```
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

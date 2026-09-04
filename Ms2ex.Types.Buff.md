@@ -27,6 +27,11 @@
 
 # `ticks?`
 
+# `unlimited?`
+
+Buffs that never time out, such as the passive an insignia grants. Their
+metadata carries no duration, so an expiry would land on the start tick.
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*
