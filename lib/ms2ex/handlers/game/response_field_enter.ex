@@ -25,6 +25,8 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     hot_bars = Context.HotBars.list(character)
     push(session, Packets.KeyTable.send_hot_bars(hot_bars))
 
+    push(session, Packets.GuideRecord.load(character.guide_records))
+
     send_skill_cooldowns(session, character_id)
 
     favorite_stickers = Context.ChatStickers.list_favorited(character)
