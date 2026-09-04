@@ -1,7 +1,6 @@
 defmodule Ms2ex.GameHandlers.Insignia do
-  alias Ms2ex.Managers
   alias Ms2ex.Context
-  alias Ms2ex.Storage
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
 
   import Packets.PacketReader
@@ -12,49 +11,15 @@ defmodule Ms2ex.GameHandlers.Insignia do
 
     # an id absent from the table is ignored; otherwise the insignia is
     # applied and the display flag broadcast
-    case Storage.Tables.Insignias.get(insignia_id) do
-      {:ok, metadata} ->
-        display = can_equip_insignia?(character, metadata, insignia_id)
-
-        {:ok, character} = Context.Characters.update(character, %{insignia_id: insignia_id})
-        Managers.Character.call(character, {:update, character})
-
+    case Context.Insignias.equip(character, insignia_id) do
+      {:ok, character, display} ->
         Context.Field.broadcast(
           character,
           Packets.Insignia.update(character, insignia_id, display)
         )
 
-      _ ->
+      :error ->
         :ok
     end
   end
-
-  defp can_equip_insignia?(%{is_vip: is_vip}, %{type: :vip}, _insignia_id), do: is_vip
-
-  defp can_equip_insignia?(character, %{type: :level}, _insignia_id) do
-    character.level >= 50
-  end
-
-  defp can_equip_insignia?(character, %{type: :enchant}, _insignia_id) do
-    items = Managers.Inventory.all(character)
-    if Enum.find(items, &(&1.enchant_level >= 12)), do: true, else: false
-  end
-
-  defp can_equip_insignia?(character, %{type: :trophy_point}, _insignia_id) do
-    case Managers.Achievement.trophy_counts(character) do
-      [combat, adventure, lifestyle] -> combat + adventure + lifestyle >= 1000
-      _ -> false
-    end
-  end
-
-  defp can_equip_insignia?(character, %{type: :title, title_id: title_id}, _insignia_id) do
-    titles = Context.Characters.list_titles(character)
-    Enum.member?(titles, title_id)
-  end
-
-  defp can_equip_insignia?(character, %{type: :adventure_level}, _insignia_id) do
-    character.prestige_level >= 100
-  end
-
-  defp can_equip_insignia?(_character, _metadata, _insignia_id), do: false
 end

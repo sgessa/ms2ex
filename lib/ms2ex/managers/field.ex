@@ -150,6 +150,9 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:has_buff?, owner_object_id, effect_id}, _from, state),
     do: {:reply, Field.Buff.owner_has_buff?(owner_object_id, effect_id, state), state}
 
+  def handle_call({:remove_effect_buff, owner_object_id, effect_id}, _from, state),
+    do: {:reply, :ok, Field.Buff.remove_owner_effect(owner_object_id, effect_id, state)}
+
   def handle_call({:lookup_npc, object_id}, _from, state) do
     case Map.get(state.npcs, object_id) do
       nil -> {:reply, :error, state}

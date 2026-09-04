@@ -1,6 +1,7 @@
 defmodule Ms2ex.Packets.FieldAddUser do
-  alias Ms2ex.Managers
+  alias Ms2ex.Context
   alias Ms2ex.Enums
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Types
@@ -68,7 +69,9 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_byte()
     |> put_int(character.title_id)
     |> put_short(character.insignia_id)
-    |> put_byte()
+    # whether the wearer still meets the insignia's condition, so peers
+    # already on the field know whether to draw the symbol
+    |> put_bool(Context.Insignias.display?(character))
     |> put_int()
     |> put_byte()
     |> put_time()

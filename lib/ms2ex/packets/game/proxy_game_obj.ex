@@ -72,6 +72,15 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_int(character.gear_score)
   end
 
+  def update_motto(character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update_player)
+    |> put_int(character.object_id)
+    |> put_byte(@player_flags.motto)
+    |> put_ustring(character.motto)
+  end
+
   # death state changes (die / revive) reach the field through the dead flag
   def update_dead(character) do
     __MODULE__

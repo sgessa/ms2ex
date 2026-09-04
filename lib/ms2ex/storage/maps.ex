@@ -2,6 +2,8 @@ defmodule Ms2ex.Storage.Maps do
   alias Ms2ex.Storage
   alias Ms2ex.Types.Coord
 
+  @field_spawn_height 25
+
   def get_bounds(map_id) do
     map_id
     |> get_meta()
@@ -11,6 +13,11 @@ defmodule Ms2ex.Storage.Maps do
     |> then(&Map.put(&1, :position2, struct(Coord, &1.position2)))
   end
 
+  @doc """
+  One of the map's enabled spawn points, picked at random. Respawns use it
+  directly (the player is placed on the exact coordinate); field entry
+  builds on it (see `get_field_spawn/1`) so the player drops in from above.
+  """
   def get_spawn(map_id) do
     map_id
     |> get_meta()
@@ -25,6 +32,19 @@ defmodule Ms2ex.Storage.Maps do
       |> Map.put(:rotation, struct(Coord, rotation))
     end)
     |> Enum.random()
+  end
+
+  @doc """
+  Spawn point to drop a player onto when they enter a field. Entering flush
+  with the floor drops the player through it, so the arrival sits above the
+  spawn point and falls the short distance.
+  """
+  @spec get_field_spawn(integer()) :: map()
+  def get_field_spawn(map_id) do
+    spawn_point = get_spawn(map_id)
+    position = spawn_point.position
+
+    %{spawn_point | position: %{position | z: position.z + @field_spawn_height}}
   end
 
   def get_npc_spawns(map_id) do

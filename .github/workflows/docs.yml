@@ -23,11 +23,6 @@ jobs:
           elixir-version: "1.20.x"
           otp-version: "29.x"
 
-      - name: Install Lua JIT dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libluajit-5.1-dev
-
       # Cache Hex's package tarballs and registry (~/.hex) so mix deps.get
       # avoids re-downloading from hex.pm when the deps/_build key misses.
       # setup-beam force-reinstalls the hex tool into ~/.mix every run, so
