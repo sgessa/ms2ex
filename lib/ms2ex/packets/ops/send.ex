@@ -64,6 +64,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x57 => "FIELD_REMOVE_NPC",
     0x59 => "CONTROL_NPC",
     0x5E => "TOMBSTONE",
+    0x5F => "ACHIEVEMENT",
     0x60 => "MOVE_CHARACTER",
     0x63 => "FRIEND",
     0x65 => "INTERACT_OBJECT",

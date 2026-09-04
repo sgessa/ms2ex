@@ -15,6 +15,7 @@ defmodule Ms2ex.Managers.Quest.Conditions do
     :dialogue,
     :explore,
     :explore_continent,
+    :field_mission,
     :fish,
     :interact_object,
     :interact_object_rep,
@@ -32,6 +33,13 @@ defmodule Ms2ex.Managers.Quest.Conditions do
     :quest_accept,
     :quest_clear,
     :quest_clear_by_chapter,
+    :riding,
+    :run,
+    :swim,
+    :climb,
+    :glide,
+    :crawl,
+    :fall,
     :skill,
     :stay_cube,
     :stay_map,
@@ -53,7 +61,7 @@ defmodule Ms2ex.Managers.Quest.Conditions do
 
   # condition types whose target integers enumerate allowed values (e.g. map
   # ids) that the pushed value must match exactly
-  @target_equality_types [:chat, :emotion]
+  @target_equality_types [:chat, :emotion, :holdtime, :laddertime, :ropetime]
 
   def all_met?(quest) do
     Enum.all?(quest.conditions, fn {_idx, condition} ->
@@ -118,7 +126,7 @@ defmodule Ms2ex.Managers.Quest.Conditions do
       metadata_matches?(condition.metadata, target_string, target_long, code_string, code_long)
   end
 
-  defp metadata_matches?(metadata, _target_string, target_long, _code_string, code_long) do
+  def metadata_matches?(metadata, _target_string, target_long, _code_string, code_long) do
     code_ok?(metadata, code_long) and target_ok?(metadata, target_long)
   end
 

@@ -21,6 +21,18 @@ defmodule Ms2ex.Packets.UserEnv do
     end)
   end
 
+  def item_collects(item_collects \\ %{}) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x03)
+    |> put_int(map_size(item_collects))
+    |> reduce(item_collects, fn {item_id, quantity}, packet ->
+      packet
+      |> put_int(item_id)
+      |> put_byte(quantity)
+    end)
+  end
+
   def set_mode(mode, integers \\ 1) do
     __MODULE__
     |> build()

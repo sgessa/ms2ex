@@ -90,8 +90,9 @@ defmodule Ms2ex.Managers.Quest.Rewards do
 
   defp maybe_push_inventory_result(%{session_pid: nil}, _result), do: :ok
 
-  defp maybe_push_inventory_result(character, result) do
+  defp maybe_push_inventory_result(character, {_status, inventory_item} = result) do
     push(character, Packets.InventoryItem.add_item(result, character))
+    push(character, Packets.InventoryItem.mark_item_new(inventory_item))
   end
 
   defp grantable?(%{id: id}) when id <= 0, do: false

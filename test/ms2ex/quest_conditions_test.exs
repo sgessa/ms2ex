@@ -36,6 +36,24 @@ defmodule Ms2ex.Managers.Quest.ConditionsTest do
     assert updated.conditions[1].counter == 1
   end
 
+  test "riding conditions require the configured map code", %{quest: quest} do
+    quest = %{quest | conditions: %{0 => condition(:riding, 200, codes: [20_000_001])}}
+
+    assert Conditions.update(quest, :riding, 1, "", 0, "", 20_000_002) == quest
+
+    updated = Conditions.update(quest, :riding, 1, "", 0, "", 20_000_001)
+    assert updated.conditions[0].counter == 1
+  end
+
+  test "field missions require the completed mission id", %{quest: quest} do
+    quest = %{quest | conditions: %{0 => condition(:field_mission, 1, codes: [72_000_134])}}
+
+    assert Conditions.update(quest, :field_mission, 1, "", 0, "", 72_000_135) == quest
+
+    updated = Conditions.update(quest, :field_mission, 1, "", 0, "", 72_000_134)
+    assert updated.conditions[0].counter == 1
+  end
+
   test "target gate requires the pushed value to reach the minimum", %{quest: quest} do
     updated = Conditions.update(quest, :level, 1, "", 9, "", 0)
     assert updated.conditions[2].counter == 0

@@ -3,6 +3,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
+  alias Ms2ex.Storage
 
   import Net.SenderSession, only: [push: 2, run: 2]
 
@@ -30,7 +31,12 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     sticker_groups = Context.ChatStickers.list_groups(character)
     push(session, Packets.ChatSticker.load(favorite_stickers, sticker_groups))
 
+    continent = Storage.Maps.get_property(character.map_id) |> Map.get(:continent, 0)
+
     Managers.Quest.update_conditions(character_id, :map, 1, "", 0, "", character.map_id)
+    Managers.Quest.update_conditions(character_id, :explore, 1, "", 0, "", character.map_id)
+    Managers.Quest.update_conditions(character_id, :continent, 1, "", 0, "", continent)
+    Managers.Quest.update_conditions(character_id, :explore_continent, 1, "", 0, "", continent)
   end
 
   defp send_skill_cooldowns(session, character_id) do

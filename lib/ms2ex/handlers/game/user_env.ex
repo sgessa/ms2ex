@@ -22,5 +22,10 @@ defmodule Ms2ex.GameHandlers.UserEnv do
     end
   end
 
+  defp handle_mode(0x3, packet, session) do
+    Ms2ex.Net.SenderSession.push(session, Packets.UserEnv.item_collects())
+    :ok
+  end
+
   defp handle_mode(_mode, _packet, _session), do: :ok
 end
