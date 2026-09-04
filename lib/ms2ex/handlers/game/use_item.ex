@@ -1,6 +1,7 @@
 defmodule Ms2ex.GameHandlers.UseItem do
   alias Ms2ex.Managers
   alias Ms2ex.Context
+  alias Ms2ex.GameHandlers.Helper.ItemBox
   alias Ms2ex.Packets
   alias Ms2ex.Schema
 
@@ -9,19 +10,32 @@ defmodule Ms2ex.GameHandlers.UseItem do
 
   def handle(packet, session) do
     {item_uid, packet} = get_long(packet)
-    # {item_type, packet} = get_short(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %Schema.Item{} = item <- Managers.Inventory.get(character, item_uid),
          item <- Context.Items.load_metadata(item) do
-      # session
-      # |> open_box(item_type, item.metadata.content, packet)
       case item.metadata.function_name do
         "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
         "AddAdditionalEffect" -> add_additional_effect(session, character, item)
+        "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
+        "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
+        "SelectItemBox" -> select_box(session, character, item, packet)
         _ -> session
       end
     end
+  end
+
+  # the picked entry index arrives as a string after the item uid
+  defp select_box(session, character, item, packet) do
+    {index_str, _packet} = get_ustring(packet)
+
+    index =
+      case Integer.parse(index_str) do
+        {value, _rest} -> value
+        :error -> -1
+      end
+
+    ItemBox.open(session, character, item, 1, index)
   end
 
   defp add_emoticon(session, character, item, _packet) do
