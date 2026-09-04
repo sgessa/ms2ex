@@ -139,6 +139,23 @@ crystal special case. Some boxes have no drop-table content in this
 client's data (e.g. the welcome pack 20300002) — those refuse to open,
 matching the reference.
 
+### 22. Character tutorial — [Partial]
+
+New characters spawn on their job's tutorial start field (from the job
+table projection instead of a hardcoded map), the client's
+`REQUEST_TUTORIAL_ITEM` request grants the job's starter items
+idempotently (level-1 characters on the start field only, topping up
+what they do not already hold), walking out of the start field at
+level 1 grants the tutorial reward items and unlocks the tutorial's maps
+and taxis (persisted, with taxi-discover packets), and the tutorial skip
+item teleports to the skip destination when used on the start field.
+
+What is still missing:
+
+- the ingest change adding the `tutorial` block to the `table:job.xml`
+  projection must be re-run before this works on a fresh database
+- guide records (`GuideRecord`) are accepted but not persisted
+
 ### 7. Join-flow packet audit — [Open]
 
 `FieldAddUser`, `AddPortal` and the battle-join packet set have not been

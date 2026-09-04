@@ -51,6 +51,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x84 => "SMART_PUSH",
     0x8F => "PREMIUM_CLUB",
     0x9A => "STAT_POINTS",
+    0x9D => "REQUEST_TUTORIAL_ITEM",
     0xA3 => "SKILL_BOOK",
     0xB2 => "RESPONSE_SERVER_ENTER",
     0xBB => "FILE_HASH",
