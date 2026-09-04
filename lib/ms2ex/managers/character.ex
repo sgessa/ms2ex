@@ -22,7 +22,16 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def start(%Schema.Character{} = character) do
-    GenServer.start(__MODULE__, character, name: process_name(character.id))
+    Ms2ex.Managers.ManagerSupervisor.start_child(
+      __MODULE__,
+      character,
+      process_name(character.id)
+    )
+  end
+
+  @doc false
+  def start_link(%Schema.Character{} = character) do
+    GenServer.start_link(__MODULE__, character, name: process_name(character.id))
   end
 
   # ids of every online character, from the registered character processes

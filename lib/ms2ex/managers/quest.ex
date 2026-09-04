@@ -16,6 +16,8 @@ defmodule Ms2ex.Managers.Quest do
   alias Ms2ex.Storage
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
+  require Logger
+
   @flush_interval :timer.minutes(1)
 
   # Constants
@@ -40,8 +42,19 @@ defmodule Ms2ex.Managers.Quest do
   # Client API
 
   @doc """
-  Starts a quest manager for a character.
+  Starts the quest manager for a character.
   """
+  def start(character_id) do
+    name = process_name(character_id)
+
+    case Managers.ManagerSupervisor.start_child(__MODULE__, character_id, name) do
+      {:ok, pid} -> {:ok, pid}
+      {:error, {:already_started, pid}} -> {:ok, pid}
+      error -> error
+    end
+  end
+
+  @doc false
   def start_link(character_id) do
     GenServer.start_link(__MODULE__, character_id, name: process_name(character_id))
   end
@@ -213,7 +226,7 @@ defmodule Ms2ex.Managers.Quest do
   def stop(character_id) do
     case Process.whereis(process_name(character_id)) do
       nil -> :ok
-      pid -> GenServer.stop(pid)
+      pid -> Managers.ManagerSupervisor.terminate_child(pid)
     end
   end
 
@@ -221,6 +234,10 @@ defmodule Ms2ex.Managers.Quest do
 
   @impl true
   def init(character_id) do
+    # deferred counters are flushed in terminate, which only runs on the
+    # teardown shutdown signal when exits are trapped
+    Process.flag(:trap_exit, true)
+
     {:ok, character} = Managers.Character.lookup(character_id)
 
     {account_quests, character_quests} =
@@ -721,11 +738,21 @@ defmodule Ms2ex.Managers.Quest do
     state.dirty
     |> Enum.reduce(state, fn quest_id, state ->
       case Managers.Quest.State.get_quest_from_state(quest_id, state) do
+        # transitions persist their own rows; the flush only carries
+        # condition counters for quests still in progress
+        %{state: quest_state} when quest_state != :started ->
+          %{state | dirty: MapSet.delete(state.dirty, quest_id)}
+
         nil ->
-          state
+          %{state | dirty: MapSet.delete(state.dirty, quest_id)}
 
         quest ->
-          Context.Quests.update_quest(quest, %{conditions: quest.conditions})
+          try do
+            Context.Quests.update_quest(quest, %{conditions: quest.conditions})
+          rescue
+            error -> Logger.warning("quest condition flush failed: #{Exception.message(error)}")
+          end
+
           %{state | dirty: MapSet.delete(state.dirty, quest_id)}
       end
     end)

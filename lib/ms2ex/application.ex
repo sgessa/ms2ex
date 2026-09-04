@@ -22,6 +22,7 @@ defmodule Ms2ex.Application do
         # Start Oban (job queue + daily reset crontab)
         {Oban, oban_config()},
         # Start Managers
+        Ms2ex.Managers.ManagerSupervisor,
         Ms2ex.Managers.GlobalCounter,
         {Ms2ex.Managers.PartyManager, [name: Ms2ex.Managers.PartyManager]},
         {Ms2ex.Managers.Session, [name: Ms2ex.Managers.Session]}

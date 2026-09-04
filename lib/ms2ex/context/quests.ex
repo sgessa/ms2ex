@@ -137,12 +137,11 @@ defmodule Ms2ex.Context.Quests do
   defp hydrate_conditions(_conditions, _metadata), do: %{}
 
   defp load_counter(conditions, index) do
-    Map.get(conditions, index) ||
-      Map.get(conditions, Integer.to_string(index)) ||
-      get_in(conditions, [index, :counter]) ||
-      get_in(conditions, [index, "counter"]) ||
-      get_in(conditions, [Integer.to_string(index), :counter]) ||
-      get_in(conditions, [Integer.to_string(index), "counter"]) || 0
+    case Map.get(conditions, index) do
+      %{counter: counter} -> counter
+      counter when is_integer(counter) -> counter
+      _ -> 0
+    end
   end
 
   defp normalize_attrs(attrs) do

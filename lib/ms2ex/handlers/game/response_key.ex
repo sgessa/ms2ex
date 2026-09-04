@@ -32,6 +32,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       # the inventory manager must own the item rows before anything reads
       # them: every Context.Inventory/Equips call below goes through it
       :ok = Managers.Inventory.start(character)
+      monitor_manager(:inventories, character.id)
 
       character =
         character
@@ -52,9 +53,11 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end
 
       :ok = Managers.Achievement.start(character)
+      monitor_manager(:achievements, character.id)
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
+      monitor_manager(:characters, character.id)
 
       character = Context.Characters.preload(character, friends: :rcpt)
       init_character(character)
@@ -113,6 +116,15 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   defp push_achievements(session, character) do
     Managers.Achievement.load(character)
     session
+  end
+
+  # a dead manager means a dead session: the client is disconnected instead
+  # of playing on with a partially broken character
+  defp monitor_manager(prefix, character_id) do
+    case Process.whereis(:"#{prefix}:#{character_id}") do
+      nil -> :ok
+      pid -> Process.monitor(pid)
+    end
   end
 
   defp maybe_set_party(character) do

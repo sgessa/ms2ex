@@ -75,10 +75,20 @@ defmodule Ms2ex.AchievementManagerTest do
     achievement_pid = Process.whereis(:"achievements:#{character.id}")
 
     on_exit(fn ->
-      if achievement_pid != nil and Process.alive?(achievement_pid),
-        do: GenServer.stop(achievement_pid)
+      # the managers outlive the test process (the supervisor owns them
+      # now), so their teardown runs after the test's sandbox checkout is
+      # gone: check out a connection here and grant it to the live
+      # managers so the achievement manager's terminate flush can write
+      Ecto.Adapters.SQL.Sandbox.checkout(Repo)
 
-      if Process.alive?(char_pid), do: GenServer.stop(char_pid)
+      Enum.each([achievement_pid, char_pid], fn pid ->
+        if pid != nil and Process.alive?(pid) do
+          Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
+          GenServer.stop(pid)
+        end
+      end)
+
+      Ecto.Adapters.SQL.Sandbox.checkin(Repo)
     end)
 
     # both managers read and write the database from their own processes
@@ -136,6 +146,25 @@ defmodule Ms2ex.AchievementManagerTest do
              Achievements.list(character.id)
 
     assert Map.keys(grades) == ["1"]
+  end
+
+  # the stop path is the teardown path: the manager supervisor delivers
+  # the shutdown exit signal, the trapped exit runs terminate, and the
+  # pending counters land in the database
+  test "stopping the manager flushes pending progress", %{character: character} do
+    Managers.Achievement.update(character.id, :monster_kill)
+
+    # the row is created with its insert-time defaults; the accumulated
+    # counter lives in memory
+    wait_until(fn ->
+      assert length(Achievements.list(character.id)) == 1
+    end)
+
+    Managers.Achievement.update(character.id, :monster_kill)
+
+    :ok = Managers.Achievement.stop(character.id)
+
+    assert [%Schema.Achievement{counter: 2}] = Achievements.list(character.id)
   end
 
   test "stat point rewards are granted automatically on rank up", %{character: character} do
