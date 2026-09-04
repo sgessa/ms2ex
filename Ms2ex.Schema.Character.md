@@ -15,6 +15,8 @@
   change_map: term(),
   channel_id: term(),
   clubs: term(),
+  condition_distances: term(),
+  condition_state: term(),
   dead?: term(),
   death_count: term(),
   death_tick: term(),

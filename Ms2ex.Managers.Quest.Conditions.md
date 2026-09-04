@@ -10,6 +10,8 @@ reach for the progress to count.
 
 # `all_met?`
 
+# `metadata_matches?`
+
 # `update`
 
 ---
