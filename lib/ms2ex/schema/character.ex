@@ -92,6 +92,8 @@ defmodule Ms2ex.Schema.Character do
     field :animation, :integer, virtual: true, default: 0
     field :change_map, :map, virtual: true
     field :channel_id, :integer, virtual: true
+    field :condition_distances, :map, virtual: true, default: %{}
+    field :condition_state, :any, virtual: true
     field :dead?, :boolean, virtual: true, default: false
     field :death_count, :integer, default: 0
     field :death_tick, :integer, default: 0

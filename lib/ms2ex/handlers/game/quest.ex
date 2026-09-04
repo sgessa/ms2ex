@@ -10,6 +10,7 @@ defmodule Ms2ex.GameHandlers.Quest do
   @complete 0x04
   @abandon 0x06
   @expired 0x07
+  @exploration 0x08
   @tracking 0x09
   @go_to_npc 0x0C
   @dispatch 0x14
@@ -49,6 +50,19 @@ defmodule Ms2ex.GameHandlers.Quest do
   defp handle_command(@abandon, packet, session) do
     {quest_id, _packet} = get_int(packet)
     Managers.Quest.abandon(quest_id, session.character_id)
+  end
+
+  defp handle_command(@exploration, packet, session) do
+    {:ok, character} = Managers.Character.lookup(session.character_id)
+    {count, packet} = get_int(packet)
+    {quest_ids, _packet} = read_ids(packet, count, [])
+
+    Enum.each(quest_ids, fn quest_id ->
+      case Storage.Quests.get_meta(quest_id) do
+        %{basic: %{type: :field_mission}} = quest -> Managers.Quest.start(character, quest)
+        _ -> :ok
+      end
+    end)
   end
 
   defp handle_command(@tracking, packet, session) do

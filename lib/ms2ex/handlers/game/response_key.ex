@@ -45,6 +45,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
           character
         end
 
+      character = %{character | trophies: Context.Achievements.trophy_counts(character)}
+
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
 
@@ -72,6 +74,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.RequestClientSyncTick.bytes(tick))
       |> push(Packets.DynamicChannel.bytes())
       |> push(Packets.ServerEnter.bytes(character, account_wallet, character_wallet))
+      |> push_achievements(character)
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
       |> push_inventory_tab(character, Context.Inventory.list_tabs(character))
@@ -99,6 +102,11 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.World.bytes())
       |> push_party(character)
     end
+  end
+
+  defp push_achievements(session, character) do
+    Context.Achievements.load(character)
+    session
   end
 
   defp maybe_set_party(character) do
