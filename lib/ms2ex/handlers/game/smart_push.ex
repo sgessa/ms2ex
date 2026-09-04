@@ -6,6 +6,7 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   """
 
   alias Ms2ex.Context
+  alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -46,9 +47,14 @@ defmodule Ms2ex.GameHandlers.SmartPush do
       Context.Field.call(character, {:add_effect_buff, metadata.value, 1, character, opts})
       session
     else
+      # the reference stays silent here, leaving the player with no feedback
+      {:error, currency} -> push(session, Packets.Notice.message_box(lack_code(currency)))
       _ -> session
     end
   end
+
+  defp lack_code(:mesos), do: Enums.StringCode.get_value(:s_err_lack_meso)
+  defp lack_code(_currency), do: Enums.StringCode.get_value(:s_err_lack_merat)
 
   # tag-based item costs need item tag metadata we don't project, so those
   # entries are refused rather than handed out for free
@@ -72,7 +78,7 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   defp charge(session, character, metadata, _package_id) do
     case spend_merets(character, metadata.meret_cost) do
       :ok -> {:ok, session, []}
-      :error -> :error
+      error -> error
     end
   end
 
@@ -101,5 +107,5 @@ defmodule Ms2ex.GameHandlers.SmartPush do
     :ok
   end
 
-  defp debit(_character, _currency, _balance, _cost), do: :error
+  defp debit(_character, currency, _balance, _cost), do: {:error, currency}
 end

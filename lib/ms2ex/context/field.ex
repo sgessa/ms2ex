@@ -247,6 +247,20 @@ defmodule Ms2ex.Context.Field do
   end
 
   @doc """
+  Whether the character currently has the given effect active, whoever cast
+  it.
+
+  ## Examples
+
+      iex> has_buff?(character, 100_000_013)
+      true
+  """
+  @spec has_buff?(Schema.Character.t(), integer()) :: boolean()
+  def has_buff?(%Schema.Character{} = character, effect_id) do
+    call(character.field_pid, {:has_buff?, character.object_id, effect_id}) == true
+  end
+
+  @doc """
   Whether the character's field has a performance stage (the concert map).
   """
   @spec performance_stage?(Schema.Character.t()) :: boolean()

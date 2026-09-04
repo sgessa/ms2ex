@@ -312,7 +312,11 @@ What is still missing:
 - **Smart Push gaps** — `autoInteraction` (bulk gathering) needs the mastery
   recipe system; entries with a tag-based item cost are refused because item
   tags are not projected; the `SaleAutoFishing` / `SaleAutoPlayInstrument`
-  game-event content override is skipped
+  game-event content override is skipped. Two deliberate divergences: a
+  purchase the player cannot afford answers with the lack-of-currency notice
+  (the reference silently drops it), and entering water without the
+  `SafeWaterRiding` effect throws the rider server-side (the reference leaves
+  the dismount to the client)
 - **Score expiry** — the reference refuses expired scores; ms2ex only checks
   remaining uses
 - **Ensemble room check** — members are matched on map and channel; the

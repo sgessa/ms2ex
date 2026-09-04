@@ -508,6 +508,16 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   @doc """
+  Whether an actor currently has the given effect active, regardless of who
+  cast it.
+  """
+  def owner_has_buff?(owner_object_id, effect_id, state) do
+    Enum.any?(state.buffs, fn {{owner_id, effect, _caster_id}, _buff_id} ->
+      owner_id == owner_object_id and effect == effect_id
+    end)
+  end
+
+  @doc """
   Stores the character's still-running buffs so they can be restored on the
   next field they enter, including after a relog.
   """
