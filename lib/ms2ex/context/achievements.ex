@@ -171,8 +171,14 @@ defmodule Ms2ex.Context.Achievements do
     item = Ms2ex.Context.Items.init(item_id, %{amount: amount, rarity: rarity})
 
     case Ms2ex.Context.Inventory.add_item(character, item) do
-      {:ok, result} ->
+      {:ok, {_status, inventory_item} = result} ->
         Ms2ex.Net.SenderSession.push(character, Packets.InventoryItem.add_item(result, character))
+
+        Ms2ex.Net.SenderSession.push(
+          character,
+          Packets.InventoryItem.mark_item_new(inventory_item)
+        )
+
         :ok
 
       _ ->

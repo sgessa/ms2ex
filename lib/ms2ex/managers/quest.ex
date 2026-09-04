@@ -792,8 +792,12 @@ defmodule Ms2ex.Managers.Quest do
         item = Context.Items.init(item_id, %{amount: amount, rarity: rarity})
 
         case Context.Inventory.add_item(character, item) do
-          {:ok, result} -> push(character, Packets.InventoryItem.add_item(result, character))
-          _ -> :ok
+          {:ok, {_status, inventory_item} = result} ->
+            push(character, Packets.InventoryItem.add_item(result, character))
+            push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+
+          _ ->
+            :ok
         end
 
       %{stat_points: stat_points} when stat_points > 0 ->
