@@ -187,10 +187,10 @@ defmodule Ms2ex.Managers.Quest do
   completion rather than an acquisition a quest tracks.
   """
   def notify_item_acquired(%Schema.Character{id: character_id} = character, item) do
-    if Process.whereis(process_name(character_id)) == self() do
-      :ok
-    else
-      do_notify_item_acquired(character, item)
+    case Process.whereis(process_name(character_id)) do
+      nil -> :ok
+      pid when pid == self() -> :ok
+      _pid -> do_notify_item_acquired(character, item)
     end
   end
 

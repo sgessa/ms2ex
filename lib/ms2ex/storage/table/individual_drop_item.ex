@@ -12,4 +12,17 @@ defmodule Ms2ex.Storage.Tables.IndividualDropItem do
       groups -> groups
     end
   end
+
+  @doc """
+  Whether the drop box exists with at least one drop group; a box without
+  entries cannot be opened (reference returns its inventory-fail error).
+  """
+  def has_entries?(box_id) do
+    Storage.get(:table, "individualdropitem.xml")
+    |> get_in([:table, :entries, to_string(box_id)])
+    |> case do
+      %{} = groups when map_size(groups) > 0 -> true
+      _ -> false
+    end
+  end
 end

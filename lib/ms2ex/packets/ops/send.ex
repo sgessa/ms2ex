@@ -108,6 +108,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x128 => "CHAT_STICKER",
     0x12A => "WEDDING",
     0x132 => "UNKNOWN_SYNC",
+    0xAE => "ITEM_BOX",
     0xDD => "ITEM_LOCK"
   }
 

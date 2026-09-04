@@ -17,7 +17,8 @@ test_bag = [
   {:gear, 13_100_001},
   # consumables & misc
   {:consumable, 20_300_001, 99},
-  {:consumable, 20_300_002, 5},
+  # 20_300_002 welcome pack — no drop table content on this client
+  {:consumable, 20_302_000, 3},
   {:misc, 59_200_001, 99}
 ]
 

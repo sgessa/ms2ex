@@ -370,7 +370,8 @@ defmodule Ms2ex.Managers.Inventory do
   defp apply_add_item(state, %Schema.Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
     case find_stack(state, attrs) do
       %Schema.Item{} = item ->
-        update_or_create(state, item, attrs, n)
+        {result, state} = update_or_create(state, item, attrs, n)
+        {{:ok, result}, state}
 
       nil ->
         case create(state, attrs) do
