@@ -39,7 +39,7 @@ defmodule Ms2ex.ItemBoxTest do
     }
   end
 
-  defp item_meta(function_name \\ nil, function_parameters \\ nil) do
+  defp item_meta(function_name, function_parameters) do
     %{
       limit: %{level: 0},
       property: %{type: 3, stack_limit: 100},
