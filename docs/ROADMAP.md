@@ -429,7 +429,10 @@ combat-heavy characters from accumulating document copies.
   flushed on demand and on stop) — ordinary gameplay events (kills,
   movement, pickups) no longer write one UPDATE per matching quest per
   event. Quest transitions that own their persistence (start, complete,
-  abandon, expire) still write through
+  abandon, expire) still write through. Application stop flushes every
+  live deferred manager before the supervision tree shuts down
+  (`Application.prep_stop/2` stops the ad-hoc per-character managers, whose
+  terminate callback writes the pending batch)
 - Auto-start gating: quests carrying an event tag never start on their own
   (event content starts only through a matching server event, and stale
   event quests would otherwise be auto-started at login and immediately

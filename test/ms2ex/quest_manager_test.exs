@@ -136,6 +136,25 @@ defmodule Ms2ex.QuestManagerTest do
              Repo.get_by(Schema.CharacterQuest, %{owner_id: character.id, quest_id: @quest_id})
   end
 
+  # server shutdown stops the manager, whose terminate flushes pending
+  # condition counters; the state snapshot + direct terminate call mirrors
+  # that path
+  test "stopping the manager flushes pending counters", %{character: character} do
+    Managers.Quest.update_conditions(character.id, :map, 1, "", 0, "", 2_000_062)
+
+    wait_until(fn ->
+      {_account, character_quests} = Managers.Quest.get_all_quests(character.id)
+      assert character_quests[@quest_id].conditions[0].counter == 1
+    end)
+
+    pid = Process.whereis(:"quest_manager:#{character.id}")
+    state = :sys.get_state(pid)
+    GenServer.stop(pid, :normal)
+    Managers.Quest.terminate(:shutdown, state)
+
+    assert %{"0" => 1} = quest_conditions(character.id)
+  end
+
   # regression: grant_items must return the inventory add results (not the
   # acquisition notification's :ok) so post-commit delivery can push the
   # add-item packets
