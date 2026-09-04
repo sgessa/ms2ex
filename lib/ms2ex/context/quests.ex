@@ -64,6 +64,20 @@ defmodule Ms2ex.Context.Quests do
     :ok
   end
 
+  @doc "Drops every persisted row of the given quests in one statement."
+  @spec delete_quests(integer(), [integer()], boolean()) :: :ok
+  def delete_quests(owner_id, quest_ids, account_quest?) do
+    CharacterQuest
+    |> where(
+      [quest],
+      quest.owner_id == ^owner_id and quest.quest_id in ^quest_ids and
+        quest.is_account_quest == ^account_quest?
+    )
+    |> Repo.delete_all()
+
+    :ok
+  end
+
   @spec has_completed_quest?(Character.t(), integer()) :: boolean()
   def has_completed_quest?(character, quest_id) do
     case Storage.Quests.get_meta(quest_id) do

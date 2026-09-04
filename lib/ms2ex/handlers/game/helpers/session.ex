@@ -23,6 +23,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
     character = %{character | online?: false}
     Managers.Inventory.stop(character)
     Managers.Quest.stop(character.id)
+    Managers.Achievement.stop(character)
     Context.Field.leave(character)
     notify_party_presence(character)
     notify_friend_presence(character)

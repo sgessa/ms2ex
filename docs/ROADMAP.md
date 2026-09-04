@@ -217,10 +217,17 @@ minimum-value / allowed-value gates.
 
 Completion and acceptance commit the quest row, turn-in item consumption
 (`item_exist` conditions) and item rewards atomically in one transaction;
-exp and currencies are granted post-commit. Non-
-forfeitable quests refuse abandon, the expiration sweep drops rows and
-notifies the client, and go-to-npc travel moves the character to the quest's
-destination map.
+exp and currencies are granted post-commit. Condition-counter changes from
+gameplay events accumulate in memory and batch into a periodic flush (also
+on demand and on stop) instead of one UPDATE per matching quest per event.
+Non-forfeitable quests refuse abandon, the expiration sweep drops expired
+rows in one statement per owner scope and notifies the client, and
+go-to-npc travel moves the character to the quest's destination map.
+Event-tagged quests never start on their own: event content starts only
+through a matching server event, so stale event quests no longer churn
+through auto-start plus client-side expiry at login. Event-tagged quests never start on their own: event
+content starts only through a matching server event, so stale event quests
+no longer churn through auto-start plus client-side expiry at login.
 What is still missing:
 
 - multi-page npc dialogue walking (Continue tracking) and script functions
@@ -240,15 +247,22 @@ What is still missing:
 
 Achievement metadata is ingested with a condition-type index, and completed
 field missions now activate exploration quests, advance milestone progress and
-deliver configured item or stat-point rewards. Achievement state persists per
-account or character, loads on field entry, receives the existing gameplay
-condition events, records completed grades, supports favorite toggles, and
-allows manual claims for item, title, and stat-point rewards. A claim request
-processes every pending grade. Riding distance is tracked from mounted sync
-updates and advances `riding` conditions per 150 units travelled.
+deliver configured item or stat-point rewards. Achievement state is owned by
+`Managers.Achievement` (`achievements:<char_id>`, started at login, stopped on
+disconnect): rows load once, condition events walk the storage index in
+memory, new rows are inserted as they are created, and updates batch into a
+periodic flush (also flushed on demand and on stop) — no per-event queries.
+Trophy counts per category live on the manager and are read from it (the
+character struct keeps no mirrored copy), grade completions feed back into
+quest conditions (`revise_achieve_*`,
+`hero_achieve`), stat-point and emote rewards are granted automatically on
+rank-up while item and title rewards wait for the manual claim, and load
+packets are batched per 60 entries. Riding distance is tracked from mounted
+sync updates and advances `riding` conditions per 150 units travelled.
 
 What is still missing:
 
+- skill point rewards stay pending (no skill point API exists yet)
 - condition matching limitations shared by quests, exploration, and
   achievements: `party_count` and `guild_party_count` gates are ignored;
   string-code conditions (`emotion`, `emotiontime`, `trigger`, `npc_race`) and
@@ -434,6 +448,36 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Quest condition batching: quest condition counters accumulate in memory
+  in the quest manager and mark quests dirty for a periodic flush (also
+  flushed on demand and on stop) — ordinary gameplay events (kills,
+  movement, pickups) no longer write one UPDATE per matching quest per
+  event. Quest transitions that own their persistence (start, complete,
+  abandon, expire) still write through
+- Auto-start gating: quests carrying an event tag never start on their own
+  (event content starts only through a matching server event, and stale
+  event quests would otherwise be auto-started at login and immediately
+  expired by the client in an insert/delete churn). The client expiration
+  sweep now drops expired rows in one DELETE per owner scope instead of
+  one per quest
+- Equipped items are no longer mirrored on the character struct: field
+  appearance, character info, stat rebuilds and conflict resolution read
+  the inventory manager at point of use, and `Context.ItemStats` takes
+  the equipped items as an argument so contexts stay free of manager
+  reads (same treatment as the mirrored trophy counts before them)
+- Achievement manager: `Managers.Achievement`
+  (`achievements:<char_id>`, like the quest manager) owns every achievement
+  row in memory — condition events walk the metadata index without touching
+  the database, new rows insert on creation, updates batch into a periodic
+  flush (and a flush on disconnect). Trophy counts live on the manager and
+  are read from it — the character struct keeps no mirrored copy — grade
+  completions notify quest conditions, stat
+  point and emote rewards apply on rank-up while item and title rewards wait
+  for the claim, and `Context.Achievements` shrank to pure persistence.
+  Meta-trophies that track other achievements (`revise_achieve_*`,
+  `hero_achieve`) gate on the completing achievement id and reached grade —
+  without the gate a single map-visit trophy cascaded into dozens of
+  meta-trophy unlocks at login
 - Character-owned inventory manager: `Managers.Inventory`
   (`inventories:<char_id>`, like the quest manager) owns every item row and
   tab size of a character in memory — reads from memory, write-through

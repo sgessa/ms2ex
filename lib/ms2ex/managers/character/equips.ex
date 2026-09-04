@@ -160,8 +160,9 @@ defmodule Ms2ex.Managers.Character.Equips do
       if :OH in item.metadata.slots, do: [equip_slot], else: item.metadata.slots
 
     conflicts =
-      Enum.filter(
-        character.equips,
+      character
+      |> Managers.Inventory.list_equips()
+      |> Enum.filter(
         &(&1.equip_slot in conflict_slots and &1.inventory_tab == item.inventory_tab)
       )
 
@@ -263,10 +264,10 @@ defmodule Ms2ex.Managers.Character.Equips do
   end
 
   defp refresh(character) do
-    equips = Managers.Inventory.list_equips(character)
-
-    %{character | equips: equips}
-    |> Context.CharacterStats.apply()
+    # equipped items live in the inventory manager; they are read here for
+    # the stat rebuild and never cached on the character
+    character
+    |> Context.CharacterStats.apply(Managers.Inventory.list_equips(character))
     |> elem(0)
   end
 end

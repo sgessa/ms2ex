@@ -76,7 +76,10 @@ defmodule Ms2ex.Context.Insignias do
   end
 
   def display?(character, %{type: :trophy_point}) do
-    Enum.sum(character.trophies) >= 1000
+    case Managers.Achievement.trophy_counts(character) do
+      [combat, adventure, lifestyle] -> combat + adventure + lifestyle >= 1000
+      _ -> false
+    end
   end
 
   def display?(character, %{type: :title, title_id: title_id}) do

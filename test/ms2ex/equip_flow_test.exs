@@ -119,5 +119,6 @@ defmodule Ms2ex.EquipFlowTest do
     item
   end
 
-  defp equip_summary(character), do: Enum.map(character.equips, & &1.item_id)
+  defp equip_summary(character),
+    do: character |> Managers.Inventory.list_equips() |> Enum.map(& &1.item_id)
 end

@@ -10,7 +10,8 @@ defmodule Ms2ex.Managers.Field.Character do
 
   def add_character(character, state) do
     Logger.info("Field #{state.map_id} @ Channel #{state.channel_id}: #{character.name} joined")
-    {character, _equipment_stats} = Context.CharacterStats.apply(character)
+    equips = Managers.Inventory.list_equips(character)
+    {character, _equipment_stats} = Context.CharacterStats.apply(character, equips)
 
     # Load other characters
     for char_id <- Map.keys(state.sessions) do

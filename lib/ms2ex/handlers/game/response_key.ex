@@ -35,7 +35,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character =
         character
-        |> Map.put(:equips, Managers.Inventory.list_equips(character))
         |> Context.Characters.preload([:friends, :stats])
         |> Context.Characters.load_skills()
 
@@ -52,7 +51,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
           character
         end
 
-      character = %{character | trophies: Context.Achievements.trophy_counts(character)}
+      :ok = Managers.Achievement.start(character)
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
@@ -112,7 +111,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp push_achievements(session, character) do
-    Context.Achievements.load(character)
+    Managers.Achievement.load(character)
     session
   end
 

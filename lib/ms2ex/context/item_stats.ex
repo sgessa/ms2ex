@@ -18,10 +18,17 @@ defmodule Ms2ex.Context.ItemStats do
   @empty_stat_groups %{values: %{}, rates: %{}, special_values: %{}, special_rates: %{}}
 
   @doc """
-  Rebuilds a character's stats and returns the derived packet data.
+  Rebuilds a character's stats and returns the derived packet data. The
+  equipped items are passed in by the caller — contexts do not read manager
+  state.
   """
-  def apply(%Schema.Character{} = character) do
-    equips = equipped_gear(character)
+  def apply(%Schema.Character{} = character, equips) do
+    # metadata is not cached on the items; it is read from the storage cache
+    # while the stats are rebuilt
+    equips =
+      equips
+      |> Enum.filter(&(&1.inventory_tab == :gear))
+      |> Enum.map(&Context.Items.load_metadata(&1))
 
     stat_groups =
       Enum.reduce(equips, @empty_stat_groups, fn item, stat_groups ->
@@ -199,14 +206,6 @@ defmodule Ms2ex.Context.ItemStats do
     Map.merge(left, right, fn _group, left_values, right_values ->
       merge_values(left_values, right_values)
     end)
-  end
-
-  defp equipped_gear(character) do
-    # metadata is not cached on the character; it is read from the storage
-    # cache while the stats are rebuilt
-    character.equips
-    |> Enum.filter(&(&1.inventory_tab == :gear))
-    |> Enum.map(&Context.Items.load_metadata(&1))
   end
 
   defp calculate_gear_score(equips) do
