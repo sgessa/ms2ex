@@ -9,8 +9,7 @@ defmodule Ms2ex.Storage.Tables.UgcDesign do
   def get(item_id) do
     :table
     |> Storage.get("ugcdesign.xml")
-    |> get_in([:table, :entries])
-    |> Map.get("#{item_id}")
+    |> get_in([:table, :entries, to_string(item_id)])
     |> case do
       nil -> nil
       entry -> Map.put(entry, :currency_type, currency(entry))

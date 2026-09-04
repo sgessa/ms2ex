@@ -30,7 +30,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(item.rarity)
     |> put_ustring()
     |> put_item(item, character)
-    |> put_ustring()
   end
 
   def add_item({:update, item}, _character), do: update_item(item.id, item.amount)
@@ -141,7 +140,7 @@ defmodule Ms2ex.Packets.InventoryItem do
   # pet, music score and badge blocks
   defp put_template(packet, item) do
     cond do
-      design_item?(item.metadata) ->
+      not is_nil(item.ugc) ->
         packet
         |> Packets.Ugc.put_ugc(item.ugc)
         |> put_blueprint(item)
@@ -172,12 +171,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_long()
     |> put_long()
   end
-
-  defp design_item?(%{mesh: mesh, property: %{type: type}}) do
-    (is_binary(mesh) and mesh != "") or type == 22
-  end
-
-  defp design_item?(_metadata), do: false
 
   defp put_blueprint(packet, %{ugc: %{blueprint: blueprint}}) do
     packet
