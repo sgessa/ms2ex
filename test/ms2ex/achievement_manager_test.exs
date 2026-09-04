@@ -138,6 +138,27 @@ defmodule Ms2ex.AchievementManagerTest do
     assert Map.keys(grades) == ["1"]
   end
 
+  # server shutdown stops the manager, whose terminate flushes pending
+  # progress; the state snapshot + direct terminate call mirrors that path
+  test "stopping the manager flushes pending progress", %{character: character} do
+    Managers.Achievement.update(character.id, :monster_kill)
+
+    # the row is created with its insert-time defaults; the accumulated
+    # counter lives in memory
+    wait_until(fn ->
+      assert length(Achievements.list(character.id)) == 1
+    end)
+
+    Managers.Achievement.update(character.id, :monster_kill)
+
+    pid = Process.whereis(:"achievements:#{character.id}")
+    state = :sys.get_state(pid)
+    GenServer.stop(pid, :normal)
+    Managers.Achievement.terminate(:shutdown, state)
+
+    assert [%Schema.Achievement{counter: 2}] = Achievements.list(character.id)
+  end
+
   test "stat point rewards are granted automatically on rank up", %{character: character} do
     Managers.Achievement.update(character.id, :quest_accept)
 

@@ -5,6 +5,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
   alias Ms2ex.Storage
 
   import Packets.PacketReader
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -22,6 +23,8 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
 
       case find_portal(portals, src_portal_id) do
         %{target_map_id: dst_map_id} ->
+          maybe_complete_tutorial(character, current_map_id)
+
           spawn_point = arrival_point(dst_map_id, current_map_id)
 
           Context.Field.change_field(
@@ -40,6 +43,59 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
   end
 
   defp handle_change_field(_mode, _packet, _session), do: :ok
+
+  # walking out of the job's tutorial start field at level 1 completes the
+  # tutorial: the reward items are granted and the tutorial's maps and taxis
+  # unlock. The unlock lists double as the once-only latch
+  defp maybe_complete_tutorial(character, from_map) do
+    with %{start_field: start_field, rewards: rewards} = tutorial when rewards != [] <-
+           Storage.Tables.Jobs.tutorial(character.job),
+         true <- character.level == 1,
+         true <- from_map == start_field,
+         :ok <- grant_tutorial_rewards(character, tutorial) do
+      unlock_tutorial_maps_and_taxis(character, tutorial)
+    else
+      _ -> :ok
+    end
+  end
+
+  defp grant_tutorial_rewards(character, tutorial) do
+    Enum.each(tutorial.rewards, fn entry ->
+      item = Context.Items.init(entry.id, %{amount: entry.count, rarity: entry.rarity})
+
+      case Managers.Inventory.add_item(character, Context.Items.load_metadata(item)) do
+        {:ok, {_status, inventory_item} = result} ->
+          push(character, Packets.InventoryItem.add_item(result, character))
+          push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+
+        _ ->
+          :ok
+      end
+    end)
+
+    :ok
+  end
+
+  defp unlock_tutorial_maps_and_taxis(character, tutorial) do
+    # TODO: while every exit portal stays enabled (no trigger runtime), all
+    # jobs leave through the portal to the skip destination and the client
+    # discovers that map's taxi on entry anyway, so this credit is mostly
+    # redundant. It matters once the tutorial's per-job exit portals open
+    # only the job's route (knights never visit the destination hub).
+    discovered_maps = Enum.uniq(character.discovered_maps ++ tutorial[:open_maps])
+
+    new_taxis = Enum.reject(tutorial[:open_taxis], &Enum.member?(character.taxis, &1))
+    taxis = Enum.uniq(character.taxis ++ new_taxis)
+
+    {:ok, character} =
+      Context.Characters.update(character, %{discovered_maps: discovered_maps, taxis: taxis})
+
+    Managers.Character.call(character, {:update, character})
+
+    Enum.each(new_taxis, fn map_id ->
+      push(character, Packets.Taxi.discover(map_id))
+    end)
+  end
 
   defp find_portal(portals, portal_id) do
     Enum.find(portals, &(&1.id == portal_id))

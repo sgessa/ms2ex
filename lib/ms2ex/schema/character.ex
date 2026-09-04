@@ -16,6 +16,7 @@ defmodule Ms2ex.Schema.Character do
     :discovered_maps,
     :exp,
     :gender,
+    :guide_records,
     :insignia_id,
     :instant_revive_count,
     :level,
@@ -62,6 +63,7 @@ defmodule Ms2ex.Schema.Character do
     field :active_skill_tab_id, :integer
     field :discovered_maps, {:array, :integer}, default: []
     field :exp, :integer, default: 0
+    field :guide_records, EctoTypes.Term, default: %{}
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
     field :job, Enums.Job, default: :beginner

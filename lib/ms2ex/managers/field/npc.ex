@@ -302,14 +302,10 @@ defmodule Ms2ex.Managers.Field.Npc do
     Context.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
     Context.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
 
-    # corpse-hittable bodies stay around for their full window so players can
-    # keep striking them; everyone else despawns once the animation settles
-    corpse_time =
-      if field_npc.corpse? do
-        get_in(field_npc.npc.metadata, [:dead, :time]) || 20
-      else
-        3
-      end
+    # bodies stay for their dead window (corpse-hittable ones keep it in
+    # full so players can keep striking them) before the field removes them
+    fallback = if field_npc.corpse?, do: 20, else: 3
+    corpse_time = get_in(field_npc.npc.metadata, [:dead, :time]) || fallback
 
     Process.send_after(self(), {:remove_npc, field_npc}, :timer.seconds(corpse_time))
 
@@ -332,7 +328,33 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     state = despawn(state, field_npc)
 
-    {field_npc, state}
+    {field_npc, open_mob_gates(state, field_npc)}
+  end
+
+  # A gate opens when the last mob of its spawn point dies: the blocking
+  # meshes drop so the way through clears. The latch keeps it open even when
+  # the spawn point's respawn cycle later refills the population, and the
+  # hidden meshes are remembered so late joiners load them dropped.
+  defp open_mob_gates(state, field_npc) do
+    gates = Map.get(state, :mob_gates, %{})
+    opened = Map.get(state, :opened_gates, MapSet.new())
+
+    with %{spawn_point_id: spid, spawned_mobs: []} <-
+           get_in(state, [:npc_spawns, field_npc.spawn_point_id]),
+         false <- MapSet.member?(opened, spid),
+         %{meshes: meshes} = gate <- Map.get(gates, spid) do
+      Enum.each(meshes, &Context.Field.broadcast(state.topic, Packets.Trigger.hide_mesh(&1)))
+
+      if guide_event = Map.get(gate, :guide_event) do
+        Context.Field.broadcast(state.topic, Packets.Trigger.guide_event(guide_event))
+      end
+
+      state
+      |> Map.put(:opened_gates, MapSet.put(opened, spid))
+      |> Map.put(:hidden_meshes, Map.get(state, :hidden_meshes, []) ++ meshes)
+    else
+      _ -> state
+    end
   end
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do
