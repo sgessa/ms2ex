@@ -555,8 +555,8 @@ everyone on the map.</p></div>
       </div>
 
 <p>Spawns the instrument a character is playing, assigning it a field object
-id.</p><h2 id="add_instrument/2-examples" class="section-heading"><a href="#add_instrument/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_instrument</span><span class="p" data-group-id="1599944266-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">instrument</span><span class="p" data-group-id="1599944266-1">)</span><span class="w">
-</span><span class="p" data-group-id="1599944266-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1599944266-3">%</span><span class="nc" data-group-id="1599944266-3">FieldInstrument</span><span class="p" data-group-id="1599944266-3">{</span><span class="p" data-group-id="1599944266-3">}</span><span class="p" data-group-id="1599944266-2">}</span></code></pre>
+id.</p><h2 id="add_instrument/2-examples" class="section-heading"><a href="#add_instrument/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_instrument</span><span class="p" data-group-id="0838845396-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">instrument</span><span class="p" data-group-id="0838845396-1">)</span><span class="w">
+</span><span class="p" data-group-id="0838845396-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0838845396-3">%</span><span class="nc" data-group-id="0838845396-3">FieldInstrument</span><span class="p" data-group-id="0838845396-3">{</span><span class="p" data-group-id="0838845396-3">}</span><span class="p" data-group-id="0838845396-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="add_mob/2">
@@ -584,7 +584,7 @@ id.</p><h2 id="add_instrument/2-examples" class="section-heading"><a href="#add_
 
       </div>
 
-<p>Adds a mob (Field NPC) to the field at the character's position.</p><h2 id="add_mob/2-examples" class="section-heading"><a href="#add_mob/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob</span><span class="p" data-group-id="9051925231-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">npc</span><span class="p" data-group-id="9051925231-1">)</span><span class="w">
+<p>Adds a mob (Field NPC) to the field at the character's position.</p><h2 id="add_mob/2-examples" class="section-heading"><a href="#add_mob/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob</span><span class="p" data-group-id="9419128201-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">npc</span><span class="p" data-group-id="9419128201-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -621,7 +621,7 @@ id.</p><h2 id="add_instrument/2-examples" class="section-heading"><a href="#add_
       </div>
 
 <p>Drops an item from a Field NPC (mob) into the field, locked to the given
-receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mob_drop/3-examples" class="section-heading"><a href="#add_mob_drop/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob_drop</span><span class="p" data-group-id="6535610965-1">(</span><span class="n">field_npc</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="6535610965-1">)</span><span class="w">
+receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mob_drop/3-examples" class="section-heading"><a href="#add_mob_drop/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_mob_drop</span><span class="p" data-group-id="2246157714-1">(</span><span class="n">field_npc</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="2246157714-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -651,8 +651,8 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
 
       </div>
 
-<p>Adds an object to the field.</p><h2 id="add_object/2-examples" class="section-heading"><a href="#add_object/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_object</span><span class="p" data-group-id="9645810723-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object</span><span class="p" data-group-id="9645810723-1">)</span><span class="w">
-</span><span class="p" data-group-id="9645810723-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="9645810723-2">}</span></code></pre>
+<p>Adds an object to the field.</p><h2 id="add_object/2-examples" class="section-heading"><a href="#add_object/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_object</span><span class="p" data-group-id="2113896970-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object</span><span class="p" data-group-id="2113896970-1">)</span><span class="w">
+</span><span class="p" data-group-id="2113896970-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="2113896970-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="add_region_skill/2">
@@ -681,8 +681,8 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
 
       </div>
 
-<p>Adds a region skill (Skill effect) to the field.</p><h2 id="add_region_skill/2-examples" class="section-heading"><a href="#add_region_skill/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_region_skill</span><span class="p" data-group-id="0894206694-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill</span><span class="p" data-group-id="0894206694-1">)</span><span class="w">
-</span><span class="p" data-group-id="0894206694-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill_id</span><span class="p" data-group-id="0894206694-2">}</span></code></pre>
+<p>Adds a region skill (Skill effect) to the field.</p><h2 id="add_region_skill/2-examples" class="section-heading"><a href="#add_region_skill/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_region_skill</span><span class="p" data-group-id="3976757936-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill</span><span class="p" data-group-id="3976757936-1">)</span><span class="w">
+</span><span class="p" data-group-id="3976757936-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">region_skill_id</span><span class="p" data-group-id="3976757936-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="add_tombstone/1">
@@ -711,7 +711,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p><h2 id="add_mo
       </div>
 
 <p>Adds a tombstone for a dead character to the field, broadcasting it to the
-field so other players can hit it to revive the owner.</p><h2 id="add_tombstone/1-examples" class="section-heading"><a href="#add_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_tombstone</span><span class="p" data-group-id="6432779944-1">(</span><span class="n">character</span><span class="p" data-group-id="6432779944-1">)</span><span class="w">
+field so other players can hit it to revive the owner.</p><h2 id="add_tombstone/1-examples" class="section-heading"><a href="#add_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">add_tombstone</span><span class="p" data-group-id="4803132501-1">(</span><span class="n">character</span><span class="p" data-group-id="4803132501-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -740,10 +740,10 @@ field so other players can hit it to revive the owner.</p><h2 id="add_tombstone/
 
       </div>
 
-<p>Broadcasts a packet to all characters in the same field as the given character.</p><h2 id="broadcast/2-examples" class="section-heading"><a href="#broadcast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="2978996498-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="2978996498-1">)</span><span class="w">
+<p>Broadcasts a packet to all characters in the same field as the given character.</p><h2 id="broadcast/2-examples" class="section-heading"><a href="#broadcast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="1595152700-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="1595152700-1">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="2978996498-2">(</span><span class="ss">:field_123</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="2978996498-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">broadcast</span><span class="p" data-group-id="1595152700-2">(</span><span class="ss">:field_123</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p" data-group-id="1595152700-2">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -773,7 +773,7 @@ field so other players can hit it to revive the owner.</p><h2 id="add_tombstone/
       </div>
 
 <p>Broadcasts a packet to all characters in the same field as the given character,
-except for the specified process.</p><h2 id="broadcast_from/3-examples" class="section-heading"><a href="#broadcast_from/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast_from</span><span class="p" data-group-id="6711248062-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p" data-group-id="6711248062-2">(</span><span class="p" data-group-id="6711248062-2">)</span><span class="p" data-group-id="6711248062-1">)</span><span class="w">
+except for the specified process.</p><h2 id="broadcast_from/3-examples" class="section-heading"><a href="#broadcast_from/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">broadcast_from</span><span class="p" data-group-id="4088202710-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p" data-group-id="4088202710-2">(</span><span class="p" data-group-id="4088202710-2">)</span><span class="p" data-group-id="4088202710-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -831,10 +831,10 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Makes a synchronous call to a field process.</p><h2 id="call/2-examples" class="section-heading"><a href="#call/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="4875920110-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4875920110-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="4875920110-2">}</span><span class="p" data-group-id="4875920110-1">)</span><span class="w">
+<p>Makes a synchronous call to a field process.</p><h2 id="call/2-examples" class="section-heading"><a href="#call/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="8264878061-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8264878061-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="8264878061-2">}</span><span class="p" data-group-id="8264878061-1">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="4875920110-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="4875920110-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">call</span><span class="p" data-group-id="8264878061-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="8264878061-3">)</span><span class="w">
 </span><span class="ss">:error</span></code></pre>
   </section>
 </section>
@@ -863,7 +863,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Cancels a character's battle stance.</p><h2 id="cancel_battle_stance/1-examples" class="section-heading"><a href="#cancel_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cancel_battle_stance</span><span class="p" data-group-id="1257534528-1">(</span><span class="n">character</span><span class="p" data-group-id="1257534528-1">)</span><span class="w">
+<p>Cancels a character's battle stance.</p><h2 id="cancel_battle_stance/1-examples" class="section-heading"><a href="#cancel_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cancel_battle_stance</span><span class="p" data-group-id="5316529893-1">(</span><span class="n">character</span><span class="p" data-group-id="5316529893-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -892,10 +892,10 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Makes an asynchronous cast to a field process.</p><h2 id="cast/2-examples" class="section-heading"><a href="#cast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="9750625304-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9750625304-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="9750625304-2">}</span><span class="p" data-group-id="9750625304-1">)</span><span class="w">
+<p>Makes an asynchronous cast to a field process.</p><h2 id="cast/2-examples" class="section-heading"><a href="#cast/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="8600890850-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8600890850-2">{</span><span class="ss">:action</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="8600890850-2">}</span><span class="p" data-group-id="8600890850-1">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="9750625304-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="9750625304-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">cast</span><span class="p" data-group-id="8600890850-3">(</span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="8600890850-3">)</span><span class="w">
 </span><span class="ss">:error</span></code></pre>
   </section>
 </section>
@@ -924,7 +924,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Changes a character's field to a new map, using the map's default spawn point.</p><h2 id="change_field/2-examples" class="section-heading"><a href="#change_field/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="6840286927-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p" data-group-id="6840286927-1">)</span><span class="w">
+<p>Changes a character's field to a new map, using the map's default spawn point.</p><h2 id="change_field/2-examples" class="section-heading"><a href="#change_field/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="4237144664-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p" data-group-id="4237144664-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -954,7 +954,7 @@ to every other character in the same field.</p>
 
       </div>
 
-<p>Changes a character's field to a new map with a specific position and rotation.</p><h2 id="change_field/4-examples" class="section-heading"><a href="#change_field/4-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="4368328681-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4368328681-2">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4368328681-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4368328681-3">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4368328681-3">}</span><span class="p" data-group-id="4368328681-1">)</span><span class="w">
+<p>Changes a character's field to a new map with a specific position and rotation.</p><h2 id="change_field/4-examples" class="section-heading"><a href="#change_field/4-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_field</span><span class="p" data-group-id="4842215854-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4842215854-2">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4842215854-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4842215854-3">%{</span><span class="ss">x</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">y</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">z</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4842215854-3">}</span><span class="p" data-group-id="4842215854-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -984,7 +984,7 @@ to every other character in the same field.</p>
       </div>
 
 <p>Broadcasts a tombstone with zero hits remaining and removes it from the
-field (when its owner revives); clients tear down the tombstone entity.</p><h2 id="clear_tombstone/1-examples" class="section-heading"><a href="#clear_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">clear_tombstone</span><span class="p" data-group-id="7681891779-1">(</span><span class="n">character</span><span class="p" data-group-id="7681891779-1">)</span><span class="w">
+field (when its owner revives); clients tear down the tombstone entity.</p><h2 id="clear_tombstone/1-examples" class="section-heading"><a href="#clear_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">clear_tombstone</span><span class="p" data-group-id="3351545343-1">(</span><span class="n">character</span><span class="p" data-group-id="3351545343-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1013,7 +1013,7 @@ field (when its owner revives); clients tear down the tombstone entity.</p><h2 i
 
       </div>
 
-<p>Drops an item from a character's inventory into the field.</p><h2 id="drop_item/2-examples" class="section-heading"><a href="#drop_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">drop_item</span><span class="p" data-group-id="0383202698-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="0383202698-1">)</span><span class="w">
+<p>Drops an item from a character's inventory into the field.</p><h2 id="drop_item/2-examples" class="section-heading"><a href="#drop_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">drop_item</span><span class="p" data-group-id="2379274303-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="2379274303-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1071,10 +1071,10 @@ current performer.</p>
 
       </div>
 
-<p>Adds a character to a field, creating the field process if it doesn't exist.</p><h2 id="enter/1-examples" class="section-heading"><a href="#enter/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="2947524598-1">(</span><span class="n">character</span><span class="p" data-group-id="2947524598-1">)</span><span class="w">
-</span><span class="p" data-group-id="2947524598-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="2947524598-2">}</span><span class="w">
+<p>Adds a character to a field, creating the field process if it doesn't exist.</p><h2 id="enter/1-examples" class="section-heading"><a href="#enter/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="3502631537-1">(</span><span class="n">character</span><span class="p" data-group-id="3502631537-1">)</span><span class="w">
+</span><span class="p" data-group-id="3502631537-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="3502631537-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="2947524598-3">(</span><span class="n">character</span><span class="p" data-group-id="2947524598-3">)</span><span class="w"> </span><span class="c1"># when field already exists</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">enter</span><span class="p" data-group-id="3502631537-3">(</span><span class="n">character</span><span class="p" data-group-id="3502631537-3">)</span><span class="w"> </span><span class="c1"># when field already exists</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1103,7 +1103,7 @@ current performer.</p>
 
       </div>
 
-<p>Puts a character into battle stance.</p><h2 id="enter_battle_stance/1-examples" class="section-heading"><a href="#enter_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter_battle_stance</span><span class="p" data-group-id="3647153322-1">(</span><span class="n">character</span><span class="p" data-group-id="3647153322-1">)</span><span class="w">
+<p>Puts a character into battle stance.</p><h2 id="enter_battle_stance/1-examples" class="section-heading"><a href="#enter_battle_stance/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">enter_battle_stance</span><span class="p" data-group-id="8704698214-1">(</span><span class="n">character</span><span class="p" data-group-id="8704698214-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1132,7 +1132,7 @@ current performer.</p>
 
       </div>
 
-<p>Generates a unique field name from a map ID and channel ID.</p><h2 id="field_name/2-examples" class="section-heading"><a href="#field_name/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">field_name</span><span class="p" data-group-id="9994724479-1">(</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="9994724479-1">)</span><span class="w">
+<p>Generates a unique field name from a map ID and channel ID.</p><h2 id="field_name/2-examples" class="section-heading"><a href="#field_name/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">field_name</span><span class="p" data-group-id="7864219209-1">(</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7864219209-1">)</span><span class="w">
 </span><span class="ss">:&quot;field:2000:channel:1&quot;</span></code></pre>
   </section>
 </section>
@@ -1162,7 +1162,7 @@ current performer.</p>
       </div>
 
 <p>Whether the character currently has the given effect active, whoever cast
-it.</p><h2 id="has_buff?/2-examples" class="section-heading"><a href="#has_buff?/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">has_buff?</span><span class="p" data-group-id="7738875431-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">100_000_013</span><span class="p" data-group-id="7738875431-1">)</span><span class="w">
+it.</p><h2 id="has_buff?/2-examples" class="section-heading"><a href="#has_buff?/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">has_buff?</span><span class="p" data-group-id="2154963980-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">100_000_013</span><span class="p" data-group-id="2154963980-1">)</span><span class="w">
 </span><span class="no">true</span></code></pre>
   </section>
 </section>
@@ -1192,7 +1192,7 @@ it.</p><h2 id="has_buff?/2-examples" class="section-heading"><a href="#has_buff?
       </div>
 
 <p>Registers a hit against a dead character's tombstone; reduces the hits
-remaining and revives the owner when it reaches zero.</p><h2 id="hit_tombstone/3-examples" class="section-heading"><a href="#hit_tombstone/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">hit_tombstone</span><span class="p" data-group-id="1370934408-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p">,</span><span class="w"> </span><span class="n">hits</span><span class="p" data-group-id="1370934408-1">)</span><span class="w">
+remaining and revives the owner when it reaches zero.</p><h2 id="hit_tombstone/3-examples" class="section-heading"><a href="#hit_tombstone/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">hit_tombstone</span><span class="p" data-group-id="9145947259-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p">,</span><span class="w"> </span><span class="n">hits</span><span class="p" data-group-id="9145947259-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1251,7 +1251,7 @@ can progress interact-object quest conditions.</p>
 
       </div>
 
-<p>Removes a character from their current field.</p><h2 id="leave/1-examples" class="section-heading"><a href="#leave/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">leave</span><span class="p" data-group-id="9690367060-1">(</span><span class="n">character</span><span class="p" data-group-id="9690367060-1">)</span><span class="w">
+<p>Removes a character from their current field.</p><h2 id="leave/1-examples" class="section-heading"><a href="#leave/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">leave</span><span class="p" data-group-id="5036577212-1">(</span><span class="n">character</span><span class="p" data-group-id="5036577212-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1281,8 +1281,8 @@ can progress interact-object quest conditions.</p>
 
       </div>
 
-<p>Looks up the instrument a character is currently playing.</p><h2 id="lookup_instrument/1-examples" class="section-heading"><a href="#lookup_instrument/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">lookup_instrument</span><span class="p" data-group-id="0418618072-1">(</span><span class="n">character</span><span class="p" data-group-id="0418618072-1">)</span><span class="w">
-</span><span class="p" data-group-id="0418618072-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0418618072-3">%</span><span class="nc" data-group-id="0418618072-3">FieldInstrument</span><span class="p" data-group-id="0418618072-3">{</span><span class="p" data-group-id="0418618072-3">}</span><span class="p" data-group-id="0418618072-2">}</span></code></pre>
+<p>Looks up the instrument a character is currently playing.</p><h2 id="lookup_instrument/1-examples" class="section-heading"><a href="#lookup_instrument/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">lookup_instrument</span><span class="p" data-group-id="3588038168-1">(</span><span class="n">character</span><span class="p" data-group-id="3588038168-1">)</span><span class="w">
+</span><span class="p" data-group-id="3588038168-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3588038168-3">%</span><span class="nc" data-group-id="3588038168-3">FieldInstrument</span><span class="p" data-group-id="3588038168-3">{</span><span class="p" data-group-id="3588038168-3">}</span><span class="p" data-group-id="3588038168-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="lookup_npc/2">
@@ -1311,8 +1311,8 @@ can progress interact-object quest conditions.</p>
 
       </div>
 
-<p>Looks up an NPC by object id in the character's field.</p><h2 id="lookup_npc/2-examples" class="section-heading"><a href="#lookup_npc/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">lookup_npc</span><span class="p" data-group-id="0501811741-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">10_000_001</span><span class="p" data-group-id="0501811741-1">)</span><span class="w">
-</span><span class="p" data-group-id="0501811741-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0501811741-3">%</span><span class="nc" data-group-id="0501811741-3">FieldNpc</span><span class="p" data-group-id="0501811741-3">{</span><span class="p" data-group-id="0501811741-3">}</span><span class="p" data-group-id="0501811741-2">}</span></code></pre>
+<p>Looks up an NPC by object id in the character's field.</p><h2 id="lookup_npc/2-examples" class="section-heading"><a href="#lookup_npc/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">lookup_npc</span><span class="p" data-group-id="7783226268-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">10_000_001</span><span class="p" data-group-id="7783226268-1">)</span><span class="w">
+</span><span class="p" data-group-id="7783226268-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7783226268-3">%</span><span class="nc" data-group-id="7783226268-3">FieldNpc</span><span class="p" data-group-id="7783226268-3">{</span><span class="p" data-group-id="7783226268-3">}</span><span class="p" data-group-id="7783226268-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="performance_stage?/1">
@@ -1369,8 +1369,8 @@ can progress interact-object quest conditions.</p>
 
       </div>
 
-<p>Picks up an item from the field.</p><h2 id="pickup_item/2-examples" class="section-heading"><a href="#pickup_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">pickup_item</span><span class="p" data-group-id="0041733939-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="0041733939-1">)</span><span class="w">
-</span><span class="p" data-group-id="0041733939-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="0041733939-2">}</span></code></pre>
+<p>Picks up an item from the field.</p><h2 id="pickup_item/2-examples" class="section-heading"><a href="#pickup_item/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">pickup_item</span><span class="p" data-group-id="4385992530-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="n">object_id</span><span class="p" data-group-id="4385992530-1">)</span><span class="w">
+</span><span class="p" data-group-id="4385992530-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p" data-group-id="4385992530-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="remove_effect_buff/2">
@@ -1398,7 +1398,7 @@ can progress interact-object quest conditions.</p>
 
       </div>
 
-<p>Removes a single effect from the character, whoever cast it.</p><h2 id="remove_effect_buff/2-examples" class="section-heading"><a href="#remove_effect_buff/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_effect_buff</span><span class="p" data-group-id="6399127048-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">70_000_086</span><span class="p" data-group-id="6399127048-1">)</span><span class="w">
+<p>Removes a single effect from the character, whoever cast it.</p><h2 id="remove_effect_buff/2-examples" class="section-heading"><a href="#remove_effect_buff/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_effect_buff</span><span class="p" data-group-id="1103502506-1">(</span><span class="n">character</span><span class="p">,</span><span class="w"> </span><span class="mi">70_000_086</span><span class="p" data-group-id="1103502506-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1429,8 +1429,8 @@ can progress interact-object quest conditions.</p>
       </div>
 
 <p>Despawns a character's instrument, returning it so callers can announce the
-stop.</p><h2 id="remove_instrument/1-examples" class="section-heading"><a href="#remove_instrument/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_instrument</span><span class="p" data-group-id="9431827941-1">(</span><span class="n">character</span><span class="p" data-group-id="9431827941-1">)</span><span class="w">
-</span><span class="p" data-group-id="9431827941-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9431827941-3">%</span><span class="nc" data-group-id="9431827941-3">FieldInstrument</span><span class="p" data-group-id="9431827941-3">{</span><span class="p" data-group-id="9431827941-3">}</span><span class="p" data-group-id="9431827941-2">}</span></code></pre>
+stop.</p><h2 id="remove_instrument/1-examples" class="section-heading"><a href="#remove_instrument/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_instrument</span><span class="p" data-group-id="9394378236-1">(</span><span class="n">character</span><span class="p" data-group-id="9394378236-1">)</span><span class="w">
+</span><span class="p" data-group-id="9394378236-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9394378236-3">%</span><span class="nc" data-group-id="9394378236-3">FieldInstrument</span><span class="p" data-group-id="9394378236-3">{</span><span class="p" data-group-id="9394378236-3">}</span><span class="p" data-group-id="9394378236-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="remove_npc/1">
@@ -1458,7 +1458,7 @@ stop.</p><h2 id="remove_instrument/1-examples" class="section-heading"><a href="
 
       </div>
 
-<p>Removes an NPC from the field.</p><h2 id="remove_npc/1-examples" class="section-heading"><a href="#remove_npc/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_npc</span><span class="p" data-group-id="7961783042-1">(</span><span class="n">field_npc</span><span class="p" data-group-id="7961783042-1">)</span><span class="w">
+<p>Removes an NPC from the field.</p><h2 id="remove_npc/1-examples" class="section-heading"><a href="#remove_npc/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_npc</span><span class="p" data-group-id="1836660916-1">(</span><span class="n">field_npc</span><span class="p" data-group-id="1836660916-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1487,7 +1487,7 @@ stop.</p><h2 id="remove_instrument/1-examples" class="section-heading"><a href="
 
       </div>
 
-<p>Removes all buffs owned by a character (e.g. on death).</p><h2 id="remove_owner_buffs/1-examples" class="section-heading"><a href="#remove_owner_buffs/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_owner_buffs</span><span class="p" data-group-id="4885462473-1">(</span><span class="n">character</span><span class="p" data-group-id="4885462473-1">)</span><span class="w">
+<p>Removes all buffs owned by a character (e.g. on death).</p><h2 id="remove_owner_buffs/1-examples" class="section-heading"><a href="#remove_owner_buffs/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_owner_buffs</span><span class="p" data-group-id="6042523746-1">(</span><span class="n">character</span><span class="p" data-group-id="6042523746-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1516,7 +1516,7 @@ stop.</p><h2 id="remove_instrument/1-examples" class="section-heading"><a href="
 
       </div>
 
-<p>Removes a character's tombstone from the field (on field leave).</p><h2 id="remove_tombstone/1-examples" class="section-heading"><a href="#remove_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_tombstone</span><span class="p" data-group-id="0933162633-1">(</span><span class="n">character</span><span class="p" data-group-id="0933162633-1">)</span><span class="w">
+<p>Removes a character's tombstone from the field (on field leave).</p><h2 id="remove_tombstone/1-examples" class="section-heading"><a href="#remove_tombstone/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_tombstone</span><span class="p" data-group-id="8223249160-1">(</span><span class="n">character</span><span class="p" data-group-id="8223249160-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1574,7 +1574,7 @@ everyone on the map.</p>
 
       </div>
 
-<p>Subscribes the current process to a character's field events.</p><h2 id="subscribe/1-examples" class="section-heading"><a href="#subscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">subscribe</span><span class="p" data-group-id="6465725234-1">(</span><span class="n">character</span><span class="p" data-group-id="6465725234-1">)</span><span class="w">
+<p>Subscribes the current process to a character's field events.</p><h2 id="subscribe/1-examples" class="section-heading"><a href="#subscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">subscribe</span><span class="p" data-group-id="9965731808-1">(</span><span class="n">character</span><span class="p" data-group-id="9965731808-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
@@ -1631,7 +1631,7 @@ everyone on the map.</p>
 
       </div>
 
-<p>Unsubscribes the current process from a character's field events.</p><h2 id="unsubscribe/1-examples" class="section-heading"><a href="#unsubscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unsubscribe</span><span class="p" data-group-id="8813345347-1">(</span><span class="n">character</span><span class="p" data-group-id="8813345347-1">)</span><span class="w">
+<p>Unsubscribes the current process from a character's field events.</p><h2 id="unsubscribe/1-examples" class="section-heading"><a href="#unsubscribe/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">unsubscribe</span><span class="p" data-group-id="2782636016-1">(</span><span class="n">character</span><span class="p" data-group-id="2782636016-1">)</span><span class="w">
 </span><span class="ss">:ok</span></code></pre>
   </section>
 </section>
