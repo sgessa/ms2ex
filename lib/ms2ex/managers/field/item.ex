@@ -42,11 +42,12 @@ defmodule Ms2ex.Managers.Field.Item do
       |> Context.Items.load_metadata()
       |> Context.Items.bind_if_needed(:loot)
 
-    case Context.Inventory.add_item(character, item) do
+    case Managers.Inventory.add_item(character, item) do
       {:ok, result} ->
         {_status, inventory_item} = result
         push(character, Packets.InventoryItem.add_item(result, character))
         push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+        Managers.Quest.notify_item_acquired(character, inventory_item)
 
         # pickup-count quest conditions; code param carries the item id
         Managers.Quest.update_conditions(

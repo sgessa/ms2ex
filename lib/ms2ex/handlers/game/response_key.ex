@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       character =
         character
-        |> Context.Characters.load_equips()
+        |> Map.put(:equips, Managers.Inventory.list_equips(character))
         |> Context.Characters.preload([:friends, :stats])
         |> Context.Characters.load_skills()
 
@@ -81,7 +81,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.ServerEnter.bytes(character, account_wallet, character_wallet))
       |> push(Packets.SyncNumber.bytes())
       |> push(Packets.Prestige.bytes(character))
-      |> push_inventory_tab(character, Context.Inventory.list_tabs(character))
+      |> push_inventory_tab(character, Managers.Inventory.list_tabs(character))
       |> push(Packets.MarketInventory.count(0))
       |> push(Packets.MarketInventory.start_list())
       |> push(Packets.MarketInventory.end_list())
@@ -135,7 +135,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   defp push_inventory_tab(session, _character, []), do: session
 
   defp push_inventory_tab(session, character, [inventory_tab | tabs]) do
-    items = Context.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
+    items = Managers.Inventory.list_tab_items(inventory_tab.character_id, inventory_tab.tab)
 
     session
     |> push(Packets.InventoryItem.reset_tab(inventory_tab.tab))

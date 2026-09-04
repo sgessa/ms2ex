@@ -215,15 +215,9 @@ defmodule Ms2ex.Context.ItemStats do
   end
 
   defp equipped_gear(character) do
-    equips =
-      case Map.get(character, :equips) do
-        equips when is_list(equips) -> equips
-        _ -> Context.Equips.list(character)
-      end
-
     # metadata is not cached on the character; it is read from the storage
     # cache while the stats are rebuilt
-    equips
+    character.equips
     |> Enum.filter(&(&1.inventory_tab == :gear))
     |> Enum.map(&Context.Items.load_metadata(&1))
   end

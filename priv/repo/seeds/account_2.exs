@@ -47,31 +47,31 @@ dagger = Context.Items.init(13_160_311, %{rarity: 5})
 # item seeding goes through the inventory manager, like in-game writes
 :ok = Ms2ex.Managers.Inventory.start(char)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, ears)
-{:ok, _equip} = Context.Equips.equip(item, :ER)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, ears)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :ER)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, hair)
-{:ok, _equip} = Context.Equips.equip(item, :HR)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, hair)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :HR)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, face)
-{:ok, _equip} = Context.Equips.equip(item, :FA)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, face)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :FA)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, face_decor)
-{:ok, _equip} = Context.Equips.equip(item, :FD)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, face_decor)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :FD)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, top)
-{:ok, _equip} = Context.Equips.equip(item, :CL)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, top)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :CL)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, bottom)
-{:ok, _equip} = Context.Equips.equip(item, :PA)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, bottom)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :PA)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, shoes)
-{:ok, _equip} = Context.Equips.equip(item, :SH)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, shoes)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :SH)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, dagger)
-{:ok, _equip} = Context.Equips.equip(item, :LH)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, dagger)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :LH)
 
-{:ok, {:create, item}} = Context.Inventory.add_item(char, dagger)
-{:ok, _equip} = Context.Equips.equip(item, :RH)
+{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, dagger)
+{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :RH)
 
 Ms2ex.Managers.Inventory.stop(char.id)

@@ -1,5 +1,6 @@
 defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
 
@@ -130,9 +131,17 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     item = %Schema.Item{item_id: id, rarity: rarity, amount: amount, enchant_level: enchant_lvl}
     item = Context.Items.load_metadata(item)
 
-    case Context.Inventory.add_item(character, item) do
-      {:ok, result} -> push(session, Packets.InventoryItem.add_item(result, character))
-      _ -> session
+    case Managers.Inventory.add_item(character, item) do
+      {:ok, result} ->
+        push(session, Packets.InventoryItem.add_item(result, character))
+        Managers.Quest.notify_item_acquired(character, added_item(result))
+
+      _ ->
+        session
     end
   end
+
+  # the created or updated stack an add result carries (the update_and_create
+  # split carries the created overflow stack last)
+  defp added_item(result), do: elem(result, tuple_size(result) - 1)
 end

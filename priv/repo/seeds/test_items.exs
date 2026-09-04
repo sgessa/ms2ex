@@ -29,11 +29,11 @@ Repo.all(Schema.Character)
   Enum.each(test_bag, fn
     {_kind, item_id} ->
       item = Context.Items.init(item_id, %{rarity: 4, amount: 1})
-      Context.Inventory.add_item(character, item)
+      Managers.Inventory.add_item(character, item)
 
     {_kind, item_id, amount} ->
       item = Context.Items.init(item_id, %{rarity: 4, amount: amount})
-      Context.Inventory.add_item(character, item)
+      Managers.Inventory.add_item(character, item)
   end)
 
   Managers.Inventory.stop(character.id)

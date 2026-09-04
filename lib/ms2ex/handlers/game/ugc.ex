@@ -167,8 +167,10 @@ defmodule Ms2ex.GameHandlers.Ugc do
          resource: resource,
          type: type
        }) do
-    case Context.Inventory.add_item(character, item) do
+    case Managers.Inventory.add_item(character, item) do
       {:ok, {_action, added} = result} ->
+        Managers.Quest.notify_item_acquired(character, added)
+
         session
         |> push(Packets.InventoryItem.add_item(result, character))
         |> push(
@@ -206,7 +208,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
   defp ensure_free_slot(character, item) do
     tab = Types.Item.inventory_tab(item.metadata)
 
-    case Context.Inventory.find_first_available_slot(character.id, tab) do
+    case Managers.Inventory.find_first_available_slot(character.id, tab) do
       {:error, :full_inventory} -> :error
       _slot -> :ok
     end

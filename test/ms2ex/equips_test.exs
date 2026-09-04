@@ -47,10 +47,10 @@ defmodule Ms2ex.EquipsTest do
     start_inventory(character)
 
     staff = Context.Items.init(15_260_310, %{rarity: 5, amount: 1})
-    {:ok, {:create, item}} = Context.Inventory.add_item(character, staff)
+    {:ok, {:create, item}} = Managers.Inventory.add_item(character, staff)
     assert item.is_bound == false
 
-    {:ok, equipped} = Context.Equips.equip(item |> Context.Items.load_metadata(), :RH)
+    {:ok, equipped} = Managers.Inventory.equip(item |> Context.Items.load_metadata(), :RH)
     assert equipped.is_bound == true
 
     reloaded = Repo.get(Schema.Item, item.id)
@@ -70,20 +70,20 @@ defmodule Ms2ex.EquipsTest do
 
     start_inventory(character)
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) == 2
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) == 2
 
     add_inventory_item(character, 4002)
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) ==
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) ==
              {:error, :full_inventory}
 
-    assert Context.Inventory.free_slot_count(character.id, :gear) == 0
+    assert Managers.Inventory.free_slot_count(character.id, :gear) == 0
 
     # expanding the tab raises the bound
-    Context.Inventory.expand_tab(character, :gear)
+    Managers.Inventory.expand_tab(character, :gear)
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) == 3
-    assert Context.Inventory.free_slot_count(character.id, :gear) == 6
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) == 3
+    assert Managers.Inventory.free_slot_count(character.id, :gear) == 6
   end
 
   test "unequip prefers a free slot and falls back when it is taken" do
@@ -95,12 +95,12 @@ defmodule Ms2ex.EquipsTest do
     start_inventory(character)
 
     equipped = equip_item(character, 4001, :RH)
-    {:ok, item} = Context.Equips.unequip(equipped, 0)
+    {:ok, item} = Managers.Inventory.move_to_inventory(equipped, 0)
     # slot 0 is occupied, so the item lands in the first open slot
     assert item.inventory_slot == 1
 
     equipped = equip_item(character, 4001, :RH)
-    {:ok, item} = Context.Equips.unequip(equipped, 2)
+    {:ok, item} = Managers.Inventory.move_to_inventory(equipped, 2)
     # slot 2 is free, so the preference is honored
     assert item.inventory_slot == 2
   end
@@ -122,7 +122,7 @@ defmodule Ms2ex.EquipsTest do
     sword = equip_item(character, 3002, :RH)
     shield = equip_item(character, 3003, :LH)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert {:ok, character} = Managers.Character.call(character, {:equip_item, staff.id, "RH"})
@@ -154,7 +154,7 @@ defmodule Ms2ex.EquipsTest do
     suit = equip_item(character, 3101, :CL)
     pants = add_inventory_item(character, 3102)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert {:ok, character} = Managers.Character.call(character, {:equip_item, pants.id, "PA"})
@@ -178,7 +178,7 @@ defmodule Ms2ex.EquipsTest do
 
     suit = add_inventory_item(character, 3101)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     # the suit occupies clothing first; the pants slot is not a valid target
@@ -196,7 +196,7 @@ defmodule Ms2ex.EquipsTest do
 
     hat = add_inventory_item(character, 3201)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert :error = Managers.Character.call(character, {:equip_item, hat.id, "CP"})
@@ -213,7 +213,7 @@ defmodule Ms2ex.EquipsTest do
 
     blade = add_inventory_item(character, 3202)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert :error = Managers.Character.call(character, {:equip_item, blade.id, "RH"})
@@ -227,7 +227,7 @@ defmodule Ms2ex.EquipsTest do
     start_inventory(character)
     hair = equip_item(character, 3301, :HR)
 
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     start_character(character)
 
     assert {:ok, character} = Managers.Character.call(character, {:unequip_item, hair.id})
@@ -297,13 +297,13 @@ defmodule Ms2ex.EquipsTest do
 
   defp add_inventory_item(character, item_id) do
     item = Context.Items.init(item_id, %{rarity: 1, amount: 1})
-    {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
+    {:ok, {:create, item}} = Managers.Inventory.add_item(character, item)
     item
   end
 
   defp equip_item(character, item_id, equip_slot) do
     item = add_inventory_item(character, item_id)
-    {:ok, item} = Context.Equips.equip(item |> Context.Items.load_metadata(), equip_slot)
+    {:ok, item} = Managers.Inventory.equip(item |> Context.Items.load_metadata(), equip_slot)
     item
   end
 

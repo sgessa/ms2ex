@@ -111,17 +111,18 @@ defmodule Ms2ex.Context.Dismantle do
 
   ## Parameters
 
-    * `character` - The character whose inventory contains the items
     * `inventory` - The current dismantle inventory
+    * `item_resolver` - Resolves an item uid to the character's item (the
+      flow reads it from the character's inventory manager)
 
   ## Returns
 
     * Updated dismantle inventory with the `rewards` field populated
   """
-  def update_rewards(character, inventory) do
+  def update_rewards(inventory, item_resolver) do
     rewards =
       Enum.reduce(inventory.slots, %{}, fn {_slot, {item_uid, amount}}, total_rewards ->
-        item = character |> Context.Inventory.get(item_uid) |> Context.Items.load_metadata()
+        item = item_uid |> item_resolver.() |> Context.Items.load_metadata()
         rewards = Map.get(item.metadata, :dismantle_rewards, [])
         sum_item_rewards(rewards, total_rewards, amount)
       end)

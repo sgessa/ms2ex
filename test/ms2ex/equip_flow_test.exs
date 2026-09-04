@@ -64,13 +64,13 @@ defmodule Ms2ex.EquipFlowTest do
     assert b_row.location == :equipment
 
     # no duplicate uids in the manager's bag view
-    bag = Context.Inventory.list_tab_items(character.id, :gear)
+    bag = Managers.Inventory.list_tab_items(character.id, :gear)
     assert Enum.map(bag, & &1.id) == [a.id]
 
     # unequip B: back to the bag
     assert {:ok, char} = Managers.Character.call(character, {:unequip_item, b.id})
     assert equip_summary(char) == []
-    assert Enum.count(Context.Inventory.list_tab_items(character.id, :gear)) == 2
+    assert Enum.count(Managers.Inventory.list_tab_items(character.id, :gear)) == 2
     assert Repo.reload!(b).location == :inventory
   end
 
@@ -100,7 +100,7 @@ defmodule Ms2ex.EquipFlowTest do
     inv_pid = :erlang.whereis(:"inventories:#{character.id}")
 
     # prime the cached equip list the same way login does
-    character = %{character | equips: Context.Equips.list(character)}
+    character = %{character | equips: Managers.Inventory.list_equips(character)}
     {:ok, char_pid} = Managers.Character.start(character)
 
     on_exit(fn ->
@@ -114,7 +114,7 @@ defmodule Ms2ex.EquipFlowTest do
 
   defp add_item(character, item_id) do
     item = Context.Items.init(item_id, %{rarity: 4, amount: 1})
-    {:ok, {:create, item}} = Context.Inventory.add_item(character, item)
+    {:ok, {:create, item}} = Managers.Inventory.add_item(character, item)
     item
   end
 

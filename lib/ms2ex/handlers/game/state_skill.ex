@@ -57,5 +57,5 @@ defmodule Ms2ex.GameHandlers.StateSkill do
   end
 
   defp owned_item?(_character, 0), do: true
-  defp owned_item?(character, item_uid), do: Context.Inventory.get(character, item_uid) != nil
+  defp owned_item?(character, item_uid), do: Managers.Inventory.get(character, item_uid) != nil
 end

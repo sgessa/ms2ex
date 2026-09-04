@@ -59,20 +59,11 @@ defmodule Ms2ex.Context.Characters do
     Repo.preload(character, assocs, opts)
   end
 
-  def load_equips(%Schema.Character{} = character) do
-    %{character | equips: Context.Equips.list(character)}
-  end
-
   # bulk listings read persisted rows: inventory managers only exist for
   # characters currently in game, and a listing spans every character of the
   # account
   defp load_persisted_equips(%Schema.Character{} = character) do
-    equips =
-      Schema.Item
-      |> where([i], i.character_id == ^character.id and i.location == ^:equipment)
-      |> Repo.all()
-
-    %{character | equips: equips}
+    %{character | equips: Context.Inventory.list_equipped(character.id)}
   end
 
   def load_skills(%Schema.Character{} = character, opts \\ []) do

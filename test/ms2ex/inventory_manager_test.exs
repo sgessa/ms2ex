@@ -53,17 +53,17 @@ defmodule Ms2ex.InventoryManagerTest do
   test "slot allocation is served from the owned item list", %{character: character} do
     add_item(character, @gear_id, 1)
     add_item(character, @gear_id, 1)
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) == 2
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) == 2
 
     add_item(character, @gear_id, 1)
 
-    assert Context.Inventory.find_first_available_slot(character.id, :gear) ==
+    assert Managers.Inventory.find_first_available_slot(character.id, :gear) ==
              {:error, :full_inventory}
 
-    assert Context.Inventory.free_slot_count(character.id, :gear) == 0
+    assert Managers.Inventory.free_slot_count(character.id, :gear) == 0
 
-    assert Context.Inventory.expand_tab(character, :gear).slots == 9
-    assert Context.Inventory.free_slot_count(character.id, :gear) == 6
+    assert Managers.Inventory.expand_tab(character, :gear).slots == 9
+    assert Managers.Inventory.free_slot_count(character.id, :gear) == 6
   end
 
   test "stackable items merge onto existing stacks and write through", %{character: character} do
@@ -71,22 +71,22 @@ defmodule Ms2ex.InventoryManagerTest do
     add_item(character, @potion_id, 6)
 
     # the second stack exactly fills the first, so no second row is created
-    assert Enum.count(Context.Inventory.list_tab_items(character.id, :consumable)) == 1
+    assert Enum.count(Managers.Inventory.list_tab_items(character.id, :consumable)) == 1
 
     add_item(character, @potion_id, 3)
 
-    stacks = Context.Inventory.list_tab_items(character.id, :consumable)
+    stacks = Managers.Inventory.list_tab_items(character.id, :consumable)
     assert Enum.map(stacks, & &1.amount) == [10, 3]
   end
 
   test "consume writes through and deletes emptied stacks", %{character: character} do
     {:ok, {:create, stack}} = add_item(character, @potion_id, 5)
 
-    {:update, updated} = Context.Inventory.consume(stack, 2)
+    {:update, updated} = Managers.Inventory.consume(stack, 2)
     assert updated.amount == 3
     assert Repo.reload!(stack).amount == 3
 
-    {:delete, _deleted} = Context.Inventory.consume(updated, 3)
+    {:delete, _deleted} = Managers.Inventory.consume(updated, 3)
     assert Repo.get(Schema.Item, stack.id) == nil
   end
 
@@ -95,11 +95,11 @@ defmodule Ms2ex.InventoryManagerTest do
     add_item(character, @potion_id, 6)
 
     # the second add overflows the first stack: 10 + 2 across two stacks
-    stacks = Context.Inventory.list_tab_items(character.id, :consumable)
+    stacks = Managers.Inventory.list_tab_items(character.id, :consumable)
     assert Enum.map(stacks, & &1.amount) == [10, 2]
 
     {:ok, results} =
-      Context.Inventory.consume_item_amounts(character, [
+      Managers.Inventory.consume_item_amounts(character, [
         %{item_id: @potion_id, amount: 11},
         %{item_id: @potion_id, amount: 50}
       ])
@@ -107,7 +107,7 @@ defmodule Ms2ex.InventoryManagerTest do
     # 11 span both stacks (two stack writes), the impossible pair is skipped
     assert Enum.count(results) == 2
 
-    remaining = Context.Inventory.list_tab_items(character.id, :consumable)
+    remaining = Managers.Inventory.list_tab_items(character.id, :consumable)
     assert Enum.sum(Enum.map(remaining, & &1.amount)) == 1
   end
 
@@ -116,7 +116,7 @@ defmodule Ms2ex.InventoryManagerTest do
     {:ok, {:create, b}} = add_item(character, 6_000_002, 1)
     {:ok, {:create, a}} = add_item(character, 6_000_001, 1)
 
-    assert {:ok, sorted} = Context.Inventory.sort_tab(character, :gear)
+    assert {:ok, sorted} = Managers.Inventory.sort_tab(character, :gear)
 
     assert Enum.map(sorted, & &1.item_id) == [6_000_001, 6_000_002]
     assert Enum.map(sorted, & &1.inventory_slot) == [0, 1]
@@ -152,7 +152,7 @@ defmodule Ms2ex.InventoryManagerTest do
     assert unlocked.unlocks_at != nil
     assert Repo.reload!(b).unlocks_at != nil
 
-    {:ok, sorted} = Context.Inventory.sort_tab(character, :gear)
+    {:ok, sorted} = Managers.Inventory.sort_tab(character, :gear)
     sorted_b = Enum.find(sorted, &(&1.id == b.id))
     assert sorted_b.unlocks_at == unlocked.unlocks_at
   end
@@ -162,10 +162,10 @@ defmodule Ms2ex.InventoryManagerTest do
   } do
     {:ok, {:create, stack}} = add_item(character, @gear_id, 1)
 
-    {:ok, equipped} = Context.Inventory.update_item(stack, %{location: :equipment})
+    {:ok, equipped} = Managers.Inventory.update_item(stack, %{location: :equipment})
     assert equipped.location == :equipment
 
-    equips = Context.Equips.list(character)
+    equips = Managers.Inventory.list_equips(character)
     assert Enum.map(equips, & &1.id) == [stack.id]
 
     assert Repo.reload!(stack).location == :equipment
@@ -202,6 +202,6 @@ defmodule Ms2ex.InventoryManagerTest do
 
   defp add_item(character, item_id, amount) do
     item = Context.Items.init(item_id, %{rarity: 1, amount: amount})
-    Context.Inventory.add_item(character, item)
+    Managers.Inventory.add_item(character, item)
   end
 end

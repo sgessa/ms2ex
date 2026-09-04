@@ -2,20 +2,19 @@ defmodule Ms2ex.Managers.Inventory do
   use GenServer
   use Ms2ex.Managers.Managed, prefix: "inventories", key: :character_id
 
+  alias Ms2ex.Context
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
-  import Ecto.Query, except: [update: 2]
-
   @fallback_tab_size 48
 
   # The inventory manager owns every item row of a character: reads are
-  # served from memory, mutations are written through to the database, and
-  # slot allocation is an in-memory scan. Rows are kept without their
-  # metadata documents; callers fetch metadata from the storage cache when
-  # they need it.
+  # served from memory, mutations are applied to memory and persisted
+  # through `Ms2ex.Context.Inventory`. Rows are kept without their metadata
+  # documents; callers fetch metadata from the storage cache when they need
+  # it.
 
   def start(%Schema.Character{id: id} = character) do
     case GenServer.start(__MODULE__, character, name: process_name(id)) do
@@ -36,10 +35,167 @@ defmodule Ms2ex.Managers.Inventory do
 
   def alive?(id), do: Process.whereis(process_name(id)) != nil
 
+  # ---- client API ----
+
+  @doc "Gets an item by uid."
+  @spec get(Schema.Character.t(), integer()) :: Schema.Item.t() | nil
+  def get(%Schema.Character{id: character_id}, uid), do: call(character_id, {:get, uid})
+
+  @doc "Lists every item of a character, equipped and carried."
+  def all(%Schema.Character{id: character_id}), do: call(character_id, :all)
+
+  @doc "Lists a character's carried items, sorted by slot."
+  def list_items(%Schema.Character{id: character_id}), do: call(character_id, :list_items)
+
+  @doc "Lists a character's inventory tab rows."
+  def list_tabs(%Schema.Character{id: character_id}), do: call(character_id, :list_tabs)
+
+  @doc "Lists a character's carried items in a tab, sorted by slot."
+  def list_tab_items(character_id, tab), do: call(character_id, {:list_tab_items, tab})
+
+  @doc "Lists a character's equipped items."
+  def list_equips(%Schema.Character{id: character_id}), do: call(character_id, :list_equips)
+
+  @doc "Finds the first free slot of a tab."
+  @spec find_first_available_slot(integer(), atom()) :: integer() | {:error, :full_inventory}
+  def find_first_available_slot(character_id, tab),
+    do: call(character_id, {:first_available_slot, tab})
+
+  @doc "Counts the free slots of a tab."
+  @spec free_slot_count(integer(), atom()) :: non_neg_integer()
+  def free_slot_count(character_id, tab), do: call(character_id, {:free_slot_count, tab})
+
+  @doc """
+  Adds an item, merging onto existing stacks when stackable. Acquisition
+  flows notify the quest manager themselves (see
+  `Ms2ex.Managers.Quest.notify_item_acquired/2`).
+  """
+  @spec add_item(Schema.Character.t(), Schema.Item.t()) ::
+          {:ok,
+           {:create, Schema.Item.t()}
+           | {:update, Schema.Item.t()}
+           | {:update_and_create, {Schema.Item.t(), integer()}, Schema.Item.t()}}
+  def add_item(%Schema.Character{id: character_id}, item) do
+    call(character_id, {:add_item, item})
+  end
+
+  @doc "Updates an item's fields, writing through."
+  @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
+          {:ok, Schema.Item.t()} | {:error, any()}
+  def update_item(%Schema.Item{id: id, character_id: character_id}, attrs) do
+    call(character_id, {:update_item, id, attrs})
+  end
+
+  def update_item(
+        %Ecto.Changeset{data: %Schema.Item{character_id: character_id}} = changeset,
+        attrs
+      ) do
+    call(character_id, {:update_item_changeset, changeset, attrs})
+  end
+
+  @doc """
+  Consumes an amount of an item, deleting it when emptied.
+  """
+  @spec consume(Schema.Item.t(), integer()) ::
+          {:update, Schema.Item.t()} | {:delete, Schema.Item.t()} | {:error, :not_found}
+  def consume(%Schema.Item{} = item, consumed \\ 1) do
+    call(item.character_id, {:consume, item, consumed})
+  end
+
+  @doc """
+  Consumes an amount across the character's carry stacks; returns
+  `{:error, :insufficient_amount}` when the stacks cannot cover it.
+  """
+  @spec consume_item_amount(Schema.Character.t(), integer(), integer()) ::
+          {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
+          | {:error, :insufficient_amount}
+  def consume_item_amount(%Schema.Character{} = character, item_id, amount)
+      when is_integer(item_id) and is_integer(amount) and amount > 0 do
+    case consume_item_amounts(character, [%{item_id: item_id, amount: amount}]) do
+      {:ok, []} -> {:error, :insufficient_amount}
+      {:ok, results} -> {:ok, results}
+    end
+  end
+
+  @doc """
+  Consumes each `%{item_id, amount}` pair from the carry stacks. Pairs the
+  inventory cannot cover are skipped so callers can keep processing (the
+  completion counter no longer matches the live inventory in that case).
+  """
+  @spec consume_item_amounts(Schema.Character.t(), [map()]) ::
+          {:ok, [{:update, Schema.Item.t()} | {:delete, Schema.Item.t()}]}
+  def consume_item_amounts(%Schema.Character{id: character_id}, consumables) do
+    call(character_id, {:consume_item_amounts, consumables})
+  end
+
+  @doc "Deletes an item."
+  @spec delete(Schema.Item.t()) :: {:delete, Schema.Item.t()} | {:error, any()}
+  def delete(%Schema.Item{id: id, character_id: character_id}) do
+    call(character_id, {:delete, id})
+  end
+
+  @doc "Swaps an item into a slot, displacing whatever occupies it."
+  @spec swap(Schema.Item.t(), integer()) :: {:ok, integer()} | {:error, any()}
+  def swap(%Schema.Item{id: id, character_id: character_id}, dst_slot) do
+    call(character_id, {:swap, id, dst_slot})
+  end
+
+  @doc "Sorts a tab's carried items by item id."
+  @spec sort_tab(Schema.Character.t(), atom()) :: {:ok, [Schema.Item.t()]} | {:error, any()}
+  def sort_tab(%Schema.Character{id: character_id}, tab) do
+    call(character_id, {:sort_tab, tab})
+  end
+
+  @doc "Expands a tab by six slots."
+  @spec expand_tab(Schema.Character.t(), atom()) :: Schema.InventoryTab.t()
+  def expand_tab(%Schema.Character{id: character_id}, tab) do
+    call(character_id, {:expand_tab, tab})
+  end
+
+  @doc """
+  Equips an item into the requested slot, binding it first when its
+  metadata marks it bind-on-equip.
+  """
+  @spec equip(Schema.Item.t(), atom()) :: {:ok, Schema.Item.t()} | {:error, any()}
+  def equip(%Schema.Item{} = item, equip_slot) do
+    item
+    |> Schema.Item.bind_if_needed(:equip)
+    |> update_item(%{
+      equip_slot: equip_slot,
+      inventory_slot: nil,
+      location: :equipment
+    })
+  end
+
+  @doc """
+  Moves an equipped item back to the inventory. Prefers `preferred_slot`
+  while it is free, else the first open slot in the tab; the item's equip
+  slot is cleared.
+  """
+  @spec move_to_inventory(Schema.Item.t(), integer() | nil) ::
+          {:ok, Schema.Item.t()} | {:error, :full_inventory} | {:error, :not_found}
+  def move_to_inventory(%Schema.Item{id: id, character_id: character_id}, preferred_slot \\ nil) do
+    call(character_id, {:move_to_inventory, id, preferred_slot})
+  end
+
+  @doc "Checks whether an item's expiry date has passed."
+  @spec expired?(Schema.Item.t()) :: boolean()
+  def expired?(%Schema.Item{expires_at: nil}), do: false
+
+  def expired?(%Schema.Item{expires_at: expires_at}) do
+    DateTime.compare(expires_at, DateTime.utc_now()) == :lt
+  end
+
+  @doc "Placeholder bind marker."
+  @spec bind(Schema.Item.t()) :: Schema.Item.t()
+  def bind(%Schema.Item{} = item), do: item
+
+  # ---- server callbacks ----
+
   @impl GenServer
   def init(%Schema.Character{id: character_id}) do
-    items = Repo.all(from i in Schema.Item, where: i.character_id == ^character_id)
-    tabs = Repo.all(from t in Schema.InventoryTab, where: t.character_id == ^character_id)
+    items = Context.Inventory.list_items(character_id)
+    tabs = Context.Inventory.list_tabs(character_id)
 
     {:ok, %{character_id: character_id, items: items, tabs: tabs, lock_staging: []}}
   end
@@ -62,16 +218,6 @@ defmodule Ms2ex.Managers.Inventory do
 
   def handle_call(:list_tabs, _from, state), do: {:reply, state.tabs, state}
 
-  def handle_call({:item_in_slot, tab, slot}, _from, state) do
-    item =
-      Enum.find(
-        state.items,
-        &(&1.location == :inventory and &1.inventory_tab == tab and &1.inventory_slot == slot)
-      )
-
-    {:reply, item, state}
-  end
-
   def handle_call({:first_available_slot, tab}, _from, state),
     do: {:reply, first_available_slot(state, tab), state}
 
@@ -82,46 +228,11 @@ defmodule Ms2ex.Managers.Inventory do
     {:reply, max(size - occupied, 0), state}
   end
 
-  def handle_call({:find_stack, attrs}, _from, state),
-    do: {:reply, find_stack(state, attrs), state}
-
   # ---- mutations ----
 
   def handle_call({:add_item, attrs}, _from, state) do
-    {result, state} = add_item(state, attrs)
+    {result, state} = apply_add_item(state, attrs)
     {:reply, result, state}
-  end
-
-  def handle_call({:consume, item, consumed}, _from, state) do
-    case get_item(state, item.id) do
-      %Schema.Item{} = owned ->
-        {result, state} = consume(state, owned, consumed)
-        {:reply, result, state}
-
-      nil ->
-        {:reply, consume_fallback(item, consumed), state}
-    end
-  end
-
-  def handle_call({:consume_item_amounts, consumables}, _from, state) do
-    {results, state} = consume_item_amounts(state, consumables)
-    {:reply, {:ok, results}, state}
-  end
-
-  def handle_call({:delete, uid}, _from, state) do
-    case get_item(state, uid) do
-      %Schema.Item{} = item ->
-        case Repo.delete(item) do
-          {:ok, deleted} ->
-            {:reply, {:delete, deleted}, %{state | items: List.delete(state.items, item)}}
-
-          error ->
-            {:reply, error, state}
-        end
-
-      nil ->
-        {:reply, {:error, :not_found}, state}
-    end
   end
 
   def handle_call({:update_item, uid, attrs}, _from, state) do
@@ -146,6 +257,49 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
+  def handle_call({:consume, item, consumed}, _from, state) do
+    case get_item(state, item.id) do
+      %Schema.Item{} = owned ->
+        {result, state} = consume(state, owned, consumed)
+        {:reply, result, state}
+
+      nil ->
+        {:reply, {:error, :not_found}, state}
+    end
+  end
+
+  def handle_call({:consume_item_amounts, consumables}, _from, state) do
+    {results, state} = apply_consume_item_amounts(state, consumables)
+    {:reply, {:ok, results}, state}
+  end
+
+  def handle_call({:delete, uid}, _from, state) do
+    case get_item(state, uid) do
+      %Schema.Item{} = item ->
+        case Context.Inventory.delete_item(item) do
+          {:ok, deleted} ->
+            {:reply, {:delete, deleted}, %{state | items: List.delete(state.items, item)}}
+
+          error ->
+            {:reply, error, state}
+        end
+
+      nil ->
+        {:reply, {:error, :not_found}, state}
+    end
+  end
+
+  def handle_call({:move_to_inventory, uid, preferred_slot}, _from, state) do
+    case get_item(state, uid) do
+      %Schema.Item{} = item ->
+        {result, state} = apply_move_to_inventory(state, item, preferred_slot)
+        {:reply, result, state}
+
+      nil ->
+        {:reply, {:error, :not_found}, state}
+    end
+  end
+
   def handle_call({:swap, uid, dst_slot}, _from, state) do
     case get_item(state, uid) do
       %Schema.Item{} = src_item ->
@@ -158,7 +312,7 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   def handle_call({:sort_tab, tab}, _from, state) do
-    {result, state} = sort_tab(state, tab)
+    {result, state} = apply_sort_tab(state, tab)
     {:reply, result, state}
   end
 
@@ -197,34 +351,26 @@ defmodule Ms2ex.Managers.Inventory do
 
   def handle_call({:expand_tab, tab}, _from, state) do
     extra_slots = 6
+    tab_row = Enum.find(state.tabs, &(&1.tab == tab))
+    :ok = Context.Inventory.expand_tab(tab_row.id, extra_slots)
+    updated = %{tab_row | slots: tab_row.slots + extra_slots}
 
-    tabs =
-      Enum.map(state.tabs, fn tab_row ->
-        if tab_row.tab == tab do
-          from(t in Schema.InventoryTab, where: t.id == ^tab_row.id)
-          |> Repo.update_all(inc: [slots: extra_slots])
+    tabs = Enum.map(state.tabs, &if(&1.tab == tab, do: updated, else: &1))
 
-          %{tab_row | slots: tab_row.slots + extra_slots}
-        else
-          tab_row
-        end
-      end)
-
-    {:reply, Enum.find(tabs, &(&1.tab == tab)), %{state | tabs: tabs}}
+    {:reply, updated, %{state | tabs: tabs}}
   end
+
+  # ---- stacking & creation ----
 
   defp get_item(state, uid), do: Enum.find(state.items, &(&1.id == uid))
 
   defp carry_items(state), do: Enum.filter(state.items, &(&1.location == :inventory))
 
-  # ---- stacking & creation ----
-
   # stackable items merge onto existing stacks first
-  defp add_item(state, %Schema.Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
+  defp apply_add_item(state, %Schema.Item{metadata: %{stack_limit: n}} = attrs) when n > 1 do
     case find_stack(state, attrs) do
       %Schema.Item{} = item ->
-        {result, state} = update_or_create(state, item, attrs, n)
-        {result, state}
+        update_or_create(state, item, attrs, n)
 
       nil ->
         case create(state, attrs) do
@@ -234,7 +380,7 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
-  defp add_item(state, %Schema.Item{} = attrs) do
+  defp apply_add_item(state, %Schema.Item{} = attrs) do
     case create(state, attrs) do
       {{:create, item}, state} -> {{:ok, {:create, item}}, state}
       {other, state} -> {other, state}
@@ -260,10 +406,9 @@ defmodule Ms2ex.Managers.Inventory do
        when amount + new_amount > stack_limit do
     amount_added = stack_limit - amount
     amount_created = new_amount - amount_added
-    attrs = Map.put(attrs, :amount, amount_created)
 
     {{:update, updated}, state} = update_qty(state, item, amount_added)
-    {{:create, created}, state} = create(state, attrs)
+    {{:create, created}, state} = create(state, Map.put(attrs, :amount, amount_created))
 
     {{:update_and_create, {updated, new_amount}, created}, state}
   end
@@ -273,23 +418,15 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   defp create(state, %{amount: n, metadata: meta} = attrs) when n > 0 do
-    rarity = attrs.rarity || 1
     inventory_tab = Types.Item.inventory_tab(meta)
     slot = first_available_slot(state, inventory_tab)
 
-    item_attrs =
+    attrs =
       attrs
       |> Map.put(:inventory_tab, inventory_tab)
-      |> Map.put(:rarity, rarity)
       |> Map.put(:inventory_slot, slot)
-      |> Map.from_struct()
 
-    changeset =
-      %Schema.Character{id: state.character_id}
-      |> Ecto.build_assoc(:inventory_items)
-      |> Schema.Item.changeset(item_attrs)
-
-    case Repo.insert(changeset) do
+    case Context.Inventory.insert_item(state.character_id, attrs) do
       {:ok, item} ->
         {{:create, item}, %{state | items: state.items ++ [item]}}
 
@@ -307,7 +444,7 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   defp consume(state, item, _consumed) do
-    case Repo.delete(item) do
+    case Context.Inventory.delete_item(item) do
       {:ok, deleted} ->
         {{:delete, deleted}, %{state | items: List.delete(state.items, item)}}
 
@@ -316,24 +453,9 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
-  # falls back to the caller's row when the manager does not own the item
-  defp consume_fallback(%{amount: amount} = item, consumed) when amount > consumed do
-    from(i in Schema.Item, where: i.id == ^item.id)
-    |> Repo.update_all(inc: [amount: -consumed])
-
-    {:update, %{item | amount: amount - consumed}}
-  end
-
-  defp consume_fallback(item, _consumed) do
-    case Repo.delete(item) do
-      {:ok, deleted} -> {:delete, deleted}
-      error -> error
-    end
-  end
-
   # consumes across the carry stacks: each pair is taken from its stacks
   # (smallest first), pairs the inventory cannot cover are skipped
-  defp consume_item_amounts(state, consumables) do
+  defp apply_consume_item_amounts(state, consumables) do
     item_ids = Enum.map(consumables, & &1.item_id)
 
     stacks =
@@ -342,9 +464,9 @@ defmodule Ms2ex.Managers.Inventory do
       |> Enum.sort_by(&{&1.amount, &1.id})
       |> Enum.group_by(& &1.item_id)
 
-    {results, stacks} = take_consumables(consumables, stacks, [])
+    {results, _stacks} = take_consumables(consumables, stacks, [])
 
-    {List.flatten(results), apply_consumption(state, results, stacks)}
+    {List.flatten(results), apply_consumption(state, results)}
   end
 
   defp take_consumables([], stacks, results), do: {Enum.reverse(results), stacks}
@@ -385,7 +507,7 @@ defmodule Ms2ex.Managers.Inventory do
 
   # persists the planned consumption: deletes emptied stacks, updates the
   # surviving amounts, and drops/updates the in-memory copies to match
-  defp apply_consumption(state, results, _stacks) do
+  defp apply_consumption(state, results) do
     ops = List.flatten(results)
 
     {deleted_ids, updates} =
@@ -395,12 +517,11 @@ defmodule Ms2ex.Managers.Inventory do
       end)
 
     unless deleted_ids == [] do
-      from(i in Schema.Item, where: i.id in ^deleted_ids) |> Repo.delete_all()
+      :ok = Context.Inventory.delete_items(deleted_ids)
     end
 
     Enum.each(updates, fn {id, stack} ->
-      from(i in Schema.Item, where: i.id == ^id)
-      |> Repo.update_all(set: [amount: stack.amount])
+      :ok = Context.Inventory.set_amount(id, stack.amount)
     end)
 
     items =
@@ -418,7 +539,7 @@ defmodule Ms2ex.Managers.Inventory do
   # ---- generic updates ----
 
   defp update_item(state, item, attrs) do
-    case persist_update(item, attrs) do
+    case Context.Inventory.update_item(item, attrs) do
       {:ok, updated} ->
         {{:ok, updated}, replace_item(state, updated)}
 
@@ -427,19 +548,11 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
-  defp persist_update(item, attrs) do
-    item
-    |> Schema.Item.changeset(attrs)
-    |> Repo.update()
-  end
-
   defp update_qty(state, item, delta) do
-    from(i in Schema.Item, where: i.id == ^item.id)
-    |> Repo.update_all(inc: [amount: delta])
+    :ok = Context.Inventory.update_amount(item.id, delta)
 
     updated = %{item | amount: item.amount + delta}
-    state = replace_item(state, updated)
-    {{:update, updated}, state}
+    {{:update, updated}, replace_item(state, updated)}
   end
 
   defp replace_item(state, updated) do
@@ -451,7 +564,45 @@ defmodule Ms2ex.Managers.Inventory do
     %{state | items: items}
   end
 
-  # ---- slots ----
+  # ---- move & slots ----
+
+  defp apply_move_to_inventory(state, item, preferred_slot) do
+    case resolve_slot(state, item.inventory_tab, preferred_slot) do
+      {:ok, slot} ->
+        attrs = %{equip_slot: :NONE, inventory_slot: slot, location: :inventory}
+
+        case Context.Inventory.update_item(item, attrs) do
+          {:ok, updated} ->
+            {{:ok, updated}, replace_item(state, updated)}
+
+          error ->
+            {error, state}
+        end
+
+      error ->
+        {error, state}
+    end
+  end
+
+  # prefers the requested slot while it lies in bounds and is still free,
+  # else falls back to the first open slot in the tab
+  defp resolve_slot(state, tab, preferred_slot) when is_integer(preferred_slot) do
+    last_slot = tab_size(state, tab) - 1
+
+    if preferred_slot in 0..last_slot and
+         preferred_slot not in occupied_slots(state, tab) do
+      {:ok, preferred_slot}
+    else
+      resolve_slot(state, tab, nil)
+    end
+  end
+
+  defp resolve_slot(state, tab, _preferred_slot) do
+    case first_available_slot(state, tab) do
+      {:error, _reason} = error -> error
+      slot -> {:ok, slot}
+    end
+  end
 
   defp first_available_slot(state, tab) do
     occupied = occupied_slots(state, tab)
@@ -491,14 +642,14 @@ defmodule Ms2ex.Managers.Inventory do
       Repo.transaction(fn ->
         case dst_item do
           %Schema.Item{} = dst_item ->
-            {:ok, _} = persist_update(src_item, %{inventory_slot: nil})
-            {:ok, _} = persist_update(dst_item, %{inventory_slot: src_slot})
-            {:ok, _} = persist_update(src_item, %{inventory_slot: dst_slot})
+            {:ok, _} = Context.Inventory.update_item(src_item, %{inventory_slot: nil})
+            {:ok, _} = Context.Inventory.update_item(dst_item, %{inventory_slot: src_slot})
+            {:ok, _} = Context.Inventory.update_item(src_item, %{inventory_slot: dst_slot})
 
             dst_item.id
 
           nil ->
-            {:ok, _} = persist_update(src_item, %{inventory_slot: dst_slot})
+            {:ok, _} = Context.Inventory.update_item(src_item, %{inventory_slot: dst_slot})
             0
         end
       end)
@@ -523,40 +674,28 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
-  defp sort_tab(state, tab) do
+  defp apply_sort_tab(state, tab) do
     result =
       Repo.transaction(fn ->
-        tab_items = tab_items(state, tab)
-        clear_slots(tab_items)
-        sorted = Enum.sort_by(tab_items, & &1.item_id)
-        assign_slots(sorted)
+        items = tab_items(state, tab)
+        Context.Inventory.clear_slots(Enum.map(items, & &1.id))
+
+        items
+        |> Enum.sort_by(& &1.item_id)
+        |> Enum.with_index()
+        |> Enum.map(fn {item, idx} ->
+          :ok = Context.Inventory.assign_slot(item.id, idx)
+          %{item | inventory_slot: idx}
+        end)
       end)
 
     case result do
       {:ok, sorted} ->
-        apply_sorted_slots(state, sorted)
+        {{:ok, sorted}, apply_sorted_slots(state, sorted)}
 
       error ->
         {error, state}
     end
-  end
-
-  defp clear_slots(tab_items) do
-    Enum.each(tab_items, fn item ->
-      from(i in Schema.Item, where: i.id == ^item.id)
-      |> Repo.update_all(set: [inventory_slot: nil])
-    end)
-  end
-
-  defp assign_slots(sorted) do
-    sorted
-    |> Enum.with_index()
-    |> Enum.map(fn {item, idx} ->
-      from(i in Schema.Item, where: i.id == ^item.id)
-      |> Repo.update_all(set: [inventory_slot: idx])
-
-      %{item | inventory_slot: idx}
-    end)
   end
 
   defp apply_sorted_slots(state, sorted) do
@@ -570,7 +709,7 @@ defmodule Ms2ex.Managers.Inventory do
         end
       end)
 
-    {{:ok, sorted}, %{state | items: items}}
+    %{state | items: items}
   end
 
   defp tab_items(state, tab) do

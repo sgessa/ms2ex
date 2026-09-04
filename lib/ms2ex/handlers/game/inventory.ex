@@ -21,8 +21,8 @@ defmodule Ms2ex.GameHandlers.Inventory do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %Schema.Item{inventory_slot: src_slot} = src_item <-
-           Context.Inventory.get(character, id),
-         {:ok, dst_uid} <- Context.Inventory.swap(src_item, dst_slot) do
+           Managers.Inventory.get(character, id),
+         {:ok, dst_uid} <- Managers.Inventory.swap(src_item, dst_slot) do
       push(session, Packets.InventoryItem.move_item(dst_uid, src_slot, src_item.id, dst_slot))
     end
   end
@@ -33,10 +33,10 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {amount, _packet} = get_int(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %Schema.Item{} = item <- Context.Inventory.get(character, id),
+         %Schema.Item{} = item <- Managers.Inventory.get(character, id),
          true <- :trade in item.transfer_flags,
          true <- :split in item.transfer_flags do
-      consumed_item = Context.Inventory.consume(item, amount)
+      consumed_item = Managers.Inventory.consume(item, amount)
       Context.Field.drop_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)
     end
@@ -47,8 +47,8 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {id, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %Schema.Item{} = item <- Context.Inventory.get(character, id) do
-      update_inventory(session, Context.Inventory.delete(item))
+         %Schema.Item{} = item <- Managers.Inventory.get(character, id) do
+      update_inventory(session, Managers.Inventory.delete(item))
     end
   end
 
@@ -58,7 +58,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
 
     with tab when not is_nil(tab) <- Enums.InventoryTab.get_key(tab),
          {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, items} <- Context.Inventory.sort_tab(character, tab) do
+         {:ok, items} <- Managers.Inventory.sort_tab(character, tab) do
       session
       |> push(Packets.InventoryItem.reset_tab(tab))
       |> push(Packets.InventoryItem.load_items(tab, items, character))
@@ -75,7 +75,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, wallet} <- Context.Wallets.update(character, :merets, meret_price),
          %Schema.InventoryTab{tab: tab, slots: slots} <-
-           Context.Inventory.expand_tab(character, tab) do
+           Managers.Inventory.expand_tab(character, tab) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.InventoryItem.load_tab(tab, slots))

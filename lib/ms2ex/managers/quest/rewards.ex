@@ -13,7 +13,7 @@ defmodule Ms2ex.Managers.Quest.Rewards do
       updates and inventory packets)
   """
 
-  alias Ms2ex.Context.Inventory
+  alias Ms2ex.Managers.Inventory
   alias Ms2ex.Context.Items
   alias Ms2ex.Context.Wallets
   alias Ms2ex.Enums
@@ -50,8 +50,11 @@ defmodule Ms2ex.Managers.Quest.Rewards do
           Items.init(reward_item.id, %{amount: reward_item.amount, rarity: reward_item.rarity})
 
         case Inventory.add_item(character, %{item | metadata: metadata}) do
-          {:ok, result} -> result
-          other -> Repo.rollback({:reward_item_failed, reward_item.id, other})
+          {:ok, result} ->
+            Managers.Quest.notify_item_acquired(character, added_item(result))
+
+          other ->
+            Repo.rollback({:reward_item_failed, reward_item.id, other})
         end
       end)
 
@@ -121,4 +124,8 @@ defmodule Ms2ex.Managers.Quest.Rewards do
       end
     end)
   end
+
+  # the created or updated stack an add result carries (the update_and_create
+  # split carries the created overflow stack last)
+  defp added_item(result), do: elem(result, tuple_size(result) - 1)
 end

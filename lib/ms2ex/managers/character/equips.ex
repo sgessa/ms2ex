@@ -14,9 +14,14 @@ defmodule Ms2ex.Managers.Character.Equips do
 
   alias Ms2ex.Context
   alias Ms2ex.Enums
+  alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
+
+  # looks worn in these slots are discarded when unequipped rather than
+  # returned to the inventory
+  @discard_on_unequip_slots [:HR, :ER, :FA, :FD]
 
   # slots no equip request may target: the none slot, off-hand (off-hand
   # items are equipped into either hand instead), and ears
@@ -33,7 +38,7 @@ defmodule Ms2ex.Managers.Character.Equips do
         # item unequipped from the target slot
         preferred_slot = item.inventory_slot
 
-        case Context.Equips.equip(item, equip_slot) do
+        case Managers.Inventory.equip(item, equip_slot) do
           {:ok, item} ->
             removed = unequip_conflicts(conflicts, equip_slot, preferred_slot)
             {:ok, commit(character, {:equipped, item}, removed)}
@@ -97,7 +102,7 @@ defmodule Ms2ex.Managers.Character.Equips do
       character.level < Map.get(limits, :level, 0) ->
         notify(character, :s_item_err_puton_low_level)
 
-      Context.Inventory.expired?(item) ->
+      Managers.Inventory.expired?(item) ->
         notify(character, :s_item_err_puton_expired)
 
       job_restricted?(character, limits) ->
@@ -117,10 +122,19 @@ defmodule Ms2ex.Managers.Character.Equips do
   # the requested slot must be a slot the item occupies: its primary slot,
   # with either hand valid for off-hand items
   defp requested_slot(item, slot_name) do
-    case Context.Equips.valid_slot?(slot_name) do
-      true -> target_slot(item, String.to_existing_atom(slot_name))
-      false -> :error
+    if valid_slot?(slot_name) do
+      target_slot(item, String.to_existing_atom(slot_name))
+    else
+      :error
     end
+  end
+
+  # validates whether a wire slot name is an equip slot the server knows
+  defp valid_slot?(slot_name) do
+    slot_name = String.to_existing_atom(slot_name)
+    !!Enums.EquipSlot.get_value(slot_name)
+  rescue
+    _ -> false
   end
 
   defp target_slot(_item, slot) when slot in @unreachable_slots, do: :error
@@ -152,7 +166,7 @@ defmodule Ms2ex.Managers.Character.Equips do
       )
 
     if multi_slot?(item) do
-      free_slots = Context.Inventory.free_slot_count(character.id, item.inventory_tab)
+      free_slots = Managers.Inventory.free_slot_count(character.id, item.inventory_tab)
 
       if free_slots + 1 > length(conflicts) do
         {:ok, equip_slot, conflicts}
@@ -175,11 +189,17 @@ defmodule Ms2ex.Managers.Character.Equips do
   # Moves an equipped item out of its slot. Returns `{:ok, {kind, item}}`
   # where the item was either unequipped back to the inventory (`:unequipped`)
   # or discarded as a cosmetic (`:discarded`).
-  defp unequip_item(item, preferred_slot) do
-    case Context.Equips.unequip(item, preferred_slot) do
-      {:ok, item} -> {:ok, {:unequipped, item}}
-      {:discard, item} -> {:ok, {:discarded, item}}
-      {:error, _reason} -> :error
+  defp unequip_item(%Schema.Item{equip_slot: equip_slot} = item, preferred_slot) do
+    if equip_slot in @discard_on_unequip_slots do
+      case Managers.Inventory.delete(item) do
+        {:delete, item} -> {:ok, {:discarded, item}}
+        _error -> :error
+      end
+    else
+      case Managers.Inventory.move_to_inventory(item, preferred_slot) do
+        {:ok, item} -> {:ok, {:unequipped, item}}
+        _error -> :error
+      end
     end
   end
 
@@ -202,7 +222,7 @@ defmodule Ms2ex.Managers.Character.Equips do
   end
 
   defp get_item(character, item_id) do
-    Context.Inventory.get_by(%{character_id: character.id, id: item_id})
+    Managers.Inventory.get(character, item_id)
   end
 
   # refreshes the cached equip list and derived stats once for the whole
@@ -243,7 +263,7 @@ defmodule Ms2ex.Managers.Character.Equips do
   end
 
   defp refresh(character) do
-    equips = Context.Equips.list(character)
+    equips = Managers.Inventory.list_equips(character)
 
     %{character | equips: equips}
     |> Context.CharacterStats.apply()

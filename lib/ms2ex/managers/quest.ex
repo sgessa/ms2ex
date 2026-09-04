@@ -161,6 +161,18 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   @doc """
+  Updates the acquisition-driven conditions (`item_add`, `item_exist`) for
+  an item a flow granted to a character; pushed for every successful
+  inventory insert/stack so progress tracks amount.
+  """
+  def notify_item_acquired(character, item) do
+    amount = Map.get(item, :amount, 0)
+
+    update_conditions(character.id, :item_add, amount, "", 0, "", item.item_id)
+    update_conditions(character.id, :item_exist, amount, "", 0, "", item.item_id)
+  end
+
+  @doc """
   Stops the quest manager. Quest progress is written through on every
   mutation, so a plain stop loses nothing.
   """
@@ -428,7 +440,7 @@ defmodule Ms2ex.Managers.Quest do
     transaction =
       Repo.transaction(fn ->
         with {:ok, consume_results} <-
-               Context.Inventory.consume_item_amounts(character, consumables),
+               Managers.Inventory.consume_item_amounts(character, consumables),
              {:ok, updated_quest} <- Managers.Quest.State.complete_quest(quest),
              {:ok, results} <- Managers.Quest.Rewards.grant_items(character, rewards) do
           {updated_quest, consume_results, results}
