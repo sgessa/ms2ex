@@ -98,6 +98,30 @@ The Tile (0x6) mode, tied to tile skills, is still unimplemented.
 
 ## P3 — Client parity & serialization
 
+### 22. Insignia condition types — [Partial]
+
+The name tag symbol is complete against the reference: the id is validated
+against `nametagsymbol.xml`, persisted, its buff swapped on change, and the
+display flag broadcast and written into the field-add-user payload. Six of
+the twelve condition types are evaluated (`title`, `level`, `enchant`,
+`trophy_point`, `adventure_level`, `vip`).
+
+What is still missing:
+
+- **`burning` and `survival_level`** never display (one insignia each in
+  `nametagsymbol.xml`). The reference does not implement them either — it
+  logs "Unhandled insignia condition type" — and each needs a system ms2ex
+  has no model for: burning-event characters and Maple Survival levels.
+  `tencentvip`, `gm` and `tgp` exist in the enum but no insignia uses them
+- **conditions are only evaluated when the insignia is equipped**, so a
+  symbol keeps showing after its condition lapses (premium expiring, the
+  enchanted gear coming off, a level reset). The reference has the same
+  behaviour; a re-check on the events that can invalidate a condition would
+  need a hook per condition type
+- **the thresholds are hardcoded** (level 50, 1000 trophy points, prestige
+  100, 12 enchants / rarity > 3), matching the reference. Only `title` reads
+  the table's `code` column, so the rest cannot be retuned from metadata
+
 ### 19. Housing & UGC cube system — [Open]
 
 The cube packet surface is almost entirely unimplemented: `RequestCube`

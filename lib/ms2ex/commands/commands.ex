@@ -81,6 +81,22 @@ defmodule Ms2ex.Commands do
     end
   end
 
+  # grants the insignia regardless of the condition it is normally gated on
+  def handle(["insignia", insignia_id], character, session) do
+    with {insignia_id, ""} <- Integer.parse(insignia_id),
+         {:ok, character, display} <-
+           Context.Insignias.equip(character, insignia_id, force: true) do
+      Context.Field.broadcast(
+        character,
+        Packets.Insignia.update(character, insignia_id, display)
+      )
+
+      session
+    else
+      _ -> push_notice(session, character, "Invalid Insignia: #{insignia_id}")
+    end
+  end
+
   def handle(["statpoint", raw_amount], character, session) do
     case Integer.parse(raw_amount) do
       {amount, ""} when amount > 0 ->
