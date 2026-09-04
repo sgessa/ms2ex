@@ -15,6 +15,7 @@ defmodule Ms2ex.Context.Field do
   alias Ms2ex.Managers
   alias Ms2ex.Types
 
+  alias Ms2ex.Types.FieldInstrument
   alias Ms2ex.Types.FieldNpc
   alias Phoenix.PubSub
 
@@ -201,6 +202,96 @@ defmodule Ms2ex.Context.Field do
   @spec add_object(Schema.Character.t(), map()) :: {:ok, integer()} | {:error, atom()}
   def add_object(%Schema.Character{} = character, object) do
     call(character.field_pid, {:add_object, object.object_type, object})
+  end
+
+  @doc """
+  Spawns the instrument a character is playing, assigning it a field object
+  id.
+
+  ## Examples
+
+      iex> add_instrument(character, instrument)
+      {:ok, %FieldInstrument{}}
+  """
+  @spec add_instrument(Schema.Character.t(), FieldInstrument.t()) ::
+          {:ok, FieldInstrument.t()} | :error
+  def add_instrument(%Schema.Character{} = character, %FieldInstrument{} = instrument) do
+    call(character.field_pid, {:add_instrument, instrument})
+  end
+
+  @doc """
+  Looks up the instrument a character is currently playing.
+
+  ## Examples
+
+      iex> lookup_instrument(character)
+      {:ok, %FieldInstrument{}}
+  """
+  @spec lookup_instrument(Schema.Character.t()) :: {:ok, FieldInstrument.t()} | :error
+  def lookup_instrument(%Schema.Character{} = character) do
+    call(character.field_pid, {:lookup_instrument, character.id})
+  end
+
+  @doc """
+  Despawns a character's instrument, returning it so callers can announce the
+  stop.
+
+  ## Examples
+
+      iex> remove_instrument(character)
+      {:ok, %FieldInstrument{}}
+  """
+  @spec remove_instrument(Schema.Character.t()) :: {:ok, FieldInstrument.t()} | :error
+  def remove_instrument(%Schema.Character{} = character) do
+    call(character.field_pid, {:remove_instrument, character.id})
+  end
+
+  @doc """
+  Whether the character currently has the given effect active, whoever cast
+  it.
+
+  ## Examples
+
+      iex> has_buff?(character, 100_000_013)
+      true
+  """
+  @spec has_buff?(Schema.Character.t(), integer()) :: boolean()
+  def has_buff?(%Schema.Character{} = character, effect_id) do
+    call(character.field_pid, {:has_buff?, character.object_id, effect_id}) == true
+  end
+
+  @doc """
+  Whether the character's field has a performance stage (the concert map).
+  """
+  @spec performance_stage?(Schema.Character.t()) :: boolean()
+  def performance_stage?(%Schema.Character{} = character) do
+    call(character.field_pid, :performance_stage?) == true
+  end
+
+  @doc """
+  Claims the performance stage for the character, announcing the concert to
+  everyone on the map.
+  """
+  @spec start_performance(Schema.Character.t()) :: :ok | :error
+  def start_performance(%Schema.Character{} = character) do
+    cast(character.field_pid, {:start_performance, character})
+  end
+
+  @doc """
+  Releases the performance stage; ignored when the character is not the
+  current performer.
+  """
+  @spec end_performance(Schema.Character.t()) :: :ok | :error
+  def end_performance(%Schema.Character{} = character) do
+    cast(character.field_pid, {:end_performance, character.id})
+  end
+
+  @doc """
+  Moves the character on or off the concert stage.
+  """
+  @spec toggle_stage(Schema.Character.t()) :: :ok | :error
+  def toggle_stage(%Schema.Character{} = character) do
+    cast(character.field_pid, {:toggle_stage, character})
   end
 
   @doc """

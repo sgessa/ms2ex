@@ -209,6 +209,18 @@ defmodule Ms2ex.Context.Achievements do
     end
   end
 
+  defp deliver_reward(character, %{type: :dynamicaction, code: emote_id}) do
+    case Ms2ex.Context.Emotes.learn(character, emote_id) do
+      {:ok, _emote} ->
+        Ms2ex.Net.SenderSession.push(character, Packets.Emote.learn(emote_id))
+        :ok
+
+      # already known; the grade still counts as claimed
+      {:error, _changeset} ->
+        :ok
+    end
+  end
+
   defp deliver_reward(_character, _reward), do: :ok
 
   defp claim_pending_rewards(character, achievement, metadata) do

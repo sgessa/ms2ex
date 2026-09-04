@@ -8,8 +8,6 @@ test_bag = [
   {:mount, 50_600_001},
   {:mount, 50_600_002},
   # gear
-  # {:gear, 11_300_000},        # male base skin — not a real item, the client rejects it
-  # {:gear, 11_600_034},        # skin gloves (lands in the outfit tab)
   {:gear, 11_800_001},
   {:gear, 12_000_001},
   # spare weapons (wizard staff / thief dagger)
