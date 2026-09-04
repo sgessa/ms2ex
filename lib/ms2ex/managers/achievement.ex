@@ -22,11 +22,16 @@ defmodule Ms2ex.Managers.Achievement do
   # documents; metadata is read from the storage cache at point of use.
 
   def start(%Schema.Character{id: id} = character) do
-    case GenServer.start(__MODULE__, character, name: process_name(id)) do
+    case Managers.ManagerSupervisor.start_child(__MODULE__, character, process_name(id)) do
       {:ok, _pid} -> :ok
       {:error, {:already_started, _pid}} -> :ok
       error -> error
     end
+  end
+
+  @doc false
+  def start_link(%Schema.Character{} = character) do
+    GenServer.start_link(__MODULE__, character, name: process_name(character.id))
   end
 
   def stop(%Schema.Character{id: id}), do: stop(id)
@@ -34,7 +39,7 @@ defmodule Ms2ex.Managers.Achievement do
   def stop(id) when is_integer(id) do
     case Process.whereis(process_name(id)) do
       nil -> :ok
-      pid -> GenServer.stop(pid)
+      pid -> Managers.ManagerSupervisor.terminate_child(pid)
     end
   end
 
@@ -92,6 +97,10 @@ defmodule Ms2ex.Managers.Achievement do
 
   @impl true
   def init(%Schema.Character{} = character) do
+    # deferred writes are flushed in terminate, which only runs on the
+    # teardown shutdown signal when exits are trapped
+    Process.flag(:trap_exit, true)
+
     achievements =
       [character.account_id, character.id]
       |> Enum.uniq()

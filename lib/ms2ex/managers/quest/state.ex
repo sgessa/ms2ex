@@ -63,7 +63,8 @@ defmodule Ms2ex.Managers.Quest.State do
     attrs = %{
       state: :completed,
       end_time: now,
-      completion_count: quest.completion_count + 1
+      completion_count: quest.completion_count + 1,
+      conditions: quest.conditions
     }
 
     Context.Quests.update_quest(quest, attrs)

@@ -3,23 +3,6 @@ defmodule Ms2ex.Application do
 
   use Application
 
-  # Runs before the supervision tree shuts down, while the ad-hoc
-  # per-character managers are still alive (they are not supervised, so
-  # they would otherwise be killed without their terminate callback ever
-  # running). Stopping them flushes the achievement/quest progress that is
-  # held in memory between periodic flushes.
-  def prep_stop(_state) do
-    for name <- :erlang.registered(),
-        prefix = Atom.to_string(name),
-        String.starts_with?(prefix, ["achievements:", "quest_manager:"]) do
-      pid = Process.whereis(name)
-
-      if pid != nil and Process.alive?(pid) do
-        GenServer.stop(pid, :shutdown, 5_000)
-      end
-    end
-  end
-
   def start(_type, _args) do
     :ets.new(:metadata, [:named_table, :set, :public, read_concurrency: true])
     Ms2ex.Context.WorldGraph.store()
@@ -39,6 +22,7 @@ defmodule Ms2ex.Application do
         # Start Oban (job queue + daily reset crontab)
         {Oban, oban_config()},
         # Start Managers
+        Ms2ex.Managers.ManagerSupervisor,
         Ms2ex.Managers.GlobalCounter,
         {Ms2ex.Managers.PartyManager, [name: Ms2ex.Managers.PartyManager]},
         {Ms2ex.Managers.Session, [name: Ms2ex.Managers.Session]}

@@ -72,11 +72,24 @@ defmodule Ms2ex.QuestManagerTest do
 
     {:ok, char_pid} = Managers.Character.start(character)
     :ok = Managers.Inventory.start(character)
-    {:ok, quest_pid} = Managers.Quest.start_link(character.id)
+    {:ok, quest_pid} = Managers.Quest.start(character.id)
 
     on_exit(fn ->
-      if Process.alive?(quest_pid), do: GenServer.stop(quest_pid)
-      if Process.alive?(char_pid), do: GenServer.stop(char_pid)
+      # the managers outlive the test process (the supervisor owns them
+      # now), so their teardown runs after the test's sandbox checkout is
+      # gone: check out a connection here and grant it to the live
+      # managers so the quest manager's terminate flush can write
+      Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+
+      Enum.each([quest_pid, char_pid], fn pid ->
+        if Process.alive?(pid) do
+          Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
+          GenServer.stop(pid)
+        end
+      end)
+
+      Managers.Inventory.stop(character.id)
+      Ecto.Adapters.SQL.Sandbox.checkin(Repo)
     end)
 
     %{character: character}
@@ -134,11 +147,16 @@ defmodule Ms2ex.QuestManagerTest do
 
     assert %Schema.CharacterQuest{state: :completed} =
              Repo.get_by(Schema.CharacterQuest, %{owner_id: character.id, quest_id: @quest_id})
+
+    # stop inside the test body: the deferred counters must flush while
+    # the sandbox transaction is still open (on_exit runs after the
+    # rollback)
+    :ok = Managers.Quest.stop(character.id)
   end
 
-  # server shutdown stops the manager, whose terminate flushes pending
-  # condition counters; the state snapshot + direct terminate call mirrors
-  # that path
+  # the stop path is the teardown path: the manager supervisor delivers
+  # the shutdown exit signal, the trapped exit runs terminate, and the
+  # pending counters land in the database
   test "stopping the manager flushes pending counters", %{character: character} do
     Managers.Quest.update_conditions(character.id, :map, 1, "", 0, "", 2_000_062)
 
@@ -147,10 +165,7 @@ defmodule Ms2ex.QuestManagerTest do
       assert character_quests[@quest_id].conditions[0].counter == 1
     end)
 
-    pid = Process.whereis(:"quest_manager:#{character.id}")
-    state = :sys.get_state(pid)
-    GenServer.stop(pid, :normal)
-    Managers.Quest.terminate(:shutdown, state)
+    :ok = Managers.Quest.stop(character.id)
 
     assert %{"0" => 1} = quest_conditions(character.id)
   end

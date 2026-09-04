@@ -429,10 +429,12 @@ combat-heavy characters from accumulating document copies.
   flushed on demand and on stop) — ordinary gameplay events (kills,
   movement, pickups) no longer write one UPDATE per matching quest per
   event. Quest transitions that own their persistence (start, complete,
-  abandon, expire) still write through. Application stop flushes every
-  live deferred manager before the supervision tree shuts down
-  (`Application.prep_stop/2` stops the ad-hoc per-character managers, whose
-  terminate callback writes the pending batch)
+  abandon, expire) still write through. The per-character managers
+  (character, inventory, quest, achievement) live under a dynamic
+  supervisor (`Ms2ex.Managers.ManagerSupervisor`), so the application
+  teardown shuts every live one down instead of killing it silently —
+  the quest and achievement managers trap the shutdown signal and flush
+  their pending batches from their terminate callback
 - Auto-start gating: quests carrying an event tag never start on their own
   (event content starts only through a matching server event, and stale
   event quests would otherwise be auto-started at login and immediately

@@ -3,6 +3,7 @@ defmodule Ms2ex.Managers.Inventory do
   use Ms2ex.Managers.Managed, prefix: "inventories", key: :character_id
 
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -17,11 +18,16 @@ defmodule Ms2ex.Managers.Inventory do
   # it.
 
   def start(%Schema.Character{id: id} = character) do
-    case GenServer.start(__MODULE__, character, name: process_name(id)) do
+    case Managers.ManagerSupervisor.start_child(__MODULE__, character, process_name(id)) do
       {:ok, _pid} -> :ok
       {:error, {:already_started, _pid}} -> :ok
       error -> error
     end
+  end
+
+  @doc false
+  def start_link(%Schema.Character{} = character) do
+    GenServer.start_link(__MODULE__, character, name: process_name(character.id))
   end
 
   def stop(%Schema.Character{id: id}), do: stop(id)
@@ -29,7 +35,7 @@ defmodule Ms2ex.Managers.Inventory do
   def stop(id) when is_integer(id) do
     case Process.whereis(process_name(id)) do
       nil -> :ok
-      pid -> GenServer.stop(pid)
+      pid -> Managers.ManagerSupervisor.terminate_child(pid)
     end
   end
 
