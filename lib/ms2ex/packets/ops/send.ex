@@ -84,6 +84,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x80 => "PROXY_GAME_OBJ",
     0x82 => "TAXI",
     0x86 => "WORLD_MAP",
+    0x8B => "GUIDE_RECORD",
     0x8D => "GROUP_CHAT",
     0x98 => "DISMANTLE",
     0xAA => "USER_ENV",

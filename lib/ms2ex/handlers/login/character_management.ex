@@ -4,6 +4,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.Packets
   alias Ms2ex.Repo
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
   alias Ms2ex.Managers.Session
   alias Ms2ex.Types
   alias Ms2ex.Enums
@@ -70,7 +71,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     attrs = %{
       gender: gender,
       job: Enums.Job.get_key(job_code),
-      map_id: 2_000_023,
+      map_id: start_field(job_code),
       name: name,
       skin_color: skin_color
     }
@@ -98,6 +99,17 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
 
       _error ->
         push(session, Packets.CharacterCreate.name_taken())
+    end
+  end
+
+  # new characters begin on their job's tutorial start field; the fallback
+  # covers projections without the tutorial block
+  defp start_field(job_code) do
+    job_code
+    |> Storage.Tables.Jobs.tutorial()
+    |> case do
+      %{start_field: field} when is_integer(field) and field > 0 -> field
+      _ -> 2_000_023
     end
   end
 

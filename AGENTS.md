@@ -38,6 +38,8 @@ host runs):
   references an effect id (attack skills, skills, tick_skills, dot.buff,
   modify_overlap)
 - `--probe-ticks` — skills whose effects tick
+- `--probe-trigger <folder>` — raw trigger-script XMLs under
+  `trigger/<folder>/` (the map's xblock name, e.g. `52000065_qd`)
 
 ## Elixir style
 

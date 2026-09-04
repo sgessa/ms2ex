@@ -6,6 +6,7 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Context
   alias Ms2ex.Packets
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   alias Ms2ex.Types.FieldNpc
   alias Ms2ex.Types.Npc
@@ -84,6 +85,9 @@ defmodule Ms2ex.Managers.Field do
       instruments: %{},
       items: %{},
       map_id: map_id,
+      mob_gates: Storage.Maps.get_mob_gates(map_id),
+      opened_gates: MapSet.new(),
+      hidden_meshes: [],
       mounts: %{},
       npcs: %{},
       npc_spawns: %{},

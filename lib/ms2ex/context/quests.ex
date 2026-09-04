@@ -136,14 +136,23 @@ defmodule Ms2ex.Context.Quests do
 
   defp hydrate_conditions(_conditions, _metadata), do: %{}
 
+  # Persisted rows hold counters keyed by condition index; rows written
+  # before the counters-only format stored the whole condition — dig the
+  # counter out of either shape.
   defp load_counter(conditions, index) do
-    Map.get(conditions, index) ||
-      Map.get(conditions, Integer.to_string(index)) ||
-      get_in(conditions, [index, :counter]) ||
-      get_in(conditions, [index, "counter"]) ||
-      get_in(conditions, [Integer.to_string(index), :counter]) ||
-      get_in(conditions, [Integer.to_string(index), "counter"]) || 0
+    conditions
+    |> Map.get(index)
+    |> Kernel.||(Map.get(conditions, Integer.to_string(index)))
+    |> counter_value()
   end
+
+  defp counter_value(counter) when is_integer(counter), do: counter
+
+  defp counter_value(full) when is_map(full) do
+    Map.get(full, :counter) || Map.get(full, "counter") || 0
+  end
+
+  defp counter_value(_), do: 0
 
   defp normalize_attrs(attrs) do
     case Map.fetch(attrs, :conditions) do

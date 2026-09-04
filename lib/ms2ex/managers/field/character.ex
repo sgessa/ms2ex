@@ -62,8 +62,9 @@ defmodule Ms2ex.Managers.Field.Character do
       push(character, Packets.FieldAddItem.add_item(item))
     end
 
-    # trigger/ui state finalizes before the player stats load
-    push(character, Packets.Trigger.load())
+    # trigger/ui state finalizes before the player stats load; meshes
+    # already dropped by opened gates join as hidden
+    push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, [])))
     push(character, Packets.FieldProperty.load(Field.PerformanceStage.properties(state)))
 
     # Load Emotes and Player Stats after Player Object is loaded

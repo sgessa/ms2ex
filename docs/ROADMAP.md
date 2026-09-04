@@ -54,7 +54,12 @@ Mob spawn points now run spawn cycles from the field tick loop: the initial
 population spawns on the first due cycle, mob deaths schedule the next cycle
 (full wipe → `regen_check_time` cooldown, partial kill → 2× cooldown while no
 cycle is pending), and every due cycle refills the population to full.
-Zero-cooldown spawns never refill. What is still missing:
+Zero-cooldown spawns never refill. Mob bodies now stay for their `dead.time`
+window before removal. Monster gates are data-driven from the map's trigger
+script (ingested as `mob_gates`): when the last mob of a gated spawn point
+dies, the blocking trigger meshes drop (update packets broadcast, the gate
+stays latched open across respawns, late joiners load the meshes hidden) and
+the gate's guide event fires. What is still missing:
 
 - pet spawn rolls for mob spawns (`pet_population` / `pet_spawn_rate`) — the
   metadata is not projected by the ingest yet
@@ -63,6 +68,9 @@ Zero-cooldown spawns never refill. What is still missing:
 - friendly NPC spawn points are still spawned eagerly at field load; their
   trigger-driven creation and `regen_check_time` top-up checks are not
   implemented
+- a general trigger-script runtime (states, conditions, cinematic/movie
+  actions, per-job portal enables) — only the monster-gate pattern is
+  projected and replayed today
 
 ---
 
@@ -162,6 +170,31 @@ full (no mail system yet), spirit/stamina orbs, and the transcendence
 crystal special case. Some boxes have no drop-table content in this
 client's data (e.g. the welcome pack 20300002) — those refuse to open,
 matching the reference.
+
+### 22. Character tutorial — [Partial]
+
+New characters spawn on their job's tutorial start field (from the job
+table projection instead of a hardcoded map), the client's
+`REQUEST_TUTORIAL_ITEM` request grants the job's starter items
+idempotently (level-1 characters on the start field only, topping up
+what they do not already hold), walking out of the start field at
+level 1 grants the tutorial reward items and unlocks the tutorial's maps
+and taxis (persisted, with taxi-discover packets), and the tutorial skip
+item teleports to the skip destination when used on the start field. Guide
+pop-up progress (`GuideRecord`) is persisted per character and replayed to
+the client on field enter. The final barrier guarding the exit is a monster
+gate: killing the guard dummy drops the steel-barrier meshes (with the
+guide event that moves the tutorial ui to its last step), opening the way
+to the exit portal.
+
+The newer-class tutorials (runeblade 63000006-chain, striker
+63000015-chain, soulbinder 63000035-chain) are scripted quest campaigns
+(walk-and-talk states, movies, npc choreography, quest-state gates —
+e.g. striker's `63000015_cs/intro01.xml` has 37 states around quest
+90000430) and do not run: they need a trigger-script runtime (states,
+box/user/quest detection conditions, cinematic ui and movie actions,
+npc movement). Until then those characters skip via the job's skip item
+(`!item 15500095` for a striker, then use it on the start field).
 
 ### 7. Join-flow packet audit — [Open]
 
@@ -453,7 +486,10 @@ combat-heavy characters from accumulating document copies.
   flushed on demand and on stop) — ordinary gameplay events (kills,
   movement, pickups) no longer write one UPDATE per matching quest per
   event. Quest transitions that own their persistence (start, complete,
-  abandon, expire) still write through
+  abandon, expire) still write through. Application stop flushes every
+  live deferred manager before the supervision tree shuts down
+  (`Application.prep_stop/2` stops the ad-hoc per-character managers, whose
+  terminate callback writes the pending batch)
 - Auto-start gating: quests carrying an event tag never start on their own
   (event content starts only through a matching server event, and stale
   event quests would otherwise be auto-started at login and immediately

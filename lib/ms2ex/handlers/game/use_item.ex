@@ -4,6 +4,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
   alias Ms2ex.GameHandlers.Helper.ItemBox
   alias Ms2ex.Packets
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -14,14 +15,51 @@ defmodule Ms2ex.GameHandlers.UseItem do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          %Schema.Item{} = item <- Managers.Inventory.get(character, item_uid),
          item <- Context.Items.load_metadata(item) do
-      case item.metadata.function_name do
-        "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
-        "AddAdditionalEffect" -> add_additional_effect(session, character, item)
-        "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
-        "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
-        "SelectItemBox" -> select_box(session, character, item, packet)
-        _ -> session
+      case maybe_skip_tutorial(session, character, item) do
+        :skipped ->
+          session
+
+        :continue ->
+          dispatch_item_use(session, character, item, packet)
       end
+    end
+  end
+
+  # the job tutorial's skip item teleports a character standing on the
+  # tutorial's start field straight to the skip destination
+  defp maybe_skip_tutorial(session, character, item) do
+    tutorial = Storage.Tables.Jobs.tutorial(character.job)
+
+    with %{skip_item: skip_item, skip_field: skip_field, start_field: start_field}
+         when skip_item > 0 and skip_field > 0 <- tutorial,
+         true <- item.item_id == skip_item,
+         true <- character.map_id == start_field do
+      spawn_point = Storage.Maps.get_spawn(skip_field)
+      consumed_item = Managers.Inventory.consume(item)
+
+      push(session, Packets.InventoryItem.consume(consumed_item))
+
+      Context.Field.change_field(
+        character,
+        skip_field,
+        spawn_point.position,
+        spawn_point.rotation
+      )
+
+      :skipped
+    else
+      _ -> :continue
+    end
+  end
+
+  defp dispatch_item_use(session, character, item, packet) do
+    case item.metadata.function_name do
+      "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
+      "AddAdditionalEffect" -> add_additional_effect(session, character, item)
+      "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
+      "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
+      "SelectItemBox" -> select_box(session, character, item, packet)
+      _ -> session
     end
   end
 
