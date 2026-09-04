@@ -518,6 +518,17 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   @doc """
+  Removes a single effect from an actor, whoever cast it.
+  """
+  def remove_owner_effect(owner_object_id, effect_id, state) do
+    state.buffs
+    |> Enum.filter(fn {{owner_id, effect, _caster_id}, _buff_id} ->
+      owner_id == owner_object_id and effect == effect_id
+    end)
+    |> Enum.reduce(state, fn {_key, buff_id}, state -> remove_buff(buff_id, state, true) end)
+  end
+
+  @doc """
   Stores the character's still-running buffs so they can be restored on the
   next field they enter, including after a relog.
   """

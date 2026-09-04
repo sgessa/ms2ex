@@ -261,6 +261,19 @@ defmodule Ms2ex.Context.Field do
   end
 
   @doc """
+  Removes a single effect from the character, whoever cast it.
+
+  ## Examples
+
+      iex> remove_effect_buff(character, 70_000_086)
+      :ok
+  """
+  @spec remove_effect_buff(Schema.Character.t(), integer()) :: :ok | :error
+  def remove_effect_buff(%Schema.Character{} = character, effect_id) do
+    call(character.field_pid, {:remove_effect_buff, character.object_id, effect_id})
+  end
+
+  @doc """
   Whether the character's field has a performance stage (the concert map).
   """
   @spec performance_stage?(Schema.Character.t()) :: boolean()

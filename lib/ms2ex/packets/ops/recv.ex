@@ -34,6 +34,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x39 => "UGC",
     0x3B => "KEY_TABLE",
     0x3C => "REQUEST_CHANGE_CHANNEL",
+    0x3E => "MY_INFO",
     0x41 => "RIDE",
     0x42 => "RIDE_SYNC",
     0x47 => "ACHIEVEMENT",

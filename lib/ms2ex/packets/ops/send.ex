@@ -89,6 +89,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xAA => "USER_ENV",
     0xA9 => "DYNAMIC_CHANNEL",
     0xA8 => "DEAD_USER",
+    0xB0 => "MY_INFO",
     0xB3 => "INSIGNIA",
     0xB5 => "BANNER_LIST",
     0xB9 => "HOME_COMMAND",
