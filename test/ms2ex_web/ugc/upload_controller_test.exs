@@ -169,5 +169,22 @@ defmodule Ms2exWeb.Ugc.UploadControllerTest do
       assert Context.Ugc.get(resource.id).path == "item/ms2/01/11050001/#{resource.id}.m2u"
       assert File.exists?(Path.join([dir, "items", "11050001", "#{resource.id}.m2u"]))
     end
+
+    test "stores an item icon through its item resource", %{conn: conn, dir: dir} do
+      character = character()
+      {:ok, resource} = Context.Ugc.create(character.id, :item)
+
+      body =
+        envelope(:item_icon,
+          character_id: character.id,
+          resource_id: resource.id,
+          id: 11_050_001
+        )
+
+      conn = post_upload(conn, body)
+
+      assert conn.resp_body == "0,itemicon/ms2/01/11050001/#{resource.id}.png"
+      assert File.exists?(Path.join([dir, "itemicon", "11050001", "#{resource.id}.png"]))
+    end
   end
 end

@@ -51,7 +51,7 @@ defmodule Ms2ex.Packets.PacketWriter do
   end
 
   def put_ecto_enum(packet, type, atom) do
-    int = Keyword.get(type.__enum_map__(), atom)
+    int = type.get_value(atom)
     put_byte(packet, int)
   end
 

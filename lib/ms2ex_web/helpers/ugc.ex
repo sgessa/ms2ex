@@ -82,12 +82,13 @@ defmodule Ms2exWeb.Helpers.Ugc do
       nil ->
         {:error, :not_found}
 
-      %{character_id: ^character_id, type: ^type} = resource ->
-        {:ok, resource}
-
-      _resource ->
-        Logger.warning("Character #{character_id} may not write UGC resource #{resource_id}")
-        {:error, :forbidden}
+      resource ->
+        if resource.character_id == character_id and resource_type_matches?(resource.type, type) do
+          {:ok, resource}
+        else
+          Logger.warning("Character #{character_id} may not write UGC resource #{resource_id}")
+          {:error, :forbidden}
+        end
     end
   end
 
@@ -172,6 +173,11 @@ defmodule Ms2exWeb.Helpers.Ugc do
       _ -> {:error, :invalid_path}
     end
   end
+
+  defp resource_type_matches?(type, type), do: true
+  defp resource_type_matches?(:item, :item_icon), do: true
+  defp resource_type_matches?(:layout_blueprint, :blueprint_icon), do: true
+  defp resource_type_matches?(_, _), do: false
 
   # Only the file name may carry a dot; every other segment is a bare id.
   defp resolve(segments) do
