@@ -1,4 +1,5 @@
 defmodule Ms2ex.Packets.InventoryItem do
+  alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -215,12 +216,24 @@ defmodule Ms2ex.Packets.InventoryItem do
       |> Types.ItemColor.put_item_color(item.color)
       |> put_int(item.appearance_flag)
 
-    case item.equip_slot do
+    case primary_slot(item) do
       # caps carry four positions and an unknown float after the color block
       :CP -> put_bytes(packet, String.duplicate(<<0x0>>, 13 * 4))
       :FD -> put_bytes(packet, item.data)
       :HR -> Types.Hair.put_hair(packet, item.data)
       _ -> packet
+    end
+  end
+
+  # the appearance block follows the item's primary equip slot from its
+  # metadata, whether the item is equipped or resting in the bag (bag rows
+  # carry no metadata; it is read from the storage cache)
+  defp primary_slot(%{metadata: %{slots: [slot | _]}}), do: slot
+
+  defp primary_slot(%Schema.Item{} = item) do
+    case Context.Items.load_metadata(item) do
+      %{metadata: %{slots: [slot | _]}} -> slot
+      _ -> item.equip_slot
     end
   end
 
