@@ -79,7 +79,7 @@ defmodule Ms2ex.Context.Field do
   @spec attach_banner(Schema.Character.t(), integer(), [integer()], map()) ::
           {:ok, map()} | :error
   def attach_banner(%Schema.Character{} = character, banner_id, slot_ids, ugc) do
-    call(character.field_pid, {:attach_banner, banner_id, slot_ids, ugc})
+    call(character.field_pid, {:attach_banner, character, banner_id, slot_ids, ugc})
   end
 
   @spec confirm_banner(Schema.Character.t(), integer(), String.t()) :: {:ok, map()} | :error

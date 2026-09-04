@@ -98,8 +98,8 @@ defmodule Ms2ex.Managers.Field do
   defp expired?(%{ends_at: %DateTime{} = ends_at}, now), do: DateTime.compare(now, ends_at) != :lt
   defp expired?(_slot, _now), do: false
 
-  defp attach_banner(banner, slot_ids, ugc) do
-    with true <- Enum.all?(slot_ids, &slot_exists?(banner.slots, &1)) do
+  defp attach_banner(banner, character, slot_ids, ugc) do
+    with true <- Enum.all?(slot_ids, &attachable_slot?(banner.slots, character.id, &1)) do
       {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_ugc(&1, slot_ids, ugc))}}
     end
   end
@@ -110,7 +110,10 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  defp slot_exists?(slots, id), do: Enum.any?(slots, &(&1.id == id))
+  defp attachable_slot?(slots, character_id, id) do
+    Enum.any?(slots, &(&1.id == id and &1.character_id == character_id and is_nil(&1.ugc)))
+  end
+
   defp slot_resource?(slot, resource_id), do: get_in(slot, [:ugc, :id]) == resource_id
 
   defp put_slot_ugc(slot, ids, ugc) do
@@ -239,9 +242,9 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  def handle_call({:attach_banner, banner_id, slot_ids, ugc}, _from, state) do
+  def handle_call({:attach_banner, character, banner_id, slot_ids, ugc}, _from, state) do
     with {:ok, banner} <- Map.fetch(state.banners, banner_id),
-         {:ok, banner} <- attach_banner(banner, slot_ids, ugc),
+         {:ok, banner} <- attach_banner(banner, character, slot_ids, ugc),
          {_count, _slots} <- Ms2ex.Context.BannerSlots.attach(slot_ids, ugc) do
       {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
     else
