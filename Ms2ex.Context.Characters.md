@@ -11,6 +11,8 @@
 
 # `get_by`
 
+# `learn_title`
+
 # `list`
 
 # `list_titles`

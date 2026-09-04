@@ -38,6 +38,10 @@ travel?" prompt from quest dialogues).
 Removes the given quests from the character (expiration sweep from the
 client) and drops their persisted rows.
 
+# `flush`
+
+Persists every pending condition-counter change.
+
 # `get_all_quests`
 
 Get all quests for a character, including both character-specific and account quests.
@@ -84,8 +88,8 @@ Starts a quest manager for a character.
 
 # `stop`
 
-Stops the quest manager. Quest progress is written through on every
-mutation, so a plain stop loses nothing.
+Stops the quest manager. Quest transitions write through, and pending
+condition-counter changes are flushed on stop, so nothing is lost.
 
 # `update_conditions`
 

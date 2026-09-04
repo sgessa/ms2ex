@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-35D8E775.js"></script>
+    <script defer src="dist/sidebar_items-36DC9002.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -206,6 +206,16 @@ client) and drops their persisted rows.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#flush/1" data-no-tooltip="" translate="no">flush(character_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Persists every pending condition-counter change.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get_all_quests/1" data-no-tooltip="" translate="no">get_all_quests(character_id)</a>
 
       </div>
@@ -303,8 +313,8 @@ inventory insert/stack so progress tracks amount.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Stops the quest manager. Quest progress is written through on every
-mutation, so a plain stop loses nothing.</p></div>
+        <div class="summary-synopsis"><p>Stops the quest manager. Quest transitions write through, and pending
+condition-counter changes are flushed on stop, so nothing is lost.</p></div>
 
     </div>
 
@@ -352,7 +362,7 @@ mutation, so a plain stop loses nothing.</p></div>
       <h1 class="signature" translate="no">abandon(quest_id, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L83" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L85" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -374,7 +384,7 @@ mutation, so a plain stop loses nothing.</p></div>
       <h1 class="signature" translate="no">can_complete?(character_id, quest_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L150" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L152" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -396,7 +406,7 @@ mutation, so a plain stop loses nothing.</p></div>
       <h1 class="signature" translate="no">can_start?(character_id, quest_metadata)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L143" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L145" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -440,7 +450,7 @@ mutation, so a plain stop loses nothing.</p></div>
       <h1 class="signature" translate="no">complete(quest_id, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L76" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L78" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -462,7 +472,7 @@ mutation, so a plain stop loses nothing.</p></div>
       <h1 class="signature" translate="no">dispatch(character_id, quest_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L125" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L127" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -485,7 +495,7 @@ travel?&quot; prompt from quest dialogues).</p>
       <h1 class="signature" translate="no">expire_quests(character_id, quest_ids)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L110" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L112" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -498,6 +508,28 @@ travel?&quot; prompt from quest dialogues).</p>
 client) and drops their persisted rows.</p>
   </section>
 </section>
+<section class="detail" id="flush/1">
+
+  <div class="detail-header">
+    <a href="#flush/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">flush(character_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L207" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Persists every pending condition-counter change.</p>
+  </section>
+</section>
 <section class="detail" id="get_all_quests/1">
 
   <div class="detail-header">
@@ -508,7 +540,7 @@ client) and drops their persisted rows.</p>
       <h1 class="signature" translate="no">get_all_quests(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L53" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -531,7 +563,7 @@ Returns a tuple of {account_quests, character_quests}.</p>
       <h1 class="signature" translate="no">get_available_quests(character_id, npc_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L157" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L159" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -553,7 +585,7 @@ Returns a tuple of {account_quests, character_quests}.</p>
       <h1 class="signature" translate="no">get_quest(character_id, quest_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L58" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L60" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -575,7 +607,7 @@ Returns a tuple of {account_quests, character_quests}.</p>
       <h1 class="signature" translate="no">get_state(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L164" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L166" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -597,7 +629,7 @@ Returns a tuple of {account_quests, character_quests}.</p>
       <h1 class="signature" translate="no">go_to_npc(character_id, quest_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L117" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L119" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -619,7 +651,7 @@ Returns a tuple of {account_quests, character_quests}.</p>
       <h1 class="signature" translate="no">load_quests(session)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L171" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L173" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -641,7 +673,7 @@ Returns a tuple of {account_quests, character_quests}.</p>
       <h1 class="signature" translate="no">notify_item_acquired(character, item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L189" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L191" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -668,7 +700,7 @@ completion rather than an acquisition a quest tracks.</p>
       <h1 class="signature" translate="no">start(character, quest_metadata)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L65" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -690,7 +722,7 @@ completion rather than an acquisition a quest tracks.</p>
       <h1 class="signature" translate="no">start_link(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L43" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L45" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -712,7 +744,7 @@ completion rather than an acquisition a quest tracks.</p>
       <h1 class="signature" translate="no">stop(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L208" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L213" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -721,8 +753,8 @@ completion rather than an acquisition a quest tracks.</p>
 
   <section class="docstring">
 
-<p>Stops the quest manager. Quest progress is written through on every
-mutation, so a plain stop loses nothing.</p>
+<p>Stops the quest manager. Quest transitions write through, and pending
+condition-counter changes are flushed on stop, so nothing is lost.</p>
   </section>
 </section>
 <section class="detail" id="update_conditions/7">
@@ -745,7 +777,7 @@ mutation, so a plain stop loses nothing.</p>
       <h1 class="signature" translate="no">update_conditions(character_id, condition_type, counter \\ 1, target_string \\ &quot;&quot;, target_long \\ 0, code_string \\ &quot;&quot;, code_long \\ 0)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L90" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L92" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -767,7 +799,7 @@ mutation, so a plain stop loses nothing.</p>
       <h1 class="signature" translate="no">update_tracking(character_id, quest_id, tracking)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L132" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest.ex#L134" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

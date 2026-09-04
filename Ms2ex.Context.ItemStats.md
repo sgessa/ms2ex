@@ -9,7 +9,9 @@ base stat values.
 
 # `apply`
 
-Rebuilds a character's stats and returns the derived packet data.
+Rebuilds a character's stats and returns the derived packet data. The
+equipped items are passed in by the caller — contexts do not read manager
+state.
 
 # `apply_stats`
 

@@ -16,6 +16,14 @@ Quest persistence helpers.
 @spec delete_quest(integer(), integer(), boolean()) :: :ok
 ```
 
+# `delete_quests`
+
+```elixir
+@spec delete_quests(integer(), [integer()], boolean()) :: :ok
+```
+
+Drops every persisted row of the given quests in one statement.
+
 # `get_all_quests`
 
 ```elixir

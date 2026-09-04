@@ -92,6 +92,7 @@ rider. Paying grants an additional effect.
 - [Ms2ex.LoginHandlers.ResponseLogin](Ms2ex.LoginHandlers.ResponseLogin.md)
 - [Ms2ex.LoginHandlers.ResponseVersion](Ms2ex.LoginHandlers.ResponseVersion.md)
 - [Ms2ex.LoginHandlers.Ugc](Ms2ex.LoginHandlers.Ugc.md)
+- [Ms2ex.Managers.Achievement](Ms2ex.Managers.Achievement.md)
 - [Ms2ex.Managers.Buff](Ms2ex.Managers.Buff.md)
 - [Ms2ex.Managers.Character](Ms2ex.Managers.Character.md)
 - [Ms2ex.Managers.Character.Equips](Ms2ex.Managers.Character.Equips.md): Equip transitions owned by the character process.

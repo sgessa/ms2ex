@@ -151,6 +151,7 @@ Ms2ex.LoginHandlers.ResponseKey.html
 Ms2ex.LoginHandlers.ResponseLogin.html
 Ms2ex.LoginHandlers.ResponseVersion.html
 Ms2ex.LoginHandlers.Ugc.html
+Ms2ex.Managers.Achievement.html
 Ms2ex.Managers.Buff.html
 Ms2ex.Managers.Character.Equips.html
 Ms2ex.Managers.Character.Experience.html
@@ -414,8 +415,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-FB7F1EAC.js
-dist/sidebar_items-35D8E775.js
+dist/search_data-E0D76E5B.js
+dist/sidebar_items-36DC9002.js
 index.html
 license.html
 readme.html

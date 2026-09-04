@@ -150,6 +150,7 @@ Ms2ex.LoginHandlers.ResponseKey.md
 Ms2ex.LoginHandlers.ResponseLogin.md
 Ms2ex.LoginHandlers.ResponseVersion.md
 Ms2ex.LoginHandlers.Ugc.md
+Ms2ex.Managers.Achievement.md
 Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Equips.md
 Ms2ex.Managers.Character.Experience.md
