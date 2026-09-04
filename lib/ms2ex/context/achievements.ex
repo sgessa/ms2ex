@@ -170,7 +170,7 @@ defmodule Ms2ex.Context.Achievements do
   defp deliver_reward(character, %{type: :item, code: item_id, value: amount, rank: rarity}) do
     item = Ms2ex.Context.Items.init(item_id, %{amount: amount, rarity: rarity})
 
-    case Ms2ex.Context.Inventory.add_item(character, item) do
+    case Ms2ex.Managers.Inventory.add_item(character, item) do
       {:ok, {_status, inventory_item} = result} ->
         Ms2ex.Net.SenderSession.push(character, Packets.InventoryItem.add_item(result, character))
 
@@ -178,6 +178,8 @@ defmodule Ms2ex.Context.Achievements do
           character,
           Packets.InventoryItem.mark_item_new(inventory_item)
         )
+
+        Ms2ex.Managers.Quest.notify_item_acquired(character, inventory_item)
 
         :ok
 
