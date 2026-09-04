@@ -80,6 +80,15 @@ host runs):
 
 ## Architecture notes
 
+- **Contexts persist, managers own state.** A context module
+  (`Ms2ex.Context.*`) contains only database reads and writes — no
+  processes, no packets, no manager references. Per-character or per-session
+  state lives in a manager (`Ms2ex.Managers.*`) GenServer that owns it in
+  memory, calls contexts to persist, and is started at login and stopped on
+  disconnect (the quest, inventory, and achievement managers are the model).
+  Handlers orchestrate through managers and never run queries directly;
+  pre-session flows (character creation, login listings, seeds) write the
+  database through contexts.
 - **Matching the reference implementation's behavior is the standing,
   assumed goal — never mention it in comments or code.** Comments must
   describe behavior in domain terms only (what the server does and why),

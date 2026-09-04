@@ -648,8 +648,8 @@ defmodule Ms2ex.Managers.Quest do
     # Get character for sending packets
     {:ok, character} = Managers.Character.lookup(state.character_id)
 
-    Context.Achievements.progress(
-      character,
+    Managers.Achievement.update(
+      state.character_id,
       condition_type,
       counter,
       target_string,

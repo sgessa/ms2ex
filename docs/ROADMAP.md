@@ -216,15 +216,21 @@ What is still missing:
 
 Achievement metadata is ingested with a condition-type index, and completed
 field missions now activate exploration quests, advance milestone progress and
-deliver configured item or stat-point rewards. Achievement state persists per
-account or character, loads on field entry, receives the existing gameplay
-condition events, records completed grades, supports favorite toggles, and
-allows manual claims for item, title, and stat-point rewards. A claim request
-processes every pending grade. Riding distance is tracked from mounted sync
-updates and advances `riding` conditions per 150 units travelled.
+deliver configured item or stat-point rewards. Achievement state is owned by
+`Managers.Achievement` (`achievements:<char_id>`, started at login, stopped on
+disconnect): rows load once, condition events walk the storage index in
+memory, new rows are inserted as they are created, and updates batch into a
+periodic flush (also flushed on demand and on stop) — no per-event queries.
+Trophy counts per category are kept in memory and pushed onto the character,
+grade completions feed back into quest conditions (`revise_achieve_*`,
+`hero_achieve`), stat-point and emote rewards are granted automatically on
+rank-up while item and title rewards wait for the manual claim, and load
+packets are batched per 60 entries. Riding distance is tracked from mounted
+sync updates and advances `riding` conditions per 150 units travelled.
 
 What is still missing:
 
+- skill point rewards stay pending (no skill point API exists yet)
 - condition matching limitations shared by quests, exploration, and
   achievements: `party_count` and `guild_party_count` gates are ignored;
   string-code conditions (`emotion`, `emotiontime`, `trigger`, `npc_race`) and
@@ -410,6 +416,14 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Achievement manager: `Managers.Achievement`
+  (`achievements:<char_id>`, like the quest manager) owns every achievement
+  row in memory — condition events walk the metadata index without touching
+  the database, new rows insert on creation, updates batch into a periodic
+  flush (and a flush on disconnect). Trophy counts live on the manager and
+  sync onto the character, grade completions notify quest conditions, stat
+  point and emote rewards apply on rank-up while item and title rewards wait
+  for the claim, and `Context.Achievements` shrank to pure persistence
 - Character-owned inventory manager: `Managers.Inventory`
   (`inventories:<char_id>`, like the quest manager) owns every item row and
   tab size of a character in memory — reads from memory, write-through

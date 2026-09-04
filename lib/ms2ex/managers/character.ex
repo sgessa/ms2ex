@@ -119,6 +119,10 @@ defmodule Ms2ex.Managers.Character do
     {:reply, :ok, character}
   end
 
+  def handle_call({:update_trophies, trophies}, _from, character) do
+    {:reply, :ok, %{character | trophies: trophies}}
+  end
+
   # --------------------------------
   # Stat Points (AP)
   # --------------------------------

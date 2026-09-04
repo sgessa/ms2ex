@@ -52,7 +52,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
           character
         end
 
-      character = %{character | trophies: Context.Achievements.trophy_counts(character)}
+      :ok = Managers.Achievement.start(character)
+
+      character = %{character | trophies: Managers.Achievement.trophy_counts(character)}
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
@@ -112,7 +114,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp push_achievements(session, character) do
-    Context.Achievements.load(character)
+    Managers.Achievement.load(character)
     session
   end
 

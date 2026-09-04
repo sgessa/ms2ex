@@ -84,6 +84,12 @@ defmodule Ms2ex.Context.Characters do
     |> Repo.all()
   end
 
+  def learn_title(%Schema.Character{} = character, title_id) do
+    character
+    |> Ecto.build_assoc(:titles, %{title_id: title_id})
+    |> Repo.insert(on_conflict: :nothing)
+  end
+
   def maybe_discover_map(%Schema.Character{discovered_maps: maps} = character, new_map) do
     if Enum.member?(maps, new_map) do
       character
