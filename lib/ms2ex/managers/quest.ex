@@ -308,15 +308,19 @@ defmodule Ms2ex.Managers.Quest do
 
   @impl true
   def handle_call({:expire_quests, quest_ids}, _from, state) do
-    {new_state, removed_ids} =
-      Enum.reduce(quest_ids, {state, []}, fn quest_id, {acc_state, removed} ->
+    {new_state, removed_ids, dropped} =
+      Enum.reduce(quest_ids, {state, [], []}, fn quest_id, {acc_state, removed, dropped} ->
         case expire_quest(quest_id, acc_state) do
-          {acc_state, quest_id} when is_integer(quest_id) -> {acc_state, [quest_id | removed]}
-          {acc_state, nil} -> {acc_state, removed}
+          {acc_state, quest} when is_map(quest) ->
+            {acc_state, [quest.quest_id | removed], [quest | dropped]}
+
+          {acc_state, nil} ->
+            {acc_state, removed, dropped}
         end
       end)
 
     removed_ids = Enum.reverse(removed_ids)
+    drop_rows(dropped, new_state)
 
     with {:ok, character} <- Managers.Character.lookup(state.character_id),
          true <- character.session_pid != nil do
@@ -911,8 +915,28 @@ defmodule Ms2ex.Managers.Quest do
         {state, nil}
 
       quest ->
-        Context.Quests.delete_quest(quest.owner_id, quest.quest_id, quest.is_account_quest)
-        {Managers.Quest.State.remove_quest_from_state(quest, state), quest_id}
+        {Managers.Quest.State.remove_quest_from_state(quest, state), quest}
+    end
+  end
+
+  # expired rows drop in one statement per owner scope
+  defp drop_rows(quests, state) do
+    {account_quests, character_quests} = Enum.split_with(quests, & &1.is_account_quest)
+
+    unless account_quests == [] do
+      Context.Quests.delete_quests(
+        state.account_id,
+        Enum.map(account_quests, & &1.quest_id),
+        true
+      )
+    end
+
+    unless character_quests == [] do
+      Context.Quests.delete_quests(
+        state.character_id,
+        Enum.map(character_quests, & &1.quest_id),
+        false
+      )
     end
   end
 

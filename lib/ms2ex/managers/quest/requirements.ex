@@ -37,11 +37,12 @@ defmodule Ms2ex.Managers.Quest.Requirements do
       check_event_tag(character, metadata.basic.event_tag)
   end
 
-  defp check_event_tag(_character, _event_tag) do
-    # TODO: Implement event tag checking when event system is available
-    # This should check if the event_tag is currently active in the game
-    # For now, return true to not block quest progression
-    true
+  defp check_event_tag(_character, event_tag) do
+    # event-tagged quests are only meant to start through a matching server
+    # event; without an event system no tag can ever be active, so they must
+    # never start on their own (stale event content would otherwise be
+    # auto-started and immediately expired by the client)
+    event_tag in [nil, ""]
   end
 
   defp meet_level_req?(character, req) do

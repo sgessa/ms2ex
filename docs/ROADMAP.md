@@ -422,6 +422,12 @@ combat-heavy characters from accumulating document copies.
   movement, pickups) no longer write one UPDATE per matching quest per
   event. Quest transitions that own their persistence (start, complete,
   abandon, expire) still write through
+- Auto-start gating: quests carrying an event tag never start on their own
+  (event content starts only through a matching server event, and stale
+  event quests would otherwise be auto-started at login and immediately
+  expired by the client in an insert/delete churn). The client expiration
+  sweep now drops expired rows in one DELETE per owner scope instead of
+  one per quest
 - Equipped items are no longer mirrored on the character struct: field
   appearance, character info, stat rebuilds and conflict resolution read
   the inventory manager at point of use, and `Context.ItemStats` takes
