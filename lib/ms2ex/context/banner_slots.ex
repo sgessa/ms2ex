@@ -46,7 +46,13 @@ defmodule Ms2ex.Context.BannerSlots do
     ugc =
       case slot.ugc_resource do
         %Schema.UgcResource{} = resource ->
-          %{id: resource.id, author: slot.character.name, url: resource.path}
+          %{
+            id: resource.id,
+            account_id: slot.character.account_id,
+            character_id: resource.character_id,
+            author: slot.character.name,
+            url: resource.path
+          }
 
         _ ->
           nil

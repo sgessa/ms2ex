@@ -41,7 +41,8 @@ dagger = Context.Items.init(13_160_311, %{rarity: 5})
     level: 70,
     map_id: 2_000_023,
     job: :thief,
-    skin_color: skin_color
+    skin_color: skin_color,
+    guide_records: %{}
   })
 
 # seeding persists straight to the database; no game session exists

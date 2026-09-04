@@ -36,6 +36,31 @@ defmodule Ms2ex.Managers.Field do
     end)
   end
 
+  defp activate_banners(state) do
+    now = DateTime.utc_now()
+
+    {banners, activated} =
+      Enum.map_reduce(state.banners, [], fn {banner_id, banner}, activated ->
+        case Enum.find(banner.slots, &current_slot?(&1, now)) do
+          nil ->
+            {{banner_id, banner}, activated}
+
+          slot ->
+            slots = Enum.map(banner.slots, &Map.put(&1, :active, &1.id == slot.id))
+            banner = %{banner | slots: slots}
+            {{banner_id, banner}, [banner | activated]}
+        end
+      end)
+
+    {%{state | banners: Map.new(banners)}, activated}
+  end
+
+  defp current_slot?(slot, now) do
+    (slot.ugc && slot.date == now.year * 10_000 + now.month * 100 + now.day) and
+      slot.hour == now.hour and
+      not slot.active
+  end
+
   defp attach_banner(banner, slot_ids, ugc) do
     with true <- Enum.all?(slot_ids, &slot_exists?(banner.slots, &1)) do
       {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_ugc(&1, slot_ids, ugc))}}
@@ -103,6 +128,7 @@ defmodule Ms2ex.Managers.Field do
 
     send(self(), :load_npc_spawns)
     send(self(), :tick_npcs)
+    send(self(), :send_updates)
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
@@ -362,6 +388,8 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info(:send_updates, state) do
     Process.send_after(self(), :send_updates, @updates_intval)
+    {state, activated} = activate_banners(state)
+    Enum.each(activated, &Context.Field.broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
     {:noreply, Field.Character.send_updates(state)}
   end
 

@@ -540,9 +540,18 @@ defmodule Ms2ex.Context.Field do
       :error
   """
   @spec call(Schema.Character.t() | pid() | nil, term()) :: term() | :error
-  def call(%Schema.Character{field_pid: field_pid}, args), do: GenServer.call(field_pid, args)
+  def call(%Schema.Character{field_pid: field_pid}, args), do: call(field_pid, args)
   def call(nil, _args), do: :error
-  def call(pid, args), do: GenServer.call(pid, args)
+
+  def call(pid, args) when is_pid(pid) do
+    if Process.alive?(pid) do
+      GenServer.call(pid, args)
+    else
+      :error
+    end
+  catch
+    :exit, _reason -> :error
+  end
 
   @doc """
   Makes an asynchronous cast to a field process.
