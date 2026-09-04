@@ -311,8 +311,9 @@ defmodule Ms2ex.GameHandlers.Ugc do
 
   defp read_banner_reservations(packet, count) do
     {reservations, _packet} =
-      Enum.reduce(List.duplicate(:reservation, count), {[], packet}, fn _,
-                                                                        {reservations, packet} ->
+      :reservation
+      |> List.duplicate(count)
+      |> Enum.reduce({[], packet}, fn _, {reservations, packet} ->
         {uid, packet} = get_long(packet)
         {_state, packet} = get_int(packet)
         {_banner_id, packet} = get_long(packet)

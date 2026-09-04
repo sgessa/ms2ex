@@ -14,10 +14,8 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Managers.Field
 
   @updates_intval 1000
-
   @npc_tick_intval 15
-
-  @banner_tick_interval :timer.seconds(30)
+  @banner_tick_intval :timer.seconds(30)
 
   # one app-wide counter feeds players and mounts, while each field instance
   # owns a local counter for npcs, portals, spawn points and items
@@ -432,7 +430,7 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_info(:tick_banners, state) do
-    Process.send_after(self(), :tick_banners, @banner_tick_interval)
+    Process.send_after(self(), :tick_banners, @banner_tick_intval)
     {state, changed} = activate_banners(state)
     Enum.each(changed, &Context.Field.broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
     {:noreply, state}
