@@ -29,7 +29,8 @@ next_slot = fn slots, item ->
   {slot, Map.put(slots, tab, slot + 1)}
 end
 
-Repo.all(Schema.Character)
+Schema.Character
+|> Repo.all()
 |> Enum.each(fn character ->
   Enum.reduce(test_bag, %{}, fn
     {_kind, item_id}, slots ->

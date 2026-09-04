@@ -285,7 +285,8 @@ defmodule Ms2ex.EquipsTest do
       })
 
     stats = Repo.insert!(%Schema.CharacterStats{character_id: character.id})
-    %{character | stats: stats, sender_session_pid: self()}
+    character = %{character | stats: stats, sender_session_pid: self()}
+    Repo.preload(character, skill_tabs: :skills)
   end
 
   defp start_character(character) do

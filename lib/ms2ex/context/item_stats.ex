@@ -11,7 +11,6 @@ defmodule Ms2ex.Context.ItemStats do
   alias Ms2ex.Enums
   alias Ms2ex.Formulas.BaseStats
   alias Ms2ex.Formulas.GearScore
-  alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
 
@@ -22,7 +21,6 @@ defmodule Ms2ex.Context.ItemStats do
   Rebuilds a character's stats and returns the derived packet data.
   """
   def apply(%Schema.Character{} = character) do
-    character = ensure_stats_source(character)
     equips = equipped_gear(character)
 
     stat_groups =
@@ -201,17 +199,6 @@ defmodule Ms2ex.Context.ItemStats do
     Map.merge(left, right, fn _group, left_values, right_values ->
       merge_values(left_values, right_values)
     end)
-  end
-
-  # the character manager carries the base stats struct and the learned
-  # skills in memory; only fall back to the database when a caller passes a
-  # character without them loaded
-  defp ensure_stats_source(%Schema.Character{} = character) do
-    if Ecto.assoc_loaded?(character.stats) and Ecto.assoc_loaded?(character.skill_tabs) do
-      character
-    else
-      Repo.preload(character, [:stats, skill_tabs: :skills], force: true)
-    end
   end
 
   defp equipped_gear(character) do

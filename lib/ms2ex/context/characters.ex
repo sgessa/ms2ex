@@ -9,7 +9,7 @@ defmodule Ms2ex.Context.Characters do
     Schema.Character
     |> where([c], c.account_id == ^account_id)
     |> Repo.all()
-    |> Enum.map(&load_persisted_equips/1)
+    |> Enum.map(&load_equips/1)
   end
 
   def create(%Schema.Account{} = account, attrs) do
@@ -62,7 +62,7 @@ defmodule Ms2ex.Context.Characters do
   # bulk listings read persisted rows: inventory managers only exist for
   # characters currently in game, and a listing spans every character of the
   # account
-  defp load_persisted_equips(%Schema.Character{} = character) do
+  defp load_equips(%Schema.Character{} = character) do
     %{character | equips: Context.Inventory.list_equipped(character.id)}
   end
 
