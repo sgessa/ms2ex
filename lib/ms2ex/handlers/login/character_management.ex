@@ -9,7 +9,6 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   alias Ms2ex.Enums
 
   import Packets.PacketReader
-  import Ecto.Query, except: [update: 2]
   import Net.SenderSession, only: [push: 2]
 
   # Login
@@ -81,7 +80,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
         case Context.Characters.create(session.account, attrs) do
           {:ok, character} ->
             add_equips(character, equips)
-            %{character | equips: list_equips(character)}
+            %{character | equips: Context.Inventory.list_equipped(character.id)}
 
           error ->
             Repo.rollback(error)
@@ -106,36 +105,15 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   # is inserted directly: one row per equipped item, already in place
   defp add_equips(character, equips) do
     Enum.each(equips, fn {equip_slot, item} ->
-      %{metadata: metadata} = item
-
-      attrs =
-        item
-        |> Map.update!(:rarity, &(&1 || 1))
-        |> Map.put(:inventory_tab, Types.Item.inventory_tab(metadata))
-        |> Map.from_struct()
-
-      item =
-        character
-        |> Ecto.build_assoc(:inventory_items)
-        |> Schema.Item.changeset(attrs)
-        |> Repo.insert!()
-
-      item = %{item | metadata: metadata}
+      {:ok, item} = Context.Inventory.insert_item(character.id, item)
 
       Schema.Item.bind_if_needed(item, :equip)
-      |> Schema.Item.changeset(%{
+      |> Context.Inventory.update_item(%{
         equip_slot: equip_slot,
         inventory_slot: nil,
         location: :equipment
       })
-      |> Repo.update!()
     end)
-  end
-
-  defp list_equips(character) do
-    Schema.Item
-    |> where([i], i.character_id == ^character.id and i.location == ^:equipment)
-    |> Repo.all()
   end
 
   defp get_equip(packet) do

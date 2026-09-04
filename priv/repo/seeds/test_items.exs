@@ -1,7 +1,7 @@
 # A bag of test items for every seeded character: mounts to ride, unequipped
 # gear to try on, and consumables / misc stacks to use.
 
-alias Ms2ex.{Context, Managers, Repo, Schema}
+alias Ms2ex.{Context, Repo, Schema}
 
 test_bag = [
   # mounts
@@ -21,20 +21,27 @@ test_bag = [
   {:misc, 59_200_001, 99}
 ]
 
-# item seeding goes through the inventory manager, like in-game writes
+# seeding persists straight to the database; bag slots fill in insertion
+# order, tracked per tab across the bag
+next_slot = fn slots, item ->
+  tab = Ms2ex.Types.Item.inventory_tab(item.metadata)
+  slot = Map.get(slots, tab, 0)
+  {slot, Map.put(slots, tab, slot + 1)}
+end
+
 Repo.all(Schema.Character)
 |> Enum.each(fn character ->
-  :ok = Managers.Inventory.start(character)
-
-  Enum.each(test_bag, fn
-    {_kind, item_id} ->
+  Enum.reduce(test_bag, %{}, fn
+    {_kind, item_id}, slots ->
       item = Context.Items.init(item_id, %{rarity: 4, amount: 1})
-      Managers.Inventory.add_item(character, item)
+      {slot, slots} = next_slot.(slots, item)
+      {:ok, _item} = Context.Inventory.insert_item(character.id, %{item | inventory_slot: slot})
+      slots
 
-    {_kind, item_id, amount} ->
+    {_kind, item_id, amount}, slots ->
       item = Context.Items.init(item_id, %{rarity: 4, amount: amount})
-      Managers.Inventory.add_item(character, item)
+      {slot, slots} = next_slot.(slots, item)
+      {:ok, _item} = Context.Inventory.insert_item(character.id, %{item | inventory_slot: slot})
+      slots
   end)
-
-  Managers.Inventory.stop(character.id)
 end)

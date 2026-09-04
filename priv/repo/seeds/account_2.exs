@@ -44,34 +44,19 @@ dagger = Context.Items.init(13_160_311, %{rarity: 5})
     skin_color: skin_color
   })
 
-# item seeding goes through the inventory manager, like in-game writes
-:ok = Ms2ex.Managers.Inventory.start(char)
+# seeding persists straight to the database; no game session exists
+outfit = [
+  {ears, :ER},
+  {hair, :HR},
+  {face, :FA},
+  {face_decor, :FD},
+  {top, :CL},
+  {bottom, :PA},
+  {shoes, :SH},
+  {dagger, :LH},
+  {dagger, :RH}
+]
 
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, ears)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :ER)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, hair)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :HR)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, face)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :FA)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, face_decor)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :FD)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, top)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :CL)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, bottom)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :PA)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, shoes)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :SH)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, dagger)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :LH)
-
-{:ok, {:create, item}} = Ms2ex.Managers.Inventory.add_item(char, dagger)
-{:ok, _equip} = Ms2ex.Managers.Inventory.equip(item, :RH)
-
-Ms2ex.Managers.Inventory.stop(char.id)
+Enum.each(outfit, fn {item, equip_slot} ->
+  {:ok, _item} = Context.Inventory.insert_item(char.id, %{item | equip_slot: equip_slot, location: :equipment})
+end)
