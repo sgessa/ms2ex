@@ -9,6 +9,8 @@ defmodule Ms2ex.Managers.Character do
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
 
+  @mastery_flush_interval :timer.minutes(1)
+
   @spec lookup(integer()) :: {:ok, Schema.Character.t()} | :error
   def lookup(character_id), do: call(character_id, :lookup)
 
@@ -37,6 +39,8 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def init(character) do
+    Process.send_after(self(), :flush_mastery, @mastery_flush_interval)
+
     {:ok,
      character
      |> Map.put(:condition_state, nil)
@@ -79,6 +83,12 @@ defmodule Ms2ex.Managers.Character do
       |> Map.put(:ensemble, Map.get(state, :ensemble))
       |> Map.put(:condition_state, Map.get(state, :condition_state))
       |> Map.put(:condition_distances, Map.get(state, :condition_distances, %{}))
+      |> Map.put(:masteries, Map.get(state, :masteries, %{}))
+      |> Map.put(:gathering_counts, Map.get(state, :gathering_counts, %{}))
+      |> Map.put(:mastery_rewards_claimed, Map.get(state, :mastery_rewards_claimed, %{}))
+      |> Map.put(:mastery_dirty?, Map.get(state, :mastery_dirty?, false))
+      |> Map.put(:fish_album, Map.get(state, :fish_album, %{}))
+      |> Map.put(:fishing, Map.get(state, :fishing))
 
     {:reply, :ok, updated}
   end
@@ -112,6 +122,63 @@ defmodule Ms2ex.Managers.Character do
   def handle_call({:set_level, level}, _from, character) do
     {:ok, character} = Character.Experience.set_level(character, level)
     {:reply, {:ok, character}, character}
+  end
+
+  # --------------------------------
+  # Life skills (mastery)
+  # --------------------------------
+
+  def handle_call({:add_mastery, type, amount, opts}, _from, character) do
+    character = Character.Mastery.add(character, type, amount, opts)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call({:claim_mastery_reward, reward_box_id}, _from, character) do
+    if Character.Mastery.claimed?(character, reward_box_id) do
+      {:reply, :error, character}
+    else
+      character = Character.Mastery.claim(character, reward_box_id)
+      {:reply, {:ok, character}, character}
+    end
+  end
+
+  def handle_call({:count_gather, recipe_id}, _from, character) do
+    character = Character.Mastery.count_gather(character, recipe_id)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call(:flush_mastery, _from, character) do
+    character = Character.Mastery.flush(character)
+    {:reply, :ok, character}
+  end
+
+  # --------------------------------
+  # Fishing
+  # --------------------------------
+
+  def handle_call({:start_fishing, fishing}, _from, character) do
+    character = Character.Fishing.start_session(character, fishing)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call(:stop_fishing, _from, character) do
+    character = Character.Fishing.stop_session(character)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call({:fishing_bite, tile, fish_id, fight_game?}, _from, character) do
+    character = Character.Fishing.bite(character, tile, fish_id, fight_game?)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call(:fishing_fail_minigame, _from, character) do
+    character = Character.Fishing.clear_minigame(character)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call({:record_catch, fish_id, size, prize?}, _from, character) do
+    {character, entry, first?} = Character.Fishing.record_catch(character, fish_id, size, prize?)
+    {:reply, {:ok, character, entry, first?}, character}
   end
 
   def handle_call(:monitor, {pid, _}, character) do
@@ -294,10 +361,16 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_info({:time_condition_tick, _condition_type}, character), do: {:noreply, character}
 
+  def handle_info(:flush_mastery, character) do
+    Process.send_after(self(), :flush_mastery, @mastery_flush_interval)
+    {:noreply, Character.Mastery.flush(character)}
+  end
+
   def handle_info({:state_skill_tick, cast_id}, character),
     do: {:noreply, Character.Skill.state_skill_tick(character, cast_id)}
 
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
+    character = Character.Mastery.flush(character)
     cleanup(character)
     {:stop, :normal, character}
   end

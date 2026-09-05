@@ -91,7 +91,10 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
   defp handle_mode(0x4, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, instrument} <- Context.Field.remove_instrument(character) do
-      seconds = div(max(Ms2ex.sync_ticks() - instrument.start_tick, 0), 1000)
+      elapsed = max(Ms2ex.sync_ticks() - instrument.start_tick, 0)
+      seconds = div(elapsed, 1000)
+
+      award_music_mastery(character, instrument, elapsed)
 
       Managers.Quest.update_conditions(
         character.id,
@@ -102,6 +105,16 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
         "",
         instrument.metadata.id
       )
+
+      if instrument.ensemble? do
+        Managers.Quest.update_conditions(
+          character.id,
+          :play_ensenble_time,
+          seconds,
+          "",
+          character.map_id
+        )
+      end
 
       Context.Field.broadcast(character, Packets.PlayInstrument.stop_score(instrument))
     else
@@ -209,19 +222,61 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
 
   defp handle_mode(_mode, _packet, session), do: session
 
+  # mastery scales with how long the score played, capped by the score's
+  # own maximum; the performance exp table is picked by the resulting grade
+  defp award_music_mastery(character, %{score: %{} = score} = instrument, elapsed) do
+    mastery = min(div(elapsed * score.mastery_value, 1000), score.mastery_value_max)
+    category = Map.get(instrument.metadata || %{}, :category, 0)
+
+    character = Context.Mastery.add(character, :music, mastery, instrument_category: category)
+
+    exp_type =
+      case Context.Mastery.grade(character, :music) do
+        2 -> :music_mastery2
+        3 -> :music_mastery3
+        4 -> :music_mastery4
+        _ -> :music_mastery1
+      end
+
+    # 500ms is dropped to account for the client/server delay; the modifier
+    # counts the 500ms ticks that passed
+    modifier = (elapsed - 500) / 500
+
+    if modifier > 0 do
+      exp = Ms2ex.Storage.Tables.ExpTable.typed_exp(exp_type, character.level)
+      Managers.Character.cast(character, {:earn_exp, trunc(exp * modifier)})
+    end
+  end
+
+  defp award_music_mastery(_character, _instrument, _elapsed), do: :ok
+
   defp start_score(character, item_uid, score_uid, opts) do
     with :error <- Context.Field.lookup_instrument(character),
          {:ok, item} <- get_instrument(character, item_uid),
          {:ok, score} <- get_score(character, score_uid),
          {:ok, instrument} <- FieldInstrument.from_item(character, item, opts),
          {:ok, score, remaining} <- consume_use(score),
-         {:ok, instrument} <- Context.Field.add_instrument(character, instrument) do
+         {:ok, instrument} <- Context.Field.add_instrument(character, mastery(instrument, score)) do
       Context.Field.broadcast(character, Packets.PlayInstrument.start_score(instrument, score))
       push(character, Packets.PlayInstrument.remaining_uses(score.id, remaining))
       {:ok, score}
     else
       _ -> :error
     end
+  end
+
+  # only the two mastery numbers of the score are kept on the field object,
+  # not its metadata document
+  defp mastery(instrument, score) do
+    music = get_in(score.metadata, [:music]) || %{}
+
+    %{
+      instrument
+      | score: %{
+          mastery_value: Map.get(music, :mastery_value, 1),
+          mastery_value_max: Map.get(music, :mastery_value_max, 1)
+        }
+    }
   end
 
   # every ready member starts on the leader's tick, otherwise the parts drift

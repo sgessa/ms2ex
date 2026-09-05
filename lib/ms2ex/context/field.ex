@@ -36,12 +36,18 @@ defmodule Ms2ex.Context.Field do
   @doc """
   Completes a player's interaction with a field interact object.
 
-  Returns `{:ok, interact_id}` when the object exists on the field so callers
-  can progress interact-object quest conditions.
+  Returns `{:ok, object}` when the object exists on the field so callers can
+  progress interact-object quest conditions and run gathering.
   """
-  @spec interact_object(Schema.Character.t(), String.t()) :: {:ok, integer()} | :error
+  @spec interact_object(Schema.Character.t(), String.t()) :: {:ok, map()} | :error
   def interact_object(%Schema.Character{} = character, uuid) do
     call(character.field_pid, {:interact_object, character, uuid})
+  end
+
+  @doc "Allocates a field-unique object id (guide objects, effects, ...)."
+  @spec next_object_id(Schema.Character.t()) :: {:ok, integer()} | :error
+  def next_object_id(%Schema.Character{} = character) do
+    call(character.field_pid, :next_object_id)
   end
 
   @doc """
@@ -55,6 +61,12 @@ defmodule Ms2ex.Context.Field do
   @spec drop_item(Schema.Character.t(), Schema.Item.t()) :: :ok | :error
   def drop_item(%Schema.Character{} = character, item) do
     cast(character.field_pid, {:drop_item, character, item})
+  end
+
+  @doc "Drops an item at a fixed position instead of at the character's feet."
+  @spec drop_item(Schema.Character.t(), Schema.Item.t(), map()) :: :ok | :error
+  def drop_item(%Schema.Character{} = character, item, position) do
+    cast(character.field_pid, {:drop_item, character, item, position})
   end
 
   @doc """

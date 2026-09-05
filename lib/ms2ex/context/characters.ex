@@ -99,4 +99,19 @@ defmodule Ms2ex.Context.Characters do
       character
     end
   end
+
+  @doc "Records a first-time interaction; returns false when already known."
+  def discover_object(%Schema.Character{} = character, object_id) do
+    objects = character.discovered_objects || []
+
+    if Enum.member?(objects, object_id) do
+      false
+    else
+      {:ok, character} =
+        __MODULE__.update(character, %{discovered_objects: [object_id | objects]})
+
+      Ms2ex.Managers.Character.call(character, {:update, character})
+      true
+    end
+  end
 end

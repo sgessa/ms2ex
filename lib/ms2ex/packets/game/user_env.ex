@@ -1,7 +1,24 @@
 defmodule Ms2ex.Packets.UserEnv do
   import Ms2ex.Packets.PacketWriter
 
-  @modes %{start_list: 0x0, update_title: 0x1, set_titles: 0x2, end_list: 0x4}
+  @modes %{
+    start_list: 0x0,
+    update_title: 0x1,
+    set_titles: 0x2,
+    end_list: 0x4,
+    interacted_objects: 0x4,
+    gathering_counts: 0x8,
+    mastery_rewards_claimed: 0x9
+  }
+
+  @doc "Interact objects the character already used (telescopes, ...)."
+  def interacted_objects(object_ids) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.interacted_objects)
+    |> put_int(length(object_ids))
+    |> reduce(object_ids, fn object_id, packet -> put_int(packet, object_id) end)
+  end
 
   def update_title(character) do
     __MODULE__
@@ -30,6 +47,33 @@ defmodule Ms2ex.Packets.UserEnv do
       packet
       |> put_int(item_id)
       |> put_byte(quantity)
+    end)
+  end
+
+  @doc "How often each gathering recipe was already harvested."
+  def gathering_counts(counts) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.gathering_counts)
+    |> put_int(map_size(counts))
+    |> reduce(counts, fn {recipe_id, count}, packet ->
+      packet
+      |> put_int(recipe_id)
+      |> put_int(count)
+    end)
+    |> put_int()
+  end
+
+  @doc "Mastery grade reward boxes the character already claimed."
+  def mastery_rewards_claimed(claimed) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.mastery_rewards_claimed)
+    |> put_int(map_size(claimed))
+    |> reduce(claimed, fn {reward_box_id, _claimed?}, packet ->
+      packet
+      |> put_int(reward_box_id)
+      |> put_bool(true)
     end)
   end
 

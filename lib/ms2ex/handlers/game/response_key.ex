@@ -4,6 +4,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   alias Ms2ex.LoginHandlers
   alias Ms2ex.Net
   alias Ms2ex.Packets
+  alias Ms2ex.Managers.Character.Mastery
+  alias Ms2ex.Managers.Character.Fishing
   alias Ms2ex.Managers.PartyManager
   alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Managers.Session
@@ -90,13 +92,13 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.FurnishingInventory.start_list())
       |> push(Packets.FurnishingInventory.end_list())
       |> push(Packets.UserEnv.set_titles(titles))
-      |> push(Packets.UserEnv.set_mode(0x4))
+      |> push(Packets.UserEnv.interacted_objects(character.discovered_objects || []))
       |> push(Packets.UserEnv.set_mode(0x5))
-      |> push(Packets.UserEnv.set_mode(0x8, 2))
-      |> push(Packets.UserEnv.set_mode(0x9))
+      |> push(Packets.UserEnv.gathering_counts(Mastery.gathering_counts(character)))
+      |> push(Packets.UserEnv.mastery_rewards_claimed(Mastery.rewards_claimed(character)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
-      |> push(Packets.Fishing.load_log())
+      |> push(Packets.Fishing.load_album(Fishing.album(character)))
       |> push(Packets.KeyTable.request())
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.InGameRank.load())
