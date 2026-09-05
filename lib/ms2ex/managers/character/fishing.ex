@@ -44,6 +44,18 @@ defmodule Ms2ex.Managers.Character.Fishing do
     end
   end
 
+  @doc "Tracks where the player dragged the bobber."
+  def move_guide(character, position, rotation) do
+    case session(character) do
+      nil ->
+        character
+
+      %{guide: guide} = fishing ->
+        guide = %{guide | position: position, rotation: rotation}
+        Map.put(character, :fishing, %{fishing | guide: guide})
+    end
+  end
+
   @doc """
   Records a catch in the album. Returns the updated character, the album
   entry and whether this was the first catch of that kind.

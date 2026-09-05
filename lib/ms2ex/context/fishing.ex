@@ -220,6 +220,7 @@ defmodule Ms2ex.Context.Fishing do
          %{
            object_id: object_id,
            character_id: character.id,
+           type: :fishing,
            position: %Coord{
              x: tile.position.x * @block_size,
              y: tile.position.y * @block_size,
@@ -431,8 +432,10 @@ defmodule Ms2ex.Context.Fishing do
   defp grant_item(character, item) do
     case Managers.Inventory.add_item(character, item) do
       {:ok, result} ->
+        {_status, inventory_item} = result
         push(character, Packets.InventoryItem.add_item(result, character))
-        Managers.Quest.notify_item_acquired(character, elem(result, tuple_size(result) - 1))
+        push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+        Managers.Quest.notify_item_acquired(character, inventory_item)
         :ok
 
       _ ->

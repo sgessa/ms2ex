@@ -23,6 +23,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x20 => "SKILL",
     0x21 => "STATE_SKILL",
     0x34 => "FALL_DAMAGE",
+    0x35 => "GUIDE_OBJECT_SYNC",
     0x25 => "JOB",
     0x26 => "VIBRATE",
     0x29 => "QUEST",

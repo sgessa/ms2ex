@@ -72,6 +72,7 @@ defmodule Ms2ex.FishingTest do
       guide = %{
         object_id: 7,
         character_id: 42,
+        type: :fishing,
         position: %{x: 150, y: 300, z: 450},
         rotation: %{x: 0, y: 0, z: 0}
       }
@@ -88,10 +89,53 @@ defmodule Ms2ex.FishingTest do
       assert {position.x, position.y, position.z} == {150.0, 300.0, 450.0}
       assert packet == <<>>
     end
+
+    test "a bobber sync relays the client's state segments" do
+      # a real GuideObjectSync body: fishing type, one segment, then the state
+      # followed by the client/server ticks
+      body =
+        <<0x01, 0x00, 0x01, 0x2E, 0x7A, 0x00, 0xF6, 0x09, 0xE6, 0xFB, 0x46, 0x05, 0x00, 0x00,
+          0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x68, 0x00, 0xFF, 0xFF,
+          0xFF, 0x7F, 0xB5, 0xF1, 0xAC, 0x00, 0x31, 0x31, 0x03, 0x00>>
+
+      {_type, rest} = get_short(body)
+      {segments, rest} = get_byte(rest)
+      {state, _rest} = Ms2ex.Types.SyncState.from_packet(rest)
+
+      assert segments == 1
+      assert {state.position.x, state.position.y, state.position.z} == {2550, -1050, 1350}
+
+      {opcode, packet} = Packets.GuideObject.sync(7, [state]) |> get_short()
+      {command, packet} = get_byte(packet)
+      {object_id, packet} = get_int(packet)
+      {count, _packet} = get_byte(packet)
+
+      assert {opcode, command, object_id, count} == {0x70, 0x02, 7, 1}
+    end
   end
 
   describe "fish album" do
     alias Ms2ex.Managers.Character.Fishing
+
+    test "the bobber follows the last synced state" do
+      guide = %{object_id: 7, character_id: 42, type: :fishing, position: nil, rotation: nil}
+      session = %{guide: guide, tile: nil, fish_id: nil, fight_game?: false}
+      character = Map.put(%Ms2ex.Schema.Character{}, :fishing, session)
+
+      position = %Ms2ex.Types.Coord{x: 2550, y: -1050, z: 1350}
+      rotation = %Ms2ex.Types.Coord{x: 0, y: 0, z: 90}
+
+      character = Fishing.move_guide(character, position, rotation)
+
+      assert Fishing.session(character).guide.position == position
+      assert Fishing.session(character).guide.rotation == rotation
+    end
+
+    test "moving the bobber without a session is a no-op" do
+      character = %Ms2ex.Schema.Character{}
+
+      assert Fishing.move_guide(character, %{x: 1, y: 2, z: 3}, nil) == character
+    end
 
     test "the first catch of a kind seeds the entry" do
       {character, entry, first?} =

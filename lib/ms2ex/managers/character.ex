@@ -278,6 +278,10 @@ defmodule Ms2ex.Managers.Character do
   # Stats
   # --------------------------------
 
+  # the bobber moves constantly; nothing waits on the new position
+  def handle_cast({:fishing_guide_moved, position, rotation}, character),
+    do: {:noreply, Character.Fishing.move_guide(character, position, rotation)}
+
   def handle_cast({:consume_stat, stat_id, amount}, character) do
     {:noreply, Character.Stats.decrease(character, stat_id, amount, [])}
   end
