@@ -28,6 +28,9 @@ defmodule Ms2ex.GameHandlers.SmartPush do
       {:ok, %{type: :additional_effect} = metadata} ->
         additional_effect(metadata, packet, session)
 
+      {:ok, %{type: :auto_interaction} = metadata} ->
+        auto_interaction(metadata, packet, session)
+
       {:ok, %{type: type}} ->
         Logger.warning("Unhandled smart push type #{type} for id #{smart_push_id}")
         session
@@ -35,6 +38,21 @@ defmodule Ms2ex.GameHandlers.SmartPush do
       :error ->
         Logger.warning("Unknown smart push id #{smart_push_id}")
         session
+    end
+  end
+
+  # bulk gathering: harvests the recipe repeatedly at the player's feet until
+  # the node's success rate decays to zero
+  defp auto_interaction(metadata, packet, session) do
+    {amount, packet} = get_int(packet)
+    {recipe_id, _packet} = get_int(packet)
+
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+         :ok <- no_required_item(metadata),
+         {:ok, _character, count} <- Context.Mastery.bulk_gather(character, recipe_id, amount) do
+      push(session, Packets.SmartPush.activate_gather(metadata.id, count))
+    else
+      _ -> session
     end
   end
 

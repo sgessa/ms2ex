@@ -17,17 +17,28 @@ defmodule Ms2ex.Managers.Field.InteractObject do
   def load(map_id) do
     map_id
     |> Storage.Maps.get_interact_objects()
-    |> Map.new(fn object -> {object.uuid, enrich(object)} end)
+    |> Enum.flat_map(fn object ->
+      case Storage.Tables.InteractObjects.get(object.id) do
+        # the client has no metadata for it either, so it is not interactable
+        nil -> []
+        meta -> [{object.uuid, enrich(object, meta)}]
+      end
+    end)
+    |> Map.new()
   end
 
-  defp enrich(object) do
-    meta = Storage.Tables.InteractObjects.get(object.id)
-
+  # the xblock only says which entity class placed the object; its interact
+  # type comes from the table, and the client's load payload depends on it
+  defp enrich(object, meta) do
     object
+    |> Map.put(:type, Map.get(meta, :type, :mesh))
     |> Map.put(:state, :normal)
     |> Map.put(:next_tick, now())
     |> Map.put(:reacts_left, reacts_left(meta))
-    |> Map.put(:time, Map.get(meta || %{}, :time, %{}))
+    |> Map.put(:time, Map.get(meta, :time, %{}))
+    |> Map.put(:recipe_id, get_in(meta, [:item, :recipe_id]) || 0)
+    |> Map.put(:drop, Map.get(meta, :drop, %{}))
+    |> Map.put(:additional_effect, Map.get(meta, :additional_effect, %{}))
   end
 
   defp reacts_left(%{react_count: count}) when count > 0, do: count
@@ -37,6 +48,9 @@ defmodule Ms2ex.Managers.Field.InteractObject do
   Completes an interaction with an object. Only Reactable objects can be
   interacted with; the animation goes to the interacting player while the
   state transition is broadcast to the whole field.
+
+  Gathering nodes get no animation here: the harvest decides success first
+  and sends the animation with its result.
   """
   def react(%Schema.Character{} = character, uuid, state) do
     case Map.get(state.interactable, uuid) do
@@ -45,11 +59,15 @@ defmodule Ms2ex.Managers.Field.InteractObject do
 
       %{state: :reactable} = object ->
         object = transition_on_react(object, now())
-        SenderSession.push(character, Packets.InteractObject.interact(object))
+
+        if object.type != :gathering do
+          SenderSession.push(character, Packets.InteractObject.interact(object))
+        end
+
         Context.Field.broadcast(state.topic, Packets.InteractObject.update(object))
 
         interactable = Map.put(state.interactable, uuid, object)
-        {:ok, object.id, %{state | interactable: interactable}}
+        {:ok, object, %{state | interactable: interactable}}
 
       _object ->
         {:error, state}

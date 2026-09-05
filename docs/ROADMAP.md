@@ -265,10 +265,10 @@ What is still missing:
 
 - multi-page npc dialogue walking (Continue tracking) and script functions
   (rewards/portal/cutscene side effects inside dialogues)
-- interact object lifecycle beyond the state machine: gathering/mastery
-  yields, telescope unlock exp, drop tables and additional effects on
-  interact
-- condition sources for breakables (`breakable_object`), triggers, fishing,
+- interact object lifecycle beyond the state machine: additional effects are
+  invoked, drop boxes roll and `modify_code` shifts a buff's remaining
+  duration; interact-driven mob spawns are not implemented
+- condition sources for breakables (`breakable_object`), triggers,
   and the long-tail condition types
 - selective rewards, mail fallback for full inventories, and the remaining
   reward-side edge cases
@@ -325,9 +325,9 @@ What is still missing:
   mail, house, banner, UGC, and profile conditions require those owning
   systems; PvP, survival, dungeon, festival, and minigame conditions require
   their event/match state and result handlers
-- life-skill sources still missing: fishing, instruments, mastery, gathering,
-  farming, crafting, and pet actions require their activity and completion
-  systems, including their metadata-specific code/target values
+- life-skill sources still missing: farming plots and pet actions require
+  their activity and completion systems; gathering, harvesting, crafting,
+  fishing and mastery grade conditions are emitted by the mastery system
 - collected-item exploration progress: the trophy UI now receives the required
   `USER_ENV` response, but collected item quantities are not yet persisted or
   updated when inventory items are acquired
@@ -393,24 +393,23 @@ effects (auto-play extension, mount stability).
 
 What is still missing:
 
-- **Music mastery and performance exp** — stopping a score should award
-  mastery scaled by play time (capped by the score's `mastery_value_max`) and
-  exp from the `musicMastery1-4` tables. There is no mastery system, so
-  stopping only fires the quest condition
+- **Fishing lures** — `fishlure.xml` is projected but lure buffs (their extra
+  spawns, catch ranks and drop boxes) are not read; the reference does not
+  implement them either. The fight-minigame outcome is client-side and
+  likewise unimplemented upstream
 - **Stage geometry** — enter/exit stage toggles between portals 802 and 803
   from a server-side membership set. The reference decides from trigger box
   101 containment, which needs trigger box geometry in the map projection
 - **Performance stage extras** — the applaud and glowstick emotes (skills
   90210001 / 90210002) are parsed and dropped, and party members of the
   performer are not treated as co-performers
-- **Smart Push gaps** — `autoInteraction` (bulk gathering) needs the mastery
-  recipe system; entries with a tag-based item cost are refused because item
-  tags are not projected; the `SaleAutoFishing` / `SaleAutoPlayInstrument`
-  game-event content override is skipped. Two deliberate divergences: a
-  purchase the player cannot afford answers with the lack-of-currency notice
-  (the reference silently drops it), and entering water without the
-  `SafeWaterRiding` effect throws the rider server-side (the reference leaves
-  the dismount to the client)
+- **Smart Push gaps** — entries with a tag-based item cost are refused because
+  item tags are not projected; the `SaleAutoFishing` /
+  `SaleAutoPlayInstrument` game-event content override is skipped. Two
+  deliberate divergences: a purchase the player cannot afford answers with the
+  lack-of-currency notice (the reference silently drops it), and entering
+  water without the `SafeWaterRiding` effect throws the rider server-side (the
+  reference leaves the dismount to the client)
 - **Score expiry** — the reference refuses expired scores; ms2ex only checks
   remaining uses
 - **Ensemble room check** — members are matched on map and channel; the
@@ -472,6 +471,49 @@ combat-heavy characters from accumulating document copies.
 ---
 
 ## Recently completed
+
+- Shallow-water exclusion for fishing tiles: the ingest now also projects the
+  grid-aligned collision boxes (`GeneratePhysX` cubes are ground, whiteboxes
+  are not), so a fluid cube is fishable only when nothing occupies the cell
+  above it and its own cell holds no ground collider — the reference's
+  `IsSurface && !IsShallow` test, without needing the PhysX/NIF mesh pipeline.
+  Boxes that do not fit their own cell only mark occupancy, matching the
+  reference's unaligned entities
+- Auto-fishing: `BuffEventType` is projected onto additional effects, so the
+  Smart Push auto-fish buff is detected — it suppresses the fight minigame and
+  flags catches for the client. Smart Push `autoInteraction` (bulk gathering)
+  now harvests a recipe repeatedly at the player's feet until the node's
+  success rate decays to zero, and interact objects apply their
+  `modify_code` / `modify_time` buff-duration change. A landed fish grants
+  fishing exp (the reference declares the exp type but never awards it)
+
+- Fishing: fluid cubes are projected per map by the ingest (the surface cube
+  of every column deeper than one block), so casting a rod finds the water in
+  front of the player, spawns the bobber guide object and hands the tiles to
+  the client. Casting picks a fish from the map's spot and fish boxes
+  (habitat and spot-mastery filtered, weighted), arms the bite timer from
+  `fisherBoreDuration` minus the rod's reduction, and resolving the bite rolls
+  the size, updates the persisted fish album, broadcasts prize catches, rolls
+  the spot's drop boxes and awards fishing mastery. `fish.xml` (fishes, spots,
+  fish boxes) and `fishingrod.xml` are new ingest projections
+- Interact objects: their drop boxes now roll and land at the object (global
+  and individual boxes, drop height), invoke effects apply as buffs, and
+  telescopes grant their exploration exp once per object with the discovered
+  set persisted and replayed to the client
+
+- Life skills (mastery): mastery values, gathering counts and claimed grade
+  rewards live on the character process and batch-flush to the row, so a
+  gathering spree writes no UPDATE per node. Gathering nodes resolve through
+  the mastery recipe table with the client's success-rate falloff (reward
+  items drop on the node, gathering exp and mastery are awarded, and the
+  grade-differential cutoff stops mastery for recipes far below the player's
+  grade), crafting consumes ingredients plus meso and hands out the crafted
+  items with manufacturing exp, grade reward boxes can be claimed once, and
+  stopping a music score awards performance mastery scaled by play time plus
+  `musicMastery1-4` exp. The mastery block in the character packet carries the
+  real values, and the `masteryreceipe.xml`, `mastery.xml`,
+  `masterydifferentialfactor.xml` and `commonexp.xml` tables are projected by
+  the ingest
 
 - Quest condition batching: quest condition counters accumulate in memory
   in the quest manager and mark quests dirty for a periodic flush (also

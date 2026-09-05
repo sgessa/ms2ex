@@ -523,6 +523,46 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   @doc """
+  Whether an actor has an effect of the given event category active (the
+  auto-fish and auto-perform conveniences, safe riding, ...).
+  """
+  def owner_has_buff_event?(owner_object_id, event_type, state) do
+    Enum.any?(state.buffs, fn {{owner_id, effect_id, _caster_id}, _buff_id} ->
+      owner_id == owner_object_id and effect_event_type(effect_id) == event_type
+    end)
+  end
+
+  defp effect_event_type(effect_id) do
+    case Storage.Skills.get_effect(effect_id, 1) do
+      %{property: %{event_type: event_type}} -> event_type
+      _ -> :none
+    end
+  end
+
+  @doc """
+  Shifts the remaining duration of an actor's effect, as interact objects do
+  when they extend or cut a buff short.
+  """
+  def modify_duration(owner_object_id, effect_id, modify_tick, state) do
+    state.buffs
+    |> Enum.filter(fn {{owner_id, effect, _caster_id}, _buff_id} ->
+      owner_id == owner_object_id and effect == effect_id
+    end)
+    |> Enum.each(fn {_key, buff_id} ->
+      case Managers.Buff.fetch(buff_id) do
+        nil ->
+          :ok
+
+        buff ->
+          buff = Managers.Buff.update(buff, %{end_tick: buff.end_tick + modify_tick})
+          Context.Field.broadcast(state.topic, Packets.Buff.send(:update, buff))
+      end
+    end)
+
+    state
+  end
+
+  @doc """
   Removes a single effect from an actor, whoever cast it.
   """
   def remove_owner_effect(owner_object_id, effect_id, state) do
