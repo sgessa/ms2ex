@@ -44,6 +44,18 @@ defmodule Ms2ex.Context.Characters do
     |> Repo.update()
   end
 
+  @doc """
+  Writes deferred state that the in-memory struct already carries. A cast
+  changeset would drop every field as unchanged, so the changes are forced.
+  """
+  def persist(%Schema.Character{} = character, attrs) do
+    attrs
+    |> Enum.reduce(Ecto.Changeset.change(character), fn {field, value}, changeset ->
+      Ecto.Changeset.force_change(changeset, field, value)
+    end)
+    |> Repo.update()
+  end
+
   def update_stat_points(%Schema.Character{} = character, sources, allocation) do
     character
     |> Schema.Character.changeset(%{

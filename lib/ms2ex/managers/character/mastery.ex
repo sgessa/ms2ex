@@ -113,7 +113,7 @@ defmodule Ms2ex.Managers.Character.Mastery do
       fish_album: Managers.Character.Fishing.album(character)
     }
 
-    case Context.Characters.update(character, attrs) do
+    case Context.Characters.persist(character, attrs) do
       {:ok, updated} -> Map.put(updated, :mastery_dirty?, false)
       _ -> character
     end
