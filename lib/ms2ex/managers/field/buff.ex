@@ -603,7 +603,8 @@ defmodule Ms2ex.Managers.Field.Buff do
     |> Enum.reduce(state, fn stored, state ->
       {_buff, state} =
         add_effect_buff(stored.effect_id, stored.effect_level, character, state, 0,
-          duration_tick: stored.remaining_ms
+          duration_tick: stored.duration_ms,
+          elapsed_tick: stored.duration_ms - stored.remaining_ms
         )
 
       state

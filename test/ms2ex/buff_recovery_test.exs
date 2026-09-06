@@ -63,6 +63,29 @@ defmodule Ms2ex.BuffRecoveryTest do
     Types.Buff.new(1, skill_cast(), %{id: effect_id, level: level}, character(), character())
   end
 
+  test "duration override can restore elapsed buff progress" do
+    before_tick = Ms2ex.sync_ticks()
+
+    buff =
+      Types.Buff.new(
+        1,
+        skill_cast(),
+        %{id: 20_000_027, level: 1},
+        character(),
+        character(),
+        duration_tick: 60_000,
+        elapsed_tick: 20_000
+      )
+
+    after_tick = Ms2ex.sync_ticks()
+
+    assert buff.end_tick - buff.start_tick == 60_000
+    assert buff.start_tick >= before_tick - 20_000
+    assert buff.start_tick <= after_tick - 20_000
+    assert buff.end_tick >= before_tick + 40_000
+    assert buff.end_tick <= after_tick + 40_000
+  end
+
   test "buff without a shield has no shield health" do
     assert buff(20_000_027, 1).shield_health == 0
   end
