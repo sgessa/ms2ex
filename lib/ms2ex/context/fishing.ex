@@ -39,6 +39,8 @@ defmodule Ms2ex.Context.Fishing do
         spot: spot,
         tiles: Map.new(tiles, &{cell(&1.position), &1}),
         guide: guide,
+        bait: nil,
+        bait_used?: false,
         tile: nil,
         fish_id: nil,
         fight_game?: false
@@ -58,16 +60,72 @@ defmodule Ms2ex.Context.Fishing do
     end
   end
 
+  @doc "Consumes a bait item and applies its timed lure effect."
+  @spec select_bait(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
+  def select_bait(%Schema.Character{} = character, 0) do
+    Managers.Character.call(character.id, {:select_fishing_bait, nil})
+    :ok
+  end
+
+  def select_bait(%Schema.Character{} = character, bait_uid) do
+    with true <- auto_fishing?(character),
+         %Schema.Item{} = item <- Managers.Inventory.get(character, bait_uid),
+         :ok <- use_bait_item(character, item) do
+      :ok
+    else
+      _ -> {:error, :s_fishing_error_invalid_item}
+    end
+  end
+
+  @spec select_bait_item(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
+  def select_bait_item(%Schema.Character{} = character, 0), do: select_bait(character, 0)
+
+  def select_bait_item(%Schema.Character{} = character, item_id) do
+    with true <- auto_fishing?(character),
+         %Schema.Item{} = item <- find_lure_item(character, item_id) do
+      use_bait_item(character, item)
+    else
+      _ -> {:error, :s_fishing_error_invalid_item}
+    end
+  end
+
+  @spec use_bait_item(Schema.Character.t(), Schema.Item.t()) :: :ok | {:error, atom()}
+  def use_bait_item(character, item) do
+    with %{metadata: metadata} = item <- Context.Items.load_metadata(item),
+         true <- auto_fishing?(character),
+         true <- fishing_lure?(metadata),
+         effect_id when is_integer(effect_id) <- metadata[:skill_id],
+         effect_level when is_integer(effect_level) <- metadata[:skill_level],
+         %{} <- Storage.Skills.get_effect(effect_id, effect_level),
+         {:ok, lure} <- Storage.Tables.Fish.lure(effect_id),
+         :ok <-
+           Context.Field.call(character, {:add_effect_buff, effect_id, effect_level, character}),
+         {:ok, consumed} <- consume_lure_item(item) do
+      push(character, Packets.InventoryItem.consume(consumed))
+
+      bait = %{effect_id: effect_id, effect_level: effect_level, lure: lure}
+      Managers.Character.call(character.id, {:select_fishing_bait, bait})
+      :ok
+    else
+      _ -> {:error, :s_fishing_error_invalid_item}
+    end
+  end
+
   @doc "Drops the line on a tile and arms the bite timer."
   @spec start(Schema.Character.t(), map()) :: :ok | {:error, atom()}
   def start(%Schema.Character{} = character, position) do
     with %{} = fishing <- Fishing.session(character),
          %{} = tile <- Map.get(fishing.tiles, cell(position)),
-         [_ | _] = fishes <- available_fishes(fishing.spot, tile.liquid_type) do
+         {bait_used?, cast_bait, next_bait} <- consume_bait(character, fishing.bait),
+         [_ | _] = fishes <- available_fishes(fishing.spot, tile.liquid_type, cast_bait) do
       fish = pick_weighted(fishes)
-      {ticks, fight_game?} = bite_timer(fishing.rod, fish, auto_fishing?(character))
+      {ticks, fight_game?} = bite_timer(fishing.rod, fish, auto_fishing?(character), cast_bait)
 
-      Managers.Character.call(character.id, {:fishing_bite, tile, fish.id, fight_game?})
+      Managers.Character.call(
+        character.id,
+        {:fishing_bite, tile, fish.id, fight_game?, bait_used?, next_bait}
+      )
+
       push(character, Packets.Fishing.start(Ms2ex.sync_ticks() + ticks, fight_game?))
       :ok
     else
@@ -255,6 +313,20 @@ defmodule Ms2ex.Context.Fishing do
 
   defp available_fishes(spot, liquid_type), do: collect_fishes(spot, liquid_type)
 
+  defp available_fishes(spot, liquid_type, nil), do: available_fishes(spot, liquid_type)
+
+  defp available_fishes(spot, :water, bait) do
+    if :seawater in spot.liquid_types do
+      available_fishes(spot, :seawater, bait)
+    else
+      available_fishes(spot, :water) ++ lure_fishes(bait.lure, spot, :water)
+    end
+  end
+
+  defp available_fishes(spot, liquid_type, %{lure: lure}) do
+    available_fishes(spot, liquid_type) ++ lure_fishes(lure, spot, liquid_type)
+  end
+
   defp collect_fishes(spot, liquid_type) do
     box_fishes(Storage.Tables.Fish.global_box(spot.global_fish_box_id), spot, liquid_type) ++
       box_fishes(
@@ -281,6 +353,21 @@ defmodule Ms2ex.Context.Fishing do
     end
   end
 
+  defp lure_fishes(%{spawns: spawns}, spot, liquid_type) do
+    Enum.flat_map(spawns, &lure_fish(&1, spot, liquid_type))
+  end
+
+  defp lure_fishes(_lure, _spot, _liquid_type), do: []
+
+  defp lure_fish(%{fish_id: fish_id, rate: rate}, spot, liquid_type) do
+    with {:ok, fish} <- Storage.Tables.Fish.fish(fish_id),
+         true <- catchable?(fish, spot, liquid_type) do
+      [{fish, rate}]
+    else
+      _ -> []
+    end
+  end
+
   defp catchable?(fish, spot, liquid_type) do
     fish.fluid_habitat == liquid_type and
       (fish.ignore_spot_mastery or
@@ -302,10 +389,10 @@ defmodule Ms2ex.Context.Fishing do
 
   # a bite lands inside the bore window; a miss runs past it so the client
   # times out
-  defp bite_timer(rod, fish, auto_fishing?) do
+  defp bite_timer(rod, fish, auto_fishing?, bait) do
     bore = constant(:fisher_bore_duration, @default_bore_duration)
 
-    if :rand.uniform(10_000) - 1 < fish.bait_probability do
+    if :rand.uniform(10_000) - 1 < bait_probability(fish, bait) do
       ticks = bore - rod.reduce_time
 
       fight? =
@@ -322,6 +409,63 @@ defmodule Ms2ex.Context.Fishing do
   # and never runs the fight minigame while it is up
   defp auto_fishing?(character) do
     Context.Field.call(character, {:has_buff_event?, character.object_id, :auto_fish}) == true
+  end
+
+  defp fishing_lure?(%{property: %{tag: :fishing_lure}}), do: true
+  defp fishing_lure?(_metadata), do: false
+
+  defp find_lure_item(character, item_id) do
+    character
+    |> Managers.Inventory.list_items()
+    |> Enum.find(fn item -> item.item_id == item_id end)
+  end
+
+  defp consume_lure_item(item) do
+    case Managers.Inventory.consume(item) do
+      {action, _item} = consumed when action in [:update, :delete] -> {:ok, consumed}
+      _ -> :error
+    end
+  end
+
+  defp consume_bait(character, bait) do
+    bait = active_bait(character, bait)
+    {not is_nil(bait), bait, bait}
+  end
+
+  defp active_bait(character, bait) do
+    if active_lure?(character, bait), do: bait, else: active_lure(character)
+  end
+
+  defp bait_probability(fish, nil), do: fish.bait_probability
+
+  defp bait_probability(fish, %{effect_id: effect_id, lure: lure}) do
+    bait_effect_ids = Map.get(fish, :bait_effect_ids, [])
+
+    if effect_id in bait_effect_ids do
+      lure
+      |> Map.get(:catches, [])
+      |> Enum.find_value(fish.bait_probability, fn
+        %{rank: rank, probability: probability} when rank == fish.rarity -> probability
+        _ -> nil
+      end)
+      |> max(fish.bait_probability)
+    else
+      fish.bait_probability
+    end
+  end
+
+  defp active_lure?(_character, nil), do: false
+
+  defp active_lure?(character, %{effect_id: effect_id}),
+    do: Context.Field.has_buff?(character, effect_id)
+
+  defp active_lure(character) do
+    Storage.Tables.Fish.lures()
+    |> Enum.find(fn %{id: effect_id} -> Context.Field.has_buff?(character, effect_id) end)
+    |> case do
+      nil -> nil
+      lure -> %{effect_id: lure.id, effect_level: lure.buff_level, lure: lure}
+    end
   end
 
   defp random_between(min, max) when max > min, do: min + :rand.uniform(max - min) - 1
@@ -363,6 +507,10 @@ defmodule Ms2ex.Context.Fishing do
     end
 
     update_conditions(character, :fish, fish.id)
+
+    if auto? and Map.get(Fishing.session(character) || %{}, :bait_used?) do
+      update_conditions(character, :fish_success_bait, fish.id)
+    end
 
     # the reference declares the fishing exp type but never awards it; the
     # other life skills all grant their activity exp

@@ -106,6 +106,26 @@ The Tile (0x6) mode, tied to tile skills, is still unimplemented.
 
 ## P3 — Client parity & serialization
 
+### 23. Fishing bait-slot UI sync — [Partial]
+
+Fishing bait mechanics are partially implemented: bait/lure items ingest with
+`property.tag = :fishing_lure`, fish metadata includes lure rows and
+`bait_effect_ids`, using a bait item skill applies the timed lure buff,
+consumes the inventory stack, pushes the shared bait cooldown, and fishing rolls
+can use the active lure buff.
+
+What is still missing:
+
+- the client bait-slot amount does not refresh when the inventory stack is
+  consumed; the normal `INVENTORY_ITEM` update refreshes the inventory tab, but
+  the fishing bait slot keeps its old cached count until the player removes and
+  re-adds the bait
+- the "Use autobait" toggle has no server-side model yet; it likely needs state
+  for auto-reapplying a lure when the active timed bait buff expires
+- the dedicated bait-slot packet or fishing subcommand is unknown. The C#
+  reference has no implementation for this either, so we need to reverse the
+  client around bait slot add/remove, bait use, and autobait toggle packets
+
 ### 22. Insignia condition types — [Partial]
 
 The name tag symbol is complete against the reference: the id is validated

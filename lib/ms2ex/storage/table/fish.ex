@@ -18,6 +18,20 @@ defmodule Ms2ex.Storage.Tables.Fish do
     fetch([:fishes, fish_id])
   end
 
+  @spec lure(integer()) :: {:ok, map()} | :error
+  def lure(effect_id), do: fetch([:lures, effect_id])
+
+  @spec lures() :: [map()]
+  def lures do
+    :table
+    |> Storage.get(@table_name)
+    |> get_in([:lures])
+    |> case do
+      nil -> []
+      lures -> Map.values(lures)
+    end
+  end
+
   @spec global_box(integer()) :: {:ok, map()} | :error
   def global_box(box_id), do: fetch([:global_fish_boxes, box_id])
 

@@ -59,9 +59,18 @@ defmodule Ms2ex.GameHandlers.UseItem do
       "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
       "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
       "SelectItemBox" -> select_box(session, character, item, packet)
+      _ -> maybe_use_bait(session, character, item)
+    end
+  end
+
+  defp maybe_use_bait(session, character, %{metadata: %{property: %{tag: :fishing_lure}}} = item) do
+    case Context.Fishing.use_bait_item(character, item) do
+      :ok -> session
       _ -> session
     end
   end
+
+  defp maybe_use_bait(session, _character, _item), do: session
 
   # the picked entry index arrives as a string after the item uid
   defp select_box(session, character, item, packet) do

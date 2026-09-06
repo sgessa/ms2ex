@@ -137,6 +137,25 @@ defmodule Ms2ex.FishingTest do
       assert Fishing.move_guide(character, %{x: 1, y: 2, z: 3}, nil) == character
     end
 
+    test "bite stores bait state for the active cast" do
+      bait = %{item_uid: 10, item_id: 20, lure_id: 90_000_020, lure: %{}}
+      character = Map.put(%Ms2ex.Schema.Character{}, :fishing, %{bait: bait})
+
+      character = Fishing.bite(character, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil)
+
+      assert Fishing.session(character).bait_used?
+      assert Fishing.session(character).bait == nil
+    end
+
+    test "selected bait is kept in the fishing session" do
+      bait = %{item_uid: 10, item_id: 20, lure_id: 90_000_020, lure: %{}}
+      character = Map.put(%Ms2ex.Schema.Character{}, :fishing, %{bait: nil})
+
+      character = Fishing.select_bait(character, bait)
+
+      assert Fishing.session(character).bait == bait
+    end
+
     test "the first catch of a kind seeds the entry" do
       {character, entry, first?} =
         Fishing.record_catch(%Ms2ex.Schema.Character{}, 101, 40, false)

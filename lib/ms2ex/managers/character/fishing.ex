@@ -22,18 +22,29 @@ defmodule Ms2ex.Managers.Character.Fishing do
   def stop_session(character), do: Map.put(character, :fishing, nil)
 
   @doc "Stores which tile is being fished and which fish is biting."
-  def bite(character, tile, fish_id, fight_game?) do
+  def bite(character, tile, fish_id, fight_game?, bait_used? \\ false, bait \\ nil) do
     case session(character) do
       nil ->
         character
 
       fishing ->
-        Map.put(character, :fishing, %{
-          fishing
-          | tile: tile,
+        fishing =
+          Map.merge(fishing, %{
+            tile: tile,
             fish_id: fish_id,
+            bait_used?: bait_used?,
+            bait: bait,
             fight_game?: fight_game?
-        })
+          })
+
+        Map.put(character, :fishing, fishing)
+    end
+  end
+
+  def select_bait(character, bait) do
+    case session(character) do
+      nil -> character
+      fishing -> Map.put(character, :fishing, Map.put(fishing, :bait, bait))
     end
   end
 

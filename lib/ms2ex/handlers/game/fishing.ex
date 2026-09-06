@@ -16,6 +16,9 @@ defmodule Ms2ex.GameHandlers.Fishing do
   @catch_fish 0x8
   @start 0x9
   @fail_minigame 0xA
+  @select_bait 0xB
+
+  require Logger
 
   def handle(packet, session) do
     {command, packet} = get_byte(packet)
@@ -35,6 +38,26 @@ defmodule Ms2ex.GameHandlers.Fishing do
     Context.Fishing.prepare(character, rod_uid)
   end
 
+  defp handle_command(@select_bait, packet, character) when byte_size(packet) >= 8 do
+    {bait_uid, _packet} = get_long(packet)
+    {bait_item_id, _packet} = get_int(packet)
+
+    case Context.Fishing.select_bait(character, bait_uid) do
+      {:error, _error} -> Context.Fishing.select_bait_item(character, bait_item_id)
+      result -> result
+    end
+  end
+
+  defp handle_command(@select_bait, packet, character) when byte_size(packet) >= 4 do
+    {bait_item_id, _packet} = get_int(packet)
+    Context.Fishing.select_bait_item(character, bait_item_id)
+  end
+
+  defp handle_command(@select_bait, packet, _character) do
+    Logger.warning("Fishing bait command payload too short: #{byte_size(packet)} bytes")
+    :ok
+  end
+
   defp handle_command(@stop, _packet, character), do: Context.Fishing.stop(character)
 
   defp handle_command(@catch_fish, packet, character) do
@@ -50,5 +73,8 @@ defmodule Ms2ex.GameHandlers.Fishing do
   defp handle_command(@fail_minigame, _packet, character),
     do: Context.Fishing.fail_minigame(character)
 
-  defp handle_command(_command, _packet, _character), do: :ok
+  defp handle_command(command, _packet, _character) do
+    Logger.warning("Unhandled fishing command 0x#{Integer.to_string(command, 16)}")
+    :ok
+  end
 end

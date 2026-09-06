@@ -171,6 +171,16 @@ defmodule Ms2ex.Managers.Character do
     {:reply, {:ok, character}, character}
   end
 
+  def handle_call({:fishing_bite, tile, fish_id, fight_game?, bait_used?, bait}, _from, character) do
+    character = Character.Fishing.bite(character, tile, fish_id, fight_game?, bait_used?, bait)
+    {:reply, {:ok, character}, character}
+  end
+
+  def handle_call({:select_fishing_bait, bait}, _from, character) do
+    character = Character.Fishing.select_bait(character, bait)
+    {:reply, {:ok, character}, character}
+  end
+
   def handle_call(:fishing_fail_minigame, _from, character) do
     character = Character.Fishing.clear_minigame(character)
     {:reply, {:ok, character}, character}
