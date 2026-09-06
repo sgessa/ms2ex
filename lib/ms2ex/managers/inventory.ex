@@ -403,8 +403,7 @@ defmodule Ms2ex.Managers.Inventory do
 
   defp apply_add_item(state, %Schema.Item{} = attrs) do
     # bind-on-loot items are character-bound the moment they enter the
-    # inventory (the reference binds in Inventory.Add), so starter gear
-    # never prompts on equip
+    # inventory, so starter gear never prompts on equip
     attrs =
       case Schema.Item.bind_if_needed(attrs, :loot) do
         %Ecto.Changeset{changes: changes} when map_size(changes) > 0 -> Map.merge(attrs, changes)

@@ -37,7 +37,8 @@ defmodule Ms2ex.MobRespawnTest do
       regen_check_time: cooldown,
       population: 2,
       position: %{x: 0.0, y: 0.0, z: 0.0},
-      rotation: %{x: 0.0, y: 0.0, z: 0.0}
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 101
     }
   end
 
@@ -74,13 +75,13 @@ defmodule Ms2ex.MobRespawnTest do
 
     assert map_size(state.npcs) == 2
     assert length(spawn.spawned_mobs) == 2
-    assert Enum.all?(state.npcs, fn {_oid, npc} -> npc.spawn_point_id == spawn.id end)
+    assert Enum.all?(state.npcs, fn {_oid, npc} -> npc.spawn_point_id == spawn.spawn_point_id end)
     assert spawn.spawn_tick == :infinity
   end
 
   test "wiping the spawn schedules one respawn after the cooldown" do
     state = load_spawn(base_state(), spawn_doc())
-    spawn_id = spawn_state(state).id
+    spawn_id = spawn_state(state).spawn_point_id
 
     state = kill_all(state)
     spawn = spawn_state(state)
@@ -150,6 +151,7 @@ defmodule Ms2ex.MobRespawnTest do
       population: 1,
       position: %{x: 0.0, y: 0.0, z: 0.0},
       rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 201,
       on_field_create: true
     }
 
@@ -169,6 +171,7 @@ defmodule Ms2ex.MobRespawnTest do
       population: 1,
       position: %{x: 0.0, y: 0.0, z: 0.0},
       rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 202,
       on_field_create: false
     }
 

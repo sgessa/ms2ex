@@ -37,11 +37,12 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   def load_spawn(state, npc_spawn, npc_ids) do
-    {spawn_point_id, state} = Managers.Field.next_local_id(state)
+    # npc_spawns is keyed by the map's spawn point id — the same id trigger
+    # scripts use to spawn/destroy/emote the staged npcs
+    spawn_point_id = npc_spawn.spawn_point_id
 
     npc_spawn =
       npc_spawn
-      |> Map.put(:id, spawn_point_id)
       |> Map.put(:spawned_mobs, [])
       |> Map.put(:spawned_npcs, [])
 
@@ -66,7 +67,7 @@ defmodule Ms2ex.Managers.Field.Npc do
       npc_spawn[:on_field_create] != false ->
         # story npcs on field-create spawns appear immediately
         Enum.reduce(npc_ids, state, fn npc_id, state ->
-          {:ok, state} = spawn_and_track(state, spawn_point_id, npc_id, npc_spawn)
+          {:ok, state} = spawn_and_track(state, npc_id, npc_spawn)
           state
         end)
 
@@ -76,13 +77,13 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
-  defp spawn_and_track(state, spawn_point_id, npc_id, npc_spawn) do
+  defp spawn_and_track(state, npc_id, npc_spawn) do
     case spawn_npc(state, npc_id, npc_spawn) do
       {%Types.FieldNpc{} = field_npc, state} ->
         state =
           update_in(
             state,
-            [:npc_spawns, spawn_point_id, :spawned_npcs],
+            [:npc_spawns, npc_spawn.spawn_point_id, :spawned_npcs],
             &[
               field_npc.object_id | &1
             ]
@@ -128,7 +129,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     field_npc =
       Types.FieldNpc.new(%{
         object_id: object_id,
-        spawn_point_id: npc_spawn[:id],
+        spawn_point_id: npc_spawn[:spawn_point_id],
         npc: npc,
         position: npc_spawn[:position],
         rotation: npc_spawn[:rotation],
@@ -150,7 +151,7 @@ defmodule Ms2ex.Managers.Field.Npc do
       %{} = spawn when is_map_key(spawn, :npc_ids) ->
         spawned = List.delete(spawn.spawned_mobs, field_npc.object_id)
         spawn = %{spawn | spawned_mobs: spawned}
-        put_in(state, [:npc_spawns, spawn.id], schedule_spawn(spawn))
+        put_in(state, [:npc_spawns, spawn.spawn_point_id], schedule_spawn(spawn))
 
       _ ->
         state
@@ -295,8 +296,8 @@ defmodule Ms2ex.Managers.Field.Npc do
     to_spawn = Enum.drop(expanded, length(Map.get(spawn, :spawned_npcs, [])))
 
     Enum.reduce(to_spawn, {spawn, state}, fn npc_id, {spawn, state} ->
-      case spawn_and_track(state, spawn.id, npc_id, spawn) do
-        {:ok, state} -> {Map.get(state.npc_spawns, spawn.id), state}
+      case spawn_and_track(state, npc_id, spawn) do
+        {:ok, state} -> {Map.get(state.npc_spawns, spawn.spawn_point_id), state}
         {:error, state} -> {spawn, state}
       end
     end)
@@ -326,7 +327,8 @@ defmodule Ms2ex.Managers.Field.Npc do
               waypoints: waypoints,
               index: 0,
               speed: @follow_speed,
-              last_at: System.monotonic_time(:millisecond)
+              last_at: System.monotonic_time(:millisecond),
+              despawn_on_finish?: true
             }
         }
 
@@ -334,6 +336,45 @@ defmodule Ms2ex.Managers.Field.Npc do
 
       {nil, state} ->
         {nil, state}
+    end
+  end
+
+  # walks a story npc along a named patrol path (script move_npc): the
+  # walk streams through the control broadcast and the npc stays at the
+  # last waypoint when the path ends
+  def move_npc(state, spawn_id, path_name) do
+    patrol = Map.get(state[:patrols] || %{}, path_name)
+
+    case patrol do
+      %{way_points: way_points} when way_points != [] ->
+        waypoints = Enum.map(way_points, & &1[:position])
+        approach = Enum.find_value(way_points, & &1[:approach_animation])
+
+        state.npcs
+        |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
+        |> Enum.reduce(state, fn {object_id, npc}, state ->
+          animation = animation_id(npc.npc.id, approach)
+
+          patrol = %{
+            waypoints: waypoints,
+            index: 0,
+            speed: @follow_speed,
+            last_at: System.monotonic_time(:millisecond),
+            despawn_on_finish?: false
+          }
+
+          npc = %{
+            npc
+            | animation: animation || npc.animation,
+              patrol: patrol,
+              send_control?: true
+          }
+
+          put_in(state, [:npcs, object_id], npc)
+        end)
+
+      _ ->
+        state
     end
   end
 
@@ -524,11 +565,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     cond do
       arrived? and patrol.index + 1 >= length(patrol.waypoints) ->
-        # the scripted move ends here: the player regains control, so any
-        # guide hint held during the move is released now
-        send(self(), :release_guide_hold)
-        Process.send_after(self(), {:remove_npc, npc}, 0)
-        %{npc | patrol: nil}
+        finish_patrol(npc, patrol)
 
       arrived? ->
         %{npc | patrol: Map.put(patrol, :index, patrol.index + 1), send_control?: true}
@@ -548,16 +585,29 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   # actors face along their move direction: yaw from the horizontal
-  # velocity, degrees — the ground-plane projection of the reference's
-  # LookTo; the transform stores its front axis negated (M21 = -x, M22 =
-  # -y), so yaw = atan2(dx, -dy). A zero velocity (waypoint arrival) keeps
-  # the last heading
+  # velocity, degrees. With the front axis stored negated in the transform
+  # (M21 = -x, M22 = -y), a move direction (dx, dy) yields
+  # yaw = atan2(dx, -dy). A zero velocity (waypoint arrival) keeps the
+  # last heading
   defp face_move_direction(rotation, {vx, vy, _vz}) when vx != 0 or vy != 0 do
     yaw = :math.atan2(vx, -vy) * 180 / :math.pi()
     %{rotation | z: yaw}
   end
 
   defp face_move_direction(rotation, _velocity), do: rotation
+
+  # end of the scripted path: follow dummies (carrying the player) despawn
+  # and release the guide hold; story npcs on a move_npc stay where they
+  # stopped and return to rest
+  defp finish_patrol(npc, patrol) do
+    if Map.get(patrol, :despawn_on_finish?, false) do
+      send(self(), :release_guide_hold)
+      Process.send_after(self(), {:remove_npc, npc}, 0)
+      %{npc | patrol: nil}
+    else
+      %{npc | patrol: nil, velocity: {0, 0, 0}, animation: 255, send_control?: true}
+    end
+  end
 
   # full 3D step toward the waypoint (waypoints carry ground heights); the
   # velocity is what the control packet reports so the client interpolates

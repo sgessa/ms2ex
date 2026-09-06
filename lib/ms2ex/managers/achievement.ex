@@ -434,9 +434,9 @@ defmodule Ms2ex.Managers.Achievement do
     {:ok, %{achievement | reward_grade: achievement.reward_grade + 1}}
   end
 
-  # TODO skill point rewards (the reference grants skill points with a
-  # rank-based breakdown); no skill point API exists yet, so the grade
-  # stays pending and can be claimed once support lands
+  # TODO skill point rewards (rank-based breakdown per grade); no skill
+  # point API exists yet, so the grade stays pending and can be claimed
+  # once support lands
   defp deliver_reward(%{type: :skillpoint}, _achievement, _character, _manual?),
     do: {:error, :skillpoint_unsupported}
 

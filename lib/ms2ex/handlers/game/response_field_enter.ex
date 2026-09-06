@@ -19,10 +19,10 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     hot_bars = Context.HotBars.list(character)
 
     # a fresh character has no saved quick-slot layout: fill the active hot
-    # bar with the job's learned active skills (the reference's
-    # UpdateHotbarSkills), send the hot bars, then let the client apply its
-    # own key-bind defaults (LoadDefault). both must precede the field-enter
-    # stream so the client initializes its ui from them
+    # bar with the job's learned active skills, send the hot bars, then let
+    # the client apply its own key-bind defaults (LoadDefault). both must
+    # precede the field-enter stream so the client initializes its ui from
+    # them
     hot_bars =
       if fresh_hot_bars?(hot_bars) do
         Context.HotBars.update_hotbar_skills(character, hot_bars)

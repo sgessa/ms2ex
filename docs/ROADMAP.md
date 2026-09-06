@@ -65,12 +65,9 @@ the gate's guide event fires. What is still missing:
   metadata is not projected by the ingest yet
 - navmesh-valid spawn position picking — mobs currently randomize ±250 around
   the spawn point instead of snapping to map spawn volumes
-- friendly NPC spawn points are still spawned eagerly at field load; their
-  trigger-driven creation and `regen_check_time` top-up checks are not
-  implemented
 - a general trigger-script runtime (states, conditions, cinematic/movie
-  actions, per-job portal enables) — the machine core now runs on whitelisted
-  xblocks (the classic tutorial start + knight Training Yard), with
+  actions, per-job portal enables) — done; the machine core now runs on
+  every map that ships trigger scripts, with
   wait-tick / user-detect / monster-dead / widget / quest-user-detect
   conditions and mesh, portal, monster, guide-event, movie, cinematic-ui,
   camera-path, effect, cinematic-talk and user-teleport actions; still
@@ -200,18 +197,20 @@ The newer-class tutorials (runeblade 63000006-chain, striker
 63000015-chain, soulbinder 63000035-chain) are scripted quest campaigns
 (walk-and-talk states, movies, npc choreography, quest-state gates —
 e.g. striker's `63000015_cs/intro01.xml` has 37 states around quest
-90000430) and do not run yet: they need the runtime's remaining
-coverage (per-map verification, cinematic transitions, npc movement).
-Until then those characters skip via the job's skip item
-(`!item 15500095` for a striker, then use it on the start field).
+90000430). The runtime now runs on every scripted map and warns on
+unimplemented actions, so each chain's remaining coverage surfaces
+during a test run; until verified, those characters skip via the job's
+skip item (`!item 15500095` for a striker, then use it on the start
+field).
 
 ### 23. Trigger-script runtime — [Partial]
 
-The xblock trigger scripts run for verified maps (`52000065_qd`,
-`52000142_qd`; whitelist in `Managers.Field.Trigger`): per-script state
-machines tick at 100ms with the reference's semantics (on-enter actions,
-first-true-condition transitions, WaitTick against state entry,
-entrance transition skipping one cycle). Conditions: user_detected
+The xblock trigger scripts run on every map that has them (per-script
+state machines tick at 100ms with the semantics described above:
+on-enter actions, first-true-condition transitions, WaitTick against
+state entry, entrance transition skipping one cycle). Unimplemented
+actions warn in the server log so coverage gaps surface per map.
+Conditions: user_detected
 (job-gated, padded boxes), monster_dead, quest_user_detected (the
 reference's wanted states: 1 started-not-completable, 2 completable,
 3 completed), widget_condition (Guide/SceneMovie), negate. Int-list
@@ -221,8 +220,11 @@ Actions: set_mesh/set_effect, set_portal, spawn/destroy_monster (mob and
 friendly spawns), guide_event, create/widget_action, play_scene_movie,
 set_cinematic_ui, set_onetime_effect, select_camera_path/reset_camera,
 add_cinematic_talk, set_dialogue (player/npc speech balloons and
-cinematic talks), set_npc_emotion_loop (emote sequences resolved through
-the model's animation table), show/hide_guide_summary (held while a
+cinematic talks), set_npc_emotion_loop + set_npc_emotion_sequence
+(emote sequences resolved through the model's animation table),
+move_npc (story npc walks a named patrol, staying at the last
+waypoint), set_pc_emotion_loop (the client loops the player's emote
+for the duration), show/hide_guide_summary (held while a
 cinematic or scripted path move has the player and flushed when control
 returns), set_skip + set_scene_skip + skip-cutscene handling,
 add/remove_buff (script buffs), move_user (same-map teleport refused for
@@ -238,13 +240,7 @@ Still missing:
   comparison with the reference. Load-time camera registration is fixed
   to arrive invisible (a visible entry activates the view client-side,
   stranding relogs outside the intro on a scripted vantage)
-- npc patrol movement for story npcs (move_npc)
-- placed liftables (dropped props) never expire; the reference removes
-  them after item lifetime + finish time, and the story expects the
-  dropped prop to leave the field once the quest completes
 - sound setup actions
-- whitelist expansion beyond the two verified maps (each classic job
-  continuation, then the newer-class cinematic tutorials)
 
 ### 24. Navmesh position validation — [Partial]
 
@@ -558,9 +554,41 @@ combat-heavy characters from accumulating document copies.
   pickup/install via LIFTABLE + REQUEST_CUBE, placed
   prop rendering, item_move condition wiring — the squire-carry quest
   works end to end
-- Script npc emotes (`set_npc_emotion_loop`) and dialogue
-  (`set_dialogue` balloons + cinematic talks) via the new `animation`
-  ingest set (anikeytext per model, sequence name -> id)
+- Script npc emotes (`set_npc_emotion_loop` + one-shot
+  `set_npc_emotion_sequence`) and dialogue (`set_dialogue` balloons +
+  cinematic talks) via the new `animation` ingest set (anikeytext per
+  model, sequence name -> id)
+- npc story walks (`move_npc` patrol attachment, staying at the last
+  waypoint) and player emotion loops (`set_pc_emotion_loop` → Trigger ui
+  EmotionLoop frame)
+- Trigger scripts run on every map that ships them (whitelist removed);
+  unimplemented actions warn in the server log so coverage gaps surface
+  per map
+- Quest/talk npc flow mirrors the dialogue handler: npcs offering a
+  quest with a talk script open the select script as a choice menu
+  (quest vs plain talk) with the pick routed through Continue
+- quest_user_detected distinguishes the wanted states (1 started,
+  2 completable, 3 completed) — the squire-carry beat advances on the
+  right state instead of stalling on the pickup hint
+- Quest manager state carries only persisted row data (state, times,
+  track, condition counters); quest and condition documents resolve
+  from the ETS cache at use time, and the virtual metadata field is
+  dropped from CharacterQuest — fixes same-session turn-in crashes
+- npc_spawns is keyed by the map's spawn point id (the id scripts use),
+  and spawned npcs carry it — spawn-id-targeted actions (emotions,
+  npc balloons) land on the right npc
+- Placed liftables expire item_lifetime + finish_time after placement
+  (RemoveCube + LIFTABLE Remove) — the dropped prop no longer lingers
+  next to the scripted lying npc
+- Scripted portal moves send USER_MOVE_BY_PORTAL with the 25-unit
+  drop-in offset and float rotation — the post-quest scene-anchor
+  teleport no longer drops the player through the ground
+- Trigger Load registers cameras invisible (a visible entry activated
+  the view client-side, stranding relogs on a scripted vantage)
+- Int-list trigger args expand inclusive ranges (`5001-5025`) — the
+  tutorial arrow trails light every effect
+- Unhandled trigger actions log at warning level, so per-map coverage
+  gaps surface during play
 - Guide summary hints held during cutscenes and scripted path moves,
   flushed exactly when the player regains control
 - Follow-dummy facing: the dummy's rotation derives from its movement

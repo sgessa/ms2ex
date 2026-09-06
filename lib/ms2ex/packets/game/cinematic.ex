@@ -86,7 +86,7 @@ defmodule Ms2ex.Packets.Cinematic do
     center_right: 7
   }
 
-  # a speech balloon over an actor's head (the reference's BalloonTalk)
+  # a speech balloon over an actor's head
   def balloon_talk(object_id, script, duration) do
     __MODULE__
     |> build()

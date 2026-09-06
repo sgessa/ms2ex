@@ -1,17 +1,17 @@
 defmodule Ms2ex.Navigation do
   @moduledoc """
-  Point queries against a map's Recast navmesh, mirroring the reference
-  field's ValidPosition: a position is valid when the navmesh has walkable
-  ground for it. Navmesh coordinates are meters with Y up, so map positions
-  transform by a -90 degree rotation about X and a 1/100 scale.
+  Point queries against a map's Recast navmesh: a position is valid when
+  the navmesh has walkable ground for it. Navmesh coordinates are meters
+  with Y up, so map positions transform by a -90 degree rotation about X
+  and a 1/100 scale.
   """
 
   alias Ms2ex.Storage
   alias Ms2ex.Types.Coord
 
   @doc """
-  The reference queries Detour's FindNearestPoly with these half extents
-  (in navmesh meters): 2 across, 4 of height tolerance, 2 across.
+  Poly queries use these half extents (in navmesh meters): 2 across,
+  4 of height tolerance, 2 across.
   """
   @half_x 2.0
   @half_y 4.0
@@ -28,8 +28,8 @@ defmodule Ms2ex.Navigation do
   def valid_position?(_, _), do: true
 
   # returns the closest point on the nearest walkable poly, or nil.
-  # mirrors Detour's FindNearestPoly: candidate polys are those whose
-  # closest point falls within the query box around the position
+  # candidate polys are those whose closest point falls within the query
+  # box around the position
   defp nearest_poly(tiles, %Coord{x: x, y: y, z: z}) do
     # MS2 is Z-up; the navmesh is meters with Y up
     nx = x / 100
@@ -54,7 +54,7 @@ defmodule Ms2ex.Navigation do
     end
   end
 
-  # Detour polygons are convex fans: triangles (v0, vi, vi+1)
+  # navmesh polys are convex fans: triangles (v0, vi, vi+1)
   defp poly_closest(tile, poly, nx, ny, nz) do
     verts = Enum.map(poly, &tile_vertex(tile, &1))
 

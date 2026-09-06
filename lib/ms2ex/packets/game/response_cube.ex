@@ -47,7 +47,7 @@ defmodule Ms2ex.Packets.ResponseCube do
   end
 
   # the placed prop's visual cube leaves the field (liftable expiry or
-  # re-pickup); mirrors the reference's CubePacket.RemoveCube
+  # re-pickup)
   def remove_cube(object_id, {x, y, z}) do
     __MODULE__
     |> build()

@@ -272,6 +272,62 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert [5001, 5002, 5003, 5025] == effect_push_ids()
   end
 
+  test "set_cinematic_ui type 9 broadcasts the opening black screen" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_cinematic_ui", args: %{arg1: "9", arg2: "X"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x68::little-16, 0xB, 1::little-16, 88, 0, 0>>} = receive_push()
+  end
+
+  test "set_pc_emotion_loop broadcasts the player emote loop" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_pc_emotion_loop", args: %{arg1: "Talk_A", arg2: "8000"}}
+    ])
+    |> tick()
+
+    assert {:push,
+            <<0x4F::little-16, 0x8, 0x8, 0, 64, 31, 0, 0, 6, 0, 84, 0, 97, 0, 108, 0, 107, 0, 95,
+              0, 65, 0>>} = receive_push()
+  end
+
+  test "move_npc attaches the patrol to the matching story npc" do
+    state =
+      base_state()
+      |> Map.put(:patrols, %{
+        "MS2PatrolData_2003" => %{
+          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Run_A"}]
+        }
+      })
+      |> Map.put(:npcs, %{
+        700 => %{
+          spawn_point_id: 108,
+          animation: 255,
+          patrol: nil,
+          velocity: {0, 0, 0},
+          rotation: %{x: 0.0, y: 0.0, z: 0.0},
+          send_control?: true,
+          npc: %{id: 11_003_401}
+        },
+        701 => %{spawn_point_id: 109, animation: 255, patrol: nil, npc: %{id: 11_003_399}}
+      })
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "move_npc", args: %{arg1: "108", arg2: "MS2PatrolData_2003"}}
+      ])
+      |> tick()
+
+    npc = state.npcs[700]
+
+    assert %{patrol: %{waypoints: [waypoint], speed: speed}} = npc
+    assert waypoint == %{x: 100.0, y: 100.0, z: 0.0}
+    assert speed == 150
+    # the other npc is untouched
+    assert state.npcs[701][:patrol] == nil
+  end
+
   test "set_cinematic_ui frames the cutscene with a letterbox transition" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
@@ -281,16 +337,6 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     assert {:push, <<0x68::little-16, 0x3, 3::little-32, 0::little-16, 0::little-16>>} =
              receive_push()
-  end
-
-  test "set_cinematic_ui type 9 broadcasts the opening black screen" do
-    base_state()
-    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-      %{name: "set_cinematic_ui", args: %{arg1: "9", arg2: "X"}}
-    ])
-    |> tick()
-
-    assert {:push, <<0x68::little-16, 0xB, 1::little-16, 88, 0, 0>>} = receive_push()
   end
 
   # -- helpers ---------------------------------------------------------

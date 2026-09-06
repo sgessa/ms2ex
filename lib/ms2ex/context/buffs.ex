@@ -22,8 +22,8 @@ defmodule Ms2ex.Context.Buffs do
         }
 
   @doc """
-  Whether an effect should be carried across sessions. Mirrors the reference's
-  `RemoveOnLogout` check.
+  Whether an effect should be carried across sessions: effects flagged to
+  persist survive relogs, everything else drops on logout.
   """
   @spec persist?(integer(), integer()) :: boolean()
   def persist?(effect_id, effect_level) do

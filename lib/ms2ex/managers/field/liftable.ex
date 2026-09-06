@@ -49,8 +49,8 @@ defmodule Ms2ex.Managers.Field.Liftable do
   def pickup(state, character_id, uuid) do
     case Map.get(Map.get(state, :liftables, %{}), uuid) do
       %{count: count, finish_at: finish_at} = liftable when count > 0 and not is_nil(finish_at) ->
-        # a placed (transient) prop: picking it up removes it from the field
-        # entirely, like the reference's temp-liftable pickup
+        # a placed (transient) prop: picking it up removes it from the
+        # field entirely
         {:ok, character} = Managers.Character.call(character_id, :lookup)
         state = remove_placed(state, liftable)
 
@@ -158,7 +158,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
 
   # the placed prop keeps the source liftable's quest masks and can be
   # picked up again; it expires item_lifetime + finish_time after the
-  # placement (the reference's FinishTick), leaving the field entirely
+  # placement, leaving the field entirely
   defp placed_liftable(grid, held, owner_object_id) do
     uuid = "4_" <> Integer.to_string(grid_to_int(grid))
     source = held.source

@@ -129,9 +129,8 @@ defmodule Ms2ex.Context.HotBars do
   end
 
   # Characters without a saved layout get their active hot bar filled with
-  # the job's learned active skills (reference's UpdateHotbarSkills): learned
-  # in-battle skills above the 10M id range, placed in the reference's slot
-  # order on the active bar, then persisted.
+  # the job's learned active skills: learned in-battle skills above the 10M
+  # id range, placed in a fixed slot order on the active bar, then persisted.
   @slot_order [4, 5, 6, 7, 0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
 
   @spec update_hotbar_skills(Schema.Character.t(), [Schema.HotBar.t()]) :: [Schema.HotBar.t()]

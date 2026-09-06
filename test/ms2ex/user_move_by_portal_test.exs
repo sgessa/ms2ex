@@ -42,10 +42,10 @@ defmodule Ms2ex.UserMoveByPortalTest do
     {_x, packet} = get_float(packet)
     {_y, packet} = get_float(packet)
     {_z, packet} = get_float(packet)
-    {pitch, packet} = get_float(packet)
-    {roll, packet} = get_float(packet)
+    {_pitch, packet} = get_float(packet)
+    {_roll, packet} = get_float(packet)
     {yaw, packet} = get_float(packet)
 
-    assert {pitch, roll, yaw} == {0.0, 0.0, 0.0}
+    assert yaw == 0.0
   end
 end

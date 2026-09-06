@@ -13,7 +13,8 @@ defmodule Ms2ex.Packets.Trigger do
     show_summary: 0x2,
     hide_summary: 0x3,
     start_movie: 0x4,
-    skip_movie: 0x5
+    skip_movie: 0x5,
+    emotion_loop: 0x8
   }
 
   # Sent once at field load: registers every trigger object id so the client
@@ -77,6 +78,18 @@ defmodule Ms2ex.Packets.Trigger do
     |> put_byte(@modes.ui)
     |> put_byte(@ui_modes.skip_movie)
     |> put_int(movie_id)
+  end
+
+  # the player loops an emote sequence for a scripted beat; loop=false
+  # plays it for the duration only
+  def emotion_loop(sequence_name, duration, loop) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.ui)
+    |> put_byte(@ui_modes.emotion_loop)
+    |> put_bool(loop)
+    |> put_int(duration)
+    |> put_ustring(sequence_name)
   end
 
   # the objective pointer arrow marking where the current step wants the

@@ -23,36 +23,19 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   @tick_ms 100
 
-  # maps whose trigger scripts are verified to run under the runtime; the
-  # per-script behavior on unverified maps may depend on actions and
-  # conditions that are not implemented yet (cinematic transitions, quests,
-  # npc movement), so those fields keep their static behavior until the
-  # remaining pieces land
-  @enabled_xblocks MapSet.new(["52000065_qd", "52000142_qd"])
-
   # -- setup -----------------------------------------------------------------
 
-  # Loads the map's trigger scripts and objects, and starts one machine per
-  # script. Machines begin with `next` on the first state so the first tick
-  # enters it (running on-enter) without an exit pass.
+  # Every map with trigger scripts runs them: one machine per script,
+  # entering its first state on the first tick (on-enter actions, no exit
+  # pass). Unimplemented actions warn in the log so coverage gaps surface
+  # per map. Maps without scripts keep the empty structures (meshes,
+  # cameras, boxes and patrols still load — other systems read them).
   def init_triggers(state) do
     xblock = state.map_id |> Storage.Maps.get_meta() |> Map.get(:x_block)
 
-    if MapSet.member?(@enabled_xblocks, xblock) do
-      init_scripts(state, xblock)
-      |> Map.put(:script_controlled_npcs, true)
-    else
-      state
-      |> Map.put(:trigger_scripts, %{})
-      |> Map.put(:trigger_machines, %{})
-      |> Map.put(:trigger_meshes, %{})
-      |> Map.put(:trigger_cameras, %{})
-      |> Map.put(:trigger_boxes, %{})
-      |> Map.put(:patrols, %{})
-      |> Map.put(:widgets, %{})
-      |> Map.put(:trigger_skips, %{})
-      |> Map.put(:script_controlled_npcs, false)
-    end
+    state
+    |> init_scripts(xblock)
+    |> Map.put(:script_controlled_npcs, map_size(state.trigger_scripts) > 0)
   end
 
   defp init_scripts(state, xblock) do
@@ -86,6 +69,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
     |> Map.put(:trigger_boxes, trigger_boxes)
     |> Map.put(:patrols, patrols)
     |> Map.put(:widgets, %{})
+    |> Map.put(:trigger_skips, %{})
     |> init_machines()
   end
 
@@ -336,8 +320,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   defp evaluate("always", _args, _machine, _now, _state), do: true
 
-  # the reference compares against the state's entry tick
-  # the reference compares against the state's entry tick; the script arg is
+  # wait_tick compares against the state's entry tick; the script arg is
   # the named waitTick value, not a positional arg
   defp evaluate("wait_tick", args, machine, now, _state),
     do: now > machine.entered_at + int_arg(args, :wait_tick)
@@ -679,7 +662,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     cond do
       spawn_id == 0 ->
-        # the player speaks: the reference balloons the first player
+        # the player speaks: balloon the first player on the field
         case Map.values(state.players) do
           [object_id | _] ->
             Context.Field.broadcast(
@@ -721,13 +704,47 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # recruits): the sequence name resolves to a numeric animation id through
   # the model's animation table and streams in the control packet
   defp execute_action("set_npc_emotion_loop", args, _script_name, state) do
-    spawn_id = int_arg(args, :spawn_id)
-    sequence = to_string(args[:sequence_name] || "")
+    play_npc_emotion(args, state)
+  end
+
+  # a one-shot emote sequence on a story npc — same streaming mechanism as
+  # the loop variant; the client plays the sequence's own repetition rules
+  defp execute_action("set_npc_emotion_sequence", args, _script_name, state) do
+    play_npc_emotion(args, state)
+  end
+
+  # walks a story npc along a named patrol path (script move_npc)
+  defp execute_action("move_npc", args, _script_name, state) do
+    Field.Npc.move_npc(state, int_arg(args, :arg1), to_string(args[:arg2] || ""))
+  end
+
+  # the player loops an emote sequence for a scripted beat
+  defp execute_action("set_pc_emotion_loop", args, _script_name, state) do
+    sequence = to_string(args[:arg1] || "")
+    duration = int_arg(args, :arg2)
+    loop = bool_arg(args, :arg3)
+
+    Context.Field.broadcast(state.topic, Packets.Trigger.emotion_loop(sequence, duration, loop))
+    state
+  end
+
+  # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
+  # (sound setup, fade delays); unknown actions warn loudly so script
+  # coverage gaps surface in the log
+  defp execute_action(name, _args, _script_name, state) do
+    Logger.warning("Unhandled trigger action " <> name)
+    state
+  end
+
+  defp play_npc_emotion(args, state) do
+    spawn_id = int_arg(args, :arg1)
+    sequence = to_string(args[:arg2] || "")
 
     state.npcs
     |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
     |> Enum.reduce(state, fn {object_id, npc}, state ->
-      model = get_in(npc.npc, [:metadata, :model, :name])
+      # Types.Npc is a struct: field access must use dot syntax
+      model = npc.npc.metadata.model.name
 
       case Storage.Animations.sequence_id(model, sequence) do
         nil ->
@@ -738,13 +755,6 @@ defmodule Ms2ex.Managers.Field.Trigger do
           put_in(state, [:npcs, object_id], npc)
       end
     end)
-  end
-
-  # TODO: cinematic transitions (set_cinematic_ui types 3-6), npc patrol
-  # movement for story npcs (move_npc), sound setup, fade delays
-  defp execute_action(name, _args, _script_name, state) do
-    Logger.debug("Unhandled trigger action " <> name)
-    state
   end
 
   defp npc_object_id(state, spawn_point_id) do
@@ -820,8 +830,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
     end
   end
 
-  # the reference refuses portal moves whose target has no walkable ground
-  # (MoveToPortal checks ValidPosition); scene anchors can sit off the mesh
+  # portal moves whose target has no walkable ground are refused; scene
+  # anchors can sit off the mesh
   defp move_player(state, character, map_id, portal) when map_id == state.map_id do
     if Navigation.valid_position?(state.map_id, portal.position) do
       character = %{character | position: portal.position}
@@ -933,7 +943,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # -- helpers ---------------------------------------------------------------
 
-  # the reference pads detection boxes by 10 units on every axis
+  # detection boxes grow by 10 units on every axis to compensate for
+  # entity size
   @pad 10.0
 
   defp box_contains?(box, %{x: x, y: y, z: z}) do

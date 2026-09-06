@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.Trigger do
          {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
       Context.Field.call(character.field_pid, {:update_widget, widget_key, arg})
 
-      # the reference echoes the movie stop so the client resets its player
+      # echoing the movie stop lets the client reset its player state
       if widget_key == :scene_movie, do: push(session, Packets.Trigger.skip_movie(arg))
     end
 

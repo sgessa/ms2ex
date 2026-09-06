@@ -16,6 +16,6 @@ defmodule Ms2ex.Packets.UserMoveByPortal do
     |> put_bool(false)
   end
 
-  # the reference's MoveByPortal always offsets the target 25 units up
+  # the target is always offset 25 units up
   defp drop_in(%{z: z} = position), do: %{position | z: z + 25}
 end
