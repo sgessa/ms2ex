@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-4A7C34A3.js"></script>
+    <script defer src="dist/sidebar_items-D57AC006.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -119,9 +119,8 @@ server drop tables, rolls the contents for the opening character, grants
 them, and consumes the box (plus any key items) per open.</p><p>Three open flows: OpenItemBox (drop tables plus an optional direct
 item), SelectItemBox (player picks an entry by index from one drop
 group) and OpenItemBoxWithKey (consumes key items). Rewards that do
-not fit the inventory are mailed on the live game; there is no mail
-system yet, so a failed grant stops the open with the inventory-full
-error and leaves the remaining boxes unopened.</p>
+not fit the inventory are mailed to the character, stopping
+subsequent opens with the inventory-full error.</p>
     </section>
 
 </div>
@@ -173,7 +172,7 @@ the number of successful opens and the resulting error code.</p></div>
       <h1 class="signature" translate="no">open(session, character, item, count, index)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/handlers/game/helpers/item_box.ex#L40" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/handlers/game/helpers/item_box.ex#L39" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

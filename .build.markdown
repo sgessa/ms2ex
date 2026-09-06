@@ -31,6 +31,7 @@ Ms2ex.Context.ItemStatsCalculator.md
 Ms2ex.Context.ItemTransfer.md
 Ms2ex.Context.ItemTypes.md
 Ms2ex.Context.Items.md
+Ms2ex.Context.Mails.md
 Ms2ex.Context.MapBlock.md
 Ms2ex.Context.Mastery.md
 Ms2ex.Context.Mobs.md
@@ -71,6 +72,8 @@ Ms2ex.Enums.InsigniaType.md
 Ms2ex.Enums.InventoryTab.md
 Ms2ex.Enums.ItemType.md
 Ms2ex.Enums.Job.md
+Ms2ex.Enums.MailError.md
+Ms2ex.Enums.MailType.md
 Ms2ex.Enums.MasteryError.md
 Ms2ex.Enums.MasteryType.md
 Ms2ex.Enums.MeretMarketCurrency.md
@@ -123,6 +126,7 @@ Ms2ex.GameHandlers.Job.md
 Ms2ex.GameHandlers.KeyTable.md
 Ms2ex.GameHandlers.Liftable.md
 Ms2ex.GameHandlers.LoadUgcMap.md
+Ms2ex.GameHandlers.Mail.md
 Ms2ex.GameHandlers.Mastery.md
 Ms2ex.GameHandlers.MyInfo.md
 Ms2ex.GameHandlers.NpcTalk.md
@@ -359,6 +363,7 @@ Ms2ex.Schema.Friend.md
 Ms2ex.Schema.HotBar.md
 Ms2ex.Schema.InventoryTab.md
 Ms2ex.Schema.Item.md
+Ms2ex.Schema.Mail.md
 Ms2ex.Schema.PremiumMembership.md
 Ms2ex.Schema.Skill.md
 Ms2ex.Schema.SkillTab.md

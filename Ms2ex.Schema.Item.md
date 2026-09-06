@@ -30,6 +30,8 @@
   limit_break_level: term(),
   location: term(),
   lock_character_id: term(),
+  mail: term(),
+  mail_id: term(),
   metadata: term(),
   mob_drop?: term(),
   object_id: term(),

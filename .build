@@ -32,6 +32,7 @@ Ms2ex.Context.ItemStatsCalculator.html
 Ms2ex.Context.ItemTransfer.html
 Ms2ex.Context.ItemTypes.html
 Ms2ex.Context.Items.html
+Ms2ex.Context.Mails.html
 Ms2ex.Context.MapBlock.html
 Ms2ex.Context.Mastery.html
 Ms2ex.Context.Mobs.html
@@ -72,6 +73,8 @@ Ms2ex.Enums.InsigniaType.html
 Ms2ex.Enums.InventoryTab.html
 Ms2ex.Enums.ItemType.html
 Ms2ex.Enums.Job.html
+Ms2ex.Enums.MailError.html
+Ms2ex.Enums.MailType.html
 Ms2ex.Enums.MasteryError.html
 Ms2ex.Enums.MasteryType.html
 Ms2ex.Enums.MeretMarketCurrency.html
@@ -124,6 +127,7 @@ Ms2ex.GameHandlers.Job.html
 Ms2ex.GameHandlers.KeyTable.html
 Ms2ex.GameHandlers.Liftable.html
 Ms2ex.GameHandlers.LoadUgcMap.html
+Ms2ex.GameHandlers.Mail.html
 Ms2ex.GameHandlers.Mastery.html
 Ms2ex.GameHandlers.MyInfo.html
 Ms2ex.GameHandlers.NpcTalk.html
@@ -360,6 +364,7 @@ Ms2ex.Schema.Friend.html
 Ms2ex.Schema.HotBar.html
 Ms2ex.Schema.InventoryTab.html
 Ms2ex.Schema.Item.html
+Ms2ex.Schema.Mail.html
 Ms2ex.Schema.PremiumMembership.html
 Ms2ex.Schema.Skill.html
 Ms2ex.Schema.SkillTab.html
@@ -456,8 +461,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-C2B07301.js
-dist/sidebar_items-4A7C34A3.js
+dist/search_data-487C51FD.js
+dist/sidebar_items-D57AC006.js
 index.html
 license.html
 readme.html

@@ -54,6 +54,7 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.KeyTable](Ms2ex.GameHandlers.KeyTable.md)
 - [Ms2ex.GameHandlers.Liftable](Ms2ex.GameHandlers.Liftable.md)
 - [Ms2ex.GameHandlers.LoadUgcMap](Ms2ex.GameHandlers.LoadUgcMap.md)
+- [Ms2ex.GameHandlers.Mail](Ms2ex.GameHandlers.Mail.md)
 - [Ms2ex.GameHandlers.Mastery](Ms2ex.GameHandlers.Mastery.md): Life skill requests: claiming the reward box of a mastery grade and
 crafting a mastery recipe at a workbench.
 
@@ -269,6 +270,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Schema.HotBar](Ms2ex.Schema.HotBar.md)
   - [Ms2ex.Schema.InventoryTab](Ms2ex.Schema.InventoryTab.md)
   - [Ms2ex.Schema.Item](Ms2ex.Schema.Item.md)
+  - [Ms2ex.Schema.Mail](Ms2ex.Schema.Mail.md)
   - [Ms2ex.Schema.PremiumMembership](Ms2ex.Schema.PremiumMembership.md)
   - [Ms2ex.Schema.Skill](Ms2ex.Schema.Skill.md)
   - [Ms2ex.Schema.SkillTab](Ms2ex.Schema.SkillTab.md)
@@ -291,6 +293,8 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Enums.InventoryTab](Ms2ex.Enums.InventoryTab.md)
   - [Ms2ex.Enums.ItemType](Ms2ex.Enums.ItemType.md)
   - [Ms2ex.Enums.Job](Ms2ex.Enums.Job.md)
+  - [Ms2ex.Enums.MailError](Ms2ex.Enums.MailError.md)
+  - [Ms2ex.Enums.MailType](Ms2ex.Enums.MailType.md)
   - [Ms2ex.Enums.MasteryError](Ms2ex.Enums.MasteryError.md): Error codes the client renders for mastery (life skill) actions.
   - [Ms2ex.Enums.MasteryType](Ms2ex.Enums.MasteryType.md): Life skill (mastery) types. The order doubles as the wire order of the
 mastery block written into the character packet.
@@ -394,6 +398,9 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.ItemTransfer](Ms2ex.Context.ItemTransfer.md): Item trade-state semantics: transfer flags and character binding.
   - [Ms2ex.Context.ItemTypes](Ms2ex.Context.ItemTypes.md)
   - [Ms2ex.Context.Items](Ms2ex.Context.Items.md)
+  - [Ms2ex.Context.Mails](Ms2ex.Context.Mails.md): Context module for the Mail System.
+Manages player-to-player mail, system mail, attachments, and collection.
+
   - [Ms2ex.Context.MapBlock](Ms2ex.Context.MapBlock.md)
   - [Ms2ex.Context.Mastery](Ms2ex.Context.Mastery.md): Life skills: harvesting gathering nodes and crafting mastery recipes, plus
 claiming the reward boxes each mastery grade hands out.
@@ -491,7 +498,8 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.LoginRequired](Ms2ex.Packets.LoginRequired.md)
   - [Ms2ex.Packets.LoginResult](Ms2ex.Packets.LoginResult.md)
   - [Ms2ex.Packets.LoginToGame](Ms2ex.Packets.LoginToGame.md)
-  - [Ms2ex.Packets.Mail](Ms2ex.Packets.Mail.md)
+  - [Ms2ex.Packets.Mail](Ms2ex.Packets.Mail.md): Packet serializer for the Mail System (SendOp 0x55).
+
   - [Ms2ex.Packets.MarketInventory](Ms2ex.Packets.MarketInventory.md)
   - [Ms2ex.Packets.Mastery](Ms2ex.Packets.Mastery.md): Life skill (mastery) frames: mastery value updates, grade reward claims,
 crafted item results and the error notices the client renders.
