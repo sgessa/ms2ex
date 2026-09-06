@@ -33,9 +33,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
   def init_triggers(state) do
     xblock = state.map_id |> Storage.Maps.get_meta() |> Map.get(:x_block)
 
-    state
-    |> init_scripts(xblock)
-    |> Map.put(:script_controlled_npcs, map_size(state.trigger_scripts) > 0)
+    state = init_scripts(state, xblock)
+    Map.put(state, :script_controlled_npcs, map_size(state.trigger_scripts) > 0)
   end
 
   defp init_scripts(state, xblock) do
