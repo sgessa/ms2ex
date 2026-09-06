@@ -9,6 +9,7 @@ defmodule Ms2ex.Schema.CharacterBuff do
     field :effect_id, :integer
     field :effect_level, :integer, default: 1
     field :stacks, :integer, default: 1
+    field :duration_ms, :integer
     field :expires_at, :utc_datetime_usec
 
     timestamps(type: :utc_datetime)
@@ -17,7 +18,7 @@ defmodule Ms2ex.Schema.CharacterBuff do
   @doc false
   def changeset(buff, attrs) do
     buff
-    |> cast(attrs, [:character_id, :effect_id, :effect_level, :stacks, :expires_at])
+    |> cast(attrs, [:character_id, :effect_id, :effect_level, :stacks, :duration_ms, :expires_at])
     |> validate_required([:character_id, :effect_id, :effect_level, :stacks, :expires_at])
   end
 end

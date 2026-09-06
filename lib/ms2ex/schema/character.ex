@@ -34,6 +34,11 @@ defmodule Ms2ex.Schema.Character do
 
   @optional_fields [
     :active_skill_tab_id,
+    :discovered_objects,
+    :fish_album,
+    :gathering_counts,
+    :masteries,
+    :mastery_rewards_claimed,
     :profile_url,
     :stat_point_sources,
     :stat_point_allocation
@@ -62,6 +67,7 @@ defmodule Ms2ex.Schema.Character do
 
     field :active_skill_tab_id, :integer
     field :discovered_maps, {:array, :integer}, default: []
+    field :discovered_objects, {:array, :integer}, default: []
     field :exp, :integer, default: 0
     field :guide_records, EctoTypes.Term, default: %{}
     field :insignia_id, :integer, default: 0
@@ -70,6 +76,16 @@ defmodule Ms2ex.Schema.Character do
     field :map_id, :integer
     field :motto, :string, default: "Let's Maple!"
     field :name, :string
+
+    # life skills: mastery value per mastery type, how often each gathering
+    # recipe was harvested (the success rate decays with it) and which
+    # mastery grade reward boxes were already claimed
+    field :masteries, EctoTypes.Term, default: %{}
+    field :gathering_counts, EctoTypes.Term, default: %{}
+    field :mastery_rewards_claimed, EctoTypes.Term, default: %{}
+    field :fish_album, EctoTypes.Term, default: %{}
+    field :mastery_dirty?, :boolean, virtual: true, default: false
+    field :fishing, EctoTypes.Term, virtual: true
 
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1

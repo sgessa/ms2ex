@@ -15,14 +15,23 @@ defmodule Ms2ex.Packets.InteractObject do
   @type_mesh 0x01
   @type_telescope 0x02
   @type_ui 0x03
-  @type_display 0x05
+  @type_web 0x04
+  @type_display_image 0x05
   @type_gathering 0x06
+  @type_guild_poster 0x07
+  @type_bill_board 0x08
+  @type_watch_tower 0x09
 
   # commands
   @update 0x04
   @interact 0x05
   @load 0x08
   @add 0x09
+  @result 0x0D
+
+  # GatherResult
+  @gather_success 0x00
+  @gather_fail 0x01
 
   @doc "Broadcasts an object's state change (normal / reactable / hidden)."
   def update(object) do
@@ -76,14 +85,37 @@ defmodule Ms2ex.Packets.InteractObject do
     |> put_bool(false)
   end
 
-  @doc "Plays the interaction animation for an object on every client."
-  def interact(object) do
+  @doc """
+  Plays the interaction animation for an object on every client. Gathering
+  nodes additionally carry whether the harvest succeeded and how much of the
+  node it consumed.
+  """
+  def interact(object, gather_result \\ :success, decrease_amount \\ 0) do
     __MODULE__
     |> build()
     |> put_byte(@interact)
     |> put_string(object.uuid)
     |> put_byte(type_byte(object))
+    |> put_gather_result(object, gather_result, decrease_amount)
   end
+
+  @doc "Notice the client shows once an interaction resolved."
+  def result(object, interact_result) do
+    __MODULE__
+    |> build()
+    |> put_byte(@result)
+    |> put_byte(interact_result)
+    |> put_string(object.uuid)
+    |> put_byte(type_byte(object))
+  end
+
+  defp put_gather_result(packet, %{type: :gathering}, gather_result, decrease_amount) do
+    packet
+    |> put_short(if gather_result == :success, do: @gather_success, else: @gather_fail)
+    |> put_int(decrease_amount)
+  end
+
+  defp put_gather_result(packet, _object, _gather_result, _decrease_amount), do: packet
 
   defp maybe_put_gather_count(packet, %{type: :gathering}),
     do: put_int(packet, 10)
@@ -96,7 +128,11 @@ defmodule Ms2ex.Packets.InteractObject do
 
   defp type_byte(%{type: :telescope}), do: @type_telescope
   defp type_byte(%{type: :ui}), do: @type_ui
-  defp type_byte(%{type: :display}), do: @type_display
+  defp type_byte(%{type: :web}), do: @type_web
+  defp type_byte(%{type: :display_image}), do: @type_display_image
   defp type_byte(%{type: :gathering}), do: @type_gathering
+  defp type_byte(%{type: :guild_poster}), do: @type_guild_poster
+  defp type_byte(%{type: :bill_board}), do: @type_bill_board
+  defp type_byte(%{type: :watch_tower}), do: @type_watch_tower
   defp type_byte(_object), do: @type_mesh
 end

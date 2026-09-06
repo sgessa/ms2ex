@@ -41,17 +41,19 @@ defmodule Ms2ex.Types.Buff do
     __MODULE__
     |> struct(attrs)
     |> stack()
-    |> override_duration(Keyword.get(opts, :duration_tick))
+    |> override_duration(Keyword.get(opts, :duration_tick), Keyword.get(opts, :elapsed_tick, 0))
     |> set_shield_health()
     |> tick_state()
   end
 
   # purchased buffs run for the length the player paid for, not the effect's
   # metadata duration
-  defp override_duration(%__MODULE__{} = buff, nil), do: buff
+  defp override_duration(%__MODULE__{} = buff, nil, _elapsed_tick), do: buff
 
-  defp override_duration(%__MODULE__{} = buff, duration_tick),
-    do: %{buff | end_tick: buff.start_tick + duration_tick}
+  defp override_duration(%__MODULE__{} = buff, duration_tick, elapsed_tick) do
+    start_tick = buff.start_tick - min(elapsed_tick, duration_tick)
+    %{buff | start_tick: start_tick, end_tick: start_tick + duration_tick}
+  end
 
   def stack(%__MODULE__{} = buff) do
     stacks = min(buff.stacks, buff.effect.property.max_count)

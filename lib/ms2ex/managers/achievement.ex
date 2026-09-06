@@ -388,6 +388,9 @@ defmodule Ms2ex.Managers.Achievement do
     end
   end
 
+  defp deliver_reward(%{type: type}, achievement, _character, false) when type in [:item, :title],
+    do: {:ok, achievement}
+
   defp deliver_reward(%{type: :item} = reward, achievement, character, true) do
     item = Context.Items.init(reward.code, %{amount: reward.value, rarity: reward.rank})
 

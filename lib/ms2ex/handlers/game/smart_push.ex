@@ -28,6 +28,9 @@ defmodule Ms2ex.GameHandlers.SmartPush do
       {:ok, %{type: :additional_effect} = metadata} ->
         additional_effect(metadata, packet, session)
 
+      {:ok, %{type: :auto_interaction} = metadata} ->
+        auto_interaction(metadata, packet, session)
+
       {:ok, %{type: type}} ->
         Logger.warning("Unhandled smart push type #{type} for id #{smart_push_id}")
         session
@@ -38,11 +41,26 @@ defmodule Ms2ex.GameHandlers.SmartPush do
     end
   end
 
+  # bulk gathering: harvests the recipe repeatedly at the player's feet until
+  # the node's success rate decays to zero
+  defp auto_interaction(metadata, packet, session) do
+    {amount, packet} = get_int(packet)
+    {recipe_id, _packet} = get_int(packet)
+
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+         :ok <- consume_required_item(session, character, metadata),
+         {:ok, _character, count} <- Context.Mastery.bulk_gather(character, recipe_id, amount) do
+      push(session, Packets.SmartPush.activate_gather(metadata.id, count))
+    else
+      _ -> session
+    end
+  end
+
   defp additional_effect(metadata, packet, session) do
     {package_id, _packet} = get_int(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         :ok <- no_required_item(metadata),
+         :ok <- consume_required_item(session, character, metadata),
          {:ok, session, opts} <- charge(session, character, metadata, package_id) do
       Context.Field.call(character, {:add_effect_buff, metadata.value, 1, character, opts})
       session
@@ -56,11 +74,51 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   defp lack_code(:mesos), do: Enums.StringCode.get_value(:s_err_lack_meso)
   defp lack_code(_currency), do: Enums.StringCode.get_value(:s_err_lack_merat)
 
-  # tag-based item costs need item tag metadata we don't project, so those
-  # entries are refused rather than handed out for free
-  defp no_required_item(%{required_item: %{tag: :none}}), do: :ok
-  defp no_required_item(%{required_item: _required}), do: :error
-  defp no_required_item(_metadata), do: :ok
+  defp consume_required_item(_session, _character, %{required_item: %{tag: :none}}), do: :ok
+
+  defp consume_required_item(_session, _character, %{required_item: %{amount: amount}})
+       when amount <= 0, do: :ok
+
+  defp consume_required_item(session, character, %{required_item: %{tag: tag, amount: amount}}) do
+    character
+    |> tagged_items(tag)
+    |> consume_tagged_items(session, amount)
+  end
+
+  defp consume_required_item(_session, _character, _metadata), do: :ok
+
+  defp tagged_items(character, tag) do
+    character
+    |> Managers.Inventory.list_items()
+    |> Enum.map(&Context.Items.load_metadata/1)
+    |> Enum.filter(&(get_in(&1.metadata, [:property, :tag]) == tag))
+    |> Enum.sort_by(&{&1.amount, &1.id})
+  end
+
+  defp consume_tagged_items(items, session, amount) do
+    if total_amount(items) >= amount do
+      items
+      |> take_tagged_items(amount)
+      |> Enum.each(fn {item, count} ->
+        consumed = Managers.Inventory.consume(item, count)
+        push(session, Packets.InventoryItem.consume(consumed))
+      end)
+
+      :ok
+    else
+      :error
+    end
+  end
+
+  defp total_amount(items), do: Enum.reduce(items, 0, &(&1.amount + &2))
+
+  defp take_tagged_items(_items, amount) when amount <= 0, do: []
+  defp take_tagged_items([], _amount), do: []
+
+  defp take_tagged_items([item | rest], amount) do
+    count = min(item.amount, amount)
+    [{item, count} | take_tagged_items(rest, amount - count)]
+  end
 
   defp charge(session, character, %{content: content} = metadata, package_id)
        when content in @auto_action_contents do

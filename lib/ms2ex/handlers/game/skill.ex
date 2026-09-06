@@ -68,14 +68,19 @@ defmodule Ms2ex.GameHandlers.Skill do
       })
 
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
+    fishing_lure_item? = fishing_lure_item?(character, item_uid)
 
     if Types.SkillCast.use_item?(skill_cast) do
       consume_used_item(session, character, item_uid)
     end
 
     case Types.SkillCast.cooldown(skill_cast, Ms2ex.sync_ticks()) do
-      nil -> :ok
-      cooldown -> Managers.Character.call(character, {:save_skill_cooldown, cooldown})
+      nil ->
+        :ok
+
+      cooldown ->
+        Managers.Character.call(character, {:save_skill_cooldown, cooldown})
+        push(session, Packets.SkillCooldown.bytes([cooldown]))
     end
 
     state = {unknown, is_hold, hold_int, hold_string}
@@ -91,6 +96,10 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     Context.Field.broadcast_stats(character)
     Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
+
+    if fishing_lure_item? do
+      consume_used_item(session, character, item_uid)
+    end
 
     # skill-use quest conditions track casts per skill id
     Managers.Quest.update_conditions(
@@ -279,6 +288,17 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       _ ->
         :ok
+    end
+  end
+
+  defp fishing_lure_item?(character, item_uid) do
+    case Managers.Inventory.get(character, item_uid) do
+      %Ms2ex.Schema.Item{} = item ->
+        item = Context.Items.load_metadata(item)
+        get_in(item.metadata, [:property, :tag]) == :fishing_lure
+
+      _ ->
+        false
     end
   end
 end
