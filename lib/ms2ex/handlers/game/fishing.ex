@@ -39,7 +39,7 @@ defmodule Ms2ex.GameHandlers.Fishing do
   end
 
   defp handle_command(@select_bait, packet, character) when byte_size(packet) >= 8 do
-    {bait_uid, _packet} = get_long(packet)
+    {bait_uid, packet} = get_long(packet)
     {bait_item_id, _packet} = get_int(packet)
 
     case Context.Fishing.select_bait(character, bait_uid) do

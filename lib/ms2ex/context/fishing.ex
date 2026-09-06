@@ -68,8 +68,7 @@ defmodule Ms2ex.Context.Fishing do
   end
 
   def select_bait(%Schema.Character{} = character, bait_uid) do
-    with true <- auto_fishing?(character),
-         %Schema.Item{} = item <- Managers.Inventory.get(character, bait_uid),
+    with %Schema.Item{} = item <- Managers.Inventory.get(character, bait_uid),
          :ok <- use_bait_item(character, item) do
       :ok
     else
@@ -81,10 +80,8 @@ defmodule Ms2ex.Context.Fishing do
   def select_bait_item(%Schema.Character{} = character, 0), do: select_bait(character, 0)
 
   def select_bait_item(%Schema.Character{} = character, item_id) do
-    with true <- auto_fishing?(character),
-         %Schema.Item{} = item <- find_lure_item(character, item_id) do
-      use_bait_item(character, item)
-    else
+    case find_lure_item(character, item_id) do
+      %Schema.Item{} = item -> use_bait_item(character, item)
       _ -> {:error, :s_fishing_error_invalid_item}
     end
   end
@@ -92,7 +89,6 @@ defmodule Ms2ex.Context.Fishing do
   @spec use_bait_item(Schema.Character.t(), Schema.Item.t()) :: :ok | {:error, atom()}
   def use_bait_item(character, item) do
     with %{metadata: metadata} = item <- Context.Items.load_metadata(item),
-         true <- auto_fishing?(character),
          true <- fishing_lure?(metadata),
          effect_id when is_integer(effect_id) <- metadata[:skill_id],
          effect_level when is_integer(effect_level) <- metadata[:skill_level],
@@ -508,7 +504,7 @@ defmodule Ms2ex.Context.Fishing do
 
     update_conditions(character, :fish, fish.id)
 
-    if auto? and Map.get(Fishing.session(character) || %{}, :bait_used?) do
+    if Map.get(Fishing.session(character) || %{}, :bait_used?) do
       update_conditions(character, :fish_success_bait, fish.id)
     end
 
