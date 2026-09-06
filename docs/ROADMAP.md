@@ -440,10 +440,6 @@ What is still missing:
 - **Guild emblems and guild posters** — the packets, upload handling and the
   `/guildmark` routes are wired, but there is no guild system for them to
   attach to, so a confirmation only records the stored path
-- **Field advertising banners** — banners are never spawned on a field and
-  `load_banners` always sends an empty list. Needs a `banner.xml` accessor, a
-  reservation table keyed by date/hour, and the `activate_banner`,
-  `update_banner` and `reserve_banner_slots` send packets
 - **Layout blueprints** — depend on the housing cube system; the blueprint
   block written next to the UGC descriptor is currently all zeroes
 - **Free design coupons** — `use_voucher` is parsed but ignored, so the player
@@ -469,10 +465,6 @@ What is still missing:
   mastery scaled by play time (capped by the score's `mastery_value_max`) and
   exp from the `musicMastery1-4` tables. There is no mastery system, so
   stopping only fires the quest condition
-- **Remaining uses on a dedicated column** — the count lives in the item's
-  `data` term to avoid a migration; it should be a real column alongside the
-  other item fields, and the `remaining_uses` send packet is only pushed on
-  play, never on load
 - **Stage geometry** — enter/exit stage toggles between portals 802 and 803
   from a server-side membership set. The reference decides from trigger box
   101 containment, which needs trigger box geometry in the map projection
@@ -632,7 +624,9 @@ combat-heavy characters from accumulating document copies.
   surface under `/ugc` (`/urq.aspx` upload plus the profile, item, item icon,
   banner, guild mark and blueprint fetch routes) with path-traversal, size and
   ownership guards. Design-shop items are charged, staged and added to the
-  inventory with their descriptor persisted and serialized alongside the item
+  inventory with their descriptor persisted and serialized alongside the item.
+  Field banners persist reservations, upload their artwork, restore schedules
+  on relog, and activate at the scheduled UTC hour
 
 - Equipment state extraction: equip transitions moved into the character
   process (`Managers.Character.Equips`, like `.Experience` / `.Stats`) — one
