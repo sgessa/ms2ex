@@ -43,8 +43,8 @@ skipped.
 @spec persist?(integer(), integer()) :: boolean()
 ```
 
-Whether an effect should be carried across sessions. Mirrors the reference's
-`RemoveOnLogout` check.
+Whether an effect should be carried across sessions: effects flagged to
+persist survive relogs, everything else drops on logout.
 
 # `save`
 

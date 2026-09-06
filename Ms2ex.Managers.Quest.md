@@ -42,6 +42,8 @@ client) and drops their persisted rows.
 
 Persists every pending condition-counter change.
 
+# `flush_dirty`
+
 # `get_all_quests`
 
 Get all quests for a character, including both character-specific and account quests.

@@ -3,6 +3,11 @@
 
 Quest condition helpers.
 
+A quest in the manager state carries only its persisted condition
+counters (`%{index => counter}`); the condition documents — type, value,
+codes, target — live in the quest's storage metadata and are resolved
+from ETS as each event is matched.
+
 Progress matching follows the metadata layout: `codes` carry the event id
 the condition is gated on (npc id, item id, skill id, map id, ...), while
 `target` optionally carries a minimum-value gate the pushed value must
@@ -11,6 +16,11 @@ reach for the progress to count.
 # `all_met?`
 
 # `metadata_matches?`
+
+Whether one condition document accepts the pushed event: the code Long
+must satisfy the condition's code gate and the pushed value its target
+gate. Shared with the achievement conditions, which follow the same
+metadata layout.
 
 # `update`
 

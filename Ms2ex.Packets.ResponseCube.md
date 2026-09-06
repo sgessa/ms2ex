@@ -7,6 +7,10 @@
 
 # `pickup`
 
+# `place_liftable`
+
+# `remove_cube`
+
 # `return_map`
 
 # `update_profile`

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
+    <script defer src="dist/sidebar_items-4A7C34A3.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,7 +114,10 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Quest condition helpers.</p><p>Progress matching follows the metadata layout: <code class="inline">codes</code> carry the event id
+<p>Quest condition helpers.</p><p>A quest in the manager state carries only its persisted condition
+counters (<code class="inline">%{index =&gt; counter}</code>); the condition documents — type, value,
+codes, target — live in the quest's storage metadata and are resolved
+from ETS as each event is matched.</p><p>Progress matching follows the metadata layout: <code class="inline">codes</code> carry the event id
 the condition is gated on (npc id, item id, skill id, map id, ...), while
 <code class="inline">target</code> optionally carries a minimum-value gate the pushed value must
 reach for the progress to count.</p>
@@ -144,9 +147,14 @@ reach for the progress to count.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#metadata_matches?/5" data-no-tooltip="" translate="no">metadata_matches?(metadata, target_string, target_long, code_string, code_long)</a>
+        <a href="#metadata_matches?/5" data-no-tooltip="" translate="no">metadata_matches?(doc, target_string, target_long, code_string, code_long)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Whether one condition document accepts the pushed event: the code Long
+must satisfy the condition's code gate and the pushed value its target
+gate. Shared with the achievement conditions, which follow the same
+metadata layout.</p></div>
 
     </div>
 
@@ -182,7 +190,7 @@ reach for the progress to count.</p>
       <h1 class="signature" translate="no">all_met?(quest)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest/conditions.ex#L110" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest/conditions.ex#L119" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -201,10 +209,10 @@ reach for the progress to count.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">metadata_matches?(metadata, target_string, target_long, code_string, code_long)</h1>
+      <h1 class="signature" translate="no">metadata_matches?(doc, target_string, target_long, code_string, code_long)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest/conditions.ex#L173" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest/conditions.ex#L152" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -213,7 +221,10 @@ reach for the progress to count.</p>
 
   <section class="docstring">
 
-
+<p>Whether one condition document accepts the pushed event: the code Long
+must satisfy the condition's code gate and the pushed value its target
+gate. Shared with the achievement conditions, which follow the same
+metadata layout.</p>
   </section>
 </section>
 <section class="detail" id="update/7">
@@ -226,7 +237,7 @@ reach for the progress to count.</p>
       <h1 class="signature" translate="no">update(quest, condition_type, counter, target_string, target_long, code_string, code_long)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest/conditions.ex#L116" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/quest/conditions.ex#L128" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

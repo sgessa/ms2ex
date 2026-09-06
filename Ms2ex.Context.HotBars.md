@@ -82,6 +82,14 @@ Finds the quick slot by skill ID and item UID and replaces it with an empty slot
     iex> remove_quick_slot(hot_bar, 99999, "nonexistent")
     :error
 
+# `update_hotbar_skills`
+
+```elixir
+@spec update_hotbar_skills(Ms2ex.Schema.Character.t(), [Ms2ex.Schema.HotBar.t()]) :: [
+  Ms2ex.Schema.HotBar.t()
+]
+```
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

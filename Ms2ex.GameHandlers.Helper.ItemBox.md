@@ -5,10 +5,10 @@ Item box opening: resolves the box's function parameters against the
 server drop tables, rolls the contents for the opening character, grants
 them, and consumes the box (plus any key items) per open.
 
-Mirrors the reference ItemBoxManager: OpenItemBox (drop tables plus an
-optional direct item), SelectItemBox (player picks an entry by index
-from one drop group) and OpenItemBoxWithKey (consumes key items). The
-reference mails rewards that do not fit the inventory; there is no mail
+Three open flows: OpenItemBox (drop tables plus an optional direct
+item), SelectItemBox (player picks an entry by index from one drop
+group) and OpenItemBoxWithKey (consumes key items). Rewards that do
+not fit the inventory are mailed on the live game; there is no mail
 system yet, so a failed grant stops the open with the inventory-full
 error and leaves the remaining boxes unopened.
 

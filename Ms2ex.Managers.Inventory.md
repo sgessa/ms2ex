@@ -16,11 +16,15 @@ Adds an item, merging onto existing stacks when stackable. Acquisition
 flows notify the quest manager themselves (see
 `Ms2ex.Managers.Quest.notify_item_acquired/2`).
 
+# `add_to_state`
+
 # `alive?`
 
 # `all`
 
 Lists every item of a character, equipped and carried.
+
+# `apply_consume_item_amounts`
 
 # `bind`
 
@@ -50,6 +54,10 @@ See `Supervisor`.
 ```
 
 Consumes an amount of an item, deleting it when emptied.
+
+# `consume_amounts_from_state`
+
+# `consume_from_state`
 
 # `consume_item_amount`
 
@@ -132,6 +140,8 @@ Counts the free slots of a tab.
 ```
 
 Gets an item by uid.
+
+# `get_from_state`
 
 # `list_equips`
 

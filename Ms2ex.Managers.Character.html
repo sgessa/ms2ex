@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
+    <script defer src="dist/sidebar_items-4A7C34A3.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -203,6 +203,18 @@ MS2EX
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_state/2" data-no-tooltip="" translate="no">update_state(character, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Merges runtime-only fields (cooldowns, buffs, regen, ...) from the manager
+state back onto a (possibly stale) character struct. Pure: state in,
+character out.</p></div>
+
+    </div>
+
 </div>
 
   </section>
@@ -271,7 +283,7 @@ MS2EX
       <h1 class="signature" translate="no">check_death(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/character.ex#L362" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/character.ex#L346" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -437,6 +449,30 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="update_state/2">
+
+  <div class="detail-header">
+    <a href="#update_state/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_state(character, state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/character.ex#L381" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Merges runtime-only fields (cooldowns, buffs, regen, ...) from the manager
+state back onto a (possibly stale) character struct. Pure: state in,
+character out.</p>
   </section>
 </section>
 

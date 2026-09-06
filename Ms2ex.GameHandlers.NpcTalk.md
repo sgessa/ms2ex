@@ -4,10 +4,11 @@
 NPC interaction flow (talk + quest selection).
 
 Flow: `Quest.talk` announces the quest list, `NpcTalk.respond` opens the
-dialogue bound to the npc (first available quest's script state when quests
-exist), and picking a quest from the list re-enters the dialogue via
-`NpcTalk.continue` for that quest's script state (100s accept / 200s
-progress / 300s complete).
+dialogue. When the npc offers a quest AND has its own talk script, the
+select script opens the choice menu first (quest vs plain talk); picking
+a side re-enters the dialogue via `NpcTalk.continue` for the quest's
+script state (100s accept / 200s progress / 300s complete) or the npc's
+talk script.
 
 # `handle`
 

@@ -15,11 +15,17 @@
 
 # `load_spawn`
 
+# `move_npc`
+
 # `remove_npc`
+
+# `spawn_follow_dummy`
 
 # `spawn_npc`
 
 # `tick`
+
+# `trigger_spawn`
 
 ---
 

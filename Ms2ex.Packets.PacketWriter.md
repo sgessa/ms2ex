@@ -27,6 +27,8 @@
 
 # `put_long`
 
+# `put_sbyte`
+
 # `put_sbyte_coord`
 
 # `put_short`

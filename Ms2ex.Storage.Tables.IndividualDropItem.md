@@ -8,7 +8,7 @@ Resolves an individual drop box id to its drop groups, keyed by group id.
 # `has_entries?`
 
 Whether the drop box exists with at least one drop group; a box without
-entries cannot be opened (reference returns its inventory-fail error).
+entries cannot be opened (the open fails with the inventory error).
 
 ---
 

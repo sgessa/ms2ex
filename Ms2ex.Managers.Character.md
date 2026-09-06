@@ -39,6 +39,12 @@ See `Supervisor`.
 
 # `start`
 
+# `update_state`
+
+Merges runtime-only fields (cooldowns, buffs, regen, ...) from the manager
+state back onto a (possibly stale) character struct. Pure: state in,
+character out.
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

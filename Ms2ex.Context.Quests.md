@@ -36,6 +36,17 @@ Drops every persisted row of the given quests in one statement.
 @spec has_completed_quest?(Ms2ex.Schema.Character.t(), integer()) :: boolean()
 ```
 
+# `save_counters`
+
+```elixir
+@spec save_counters(Ms2ex.Schema.CharacterQuest.t()) ::
+  {:ok, Ms2ex.Schema.CharacterQuest.t()} | {:error, Ecto.Changeset.t()}
+```
+
+Persists a quest's condition counters unconditionally. The in-memory quest
+already carries the serialized counters, so a plain changeset would see no
+change; this forces the column write (used by the manager's dirty flush).
+
 # `serialize_conditions`
 
 ```elixir

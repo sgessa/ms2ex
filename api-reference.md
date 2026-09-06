@@ -52,6 +52,7 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.ItemLock](Ms2ex.GameHandlers.ItemLock.md)
 - [Ms2ex.GameHandlers.Job](Ms2ex.GameHandlers.Job.md)
 - [Ms2ex.GameHandlers.KeyTable](Ms2ex.GameHandlers.KeyTable.md)
+- [Ms2ex.GameHandlers.Liftable](Ms2ex.GameHandlers.Liftable.md)
 - [Ms2ex.GameHandlers.LoadUgcMap](Ms2ex.GameHandlers.LoadUgcMap.md)
 - [Ms2ex.GameHandlers.Mastery](Ms2ex.GameHandlers.Mastery.md): Life skill requests: claiming the reward box of a mastery grade and
 crafting a mastery recipe at a workbench.
@@ -95,6 +96,7 @@ rider. Paying grants an additional effect.
 - [Ms2ex.GameHandlers.StateSkill](Ms2ex.GameHandlers.StateSkill.md)
 - [Ms2ex.GameHandlers.Taxi](Ms2ex.GameHandlers.Taxi.md)
 - [Ms2ex.GameHandlers.Tombstone](Ms2ex.GameHandlers.Tombstone.md)
+- [Ms2ex.GameHandlers.Trigger](Ms2ex.GameHandlers.Trigger.md)
 - [Ms2ex.GameHandlers.Ugc](Ms2ex.GameHandlers.Ugc.md)
 - [Ms2ex.GameHandlers.UseItem](Ms2ex.GameHandlers.UseItem.md)
 - [Ms2ex.GameHandlers.UserChat](Ms2ex.GameHandlers.UserChat.md)
@@ -134,6 +136,11 @@ objects (react count reached) hide permanently, unless a hide delay is
 configured. Normal objects return to Reactable after their reset time.
 
 - [Ms2ex.Managers.Field.Item](Ms2ex.Managers.Field.Item.md)
+- [Ms2ex.Managers.Field.Liftable](Ms2ex.Managers.Field.Liftable.md): Quest liftable props (e.g. the carried squire): rendered by the client
+from the field-enter batch, picked up with the interact key (recv
+LIFTABLE), and installed at a liftable target box — which fires the
+quest's item_move condition.
+
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
 - [Ms2ex.Managers.Field.PerformanceStage](Ms2ex.Managers.Field.PerformanceStage.md): The Queenstown concert stage: one player (or their party) holds the stage
 at a time, announced to the field as the `music_concert` field property so
@@ -141,6 +148,10 @@ clients light up the stage and show the performance timer.
 - [Ms2ex.Managers.Field.Portal](Ms2ex.Managers.Field.Portal.md)
 - [Ms2ex.Managers.Field.RegionSkill](Ms2ex.Managers.Field.RegionSkill.md)
 - [Ms2ex.Managers.Field.Tombstone](Ms2ex.Managers.Field.Tombstone.md)
+- [Ms2ex.Managers.Field.Trigger](Ms2ex.Managers.Field.Trigger.md): Trigger-script runtime: every map script runs as an independent state
+machine. A machine enters a state (running its on-enter actions), then
+each cycle evaluates the state's conditions in document order — the
+first that evaluates true runs its inline actions and transitions.
 - [Ms2ex.Managers.GlobalCounter](Ms2ex.Managers.GlobalCounter.md)
 - [Ms2ex.Managers.GroupChat](Ms2ex.Managers.GroupChat.md)
 - [Ms2ex.Managers.Inventory](Ms2ex.Managers.Inventory.md)
@@ -155,11 +166,17 @@ clients light up the stage and show the performance timer.
 - [Ms2ex.Managers.Session](Ms2ex.Managers.Session.md)
 - [Ms2ex.Managers.SessionManager](Ms2ex.Managers.SessionManager.md)
 - [Ms2ex.Managers.SkillCast](Ms2ex.Managers.SkillCast.md)
+- [Ms2ex.Navigation](Ms2ex.Navigation.md): Point queries against a map's Recast navmesh: a position is valid when
+the navmesh has walkable ground for it. Navmesh coordinates are meters
+with Y up, so map positions transform by a -90 degree rotation about X
+and a 1/100 scale.
+
 - [Ms2ex.Packets](Ms2ex.Packets.md)
 - [Ms2ex.Release](Ms2ex.Release.md)
 - [Ms2ex.Repo](Ms2ex.Repo.md)
 - [Ms2ex.Storage](Ms2ex.Storage.md): Lazy, Redis-backed metadata cache.
 - [Ms2ex.Storage.Achievements](Ms2ex.Storage.Achievements.md)
+- [Ms2ex.Storage.Animations](Ms2ex.Storage.Animations.md)
 - [Ms2ex.Storage.Items](Ms2ex.Storage.Items.md)
 - [Ms2ex.Storage.Maps](Ms2ex.Storage.Maps.md)
 - [Ms2ex.Storage.Npcs](Ms2ex.Storage.Npcs.md)
@@ -201,6 +218,10 @@ the reward box handed out for reaching it.
 - [Ms2ex.Storage.Tables.UgcDesign](Ms2ex.Storage.Tables.UgcDesign.md): Cost and rarity of the design shop templates a player can turn into an item.
 
 - [Ms2ex.Storage.Tables.UserStats](Ms2ex.Storage.Tables.UserStats.md)
+- [Ms2ex.Storage.Triggers](Ms2ex.Storage.Triggers.md): Per-map trigger scripts, keyed by the map's xblock name. Each document
+holds every script of the xblock: states with on-enter/on-exit actions
+plus ordered conditions carrying their transition target.
+
 - [Ms2ex.TransferFlags](Ms2ex.TransferFlags.md)
 - [Ms2ex.Workers.DailyReset](Ms2ex.Workers.DailyReset.md): Runs at midnight (Oban crontab) to reset each character's daily meso
 instant-revive allowance. The counter is stored on the character row so it
@@ -411,11 +432,13 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.BannerList](Ms2ex.Packets.BannerList.md)
   - [Ms2ex.Packets.Breakable](Ms2ex.Packets.Breakable.md)
   - [Ms2ex.Packets.Buff](Ms2ex.Packets.Buff.md)
+  - [Ms2ex.Packets.CameraInterpolation](Ms2ex.Packets.CameraInterpolation.md)
   - [Ms2ex.Packets.CharacterCreate](Ms2ex.Packets.CharacterCreate.md)
   - [Ms2ex.Packets.CharacterInfo](Ms2ex.Packets.CharacterInfo.md)
   - [Ms2ex.Packets.CharacterList](Ms2ex.Packets.CharacterList.md)
   - [Ms2ex.Packets.CharacterMaxCount](Ms2ex.Packets.CharacterMaxCount.md)
   - [Ms2ex.Packets.ChatSticker](Ms2ex.Packets.ChatSticker.md)
+  - [Ms2ex.Packets.Cinematic](Ms2ex.Packets.Cinematic.md)
   - [Ms2ex.Packets.ControlNpc](Ms2ex.Packets.ControlNpc.md)
   - [Ms2ex.Packets.DeadUser](Ms2ex.Packets.DeadUser.md)
   - [Ms2ex.Packets.Dismantle](Ms2ex.Packets.Dismantle.md)
@@ -437,6 +460,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.Fishing](Ms2ex.Packets.Fishing.md): Fishing frames: the water tiles a rod can reach, the bite timer, catches
 and the fish album.
 
+  - [Ms2ex.Packets.FollowNpc](Ms2ex.Packets.FollowNpc.md)
   - [Ms2ex.Packets.Friend](Ms2ex.Packets.Friend.md)
   - [Ms2ex.Packets.FunctionCube](Ms2ex.Packets.FunctionCube.md)
   - [Ms2ex.Packets.FurnishingInventory](Ms2ex.Packets.FurnishingInventory.md)
@@ -475,12 +499,12 @@ crafted item results and the error notices the client renders.
   - [Ms2ex.Packets.Mentor](Ms2ex.Packets.Mentor.md)
   - [Ms2ex.Packets.Merets](Ms2ex.Packets.Merets.md)
   - [Ms2ex.Packets.Mesos](Ms2ex.Packets.Mesos.md)
-  - [Ms2ex.Packets.MoveCharacter](Ms2ex.Packets.MoveCharacter.md)
   - [Ms2ex.Packets.MoveResult](Ms2ex.Packets.MoveResult.md)
   - [Ms2ex.Packets.MyInfo](Ms2ex.Packets.MyInfo.md)
   - [Ms2ex.Packets.Notice](Ms2ex.Packets.Notice.md)
   - [Ms2ex.Packets.NpcTalk](Ms2ex.Packets.NpcTalk.md): NpcTalk packet builders.
   - [Ms2ex.Packets.NpsInfo](Ms2ex.Packets.NpsInfo.md)
+  - [Ms2ex.Packets.OneTimeEffect](Ms2ex.Packets.OneTimeEffect.md)
   - [Ms2ex.Packets.Ops.Recv](Ms2ex.Packets.Ops.Recv.md)
   - [Ms2ex.Packets.Ops.Send](Ms2ex.Packets.Ops.Send.md)
   - [Ms2ex.Packets.PacketReader](Ms2ex.Packets.PacketReader.md)
@@ -528,6 +552,10 @@ crafted item results and the error notices the client renders.
   - [Ms2ex.Packets.UserBattle](Ms2ex.Packets.UserBattle.md)
   - [Ms2ex.Packets.UserChat](Ms2ex.Packets.UserChat.md)
   - [Ms2ex.Packets.UserEnv](Ms2ex.Packets.UserEnv.md)
+  - [Ms2ex.Packets.UserMoveByPortal](Ms2ex.Packets.UserMoveByPortal.md): Scripted portal moves (`move_user`): the player is dropped 25 units
+above the target anchor so the client settles onto the ground instead
+of clipping into it.
+
   - [Ms2ex.Packets.UserState](Ms2ex.Packets.UserState.md)
   - [Ms2ex.Packets.UserSync](Ms2ex.Packets.UserSync.md)
   - [Ms2ex.Packets.Vibrate](Ms2ex.Packets.Vibrate.md)

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
+    <script defer src="dist/sidebar_items-4A7C34A3.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -141,6 +141,14 @@ flows notify the quest manager themselves (see
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_to_state/2" data-no-tooltip="" translate="no">add_to_state(state, item)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#alive?/1" data-no-tooltip="" translate="no">alive?(id)</a>
 
       </div>
@@ -154,6 +162,14 @@ flows notify the quest manager themselves (see
       </div>
 
         <div class="summary-synopsis"><p>Lists every item of a character, equipped and carried.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#apply_consume_item_amounts/2" data-no-tooltip="" translate="no">apply_consume_item_amounts(state, consumables)</a>
+
+      </div>
 
     </div>
 
@@ -200,6 +216,22 @@ flows notify the quest manager themselves (see
       </div>
 
         <div class="summary-synopsis"><p>Consumes an amount of an item, deleting it when emptied.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#consume_amounts_from_state/2" data-no-tooltip="" translate="no">consume_amounts_from_state(state, consumables)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#consume_from_state/3" data-no-tooltip="" translate="no">consume_from_state(state, item, consumed)</a>
+
+      </div>
 
     </div>
 
@@ -294,6 +326,14 @@ metadata marks it bind-on-equip.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>Gets an item by uid.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_from_state/2" data-no-tooltip="" translate="no">get_from_state(state, uid)</a>
+
+      </div>
 
     </div>
 
@@ -444,6 +484,28 @@ flows notify the quest manager themselves (see
 <a href="Ms2ex.Managers.Quest.html#notify_item_acquired/2"><code class="inline">Ms2ex.Managers.Quest.notify_item_acquired/2</code></a>).</p>
   </section>
 </section>
+<section class="detail" id="add_to_state/2">
+
+  <div class="detail-header">
+    <a href="#add_to_state/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_to_state(state, item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L195" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="alive?/1">
 
   <div class="detail-header">
@@ -486,6 +548,28 @@ flows notify the quest manager themselves (see
   <section class="docstring">
 
 <p>Lists every item of a character, equipped and carried.</p>
+  </section>
+</section>
+<section class="detail" id="apply_consume_item_amounts/2">
+
+  <div class="detail-header">
+    <a href="#apply_consume_item_amounts/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">apply_consume_item_amounts(state, consumables)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L487" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="bind/1">
@@ -613,6 +697,50 @@ flows notify the quest manager themselves (see
       </div>
 
 <p>Consumes an amount of an item, deleting it when emptied.</p>
+  </section>
+</section>
+<section class="detail" id="consume_amounts_from_state/2">
+
+  <div class="detail-header">
+    <a href="#consume_amounts_from_state/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">consume_amounts_from_state(state, consumables)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L210" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="consume_from_state/3">
+
+  <div class="detail-header">
+    <a href="#consume_from_state/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">consume_from_state(state, item, consumed)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L199" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="consume_item_amount/3">
@@ -875,6 +1003,28 @@ metadata marks it bind-on-equip.</p>
       </div>
 
 <p>Gets an item by uid.</p>
+  </section>
+</section>
+<section class="detail" id="get_from_state/2">
+
+  <div class="detail-header">
+    <a href="#get_from_state/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_from_state(state, uid)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L197" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="list_equips/1">

@@ -9,19 +9,22 @@
   corpse?: term(),
   damage_dealers: term(),
   dead?: term(),
+  emote_loop: term(),
   field: term(),
   first_attacker: term(),
   last_attacker: term(),
   last_control_at: term(),
   npc: term(),
   object_id: term(),
+  patrol: term(),
   position: term(),
   rotation: term(),
   send_control?: term(),
   seq_counter: term(),
   spawn_point_id: term(),
   stats: term(),
-  type: term()
+  type: term(),
+  velocity: term()
 }
 ```
 

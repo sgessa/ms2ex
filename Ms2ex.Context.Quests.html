@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
+    <script defer src="dist/sidebar_items-4A7C34A3.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -175,6 +175,18 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#save_counters/1" data-no-tooltip="" translate="no">save_counters(quest)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Persists a quest's condition counters unconditionally. The in-memory quest
+already carries the serialized counters, so a plain changeset would see no
+change; this forces the column write (used by the manager's dirty flush).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#serialize_conditions/1" data-no-tooltip="" translate="no">serialize_conditions(conditions)</a>
 
       </div>
@@ -242,7 +254,7 @@ MS2EX
       <h1 class="signature" translate="no">delete_quest(owner_id, quest_id, account_quest?)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L55" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L53" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -270,7 +282,7 @@ MS2EX
       <h1 class="signature" translate="no">delete_quests(owner_id, quest_ids, account_quest?)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L69" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -326,7 +338,7 @@ MS2EX
       <h1 class="signature" translate="no">has_completed_quest?(character, quest_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L82" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L80" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -344,6 +356,37 @@ MS2EX
 
   </section>
 </section>
+<section class="detail" id="save_counters/1">
+
+  <div class="detail-header">
+    <a href="#save_counters/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">save_counters(quest)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L108" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> save_counters(Ms2ex.Schema.CharacterQuest.t()) ::
+  {:ok, Ms2ex.Schema.CharacterQuest.t()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+
+      </div>
+
+<p>Persists a quest's condition counters unconditionally. The in-memory quest
+already carries the serialized counters, so a plain changeset would see no
+change; this forces the column write (used by the manager's dirty flush).</p>
+  </section>
+</section>
 <section class="detail" id="serialize_conditions/1">
 
   <div class="detail-header">
@@ -354,7 +397,7 @@ MS2EX
       <h1 class="signature" translate="no">serialize_conditions(conditions)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L104" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L116" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -382,7 +425,7 @@ MS2EX
       <h1 class="signature" translate="no">update_quest(quest, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L47" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/quests.ex#L46" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
