@@ -1,7 +1,6 @@
 defmodule Ms2ex.QuestManagerTest do
   use Ms2ex.DataCase, async: false
 
-  alias Ms2ex.Context.Quests
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Quest.Conditions
   alias Ms2ex.Repo
@@ -79,21 +78,15 @@ defmodule Ms2ex.QuestManagerTest do
     %{character: character, quest: quest}
   end
 
-  test "condition counters accumulate in memory", %{character: character, quest: quest} do
-    quest = %{quest | metadata: @quest_metadata}
-
+  test "condition counters accumulate in memory", %{quest: quest} do
     updated = Conditions.update(quest, :map, 1, "", 0, "", 2_000_062)
-    assert updated.conditions[0].counter == 1
+    assert updated.conditions[0] == 1
 
     updated = Conditions.update(updated, :map, 1, "", 0, "", 2_000_062)
-    assert updated.conditions[0].counter == 2
+    assert updated.conditions[0] == 2
   end
 
-  test "flushing dirty state persists accumulated counters", %{
-    character: character,
-    quest: quest
-  } do
-    quest = %{quest | metadata: @quest_metadata}
+  test "flushing dirty state persists accumulated counters", %{quest: quest} do
     quest = Conditions.update(quest, :map, 1, "", 0, "", 2_000_062)
     quest = Conditions.update(quest, :map, 1, "", 0, "", 2_000_062)
 
@@ -110,12 +103,10 @@ defmodule Ms2ex.QuestManagerTest do
   end
 
   test "an unmet quest is not completable", %{quest: quest} do
-    quest = %{quest | metadata: @quest_metadata}
     assert Conditions.all_met?(quest) == false
   end
 
   test "completing a met quest marks it completed", %{quest: quest} do
-    quest = %{quest | metadata: @quest_metadata}
     quest = Conditions.update(quest, :map, 1, "", 0, "", 2_000_062)
     quest = Conditions.update(quest, :map, 1, "", 0, "", 2_000_062)
     assert Conditions.all_met?(quest)

@@ -13,7 +13,6 @@ defmodule Ms2ex.Managers.Field.Trigger do
   require Logger
 
   alias Ms2ex.Context
-  alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Field
   alias Ms2ex.Navigation
@@ -391,17 +390,25 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   defp evaluate(_name, _args, _machine, _now, _state), do: false
 
+  # the wanted-state semantics: 1 = started (but not completable),
+  # 2 = started with all conditions met (completable), 3 = completed
+  @spec quest_state_matches?(map() | nil, integer()) :: boolean()
+  def quest_state_matches?(nil, _wanted), do: false
+
+  def quest_state_matches?(quest, wanted) do
+    started? = quest.state == :started
+
+    cond do
+      wanted == 1 -> started? and not Managers.Quest.Conditions.all_met?(quest)
+      wanted == 2 -> started? and Managers.Quest.Conditions.all_met?(quest)
+      wanted == 3 -> quest.state == :completed
+      true -> false
+    end
+  end
+
   defp quest_state_is?(character_id, quest_id, wanted) do
     quest = Managers.Quest.get_quest(character_id, quest_id)
-
-    case quest do
-      %{} = quest ->
-        value = Enums.QuestState.get_value(quest.state)
-        if wanted in [2, 3], do: value in [2, 3], else: value == wanted
-
-      _ ->
-        false
-    end
+    quest_state_matches?(quest, wanted)
   catch
     _kind, _reason -> false
   end

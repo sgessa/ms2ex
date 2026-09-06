@@ -212,8 +212,9 @@ The xblock trigger scripts run for verified maps (`52000065_qd`,
 machines tick at 100ms with the reference's semantics (on-enter actions,
 first-true-condition transitions, WaitTick against state entry,
 entrance transition skipping one cycle). Conditions: user_detected
-(job-gated, padded boxes), monster_dead, quest_user_detected (started /
-completed mapping), widget_condition (Guide/SceneMovie), negate. Int-list
+(job-gated, padded boxes), monster_dead, quest_user_detected (the
+reference's wanted states: 1 started-not-completable, 2 completable,
+3 completed), widget_condition (Guide/SceneMovie), negate. Int-list
 arguments accept single ids, comma lists and inclusive ranges
 (`5001-5025` → every id — this drives the tutorial's arrow trails).
 Actions: set_mesh/set_effect, set_portal, spawn/destroy_monster (mob and
@@ -324,6 +325,10 @@ Completion and acceptance commit the quest row, turn-in item consumption
 exp and currencies are granted post-commit. Condition-counter changes from
 gameplay events accumulate in memory and batch into a periodic flush (also
 on demand and on stop) instead of one UPDATE per matching quest per event.
+The quest manager's state stores only persisted row data (state, times,
+track flag, condition counters); the quest document and condition documents
+are read from the ETS cache wherever needed — no metadata is mirrored into
+the manager.
 Non-forfeitable quests refuse abandon, the expiration sweep drops expired
 rows in one statement per owner scope and notifies the client, and
 go-to-npc travel moves the character to the quest's destination map.

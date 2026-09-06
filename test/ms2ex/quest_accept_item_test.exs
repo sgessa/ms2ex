@@ -54,26 +54,23 @@ defmodule Ms2ex.QuestAcceptItemTest do
     assert Conditions.all_met?(updated) == false
   end
 
+  # the manager state carries only the condition counters; documents
+  # resolve from ETS by quest id
   defp started_quest do
     quest_doc = Storage.get(:quest, @quest_id)
 
-    conditions =
+    counters =
       quest_doc
       |> Map.get(:conditions, [])
       |> Enum.with_index()
-      |> Map.new(fn {condition, index} ->
-        {Integer.to_string(index),
-         %{
-           metadata: condition,
-           counter: 0
-         }}
-      end)
+      |> Map.new(fn {_condition, index} -> {index, 0} end)
 
     %{
       id: @quest_id,
+      quest_id: @quest_id,
       state: :started,
-      metadata: quest_doc,
-      conditions: conditions
+      start_time: :os.system_time(:second),
+      conditions: counters
     }
   end
 end

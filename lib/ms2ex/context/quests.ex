@@ -19,7 +19,7 @@ defmodule Ms2ex.Context.Quests do
         (quest.owner_id == ^character_id and quest.is_account_quest == false)
     )
     |> Repo.all()
-    |> Enum.map(&hydrate_quest/1)
+    |> Enum.map(&normalize_quest/1)
     |> Enum.reduce({%{}, %{}}, fn quest, {account_quests, character_quests} ->
       if quest.is_account_quest do
         {Map.put(account_quests, quest.quest_id, quest), character_quests}
@@ -39,7 +39,6 @@ defmodule Ms2ex.Context.Quests do
     %CharacterQuest{}
     |> CharacterQuest.changeset(attrs)
     |> Repo.insert()
-    |> hydrate_result()
   end
 
   @spec update_quest(CharacterQuest.t(), map()) ::
@@ -48,7 +47,6 @@ defmodule Ms2ex.Context.Quests do
     quest
     |> CharacterQuest.changeset(normalize_attrs(attrs))
     |> Repo.update()
-    |> hydrate_result()
   end
 
   @spec delete_quest(integer(), integer(), boolean()) :: :ok
@@ -100,6 +98,20 @@ defmodule Ms2ex.Context.Quests do
     end
   end
 
+  @doc """
+  Persists a quest's condition counters unconditionally. The in-memory quest
+  already carries the serialized counters, so a plain changeset would see no
+  change; this forces the column write (used by the manager's dirty flush).
+  """
+  @spec save_counters(CharacterQuest.t()) ::
+          {:ok, CharacterQuest.t()} | {:error, Ecto.Changeset.t()}
+  def save_counters(quest) do
+    quest
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.force_change(:conditions, serialize_conditions(quest.conditions))
+    |> Repo.update()
+  end
+
   @spec serialize_conditions(map()) :: map()
   def serialize_conditions(conditions) do
     Enum.into(conditions, %{}, fn {index, condition} ->
@@ -115,44 +127,35 @@ defmodule Ms2ex.Context.Quests do
     end)
   end
 
-  defp hydrate_result({:ok, quest}), do: {:ok, hydrate_quest(quest)}
-  defp hydrate_result(error), do: error
-
-  defp hydrate_quest(quest) do
-    metadata = Storage.Quests.get_meta(quest.quest_id)
-    conditions = hydrate_conditions(quest.conditions, metadata)
-
-    %{quest | metadata: metadata, conditions: conditions}
+  # persisted rows keep the condition counters keyed by condition index;
+  # normalize legacy shapes (string keys, whole-condition docs) into plain
+  # integer counters
+  defp normalize_quest(quest) do
+    %{quest | conditions: normalize_conditions(quest.conditions)}
   end
 
-  defp hydrate_conditions(conditions, %{conditions: metadata_conditions})
-       when is_list(metadata_conditions) do
-    metadata_conditions
-    |> Enum.with_index()
-    |> Enum.into(%{}, fn {metadata, index} ->
-      {index, %{counter: load_counter(conditions, index), metadata: metadata}}
+  defp normalize_conditions(conditions) do
+    Enum.into(conditions, %{}, fn {index, counter} ->
+      {to_index(index), counter_from(counter)}
     end)
   end
 
-  defp hydrate_conditions(_conditions, _metadata), do: %{}
+  defp to_index(index) when is_integer(index), do: index
 
-  # Persisted rows hold counters keyed by condition index; rows written
-  # before the counters-only format stored the whole condition — dig the
-  # counter out of either shape.
-  defp load_counter(conditions, index) do
-    conditions
-    |> Map.get(index)
-    |> Kernel.||(Map.get(conditions, Integer.to_string(index)))
-    |> counter_value()
+  defp to_index(index) when is_binary(index) do
+    case Integer.parse(index) do
+      {int, ""} -> int
+      _ -> 0
+    end
   end
 
-  defp counter_value(counter) when is_integer(counter), do: counter
+  defp counter_from(counter) when is_integer(counter), do: counter
 
-  defp counter_value(full) when is_map(full) do
-    Map.get(full, :counter) || Map.get(full, "counter") || 0
+  defp counter_from(counter) when is_map(counter) do
+    Map.get(counter, :counter) || Map.get(counter, "counter") || 0
   end
 
-  defp counter_value(_), do: 0
+  defp counter_from(_counter), do: 0
 
   defp normalize_attrs(attrs) do
     case Map.fetch(attrs, :conditions) do

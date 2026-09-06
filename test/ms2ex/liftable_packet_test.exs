@@ -58,6 +58,9 @@ defmodule Ms2ex.LiftablePacketTest do
     assert {opcode, command} == {0x75, 0x3}
     assert uuid == @liftable.uuid
     assert prop_count == 1
+    assert mask_quest_id == "40002720,40002720"
+    assert mask_quest_state == "1,1"
+    assert {effect_quest_id, effect_quest_state} == {"40002720", "1"}
     assert react_effect
     assert packet == <<>>
   end

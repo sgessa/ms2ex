@@ -334,12 +334,18 @@ defmodule Ms2ex.Managers.Quest do
   def handle_call({:go_to_npc, quest_id}, _from, state) do
     reply =
       case Managers.Quest.State.get_quest_from_state(quest_id, state) do
-        %{metadata: %{go_to_npc: %{enabled: true, map_id: map_id}}} ->
-          {:ok, character} = Managers.Character.lookup(state.character_id)
-          Context.Field.change_field(character, map_id)
-
-        _ ->
+        nil ->
           :ok
+
+        quest ->
+          case Storage.Quests.get_meta(quest.quest_id) do
+            %{go_to_npc: %{enabled: true, map_id: map_id}} ->
+              {:ok, character} = Managers.Character.lookup(state.character_id)
+              Context.Field.change_field(character, map_id)
+
+            _metadata ->
+              :ok
+          end
       end
 
     {:reply, reply, state}
@@ -349,13 +355,11 @@ defmodule Ms2ex.Managers.Quest do
   def handle_call({:dispatch, quest_id}, _from, state) do
     reply =
       case Managers.Quest.State.get_quest_from_state(quest_id, state) do
-        %{state: quest_state, metadata: %{dispatch: %{map_id: map_id}}}
-        when quest_state != :completed and map_id > 0 ->
-          {:ok, character} = Managers.Character.lookup(state.character_id)
-          Context.Field.change_field(character, map_id)
-
-        _ ->
+        nil ->
           :ok
+
+        quest ->
+          dispatch_change_field(quest, state)
       end
 
     {:reply, reply, state}
@@ -450,10 +454,9 @@ defmodule Ms2ex.Managers.Quest do
     end
   end
 
-  defp maybe_push_quest_start(character, quest, quest_metadata) do
+  defp maybe_push_quest_start(character, quest, _quest_metadata) do
     if character.session_pid do
-      quest_with_metadata = %{quest | metadata: quest_metadata}
-      push(character, Packets.Game.Quest.start(quest_with_metadata))
+      push(character, Packets.Game.Quest.start(quest))
     end
   end
 
@@ -483,11 +486,12 @@ defmodule Ms2ex.Managers.Quest do
 
   defp finalize_quest_completion(quest, state) do
     {:ok, character} = Managers.Character.lookup(state.character_id)
+    metadata = Storage.Quests.get_meta(quest.quest_id)
 
     # completion, turn-in item consumption and item rewards commit atomically;
     # experience and currencies are delivered post-commit (exp lives in the
     # character manager's state)
-    rewards = Managers.Quest.Rewards.prepare(character, quest.metadata.complete_reward)
+    rewards = Managers.Quest.Rewards.prepare(character, metadata.complete_reward)
     consumables = quest_consumables(quest)
 
     transaction =
@@ -506,11 +510,13 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   defp handle_completion_result(transaction, quest, character, state) do
+    metadata = Storage.Quests.get_meta(quest.quest_id)
+
     case transaction do
       {:ok, {updated_quest, consume_results, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
 
-        Managers.Quest.Rewards.deliver(character, quest.metadata.complete_reward, results)
+        Managers.Quest.Rewards.deliver(character, metadata.complete_reward, results)
         Enum.each(consume_results, &maybe_push_consume(character, &1))
 
         update_conditions(
@@ -520,18 +526,18 @@ defmodule Ms2ex.Managers.Quest do
           "",
           0,
           "",
-          quest.metadata.basic.chapter_id
+          metadata.basic.chapter_id
         )
 
-        update_conditions(character.id, :quest, 1, "", 0, "", quest.metadata.id)
-        update_conditions(character.id, :quest_clear, 1, "", 0, "", quest.metadata.id)
+        update_conditions(character.id, :quest, 1, "", 0, "", metadata.id)
+        update_conditions(character.id, :quest_clear, 1, "", 0, "", metadata.id)
 
-        if quest.metadata.basic.type == :field_mission do
-          update_conditions(character.id, :field_mission, 1, "", 0, "", quest.metadata.id)
+        if metadata.basic.type == :field_mission do
+          update_conditions(character.id, :field_mission, 1, "", 0, "", metadata.id)
           handle_exploration_completion(character, state, new_state)
         end
 
-        maybe_push_quest_complete(character, updated_quest, quest.metadata)
+        maybe_push_quest_complete(character, updated_quest, metadata)
 
         # TODO: Implement job advancement and chapter completion
 
@@ -542,10 +548,9 @@ defmodule Ms2ex.Managers.Quest do
     end
   end
 
-  defp maybe_push_quest_complete(character, updated_quest, quest_metadata) do
+  defp maybe_push_quest_complete(character, updated_quest, _quest_metadata) do
     if character.session_pid do
-      updated_quest_with_metadata = %{updated_quest | metadata: quest_metadata}
-      push(character, Packets.Game.Quest.complete(updated_quest_with_metadata))
+      push(character, Packets.Game.Quest.complete(updated_quest))
     end
   end
 
@@ -570,15 +575,22 @@ defmodule Ms2ex.Managers.Quest do
     end
   end
 
-  defp process_quest_abandonment(%{state: :completed}, state) do
-    {:reply, {:error, :quest_already_done}, state}
-  end
-
-  defp process_quest_abandonment(%{metadata: %{basic: %{forfeitable: false}}}, state) do
-    {:reply, {:error, :quest_abandon_restrict}, state}
-  end
-
   defp process_quest_abandonment(quest, state) do
+    metadata = Storage.Quests.get_meta(quest.quest_id)
+
+    cond do
+      quest.state == :completed ->
+        {:reply, {:error, :quest_already_done}, state}
+
+      metadata && metadata.basic.forfeitable == false ->
+        {:reply, {:error, :quest_abandon_restrict}, state}
+
+      true ->
+        abandon_started_quest(quest, state)
+    end
+  end
+
+  defp abandon_started_quest(quest, state) do
     case Managers.Quest.State.abandon_quest(quest) do
       {:ok, updated_quest} ->
         Context.Quests.delete_quest(
@@ -657,11 +669,16 @@ defmodule Ms2ex.Managers.Quest do
 
   defp active_npc_quests(quests, npc_id) do
     quests
-    |> Enum.filter(fn {_id, quest} ->
-      quest.state == :started and quest.metadata.basic.complete_npc == npc_id
+    |> Enum.flat_map(fn {id, quest} ->
+      metadata = Storage.Quests.get_meta(id)
+
+      if (quest.state == :started and metadata) && metadata.basic.complete_npc == npc_id do
+        [{id, metadata}]
+      else
+        []
+      end
     end)
-    |> Enum.map(fn {id, quest} -> {id, quest.metadata} end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   @impl true
@@ -736,7 +753,7 @@ defmodule Ms2ex.Managers.Quest do
           state
 
         quest ->
-          Context.Quests.update_quest(quest, %{conditions: quest.conditions})
+          Context.Quests.save_counters(quest)
           %{state | dirty: MapSet.delete(state.dirty, quest_id)}
       end
     end)
@@ -796,8 +813,8 @@ defmodule Ms2ex.Managers.Quest do
   defp condition_bucket(quest) do
     quest.conditions
     |> Map.values()
-    |> Enum.map(&div(&1.counter, 5))
     |> Enum.max(fn -> 0 end)
+    |> div(5)
   end
 
   defp maybe_push_tracking(%{session_pid: nil}, _quest), do: :ok
@@ -811,9 +828,23 @@ defmodule Ms2ex.Managers.Quest do
   defp maybe_push_abandon(character, quest_id),
     do: push(character, Packets.Game.Quest.abandon(quest_id))
 
+  defp dispatch_change_field(quest, state) do
+    case Storage.Quests.get_meta(quest.quest_id) do
+      %{dispatch: %{map_id: map_id}}
+      when quest.state != :completed and map_id > 0 ->
+        {:ok, character} = Managers.Character.lookup(state.character_id)
+        Context.Field.change_field(character, map_id)
+
+      _metadata ->
+        :ok
+    end
+  end
+
   # Helper function to handle auto-completion of field missions
   defp handle_auto_completion(quest, character_id) do
-    if quest.metadata.basic.type == :field_mission &&
+    metadata = Storage.Quests.get_meta(quest.quest_id)
+
+    if metadata && metadata.basic.type == :field_mission &&
          Managers.Quest.Conditions.all_met?(quest) do
       # Complete the quest in a separate call to handle rewards properly
       # This is async and non-blocking
@@ -832,8 +863,15 @@ defmodule Ms2ex.Managers.Quest do
   defp exploration_progress(state) do
     [state.account_quests, state.character_quests]
     |> Enum.flat_map(&Map.values/1)
-    |> Enum.count(&(&1.state == :completed and &1.metadata.basic.type == :field_mission))
+    |> Enum.count(&completed_field_mission?/1)
     |> Ms2ex.Storage.Tables.FieldMission.reached_progress()
+  end
+
+  defp completed_field_mission?(quest) do
+    case Storage.Quests.get_meta(quest.quest_id) do
+      %{basic: %{type: :field_mission}} -> quest.state == :completed
+      _metadata -> false
+    end
   end
 
   defp award_exploration_reward(character, progress) do
@@ -883,10 +921,9 @@ defmodule Ms2ex.Managers.Quest do
 
   # auto-started quests never went through the accept flow, so the client
   # learns about them from a Start frame (before the state list loads)
-  defp announce_auto_start(character, quest, quest_metadata) do
+  defp announce_auto_start(character, quest, _quest_metadata) do
     if character.session_pid do
-      quest_with_metadata = %{quest | metadata: quest_metadata}
-      push(character, Packets.Game.Quest.start(quest_with_metadata))
+      push(character, Packets.Game.Quest.start(quest))
     end
   end
 
@@ -902,9 +939,12 @@ defmodule Ms2ex.Managers.Quest do
   # turn-in items: item_exist conditions name the item and required amount;
   # the held amount is consumed when the quest completes
   defp quest_consumables(quest) do
-    Enum.flat_map(quest.conditions, fn {_index, condition} ->
+    metadata = Storage.Quests.get_meta(quest.quest_id)
+    docs = (metadata && Map.get(metadata, :conditions)) || []
+
+    Enum.flat_map(docs, fn condition ->
       case condition do
-        %{metadata: %{type: :item_exist, value: value, codes: %{integers: [item_id | _]}}}
+        %{type: :item_exist, value: value, codes: %{integers: [item_id | _]}}
         when is_integer(item_id) and item_id > 0 and value > 0 ->
           [%{item_id: item_id, amount: value}]
 
