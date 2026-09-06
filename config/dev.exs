@@ -49,5 +49,6 @@ config :ms2ex, Ms2ex,
     "USER_BATTLE",
     "USER_CHAT",
     "USER_SYNC",
-    "VIBRATE"
+    "VIBRATE",
+    "GUIDE_OBJECT_SYNC"
   ]

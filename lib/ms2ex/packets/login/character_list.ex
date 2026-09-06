@@ -1,4 +1,5 @@
 defmodule Ms2ex.Packets.CharacterList do
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Enums
@@ -107,7 +108,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_byte(length(character.clubs))
     |> put_clubs(character.clubs)
     |> put_byte()
-    |> put_bytes(String.duplicate(<<0x0>>, 12 * 4))
+    |> put_masteries(character)
     |> put_ustring()
     |> put_long(character.unknown_id)
     |> put_long(2000)
@@ -127,8 +128,18 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_long()
   end
 
-  defp put_badges(packet, []), do: packet
+  # leading unknown int, then one int per life skill in mastery type order
+  defp put_masteries(packet, character) do
+    masteries = Managers.Character.Mastery.all(character)
 
+    packet
+    |> put_int()
+    |> reduce(Enums.MasteryType.ordered(), fn type, packet ->
+      put_int(packet, Map.get(masteries, type, 0))
+    end)
+  end
+
+  defp put_badges(packet, []), do: packet
   # TODO
   defp put_badges(packet, [_b | badges]) do
     packet

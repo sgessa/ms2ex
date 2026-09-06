@@ -18,6 +18,7 @@ defmodule Ms2ex.Context.Buffs do
           effect_id: integer(),
           effect_level: integer(),
           stacks: integer(),
+          duration_ms: integer(),
           remaining_ms: integer()
         }
 
@@ -74,11 +75,14 @@ defmodule Ms2ex.Context.Buffs do
       remaining = DateTime.diff(buff.expires_at, now, :millisecond)
 
       if remaining > 0 do
+        duration = buff.duration_ms || remaining
+
         [
           %{
             effect_id: buff.effect_id,
             effect_level: buff.effect_level,
             stacks: buff.stacks,
+            duration_ms: max(duration, remaining),
             remaining_ms: remaining
           }
         ]
@@ -100,6 +104,7 @@ defmodule Ms2ex.Context.Buffs do
 
   defp entry(buff, character_id, now, tick) do
     remaining = buff.end_tick - tick
+    duration = buff.end_tick - buff.start_tick
     timestamp = DateTime.truncate(now, :second)
 
     if remaining > 0 do
@@ -109,6 +114,7 @@ defmodule Ms2ex.Context.Buffs do
           effect_id: buff.skill.id,
           effect_level: buff.skill.level,
           stacks: buff.stacks,
+          duration_ms: duration,
           expires_at: DateTime.add(now, remaining, :millisecond),
           inserted_at: timestamp,
           updated_at: timestamp

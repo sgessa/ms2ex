@@ -76,12 +76,14 @@ defmodule Ms2ex.Managers.Field.Item do
     %{state | items: items}
   end
 
-  def drop_item(character, item, state) do
+  def drop_item(character, item, state), do: drop_item(character, item, character.position, state)
+
+  def drop_item(character, item, position, state) do
     {object_id, state} = Managers.Field.next_local_id(state)
 
     item = %{
       item
-      | position: character.position,
+      | position: position,
         object_id: object_id,
         source_object_id: character.object_id
     }

@@ -2,6 +2,7 @@ defmodule Ms2ex.AchievementManagerTest do
   use Ms2ex.DataCase, async: false
 
   alias Ms2ex.Context.Achievements
+  alias Ms2ex.Context.Characters
   alias Ms2ex.Managers
   alias Ms2ex.Repo
   alias Ms2ex.Schema
@@ -31,6 +32,19 @@ defmodule Ms2ex.AchievementManagerTest do
       }
     }
   }
+  @manual_reward_id 236_002
+  @manual_reward_title_id 100_000
+  @manual_reward_metadata %{
+    id: @manual_reward_id,
+    account_wide: false,
+    category: 2,
+    grades: %{
+      "1" => %{
+        condition: %{type: :guild_join, value: 1},
+        reward: %{type: :title, code: @manual_reward_title_id, value: 0, rank: 1}
+      }
+    }
+  }
 
   setup {Mimic, :set_mimic_global}
 
@@ -38,9 +52,11 @@ defmodule Ms2ex.AchievementManagerTest do
     stub_metadata(%{
       "achievement:#{@achievement_id}" => @metadata,
       "achievement:#{@reward_id}" => @reward_metadata,
+      "achievement:#{@manual_reward_id}" => @manual_reward_metadata,
       "achievement:index" => %{
         monster_kill: [@achievement_id],
-        quest_accept: [@reward_id]
+        quest_accept: [@reward_id],
+        guild_join: [@manual_reward_id]
       }
     })
 
@@ -172,6 +188,22 @@ defmodule Ms2ex.AchievementManagerTest do
     Managers.Achievement.claim_reward(character, @reward_id)
     :ok = Managers.Achievement.flush(character)
 
+    assert [%Schema.Achievement{reward_grade: 2}] = Achievements.list(character.id)
+  end
+
+  test "item and title rewards wait for manual claim", %{character: character} do
+    Managers.Achievement.update(character.id, :guild_join)
+
+    wait_until(fn ->
+      assert [%Schema.Achievement{reward_grade: 1}] = Achievements.list(character.id)
+    end)
+
+    assert Characters.list_titles(character) == []
+
+    Managers.Achievement.claim_reward(character, @manual_reward_id)
+    :ok = Managers.Achievement.flush(character)
+
+    assert Characters.list_titles(character) == [@manual_reward_title_id]
     assert [%Schema.Achievement{reward_grade: 2}] = Achievements.list(character.id)
   end
 end

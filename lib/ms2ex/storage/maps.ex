@@ -77,6 +77,19 @@ defmodule Ms2ex.Storage.Maps do
     end)
   end
 
+  @doc """
+  Fishable water cells of a map, keyed by their block coordinate: the surface
+  of a fluid column that is not shallow.
+  """
+  def get_fluid_surfaces(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:fluid_surfaces, [])
+    |> Map.new(fn %{position: position} = cell ->
+      {{position.x, position.y, position.z}, cell}
+    end)
+  end
+
   def get_portals(map_id) do
     map_id
     |> get_meta()

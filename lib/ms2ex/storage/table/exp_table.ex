@@ -20,4 +20,30 @@ defmodule Ms2ex.Storage.Tables.ExpTable do
   def mob_exp(level) do
     get_in(Storage.get(:table, @table_name), [:table, :exp_base, "2", to_string(level)])
   end
+
+  @doc """
+  Base exp for an exp type at a level: `commonexp.xml` maps the type to one of
+  the `exp*.xml` tables plus a factor applied on top.
+  """
+  @spec typed_exp(atom(), pos_integer()) :: non_neg_integer()
+  def typed_exp(exp_type, level) do
+    with %{exp_table_id: table_id, factor: factor} <- common_entry(exp_type),
+         value when is_integer(value) <-
+           get_in(Storage.get(:table, @table_name), [
+             :table,
+             :exp_base,
+             to_string(table_id),
+             to_string(level)
+           ]) do
+      trunc(value * factor)
+    else
+      _ -> 0
+    end
+  end
+
+  defp common_entry(exp_type) do
+    :table
+    |> Storage.get("commonexp.xml")
+    |> get_in([:table, :entries, exp_type])
+  end
 end

@@ -211,6 +211,11 @@ defmodule Ms2ex.Managers.Field do
     {:reply, {:ok, instrument}, state}
   end
 
+  def handle_call(:next_object_id, _from, state) do
+    {object_id, state} = next_local_id(state)
+    {:reply, {:ok, object_id}, state}
+  end
+
   def handle_call({:lookup_instrument, character_id}, _from, state) do
     case Field.Instrument.get(character_id, state) do
       nil -> {:reply, :error, state}
@@ -269,8 +274,8 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_call({:interact_object, character, uuid}, _from, state) do
     case Field.InteractObject.react(character, uuid, state) do
-      {:ok, interact_id, state} ->
-        {:reply, {:ok, interact_id}, state}
+      {:ok, object, state} ->
+        {:reply, {:ok, object}, state}
 
       {:error, state} ->
         {:reply, :error, state}
@@ -303,6 +308,12 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:has_buff?, owner_object_id, effect_id}, _from, state),
     do: {:reply, Field.Buff.owner_has_buff?(owner_object_id, effect_id, state), state}
 
+  def handle_call({:has_buff_event?, owner_object_id, event_type}, _from, state),
+    do: {:reply, Field.Buff.owner_has_buff_event?(owner_object_id, event_type, state), state}
+
+  def handle_call({:modify_buff_duration, owner_object_id, effect_id, modify_tick}, _from, state),
+    do: {:reply, :ok, Field.Buff.modify_duration(owner_object_id, effect_id, modify_tick, state)}
+
   def handle_call({:remove_effect_buff, owner_object_id, effect_id}, _from, state),
     do: {:reply, :ok, Field.Buff.remove_owner_effect(owner_object_id, effect_id, state)}
 
@@ -328,6 +339,9 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_cast({:drop_item, source, item}, state),
     do: {:noreply, Field.Item.drop_item(source, item, state)}
+
+  def handle_cast({:drop_item, source, item, position}, state),
+    do: {:noreply, Field.Item.drop_item(source, item, position, state)}
 
   def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item, receiver}, state),
     do: {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}

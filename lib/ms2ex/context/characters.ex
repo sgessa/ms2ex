@@ -44,6 +44,18 @@ defmodule Ms2ex.Context.Characters do
     |> Repo.update()
   end
 
+  @doc """
+  Writes deferred state that the in-memory struct already carries. A cast
+  changeset would drop every field as unchanged, so the changes are forced.
+  """
+  def persist(%Schema.Character{} = character, attrs) do
+    attrs
+    |> Enum.reduce(Ecto.Changeset.change(character), fn {field, value}, changeset ->
+      Ecto.Changeset.force_change(changeset, field, value)
+    end)
+    |> Repo.update()
+  end
+
   def update_stat_points(%Schema.Character{} = character, sources, allocation) do
     character
     |> Schema.Character.changeset(%{
@@ -97,6 +109,21 @@ defmodule Ms2ex.Context.Characters do
       maps = [new_map | maps]
       {:ok, character} = __MODULE__.update(character, %{discovered_maps: maps})
       character
+    end
+  end
+
+  @doc "Records a first-time interaction; returns false when already known."
+  def discover_object(%Schema.Character{} = character, object_id) do
+    objects = character.discovered_objects || []
+
+    if Enum.member?(objects, object_id) do
+      false
+    else
+      {:ok, character} =
+        __MODULE__.update(character, %{discovered_objects: [object_id | objects]})
+
+      Ms2ex.Managers.Character.call(character, {:update, character})
+      true
     end
   end
 end
