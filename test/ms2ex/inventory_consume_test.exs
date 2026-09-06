@@ -1,10 +1,8 @@
 defmodule Ms2ex.Context.InventoryTest do
-  use Ms2ex.DataCase, async: false
+  use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Context
-  alias Ms2ex.Managers
-  alias Ms2ex.Repo
-  alias Ms2ex.Schema
+  alias Ms2ex.Managers.Inventory
 
   setup do
     stub_metadata(%{
@@ -16,64 +14,39 @@ defmodule Ms2ex.Context.InventoryTest do
       }
     })
 
-    account = Repo.insert!(%Schema.Account{username: "pudding_test", password_hash: "x"})
+    state = %{character_id: 1, items: [], tabs: [], lock_staging: []}
 
-    character =
-      Repo.insert!(%Schema.Character{
-        account_id: account.id,
-        name: "PuddingTester",
-        job: :knight,
-        map_id: 1,
-        skin_color: {}
-      })
-
-    %{character: character}
+    %{state: state, pudding: &pudding/1}
   end
 
-  # the inventory manager owns the item rows; writes from its process need
-  # sandbox access
-  setup %{character: character} do
-    :ok = Managers.Inventory.start(character)
+  test "consuming an amount spans stacks and deletes emptied ones", %{state: state} do
+    {{:ok, {:create, first}}, state} = Inventory.add_to_state(state, pudding(1))
+    {{:ok, {:create, second}}, state} = Inventory.add_to_state(state, pudding(2))
 
-    Ecto.Adapters.SQL.Sandbox.allow(
-      Repo,
-      self(),
-      :erlang.whereis(:"inventories:#{character.id}")
-    )
-
-    on_exit(fn -> Managers.Inventory.stop(character.id) end)
-
-    :ok
-  end
-
-  test "consuming an amount spans stacks and deletes emptied ones", %{character: character} do
-    {:ok, {:create, first}} = Managers.Inventory.add_item(character, pudding(1))
-    {:ok, {:create, second}} = Managers.Inventory.add_item(character, pudding(2))
-
-    {:ok, results} = Managers.Inventory.consume_item_amount(character, 30_000_122, 2)
+    {results, state} =
+      Inventory.consume_amounts_from_state(state, [%{item_id: 30_000_122, amount: 2}])
 
     assert [{:delete, deleted}, {:update, updated}] = results
     assert deleted.id == first.id
     assert updated.id == second.id
     assert updated.amount == 1
 
-    refute Managers.Inventory.get(character, first.id)
-    assert Managers.Inventory.get(character, second.id).amount == 1
+    refute Inventory.get_from_state(state, first.id)
+    assert Inventory.get_from_state(state, second.id).amount == 1
   end
 
-  test "consuming more than owned fails without changing stacks", %{character: character} do
-    {:ok, {:create, item}} = Managers.Inventory.add_item(character, pudding(1))
+  test "consuming more than owned fails without changing stacks", %{state: state} do
+    {{:ok, {:create, item}}, state} = Inventory.add_to_state(state, pudding(1))
 
-    assert {:error, :insufficient_amount} =
-             Managers.Inventory.consume_item_amount(character, 30_000_122, 2)
+    {results, _state} =
+      Inventory.consume_amounts_from_state(state, [%{item_id: 30_000_122, amount: 2}])
 
-    assert Managers.Inventory.get(character, item.id).amount == 1
+    assert results == []
+    assert Inventory.get_from_state(state, item.id).amount == 1
   end
 
-  test "batch consumption spans pairs sharing stacks and skips uncovered ones", %{
-    character: character
-  } do
-    {:ok, {:create, first}} = Managers.Inventory.add_item(character, pudding(2))
+  test "batch consumption spans pairs sharing stacks and skips uncovered ones", %{state: state} do
+    {{:ok, {:create, first}}, state} = Inventory.add_to_state(state, pudding(2))
 
     consumables = [
       %{item_id: 30_000_122, amount: 1},
@@ -81,7 +54,7 @@ defmodule Ms2ex.Context.InventoryTest do
       %{item_id: 30_000_122, amount: 1}
     ]
 
-    {:ok, results} = Managers.Inventory.consume_item_amounts(character, consumables)
+    {results, state} = Inventory.consume_amounts_from_state(state, consumables)
 
     # the 2-stack covers the first pair (1 left) and the third pair (emptied);
     # the middle pair is skipped as uncovered
@@ -90,7 +63,7 @@ defmodule Ms2ex.Context.InventoryTest do
     assert updated.amount == 1
     assert deleted.id == first.id
 
-    refute Managers.Inventory.get(character, first.id)
+    refute Inventory.get_from_state(state, first.id)
   end
 
   defp pudding(amount) do

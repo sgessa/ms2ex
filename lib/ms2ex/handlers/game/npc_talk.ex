@@ -3,10 +3,11 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
   NPC interaction flow (talk + quest selection).
 
   Flow: `Quest.talk` announces the quest list, `NpcTalk.respond` opens the
-  dialogue bound to the npc (first available quest's script state when quests
-  exist), and picking a quest from the list re-enters the dialogue via
-  `NpcTalk.continue` for that quest's script state (100s accept / 200s
-  progress / 300s complete).
+  dialogue. When the npc offers a quest AND has its own talk script, the
+  select script opens the choice menu first (quest vs plain talk); picking
+  a side re-enters the dialogue via `NpcTalk.continue` for the quest's
+  script state (100s accept / 200s progress / 300s complete) or the npc's
+  talk script.
   """
 
   alias Ms2ex.Context
@@ -22,7 +23,12 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
   @continue 0x02
   @quest 0x07
 
+  @type_talk 0x02
   @type_quest 0x04
+  @type_select 0x08
+
+  # the choice menu announces both options: Quest | Talk | Select flags
+  @type_quest_or_talk_menu @type_select + @type_quest + @type_talk
 
   # quest script state-id bands
   @accept_bounds {100, 199}
@@ -33,7 +39,7 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
     {command, packet} = get_byte(packet)
 
     case command do
-      @close -> :ok
+      @close -> Managers.Character.call(session.character_id, {:set_npc_talk, nil})
       @talk -> handle_talk(packet, session)
       @continue -> handle_continue(packet, session)
       @quest -> handle_quest(packet, session)
@@ -49,32 +55,96 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, field_npc} <- Context.Field.lookup_npc(character, npc_object_id) do
-      Managers.Quest.update_conditions(character.id, :dialogue, 1, "", 0, "", field_npc.npc.id)
-      Managers.Quest.update_conditions(character.id, :talk_in, 1, "", 0, "", field_npc.npc.id)
+      npc_id = field_npc.npc.id
+      Managers.Quest.update_conditions(character.id, :dialogue, 1, "", 0, "", npc_id)
+      Managers.Quest.update_conditions(character.id, :talk_in, 1, "", 0, "", npc_id)
 
       quests =
         character.id
-        |> Managers.Quest.get_available_quests(field_npc.npc.id)
+        |> Managers.Quest.get_available_quests(npc_id)
         |> available_quests()
 
-      case first_quest_state(character, quests) do
-        {_quest_id, state} ->
+      quest_talk = first_quest_state(character, quests)
+      script_state = npc_script_state(npc_id)
+      select_state = npc_select_state(npc_id)
+      menu? = quest_talk != nil and script_state != nil and select_state != nil
+
+      Managers.Character.call(character.id, {:set_npc_talk, nil})
+
+      cond do
+        menu? ->
+          open_quest_or_talk_menu(
+            session,
+            character.id,
+            npc_object_id,
+            npc_id,
+            quests,
+            select_state
+          )
+
+        quest_talk != nil ->
+          {_quest_id, state} = quest_talk
           push(session, Packets.Game.Quest.talk(npc_object_id, quests))
           push(session, Packets.NpcTalk.respond(npc_object_id, @type_quest, state))
 
-        nil ->
-          open_npc_dialogue(session, npc_object_id, field_npc.npc.id)
+        true ->
+          open_npc_dialogue(session, npc_object_id, npc_id)
       end
     else
       _ -> :ok
     end
   end
 
-  # Continue: dialogue advanced ("Next" button). Single-page dialogues only
-  # for now; anything further ends the talk so the client never hangs.
+  # the npc has a quest and its own talk script: the select script offers
+  # the choice between the quest and plain talk
+  defp open_quest_or_talk_menu(session, character_id, npc_object_id, npc_id, quests, select_state) do
+    Managers.Character.call(character_id, {:set_npc_talk, %{npc_id: npc_id, quests: quests}})
+
+    push(session, Packets.Game.Quest.talk(npc_object_id, quests))
+    push(session, Packets.NpcTalk.respond(npc_object_id, @type_quest_or_talk_menu, select_state))
+  end
+
+  # Continue: dialogue advanced ("Next"/pick). With a select menu open the
+  # pick routes to the picked quest's script or the npc's talk script.
+  # Single-page dialogues only for now; anything further ends the talk so
+  # the client never hangs.
   # TODO track per-character script state to walk multi-page dialogues.
-  defp handle_continue(_packet, session) do
-    push(session, Packets.NpcTalk.close())
+  defp handle_continue(packet, session) do
+    {pick, _packet} = get_int(packet)
+
+    with {:ok, character} <- Managers.Character.lookup(session.character_id),
+         talk when is_map(talk) <- Map.get(character, :npc_talk) do
+      Managers.Character.call(character.id, {:set_npc_talk, nil})
+      route_menu_pick(session, character, talk, pick)
+    else
+      _ -> push(session, Packets.NpcTalk.close())
+    end
+  end
+
+  # options are ordered quests first, plain talk last
+  defp route_menu_pick(session, character, talk, pick) do
+    quests = talk.quests
+
+    if pick < length(quests) do
+      quest = Enum.fetch!(quests, pick)
+
+      case first_quest_state(character, [quest.id]) do
+        nil ->
+          push(session, Packets.NpcTalk.close())
+
+        {quest_id, state} ->
+          push(session, Packets.NpcTalk.continue(@type_quest, quest_id, state))
+      end
+    else
+      push_talk_script(session, talk.npc_id)
+    end
+  end
+
+  defp push_talk_script(session, npc_id) do
+    case npc_script_state(npc_id) do
+      nil -> push(session, Packets.NpcTalk.close())
+      state -> push(session, Packets.NpcTalk.continue(@type_talk, 0, state))
+    end
   end
 
   # Quest: a quest was picked from the npc quest list
@@ -84,6 +154,7 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {^quest_id, state} <- first_quest_state(character, [quest_id]) do
+      Managers.Character.call(session.character_id, {:set_npc_talk, nil})
       push(session, Packets.NpcTalk.continue(@type_quest, quest_id, state))
     else
       _ -> push(session, Packets.NpcTalk.close())
@@ -91,9 +162,22 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
   end
 
   defp open_npc_dialogue(session, npc_object_id, npc_id) do
-    case first_npc_state(npc_id) do
+    case npc_script_state(npc_id) do
       nil ->
-        push(session, Packets.NpcTalk.close())
+        case npc_select_state(npc_id) do
+          nil ->
+            push(session, Packets.NpcTalk.close())
+
+          state ->
+            push(
+              session,
+              Packets.NpcTalk.respond(
+                npc_object_id,
+                Packets.NpcTalk.state_talk_type(state),
+                state
+              )
+            )
+        end
 
       state ->
         push(
@@ -144,15 +228,18 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
     Storage.Scripts.quest_state(script, min_id, max_id)
   end
 
-  defp first_npc_state(npc_id) do
-    script = Storage.Scripts.get_meta(npc_id)
-
-    script
+  defp npc_script_state(npc_id) do
+    npc_id
+    |> Storage.Scripts.get_meta()
     |> Storage.Scripts.states_of_type(:script)
-    |> case do
-      [] -> script |> Storage.Scripts.states_of_type(:select) |> List.first()
-      states -> List.first(states)
-    end
+    |> List.first()
+  end
+
+  defp npc_select_state(npc_id) do
+    npc_id
+    |> Storage.Scripts.get_meta()
+    |> Storage.Scripts.states_of_type(:select)
+    |> List.first()
   end
 
   defp available_quests(quests) when is_map(quests),

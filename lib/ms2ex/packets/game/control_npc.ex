@@ -61,14 +61,24 @@ defmodule Ms2ex.Packets.ControlNpc do
     |> put_short_coord(npc.position)
     # TODO convert Z to degree
     |> put_short(trunc(npc.rotation.z * 10))
-    # speed
-    |> put_short_coord()
+    # movement velocity lets the client interpolate between control packets
+    |> put_velocity(npc)
     |> put_short(100)
     |> put_target_id(npc, boss_target)
     |> put_state(npc)
     |> put_short(npc.animation)
     |> put_short(npc.seq_counter)
   end
+
+  defp put_velocity(packet, %Types.FieldNpc{velocity: {vx, vy, vz}})
+       when {vx, vy, vz} != {0, 0, 0} do
+    packet
+    |> put_short(round(vx))
+    |> put_short(round(vy))
+    |> put_short(round(vz))
+  end
+
+  defp put_velocity(packet, _npc), do: put_short_coord(packet)
 
   # The state byte toggles between the PcSkill reaction state (16) while a
   # mob is engaged by a player and idle (1) otherwise. The client shows the

@@ -15,11 +15,7 @@ defmodule Ms2ex.Packets.QuestTest do
           start_time: 11,
           end_time: 22,
           track: true,
-          conditions: %{
-            2 => %{counter: 9},
-            0 => %{counter: 7},
-            1 => %{counter: 8}
-          }
+          conditions: %{2 => 9, 0 => 7, 1 => 8}
         }
       ])
 
@@ -69,7 +65,7 @@ defmodule Ms2ex.Packets.QuestTest do
           start_time: 7,
           end_time: 0,
           track: true,
-          conditions: %{0 => %{counter: 1}}
+          conditions: %{0 => 1}
         }
       ])
 

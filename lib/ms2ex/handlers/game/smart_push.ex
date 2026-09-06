@@ -65,7 +65,7 @@ defmodule Ms2ex.GameHandlers.SmartPush do
       Context.Field.call(character, {:add_effect_buff, metadata.value, 1, character, opts})
       session
     else
-      # the reference stays silent here, leaving the player with no feedback
+      # a failed charge gets a message box rather than silent failure
       {:error, currency} -> push(session, Packets.Notice.message_box(lack_code(currency)))
       _ -> session
     end

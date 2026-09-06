@@ -15,7 +15,7 @@ defmodule Ms2ex.Storage.Tables.IndividualDropItem do
 
   @doc """
   Whether the drop box exists with at least one drop group; a box without
-  entries cannot be opened (reference returns its inventory-fail error).
+  entries cannot be opened (the open fails with the inventory error).
   """
   def has_entries?(box_id) do
     Storage.get(:table, "individualdropitem.xml")

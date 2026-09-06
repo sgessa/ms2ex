@@ -26,4 +26,16 @@ defmodule Ms2ex.Packets.AddPortal do
     |> put_ustring()
     |> put_ustring()
   end
+
+  # trigger scripts flip portal visibility/enable flags at runtime
+  def update(portal) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x2)
+    |> put_int(portal.id)
+    |> put_bool(portal.visible)
+    |> put_bool(portal.enable)
+    |> put_bool(portal.minimap_visible)
+    |> put_short()
+  end
 end

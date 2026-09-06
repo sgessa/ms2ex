@@ -30,7 +30,7 @@ defmodule Ms2ex.Context.QuestsTest do
     :ok
   end
 
-  test "create_quest persists integer-backed quest states" do
+  test "create_quest persists counters keyed by condition index" do
     assert {:ok, quest} =
              Quests.create_quest(%{
                owner_id: 42,
@@ -38,19 +38,16 @@ defmodule Ms2ex.Context.QuestsTest do
                state: :started,
                start_time: 123,
                track: true,
-               conditions: %{
-                 0 => %{counter: 1, metadata: %{type: :map, value: 1}},
-                 1 => %{counter: 0, metadata: %{type: :quest_clear, value: 1}}
-               },
+               conditions: %{0 => 1, 1 => 0},
                is_account_quest: false
              })
 
     assert quest.state == :started
-    assert quest.conditions[0].counter == 1
-    assert quest.conditions[1].counter == 0
+    assert quest.conditions[0] == 1
+    assert quest.conditions[1] == 0
   end
 
-  test "get_all_quests reads counters from rows stored before the counters-only format" do
+  test "get_all_quests normalizes counters from rows stored in legacy shapes" do
     account =
       Repo.insert!(%Schema.Account{
         username: "legacy_#{System.unique_integer([:positive])}",
@@ -63,7 +60,8 @@ defmodule Ms2ex.Context.QuestsTest do
       state: :started,
       start_time: 123,
       track: true,
-      # legacy shape: the whole condition (metadata included) per index
+      # legacy shape: string keys and the whole condition (metadata included)
+      # per index
       conditions: %{
         "0" => %{"counter" => 1, "metadata" => %{"type" => "map", "value" => 1}}
       },
@@ -73,7 +71,6 @@ defmodule Ms2ex.Context.QuestsTest do
     {account_quests, %{5001 => quest}} = Quests.get_all_quests(account.id, account.id)
     assert account_quests == %{}
 
-    assert quest.conditions[0].counter == 1
-    assert quest.conditions[0].metadata.type == :map
+    assert quest.conditions[0] == 1
   end
 end

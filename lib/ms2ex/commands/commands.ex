@@ -155,7 +155,7 @@ defmodule Ms2ex.Commands do
 
           character.map_id == target.map_id ->
             coord = character.position
-            push(target, Packets.MoveCharacter.bytes(target, coord))
+            push(target, Packets.UserMoveByPortal.bytes(target, coord))
 
           true ->
             target = Map.put(target, :update_position, character.position)
@@ -176,7 +176,7 @@ defmodule Ms2ex.Commands do
             push_notice(session, character, "Character is in Channel #{target.channel_id}")
 
           character.map_id == target.map_id ->
-            push(session, Packets.MoveCharacter.bytes(character, target.position))
+            push(session, Packets.UserMoveByPortal.bytes(character, target.position))
 
           true ->
             character = Map.put(character, :update_position, target.position)

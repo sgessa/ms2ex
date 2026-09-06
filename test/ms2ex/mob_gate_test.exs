@@ -66,6 +66,13 @@ defmodule Ms2ex.MobGateTest do
              2000::little-32, 0, 0, 0::little-32, 0::little-16, 2.0::little-float-32>> = rest
   end
 
+  test "load registers cameras without activating them" do
+    bytes = Packets.Trigger.load([], [%{id: 8001}, %{id: 8002}])
+
+    assert <<0x4F::little-16, 0x2, 2::little-32>> <> rest = bytes
+    assert <<8001::little-32, 0, 8002::little-32, 0>> = rest
+  end
+
   test "killing the last mob of a gated spawn hides the barrier meshes" do
     state = gated_state()
 

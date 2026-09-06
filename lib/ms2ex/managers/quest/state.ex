@@ -28,10 +28,7 @@ defmodule Ms2ex.Managers.Quest.State do
     conditions =
       quest_metadata.conditions
       |> Enum.with_index()
-      |> Enum.map(fn {metadata, index} ->
-        {index, %{counter: 0, metadata: metadata}}
-      end)
-      |> Enum.into(%{})
+      |> Enum.into(%{}, fn {_metadata, index} -> {index, 0} end)
 
     quest_attrs = %{
       owner_id: owner_id,
@@ -172,18 +169,6 @@ defmodule Ms2ex.Managers.Quest.State do
     * Quest struct if found, nil otherwise
   """
   def get_quest_from_state(quest_id, state) do
-    quest = Map.get(state.character_quests, quest_id) || Map.get(state.account_quests, quest_id)
-
-    if quest do
-      # Add metadata if not already present
-      if Map.has_key?(quest, :metadata) do
-        quest
-      else
-        metadata = Storage.Quests.get_meta(quest.quest_id)
-        %{quest | metadata: metadata}
-      end
-    else
-      nil
-    end
+    Map.get(state.character_quests, quest_id) || Map.get(state.account_quests, quest_id)
   end
 end

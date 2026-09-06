@@ -11,4 +11,17 @@ defmodule Ms2ex.Packets.SetCraftMode do
     |> put_int(object_id)
     |> put_byte(@commands.stop)
   end
+
+  # shows a player carrying a liftable prop (quest carry sequences)
+  def liftable(object_id, item_id) do
+    __MODULE__
+    |> build()
+    |> put_int(object_id)
+    |> put_byte(@commands.liftable)
+    |> put_int(item_id)
+    |> put_long()
+    |> put_long()
+    |> put_bool(false)
+    |> put_int(2)
+  end
 end
