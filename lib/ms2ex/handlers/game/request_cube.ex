@@ -7,11 +7,10 @@ defmodule Ms2ex.GameHandlers.RequestCube do
   import Packets.PacketReader
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  # @hold_cube 0x01
   # @buy_plot 0x02
   # @forfeit_plot 0x06
   # @extend_plot 0x09
-  # @place_cube 0x0A
+  @place_cube 0x0A
   @remove_cube 0x0C
   # @rotate_cube 0x0E
   # @replace_cube 0x0F
@@ -43,6 +42,30 @@ defmodule Ms2ex.GameHandlers.RequestCube do
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
     handle_mode(mode, packet, session)
+  end
+
+  # placing a held quest liftable (e.g. carrying the squire to safety).
+  # the position arrives as the 4-byte Vector3B struct (3 coords + padding)
+  def handle_mode(@place_cube, packet, session) do
+    {x, packet} = get_sbyte(packet)
+    {y, packet} = get_sbyte(packet)
+    {z, packet} = get_sbyte(packet)
+    {_padding, packet} = get_sbyte(packet)
+    {item_id, packet} = get_int(packet)
+    {_cube_id, packet} = get_long(packet)
+    {_expiry, packet} = get_long(packet)
+    {_has_look, packet} = get_bool(packet)
+    {rotation, _packet} = get_float(packet)
+
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+    grid = {x, y, z}
+
+    Context.Field.call(
+      character.field_pid,
+      {:place_liftable, character.id, grid, item_id, rotation}
+    )
+
+    session
   end
 
   def handle_mode(@remove_cube, _packet, session) do

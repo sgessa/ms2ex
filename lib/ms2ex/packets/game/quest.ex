@@ -55,8 +55,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_bool(quest.track)
       |> put_int(map_size(quest.conditions))
 
-    Enum.reduce(condition_entries(quest), packet, fn {_index, condition}, acc ->
-      put_int(acc, condition.counter)
+    Enum.reduce(condition_entries(quest), packet, fn {_index, counter}, acc ->
+      put_int(acc, counter)
     end)
   end
 
@@ -68,8 +68,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_int(quest.quest_id)
       |> put_int(map_size(quest.conditions))
 
-    Enum.reduce(condition_entries(quest), packet, fn {_index, condition}, acc ->
-      put_int(acc, condition.counter)
+    Enum.reduce(condition_entries(quest), packet, fn {_index, counter}, acc ->
+      put_int(acc, counter)
     end)
   end
 
@@ -150,8 +150,8 @@ defmodule Ms2ex.Packets.Game.Quest do
       |> put_long(quest.end_time)
       |> put_bool(quest.track)
       |> put_int(map_size(quest.conditions))
-      |> reduce(condition_entries(quest), fn {_index, condition}, packet_acc ->
-        put_int(packet_acc, condition.counter)
+      |> reduce(condition_entries(quest), fn {_index, counter}, packet_acc ->
+        put_int(packet_acc, counter)
       end)
     end)
   end

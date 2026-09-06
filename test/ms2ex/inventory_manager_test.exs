@@ -9,6 +9,7 @@ defmodule Ms2ex.InventoryManagerTest do
 
   @potion_id 5_000_001
   @gear_id 5_000_002
+  @bind_on_loot_gear_id 5_000_003
 
   setup do
     stub_metadata(%{
@@ -21,6 +22,12 @@ defmodule Ms2ex.InventoryManagerTest do
       },
       "item:#{@gear_id}" => %{
         limit: %{level: 1, transfer_type: 3},
+        property: %{type: 1},
+        slot_names: [5],
+        option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
+      },
+      "item:#{@bind_on_loot_gear_id}" => %{
+        limit: %{level: 1, transfer_type: 2, trade_max_rarity: 4},
         property: %{type: 1},
         slot_names: [5],
         option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
@@ -169,6 +176,14 @@ defmodule Ms2ex.InventoryManagerTest do
     assert Enum.map(equips, & &1.id) == [stack.id]
 
     assert Repo.reload!(stack).location == :equipment
+  end
+
+  test "bind-on-loot gear is char-bound when added to the inventory", %{character: character} do
+    add_item(character, @bind_on_loot_gear_id, 1)
+
+    [item] = Managers.Inventory.list_tab_items(character.id, :gear)
+    assert item.is_bound == true
+    assert item.remaining_trades == 0
   end
 
   defp insert_character do

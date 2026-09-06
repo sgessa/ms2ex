@@ -4,10 +4,10 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   server drop tables, rolls the contents for the opening character, grants
   them, and consumes the box (plus any key items) per open.
 
-  Mirrors the reference ItemBoxManager: OpenItemBox (drop tables plus an
-  optional direct item), SelectItemBox (player picks an entry by index
-  from one drop group) and OpenItemBoxWithKey (consumes key items). Rewards
-  that do not fit the inventory are mailed to the character, stopping
+  Three open flows: OpenItemBox (drop tables plus an optional direct
+  item), SelectItemBox (player picks an entry by index from one drop
+  group) and OpenItemBoxWithKey (consumes key items). Rewards that do
+  not fit the inventory are mailed to the character, stopping
   subsequent opens with the inventory-full error.
   """
 
@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  # function parameter layouts (reference ItemBoxManager.Open)
+  # function parameter layouts
   #   OpenItemBox:        globalDropBoxId, unknownId, itemId, dropBoxId, requiredAmount?
   #   SelectItemBox:      dropGroupId, dropBoxId
   #   OpenItemBoxWithKey: keyItemId, keyAmount, itemId, _, _, dropBoxId
@@ -328,7 +328,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
 
   defp param(_params, nil, default), do: default
 
-  # ---- currency drops (reference InventoryManager.AddCurrency) ----
+  # ---- currency drops ----
 
   @currency_types %{
     90_000_001 => :mesos,

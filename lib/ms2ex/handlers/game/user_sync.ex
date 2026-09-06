@@ -69,13 +69,16 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: state, position: new_position}
+
+    # trigger conditions detect users by their live position
+    Context.Field.cast(character, {:user_position, character.id, new_position})
     Managers.Character.call(character, {:update, character})
 
     if out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
       fall_distance = Constants.get(:out_of_bounds_fall_distance)
       Managers.Character.cast(character, {:receive_fall_dmg, fall_distance})
-      push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
+      push(session, Packets.UserMoveByPortal.bytes(character, character.safe_position))
     end
   end
 

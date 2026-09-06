@@ -190,6 +190,26 @@ defmodule Ms2ex.Managers.Inventory do
   @spec bind(Schema.Item.t()) :: Schema.Item.t()
   def bind(%Schema.Item{} = item), do: item
 
+  # ---- state-in/state-out variants (direct testing, no process) ----
+
+  def add_to_state(state, item), do: apply_add_item(state, item)
+
+  def get_from_state(state, uid), do: get_item(state, uid)
+
+  def consume_from_state(state, item, consumed) do
+    case get_item(state, item.id) do
+      %Schema.Item{} = owned ->
+        {result, state} = consume(state, owned, consumed)
+        {result, state}
+
+      nil ->
+        {{:error, :not_found}, state}
+    end
+  end
+
+  def consume_amounts_from_state(state, consumables),
+    do: apply_consume_item_amounts(state, consumables)
+
   # ---- server callbacks ----
 
   @impl GenServer
@@ -382,6 +402,14 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   defp apply_add_item(state, %Schema.Item{} = attrs) do
+    # bind-on-loot items are character-bound the moment they enter the
+    # inventory, so starter gear never prompts on equip
+    attrs =
+      case Schema.Item.bind_if_needed(attrs, :loot) do
+        %Ecto.Changeset{changes: changes} when map_size(changes) > 0 -> Map.merge(attrs, changes)
+        _ -> attrs
+      end
+
     case create(state, attrs) do
       {{:create, item}, state} -> {{:ok, {:create, item}}, state}
       {other, state} -> {other, state}
@@ -456,7 +484,7 @@ defmodule Ms2ex.Managers.Inventory do
 
   # consumes across the carry stacks: each pair is taken from its stacks
   # (smallest first), pairs the inventory cannot cover are skipped
-  defp apply_consume_item_amounts(state, consumables) do
+  def apply_consume_item_amounts(state, consumables) do
     item_ids = Enum.map(consumables, & &1.item_id)
 
     stacks =

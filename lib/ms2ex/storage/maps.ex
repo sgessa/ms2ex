@@ -77,6 +77,29 @@ defmodule Ms2ex.Storage.Maps do
     end)
   end
 
+  # script move_user targets work even while the portal is disabled for
+  # interaction (script portals start hidden); only interaction respects
+  # the enabled flag
+  def get_portal(map_id, portal_id) do
+    meta = get_meta(map_id)
+
+    meta
+    |> Map.get(:portals, [])
+    |> Enum.find(&(&1[:id] == portal_id))
+    |> case do
+      nil ->
+        nil
+
+      portal ->
+        portal
+        |> Map.put(:enable, Map.get(portal, :enable, false))
+        |> Map.put(:visible, Map.get(portal, :visible, false))
+        |> Map.put(:minimap_visible, Map.get(portal, :minimap_visible, false))
+        |> Map.put(:position, struct(Coord, Map.get(portal, :position, %{})))
+        |> Map.put(:rotation, struct(Coord, Map.get(portal, :rotation, %{})))
+    end
+  end
+
   @doc """
   Fishable water cells of a map, keyed by their block coordinate: the surface
   of a fluid column that is not shallow.

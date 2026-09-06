@@ -81,6 +81,8 @@ defmodule Ms2ex.Packets.PacketWriter do
 
   def put_short(packet, short \\ 0x0), do: packet <> <<short::little-signed-integer-16>>
 
+  def put_sbyte(packet, n), do: packet <> <<n::signed-integer-8>>
+
   def put_sbyte_coord(packet, %{x: x, y: y, z: z}) do
     packet
     |> put_byte(x)

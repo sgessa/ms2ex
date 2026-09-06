@@ -26,9 +26,6 @@ defmodule Ms2ex.Schema.CharacterQuest do
     field :owner_id, :integer
     field :is_account_quest, :boolean, default: false
 
-    # Virtual field for quest metadata
-    field :metadata, :any, virtual: true
-
     timestamps(type: :utc_datetime)
   end
 

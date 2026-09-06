@@ -37,7 +37,8 @@ defmodule Ms2ex.MobRespawnTest do
       regen_check_time: cooldown,
       population: 2,
       position: %{x: 0.0, y: 0.0, z: 0.0},
-      rotation: %{x: 0.0, y: 0.0, z: 0.0}
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 101
     }
   end
 
@@ -74,13 +75,13 @@ defmodule Ms2ex.MobRespawnTest do
 
     assert map_size(state.npcs) == 2
     assert length(spawn.spawned_mobs) == 2
-    assert Enum.all?(state.npcs, fn {_oid, npc} -> npc.spawn_point_id == spawn.id end)
+    assert Enum.all?(state.npcs, fn {_oid, npc} -> npc.spawn_point_id == spawn.spawn_point_id end)
     assert spawn.spawn_tick == :infinity
   end
 
   test "wiping the spawn schedules one respawn after the cooldown" do
     state = load_spawn(base_state(), spawn_doc())
-    spawn_id = spawn_state(state).id
+    spawn_id = spawn_state(state).spawn_point_id
 
     state = kill_all(state)
     spawn = spawn_state(state)
@@ -149,13 +150,35 @@ defmodule Ms2ex.MobRespawnTest do
       regen_check_time: 0,
       population: 1,
       position: %{x: 0.0, y: 0.0, z: 0.0},
-      rotation: %{x: 0.0, y: 0.0, z: 0.0}
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 201,
+      on_field_create: true
     }
 
     state = Npc.load_spawn(base_state(), doc, [doc.npc_list |> hd() |> Map.get(:npc_id)])
     spawn = spawn_state(state)
 
-    refute Map.has_key?(spawn, :spawned_mobs)
+    # story npcs track their own spawned list, not the mob respawn cycle
     refute Map.has_key?(spawn, :spawn_tick)
+    assert length(spawn.spawned_npcs) == 1
+    assert map_size(state.npcs) == 1
+  end
+
+  test "friendly spawns without on_field_create wait for a script" do
+    doc = %{
+      npc_list: [%{npc_id: @mob_id, count: 1}],
+      regen_check_time: 0,
+      population: 1,
+      position: %{x: 0.0, y: 0.0, z: 0.0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 202,
+      on_field_create: false
+    }
+
+    state = Npc.load_spawn(base_state(), doc, [doc.npc_list |> hd() |> Map.get(:npc_id)])
+    spawn = spawn_state(state)
+
+    assert spawn.spawned_npcs == []
+    assert state.npcs == %{}
   end
 end
