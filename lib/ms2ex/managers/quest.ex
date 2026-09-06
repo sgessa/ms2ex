@@ -428,6 +428,17 @@ defmodule Ms2ex.Managers.Quest do
 
         Managers.Quest.Rewards.deliver(character, quest_metadata.accept_reward, results)
         update_conditions(character.id, :quest_accept, 1, "", 0, "", quest_metadata.id)
+
+        # accept-granted items count toward the new quest's own item
+        # conditions (delivery quests hand the item on accept) — without
+        # this the item_exist counter never moves and the quest cannot
+        # complete
+        Enum.each(results, fn {_status, item} ->
+          amount = Map.get(item, :amount, 0)
+          update_conditions(character.id, :item_add, amount, "", 0, "", item.item_id)
+          update_conditions(character.id, :item_exist, amount, "", 0, "", item.item_id)
+        end)
+
         maybe_push_quest_start(character, quest, quest_metadata)
 
         # TODO: Implement portal summoning
@@ -717,7 +728,7 @@ defmodule Ms2ex.Managers.Quest do
   # expire) keep writing through; condition counters accumulate in memory
   # and batch into the periodic flush below, so ordinary gameplay events
   # never touch the database.
-  defp flush_dirty(state) do
+  def flush_dirty(state) do
     state.dirty
     |> Enum.reduce(state, fn quest_id, state ->
       case Managers.Quest.State.get_quest_from_state(quest_id, state) do

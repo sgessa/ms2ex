@@ -61,25 +61,7 @@ defmodule Ms2ex.Managers.Character do
   end
 
   def handle_call({:update, character}, _from, state) do
-    updated =
-      character
-      |> Map.put(:skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))
-      |> Map.put(:stat_point_sources, state.stat_point_sources)
-      |> Map.put(:stat_point_allocation, state.stat_point_allocation)
-      |> Map.put(:dead?, Map.get(state, :dead?, false))
-      |> Map.put(:death_count, Map.get(state, :death_count, 0))
-      |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
-      |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
-      |> Map.put(:state_skill, Map.get(state, :state_skill))
-      |> Map.put(:regen_waits, Map.get(state, :regen_waits, %{}))
-      |> Map.put(:regen_health?, Map.get(state, :regen_health?, false))
-      |> Map.put(:regen_spirit?, Map.get(state, :regen_spirit?, false))
-      |> Map.put(:regen_stamina?, Map.get(state, :regen_stamina?, false))
-      |> Map.put(:staged_ugc_item, Map.get(state, :staged_ugc_item))
-      |> Map.put(:ensemble, Map.get(state, :ensemble))
-      |> Map.put(:condition_state, Map.get(state, :condition_state))
-      |> Map.put(:condition_distances, Map.get(state, :condition_distances, %{}))
-
+    updated = update_state(character, state)
     {:reply, :ok, updated}
   end
 
@@ -300,5 +282,30 @@ defmodule Ms2ex.Managers.Character do
   def handle_info({:DOWN, _, _, _pid, _reason}, character) do
     cleanup(character)
     {:stop, :normal, character}
+  end
+
+  @doc """
+  Merges runtime-only fields (cooldowns, buffs, regen, ...) from the manager
+  state back onto a (possibly stale) character struct. Pure: state in,
+  character out.
+  """
+  def update_state(character, state) do
+    character
+    |> Map.put(:skill_cooldowns, Map.get(state, :skill_cooldowns, %{}))
+    |> Map.put(:stat_point_sources, state.stat_point_sources)
+    |> Map.put(:stat_point_allocation, state.stat_point_allocation)
+    |> Map.put(:dead?, Map.get(state, :dead?, false))
+    |> Map.put(:death_count, Map.get(state, :death_count, 0))
+    |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
+    |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
+    |> Map.put(:state_skill, Map.get(state, :state_skill))
+    |> Map.put(:regen_waits, Map.get(state, :regen_waits, %{}))
+    |> Map.put(:regen_health?, Map.get(state, :regen_health?, false))
+    |> Map.put(:regen_spirit?, Map.get(state, :regen_spirit?, false))
+    |> Map.put(:regen_stamina?, Map.get(state, :regen_stamina?, false))
+    |> Map.put(:staged_ugc_item, Map.get(state, :staged_ugc_item))
+    |> Map.put(:ensemble, Map.get(state, :ensemble))
+    |> Map.put(:condition_state, Map.get(state, :condition_state))
+    |> Map.put(:condition_distances, Map.get(state, :condition_distances, %{}))
   end
 end

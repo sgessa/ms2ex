@@ -34,29 +34,33 @@ defmodule Ms2ex.Managers.Field do
     {local_id_counter, portals} = Field.Portal.load(map_id, @local_id_counter)
     interactable = Field.InteractObject.load(map_id)
 
-    state = %{
-      buffs: %{},
-      channel_id: channel_id,
-      local_id_counter: local_id_counter,
-      interactable: interactable,
-      instruments: %{},
-      items: %{},
-      map_id: map_id,
-      mob_gates: Storage.Maps.get_mob_gates(map_id),
-      opened_gates: MapSet.new(),
-      hidden_meshes: [],
-      mounts: %{},
-      npcs: %{},
-      npc_spawns: %{},
-      performance: nil,
-      players: %{},
-      portals: portals,
-      regions: %{},
-      sessions: %{},
-      stage: MapSet.new(),
-      tombstones: %{},
-      topic: field_name
-    }
+    state =
+      %{
+        buffs: %{},
+        channel_id: channel_id,
+        local_id_counter: local_id_counter,
+        interactable: interactable,
+        instruments: %{},
+        items: %{},
+        map_id: map_id,
+        mob_gates: Storage.Maps.get_mob_gates(map_id),
+        opened_gates: MapSet.new(),
+        hidden_meshes: [],
+        player_positions: %{},
+        mounts: %{},
+        npcs: %{},
+        npc_spawns: %{},
+        performance: nil,
+        players: %{},
+        portals: portals,
+        regions: %{},
+        sessions: %{},
+        stage: MapSet.new(),
+        tombstones: %{},
+        topic: field_name
+      }
+      |> Field.Liftable.init_liftables()
+      |> Field.Trigger.init_triggers()
 
     send(self(), :load_npc_spawns)
     send(self(), :tick_npcs)
@@ -74,6 +78,22 @@ defmodule Ms2ex.Managers.Field do
     send(self(), :maybe_stop)
 
     {:reply, :ok, Field.Character.remove_character(character, state)}
+  end
+
+  def handle_call({:update_widget, widget_key, arg}, _from, state) do
+    {:reply, :ok, Field.Trigger.update_widget(state, widget_key, arg)}
+  end
+
+  def handle_call({:skip_cutscene}, _from, state) do
+    {:reply, :ok, Field.Trigger.skip_cutscene(state)}
+  end
+
+  def handle_call({:pickup_liftable, character_id, uuid}, _from, state) do
+    {:reply, :ok, Field.Liftable.pickup(state, character_id, uuid)}
+  end
+
+  def handle_call({:place_liftable, character_id, grid, item_id, rotation}, _from, state) do
+    {:reply, :ok, Field.Liftable.place(state, character_id, grid, item_id, rotation)}
   end
 
   def handle_call({:pickup_item, character, object_id}, _from, state) do
@@ -180,6 +200,11 @@ defmodule Ms2ex.Managers.Field do
   def handle_cast({:drop_item, source, item}, state),
     do: {:noreply, Field.Item.drop_item(source, item, state)}
 
+  # trigger conditions detect users by their live position
+  def handle_cast({:user_position, character_id, position}, state) do
+    {:noreply, Field.Trigger.track_position(state, character_id, position)}
+  end
+
   def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item, receiver}, state),
     do: {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
 
@@ -220,13 +245,22 @@ defmodule Ms2ex.Managers.Field do
   #
 
   def handle_info(:load_npc_spawns, state) do
+    # the trigger machines must not consume their first states until every
+    # spawn point doc is registered, so ticking is gated on this counter
+    npc_count = length(Storage.Maps.get_npc_spawns(state.map_id))
+    mob_count = length(Storage.Maps.get_mob_spawns(state.map_id))
+    state = Map.put(state, :spawn_docs_pending, npc_count + mob_count)
+
     Field.Npc.load_npc_spawns(state)
     Field.Npc.load_mob_spawns(state)
     {:noreply, state}
   end
 
-  def handle_info({:add_npc_spawn, npc_spawn, npc_ids}, state),
-    do: {:noreply, Field.Npc.load_spawn(state, npc_spawn, npc_ids)}
+  def handle_info({:add_npc_spawn, npc_spawn, npc_ids}, state) do
+    state = Field.Npc.load_spawn(state, npc_spawn, npc_ids)
+    pending = Map.get(state, :spawn_docs_pending, 1) - 1
+    {:noreply, Map.put(state, :spawn_docs_pending, max(pending, 0))}
+  end
 
   def handle_info({:add_npc, npc_id, npc_spawn}, state),
     do: {:noreply, Field.Npc.load_npc(state, npc_id, npc_spawn)}
@@ -235,16 +269,36 @@ defmodule Ms2ex.Managers.Field do
     do: {:noreply, Field.Npc.load_npc(state, npc, %{position: position, rotation: nil})}
 
   def handle_info({:remove_npc, field_npc}, state) do
-    Context.Field.broadcast(field_npc.field, Packets.FieldRemoveNpc.bytes(field_npc.object_id))
-    Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
+    # destroy_monster and corpse timers can race; removal is idempotent
+    case Map.get(state.npcs, field_npc.object_id) do
+      %FieldNpc{} ->
+        Context.Field.broadcast(
+          field_npc.field,
+          Packets.FieldRemoveNpc.bytes(field_npc.object_id)
+        )
 
-    {:noreply, Field.Npc.remove_npc(field_npc, state)}
+        Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
+
+        {:noreply, Field.Npc.remove_npc(field_npc, state)}
+
+      _ ->
+        {:noreply, state}
+    end
   end
+
+  def handle_info(:release_guide_hold, state),
+    do: {:noreply, Field.Trigger.release_guide_hold(state)}
 
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
-    state = Field.InteractObject.tick(state)
-    {:noreply, Field.Npc.tick(state)}
+
+    if Map.get(state, :spawn_docs_pending, 0) > 0 do
+      {:noreply, state}
+    else
+      state = Field.InteractObject.tick(state)
+      state = Field.Trigger.tick(state)
+      {:noreply, Field.Npc.tick(state)}
+    end
   end
 
   def handle_info({:region_tick, source_id}, state),

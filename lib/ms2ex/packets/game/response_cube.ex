@@ -1,7 +1,7 @@
 defmodule Ms2ex.Packets.ResponseCube do
   import Ms2ex.Packets.PacketWriter
 
-  @mode %{pickup: 0x11, drop: 0x12}
+  @mode %{pickup: 0x11, drop: 0x12, place_cube: 0x0A}
   @update_profile 0x14
   @return_map 0x22
   @design_rank_reward 0x27
@@ -17,6 +17,33 @@ defmodule Ms2ex.Packets.ResponseCube do
     |> put_int(weapon_id)
     # TODO find object ID?
     |> put_int(Enum.random(1..2_147_483_647))
+  end
+
+  # the visual of a placed cube (or dropped liftable prop) at a grid tile
+  def place_liftable(object_id, item_id, {x, y, z}, rotation) do
+    __MODULE__
+    |> build()
+    |> put_byte(@mode.place_cube)
+    |> put_byte(0)
+    |> put_int(object_id)
+    |> put_int(object_id)
+    |> put_int(0)
+    |> put_int(0)
+    |> put_sbyte(x)
+    |> put_sbyte(y)
+    |> put_sbyte(z)
+    # the Vector3B struct is 4 bytes wide (one padding byte), matching the
+    # client's serializer
+    |> put_byte(0)
+    |> put_long(0)
+    |> put_int(item_id)
+    |> put_long(0)
+    |> put_long(0)
+    |> put_bool(false)
+    |> put_bool(true)
+    |> put_float(rotation)
+    |> put_int(0)
+    |> put_bool(false)
   end
 
   def drop(character) do

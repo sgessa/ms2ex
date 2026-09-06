@@ -8,6 +8,7 @@ defmodule Ms2ex.Context.HotBars do
 
   alias Ms2ex.Repo
   alias Ms2ex.Schema
+  alias Ms2ex.Storage
   alias Ms2ex.Types
 
   import Ecto.Query, except: [update: 2]
@@ -125,5 +126,88 @@ defmodule Ms2ex.Context.HotBars do
 
   defp valid_target_slot?(target) do
     !(target < 0 or target >= Schema.HotBar.max_quick_slots())
+  end
+
+  # Characters without a saved layout get their active hot bar filled with
+  # the job's learned active skills (reference's UpdateHotbarSkills): learned
+  # in-battle skills above the 10M id range, placed in the reference's slot
+  # order on the active bar, then persisted.
+  @slot_order [4, 5, 6, 7, 0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+
+  @spec update_hotbar_skills(Schema.Character.t(), [Schema.HotBar.t()]) :: [Schema.HotBar.t()]
+  def update_hotbar_skills(%Schema.Character{} = character, hot_bars) do
+    skill_ids = learned_active_skill_ids(character)
+    active_index = Enum.find_index(hot_bars, & &1.active) || 0
+
+    updated =
+      List.update_at(hot_bars, active_index, fn hot_bar ->
+        %{hot_bar | quick_slots: fill_slots(hot_bar.quick_slots, skill_ids)}
+      end)
+
+    Enum.each(updated, &save_hot_bar/1)
+    updated
+  end
+
+  defp learned_active_skill_ids(%Schema.Character{
+         skill_tabs: tabs,
+         active_skill_tab_id: active_id
+       })
+       when is_list(tabs) do
+    case Enum.find(tabs, &(&1.id == active_id)) do
+      %Schema.SkillTab{skills: skills} when is_list(skills) ->
+        skills
+        |> Enum.filter(&learned_active_skill?(&1))
+        |> Enum.map(& &1.skill_id)
+        |> Enum.sort()
+
+      _ ->
+        []
+    end
+  end
+
+  defp learned_active_skill_ids(_character), do: []
+
+  defp learned_active_skill?(skill) do
+    skill.level > 0 and skill.skill_id > 10_000_000 and skill_in_battle?(skill.skill_id)
+  end
+
+  defp skill_in_battle?(skill_id) do
+    case Storage.Skills.get_meta(skill_id) do
+      %{state: %{in_battle: in_battle}} -> in_battle
+      _ -> false
+    end
+  end
+
+  defp fill_slots(slots, skill_ids) do
+    Enum.reduce(skill_ids, slots, &assign_free_slot(&2, &1))
+  end
+
+  defp assign_free_slot(slots, skill_id) do
+    if Enum.any?(slots, &(&1.skill_id == skill_id)) do
+      slots
+    else
+      do_assign(slots, free_slot_index(slots), skill_id)
+    end
+  end
+
+  defp free_slot_index(slots) do
+    Enum.find(@slot_order, fn index ->
+      case Enum.at(slots, index) do
+        %{skill_id: skill_id} -> skill_id in [nil, 0]
+        _ -> false
+      end
+    end)
+  end
+
+  defp do_assign(slots, nil, _skill_id), do: slots
+
+  defp do_assign(slots, index, skill_id) do
+    List.update_at(slots, index, fn _slot -> %Types.QuickSlot{skill_id: skill_id} end)
+  end
+
+  defp save_hot_bar(hot_bar) do
+    hot_bar
+    |> Schema.HotBar.changeset(%{quick_slots: hot_bar.quick_slots})
+    |> Repo.update()
   end
 end

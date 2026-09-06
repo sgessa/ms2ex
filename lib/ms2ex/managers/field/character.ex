@@ -1,4 +1,5 @@
 defmodule Ms2ex.Managers.Field.Character do
+  alias Ms2ex.Enums
   alias Ms2ex.Packets
   alias Ms2ex.Context
   alias Ms2ex.Managers
@@ -29,6 +30,10 @@ defmodule Ms2ex.Managers.Field.Character do
     players = Map.put(state.players, character.id, character.object_id)
     state = %{state | sessions: sessions, players: players}
 
+    # trigger conditions read who is on the field and where they stand
+    state = Field.Trigger.track_position(state, character.id, character.position)
+    state = Field.Trigger.track_job(state, character.id, Enums.Job.get_value(character.job))
+
     # field-object systems must be initialized before entities load
     push(character, Packets.LoadCubes.load_plots())
     push(character, Packets.LoadCubes.load())
@@ -36,7 +41,8 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.LoadCubes.plot_expiry())
     push(character, Packets.Ugc.load_banners())
     push(character, Packets.Breakable.load())
-    push(character, Packets.Liftable.load())
+    # the liftable batch renders quest props (and honors their quest masks)
+    push(character, Packets.Liftable.batch_update(Field.Liftable.liftables_for_enter(state)))
     push(character, Packets.FunctionCube.load())
 
     # Load NPCs
@@ -64,7 +70,8 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # trigger/ui state finalizes before the player stats load; meshes
     # already dropped by opened gates join as hidden
-    push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, [])))
+    cameras = state |> Map.get(:trigger_cameras, []) |> Map.values()
+    push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, []), cameras))
     push(character, Packets.FieldProperty.load(Field.PerformanceStage.properties(state)))
 
     # Load Emotes and Player Stats after Player Object is loaded
@@ -133,6 +140,8 @@ defmodule Ms2ex.Managers.Field.Character do
     players = Map.delete(state.players, character.id)
     tombstones = Map.delete(state.tombstones, character.id)
     instruments = Map.delete(state.instruments, character.id)
+    state = Field.Liftable.drop(state, character)
+    state = Field.Trigger.drop_position(state, character.id)
 
     Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
     Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))

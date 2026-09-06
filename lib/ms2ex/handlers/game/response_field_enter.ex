@@ -15,17 +15,35 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     Managers.Character.call(character, {:update, character})
 
     run(session, fn -> Context.Field.subscribe(character) end)
+
+    hot_bars = Context.HotBars.list(character)
+
+    # a fresh character has no saved quick-slot layout: fill the active hot
+    # bar with the job's learned active skills (the reference's
+    # UpdateHotbarSkills), send the hot bars, then let the client apply its
+    # own key-bind defaults (LoadDefault). both must precede the field-enter
+    # stream so the client initializes its ui from them
+    hot_bars =
+      if fresh_hot_bars?(hot_bars) do
+        Context.HotBars.update_hotbar_skills(character, hot_bars)
+      else
+        hot_bars
+      end
+
+    push(session, Packets.KeyTable.send_hot_bars(hot_bars))
+
+    if fresh_hot_bars?(hot_bars) do
+      push(session, Packets.KeyTable.request())
+    end
+
+    push(session, Packets.GuideRecord.load(character.guide_records))
+
     {:ok, _pid} = Context.Field.enter(character)
 
     case start_quest_manager(character.id) do
       {:ok, _pid} -> Managers.Quest.load_quests(session)
       :ok -> :ok
     end
-
-    hot_bars = Context.HotBars.list(character)
-    push(session, Packets.KeyTable.send_hot_bars(hot_bars))
-
-    push(session, Packets.GuideRecord.load(character.guide_records))
 
     send_skill_cooldowns(session, character_id)
 
@@ -71,5 +89,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
       nil -> Managers.Quest.start_link(character_id)
       _ -> :ok
     end
+  end
+
+  defp fresh_hot_bars?(hot_bars) do
+    Enum.all?(hot_bars, fn hot_bar ->
+      Enum.all?(hot_bar.quick_slots, &(&1.skill_id in [nil, 0]))
+    end)
   end
 end

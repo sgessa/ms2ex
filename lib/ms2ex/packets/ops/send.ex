@@ -69,6 +69,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x63 => "FRIEND",
     0x65 => "INTERACT_OBJECT",
     0x67 => "FALL_DAMAGE",
+    0x68 => "CINEMATIC",
     0x6A => "SET_CRAFT_MODE",
     0x6B => "RESPONSE_CUBE",
     0x6C => "LOAD_CUBES",
@@ -113,7 +114,10 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x12A => "WEDDING",
     0x132 => "UNKNOWN_SYNC",
     0xAE => "ITEM_BOX",
-    0xDD => "ITEM_LOCK"
+    0xDD => "ITEM_LOCK",
+    0x72 => "FOLLOW_NPC",
+    0xF3 => "ONE_TIME_EFFECT",
+    0xF4 => "CAMERA_INTERPOLATION"
   }
 
   def all_map(), do: @send_ops

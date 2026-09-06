@@ -149,13 +149,33 @@ defmodule Ms2ex.MobRespawnTest do
       regen_check_time: 0,
       population: 1,
       position: %{x: 0.0, y: 0.0, z: 0.0},
-      rotation: %{x: 0.0, y: 0.0, z: 0.0}
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      on_field_create: true
     }
 
     state = Npc.load_spawn(base_state(), doc, [doc.npc_list |> hd() |> Map.get(:npc_id)])
     spawn = spawn_state(state)
 
-    refute Map.has_key?(spawn, :spawned_mobs)
+    # story npcs track their own spawned list, not the mob respawn cycle
     refute Map.has_key?(spawn, :spawn_tick)
+    assert length(spawn.spawned_npcs) == 1
+    assert map_size(state.npcs) == 1
+  end
+
+  test "friendly spawns without on_field_create wait for a script" do
+    doc = %{
+      npc_list: [%{npc_id: @mob_id, count: 1}],
+      regen_check_time: 0,
+      population: 1,
+      position: %{x: 0.0, y: 0.0, z: 0.0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      on_field_create: false
+    }
+
+    state = Npc.load_spawn(base_state(), doc, [doc.npc_list |> hd() |> Map.get(:npc_id)])
+    spawn = spawn_state(state)
+
+    assert spawn.spawned_npcs == []
+    assert state.npcs == %{}
   end
 end

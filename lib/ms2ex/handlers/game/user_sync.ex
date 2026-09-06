@@ -69,6 +69,9 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     character = maybe_set_safe_position(character, new_position, closest_block)
     character = %{character | animation: state, position: new_position}
+
+    # trigger conditions detect users by their live position
+    Context.Field.cast(character, {:user_position, character.id, new_position})
     Managers.Character.call(character, {:update, character})
 
     if out_of_bounds?(character.map_id, character.position) do

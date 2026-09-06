@@ -19,11 +19,14 @@ defmodule Ms2ex.Types.FieldNpc do
     :damage_dealers,
     # TODO per-model sequence ids from anikey data (ingest projection)
     animation: 255,
+    patrol: nil,
     dead?: false,
     corpse?: false,
     send_control?: true,
     seq_counter: 0,
-    last_control_at: 0
+    last_control_at: 0,
+    velocity: {0, 0, 0},
+    emote_loop: nil
   ]
 
   # must match @idle_control_ms in Managers.Field; staggering keeps npcs from

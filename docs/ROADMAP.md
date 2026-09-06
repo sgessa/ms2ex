@@ -69,8 +69,14 @@ the gate's guide event fires. What is still missing:
   trigger-driven creation and `regen_check_time` top-up checks are not
   implemented
 - a general trigger-script runtime (states, conditions, cinematic/movie
-  actions, per-job portal enables) — only the monster-gate pattern is
-  projected and replayed today
+  actions, per-job portal enables) — the machine core now runs on whitelisted
+  xblocks (the classic tutorial start + knight Training Yard), with
+  wait-tick / user-detect / monster-dead / widget / quest-user-detect
+  conditions and mesh, portal, monster, guide-event, movie, cinematic-ui,
+  camera-path, effect, cinematic-talk and user-teleport actions; still
+  missing: npc patrol movement, sound setup, cinematic transitions
+  (types 3-6), movie skip via set_skip-armed scripts is in, patrol-driven
+  user path movement is not
 
 ---
 
@@ -182,19 +188,81 @@ level 1 grants the tutorial reward items and unlocks the tutorial's maps
 and taxis (persisted, with taxi-discover packets), and the tutorial skip
 item teleports to the skip destination when used on the start field. Guide
 pop-up progress (`GuideRecord`) is persisted per character and replayed to
-the client on field enter. The final barrier guarding the exit is a monster
-gate: killing the guard dummy drops the steel-barrier meshes (with the
-guide event that moves the tutorial ui to its last step), opening the way
-to the exit portal.
+the client on field enter.
+
+The classic tutorial chain (start field → knight training yard) runs on
+the trigger-script runtime (see the trigger runtime item): the barrier
+monster gate, the squire-carry quest (liftable pickup/install firing the
+item_move condition), job-portal selection, and the map-exit teleport all
+play through the xblock scripts.
 
 The newer-class tutorials (runeblade 63000006-chain, striker
 63000015-chain, soulbinder 63000035-chain) are scripted quest campaigns
 (walk-and-talk states, movies, npc choreography, quest-state gates —
 e.g. striker's `63000015_cs/intro01.xml` has 37 states around quest
-90000430) and do not run: they need a trigger-script runtime (states,
-box/user/quest detection conditions, cinematic ui and movie actions,
-npc movement). Until then those characters skip via the job's skip item
+90000430) and do not run yet: they need the runtime's remaining
+coverage (per-map verification, cinematic transitions, npc movement).
+Until then those characters skip via the job's skip item
 (`!item 15500095` for a striker, then use it on the start field).
+
+### 23. Trigger-script runtime — [Partial]
+
+The xblock trigger scripts run for verified maps (`52000065_qd`,
+`52000142_qd`; whitelist in `Managers.Field.Trigger`): per-script state
+machines tick at 100ms with the reference's semantics (on-enter actions,
+first-true-condition transitions, WaitTick against state entry,
+entrance transition skipping one cycle). Conditions: user_detected
+(job-gated, padded boxes), monster_dead, quest_user_detected (started /
+completed mapping), widget_condition (Guide/SceneMovie), negate.
+Actions: set_mesh/set_effect, set_portal, spawn/destroy_monster (mob and
+friendly spawns), guide_event, create/widget_action, play_scene_movie,
+set_cinematic_ui, set_onetime_effect, select_camera_path/reset_camera,
+add_cinematic_talk, set_dialogue (player/npc speech balloons and
+cinematic talks), set_npc_emotion_loop (emote sequences resolved through
+the model's animation table), show/hide_guide_summary (held while a
+cinematic or scripted path move has the player and flushed when control
+returns), set_skip + set_scene_skip + skip-cutscene handling,
+add/remove_buff (script buffs), move_user (same-map teleport refused for
+non-walkable portals via the navmesh, cross-map field change),
+move_user_path (invisible follow-dummy walks the patrol in 3D with
+velocity while the client walks the player behind it).
+
+Still missing:
+
+- camera cutscene fidelity: scripted camera paths register and play, but
+  the framing/revert behavior diverges from the reference (camera keeps
+  drifting after the spline, player movement is not locked during
+  scripted cameras); needs a packet-level comparison with the reference
+- cinematic transition setup types 3–6 (letterbox / fade / horizontal /
+  vertical wipes)
+- npc patrol movement for story npcs (move_npc)
+- follow-dummy facing: rotation is not derived from the movement
+  direction, so the followed character's heading is stale
+- placed liftables (dropped props) never expire; the reference removes
+  them after item lifetime + finish time, and the story expects the
+  dropped prop to leave the field once the quest completes
+- sound setup actions
+- whitelist expansion beyond the two verified maps (each classic job
+  continuation, then the newer-class cinematic tutorials)
+
+### 24. Navmesh position validation — [Partial]
+
+The ingest builds a Recast/Detour navmesh per xblock from the client's
+collision geometry (`--navmesh [xblocks]`; DotRecast pipeline ported
+from the reference: doesMakeTOK entities, physics cubes, nif PhysX
+props) and stores a tile/poly projection under the `navmesh` set.
+`Ms2ex.Navigation` answers nearest-poly position queries with the
+reference's ToNavMeshSpace transform and FindNearestPoly half extents,
+and the trigger runtime's move_user refuses teleports to positions
+without walkable ground (the reference's MoveToPortal ValidPosition
+check) — scene-anchor portals that sit off the platform edge no longer
+drop players out of the world.
+
+Still missing: generating navmeshes for the remaining maps (the flag
+currently defaults to the two verified tutorial xblocks), npc pathing
+queries over the stored tiles, and auditing the generated meshes
+against the reference (nif assets whose llid lookup failed leave small
+gaps in walkable coverage).
 
 ### 7. Join-flow packet audit — [Open]
 
@@ -480,6 +548,27 @@ combat-heavy characters from accumulating document copies.
 ---
 
 ## Recently completed
+
+### Trigger tutorial systems (character tutorial PR series)
+
+- Liftable quest props: ingest projection (all fields), field-enter batch
+  with quest masks, pickup/install via LIFTABLE + REQUEST_CUBE, placed
+  prop rendering, item_move condition wiring — the squire-carry quest
+  works end to end
+- Script npc emotes (`set_npc_emotion_loop`) and dialogue
+  (`set_dialogue` balloons + cinematic talks) via the new `animation`
+  ingest set (anikeytext per model, sequence name -> id)
+- Guide summary hints held during cutscenes and scripted path moves,
+  flushed exactly when the player regains control
+- Follow-dummy movement: 3D patrol stepping with streamed velocity and
+  approach-animation resolution
+- Bind-on-loot items are character-bound when added to the inventory
+  (starter weapons no longer prompt on equip)
+- Fresh characters receive client-default key binds and hot bars seeded
+  with learned active skills (reference LoadKeyTable/UpdateHotbarSkills)
+- Spawn-load race fix: trigger machines start only after every spawn
+  point doc is registered; script-controlled maps seed their full cast
+  from the scripts alone
 
 - Quest condition batching: quest condition counters accumulate in memory
   in the quest manager and mark quests dirty for a periodic flush (also
