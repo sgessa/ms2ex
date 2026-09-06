@@ -66,6 +66,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       account_wallet = Context.Wallets.find(account)
       character_wallet = Context.Wallets.find(character)
 
+      Context.Mails.bind_account_mails(account.id, character.id)
+      unread_mail_count = Context.Mails.count_unread(character.id)
+
       %{friends: friends, map_id: map_id, position: position, rotation: rotation} = character
 
       send(self(), {:update, %{character_id: character.id, server_tick: tick}})
@@ -106,7 +109,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.HomeCommand.load(account.id))
       |> push(Packets.Mentor.load())
       |> push(Packets.Mentor.unknown12())
-      |> push(Packets.Mail.notify())
+      |> push(Packets.Mail.notify(unread_mail_count, unread_mail_count > 0))
       |> push(Packets.World.bytes())
       |> push_party(character)
     end

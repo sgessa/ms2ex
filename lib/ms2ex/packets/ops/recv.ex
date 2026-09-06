@@ -29,6 +29,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x29 => "QUEST",
     0x2A => "TOMBSTONE",
     0x2C => "PARTY",
+    0x2D => "MAIL",
     0x30 => "FRIEND",
     0x31 => "INTERACT_OBJECT",
     0x37 => "REQUEST_CUBE",

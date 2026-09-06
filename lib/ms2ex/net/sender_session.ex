@@ -22,6 +22,8 @@ defmodule Ms2ex.Net.SenderSession do
     GenServer.cast(pid, {:handshake, recv_cipher})
   end
 
+  def push(%Schema.Character{sender_session_pid: nil}, _packet), do: :error
+
   def push(%Schema.Character{} = character, packet) when is_binary(packet) do
     push(character.sender_session_pid, packet)
   end
@@ -34,6 +36,8 @@ defmodule Ms2ex.Net.SenderSession do
   def push(pid, packet) when is_pid(pid) and is_binary(packet) do
     send(pid, {:push, packet})
   end
+
+  def push(nil, _packet), do: :error
 
   def push_notice(session, character, notice) do
     push(session, Packets.UserChat.bytes(:notice_alert, character, notice))

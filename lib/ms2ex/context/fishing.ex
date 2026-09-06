@@ -583,7 +583,8 @@ defmodule Ms2ex.Context.Fishing do
         :ok
 
       _ ->
-        :error
+        Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
+        :ok
     end
   end
 

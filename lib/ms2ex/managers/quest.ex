@@ -837,6 +837,7 @@ defmodule Ms2ex.Managers.Quest do
             notify_item_acquired(character, inventory_item)
 
           _ ->
+            Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
             :ok
         end
 

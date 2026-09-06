@@ -63,6 +63,7 @@ defmodule Ms2ex.Context.Inventory do
 
     item_attrs =
       attrs
+      |> Map.put(:character_id, character_id)
       |> Map.put(:inventory_tab, inventory_tab)
       |> Map.put(:rarity, rarity)
       |> Map.from_struct()
