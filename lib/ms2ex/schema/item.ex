@@ -11,6 +11,7 @@ defmodule Ms2ex.Schema.Item do
 
   @fields [
     :amount,
+    :character_id,
     :color,
     :data,
     :enchant_level,
@@ -22,6 +23,7 @@ defmodule Ms2ex.Schema.Item do
     :is_locked,
     :limit_break_level,
     :location,
+    :mail_id,
     :rarity,
     :remaining_trades,
     :stats,
@@ -34,6 +36,7 @@ defmodule Ms2ex.Schema.Item do
 
   schema "inventory_items" do
     belongs_to :character, Schema.Character
+    belongs_to :mail, Schema.Mail
 
     field :item_id, :integer
     field :amount, :integer, default: 1
@@ -55,7 +58,7 @@ defmodule Ms2ex.Schema.Item do
     field :is_bound, :boolean, default: false
     field :level, :integer, virtual: true
     field :limit_break_level, :integer, default: 0
-    field :location, Ecto.Enum, values: [inventory: 0, equipment: 1], default: :inventory
+    field :location, Ecto.Enum, values: [inventory: 0, equipment: 1, mail: 2], default: :inventory
     field :lock_character_id, :integer, virtual: true
     field :mob_drop?, :boolean, virtual: true, default: false
     field :object_id, :integer, virtual: true

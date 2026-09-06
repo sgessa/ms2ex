@@ -402,7 +402,8 @@ defmodule Ms2ex.Managers.Achievement do
         {:ok, %{achievement | reward_grade: achievement.reward_grade + 1}}
 
       _ ->
-        {:error, :inventory_full}
+        Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
+        {:ok, %{achievement | reward_grade: achievement.reward_grade + 1}}
     end
   end
 

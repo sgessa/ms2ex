@@ -188,8 +188,7 @@ currency drops (meso/meret/valor/rue/havi/treva wallets, experience
 orbs); a failed grant stops the open instead of losing the box.
 
 Remaining: gacha and Lullu box variants (need the gacha tables and
-`ItemScript.Gacha`), mail-overflow of rewards when the inventory is
-full (no mail system yet), spirit/stamina orbs, and the transcendence
+`ItemScript.Gacha`), spirit/stamina orbs, and the transcendence
 crystal special case. Some boxes have no drop-table content in this
 client's data (e.g. the welcome pack 20300002) — those refuse to open,
 matching the reference.
@@ -363,8 +362,7 @@ What is still missing:
   duration; interact-driven mob spawns are not implemented
 - condition sources for breakables (`breakable_object`), triggers,
   and the long-tail condition types
-- selective rewards, mail fallback for full inventories, and the remaining
-  reward-side edge cases
+- selective rewards and the remaining reward-side edge cases
 - Maple Navigator: audit request/response packets, remote completion, and map
   guidance flow against client behavior
 - chapter rewards, job-advance hooks, and the remaining quest subcommands
@@ -415,7 +413,7 @@ What is still missing:
   results, and limited bundles require their corresponding inventory, shop,
   currency, and upgrade systems to emit condition events
 - social and world sources still missing: guild, club, marriage, mentor,
-  mail, house, banner, UGC, and profile conditions require those owning
+  house, banner, UGC, and profile conditions require those owning
   systems; PvP, survival, dungeon, festival, and minigame conditions require
   their event/match state and result handlers
 - life-skill sources still missing: farming plots and pet actions require
@@ -440,8 +438,6 @@ What is still missing:
 - audit every achievement reward definition against the live client metadata,
   including item ids, quantities, rarity/rank semantics, automatic versus
   manual claims, and each reward type's client update
-- inventory-full fallback for item rewards: mail has notification packets only;
-  no mail, attachment, or item-delivery persistence exists
 - achievement counters in character/field profile packets and trophy rankings:
   character trophy aggregates and ranking queries/packets are not implemented
 - condition sources not yet emitted by gameplay systems, including gathering,
@@ -564,6 +560,15 @@ combat-heavy characters from accumulating document copies.
 ---
 
 ## Recently completed
+
+- Mail System & Reward Delivery Fallbacks: player-to-player mail, system mail
+  with item/currency attachments and XML template argument formatting, account-wide
+  mail binding at login, batched inbox loading, single/bulk reading, attachment
+  collection with per-tab inventory validation, and safe deletion. When player
+  inventories are full, reward items from achievement claims, item box opens,
+  quest completions, field missions, fishing spots, and mastery gathering/crafting
+  automatically overflow into system mail deliveries instead of dropping or failing.
+  Condition event emission for `:send_mail` advances corresponding achievements
 
 ### Trigger tutorial systems (character tutorial PR series)
 

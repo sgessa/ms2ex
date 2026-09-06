@@ -329,7 +329,8 @@ defmodule Ms2ex.Context.Mastery do
         :ok
 
       _ ->
-        {:error, :s_mastery_error_unknown}
+        Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
+        :ok
     end
   end
 

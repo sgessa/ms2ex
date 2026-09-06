@@ -61,6 +61,16 @@ defmodule Ms2ex.ItemBoxTest do
     }
   end
 
+  defp filler_meta do
+    %{
+      limit: %{level: 0},
+      property: %{type: 1},
+      stack_limit: 1,
+      slot_names: [11],
+      option: %{constant_id: 0}
+    }
+  end
+
   setup do
     stub_metadata(%{
       "item:#{@box_id}" => item_meta("OpenItemBox", "0,0,0,#{@drop_box_id}"),
@@ -68,6 +78,7 @@ defmodule Ms2ex.ItemBoxTest do
       "item:#{@select_box_id}" => item_meta("SelectItemBox", "1,#{@select_drop_box_id}"),
       "item:#{@reward_a}" => reward_meta(),
       "item:#{@reward_b}" => reward_meta(),
+      "item:50000001" => filler_meta(),
       "table:individualdropitem.xml" => %{
         table: %{
           entries: %{
@@ -101,6 +112,9 @@ defmodule Ms2ex.ItemBoxTest do
         map_id: 1,
         skin_color: {}
       })
+
+    Repo.insert!(%Schema.InventoryTab{character_id: character.id, tab: :consumable, slots: 84})
+    Repo.insert!(%Schema.InventoryTab{character_id: character.id, tab: :gear, slots: 10})
 
     :ok = Managers.Inventory.start(character)
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"inventories:#{character.id}"))
@@ -156,6 +170,26 @@ defmodule Ms2ex.ItemBoxTest do
     refute Managers.Inventory.get(character, box.id)
     assert find_item(character, @reward_b).amount == 1
     refute find_item(character, @reward_a)
+  end
+
+  test "overflows rewards to mail when inventory is full", %{character: character} do
+    # Fill all 10 gear slots with unstackable filler items
+    Enum.each(1..10, fn _ ->
+      item = Context.Items.init(50_000_001, %{amount: 1, rarity: 1})
+      Managers.Inventory.add_item(character, item)
+    end)
+
+    box = add_box(character, @box_id, 2)
+
+    ItemBox.open(character, character, box, 2, -1)
+
+    # 1 box was consumed before hitting inventory full
+    assert_received {:push, <<0xAE::little-16, @box_id::little-32, 0::little-32, 4::little-32>>}
+
+    # Reward was sent by mail
+    mails = Context.Mails.list(character.id)
+    assert length(mails) == 1
+    assert List.first(mails).items |> Enum.any?(&(&1.item_id == @reward_a))
   end
 
   defp add_box(character, item_id, amount) do

@@ -2,10 +2,13 @@ defmodule Ms2ex.Context.Achievements do
   alias Ms2ex.Repo
   alias Ms2ex.Schema
 
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query
 
   def list(owner_id),
-    do: Repo.all(from achievement in Schema.Achievement, where: achievement.owner_id == ^owner_id)
+    do:
+      Schema.Achievement
+      |> where([a], a.owner_id == ^owner_id)
+      |> Repo.all()
 
   def create(attrs) do
     %Schema.Achievement{}

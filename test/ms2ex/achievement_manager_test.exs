@@ -46,6 +46,20 @@ defmodule Ms2ex.AchievementManagerTest do
     }
   }
 
+  @item_reward_id 236_003
+  @reward_item_id 5_000_001
+  @item_reward_metadata %{
+    id: @item_reward_id,
+    account_wide: false,
+    category: 2,
+    grades: %{
+      "1" => %{
+        condition: %{type: :send_mail, value: 1},
+        reward: %{type: :item, code: @reward_item_id, value: 2, rank: 1}
+      }
+    }
+  }
+
   setup {Mimic, :set_mimic_global}
 
   setup do
@@ -53,10 +67,19 @@ defmodule Ms2ex.AchievementManagerTest do
       "achievement:#{@achievement_id}" => @metadata,
       "achievement:#{@reward_id}" => @reward_metadata,
       "achievement:#{@manual_reward_id}" => @manual_reward_metadata,
+      "achievement:#{@item_reward_id}" => @item_reward_metadata,
+      "item:#{@reward_item_id}" => %{
+        limit: %{level: 1, transfer_type: 3},
+        property: %{type: 0, subtype: 2},
+        slot_names: [],
+        stack_limit: 10,
+        option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
+      },
       "achievement:index" => %{
         monster_kill: [@achievement_id],
         quest_accept: [@reward_id],
-        guild_join: [@manual_reward_id]
+        guild_join: [@manual_reward_id],
+        send_mail: [@item_reward_id]
       }
     })
 
@@ -205,5 +228,27 @@ defmodule Ms2ex.AchievementManagerTest do
 
     assert Characters.list_titles(character) == [@manual_reward_title_id]
     assert [%Schema.Achievement{reward_grade: 2}] = Achievements.list(character.id)
+  end
+
+  test "item rewards fallback to mail when inventory is not available or full", %{
+    character: character
+  } do
+    Managers.Achievement.update(character.id, :send_mail)
+
+    wait_until(fn ->
+      assert [%Schema.Achievement{achievement_id: @item_reward_id, reward_grade: 1}] =
+               Achievements.list(character.id)
+    end)
+
+    Managers.Achievement.claim_reward(character, @item_reward_id)
+    :ok = Managers.Achievement.flush(character)
+
+    assert [%Schema.Achievement{achievement_id: @item_reward_id, reward_grade: 2}] =
+             Achievements.list(character.id)
+
+    # Item was mailed
+    mails = Ms2ex.Context.Mails.list(character.id)
+    assert length(mails) == 1
+    assert List.first(mails).items |> Enum.any?(&(&1.item_id == @reward_item_id))
   end
 end

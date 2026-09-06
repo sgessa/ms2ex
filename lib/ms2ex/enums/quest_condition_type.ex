@@ -121,6 +121,7 @@ defmodule Ms2ex.Enums.QuestConditionType do
     defeat_player_in_battleroyale: 114,
     use_mastery_workbench: 115,
     item_lapenshard_enchant: 116,
-    activate_lapenshards: 117
+    activate_lapenshards: 117,
+    send_mail: 168
   }
 end

@@ -63,6 +63,7 @@ defmodule Ms2ex.Context.Inventory do
 
     item_attrs =
       attrs
+      |> Map.put(:character_id, character_id)
       |> Map.put(:inventory_tab, inventory_tab)
       |> Map.put(:rarity, rarity)
       |> Map.from_struct()
@@ -99,7 +100,8 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec update_amount(integer(), integer()) :: :ok
   def update_amount(item_id, delta) do
-    from(i in Schema.Item, where: i.id == ^item_id)
+    Schema.Item
+    |> where([i], i.id == ^item_id)
     |> Repo.update_all(inc: [amount: delta])
 
     :ok
@@ -110,7 +112,8 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec set_amount(integer(), integer()) :: :ok
   def set_amount(item_id, amount) do
-    from(i in Schema.Item, where: i.id == ^item_id)
+    Schema.Item
+    |> where([i], i.id == ^item_id)
     |> Repo.update_all(set: [amount: amount])
 
     :ok
@@ -127,7 +130,8 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec delete_items([integer()]) :: :ok
   def delete_items(ids) do
-    from(i in Schema.Item, where: i.id in ^ids)
+    Schema.Item
+    |> where([i], i.id in ^ids)
     |> Repo.delete_all()
 
     :ok
@@ -138,7 +142,8 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec clear_slots([integer()]) :: :ok
   def clear_slots(item_ids) do
-    from(i in Schema.Item, where: i.id in ^item_ids)
+    Schema.Item
+    |> where([i], i.id in ^item_ids)
     |> Repo.update_all(set: [inventory_slot: nil])
 
     :ok
@@ -149,7 +154,8 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec assign_slot(integer(), integer() | nil) :: :ok
   def assign_slot(item_id, slot) do
-    from(i in Schema.Item, where: i.id == ^item_id)
+    Schema.Item
+    |> where([i], i.id == ^item_id)
     |> Repo.update_all(set: [inventory_slot: slot])
 
     :ok
@@ -160,7 +166,8 @@ defmodule Ms2ex.Context.Inventory do
   """
   @spec expand_tab(integer(), integer()) :: :ok
   def expand_tab(tab_id, extra_slots) do
-    from(t in Schema.InventoryTab, where: t.id == ^tab_id)
+    Schema.InventoryTab
+    |> where([i], i.id == ^tab_id)
     |> Repo.update_all(inc: [slots: extra_slots])
 
     :ok

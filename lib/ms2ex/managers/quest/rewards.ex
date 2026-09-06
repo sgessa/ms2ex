@@ -14,12 +14,12 @@ defmodule Ms2ex.Managers.Quest.Rewards do
   """
 
   alias Ms2ex.Managers.Inventory
+  alias Ms2ex.Context
   alias Ms2ex.Context.Items
   alias Ms2ex.Context.Wallets
   alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Packets
-  alias Ms2ex.Repo
   alias Ms2ex.Storage
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -56,8 +56,11 @@ defmodule Ms2ex.Managers.Quest.Rewards do
             Managers.Quest.notify_item_acquired(character, added_item(result))
             result
 
-          other ->
-            Repo.rollback({:reward_item_failed, reward_item.id, other})
+          _other ->
+            {:ok, mail} =
+              Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
+
+            {:mail, mail}
         end
       end)
 

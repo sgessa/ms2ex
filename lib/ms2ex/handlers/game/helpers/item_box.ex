@@ -7,9 +7,8 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   Three open flows: OpenItemBox (drop tables plus an optional direct
   item), SelectItemBox (player picks an entry by index from one drop
   group) and OpenItemBoxWithKey (consumes key items). Rewards that do
-  not fit the inventory are mailed on the live game; there is no mail
-  system yet, so a failed grant stops the open with the inventory-full
-  error and leaves the remaining boxes unopened.
+  not fit the inventory are mailed to the character, stopping
+  subsequent opens with the inventory-full error.
   """
 
   alias Ms2ex.Context
@@ -254,6 +253,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
             :ok
 
           _ ->
+            Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
             {:error, @error_inventory_full}
         end
     end
