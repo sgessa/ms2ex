@@ -259,6 +259,40 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert_receive {:push, <<0x4F::little-16, 8, 2, _::binary>>}
   end
 
+  test "set_effect expands inclusive ranges into one packet per id" do
+    # the knight tutorial's arrow trails toggle ranges like "5001-5025"
+    state =
+      base_state()
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "set_effect", args: %{arg1: "5001-5003,5025", arg2: "1"}}
+      ])
+      |> tick()
+
+    assert %{current: "wait", next: nil} = state.trigger_machines["tutorial"]
+    assert [5001, 5002, 5003, 5025] == effect_push_ids()
+  end
+
+  test "set_cinematic_ui frames the cutscene with a letterbox transition" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_cinematic_ui", args: %{arg1: "3"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x68::little-16, 0x3, 3::little-32, 0::little-16, 0::little-16>>} =
+             receive_push()
+  end
+
+  test "set_cinematic_ui type 9 broadcasts the opening black screen" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_cinematic_ui", args: %{arg1: "9", arg2: "X"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x68::little-16, 0xB, 1::little-16, 88, 0, 0>>} = receive_push()
+  end
+
   # -- helpers ---------------------------------------------------------
 
   defp base_state do
@@ -392,6 +426,18 @@ defmodule Ms2ex.TriggerRuntimeTest do
         portal_update_push?()
     after
       100 -> false
+    end
+  end
+
+  defp effect_push_ids do
+    receive do
+      {:push, <<0x4F::little-16, 0x3, id::little-32, 1, 0, _::binary>>} ->
+        [id | effect_push_ids()]
+
+      {:push, _other} ->
+        effect_push_ids()
+    after
+      100 -> []
     end
   end
 

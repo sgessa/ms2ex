@@ -645,7 +645,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action("start_tutorial", _args, _script_name, state), do: state
 
   defp execute_action("set_cinematic_ui", args, _script_name, state),
-    do: cinematic_ui(int_arg(args, :arg1), state)
+    do: cinematic_ui(int_arg(args, :arg1), args, state)
 
   # arms the cutscene skip: while set, a skip request jumps the script to
   # the armed state (an empty string disarms)
@@ -885,24 +885,40 @@ defmodule Ms2ex.Managers.Field.Trigger do
     end)
   end
 
-  defp cinematic_ui(0, state) do
+  defp cinematic_ui(0, _args, state) do
     # EndCinematic: the UI (and any held guide hint) returns to the player
     Context.Field.broadcast(state.topic, Packets.Cinematic.toggle_ui(false))
     maybe_release_guide_hold(Map.put(state, :cinematic_on, false))
   end
 
-  defp cinematic_ui(1, state) do
+  defp cinematic_ui(1, _args, state) do
     # BeginCinematic: guides held until the cinematic ends
     Context.Field.broadcast(state.topic, Packets.Cinematic.toggle_ui(true))
     Map.put(state, :cinematic_on, true)
   end
 
-  defp cinematic_ui(2, state) do
+  defp cinematic_ui(2, _args, state) do
     Context.Field.broadcast(state.topic, Packets.Cinematic.hide_ui())
     state
   end
 
-  defp cinematic_ui(_type, state), do: state
+  # letterbox bars / fade / wipes frame the cutscene — their black backing
+  # is what cinematic dialog bubbles render over; the script text overlays
+  # the transition
+  defp cinematic_ui(type, args, state) when type in 3..6 do
+    script = to_string(args[:arg2] || "")
+    Context.Field.broadcast(state.topic, Packets.Cinematic.view(type, script))
+    state
+  end
+
+  # black screen with text (scripted intros)
+  defp cinematic_ui(9, args, state) do
+    script = to_string(args[:arg2] || "")
+    Context.Field.broadcast(state.topic, Packets.Cinematic.opening(script, bool_arg(args, :arg3)))
+    state
+  end
+
+  defp cinematic_ui(_type, _args, state), do: state
 
   # -- helpers ---------------------------------------------------------------
 
@@ -965,15 +981,29 @@ defmodule Ms2ex.Managers.Field.Trigger do
     end
   end
 
+  # int-list args mix single ids and inclusive ranges, e.g. "8003,8005"
+  # or the tutorial arrow trails "5001-5025"; ranges expand to every id
   defp parse_int_list(value) do
     value
     |> String.split(",", trim: true)
-    |> Enum.flat_map(fn part ->
-      case Integer.parse(String.trim(part)) do
-        {int, _rest} -> [int]
-        :error -> []
-      end
-    end)
+    |> Enum.map(&String.trim/1)
+    |> Enum.flat_map(&parse_int_span/1)
+  end
+
+  defp parse_int_span(part) do
+    case Integer.parse(part) do
+      {first, "-" <> rest} ->
+        case Integer.parse(rest) do
+          {last, _rest} -> Enum.to_list(first..last//1)
+          :error -> [first]
+        end
+
+      {int, _rest} ->
+        [int]
+
+      :error ->
+        []
+    end
   end
 
   defp now_ms, do: System.monotonic_time(:millisecond)

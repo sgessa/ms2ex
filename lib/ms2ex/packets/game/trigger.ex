@@ -28,10 +28,14 @@ defmodule Ms2ex.Packets.Trigger do
     |> reduce(cameras, fn camera, packet -> put_camera(packet, camera) end)
   end
 
+  # camera entries only register the path ids so later CameraStart/
+  # update packets can reference them; they must not arrive visible — the
+  # client would activate that camera view immediately and the view is
+  # only restored by a script-driven camera reset
   defp put_camera(packet, camera) do
     packet
     |> put_int(camera.id)
-    |> put_bool(Map.get(camera, :visible, true))
+    |> put_bool(false)
   end
 
   # Notifies the client that a map trigger mesh changed state — e.g. a

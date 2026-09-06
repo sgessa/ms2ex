@@ -6,7 +6,9 @@ defmodule Ms2ex.Packets.Liftable do
   @states %{default: 0, removed: 1, disabled: 2, respawning: 3}
 
   # field-enter batch: the client renders liftable props (and honors their
-  # quest masks) from this list
+  # quest masks) from this list; the react flag enables the quest-effect
+  # glow — the client lights the prop once the effect quest reaches its
+  # wanted state
   def batch_update(liftables) do
     __MODULE__
     |> build()
@@ -18,11 +20,11 @@ defmodule Ms2ex.Packets.Liftable do
       |> put_byte(1)
       |> put_int(liftable.count)
       |> put_byte(Map.get(@states, liftable.state, 0))
-      |> put_ustring(liftable.mask_quest_id)
-      |> put_ustring(liftable.mask_quest_state)
-      |> put_ustring(liftable.effect_quest_id)
-      |> put_ustring(liftable.effect_quest_state)
-      |> put_bool(false)
+      |> put_ustring(Map.get(liftable, :mask_quest_id, ""))
+      |> put_ustring(Map.get(liftable, :mask_quest_state, ""))
+      |> put_ustring(Map.get(liftable, :effect_quest_id, ""))
+      |> put_ustring(Map.get(liftable, :effect_quest_state, ""))
+      |> put_bool(Map.get(liftable, :react_effect, false))
     end)
   end
 

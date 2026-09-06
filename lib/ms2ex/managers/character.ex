@@ -46,6 +46,7 @@ defmodule Ms2ex.Managers.Character do
      |> Map.put(:regen_spirit?, false)
      |> Map.put(:regen_stamina?, false)
      |> Map.put(:skill_cooldowns, %{})
+     |> Map.put(:npc_talk, nil)
      |> Map.put(:state_skill, nil)
      |> Map.put(:regen_waits, %{})
      |> Map.update(
@@ -63,6 +64,13 @@ defmodule Ms2ex.Managers.Character do
   def handle_call({:update, character}, _from, state) do
     updated = update_state(character, state)
     {:reply, :ok, updated}
+  end
+
+  # the open npc select menu (npc + offered quests) — clients route their
+  # menu pick back through the talk handler, which needs it once; callers
+  # use call/2 with this message directly instead of a public wrapper
+  def handle_call({:set_npc_talk, talk}, _from, character) do
+    {:reply, :ok, Map.put(character, :npc_talk, talk)}
   end
 
   # An item being created from a design template only becomes real once the

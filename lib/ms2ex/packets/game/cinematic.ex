@@ -6,7 +6,8 @@ defmodule Ms2ex.Packets.Cinematic do
     hide: 0x2,
     view: 0x3,
     set_skip: 0x4,
-    start_skip: 0x5
+    start_skip: 0x5,
+    opening: 0xB
   }
 
   @set_skip_kinds %{
@@ -26,6 +27,28 @@ defmodule Ms2ex.Packets.Cinematic do
     __MODULE__
     |> build()
     |> put_byte(@modes.hide)
+  end
+
+  # frames a cutscene: letterbox bars (3), fade (4), horizontal (5) or
+  # vertical (6) wipes — the transition id is carried verbatim; the script
+  # text overlays the transition
+  def view(transition, script) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.view)
+    |> put_int(transition)
+    |> put_ustring(script)
+    |> put_ustring("")
+  end
+
+  # black screen with text (scripted intros); the bool flags an unknown
+  # client variant
+  def opening(script, unknown \\ false) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.opening)
+    |> put_ustring(script)
+    |> put_bool(unknown)
   end
 
   # shows or hides the client's cutscene skip button; an empty scene hides it

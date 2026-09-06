@@ -213,7 +213,9 @@ machines tick at 100ms with the reference's semantics (on-enter actions,
 first-true-condition transitions, WaitTick against state entry,
 entrance transition skipping one cycle). Conditions: user_detected
 (job-gated, padded boxes), monster_dead, quest_user_detected (started /
-completed mapping), widget_condition (Guide/SceneMovie), negate.
+completed mapping), widget_condition (Guide/SceneMovie), negate. Int-list
+arguments accept single ids, comma lists and inclusive ranges
+(`5001-5025` → every id — this drives the tutorial's arrow trails).
 Actions: set_mesh/set_effect, set_portal, spawn/destroy_monster (mob and
 friendly spawns), guide_event, create/widget_action, play_scene_movie,
 set_cinematic_ui, set_onetime_effect, select_camera_path/reset_camera,
@@ -229,15 +231,13 @@ velocity while the client walks the player behind it).
 
 Still missing:
 
-- camera cutscene fidelity: scripted camera paths register and play, but
-  the framing/revert behavior diverges from the reference (camera keeps
-  drifting after the spline, player movement is not locked during
-  scripted cameras); needs a packet-level comparison with the reference
-- cinematic transition setup types 3–6 (letterbox / fade / horizontal /
-  vertical wipes)
+- camera cutscene fidelity: scripted camera paths play, but the revert
+  behavior diverges (camera keeps drifting after the spline, player
+  movement is not locked during scripted cameras); needs a packet-level
+  comparison with the reference. Load-time camera registration is fixed
+  to arrive invisible (a visible entry activates the view client-side,
+  stranding relogs outside the intro on a scripted vantage)
 - npc patrol movement for story npcs (move_npc)
-- follow-dummy facing: rotation is not derived from the movement
-  direction, so the followed character's heading is stale
 - placed liftables (dropped props) never expire; the reference removes
   them after item lifetime + finish time, and the story expects the
   dropped prop to leave the field once the quest completes
@@ -304,7 +304,10 @@ quest-state packets can serialize, character/account quest rows can persist
 Redis with a quest index, field-enter
 restores quest state plus the basic `map` condition update, NPC interact can
 surface the available-quest list, quest talk scripts drive the dialogue state
-selection (accept/progress/complete), basic auto-start quests are seeded, and
+selection (accept/progress/complete), and npcs that offer a quest while
+having their own talk script open the select script as a choice menu
+(quest vs plain talk) with the pick routed through Continue. Basic
+auto-start quests are seeded, and
 common reward delivery now covers exp, mesos, treva, rue, and essential item
 grants.
 
@@ -331,7 +334,8 @@ content starts only through a matching server event, so stale event quests
 no longer churn through auto-start plus client-side expiry at login.
 What is still missing:
 
-- multi-page npc dialogue walking (Continue tracking) and script functions
+- multi-page dialogue walking within one script state (Continue index
+  tracking) and script functions
   (rewards/portal/cutscene side effects inside dialogues)
 - interact object lifecycle beyond the state machine: gathering/mastery
   yields, telescope unlock exp, drop tables and additional effects on
@@ -544,7 +548,9 @@ combat-heavy characters from accumulating document copies.
 ### Trigger tutorial systems (character tutorial PR series)
 
 - Liftable quest props: ingest projection (all fields), field-enter batch
-  with quest masks, pickup/install via LIFTABLE + REQUEST_CUBE, placed
+  with quest masks AND the react flag (the quest-effect glow — was
+  hardcoded off in the batch, so props only glowed after pickup+place),
+  pickup/install via LIFTABLE + REQUEST_CUBE, placed
   prop rendering, item_move condition wiring — the squire-carry quest
   works end to end
 - Script npc emotes (`set_npc_emotion_loop`) and dialogue
@@ -552,6 +558,14 @@ combat-heavy characters from accumulating document copies.
   ingest set (anikeytext per model, sequence name -> id)
 - Guide summary hints held during cutscenes and scripted path moves,
   flushed exactly when the player regains control
+- Follow-dummy facing: the dummy's rotation derives from its movement
+  direction (yaw = atan2(vx, -vy), the reference's ground-plane LookTo)
+  and streams in the control entry, so the carried player faces where
+  the scripted path is heading
+- Cinematic UI transitions: set_cinematic_ui types 3–6 broadcast the
+  View packet (letterbox / fade / horizontal / vertical wipes) and type
+  9 the opening black screen — the letterbox backing is what cinematic
+  dialog bubbles render over
 - Follow-dummy movement: 3D patrol stepping with streamed velocity and
   approach-animation resolution
 - Bind-on-loot items are character-bound when added to the inventory

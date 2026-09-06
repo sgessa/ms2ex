@@ -20,6 +20,7 @@ defmodule Ms2ex.Packets.NpcTalk do
   # NpcTalkButton values
   @button_none 0x00
   @button_close 0x03
+  @button_selectable_talk 0x05
   @button_quest_accept 0x06
   @button_quest_complete 0x07
   @button_quest_progress 0x08
@@ -87,6 +88,10 @@ defmodule Ms2ex.Packets.NpcTalk do
   # conversation, so the band button always wins for quest states.
   defp button(state) do
     case state do
+      # the select script is the talk choice menu
+      %{type: :select} ->
+        @button_selectable_talk
+
       %{type: :quest, id: id} when is_integer(id) ->
         quest_band_button(id)
 

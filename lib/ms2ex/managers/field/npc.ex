@@ -534,9 +534,30 @@ defmodule Ms2ex.Managers.Field.Npc do
         %{npc | patrol: Map.put(patrol, :index, patrol.index + 1), send_control?: true}
 
       true ->
-        %{npc | position: position, velocity: velocity, send_control?: true, patrol: patrol}
+        rotation = face_move_direction(npc.rotation, velocity)
+
+        %{
+          npc
+          | position: position,
+            velocity: velocity,
+            rotation: rotation,
+            send_control?: true,
+            patrol: patrol
+        }
     end
   end
+
+  # actors face along their move direction: yaw from the horizontal
+  # velocity, degrees — the ground-plane projection of the reference's
+  # LookTo; the transform stores its front axis negated (M21 = -x, M22 =
+  # -y), so yaw = atan2(dx, -dy). A zero velocity (waypoint arrival) keeps
+  # the last heading
+  defp face_move_direction(rotation, {vx, vy, _vz}) when vx != 0 or vy != 0 do
+    yaw = :math.atan2(vx, -vy) * 180 / :math.pi()
+    %{rotation | z: yaw}
+  end
+
+  defp face_move_direction(rotation, _velocity), do: rotation
 
   # full 3D step toward the waypoint (waypoints carry ground heights); the
   # velocity is what the control packet reports so the client interpolates
