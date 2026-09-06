@@ -413,23 +413,23 @@ effects (auto-play extension, mount stability).
 
 What is still missing:
 
-- **Fishing lures** — `fishlure.xml` is projected but lure buffs (their extra
-  spawns, catch ranks and drop boxes) are not read; the reference does not
-  implement them either. The fight-minigame outcome is client-side and
-  likewise unimplemented upstream
+- **Fishing lures** — bait item tags, `fishlure.xml`, lure-specific catch ranks
+  and lure fish spawns are projected and used by fishing rolls, but the client
+  bait-slot amount does not refresh from the normal inventory update packet.
+  The dedicated bait-slot/autobait packet still needs client reversing; see
+  item 23
 - **Stage geometry** — enter/exit stage toggles between portals 802 and 803
   from a server-side membership set. The reference decides from trigger box
   101 containment, which needs trigger box geometry in the map projection
 - **Performance stage extras** — the applaud and glowstick emotes (skills
   90210001 / 90210002) are parsed and dropped, and party members of the
   performer are not treated as co-performers
-- **Smart Push gaps** — entries with a tag-based item cost are refused because
-  item tags are not projected; the `SaleAutoFishing` /
-  `SaleAutoPlayInstrument` game-event content override is skipped. Two
-  deliberate divergences: a purchase the player cannot afford answers with the
-  lack-of-currency notice (the reference silently drops it), and entering
-  water without the `SafeWaterRiding` effect throws the rider server-side (the
-  reference leaves the dismount to the client)
+- **Smart Push gaps** — the `SaleAutoFishing` / `SaleAutoPlayInstrument`
+  game-event content override is skipped. Two deliberate divergences: a
+  purchase the player cannot afford answers with the lack-of-currency notice
+  (the reference silently drops it), and entering water without the
+  `SafeWaterRiding` effect throws the rider server-side (the reference leaves
+  the dismount to the client)
 - **Score expiry** — the reference refuses expired scores; ms2ex only checks
   remaining uses
 - **Ensemble room check** — members are matched on map and channel; the
