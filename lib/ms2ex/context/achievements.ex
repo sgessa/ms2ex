@@ -5,9 +5,10 @@ defmodule Ms2ex.Context.Achievements do
   import Ecto.Query
 
   def list(owner_id),
-    do: Schema.Achievement
-    |> where([a], a.owner_id == ^owner_id)
-    |> Repo.all()
+    do:
+      Schema.Achievement
+      |> where([a], a.owner_id == ^owner_id)
+      |> Repo.all()
 
   def create(attrs) do
     %Schema.Achievement{}

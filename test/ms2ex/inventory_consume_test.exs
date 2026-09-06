@@ -3,6 +3,7 @@ defmodule Ms2ex.Context.InventoryTest do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers.Inventory
+  alias Ms2ex.Schema
 
   setup do
     stub_metadata(%{
@@ -14,7 +15,23 @@ defmodule Ms2ex.Context.InventoryTest do
       }
     })
 
-    state = %{character_id: 1, items: [], tabs: [], lock_staging: []}
+    account =
+      Repo.insert!(%Schema.Account{
+        username: "inv_consume_#{System.unique_integer([:positive])}",
+        password_hash: "x"
+      })
+
+    character =
+      Repo.insert!(%Schema.Character{
+        account_id: account.id,
+        name: "InvConsume#{System.unique_integer([:positive])}",
+        job: :knight,
+        level: 10,
+        map_id: 1,
+        skin_color: {}
+      })
+
+    state = %{character_id: character.id, items: [], tabs: [], lock_staging: []}
 
     %{state: state, pudding: &pudding/1}
   end

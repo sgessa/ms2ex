@@ -3,14 +3,14 @@ defmodule Ms2ex.Storage.Tables.Jobs do
   alias Ms2ex.Storage
 
   def all do
-    :table
-    |> Storage.get("job.xml")
-    |> get_in([:table, :entries])
+    case Storage.get(:table, "job.xml") do
+      nil -> %{}
+      doc -> get_in(doc, [:table, :entries]) || %{}
+    end
   end
 
   def get(job) do
-    all()
-    |> Map.get(to_job_id(job))
+    Map.get(all(), to_job_id(job))
   end
 
   @doc """

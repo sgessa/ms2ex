@@ -7,6 +7,34 @@ defmodule Ms2ex.HotBarSkillsTest do
   alias Ms2ex.Types
 
   setup do
+    stub_metadata(%{
+      "table:job.xml" => %{
+        table: %{
+          entries: %{
+            10 => %{
+              skills: %{
+                basic: [%{main: 10_100_001, sub: []}, %{main: 10_100_011, sub: []}],
+                awakening: []
+              },
+              base_skills: [10_100_001, 10_100_011]
+            }
+          }
+        }
+      },
+      "skill:10100001" => %{
+        id: 10_100_001,
+        property: %{max_level: 12},
+        state: %{in_battle: true},
+        levels: %{}
+      },
+      "skill:10100011" => %{
+        id: 10_100_011,
+        property: %{max_level: 10},
+        state: %{in_battle: true},
+        levels: %{}
+      }
+    })
+
     account =
       Repo.insert!(%Schema.Account{
         username: "hb_#{System.unique_integer([:positive])}",
