@@ -205,6 +205,34 @@ defmodule Ms2ex.GameHandlers.Ugc do
             session
         end
 
+      resource when type == :guild_emblem ->
+        with {:ok, character} <- Managers.Character.lookup(session.character_id),
+             {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+          Managers.GuildServer.update_emblem(guild_id, character.id, resource.path)
+          push(session, Packets.Ugc.update_path(resource))
+        else
+          _ ->
+            push(session, Packets.Ugc.update_path(resource))
+        end
+
+      resource when type == :guild_banner ->
+        with {:ok, character} <- Managers.Character.lookup(session.character_id),
+             {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+          poster = %Types.GuildPoster{
+            id: resource.id,
+            picture: resource.path,
+            owner_id: character.id,
+            owner_name: character.name,
+            resource_id: resource.id
+          }
+
+          Managers.GuildServer.add_or_update_poster(guild_id, poster)
+          push(session, Packets.Ugc.update_path(resource))
+        else
+          _ ->
+            push(session, Packets.Ugc.update_path(resource))
+        end
+
       resource ->
         Logger.warning("Unhandled UGC confirmation for #{inspect(type)}")
         push(session, Packets.Ugc.update_path(resource))

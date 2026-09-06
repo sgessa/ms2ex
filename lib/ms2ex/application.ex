@@ -24,6 +24,7 @@ defmodule Ms2ex.Application do
         # Start Managers
         Ms2ex.Managers.GlobalCounter,
         {Ms2ex.Managers.PartyManager, [name: Ms2ex.Managers.PartyManager]},
+        {Ms2ex.Managers.GuildManager, [name: Ms2ex.Managers.GuildManager]},
         {Ms2ex.Managers.Session, [name: Ms2ex.Managers.Session]}
       ] ++ game_listeners()
 

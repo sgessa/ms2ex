@@ -75,5 +75,13 @@ defmodule Ms2ex.GameHandlers.UserChat do
     end
   end
 
+  defp handle_message({:guild, msg, _rcpt_name}, character, _session) do
+    packet = Packets.UserChat.bytes(:guild, character, msg)
+
+    if character.guild_id && character.guild_id > 0 do
+      Managers.GuildServer.broadcast(character.guild_id, packet)
+    end
+  end
+
   defp handle_message(_msg, _character, _session), do: :ok
 end

@@ -561,6 +561,13 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Guild System: guild creation/disbanding, invites and responses, search and
+  applications, role/permission configurations (Master, Jr. Master, Veteran,
+  Member, Recruit), member mottos, daily check-in (player exp, guild exp,
+  funds, and guild coin rewards), donations, leadership transfer, notices,
+  UGC emblems and poster uploads, guild chat routing (`USER_CHAT` `:guild`),
+  and online/offline presence notifications across channels and maps via
+  `GuildServer` and `GuildManager`
 - Mail System & Reward Delivery Fallbacks: player-to-player mail, system mail
   with item/currency attachments and XML template argument formatting, account-wide
   mail binding at login, batched inbox loading, single/bulk reading, attachment

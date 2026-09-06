@@ -44,6 +44,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x47 => "ACHIEVEMENT",
     0x49 => "TAXI",
     0x4B => "REQUEST_WORLD_MAP",
+    0x4C => "GUILD",
     0x4D => "GROUP_CHAT",
     0x56 => "SEND_LOG",
     0x58 => "GUIDE_RECORD",

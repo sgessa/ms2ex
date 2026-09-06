@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       tick = Ms2ex.sync_ticks()
 
-      character = character |> set_spawn_position() |> maybe_set_party()
+      character = character |> set_spawn_position() |> maybe_set_party() |> maybe_set_guild()
 
       # the object id must exist before ServerEnter is built: the client reads
       # its own id from that packet and derives its session identity from it
@@ -112,6 +112,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Mail.notify(unread_mail_count, unread_mail_count > 0))
       |> push(Packets.World.bytes())
       |> push_party(character)
+      |> push_guild(character)
     end
   end
 
@@ -172,5 +173,38 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         push(session, Packets.Party.update_hitpoints(m))
       end
     end
+
+    session
   end
+
+  defp maybe_set_guild(character) do
+    case Managers.GuildManager.lookup_by_character(character.id) do
+      {:ok, guild_id, _pid} ->
+        case Managers.GuildServer.lookup(guild_id) do
+          {:ok, guild_state} ->
+            %{character | guild_id: guild_id, guild_name: guild_state.guild.name}
+
+          _ ->
+            character
+        end
+
+      _ ->
+        character
+    end
+  end
+
+  defp push_guild(session, %{guild_id: guild_id} = character)
+       when is_integer(guild_id) and guild_id > 0 do
+    case Managers.GuildServer.lookup(guild_id) do
+      {:ok, guild_state} ->
+        Managers.GuildServer.subscribe(guild_id)
+        Managers.GuildServer.member_online(guild_id, character)
+        push(session, Packets.Guild.load(guild_state))
+
+      _ ->
+        session
+    end
+  end
+
+  defp push_guild(session, _character), do: session
 end
