@@ -16,5 +16,6 @@ config :ms2ex, Ms2ex,
     "PROXY_GAME_OBJ",
     "SEND_LOG",
     "USER_CHAT",
-    "USER_SYNC"
+    "USER_SYNC",
+    "GUIDE_OBJECT_SYNC"
   ]
