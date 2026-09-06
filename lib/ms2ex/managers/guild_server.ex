@@ -435,12 +435,12 @@ defmodule Ms2ex.Managers.GuildServer do
   def handle_call({:update_focus, requestor_id, focus}, _from, state) do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_notice) do
-      focus_atom = if is_integer(focus), do: Enums.GuildFocus.get_key(focus), else: focus
-      Context.Guilds.update_guild(state.id, %{focus: focus_atom})
-      guild = %{state.guild | focus: focus_atom}
+      focus_val = focus_value(focus)
+      Context.Guilds.update_guild(state.id, %{focus: focus_val})
+      guild = %{state.guild | focus: focus_val}
       state = %{state | guild: guild}
 
-      broadcast(state.id, Packets.Guild.notify_update_focus(requestor.name, true, focus))
+      broadcast(state.id, Packets.Guild.notify_update_focus(requestor.name, true, focus_val))
       {:reply, :ok, state}
     else
       {:error, reason} -> {:reply, {:error, reason}, state}
@@ -879,6 +879,10 @@ defmodule Ms2ex.Managers.GuildServer do
       if r.id == rank.id, do: rank, else: r
     end)
   end
+
+  defp focus_value(focus) when is_atom(focus), do: Enums.GuildFocus.get_value(focus) || 0
+  defp focus_value(focus) when is_integer(focus), do: focus
+  defp focus_value(_), do: 0
 
   defp unix_or_now(%DateTime{} = dt), do: DateTime.to_unix(dt)
   defp unix_or_now(_), do: DateTime.utc_now() |> DateTime.to_unix()

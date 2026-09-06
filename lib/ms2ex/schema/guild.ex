@@ -2,7 +2,6 @@ defmodule Ms2ex.Schema.Guild do
   use Ecto.Schema
 
   alias Ms2ex.EctoTypes
-  alias Ms2ex.Enums
   alias Ms2ex.Schema
   alias Ms2ex.Types
 
@@ -34,7 +33,7 @@ defmodule Ms2ex.Schema.Guild do
     field :name, :string
     field :emblem, :string, default: ""
     field :notice, :string, default: ""
-    field :focus, Enums.GuildFocus, default: :none
+    field :focus, :integer, default: 0
     field :experience, :integer, default: 0
     field :funds, :integer, default: 0
     field :house_rank, :integer, default: 0

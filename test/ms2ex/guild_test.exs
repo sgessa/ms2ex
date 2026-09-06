@@ -136,6 +136,10 @@ defmodule Ms2ex.GuildTest do
       focus_results = Context.Guilds.search_guilds(:dungeons)
       assert length(focus_results) == 1
       assert List.first(focus_results).id == guild.id
+
+      # Searching with 0x7FFFFFFF (all focus bits) returns all guilds
+      all_results = Context.Guilds.search_guilds(0x7FFFFFFF)
+      refute Enum.empty?(all_results)
     end
 
     test "applications in context", %{leader: leader, applicant: applicant} do
@@ -323,9 +327,10 @@ defmodule Ms2ex.GuildTest do
       Ms2ex.GameHandlers.Guild.handle(notice_packet, session)
       assert_receive {:push, _notice_pkt}
 
-      # Donate (110 / 0x6E)
-      donate_packet = <<0x6E, 1::little-32>>
-      Ms2ex.GameHandlers.Guild.handle(donate_packet, session)
+      # Search guilds (85 / 0x55) with 0x7FFFFFFF (all focus)
+      search_packet = <<0x55, 0x7FFFFFFF::little-32, 1::little-32>>
+      Ms2ex.GameHandlers.Guild.handle(search_packet, session)
+      assert_receive {:push, _list_guilds_pkt}
     end
   end
 

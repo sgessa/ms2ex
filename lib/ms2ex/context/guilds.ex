@@ -11,6 +11,7 @@ defmodule Ms2ex.Context.Guilds do
   alias Ms2ex.Types
 
   @default_capacity 60
+  @all_focus 0x7FFFFFFF
 
   @doc """
   Gets a guild by ID, preloading members, leader, and applications.
@@ -62,7 +63,7 @@ defmodule Ms2ex.Context.Guilds do
           {:ok, Schema.Guild.t()} | {:error, atom() | Ecto.Changeset.t()}
   def create(%Schema.Character{} = leader, name, opts \\ []) do
     name = String.trim(name)
-    focus = Keyword.get(opts, :focus, :none)
+    focus = focus_value(Keyword.get(opts, :focus, 0))
 
     cond do
       name == "" or String.length(name) < 2 or String.length(name) > 20 ->
@@ -197,8 +198,9 @@ defmodule Ms2ex.Context.Guilds do
   Searches guilds by focus.
   """
   @spec search_guilds(atom() | integer(), integer(), integer()) :: [Schema.Guild.t()]
-  def search_guilds(focus \\ :none, page \\ 1, page_size \\ 10) do
+  def search_guilds(focus \\ 0, page \\ 1, page_size \\ 10) do
     offset = max(page - 1, 0) * page_size
+    focus_val = focus_value(focus)
 
     query =
       Schema.Guild
@@ -208,15 +210,18 @@ defmodule Ms2ex.Context.Guilds do
       |> preload([:leader, :members])
 
     query =
-      if focus != :none and focus != 0 do
-        focus_val = if is_atom(focus), do: Enums.GuildFocus.get_value(focus), else: focus
-        where(query, [g], g.focus == ^focus_val)
-      else
+      if focus_val in [0, @all_focus] do
         query
+      else
+        where(query, [g], fragment("(? & ?) > 0", g.focus, ^focus_val))
       end
 
     Repo.all(query)
   end
+
+  defp focus_value(focus) when is_atom(focus), do: Enums.GuildFocus.get_value(focus) || 0
+  defp focus_value(focus) when is_integer(focus), do: focus
+  defp focus_value(_), do: 0
 
   @doc """
   Searches guilds by name prefix/substring.
