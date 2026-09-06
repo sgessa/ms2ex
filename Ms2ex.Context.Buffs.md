@@ -15,6 +15,7 @@ they run on is per-VM and resets with the server.
   effect_id: integer(),
   effect_level: integer(),
   stacks: integer(),
+  duration_ms: integer(),
   remaining_ms: integer()
 }
 ```

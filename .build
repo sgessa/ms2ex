@@ -18,6 +18,7 @@ Ms2ex.Context.Drops.html
 Ms2ex.Context.Emotes.html
 Ms2ex.Context.Experience.html
 Ms2ex.Context.Field.html
+Ms2ex.Context.Fishing.html
 Ms2ex.Context.Friends.html
 Ms2ex.Context.HotBars.html
 Ms2ex.Context.Insignias.html
@@ -32,6 +33,7 @@ Ms2ex.Context.ItemTransfer.html
 Ms2ex.Context.ItemTypes.html
 Ms2ex.Context.Items.html
 Ms2ex.Context.MapBlock.html
+Ms2ex.Context.Mastery.html
 Ms2ex.Context.Mobs.html
 Ms2ex.Context.PremiumMemberships.html
 Ms2ex.Context.Quests.html
@@ -59,14 +61,19 @@ Ms2ex.Enums.AchievementRewardType.html
 Ms2ex.Enums.AttackType.html
 Ms2ex.Enums.BasicStatType.html
 Ms2ex.Enums.BlueprintType.html
+Ms2ex.Enums.CaughtFishType.html
 Ms2ex.Enums.ChatType.html
 Ms2ex.Enums.EquipSlot.html
 Ms2ex.Enums.FieldProperty.html
+Ms2ex.Enums.FishingError.html
 Ms2ex.Enums.Gender.html
+Ms2ex.Enums.GuideObjectType.html
 Ms2ex.Enums.InsigniaType.html
 Ms2ex.Enums.InventoryTab.html
 Ms2ex.Enums.ItemType.html
 Ms2ex.Enums.Job.html
+Ms2ex.Enums.MasteryError.html
+Ms2ex.Enums.MasteryType.html
 Ms2ex.Enums.MeretMarketCurrency.html
 Ms2ex.Enums.MyInfoError.html
 Ms2ex.Enums.PartyNotice.html
@@ -84,6 +91,7 @@ Ms2ex.Enums.TransferType.html
 Ms2ex.Enums.UgcType.html
 Ms2ex.Formulas.AttackStats.html
 Ms2ex.Formulas.BaseStats.html
+Ms2ex.Formulas.Gathering.html
 Ms2ex.Formulas.GearScore.html
 Ms2ex.Formulas.ItemBasicStats.html
 Ms2ex.Formulas.ItemDefense.html
@@ -99,8 +107,10 @@ Ms2ex.GameHandlers.Emote.html
 Ms2ex.GameHandlers.EquipItem.html
 Ms2ex.GameHandlers.FallDamage.html
 Ms2ex.GameHandlers.FileHash.html
+Ms2ex.GameHandlers.Fishing.html
 Ms2ex.GameHandlers.Friend.html
 Ms2ex.GameHandlers.GroupChat.html
+Ms2ex.GameHandlers.GuideObjectSync.html
 Ms2ex.GameHandlers.GuideRecord.html
 Ms2ex.GameHandlers.Helper.Friend.html
 Ms2ex.GameHandlers.Helper.ItemBox.html
@@ -113,6 +123,7 @@ Ms2ex.GameHandlers.ItemLock.html
 Ms2ex.GameHandlers.Job.html
 Ms2ex.GameHandlers.KeyTable.html
 Ms2ex.GameHandlers.LoadUgcMap.html
+Ms2ex.GameHandlers.Mastery.html
 Ms2ex.GameHandlers.MyInfo.html
 Ms2ex.GameHandlers.NpcTalk.html
 Ms2ex.GameHandlers.Party.html
@@ -162,6 +173,8 @@ Ms2ex.Managers.Buff.html
 Ms2ex.Managers.Character.Equips.html
 Ms2ex.Managers.Character.Experience.html
 Ms2ex.Managers.Character.FallDamage.html
+Ms2ex.Managers.Character.Fishing.html
+Ms2ex.Managers.Character.Mastery.html
 Ms2ex.Managers.Character.Revival.html
 Ms2ex.Managers.Character.Skill.html
 Ms2ex.Managers.Character.SkillCooldown.html
@@ -234,6 +247,7 @@ Ms2ex.Packets.Game.Quest.html
 Ms2ex.Packets.GameToGame.html
 Ms2ex.Packets.GameToLogin.html
 Ms2ex.Packets.GroupChat.html
+Ms2ex.Packets.GuideObject.html
 Ms2ex.Packets.GuideRecord.html
 Ms2ex.Packets.HomeCommand.html
 Ms2ex.Packets.InGameRank.html
@@ -254,6 +268,7 @@ Ms2ex.Packets.LoginResult.html
 Ms2ex.Packets.LoginToGame.html
 Ms2ex.Packets.Mail.html
 Ms2ex.Packets.MarketInventory.html
+Ms2ex.Packets.Mastery.html
 Ms2ex.Packets.Mentor.html
 Ms2ex.Packets.Merets.html
 Ms2ex.Packets.Mesos.html
@@ -355,6 +370,8 @@ Ms2ex.Storage.Tables.ChatStickers.html
 Ms2ex.Storage.Tables.Constants.html
 Ms2ex.Storage.Tables.ExpTable.html
 Ms2ex.Storage.Tables.FieldMission.html
+Ms2ex.Storage.Tables.Fish.html
+Ms2ex.Storage.Tables.FishingRods.html
 Ms2ex.Storage.Tables.GlobalDropItemBox.html
 Ms2ex.Storage.Tables.IndividualDropItem.html
 Ms2ex.Storage.Tables.Insignias.html
@@ -362,6 +379,9 @@ Ms2ex.Storage.Tables.Instruments.html
 Ms2ex.Storage.Tables.InteractObjects.html
 Ms2ex.Storage.Tables.ItemOptions.html
 Ms2ex.Storage.Tables.Jobs.html
+Ms2ex.Storage.Tables.MasteryDifferentialFactors.html
+Ms2ex.Storage.Tables.MasteryRecipes.html
+Ms2ex.Storage.Tables.MasteryRewards.html
 Ms2ex.Storage.Tables.SmartPush.html
 Ms2ex.Storage.Tables.UgcDesign.html
 Ms2ex.Storage.Tables.UserStats.html
@@ -425,8 +445,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-332FBDA9.js
-dist/sidebar_items-DE200E8E.js
+dist/search_data-70EBC0FB.js
+dist/sidebar_items-A4D3AC2A.js
 index.html
 license.html
 readme.html

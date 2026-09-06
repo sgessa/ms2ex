@@ -14,6 +14,9 @@ Completes an interaction with an object. Only Reactable objects can be
 interacted with; the animation goes to the interacting player while the
 state transition is broadcast to the whole field.
 
+Gathering nodes get no animation here: the harvest decides success first
+and sends the animation with its result.
+
 # `tick`
 
 Flips objects whose cooldown elapsed (Normal -> Reactable or Hidden).

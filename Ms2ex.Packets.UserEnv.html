@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-DE200E8E.js"></script>
+    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -129,9 +129,39 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#gathering_counts/1" data-no-tooltip="" translate="no">gathering_counts(counts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>How often each gathering recipe was already harvested.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#interacted_objects/1" data-no-tooltip="" translate="no">interacted_objects(object_ids)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Interact objects the character already used (telescopes, ...).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#item_collects/1" data-no-tooltip="" translate="no">item_collects(item_collects \\ %{})</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#mastery_rewards_claimed/1" data-no-tooltip="" translate="no">mastery_rewards_claimed(claimed)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Mastery grade reward boxes the character already claimed.</p></div>
 
     </div>
 
@@ -173,6 +203,50 @@ MS2EX
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="gathering_counts/1">
+
+  <div class="detail-header">
+    <a href="#gathering_counts/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">gathering_counts(counts)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>How often each gathering recipe was already harvested.</p>
+  </section>
+</section>
+<section class="detail" id="interacted_objects/1">
+
+  <div class="detail-header">
+    <a href="#interacted_objects/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">interacted_objects(object_ids)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L15" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Interact objects the character already used (telescopes, ...).</p>
+  </section>
+</section>
 <section class="detail" id="item_collects/1">
 
     <span id="item_collects/0"></span>
@@ -185,7 +259,7 @@ MS2EX
       <h1 class="signature" translate="no">item_collects(item_collects \\ %{})</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L41" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -195,6 +269,28 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="mastery_rewards_claimed/1">
+
+  <div class="detail-header">
+    <a href="#mastery_rewards_claimed/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">mastery_rewards_claimed(claimed)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L68" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Mastery grade reward boxes the character already claimed.</p>
   </section>
 </section>
 <section class="detail" id="set_mode/2">
@@ -209,7 +305,7 @@ MS2EX
       <h1 class="signature" translate="no">set_mode(mode, integers \\ 1)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L80" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -231,7 +327,7 @@ MS2EX
       <h1 class="signature" translate="no">set_titles(titles)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L14" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L31" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -253,7 +349,7 @@ MS2EX
       <h1 class="signature" translate="no">update_title(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L6" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L23" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

@@ -7,10 +7,20 @@
 
 # `add_mob_buff`
 
+# `modify_duration`
+
+Shifts the remaining duration of an actor's effect, as interact objects do
+when they extend or cut a buff short.
+
 # `owner_has_buff?`
 
 Whether an actor currently has the given effect active, regardless of who
 cast it.
+
+# `owner_has_buff_event?`
+
+Whether an actor has an effect of the given event category active (the
+auto-fish and auto-perform conveniences, safe riding, ...).
 
 # `remove_buff`
 

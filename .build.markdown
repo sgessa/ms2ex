@@ -17,6 +17,7 @@ Ms2ex.Context.Drops.md
 Ms2ex.Context.Emotes.md
 Ms2ex.Context.Experience.md
 Ms2ex.Context.Field.md
+Ms2ex.Context.Fishing.md
 Ms2ex.Context.Friends.md
 Ms2ex.Context.HotBars.md
 Ms2ex.Context.Insignias.md
@@ -31,6 +32,7 @@ Ms2ex.Context.ItemTransfer.md
 Ms2ex.Context.ItemTypes.md
 Ms2ex.Context.Items.md
 Ms2ex.Context.MapBlock.md
+Ms2ex.Context.Mastery.md
 Ms2ex.Context.Mobs.md
 Ms2ex.Context.PremiumMemberships.md
 Ms2ex.Context.Quests.md
@@ -58,14 +60,19 @@ Ms2ex.Enums.AchievementRewardType.md
 Ms2ex.Enums.AttackType.md
 Ms2ex.Enums.BasicStatType.md
 Ms2ex.Enums.BlueprintType.md
+Ms2ex.Enums.CaughtFishType.md
 Ms2ex.Enums.ChatType.md
 Ms2ex.Enums.EquipSlot.md
 Ms2ex.Enums.FieldProperty.md
+Ms2ex.Enums.FishingError.md
 Ms2ex.Enums.Gender.md
+Ms2ex.Enums.GuideObjectType.md
 Ms2ex.Enums.InsigniaType.md
 Ms2ex.Enums.InventoryTab.md
 Ms2ex.Enums.ItemType.md
 Ms2ex.Enums.Job.md
+Ms2ex.Enums.MasteryError.md
+Ms2ex.Enums.MasteryType.md
 Ms2ex.Enums.MeretMarketCurrency.md
 Ms2ex.Enums.MyInfoError.md
 Ms2ex.Enums.PartyNotice.md
@@ -83,6 +90,7 @@ Ms2ex.Enums.TransferType.md
 Ms2ex.Enums.UgcType.md
 Ms2ex.Formulas.AttackStats.md
 Ms2ex.Formulas.BaseStats.md
+Ms2ex.Formulas.Gathering.md
 Ms2ex.Formulas.GearScore.md
 Ms2ex.Formulas.ItemBasicStats.md
 Ms2ex.Formulas.ItemDefense.md
@@ -98,8 +106,10 @@ Ms2ex.GameHandlers.Emote.md
 Ms2ex.GameHandlers.EquipItem.md
 Ms2ex.GameHandlers.FallDamage.md
 Ms2ex.GameHandlers.FileHash.md
+Ms2ex.GameHandlers.Fishing.md
 Ms2ex.GameHandlers.Friend.md
 Ms2ex.GameHandlers.GroupChat.md
+Ms2ex.GameHandlers.GuideObjectSync.md
 Ms2ex.GameHandlers.GuideRecord.md
 Ms2ex.GameHandlers.Helper.Friend.md
 Ms2ex.GameHandlers.Helper.ItemBox.md
@@ -112,6 +122,7 @@ Ms2ex.GameHandlers.ItemLock.md
 Ms2ex.GameHandlers.Job.md
 Ms2ex.GameHandlers.KeyTable.md
 Ms2ex.GameHandlers.LoadUgcMap.md
+Ms2ex.GameHandlers.Mastery.md
 Ms2ex.GameHandlers.MyInfo.md
 Ms2ex.GameHandlers.NpcTalk.md
 Ms2ex.GameHandlers.Party.md
@@ -161,6 +172,8 @@ Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Equips.md
 Ms2ex.Managers.Character.Experience.md
 Ms2ex.Managers.Character.FallDamage.md
+Ms2ex.Managers.Character.Fishing.md
+Ms2ex.Managers.Character.Mastery.md
 Ms2ex.Managers.Character.Revival.md
 Ms2ex.Managers.Character.Skill.md
 Ms2ex.Managers.Character.SkillCooldown.md
@@ -233,6 +246,7 @@ Ms2ex.Packets.Game.Quest.md
 Ms2ex.Packets.GameToGame.md
 Ms2ex.Packets.GameToLogin.md
 Ms2ex.Packets.GroupChat.md
+Ms2ex.Packets.GuideObject.md
 Ms2ex.Packets.GuideRecord.md
 Ms2ex.Packets.HomeCommand.md
 Ms2ex.Packets.InGameRank.md
@@ -253,6 +267,7 @@ Ms2ex.Packets.LoginResult.md
 Ms2ex.Packets.LoginToGame.md
 Ms2ex.Packets.Mail.md
 Ms2ex.Packets.MarketInventory.md
+Ms2ex.Packets.Mastery.md
 Ms2ex.Packets.Mentor.md
 Ms2ex.Packets.Merets.md
 Ms2ex.Packets.Mesos.md
@@ -354,6 +369,8 @@ Ms2ex.Storage.Tables.ChatStickers.md
 Ms2ex.Storage.Tables.Constants.md
 Ms2ex.Storage.Tables.ExpTable.md
 Ms2ex.Storage.Tables.FieldMission.md
+Ms2ex.Storage.Tables.Fish.md
+Ms2ex.Storage.Tables.FishingRods.md
 Ms2ex.Storage.Tables.GlobalDropItemBox.md
 Ms2ex.Storage.Tables.IndividualDropItem.md
 Ms2ex.Storage.Tables.Insignias.md
@@ -361,6 +378,9 @@ Ms2ex.Storage.Tables.Instruments.md
 Ms2ex.Storage.Tables.InteractObjects.md
 Ms2ex.Storage.Tables.ItemOptions.md
 Ms2ex.Storage.Tables.Jobs.md
+Ms2ex.Storage.Tables.MasteryDifferentialFactors.md
+Ms2ex.Storage.Tables.MasteryRecipes.md
+Ms2ex.Storage.Tables.MasteryRewards.md
 Ms2ex.Storage.Tables.SmartPush.md
 Ms2ex.Storage.Tables.UgcDesign.md
 Ms2ex.Storage.Tables.UserStats.md

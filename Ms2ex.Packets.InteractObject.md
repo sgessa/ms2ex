@@ -11,12 +11,18 @@ full rendering data.
 
 # `interact`
 
-Plays the interaction animation for an object on every client.
+Plays the interaction animation for an object on every client. Gathering
+nodes additionally carry whether the harvest succeeded and how much of the
+node it consumed.
 
 # `load`
 
 Announces the field's interact objects to a joining player. The client only
 enables interaction tooltips for objects announced through this frame.
+
+# `result`
+
+Notice the client shows once an interaction resolved.
 
 # `update`
 

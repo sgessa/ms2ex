@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-DE200E8E.js"></script>
+    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -147,6 +147,17 @@ MS2EX
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#typed_exp/2" data-no-tooltip="" translate="no">typed_exp(exp_type, level)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Base exp for an exp type at a level: <code class="inline">commonexp.xml</code> maps the type to one of
+the <code class="inline">exp*.xml</code> tables plus a factor applied on top.</p></div>
+
+    </div>
+
 </div>
 
   </section>
@@ -209,6 +220,35 @@ MS2EX
       </div>
 
 <p>Returns <code class="inline">{:ok, exp_to_next_level}</code> for a character level, or :error.</p>
+  </section>
+</section>
+<section class="detail" id="typed_exp/2">
+
+  <div class="detail-header">
+    <a href="#typed_exp/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">typed_exp(exp_type, level)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage/table/exp_table.ex#L29" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> typed_exp(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+<p>Base exp for an exp type at a level: <code class="inline">commonexp.xml</code> maps the type to one of
+the <code class="inline">exp*.xml</code> tables plus a factor applied on top.</p>
   </section>
 </section>
 

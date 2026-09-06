@@ -5,6 +5,10 @@
 
 # `delete`
 
+# `discover_object`
+
+Records a first-time interaction; returns false when already known.
+
 # `get`
 
 # `get`
@@ -20,6 +24,11 @@
 # `load_skills`
 
 # `maybe_discover_map`
+
+# `persist`
+
+Writes deferred state that the in-memory struct already carries. A cast
+changeset would drop every field as unchanged, so the changes are forced.
 
 # `preload`
 

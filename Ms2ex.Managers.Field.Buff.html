@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-DE200E8E.js"></script>
+    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -153,12 +153,34 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#modify_duration/4" data-no-tooltip="" translate="no">modify_duration(owner_object_id, effect_id, modify_tick, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Shifts the remaining duration of an actor's effect, as interact objects do
+when they extend or cut a buff short.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#owner_has_buff?/3" data-no-tooltip="" translate="no">owner_has_buff?(owner_object_id, effect_id, state)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Whether an actor currently has the given effect active, regardless of who
 cast it.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#owner_has_buff_event?/3" data-no-tooltip="" translate="no">owner_has_buff_event?(owner_object_id, event_type, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether an actor has an effect of the given event category active (the
+auto-fish and auto-perform conveniences, safe riding, ...).</p></div>
 
     </div>
 
@@ -303,6 +325,29 @@ next field they enter, including after a relog.</p></div>
 
   </section>
 </section>
+<section class="detail" id="modify_duration/4">
+
+  <div class="detail-header">
+    <a href="#modify_duration/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">modify_duration(owner_object_id, effect_id, modify_tick, state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L546" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Shifts the remaining duration of an actor's effect, as interact objects do
+when they extend or cut a buff short.</p>
+  </section>
+</section>
 <section class="detail" id="owner_has_buff?/3">
 
   <div class="detail-header">
@@ -324,6 +369,29 @@ next field they enter, including after a relog.</p></div>
 
 <p>Whether an actor currently has the given effect active, regardless of who
 cast it.</p>
+  </section>
+</section>
+<section class="detail" id="owner_has_buff_event?/3">
+
+  <div class="detail-header">
+    <a href="#owner_has_buff_event?/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">owner_has_buff_event?(owner_object_id, event_type, state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L529" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Whether an actor has an effect of the given event category active (the
+auto-fish and auto-perform conveniences, safe riding, ...).</p>
   </section>
 </section>
 <section class="detail" id="remove_buff/3">
@@ -382,7 +450,7 @@ cast it.</p>
       <h1 class="signature" translate="no">remove_owner_effect(owner_object_id, effect_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L528" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L568" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -404,7 +472,7 @@ cast it.</p>
       <h1 class="signature" translate="no">restore_buffs(character, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L560" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L600" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -426,7 +494,7 @@ cast it.</p>
       <h1 class="signature" translate="no">save_owner_buffs(character, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L540" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L580" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

@@ -254,6 +254,15 @@ Drops an item from a character's inventory into the field.
     iex> drop_item(character, item)
     :ok
 
+# `drop_item`
+
+```elixir
+@spec drop_item(Ms2ex.Schema.Character.t(), Ms2ex.Schema.Item.t(), map()) ::
+  :ok | :error
+```
+
+Drops an item at a fixed position instead of at the character's feet.
+
 # `end_performance`
 
 ```elixir
@@ -336,14 +345,13 @@ remaining and revives the owner when it reaches zero.
 # `interact_object`
 
 ```elixir
-@spec interact_object(Ms2ex.Schema.Character.t(), String.t()) ::
-  {:ok, integer()} | :error
+@spec interact_object(Ms2ex.Schema.Character.t(), String.t()) :: {:ok, map()} | :error
 ```
 
 Completes a player's interaction with a field interact object.
 
-Returns `{:ok, interact_id}` when the object exists on the field so callers
-can progress interact-object quest conditions.
+Returns `{:ok, object}` when the object exists on the field so callers can
+progress interact-object quest conditions and run gathering.
 
 # `leave`
 
@@ -385,6 +393,14 @@ Looks up an NPC by object id in the character's field.
 
     iex> lookup_npc(character, 10_000_001)
     {:ok, %FieldNpc{}}
+
+# `next_object_id`
+
+```elixir
+@spec next_object_id(Ms2ex.Schema.Character.t()) :: {:ok, integer()} | :error
+```
+
+Allocates a field-unique object id (guide objects, effects, ...).
 
 # `performance_stage?`
 

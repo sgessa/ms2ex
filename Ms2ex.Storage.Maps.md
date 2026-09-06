@@ -13,6 +13,11 @@ Spawn point to drop a player onto when they enter a field. Entering flush
 with the floor drops the player through it, so the arrival sits above the
 spawn point and falls the short distance.
 
+# `get_fluid_surfaces`
+
+Fishable water cells of a map, keyed by their block coordinate: the surface
+of a fluid column that is not shallow.
+
 # `get_interact_objects`
 
 # `get_meta`

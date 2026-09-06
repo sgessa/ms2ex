@@ -10,6 +10,8 @@
 - [Ms2ex.Enum](Ms2ex.Enum.md)
 - [Ms2ex.Formulas.AttackStats](Ms2ex.Formulas.AttackStats.md)
 - [Ms2ex.Formulas.BaseStats](Ms2ex.Formulas.BaseStats.md)
+- [Ms2ex.Formulas.Gathering](Ms2ex.Formulas.Gathering.md): Gathering success rate, ported from the client's
+`calcGatheringObjectSuccessRate`.
 - [Ms2ex.Formulas.GearScore](Ms2ex.Formulas.GearScore.md)
 - [Ms2ex.Formulas.ItemBasicStats](Ms2ex.Formulas.ItemBasicStats.md)
 - [Ms2ex.Formulas.ItemDefense](Ms2ex.Formulas.ItemDefense.md)
@@ -25,8 +27,15 @@
 - [Ms2ex.GameHandlers.EquipItem](Ms2ex.GameHandlers.EquipItem.md)
 - [Ms2ex.GameHandlers.FallDamage](Ms2ex.GameHandlers.FallDamage.md)
 - [Ms2ex.GameHandlers.FileHash](Ms2ex.GameHandlers.FileHash.md)
+- [Ms2ex.GameHandlers.Fishing](Ms2ex.GameHandlers.Fishing.md): Fishing requests: casting a rod, dropping the line on a water tile,
+resolving the bite and reeling in.
+
 - [Ms2ex.GameHandlers.Friend](Ms2ex.GameHandlers.Friend.md)
 - [Ms2ex.GameHandlers.GroupChat](Ms2ex.GameHandlers.GroupChat.md)
+- [Ms2ex.GameHandlers.GuideObjectSync](Ms2ex.GameHandlers.GuideObjectSync.md): Movement of a guide object (the fishing bobber). Only its owner controls it,
+so the server relays the states to the rest of the field and follows along
+with the last one.
+
 - [Ms2ex.GameHandlers.GuideRecord](Ms2ex.GameHandlers.GuideRecord.md)
 - [Ms2ex.GameHandlers.Helper.Friend](Ms2ex.GameHandlers.Helper.Friend.md)
 - [Ms2ex.GameHandlers.Helper.ItemBox](Ms2ex.GameHandlers.Helper.ItemBox.md): Item box opening: resolves the box's function parameters against the
@@ -44,6 +53,9 @@ with End; End is what counts towards interact-object quest conditions.
 - [Ms2ex.GameHandlers.Job](Ms2ex.GameHandlers.Job.md)
 - [Ms2ex.GameHandlers.KeyTable](Ms2ex.GameHandlers.KeyTable.md)
 - [Ms2ex.GameHandlers.LoadUgcMap](Ms2ex.GameHandlers.LoadUgcMap.md)
+- [Ms2ex.GameHandlers.Mastery](Ms2ex.GameHandlers.Mastery.md): Life skill requests: claiming the reward box of a mastery grade and
+crafting a mastery recipe at a workbench.
+
 - [Ms2ex.GameHandlers.MyInfo](Ms2ex.GameHandlers.MyInfo.md): The motto shown on the player's profile and above their head.
 
 - [Ms2ex.GameHandlers.NpcTalk](Ms2ex.GameHandlers.NpcTalk.md): NPC interaction flow (talk + quest selection).
@@ -102,6 +114,11 @@ rider. Paying grants an additional effect.
 - [Ms2ex.Managers.Character.Equips](Ms2ex.Managers.Character.Equips.md): Equip transitions owned by the character process.
 - [Ms2ex.Managers.Character.Experience](Ms2ex.Managers.Character.Experience.md)
 - [Ms2ex.Managers.Character.FallDamage](Ms2ex.Managers.Character.FallDamage.md)
+- [Ms2ex.Managers.Character.Fishing](Ms2ex.Managers.Character.Fishing.md): Fishing state owned by the character process: the active rod, the water
+tiles it reaches, the fish currently biting and the fish album.
+- [Ms2ex.Managers.Character.Mastery](Ms2ex.Managers.Character.Mastery.md): Life skill (mastery) state owned by the character process: the mastery
+value per type, how often each gathering recipe was harvested and which
+grade reward boxes were claimed.
 - [Ms2ex.Managers.Character.Revival](Ms2ex.Managers.Character.Revival.md): Death and revival logic for a character.
 - [Ms2ex.Managers.Character.Skill](Ms2ex.Managers.Character.Skill.md)
 - [Ms2ex.Managers.Character.SkillCooldown](Ms2ex.Managers.Character.SkillCooldown.md)
@@ -156,6 +173,12 @@ clients light up the stage and show the performance timer.
 - [Ms2ex.Storage.Tables.Constants](Ms2ex.Storage.Tables.Constants.md)
 - [Ms2ex.Storage.Tables.ExpTable](Ms2ex.Storage.Tables.ExpTable.md)
 - [Ms2ex.Storage.Tables.FieldMission](Ms2ex.Storage.Tables.FieldMission.md)
+- [Ms2ex.Storage.Tables.Fish](Ms2ex.Storage.Tables.Fish.md): `fish.xml`: the fish catalogue, the fishing spot of each map and the fish
+boxes a spot rolls its catches from.
+
+- [Ms2ex.Storage.Tables.FishingRods](Ms2ex.Storage.Tables.FishingRods.md): `fishingrod.xml`: keyed by the rod code a fishing rod item carries in its
+`FishingRod` function parameter.
+
 - [Ms2ex.Storage.Tables.GlobalDropItemBox](Ms2ex.Storage.Tables.GlobalDropItemBox.md)
 - [Ms2ex.Storage.Tables.IndividualDropItem](Ms2ex.Storage.Tables.IndividualDropItem.md)
 - [Ms2ex.Storage.Tables.Insignias](Ms2ex.Storage.Tables.Insignias.md)
@@ -163,6 +186,17 @@ clients light up the stage and show the performance timer.
 - [Ms2ex.Storage.Tables.InteractObjects](Ms2ex.Storage.Tables.InteractObjects.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
+- [Ms2ex.Storage.Tables.MasteryDifferentialFactors](Ms2ex.Storage.Tables.MasteryDifferentialFactors.md): `masterydifferentialfactor.xml`: how much mastery a harvest still awards
+when the recipe sits below the player's grade. Only the number of entries
+with a positive factor is used: once the grade difference reaches it, the
+harvest awards no mastery at all.
+
+- [Ms2ex.Storage.Tables.MasteryRecipes](Ms2ex.Storage.Tables.MasteryRecipes.md): `masteryreceipe.xml`: one entry per gathering node and craft recipe, keyed
+by recipe id (the id an interact object's `item.recipe_id` points at).
+
+- [Ms2ex.Storage.Tables.MasteryRewards](Ms2ex.Storage.Tables.MasteryRewards.md): `mastery.xml`: per mastery type, the mastery value each grade starts at and
+the reward box handed out for reaching it.
+
 - [Ms2ex.Storage.Tables.SmartPush](Ms2ex.Storage.Tables.SmartPush.md)
 - [Ms2ex.Storage.Tables.UgcDesign](Ms2ex.Storage.Tables.UgcDesign.md): Cost and rarity of the design shop templates a player can turn into an item.
 
@@ -225,14 +259,21 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Enums.AttackType](Ms2ex.Enums.AttackType.md)
   - [Ms2ex.Enums.BasicStatType](Ms2ex.Enums.BasicStatType.md)
   - [Ms2ex.Enums.BlueprintType](Ms2ex.Enums.BlueprintType.md)
+  - [Ms2ex.Enums.CaughtFishType](Ms2ex.Enums.CaughtFishType.md): Which mastery notice the client shows for a caught fish.
   - [Ms2ex.Enums.ChatType](Ms2ex.Enums.ChatType.md)
   - [Ms2ex.Enums.EquipSlot](Ms2ex.Enums.EquipSlot.md)
   - [Ms2ex.Enums.FieldProperty](Ms2ex.Enums.FieldProperty.md)
+  - [Ms2ex.Enums.FishingError](Ms2ex.Enums.FishingError.md): Error codes the client renders for fishing actions.
   - [Ms2ex.Enums.Gender](Ms2ex.Enums.Gender.md)
+  - [Ms2ex.Enums.GuideObjectType](Ms2ex.Enums.GuideObjectType.md): Client-side markers a player controls.
   - [Ms2ex.Enums.InsigniaType](Ms2ex.Enums.InsigniaType.md)
   - [Ms2ex.Enums.InventoryTab](Ms2ex.Enums.InventoryTab.md)
   - [Ms2ex.Enums.ItemType](Ms2ex.Enums.ItemType.md)
   - [Ms2ex.Enums.Job](Ms2ex.Enums.Job.md)
+  - [Ms2ex.Enums.MasteryError](Ms2ex.Enums.MasteryError.md): Error codes the client renders for mastery (life skill) actions.
+  - [Ms2ex.Enums.MasteryType](Ms2ex.Enums.MasteryType.md): Life skill (mastery) types. The order doubles as the wire order of the
+mastery block written into the character packet.
+
   - [Ms2ex.Enums.MeretMarketCurrency](Ms2ex.Enums.MeretMarketCurrency.md)
   - [Ms2ex.Enums.MyInfoError](Ms2ex.Enums.MyInfoError.md)
   - [Ms2ex.Enums.PartyNotice](Ms2ex.Enums.PartyNotice.md)
@@ -315,6 +356,7 @@ drop boxes), shared by mob loot and item boxes.
   - [Ms2ex.Context.Emotes](Ms2ex.Context.Emotes.md): Context module for character emote-related operations.
   - [Ms2ex.Context.Experience](Ms2ex.Context.Experience.md): Context module for character experience-related operations.
   - [Ms2ex.Context.Field](Ms2ex.Context.Field.md): Context module for field-related operations.
+  - [Ms2ex.Context.Fishing](Ms2ex.Context.Fishing.md): Fishing, ported from the reference FishingManager.
   - [Ms2ex.Context.Friends](Ms2ex.Context.Friends.md): Context module for friend-related operations.
   - [Ms2ex.Context.HotBars](Ms2ex.Context.HotBars.md): Context module for hot bar-related operations.
   - [Ms2ex.Context.Insignias](Ms2ex.Context.Insignias.md): Name tag symbols. Each insignia is gated on a condition the wearer has to
@@ -332,6 +374,8 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.ItemTypes](Ms2ex.Context.ItemTypes.md)
   - [Ms2ex.Context.Items](Ms2ex.Context.Items.md)
   - [Ms2ex.Context.MapBlock](Ms2ex.Context.MapBlock.md)
+  - [Ms2ex.Context.Mastery](Ms2ex.Context.Mastery.md): Life skills: harvesting gathering nodes and crafting mastery recipes, plus
+claiming the reward boxes each mastery grade hands out.
   - [Ms2ex.Context.Mobs](Ms2ex.Context.Mobs.md)
   - [Ms2ex.Context.PremiumMemberships](Ms2ex.Context.PremiumMemberships.md)
   - [Ms2ex.Context.Quests](Ms2ex.Context.Quests.md): Quest persistence helpers.
@@ -390,7 +434,9 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.FieldRemoveItem](Ms2ex.Packets.FieldRemoveItem.md)
   - [Ms2ex.Packets.FieldRemoveNpc](Ms2ex.Packets.FieldRemoveNpc.md)
   - [Ms2ex.Packets.FieldRemoveObject](Ms2ex.Packets.FieldRemoveObject.md)
-  - [Ms2ex.Packets.Fishing](Ms2ex.Packets.Fishing.md)
+  - [Ms2ex.Packets.Fishing](Ms2ex.Packets.Fishing.md): Fishing frames: the water tiles a rod can reach, the bite timer, catches
+and the fish album.
+
   - [Ms2ex.Packets.Friend](Ms2ex.Packets.Friend.md)
   - [Ms2ex.Packets.FunctionCube](Ms2ex.Packets.FunctionCube.md)
   - [Ms2ex.Packets.FurnishingInventory](Ms2ex.Packets.FurnishingInventory.md)
@@ -398,6 +444,9 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.GameToGame](Ms2ex.Packets.GameToGame.md)
   - [Ms2ex.Packets.GameToLogin](Ms2ex.Packets.GameToLogin.md)
   - [Ms2ex.Packets.GroupChat](Ms2ex.Packets.GroupChat.md)
+  - [Ms2ex.Packets.GuideObject](Ms2ex.Packets.GuideObject.md): Guide objects are the client-side markers a player controls: the fishing
+bobber, construction cursor and skill guides.
+
   - [Ms2ex.Packets.GuideRecord](Ms2ex.Packets.GuideRecord.md)
   - [Ms2ex.Packets.HomeCommand](Ms2ex.Packets.HomeCommand.md)
   - [Ms2ex.Packets.InGameRank](Ms2ex.Packets.InGameRank.md)
@@ -420,6 +469,9 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.LoginToGame](Ms2ex.Packets.LoginToGame.md)
   - [Ms2ex.Packets.Mail](Ms2ex.Packets.Mail.md)
   - [Ms2ex.Packets.MarketInventory](Ms2ex.Packets.MarketInventory.md)
+  - [Ms2ex.Packets.Mastery](Ms2ex.Packets.Mastery.md): Life skill (mastery) frames: mastery value updates, grade reward claims,
+crafted item results and the error notices the client renders.
+
   - [Ms2ex.Packets.Mentor](Ms2ex.Packets.Mentor.md)
   - [Ms2ex.Packets.Merets](Ms2ex.Packets.Merets.md)
   - [Ms2ex.Packets.Mesos](Ms2ex.Packets.Mesos.md)

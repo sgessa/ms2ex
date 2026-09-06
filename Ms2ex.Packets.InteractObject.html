@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-DE200E8E.js"></script>
+    <script defer src="dist/sidebar_items-A4D3AC2A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -145,11 +145,13 @@ full rendering data.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#interact/1" data-no-tooltip="" translate="no">interact(object)</a>
+        <a href="#interact/3" data-no-tooltip="" translate="no">interact(object, gather_result \\ :success, decrease_amount \\ 0)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Plays the interaction animation for an object on every client.</p></div>
+        <div class="summary-synopsis"><p>Plays the interaction animation for an object on every client. Gathering
+nodes additionally carry whether the harvest succeeded and how much of the
+node it consumed.</p></div>
 
     </div>
 
@@ -161,6 +163,16 @@ full rendering data.</p></div>
 
         <div class="summary-synopsis"><p>Announces the field's interact objects to a joining player. The client only
 enables interaction tooltips for objects announced through this frame.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#result/2" data-no-tooltip="" translate="no">result(object, interact_result)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Notice the client shows once an interaction resolved.</p></div>
 
     </div>
 
@@ -198,7 +210,7 @@ enables interaction tooltips for objects announced through this frame.</p></div>
       <h1 class="signature" translate="no">add(object)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L61" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L70" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -211,17 +223,21 @@ enables interaction tooltips for objects announced through this frame.</p></div>
 full rendering data.</p>
   </section>
 </section>
-<section class="detail" id="interact/1">
+<section class="detail" id="interact/3">
+
+    <span id="interact/1"></span>
+
+    <span id="interact/2"></span>
 
   <div class="detail-header">
-    <a href="#interact/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#interact/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">interact(object)</h1>
+      <h1 class="signature" translate="no">interact(object, gather_result \\ :success, decrease_amount \\ 0)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L80" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L93" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -230,7 +246,9 @@ full rendering data.</p>
 
   <section class="docstring">
 
-<p>Plays the interaction animation for an object on every client.</p>
+<p>Plays the interaction animation for an object on every client. Gathering
+nodes additionally carry whether the harvest succeeded and how much of the
+node it consumed.</p>
   </section>
 </section>
 <section class="detail" id="load/1">
@@ -243,7 +261,7 @@ full rendering data.</p>
       <h1 class="signature" translate="no">load(objects)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L41" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L50" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -256,6 +274,28 @@ full rendering data.</p>
 enables interaction tooltips for objects announced through this frame.</p>
   </section>
 </section>
+<section class="detail" id="result/2">
+
+  <div class="detail-header">
+    <a href="#result/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">result(object, interact_result)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L103" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Notice the client shows once an interaction resolved.</p>
+  </section>
+</section>
 <section class="detail" id="update/1">
 
   <div class="detail-header">
@@ -266,7 +306,7 @@ enables interaction tooltips for objects announced through this frame.</p>
       <h1 class="signature" translate="no">update(object)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/interact_object.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
