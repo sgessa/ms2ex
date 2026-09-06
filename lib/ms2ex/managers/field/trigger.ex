@@ -827,7 +827,11 @@ defmodule Ms2ex.Managers.Field.Trigger do
       character = %{character | position: portal.position}
       Managers.Character.call(character, {:update, character})
       Field.Trigger.track_position(state, character.id, portal.position)
-      Net.SenderSession.push(character, Packets.MoveCharacter.bytes(character, portal.position))
+
+      Net.SenderSession.push(
+        character,
+        Packets.UserMoveByPortal.bytes(character, portal.position, portal.rotation)
+      )
     end
 
     state

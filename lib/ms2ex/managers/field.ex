@@ -446,7 +446,8 @@ defmodule Ms2ex.Managers.Field do
     else
       state = Field.InteractObject.tick(state)
       state = Field.Trigger.tick(state)
-      {:noreply, Field.Npc.tick(state)}
+      state = Field.Npc.tick(state)
+      {:noreply, Field.Liftable.expire_placed(state)}
     end
   end
 

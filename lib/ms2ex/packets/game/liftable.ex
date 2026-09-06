@@ -52,4 +52,12 @@ defmodule Ms2ex.Packets.Liftable do
     |> put_ustring(Map.get(liftable, :effect_quest_state, ""))
     |> put_bool(Map.get(liftable, :react_effect, false))
   end
+
+  # the placed prop was removed (expiry or re-pickup)
+  def remove(uuid) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.remove)
+    |> put_string(uuid)
+  end
 end

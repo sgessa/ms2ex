@@ -114,6 +114,6 @@ defmodule Ms2ex.Managers.Field.PerformanceStage do
   defp move_to(character, portal) do
     character = %{character | position: portal.position}
     Ms2ex.Managers.Character.call(character, {:update, character})
-    Context.Field.broadcast(character, Packets.MoveCharacter.bytes(character, portal.position))
+    Context.Field.broadcast(character, Packets.UserMoveByPortal.bytes(character, portal.position))
   end
 end

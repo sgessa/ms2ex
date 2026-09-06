@@ -1,7 +1,7 @@
 defmodule Ms2ex.Packets.ResponseCube do
   import Ms2ex.Packets.PacketWriter
 
-  @mode %{pickup: 0x11, drop: 0x12, place_cube: 0x0A}
+  @mode %{pickup: 0x11, drop: 0x12, place_cube: 0x0A, remove_cube: 0x0C}
   @update_profile 0x14
   @return_map 0x22
   @design_rank_reward 0x27
@@ -43,6 +43,24 @@ defmodule Ms2ex.Packets.ResponseCube do
     |> put_bool(true)
     |> put_float(rotation)
     |> put_int(0)
+    |> put_bool(false)
+  end
+
+  # the placed prop's visual cube leaves the field (liftable expiry or
+  # re-pickup); mirrors the reference's CubePacket.RemoveCube
+  def remove_cube(object_id, {x, y, z}) do
+    __MODULE__
+    |> build()
+    |> put_byte(@mode.remove_cube)
+    |> put_byte(0)
+    |> put_int(object_id)
+    |> put_int(object_id)
+    |> put_sbyte(x)
+    |> put_sbyte(y)
+    |> put_sbyte(z)
+    # the Vector3B struct is 4 bytes wide (one padding byte), matching the
+    # client's serializer
+    |> put_byte(0)
     |> put_bool(false)
   end
 

@@ -164,7 +164,7 @@ defmodule Ms2ex.Managers.Field.Character do
       coord ->
         character = %{character | update_position: nil}
         Managers.Character.call(character, {:update, character})
-        push(character, Packets.MoveCharacter.bytes(character, coord))
+        push(character, Packets.UserMoveByPortal.bytes(character, coord))
     end
   end
 

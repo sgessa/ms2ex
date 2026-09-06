@@ -78,7 +78,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
       character = handle_out_of_bounds(character)
       fall_distance = Constants.get(:out_of_bounds_fall_distance)
       Managers.Character.cast(character, {:receive_fall_dmg, fall_distance})
-      push(session, Packets.MoveCharacter.bytes(character, character.safe_position))
+      push(session, Packets.UserMoveByPortal.bytes(character, character.safe_position))
     end
   end
 

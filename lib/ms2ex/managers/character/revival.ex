@@ -209,7 +209,7 @@ defmodule Ms2ex.Managers.Character.Revival do
         |> Map.put(:position, spawn_point.position)
         |> Map.put(:rotation, spawn_point.rotation)
 
-      push(character, Packets.MoveCharacter.bytes(character, spawn_point.position))
+      push(character, Packets.UserMoveByPortal.bytes(character, spawn_point.position))
       Context.Field.broadcast(character, Packets.ProxyGameObj.update_player(character))
       character
     end
