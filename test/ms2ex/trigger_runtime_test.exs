@@ -368,6 +368,81 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert_received {:quest_event, 1, :trigger, 1, "jordy"}
   end
 
+  test "set_dialogue balloons the spawn-point npc with the script text" do
+    state =
+      base_state()
+      |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{
+          name: "set_dialogue",
+          args: %{arg1: "1", arg2: "108", arg3: "$52000116_QD__MAIN__4$", arg4: "2"}
+        }
+      ])
+      |> tick()
+
+    assert %{current: "wait"} = state.trigger_machines["tutorial"]
+
+    expected =
+      <<0x68::little-16, 0x8, 0, 700::little-32>>
+      |> Kernel.<>(ustring("$52000116_QD__MAIN__4$"))
+      |> Kernel.<>(<<2000::little-32, 0::little-32>>)
+
+    assert {:push, ^expected} = receive_push()
+  end
+
+  test "set_dialogue balloons the player when the spawn point is zero" do
+    state =
+      base_state()
+      |> Map.put(:players, %{1 => 777})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "set_dialogue", args: %{arg1: "1", arg2: "0", arg3: "$hi$", arg4: "3"}}
+      ])
+      |> tick()
+
+    expected =
+      <<0x68::little-16, 0x8, 0, 777::little-32>>
+      |> Kernel.<>(ustring("$hi$"))
+      |> Kernel.<>(<<3000::little-32, 0::little-32>>)
+
+    assert {:push, ^expected} = receive_push()
+  end
+
+  test "add_balloon_talk queues an npc balloon after the delay" do
+    state =
+      base_state()
+      |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{
+          name: "add_balloon_talk",
+          args: %{
+            msg: "$52000135_QD__MAIN__12$",
+            duration: "2000",
+            spawn_point_id: "108",
+            delay_tick: "100"
+          }
+        }
+      ])
+      |> tick()
+
+    expected =
+      <<0x68::little-16, 0x8, 1, 700::little-32>>
+      |> Kernel.<>(ustring("$52000135_QD__MAIN__12$"))
+      |> Kernel.<>(<<2000::little-32, 100::little-32>>)
+
+    assert {:push, ^expected} = receive_push()
+  end
+
+  test "play_system_sound_in_box broadcasts the sound field-wide without boxes" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "play_system_sound_in_box", args: %{arg2: "System_Space_PopUp_01"}}
+    ])
+    |> tick()
+
+    expected = <<0xC5::little-16>> <> ustring("System_Space_PopUp_01")
+    assert {:push, ^expected} = receive_push()
+  end
+
   test "move_npc attaches the patrol to the matching story npc" do
     # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
     # approach falls back to the model's run sequence

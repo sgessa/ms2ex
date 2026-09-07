@@ -112,16 +112,17 @@ defmodule Ms2ex.Packets.Cinematic do
     center_right: 7
   }
 
-  # a speech balloon over an actor's head
-  def balloon_talk(object_id, script, duration) do
+  # a speech balloon over an actor's head; the flag anchors the balloon as
+  # an npc speech for add_balloon_talk's npc variant
+  def balloon_talk(npc?, object_id, script, duration, delay \\ 0) do
     __MODULE__
     |> build()
     |> put_byte(0x8)
-    |> put_bool(false)
+    |> put_bool(npc?)
     |> put_int(object_id)
     |> put_ustring(script)
     |> put_int(duration)
-    |> put_int(0)
+    |> put_int(delay)
   end
 
   # a cinematic dialog bubble during scripted sequences

@@ -265,7 +265,12 @@ Still missing:
   comparison with the reference. Load-time camera registration is fixed
   to arrive invisible (a visible entry activates the view client-side,
   stranding relogs outside the intro on a scripted vantage)
-- sound setup actions
+- residual sound actions: `play_system_sound_in_box` is in (field-wide
+  broadcast when no box is configured, per-player push inside boxes);
+  still missing the background/BGM sound actions (`set_sound`)
+- balloon-family follow-ups: `remove_balloon_talk` and dialogue
+  `delay_tick` scheduling (the client applies the delay itself, so
+  scripts that gate via wait_tick are unaffected)
 
 ### 24. Navmesh position validation — [Partial]
 
@@ -614,6 +619,13 @@ combat-heavy characters from accumulating document copies.
   advanced all 106 trigger-coded achievements (none of which are coded
   "jordy"), and makes the 57 emotion quest conditions require the
   actual emote key the client sends (reference: aniKey → codeString)
+- Speech balloons actually render now: `set_dialogue` reads its
+  positional args (type, spawn point, script, seconds) instead of named
+  keys the data never carries — every dialogue fell through to an empty
+  player-anchored balloon. `add_balloon_talk` (named args: msg,
+  duration, spawn_point_id, delay_tick) sends the npc-flagged balloon
+  variant, and `play_system_sound_in_box` fires the new
+  PLAY_SYSTEM_SOUND packet field-wide or per player inside the boxes
 - npc story walks (`move_npc` patrol attachment, staying at the last
   waypoint) and player emotion loops (`set_pc_emotion_loop` → Trigger ui
   EmotionLoop frame)

@@ -97,6 +97,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xB9 => "HOME_COMMAND",
     0xBA => "CHARACTER_MAX_COUNT",
     0xBB => "WORLD",
+    0xC5 => "PLAY_SYSTEM_SOUND",
     0xC6 => "FISHING",
     0x70 => "GUIDE_OBJECT",
     0xC8 => "NPS_INFO",

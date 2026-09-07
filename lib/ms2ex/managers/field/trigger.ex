@@ -649,28 +649,19 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   # scripted dialogue: a speech balloon over the speaking actor's head, or a
-  # cinematic-styled talk anchored to the npc
+  # cinematic-styled talk anchored to the npc. Args are positional:
+  # arg1 = type (1 = balloon over the npc), arg2 = spawn point id (or the
+  # npc id for the cinematic talk), arg3 = script text, arg4 = display
+  # seconds
   defp execute_action("set_dialogue", args, _script_name, state) do
-    type = int_arg(args, :type)
-    spawn_id = int_arg(args, :spawn_id)
-    script = to_string(args[:script] || "")
-    duration = int_arg(args, :time) * 1000
+    type = int_arg(args, :arg1)
+    spawn_id = int_arg(args, :arg2)
+    script = to_string(args[:arg3] || "")
+    duration = int_arg(args, :arg4) * 1000
 
     cond do
       spawn_id == 0 ->
-        # the player speaks: balloon the first player on the field
-        case Map.values(state.players) do
-          [object_id | _] ->
-            Context.Field.broadcast(
-              state.topic,
-              Packets.Cinematic.balloon_talk(object_id, script, duration)
-            )
-
-          [] ->
-            :ok
-        end
-
-        state
+        balloon_first_player(state, script, duration, 0)
 
       type == 1 ->
         case npc_object_id(state, spawn_id) do
@@ -680,7 +671,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
           object_id ->
             Context.Field.broadcast(
               state.topic,
-              Packets.Cinematic.balloon_talk(object_id, script, duration)
+              Packets.Cinematic.balloon_talk(false, object_id, script, duration, 0)
             )
 
             state
@@ -689,12 +680,64 @@ defmodule Ms2ex.Managers.Field.Trigger do
       true ->
         Context.Field.broadcast(
           state.topic,
-          Packets.Cinematic.talk(spawn_id, "", script, duration, align_key(args[:align]))
+          Packets.Cinematic.talk(
+            spawn_id,
+            Integer.to_string(spawn_id),
+            script,
+            duration,
+            align_key(args[:align])
+          )
         )
 
         state
     end
   end
+
+  # a balloon speech queued by the script (add_balloon_talk): the balloon
+  # appears over the player (spawn point 0) or the spawn-point npc after
+  # delay_tick milliseconds; the duration is already milliseconds
+  defp execute_action("add_balloon_talk", args, _script_name, state) do
+    script = to_string(args[:msg] || "")
+    duration = int_arg(args, :duration)
+    delay = int_arg(args, :delay_tick)
+    spawn_id = int_arg(args, :spawn_point_id)
+
+    if spawn_id == 0 do
+      balloon_first_player(state, script, duration, delay)
+    else
+      case npc_object_id(state, spawn_id) do
+        nil ->
+          state
+
+        object_id ->
+          Context.Field.broadcast(
+            state.topic,
+            Packets.Cinematic.balloon_talk(true, object_id, script, duration, delay)
+          )
+
+          state
+      end
+    end
+  end
+
+  # system sounds inside trigger boxes (or field-wide when no box is
+  # configured)
+  defp execute_action("play_system_sound_in_box", args, _script_name, state) do
+    sound = to_string(args[:arg2] || "")
+    box_ids = int_list_arg(args, :arg1)
+
+    if box_ids == [] do
+      Context.Field.broadcast(state.topic, Packets.PlaySystemSound.system(sound))
+    else
+      play_sound_for_players_in_boxes(state, box_ids, sound)
+    end
+
+    state
+  end
+
+  # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
+  # (sound setup, fade delays); unknown actions warn loudly so script
+  # coverage gaps surface in the log
 
   # loops an emote sequence on a story npc (the collapsed robe, lying
   # recruits): the sequence name resolves to a numeric animation id through
@@ -789,6 +832,34 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action(name, _args, _script_name, state) do
     Logger.warning("Unhandled trigger action " <> name)
     state
+  end
+
+  defp balloon_first_player(state, script, duration, delay) do
+    case Map.values(state.players) do
+      [object_id | _] ->
+        Context.Field.broadcast(
+          state.topic,
+          Packets.Cinematic.balloon_talk(false, object_id, script, duration, delay)
+        )
+
+      [] ->
+        :ok
+    end
+
+    state
+  end
+
+  defp play_sound_for_players_in_boxes(state, box_ids, sound) do
+    players_in_boxes(state, box_ids)
+    |> Enum.each(fn character_id ->
+      case Managers.Character.call(character_id, :lookup) do
+        {:ok, character} ->
+          Net.SenderSession.push(character, Packets.PlaySystemSound.system(sound))
+
+        _ ->
+          :ok
+      end
+    end)
   end
 
   # the event type defaults to "trigger"
