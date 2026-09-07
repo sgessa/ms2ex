@@ -80,12 +80,17 @@ defmodule Ms2ex.Packets.ControlNpc do
 
   defp put_velocity(packet, _npc), do: put_short_coord(packet)
 
-  # The state byte toggles between the PcSkill reaction state (16) while a
-  # mob is engaged by a player and idle (1) otherwise. The client shows the
-  # field HP bar for a mob reacting to a player skill, so the transition to
-  # the reaction state on the first hit is what arms the bar.
+  # The state byte tells the client which actor state to present: the
+  # PcSkill reaction (16) while a mob is engaged by a player, Walk (2)
+  # while a scripted patrol is moving the npc (this is what plays the
+  # locomotion animation instead of sliding), and idle (1) otherwise. The
+  # client shows the field HP bar for a mob reacting to a player skill, so
+  # the transition to the reaction state on the first hit is what arms it.
   defp put_state(packet, %Types.FieldNpc{last_attacker: attacker}) when not is_nil(attacker),
     do: put_byte(packet, 16)
+
+  defp put_state(packet, %Types.FieldNpc{velocity: {vx, vy, _vz}}) when vx != 0 or vy != 0,
+    do: put_byte(packet, 2)
 
   defp put_state(packet, _npc), do: put_byte(packet, 1)
 

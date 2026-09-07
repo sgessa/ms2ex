@@ -294,24 +294,99 @@ defmodule Ms2ex.TriggerRuntimeTest do
               0, 65, 0>>} = receive_push()
   end
 
+  test "set_pc_emotion_sequence broadcasts the player emote sequence" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_pc_emotion_sequence", args: %{arg1: "Bore_C, Talk_A"}}
+    ])
+    |> tick()
+
+    assert {:push,
+            <<0x4F::little-16, 0x8, 0x7, 2::little-32, 6::little-16, 66, 0, 111, 0, 114, 0, 101,
+              0, 95, 0, 67, 0, 6::little-16, 84, 0, 97, 0, 108, 0, 107, 0, 95, 0, 65, 0>>} =
+             receive_push()
+  end
+
+  test "show_caption broadcasts the scripted caption card" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{
+        name: "show_caption",
+        args: %{
+          type: "NameCaption",
+          title: "$52000116_QD__MAIN__8$",
+          desc: "$52000116_QD__MAIN__9$",
+          duration: "4000",
+          align: "centerLeft",
+          scale: "2.3",
+          offest_rate_x: "-0.15"
+        }
+      }
+    ])
+    |> tick()
+
+    # NameCaption zero-holds both offset rates together when one is unset
+    expected =
+      <<0x68::little-16, 0xA>>
+      |> Kernel.<>(ustring("NameCaption"))
+      |> Kernel.<>(ustring("$52000116_QD__MAIN__8$"))
+      |> Kernel.<>(ustring("$52000116_QD__MAIN__9$"))
+      |> Kernel.<>(ustring("centerLeft"))
+      |> Kernel.<>(
+        <<4000::little-32, 0.0::little-float-32, 0.0::little-float-32, 2.3::little-float-32>>
+      )
+
+    assert {:push, ^expected} = receive_push()
+  end
+
+  test "set_achievement pushes the trigger event to players in the box" do
+    Mimic.stub(Ms2ex.Managers.Quest, :update_conditions, fn
+      character_id, type, counter, _target_string, _target_long, code_string, _code_long ->
+        send(self(), {:quest_event, character_id, type, counter, code_string})
+    end)
+
+    Mimic.stub(Ms2ex.Managers.Achievement, :update, fn
+      character_id, type, _counter, _ts, _tl, code_string, _cl ->
+        send(self(), {:achievement_event, character_id, type, code_string})
+    end)
+
+    state =
+      base_state()
+      |> put_in([:trigger_boxes, 2001], %{
+        id: 2001,
+        position: %{x: 0.0, y: 0.0, z: 0.0},
+        dimensions: %{x: 100.0, y: 100.0, z: 100.0}
+      })
+      |> put_player(%{x: 5.0, y: 5.0, z: 5.0}, 1)
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "set_achievement", args: %{arg1: "2001", arg2: "trigger", arg3: "jordy"}}
+      ])
+      |> tick()
+
+    assert %{current: "wait"} = state.trigger_machines["tutorial"]
+    assert_received {:achievement_event, 1, :trigger, "jordy"}
+    assert_received {:quest_event, 1, :trigger, 1, "jordy"}
+  end
+
   test "move_npc attaches the patrol to the matching story npc" do
+    # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
+    # approach falls back to the model's run sequence
+    stub_metadata(%{
+      "animation:11003401_m_storynpc" => %{
+        model: "11003401_m_storynpc",
+        sequences: %{Run_A: 11, Idle_A: 3}
+      }
+    })
+
     state =
       base_state()
       |> Map.put(:patrols, %{
         "MS2PatrolData_2003" => %{
-          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Run_A"}]
+          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
         }
       })
       |> Map.put(:npcs, %{
-        700 => %{
-          spawn_point_id: 108,
-          animation: 255,
-          patrol: nil,
-          velocity: {0, 0, 0},
-          rotation: %{x: 0.0, y: 0.0, z: 0.0},
-          send_control?: true,
-          npc: %{id: 11_003_401}
-        },
+        700 => story_npc(108, 11_003_401),
         701 => %{spawn_point_id: 109, animation: 255, patrol: nil, npc: %{id: 11_003_399}}
       })
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
@@ -321,11 +396,38 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     npc = state.npcs[700]
 
-    assert %{patrol: %{waypoints: [waypoint], speed: speed}} = npc
+    assert %{patrol: %{waypoints: [waypoint], animations: [11], speed: speed}} = npc
     assert waypoint == %{x: 100.0, y: 100.0, z: 0.0}
+    assert npc.animation == 11
     assert speed == 150
     # the other npc is untouched
     assert state.npcs[701][:patrol] == nil
+  end
+
+  test "move_npc leaves npcs without a locomotion sequence in place" do
+    stub_metadata(%{
+      "animation:11003401_m_storynpc" => %{
+        model: "11003401_m_storynpc",
+        sequences: %{Idle_A: 3}
+      }
+    })
+
+    state =
+      base_state()
+      |> Map.put(:patrols, %{
+        "MS2PatrolData_2003" => %{
+          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
+        }
+      })
+      |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "move_npc", args: %{arg1: "108", arg2: "MS2PatrolData_2003"}}
+      ])
+      |> tick()
+
+    # no walk/run sequence on the model: the npc stays put instead of
+    # sliding across the field in its idle pose
+    assert %{patrol: nil, animation: 255} = state.npcs[700]
   end
 
   test "set_cinematic_ui frames the cutscene with a letterbox transition" do
@@ -380,6 +482,18 @@ defmodule Ms2ex.TriggerRuntimeTest do
       enable: false,
       minimap_visible: false,
       target_map_id: 20_000_062
+    }
+  end
+
+  defp story_npc(spawn_point_id, npc_id) do
+    %Ms2ex.Types.FieldNpc{
+      spawn_point_id: spawn_point_id,
+      animation: 255,
+      patrol: nil,
+      velocity: {0, 0, 0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      send_control?: true,
+      npc: %{id: npc_id, metadata: %{model: %{name: "11003401_m_storynpc"}}}
     }
   end
 
@@ -496,4 +610,10 @@ defmodule Ms2ex.TriggerRuntimeTest do
   end
 
   defp now_ms, do: System.monotonic_time(:millisecond)
+
+  defp ustring(text) do
+    # the length field counts characters, the payload is utf16-le
+    <<String.length(text)::little-16,
+      :unicode.characters_to_binary(text, :utf8, {:utf16, :little})::binary>>
+  end
 end

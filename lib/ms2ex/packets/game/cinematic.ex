@@ -7,6 +7,7 @@ defmodule Ms2ex.Packets.Cinematic do
     view: 0x3,
     set_skip: 0x4,
     start_skip: 0x5,
+    caption: 0xA,
     opening: 0xB
   }
 
@@ -49,6 +50,31 @@ defmodule Ms2ex.Packets.Cinematic do
     |> put_byte(@modes.opening)
     |> put_ustring(script)
     |> put_bool(unknown)
+  end
+
+  # a screen-space caption banner (type NameCaption renders the named-title
+  # card at the end of scripted beats); align carries the client's
+  # camel-case enum name verbatim. NameCaption entries zero both offset
+  # rates together when only one is set
+  def caption(type, title, script, align, duration, offset_rate_x, offset_rate_y, scale) do
+    {offset_rate_x, offset_rate_y} =
+      if type == "NameCaption" and (offset_rate_x == 0.0 or offset_rate_y == 0.0) do
+        {0.0, 0.0}
+      else
+        {offset_rate_x, offset_rate_y}
+      end
+
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.caption)
+    |> put_ustring(type)
+    |> put_ustring(title)
+    |> put_ustring(script)
+    |> put_ustring(align)
+    |> put_int(duration)
+    |> put_float(offset_rate_x)
+    |> put_float(offset_rate_y)
+    |> put_float(scale)
   end
 
   # shows or hides the client's cutscene skip button; an empty scene hides it

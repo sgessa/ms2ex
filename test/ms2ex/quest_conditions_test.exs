@@ -48,6 +48,74 @@ defmodule Ms2ex.Managers.Quest.ConditionsTest do
     assert updated.conditions[1] == 1
   end
 
+  # the knight main quest's gate: quest 60100001 completes on the scripted
+  # set_achievement event (trigger code "jordy") fired from 52000116_qd
+  test "trigger conditions progress on the scripted achievement event" do
+    stub_metadata(%{
+      "quest:#{@quest_id}" => %{
+        id: @quest_id,
+        basic: %{type: :world_quest},
+        mentoring: nil,
+        conditions: [
+          %{
+            type: :trigger,
+            value: 1,
+            codes: %{strings: ["jordy"], integers: [], range: nil},
+            target: %{strings: [], integers: [], range: nil}
+          }
+        ]
+      }
+    })
+
+    quest = %{
+      id: @quest_id,
+      quest_id: @quest_id,
+      state: :started,
+      start_time: :os.system_time(:second),
+      conditions: %{0 => 0}
+    }
+
+    updated = Conditions.update(quest, :trigger, 1, "", 0, "jordy", 0)
+    assert updated.conditions[0] == 1
+
+    # a different trigger code must not count (other scripts fire their own)
+    assert Conditions.update(quest, :trigger, 1, "", 0, "rescueskyfortress", 0) == quest
+  end
+
+  # emotion conditions gate on the client-sent emote key plus the map
+  test "emotion conditions require the configured emote key" do
+    stub_metadata(%{
+      "quest:#{@quest_id}" => %{
+        id: @quest_id,
+        basic: %{type: :world_quest},
+        mentoring: nil,
+        conditions: [
+          %{
+            type: :emotion,
+            value: 1,
+            codes: %{strings: ["hello"], integers: [], range: nil},
+            target: %{strings: [], integers: [2_000_062], range: nil}
+          }
+        ]
+      }
+    })
+
+    quest = %{
+      id: @quest_id,
+      quest_id: @quest_id,
+      state: :started,
+      start_time: :os.system_time(:second),
+      conditions: %{0 => 0}
+    }
+
+    # a different emote on the right map does not count
+    assert Conditions.update(quest, :emotion, 1, "", 2_000_062, "greet", 0) == quest
+
+    # the configured emote on the configured map does
+    updated = Conditions.update(quest, :emotion, 1, "", 2_000_062, "hello", 0)
+    assert updated.conditions[0] == 1
+  end
+
   test "riding conditions require the configured map code", %{quest: quest} do
     stub_metadata(%{
       "quest:#{@quest_id}" => %{

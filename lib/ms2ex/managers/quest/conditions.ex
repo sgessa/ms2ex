@@ -124,8 +124,10 @@ defmodule Ms2ex.Managers.Quest.Conditions do
   end
 
   # progress the quest's counters for one gameplay event; returns the quest
-  # unchanged when the event matches no condition (or can no longer count)
-  def update(quest, condition_type, counter, _target_string, target_long, _code_string, code_long) do
+  # unchanged when the event matches no condition (or can no longer count).
+  # the metadata has no string target gates, so the pushed target string is
+  # not matched
+  def update(quest, condition_type, counter, _target_string, target_long, code_string, code_long) do
     metadata = Storage.Quests.get_meta(quest.quest_id)
 
     if quest.state != :started or mentoring_locked?(quest, metadata) do
@@ -136,7 +138,15 @@ defmodule Ms2ex.Managers.Quest.Conditions do
         |> condition_docs(metadata)
         |> Enum.with_index()
         |> Enum.filter(fn {doc, index} ->
-          condition_matches?(doc, index, quest.conditions, condition_type, target_long, code_long)
+          condition_matches?(
+            doc,
+            index,
+            quest.conditions,
+            condition_type,
+            target_long,
+            code_string,
+            code_long
+          )
         end)
 
       apply_updates(quest, matching, counter)
@@ -144,13 +154,14 @@ defmodule Ms2ex.Managers.Quest.Conditions do
   end
 
   @doc """
-  Whether one condition document accepts the pushed event: the code Long
-  must satisfy the condition's code gate and the pushed value its target
-  gate. Shared with the achievement conditions, which follow the same
-  metadata layout.
+  Whether one condition document accepts the pushed event: the code
+  parameter must satisfy the condition's code gate (string codes match the
+  pushed string, integer codes the pushed long) and the pushed value its
+  target gate. Shared with the achievement conditions, which follow the
+  same metadata layout.
   """
-  def metadata_matches?(doc, _target_string, target_long, _code_string, code_long) do
-    code_ok?(doc, code_long) and target_ok?(doc, target_long)
+  def metadata_matches?(doc, _target_string, target_long, code_string, code_long) do
+    code_ok?(doc, code_string, code_long) and target_ok?(doc, target_long)
   end
 
   # the condition document list is indexed by position; the manager state
@@ -164,10 +175,18 @@ defmodule Ms2ex.Managers.Quest.Conditions do
 
   defp counter(conditions, index), do: Map.get(conditions, index, 0)
 
-  defp condition_matches?(doc, index, conditions, condition_type, target_long, code_long) do
+  defp condition_matches?(
+         doc,
+         index,
+         conditions,
+         condition_type,
+         target_long,
+         code_string,
+         code_long
+       ) do
     doc.type == condition_type and
       counter(conditions, index) < doc.value and
-      metadata_matches?(doc, target_long, code_long)
+      metadata_matches?(doc, "", target_long, code_string, code_long)
   end
 
   defp apply_updates(quest, [], _counter), do: quest
@@ -181,28 +200,25 @@ defmodule Ms2ex.Managers.Quest.Conditions do
     %{quest | conditions: conditions}
   end
 
-  defp metadata_matches?(doc, target_long, code_long) do
-    metadata_matches?(doc, "", target_long, "", code_long)
-  end
+  # the code gate: conditions configured with string codes match the
+  # pushed code string (emote keys, trigger names, npc races, ...);
+  # integer-gated types match the pushed long against the configured ids
+  # or range; conditions without a code parameter accept any event of the
+  # type
+  defp code_ok?(doc, code_string, code_long) do
+    strings = parameter_strings(doc[:codes])
+    integers = parameter_integers(doc[:codes])
+    range = parameter_range(doc[:codes])
 
-  defp code_ok?(%{type: type} = doc, code_long) do
-    if type in @code_types do
-      strings = parameter_strings(doc[:codes])
-      integers = parameter_integers(doc[:codes])
-      range = parameter_range(doc[:codes])
+    cond do
+      strings != [] ->
+        code_string in strings
 
-      cond do
-        strings != [] ->
-          Enum.member?(strings, code_long)
+      doc.type in @code_types and (integers != [] or range != nil) ->
+        code_long in integers or in_range?(range, code_long)
 
-        integers != [] or range != nil ->
-          Enum.member?(integers, code_long) or in_range?(range, code_long)
-
-        true ->
-          true
-      end
-    else
-      true
+      true ->
+        true
     end
   end
 

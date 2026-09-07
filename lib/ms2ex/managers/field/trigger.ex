@@ -498,7 +498,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action("reset_camera", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
-      Packets.CameraInterpolation.interpolate(float_arg(args, :arg1))
+      Packets.CameraInterpolation.interpolate(float_arg(args, :interpolation_time))
     )
 
     state
@@ -592,14 +592,11 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     case patrol do
       %{way_points: way_points} when way_points != [] ->
-        waypoints = Enum.map(way_points, & &1[:position])
-        approach = Enum.find_value(way_points, & &1[:approach_animation]) || ""
-
         Enum.reduce(
           Map.keys(state.players),
           Map.put(state, :path_move_active, true),
           fn character_id, state ->
-            spawn_player_dummy(state, character_id, waypoints, approach)
+            spawn_player_dummy(state, character_id, way_points)
           end
         )
 
@@ -727,12 +724,80 @@ defmodule Ms2ex.Managers.Field.Trigger do
     state
   end
 
+  # the player plays one or more emote sequences back to back (comma list)
+  defp execute_action("set_pc_emotion_sequence", args, _script_name, state) do
+    sequence_names =
+      args
+      |> Map.get(:arg1, "")
+      |> to_string()
+      |> String.split(",", trim: true)
+      |> Enum.map(&String.trim/1)
+
+    Context.Field.broadcast(state.topic, Packets.Trigger.emotion_sequence(sequence_names))
+    state
+  end
+
+  # a screen-space caption banner ending a scripted beat (the named-title
+  # card). The game data spells the offset attributes offestRate*; the
+  # ingest stores them snake-cased under that same spelling
+  defp execute_action("show_caption", args, _script_name, state) do
+    Context.Field.broadcast(
+      state.topic,
+      Packets.Cinematic.caption(
+        to_string(args[:type] || ""),
+        to_string(args[:title] || ""),
+        to_string(args[:desc] || ""),
+        to_string(args[:align] || "center"),
+        int_arg(args, :duration),
+        float_arg(args, :offest_rate_x),
+        float_arg(args, :offest_rate_y),
+        float_arg(args, :scale)
+      )
+    )
+
+    state
+  end
+
+  # the scripted achievement gate: a trigger condition event for players
+  # standing in the box, feeding both the quest and achievement condition
+  # pipelines. The knight main quest's "trigger: jordy" beat completes here
+  defp execute_action("set_achievement", args, _script_name, state) do
+    box_ids = int_list_arg(args, :arg1)
+
+    case event_condition_type(args[:arg2]) do
+      nil ->
+        # an unknown type matches no condition, same as the reference's
+        # ConditionType.unknown
+        state
+
+      type ->
+        code = to_string(args[:arg3] || "")
+
+        players_in_boxes(state, box_ids)
+        |> Enum.each(fn character_id ->
+          Managers.Achievement.update(character_id, type, 1, "", 0, code, 0)
+          Managers.Quest.update_conditions(character_id, type, 1, "", 0, code, 0)
+        end)
+
+        state
+    end
+  end
+
   # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
   # (sound setup, fade delays); unknown actions warn loudly so script
   # coverage gaps surface in the log
   defp execute_action(name, _args, _script_name, state) do
     Logger.warning("Unhandled trigger action " <> name)
     state
+  end
+
+  # the event type defaults to "trigger"
+  defp event_condition_type(blank) when blank in [nil, ""], do: :trigger
+
+  defp event_condition_type(name) do
+    String.to_existing_atom(Macro.underscore(to_string(name)))
+  rescue
+    _ -> nil
   end
 
   defp play_npc_emotion(args, state) do
@@ -816,10 +881,10 @@ defmodule Ms2ex.Managers.Field.Trigger do
     |> Enum.map(fn {character_id, _entry} -> character_id end)
   end
 
-  defp spawn_player_dummy(state, character_id, waypoints, approach_animation) do
+  defp spawn_player_dummy(state, character_id, way_points) do
     {:ok, character} = Managers.Character.call(character_id, :lookup)
 
-    case Field.Npc.spawn_follow_dummy(state, character, waypoints, approach_animation) do
+    case Field.Npc.spawn_follow_dummy(state, character, way_points) do
       {nil, state} ->
         state
 

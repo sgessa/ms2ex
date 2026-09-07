@@ -14,6 +14,7 @@ defmodule Ms2ex.Packets.Trigger do
     hide_summary: 0x3,
     start_movie: 0x4,
     skip_movie: 0x5,
+    emotion_sequence: 0x7,
     emotion_loop: 0x8
   }
 
@@ -90,6 +91,19 @@ defmodule Ms2ex.Packets.Trigger do
     |> put_bool(loop)
     |> put_int(duration)
     |> put_ustring(sequence_name)
+  end
+
+  # the player plays one or more emote sequences back to back; the client
+  # resolves the names against the player model's animation table
+  def emotion_sequence(sequence_names) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.ui)
+    |> put_byte(@ui_modes.emotion_sequence)
+    |> put_int(length(sequence_names))
+    |> reduce(sequence_names, fn sequence_name, packet ->
+      put_ustring(packet, sequence_name)
+    end)
   end
 
   # the objective pointer arrow marking where the current step wants the

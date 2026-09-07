@@ -60,6 +60,26 @@ defmodule Ms2ex.AchievementManagerTest do
     }
   }
 
+  # a string-coded trigger achievement, shaped like the real boomocean/
+  # trapmaster trophies (their code strings never collide with other
+  # scripts' events)
+  @trigger_achievement_id 236_004
+  @trigger_metadata %{
+    id: @trigger_achievement_id,
+    account_wide: false,
+    category: 1,
+    grades: %{
+      "1" => %{
+        condition: %{
+          type: :trigger,
+          value: 1,
+          codes: %{strings: ["boomocean_start"], integers: [], range: nil}
+        },
+        reward: nil
+      }
+    }
+  }
+
   setup {Mimic, :set_mimic_global}
 
   setup do
@@ -68,6 +88,7 @@ defmodule Ms2ex.AchievementManagerTest do
       "achievement:#{@reward_id}" => @reward_metadata,
       "achievement:#{@manual_reward_id}" => @manual_reward_metadata,
       "achievement:#{@item_reward_id}" => @item_reward_metadata,
+      "achievement:#{@trigger_achievement_id}" => @trigger_metadata,
       "item:#{@reward_item_id}" => %{
         limit: %{level: 1, transfer_type: 3},
         property: %{type: 0, subtype: 2},
@@ -79,7 +100,8 @@ defmodule Ms2ex.AchievementManagerTest do
         monster_kill: [@achievement_id],
         quest_accept: [@reward_id],
         guild_join: [@manual_reward_id],
-        send_mail: [@item_reward_id]
+        send_mail: [@item_reward_id],
+        trigger: [@trigger_achievement_id]
       }
     })
 
@@ -156,6 +178,26 @@ defmodule Ms2ex.AchievementManagerTest do
     :ok = Managers.Achievement.flush(character)
 
     assert [%Schema.Achievement{counter: 2}] = Achievements.list(character.id)
+  end
+
+  # the set_achievement regression: a script event (e.g. the knight main
+  # quest's "jordy") must not unlock the unrelated string-coded trigger
+  # trophies; only the event whose code matches the condition's string
+  test "trigger achievements only progress on their configured code", %{character: character} do
+    Managers.Achievement.update(character.id, :trigger, 1, "", 0, "jordy", 0)
+    Process.sleep(50)
+
+    assert Achievements.list(character.id) == []
+
+    Managers.Achievement.update(character.id, :trigger, 1, "", 0, "boomocean_start", 0)
+
+    wait_until(fn ->
+      assert length(Achievements.list(character.id)) == 1
+    end)
+
+    :ok = Managers.Achievement.flush(character)
+
+    assert [%Schema.Achievement{counter: 1, current_grade: 1}] = Achievements.list(character.id)
   end
 
   test "grade completion bumps trophy counts and stop flushes progress", %{

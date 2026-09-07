@@ -243,9 +243,15 @@ cinematic talks), set_npc_emotion_loop + set_npc_emotion_sequence
 (emote sequences resolved through the model's animation table),
 move_npc (story npc walks a named patrol, staying at the last
 waypoint), set_pc_emotion_loop (the client loops the player's emote
-for the duration), show/hide_guide_summary (held while a
+for the duration), set_pc_emotion_sequence (the player plays a
+comma list of emote sequences back to back),
+show/hide_guide_summary (held while a
 cinematic or scripted path move has the player and flushed when control
 returns), set_skip + set_scene_skip + skip-cutscene handling,
+show_caption (the screen-space named-title card ending a scripted
+beat), set_achievement (a trigger condition event for players in a
+box, feeding the quest and achievement pipelines — this is what lets
+trigger-gated main quests such as the knight's complete),
 add/remove_buff (script buffs), move_user (same-map teleport refused for
 non-walkable portals via the navmesh, cross-map field change),
 move_user_path (invisible follow-dummy walks the patrol in 3D with
@@ -389,11 +395,10 @@ What is still missing:
 - skill point rewards stay pending (no skill point API exists yet)
 - condition matching limitations shared by quests, exploration, and
   achievements: `party_count` and `guild_party_count` gates are ignored;
-  string-code conditions (`emotion`, `emotiontime`, `trigger`, `npc_race`) and
-  target ranges are not evaluated; `stay_cube` needs surface/material checks;
-  unique collection conditions need persisted item/fish albums; and
-  field-mission `progress_maps` / exploration-type restrictions are not
-  enforced
+  `target` range gates are not evaluated; `stay_cube` needs
+  surface/material checks; unique collection conditions need persisted
+  item/fish albums; and field-mission `progress_maps` / exploration-type
+  restrictions are not enforced
 - movement/time update throttling must compare the changed condition's counter
   rather than the highest counter on the quest, so an unrelated condition
   cannot suppress a five-step client update
@@ -581,7 +586,34 @@ combat-heavy characters from accumulating document copies.
 - Script npc emotes (`set_npc_emotion_loop` + one-shot
   `set_npc_emotion_sequence`) and dialogue (`set_dialogue` balloons +
   cinematic talks) via the new `animation` ingest set (anikeytext per
-  model, sequence name -> id)
+  model, sequence name -> id); player emote sequences too
+  (`set_pc_emotion_sequence` → Trigger ui EmotionSequence frame with the
+  comma-split sequence list)
+- Story-npc walks play real locomotion instead of sliding: patrol legs
+  resolve each waypoint's approach animation against the npc model's
+  animation table (fallback Walk_A → Run_A — models like the striker
+  champion whose anikey table lacks Walk_A run instead of sliding), the
+  control packet streams the Walk actor state while the patrol moves the
+  npc (the client keys the locomotion animation on this state), and the
+  npc returns to its model's Idle_A when the path ends. A model with no
+  walk/run sequence at all stays put with a warning instead of drifting
+  in its idle pose
+- The knight main quest chain (52000116_qd, "A Natural Hero") completes:
+  its closing beat fires `set_achievement(box, "trigger", "jordy")` —
+  now implemented as the reference's ConditionUpdate (quest +
+  achievement condition event for players in the box), which is the
+  quest's only completion condition. The beat's `show_caption` named-title
+  card broadcasts the Cinematic Caption packet, and `reset_camera` reads
+  the script's `interpolation_time` (was reading a positional arg,
+  always sending 0.0)
+- String-code condition matching (shared by quests and achievements):
+  conditions configured with code strings (trigger names, emote keys,
+  npc races) now match the pushed event's code string — previously the
+  string was ignored and any event of the type counted. This fixes a
+  mass unlock where one script's `set_achievement("jordy")` event
+  advanced all 106 trigger-coded achievements (none of which are coded
+  "jordy"), and makes the 57 emotion quest conditions require the
+  actual emote key the client sends (reference: aniKey → codeString)
 - npc story walks (`move_npc` patrol attachment, staying at the last
   waypoint) and player emotion loops (`set_pc_emotion_loop` → Trigger ui
   EmotionLoop frame)
