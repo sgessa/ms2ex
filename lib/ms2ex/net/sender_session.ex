@@ -51,6 +51,10 @@ defmodule Ms2ex.Net.SenderSession do
     GenServer.call(pid, {:run, fun})
   end
 
+  def run(pid, fun) when is_pid(pid) and is_function(fun) do
+    GenServer.call(pid, {:run, fun})
+  end
+
   def stop(pid) do
     GenServer.stop(pid)
   end

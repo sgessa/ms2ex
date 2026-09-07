@@ -36,6 +36,10 @@ defmodule Ms2ex.Managers.GuildServer do
 
   def lookup(guild_id), do: call(guild_id, :lookup)
 
+  def has_permission?(guild_id, character_id, flag) do
+    call(guild_id, {:has_permission?, character_id, flag})
+  end
+
   def topic(guild_id), do: "guild:#{guild_id}"
 
   def broadcast(guild_id, packet) do
@@ -64,6 +68,10 @@ defmodule Ms2ex.Managers.GuildServer do
 
   def update_member_map(guild_id, character_id, map_id) do
     call(guild_id, {:update_member_map, character_id, map_id})
+  end
+
+  def update_member_profile(guild_id, character_id, profile_url) do
+    call(guild_id, {:update_member_profile, character_id, profile_url})
   end
 
   def invite(guild_id, requestor_id, target_name) do
@@ -112,6 +120,10 @@ defmodule Ms2ex.Managers.GuildServer do
 
   def update_focus(guild_id, requestor_id, focus) do
     call(guild_id, {:update_focus, requestor_id, focus})
+  end
+
+  def send_mail(guild_id, requestor_id, title, content) do
+    call(guild_id, {:send_mail, requestor_id, title, content})
   end
 
   def update_rank_def(guild_id, requestor_id, rank) do
@@ -177,6 +189,16 @@ defmodule Ms2ex.Managers.GuildServer do
     {:reply, {:ok, state}, state}
   end
 
+  def handle_call({:has_permission?, character_id, flag}, _from, state) do
+    allowed? =
+      case get_member(state, character_id) do
+        {:ok, member} -> check_permission(state, member, flag) == :ok
+        _ -> false
+      end
+
+    {:reply, allowed?, state}
+  end
+
   def handle_call({:member_online, character}, _from, state) do
     case Map.get(state.members, character.id) do
       nil ->
@@ -240,6 +262,21 @@ defmodule Ms2ex.Managers.GuildServer do
     end
   end
 
+  def handle_call({:update_member_profile, character_id, profile_url}, _from, state) do
+    case Map.get(state.members, character_id) do
+      nil ->
+        {:reply, :error, state}
+
+      member ->
+        updated_member = Map.put(member, :profile_url, profile_url)
+        members = Map.put(state.members, character_id, updated_member)
+        state = %{state | members: members}
+
+        broadcast(state.id, Packets.Guild.update_member(updated_member))
+        {:reply, :ok, state}
+    end
+  end
+
   def handle_call({:invite, requestor_id, target_name}, _from, state) do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :invite_members),
@@ -254,7 +291,8 @@ defmodule Ms2ex.Managers.GuildServer do
         guild_id: state.id,
         guild_name: state.guild.name,
         sender_id: requestor.character_id,
-        sender_name: requestor.name
+        sender_name: requestor.name,
+        receiver_name: target.name
       }
 
       SenderSession.push(target, Packets.Guild.invite_info(invite_info))
@@ -425,6 +463,7 @@ defmodule Ms2ex.Managers.GuildServer do
       guild = %{state.guild | emblem: emblem}
       state = %{state | guild: guild}
 
+      broadcast(state.id, Packets.Guild.update_emblem(emblem))
       broadcast(state.id, Packets.Guild.notify_update_emblem(requestor.name, emblem))
       {:reply, :ok, state}
     else
@@ -441,6 +480,26 @@ defmodule Ms2ex.Managers.GuildServer do
       state = %{state | guild: guild}
 
       broadcast(state.id, Packets.Guild.notify_update_focus(requestor.name, true, focus_val))
+      {:reply, :ok, state}
+    else
+      {:error, reason} -> {:reply, {:error, reason}, state}
+    end
+  end
+
+  def handle_call({:send_mail, requestor_id, title, content}, _from, state) do
+    with {:ok, requestor} <- get_member(state, requestor_id),
+         :ok <- check_permission(state, requestor, :send_mail) do
+      state.members
+      |> Map.keys()
+      |> Enum.reject(&(&1 == requestor_id))
+      |> Enum.each(fn char_id ->
+        Context.Mails.send_system_mail(char_id, title, content,
+          sender_id: requestor_id,
+          sender_name: requestor.name,
+          type: :player
+        )
+      end)
+
       {:reply, :ok, state}
     else
       {:error, reason} -> {:reply, {:error, reason}, state}
@@ -589,6 +648,11 @@ defmodule Ms2ex.Managers.GuildServer do
         state = %{state | members: members}
 
         if target.online? and target.sender_session_pid do
+          SenderSession.run(target.sender_session_pid, fn -> Managers.GuildServer.unsubscribe(state.id) end)
+
+          topic = Context.Field.field_name(target.map_id, target.channel)
+          Context.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
+
           SenderSession.push(
             target.sender_session_pid,
             Packets.Guild.notify_expel(requestor.name)
@@ -697,8 +761,17 @@ defmodule Ms2ex.Managers.GuildServer do
     with :ok <- check_capacity(state),
          {:ok, member_schema} <-
            Context.Guilds.add_member(state.id, application.character_id, 4),
-         %Schema.Character{} = applicant_char <-
+         %Schema.Character{} = db_char <-
            Context.Characters.get(application.character_id) do
+      # Context.Characters.get/1 reads a plain DB row, whose virtual
+      # online?/sender_session_pid fields are always defaults; look up the
+      # live character process to get the real presence state.
+      applicant_char =
+        case Managers.Character.lookup(application.character_id) do
+          {:ok, live_char} -> live_char
+          _ -> db_char
+        end
+
       member_data = build_member_data(member_schema, applicant_char)
       members = Map.put(state.members, applicant_char.id, member_data)
       state = %{state | members: members}
@@ -715,13 +788,30 @@ defmodule Ms2ex.Managers.GuildServer do
         )
       )
 
-      broadcast(state.id, Packets.Guild.joined(requestor.name, member_data))
+      broadcast(state.id, Packets.Guild.joined(requestor.name, member_data, false))
 
       if applicant_char.online? and applicant_char.sender_session_pid do
+        :ok =
+          Managers.Character.call(
+            applicant_char.id,
+            {:update, %{applicant_char | guild_name: state.guild.name, guild_id: state.id}}
+          )
+
+        SenderSession.run(applicant_char.sender_session_pid, fn ->
+          Managers.GuildServer.subscribe(state.id)
+        end)
+
+        Context.Field.broadcast(
+          applicant_char,
+          Packets.Guild.add_tag(applicant_char.name, state.guild.name)
+        )
+
         SenderSession.push(
           applicant_char.sender_session_pid,
           Packets.Guild.notify_applicant(state.guild.name, application.id, true)
         )
+
+        SenderSession.push(applicant_char.sender_session_pid, Packets.Guild.load(state))
       end
 
       {:reply, :ok, state}

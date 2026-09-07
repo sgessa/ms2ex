@@ -14,7 +14,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
   require Logger
 
-  @guild_create_price 50_000
+  @guild_create_price 2_000
   @guild_create_min_level 10
 
   def handle(packet, session) do
@@ -64,15 +64,16 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp handle_mode(0x05, packet, session) do
     {guild_id, packet} = get_long(packet)
     {guild_name, packet} = get_ustring(packet)
-    {sender_id, packet} = get_long(packet)
+    {_blank, packet} = get_ustring(packet)
     {sender_name, packet} = get_ustring(packet)
+    {receiver_name, packet} = get_ustring(packet)
     {accepted?, _packet} = get_bool(packet)
 
     invite = %Types.GuildInvite{
       guild_id: guild_id,
       guild_name: guild_name,
-      sender_id: sender_id,
-      sender_name: sender_name
+      sender_name: sender_name,
+      receiver_name: receiver_name
     }
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
@@ -92,6 +93,8 @@ defmodule Ms2ex.GameHandlers.Guild do
               {:update, %{character | guild_name: "", guild_id: 0}}
             )
 
+          Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
+          Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
           push(session, Packets.Guild.leave())
 
         {:error, reason} ->
@@ -230,6 +233,22 @@ defmodule Ms2ex.GameHandlers.Guild do
     end
   end
 
+  # SendMail (69 / 0x45)
+  defp handle_mode(0x45, packet, session) do
+    {title, packet} = get_ustring(packet)
+    {content, _packet} = get_ustring(packet)
+
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+         {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+      case Managers.GuildServer.send_mail(guild_id, character.id, title, content) do
+        :ok -> session
+        {:error, reason} -> push(session, Packets.Guild.error(reason))
+      end
+    else
+      _ -> push(session, Packets.Guild.error(:s_guild_err_null_guild))
+    end
+  end
+
   # SendApplication (80 / 0x50)
   defp handle_mode(0x50, packet, session) do
     {guild_id, _packet} = get_long(packet)
@@ -237,7 +256,7 @@ defmodule Ms2ex.GameHandlers.Guild do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
       case Managers.GuildServer.apply_to_guild(guild_id, character) do
         {:ok, app} ->
-          push(session, Packets.Guild.receive_application(app))
+          push(session, Packets.Guild.send_application(app.id, app.guild.name))
 
         {:error, reason} ->
           push(session, Packets.Guild.error(reason))
@@ -356,7 +375,7 @@ defmodule Ms2ex.GameHandlers.Guild do
         push(session, Packets.Guild.error(:s_guild_err_not_enough_level))
 
       Context.Wallets.find(character).mesos < @guild_create_price ->
-        push(session, Packets.Guild.error(:s_err_lack_meso))
+        push(session, Packets.Guild.error(:s_guild_err_no_money))
 
       true ->
         create_and_load_guild(session, character, guild_name)
@@ -375,6 +394,9 @@ defmodule Ms2ex.GameHandlers.Guild do
           )
 
         Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
+
+        Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild.id) end)
+        Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
 
         session
         |> push(Packets.Guild.created(guild.name))
@@ -402,6 +424,8 @@ defmodule Ms2ex.GameHandlers.Guild do
             {:update, %{character | guild_name: "", guild_id: 0}}
           )
 
+        Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
+        Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
         push(session, Packets.Guild.disbanded())
     end
   end
@@ -416,6 +440,9 @@ defmodule Ms2ex.GameHandlers.Guild do
           )
 
         Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
+
+        Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
+        Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild_state.guild.name))
 
         session
         |> push(Packets.Guild.invite_reply(invite, true))

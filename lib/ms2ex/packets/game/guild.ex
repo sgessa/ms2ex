@@ -56,10 +56,13 @@ defmodule Ms2ex.Packets.Guild do
     update_capacity: 0x40,
     update_rank: 0x41,
     update_focus: 0x42,
+    add_tag: 0x4B,
+    remove_tag: 0x4C,
     error: 0x4D,
     list_applications: 0x53,
     list_applied_guilds: 0x54,
-    list_guilds: 0x55
+    list_guilds: 0x55,
+    send_application: 0x50
   }
 
   def load(%{guild: guild, members: members}) do
@@ -119,6 +122,17 @@ defmodule Ms2ex.Packets.Guild do
     # ShopProducts
     |> put_bool(false)
     |> put_int(length(bank))
+    |> put_int()
+    |> put_ustring()
+    |> put_long()
+    |> put_long()
+    |> put_int()
+    |> put_int()
+    |> put_int()
+    |> put_int()
+    |> put_int()
+    |> put_int()
+    |> put_int()
   end
 
   def created(guild_name) do
@@ -147,21 +161,24 @@ defmodule Ms2ex.Packets.Guild do
     __MODULE__
     |> build()
     |> put_byte(@commands.invite_info)
-    |> put_long(invite.guild_id)
-    |> put_ustring(invite.guild_name)
-    |> put_long(invite.sender_id)
-    |> put_ustring(invite.sender_name)
+    |> put_guild_invite(invite)
   end
 
   def invite_reply(%Types.GuildInvite{} = invite, accepted?) do
     __MODULE__
     |> build()
     |> put_byte(@commands.invite_reply)
+    |> put_guild_invite(invite)
+    |> put_bool(accepted?)
+  end
+
+  defp put_guild_invite(packet, invite) do
+    packet
     |> put_long(invite.guild_id)
     |> put_ustring(invite.guild_name)
-    |> put_long(invite.sender_id)
+    |> put_ustring()
     |> put_ustring(invite.sender_name)
-    |> put_bool(accepted?)
+    |> put_ustring(invite.receiver_name)
   end
 
   def notify_invite(name, response) do
@@ -360,6 +377,15 @@ defmodule Ms2ex.Packets.Guild do
     |> put_application(application)
   end
 
+  # confirmation sent to the applicant (s_guild_search_request_join_guild: "You have applied to the guild {0}.")
+  def send_application(application_id, guild_name) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.send_application)
+    |> put_long(application_id)
+    |> put_ustring(guild_name)
+  end
+
   def withdraw_application(application_id) do
     __MODULE__
     |> build()
@@ -473,7 +499,9 @@ defmodule Ms2ex.Packets.Guild do
     |> put_byte(@commands.list_applications)
     |> put_int(length(applications))
     |> reduce(applications, fn app, packet ->
-      put_application(packet, app)
+      packet
+      |> put_bool(true)
+      |> put_application_summary(app)
     end)
   end
 
@@ -483,7 +511,9 @@ defmodule Ms2ex.Packets.Guild do
     |> put_byte(@commands.list_applied_guilds)
     |> put_int(length(applications))
     |> reduce(applications, fn app, packet ->
-      put_long(packet, app.guild_id)
+      packet
+      |> put_bool(true)
+      |> put_application_summary(app)
     end)
   end
 
@@ -493,22 +523,45 @@ defmodule Ms2ex.Packets.Guild do
     |> put_byte(@commands.list_guilds)
     |> put_int(length(guilds))
     |> reduce(guilds, fn guild, packet ->
-      leader_name = if guild.leader, do: guild.leader.name, else: ""
+      leader = guild.leader
+      leader_account_id = if leader, do: leader.account_id, else: 0
+      leader_char_id = if leader, do: leader.id, else: guild.leader_id
+      leader_name = if leader, do: leader.name, else: ""
+      trophies = (leader && leader.trophies) || [0, 0, 0]
       focus_val = focus_value(guild.focus)
       member_count = if is_list(guild.members), do: length(guild.members), else: 1
 
       packet
+      |> put_bool(true)
       |> put_long(guild.id)
       |> put_ustring(guild.name)
       |> put_ustring(guild.emblem)
-      |> put_ustring(leader_name)
-      |> put_byte(member_count)
-      |> put_byte(guild.capacity)
+      |> put_trophies(trophies)
+      |> put_int(member_count)
+      |> put_int(guild.capacity)
       |> put_int(focus_val)
+      |> put_long(leader_account_id)
+      |> put_long(leader_char_id)
+      |> put_ustring(leader_name)
     end)
   end
 
-  def error(error_code) do
+  def add_tag(player_name, guild_name) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.add_tag)
+    |> put_ustring(player_name)
+    |> put_ustring(guild_name)
+  end
+
+  def remove_tag(player_name) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.remove_tag)
+    |> put_ustring(player_name)
+  end
+
+  def error(error_code, arg \\ 0) do
     error_val =
       if is_atom(error_code) do
         Enums.GuildError.get_value(error_code) || 1
@@ -519,7 +572,9 @@ defmodule Ms2ex.Packets.Guild do
     __MODULE__
     |> build()
     |> put_byte(@commands.error)
+    |> put_byte(1)
     |> put_byte(error_val)
+    |> put_int(arg)
   end
 
   # ---- Subpacket Helpers ----
@@ -639,6 +694,7 @@ defmodule Ms2ex.Packets.Guild do
     end)
   end
 
+  # single push notifying guild members of a new applicant (Command.ReceiveApplication)
   defp put_application(packet, app) do
     info = extract_applicant_info(app)
 
@@ -647,6 +703,24 @@ defmodule Ms2ex.Packets.Guild do
     |> put_long(app.guild_id)
     |> put_long(info.char_id)
     |> put_long(info.acc_id)
+    |> put_ustring(info.name)
+    |> put_ustring(info.profile_url)
+    |> put_int(info.job_val)
+    |> put_int(info.job_code)
+    |> put_int(info.level)
+    |> put_trophies(info.trophies)
+    |> put_long(unix_or_zero(app.inserted_at))
+  end
+
+  # list views (ListApplications/ListAppliedGuilds); confirmed via client crash
+  # analysis that this variant has no separate account_id field
+  defp put_application_summary(packet, app) do
+    info = extract_applicant_info(app)
+
+    packet
+    |> put_long(app.id)
+    |> put_long(app.guild_id)
+    |> put_long(info.char_id)
     |> put_ustring(info.name)
     |> put_ustring(info.profile_url)
     |> put_int(info.job_val)

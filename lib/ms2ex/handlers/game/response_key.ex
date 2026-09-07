@@ -196,10 +196,14 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   defp push_guild(session, %{guild_id: guild_id} = character)
        when is_integer(guild_id) and guild_id > 0 do
     case Managers.GuildServer.lookup(guild_id) do
-      {:ok, guild_state} ->
-        Managers.GuildServer.subscribe(guild_id)
-        Managers.GuildServer.member_online(guild_id, character)
-        push(session, Packets.Guild.load(guild_state))
+      {:ok, _guild_state} ->
+        # subscribe from the SenderSession process, since PubSub delivers {:push, _} there
+        Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
+
+        case Managers.GuildServer.member_online(guild_id, character) do
+          {:ok, guild_state} -> push(session, Packets.Guild.load(guild_state))
+          _ -> session
+        end
 
       _ ->
         session

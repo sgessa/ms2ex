@@ -18,10 +18,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
       SenderSession.run(character, fn -> Managers.PartyServer.subscribe(character.party_id) end)
     end
 
-    if character.guild_id && character.guild_id > 0 do
-      notify_guild_presence(character)
-      SenderSession.run(character, fn -> Managers.GuildServer.subscribe(character.guild_id) end)
-    end
+    # guild presence/subscribe on login is handled by push_guild/2 (response_key.ex)
   end
 
   def cleanup(character) do
@@ -56,11 +53,6 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
   defp notify_party_presence(character) do
     Managers.PartyServer.member_offline(character)
-  end
-
-  defp notify_guild_presence(%{online?: true, guild_id: guild_id} = character)
-       when is_integer(guild_id) and guild_id > 0 do
-    Managers.GuildServer.member_online(guild_id, character)
   end
 
   defp notify_guild_presence(%{guild_id: guild_id} = character)

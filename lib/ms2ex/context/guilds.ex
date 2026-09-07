@@ -93,18 +93,24 @@ defmodule Ms2ex.Context.Guilds do
       bank: []
     }
 
-    Repo.transaction(fn ->
-      with {:ok, guild} <- %Schema.Guild{} |> Schema.Guild.changeset(guild_attrs) |> Repo.insert(),
-           member_attrs = %{guild_id: guild.id, character_id: leader.id, rank: 0},
-           {:ok, member} <-
-             %Schema.GuildMember{} |> Schema.GuildMember.changeset(member_attrs) |> Repo.insert() do
-        # Delete any pending applications for the leader
-        delete_all_applications_for_character(leader.id)
-        %{guild | members: [member], leader: leader, applications: []}
-      else
-        {:error, changeset} -> Repo.rollback(changeset)
-      end
-    end)
+    result =
+      Repo.transaction(fn ->
+        with {:ok, guild} <- %Schema.Guild{} |> Schema.Guild.changeset(guild_attrs) |> Repo.insert(),
+             member_attrs = %{guild_id: guild.id, character_id: leader.id, rank: 0},
+             {:ok, member} <-
+               %Schema.GuildMember{} |> Schema.GuildMember.changeset(member_attrs) |> Repo.insert() do
+          # Delete any pending applications for the leader
+          delete_all_applications_for_character(leader.id)
+          %{guild | members: [member], leader: leader, applications: []}
+        else
+          {:error, changeset} -> Repo.rollback(changeset)
+        end
+      end)
+
+    case result do
+      {:ok, guild} -> {:ok, guild}
+      {:error, _changeset} -> {:error, :s_guild_err_unknown}
+    end
   end
 
   @doc """
@@ -267,17 +273,27 @@ defmodule Ms2ex.Context.Guilds do
       |> select([a], count(a.id))
       |> Repo.one() || 0
 
-    if count >= 10 do
-      {:error, :s_guild_search_max_join_request}
-    else
-      attrs = %{guild_id: guild_id, character_id: character_id, account_id: account_id}
+    already_applied? =
+      Schema.GuildApplication
+      |> where([a], a.guild_id == ^guild_id and a.character_id == ^character_id)
+      |> Repo.exists?()
 
-      case %Schema.GuildApplication{}
-           |> Schema.GuildApplication.changeset(attrs)
-           |> Repo.insert() do
-        {:ok, app} -> {:ok, Repo.preload(app, [:character, :account, :guild])}
-        {:error, _} -> {:error, :s_guild_search_null_join_guild_request}
-      end
+    cond do
+      count >= 10 ->
+        {:error, :s_guild_search_max_join_request}
+
+      already_applied? ->
+        {:error, :s_guild_search_last_request}
+
+      true ->
+        attrs = %{guild_id: guild_id, character_id: character_id, account_id: account_id}
+
+        case %Schema.GuildApplication{}
+             |> Schema.GuildApplication.changeset(attrs)
+             |> Repo.insert() do
+          {:ok, app} -> {:ok, Repo.preload(app, [:character, :account, :guild])}
+          {:error, _} -> {:error, :s_guild_search_null_join_guild_request}
+        end
     end
   end
 
@@ -329,7 +345,7 @@ defmodule Ms2ex.Context.Guilds do
   def list_character_applications(character_id) when is_integer(character_id) do
     Schema.GuildApplication
     |> where([a], a.character_id == ^character_id)
-    |> preload([:guild])
+    |> preload([:character, :account])
     |> Repo.all()
   end
 end

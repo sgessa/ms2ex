@@ -66,6 +66,10 @@ defmodule Ms2ex.GameHandlers.Ugc do
          {:ok, character} <- Context.Characters.update(character, %{profile_url: url}) do
       Managers.Character.call(character.id, {:update, character})
       Context.Field.broadcast(character, Packets.Ugc.profile_picture(character))
+
+      with {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+        Managers.GuildServer.update_member_profile(guild_id, character.id, url)
+      end
     end
 
     session
