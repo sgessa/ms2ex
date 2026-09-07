@@ -671,7 +671,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
           object_id ->
             Context.Field.broadcast(
               state.topic,
-              Packets.Cinematic.balloon_talk(false, object_id, script, duration, 0)
+              Packets.Cinematic.balloon_talk(object_id, script, duration, 0)
             )
 
             state
@@ -712,7 +712,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
         object_id ->
           Context.Field.broadcast(
             state.topic,
-            Packets.Cinematic.balloon_talk(true, object_id, script, duration, delay)
+            Packets.Cinematic.balloon_talk(object_id, script, duration, delay)
           )
 
           state
@@ -839,7 +839,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
       [object_id | _] ->
         Context.Field.broadcast(
           state.topic,
-          Packets.Cinematic.balloon_talk(false, object_id, script, duration, delay)
+          Packets.Cinematic.balloon_talk(object_id, script, duration, delay)
         )
 
       [] ->

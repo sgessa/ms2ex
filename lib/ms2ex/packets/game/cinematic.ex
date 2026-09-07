@@ -112,13 +112,15 @@ defmodule Ms2ex.Packets.Cinematic do
     center_right: 7
   }
 
-  # a speech balloon over an actor's head; the flag anchors the balloon as
-  # an npc speech for add_balloon_talk's npc variant
-  def balloon_talk(npc?, object_id, script, duration, delay \\ 0) do
+  # a speech balloon over an actor's head. The npc flag stays unset: the
+  # client only renders unflagged balloons (a flagged npc balloon is sent
+  # and never appears; the reference's own set_dialogue also flags npc
+  # balloons false)
+  def balloon_talk(object_id, script, duration, delay \\ 0) do
     __MODULE__
     |> build()
     |> put_byte(0x8)
-    |> put_bool(npc?)
+    |> put_bool(false)
     |> put_int(object_id)
     |> put_ustring(script)
     |> put_int(duration)

@@ -425,7 +425,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
       |> tick()
 
     expected =
-      <<0x68::little-16, 0x8, 1, 700::little-32>>
+      <<0x68::little-16, 0x8, 0, 700::little-32>>
       |> Kernel.<>(ustring("$52000135_QD__MAIN__12$"))
       |> Kernel.<>(<<2000::little-32, 100::little-32>>)
 

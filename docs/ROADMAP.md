@@ -623,7 +623,7 @@ combat-heavy characters from accumulating document copies.
   positional args (type, spawn point, script, seconds) instead of named
   keys the data never carries — every dialogue fell through to an empty
   player-anchored balloon. `add_balloon_talk` (named args: msg,
-  duration, spawn_point_id, delay_tick) sends the npc-flagged balloon
+  duration, spawn_point_id, delay_tick) sends the unflagged balloon
   variant, and `play_system_sound_in_box` fires the new
   PLAY_SYSTEM_SOUND packet field-wide or per player inside the boxes
 - npc story walks (`move_npc` patrol attachment, staying at the last
