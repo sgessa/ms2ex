@@ -86,19 +86,8 @@ defmodule Ms2ex.GameHandlers.Guild do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
       case Managers.GuildServer.leave(guild_id, character.id) do
-        :ok ->
-          :ok =
-            Managers.Character.call(
-              character.id,
-              {:update, %{character | guild_name: "", guild_id: 0}}
-            )
-
-          Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
-          Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
-          push(session, Packets.Guild.leave())
-
-        {:error, reason} ->
-          push(session, Packets.Guild.error(reason))
+        :ok -> process_leave_guild(session, character, guild_id)
+        {:error, reason} -> push(session, Packets.Guild.error(reason))
       end
     else
       _ -> push(session, Packets.Guild.error(:s_guild_err_null_guild))
@@ -395,7 +384,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
         Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
 
-        Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild.id) end)
+        Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.subscribe(guild.id) end)
         Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
 
         session
@@ -424,7 +413,7 @@ defmodule Ms2ex.GameHandlers.Guild do
             {:update, %{character | guild_name: "", guild_id: 0}}
           )
 
-        Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
+        Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
         Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
         push(session, Packets.Guild.disbanded())
     end
@@ -441,7 +430,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
         Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
 
-        Ms2ex.Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
+        Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
         Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild_state.guild.name))
 
         session
@@ -539,5 +528,17 @@ defmodule Ms2ex.GameHandlers.Guild do
       gear_score: character.gear_score || 0,
       trophies: character.trophies || [0, 0, 0]
     }
+  end
+
+  defp process_leave_guild(session, character, guild_id) do
+    :ok =
+      Managers.Character.call(
+        character.id,
+        {:update, %{character | guild_name: "", guild_id: 0}}
+      )
+
+    Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
+    Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
+    push(session, Packets.Guild.leave())
   end
 end
