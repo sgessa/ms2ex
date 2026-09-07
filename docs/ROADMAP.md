@@ -55,7 +55,11 @@ population spawns on the first due cycle, mob deaths schedule the next cycle
 (full wipe → `regen_check_time` cooldown, partial kill → 2× cooldown while no
 cycle is pending), and every due cycle refills the population to full.
 Zero-cooldown spawns never refill. Mob bodies now stay for their `dead.time`
-window before removal. Monster gates are data-driven from the map's trigger
+window before removal. Event spawn points (script-summoned mobs, the
+reference's `EventSpawnPointNPC`, ingested with `is_event: true`) are
+one-shot: they only appear through a `spawn_monster` trigger action and
+never join the regen machinery — quest fights like the soulbinder
+arena no longer resurrect their mobs every 10 s. Monster gates are data-driven from the map's trigger
 script (ingested as `mob_gates`): when the last mob of a gated spawn point
 dies, the blocking trigger meshes drop (update packets broadcast, the gate
 stays latched open across respawns, late joiners load the meshes hidden) and

@@ -60,9 +60,15 @@ defmodule Ms2ex.Managers.Field.Npc do
 
       mob_spawn?(npc_spawn) ->
         # mob spawn points fill their population through the tick-driven
-        # spawn cycle; the first cycle is due as soon as the spawn is loaded
+        # spawn cycle; the first cycle is due as soon as the spawn is loaded.
+        # event spawn points are script summons and only ever appear through
+        # a spawn_monster action, whatever their on-create flag says
         spawn_tick =
-          if npc_spawn[:on_field_create] == false, do: :infinity, else: Ms2ex.sync_ticks()
+          cond do
+            npc_spawn[:on_field_create] == false -> :infinity
+            npc_spawn[:is_event] == true -> :infinity
+            true -> Ms2ex.sync_ticks()
+          end
 
         put_in(state, [:npc_spawns, spawn_point_id, :spawn_tick], spawn_tick)
 
@@ -147,7 +153,8 @@ defmodule Ms2ex.Managers.Field.Npc do
   # A mob death frees its population slot and schedules the next spawn cycle:
   # a spawn wiped down to zero mobs starts its cooldown, while a partial kill
   # (with no cycle pending) respawns at twice the cooldown. A zero cooldown
-  # means the spawn point never refills.
+  # means the spawn point never refills. Event spawn points (script
+  # summons) never refill — the script decides when they appear again.
   def despawn(state, %FieldNpc{} = field_npc) do
     case get_in(state, [:npc_spawns, field_npc.spawn_point_id]) do
       %{} = spawn when is_map_key(spawn, :npc_ids) ->
@@ -159,6 +166,8 @@ defmodule Ms2ex.Managers.Field.Npc do
         state
     end
   end
+
+  defp schedule_spawn(%{is_event: true} = spawn), do: spawn
 
   defp schedule_spawn(%{regen_check_time: cooldown} = spawn) when cooldown <= 0, do: spawn
 
