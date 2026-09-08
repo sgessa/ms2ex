@@ -350,6 +350,26 @@ defmodule Ms2ex.Managers.Field.Trigger do
     |> Enum.all?(&spawn_wiped?(state, &1))
   end
 
+  # true when a story npc (matched by spawn point, not object id — a spawn
+  # can be refilled/replaced) is currently standing inside the box. Drives
+  # scripted arrivals (e.g. an npc walking off through move_npc reaching its
+  # destination) rather than player detection
+  defp evaluate("npc_detected", args, _machine, _now, state) do
+    spawn_point_ids = int_list_arg(args, :spawn_ids)
+
+    case Map.get(state.trigger_boxes, int_arg(args, :box_id)) do
+      nil ->
+        false
+
+      box ->
+        state.npcs
+        |> Map.values()
+        |> Enum.any?(fn npc ->
+          npc.spawn_point_id in spawn_point_ids and box_contains?(box, npc.position)
+        end)
+    end
+  end
+
   defp evaluate("widget_condition", args, _machine, _now, state) do
     conditions = get_in(state, [:widgets, widget_key(args[:type]), :conditions]) || %{}
     value = Map.get(conditions, args[:widget_name])

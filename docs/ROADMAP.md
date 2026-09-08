@@ -245,7 +245,10 @@ actions warn in the server log so coverage gaps surface per map.
 Conditions: user_detected
 (job-gated, padded boxes), monster_dead, quest_user_detected (the
 reference's wanted states: 1 started-not-completable, 2 completable,
-3 completed), widget_condition (Guide/SceneMovie), negate. Int-list
+3 completed), npc_detected (a story npc's spawn point standing inside a
+box — drives scripted arrivals, e.g. an npc that walked off through
+move_npc reaching its destination), widget_condition (Guide/SceneMovie),
+negate. Int-list
 arguments accept single ids, comma lists and inclusive ranges
 (`5001-5025` → every id — this drives the tutorial's arrow trails).
 Actions: set_mesh/set_effect, set_portal, spawn/destroy_monster (mob and

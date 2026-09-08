@@ -134,6 +134,37 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert portal_update_push?()
   end
 
+  test "npc_detected only transitions once the matching spawn point's npc walks into the box" do
+    state =
+      base_state()
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "npc_detected",
+          negate: false,
+          args: %{spawn_ids: "102", box_id: "9000"},
+          next_state: "fight",
+          actions: []
+        }
+      ])
+      |> put_in([:npcs, 60_000_001], npc_at(102, %{x: 0.0, y: 0.0, z: 0.0}))
+
+    # far outside the box does not trigger
+    state = tick(state)
+    assert %{current: "wait"} = state.trigger_machines["tutorial"]
+
+    # walking into the box does
+    state =
+      update_in(
+        state,
+        [:npcs, 60_000_001],
+        &%{&1 | position: struct(Ms2ex.Types.Coord, @box.position)}
+      )
+
+    state = tick(state)
+
+    assert %{next: "fight"} = state.trigger_machines["tutorial"]
+  end
+
   test "skip_cutscene jumps to the armed state and confirms" do
     state =
       base_state()
@@ -582,6 +613,17 @@ defmodule Ms2ex.TriggerRuntimeTest do
       rotation: %{x: 0.0, y: 0.0, z: 0.0},
       send_control?: true,
       npc: %{id: npc_id, metadata: %{model: %{name: "11003401_m_storynpc"}}}
+    }
+  end
+
+  defp npc_at(spawn_point_id, position) do
+    %Ms2ex.Types.FieldNpc{
+      object_id: 60_000_000 + spawn_point_id,
+      spawn_point_id: spawn_point_id,
+      position: struct(Ms2ex.Types.Coord, position),
+      rotation: %Ms2ex.Types.Coord{},
+      npc: %Ms2ex.Types.Npc{id: 0, metadata: %{}},
+      type: :npc
     }
   end
 
