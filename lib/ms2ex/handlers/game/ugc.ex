@@ -68,7 +68,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
       Context.Field.broadcast(character, Packets.Ugc.profile_picture(character))
 
       with {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-        Managers.GuildServer.update_member_profile(guild_id, character.id, url)
+        Managers.GuildServer.call(guild_id, {:update_member_profile, character.id, url})
       end
     end
 
@@ -212,7 +212,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
       resource when type == :guild_emblem ->
         with {:ok, character} <- Managers.Character.lookup(session.character_id),
              {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-          Managers.GuildServer.update_emblem(guild_id, character.id, resource.path)
+          Managers.GuildServer.call(guild_id, {:update_emblem, character.id, resource.path})
           push(session, Packets.Ugc.update_path(resource))
         else
           _ ->
@@ -230,7 +230,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
             resource_id: resource.id
           }
 
-          Managers.GuildServer.add_or_update_poster(guild_id, poster)
+          Managers.GuildServer.call(guild_id, {:add_or_update_poster, poster})
           push(session, Packets.Ugc.update_path(resource))
         else
           _ ->

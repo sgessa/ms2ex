@@ -77,16 +77,14 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
   defp handle_message({:guild, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:guild, character, msg)
-
-    if character.guild_id && character.guild_id > 0 do
-      Managers.GuildServer.broadcast(character.guild_id, packet)
-    end
+    Managers.GuildServer.broadcast(character.guild_id, packet)
   end
 
   defp handle_message({type, msg, _rcpt_name}, character, _session)
        when type in [:guild_notice, :guild_notice_noprefix] do
-    if character.guild_id && character.guild_id > 0 and
-         Managers.GuildServer.has_permission?(character.guild_id, character.id, :send_alert) do
+    permission_msg = {:has_permission?, character.id, :send_alert}
+
+    if Managers.GuildServer.call(character.guild_id, permission_msg) == true do
       packet = Packets.UserChat.bytes(type, character, msg)
       Managers.GuildServer.broadcast(character.guild_id, packet)
     end

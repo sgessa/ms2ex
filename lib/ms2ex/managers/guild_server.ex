@@ -6,6 +6,10 @@ defmodule Ms2ex.Managers.GuildServer do
   use GenServer
   use Ms2ex.Managers.Managed, prefix: "guild", key: :id
 
+  # Normalizes invalid guild ids (nil/0/negative) to a plain :error so callers
+  # don't need to re-validate guild_id before every call.
+  def call(guild_id, _msg) when not (is_integer(guild_id) and guild_id > 0), do: :error
+
   alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Managers
@@ -25,6 +29,9 @@ defmodule Ms2ex.Managers.GuildServer do
   ]
 
   # ---- Client API ----
+  #
+  # No per-message wrapper functions: callers use `call(guild_id, message)`
+  # directly (see the `Managers.Managed` macro).
 
   def start(guild_id) when is_integer(guild_id) do
     case GenServer.start(__MODULE__, guild_id, name: process_name(guild_id)) do
@@ -32,12 +39,6 @@ defmodule Ms2ex.Managers.GuildServer do
       {:error, {:already_started, pid}} -> {:ok, pid}
       error -> error
     end
-  end
-
-  def lookup(guild_id), do: call(guild_id, :lookup)
-
-  def has_permission?(guild_id, character_id, flag) do
-    call(guild_id, {:has_permission?, character_id, flag})
   end
 
   def topic(guild_id), do: "guild:#{guild_id}"
@@ -56,118 +57,6 @@ defmodule Ms2ex.Managers.GuildServer do
 
   def unsubscribe(guild_id) do
     PubSub.unsubscribe(Ms2ex.PubSub, topic(guild_id))
-  end
-
-  def member_online(guild_id, character) do
-    call(guild_id, {:member_online, character})
-  end
-
-  def member_offline(guild_id, character) do
-    call(guild_id, {:member_offline, character})
-  end
-
-  def update_member_map(guild_id, character_id, map_id) do
-    call(guild_id, {:update_member_map, character_id, map_id})
-  end
-
-  def update_member_profile(guild_id, character_id, profile_url) do
-    call(guild_id, {:update_member_profile, character_id, profile_url})
-  end
-
-  def invite(guild_id, requestor_id, target_name) do
-    call(guild_id, {:invite, requestor_id, target_name})
-  end
-
-  def respond_invite(guild_id, character, accepted?) do
-    call(guild_id, {:respond_invite, character, accepted?})
-  end
-
-  def leave(guild_id, character_id) do
-    call(guild_id, {:leave, character_id})
-  end
-
-  def expel(guild_id, requestor_id, target_name) do
-    call(guild_id, {:expel, requestor_id, target_name})
-  end
-
-  def update_member_rank(guild_id, requestor_id, target_name, rank_id) do
-    call(guild_id, {:update_member_rank, requestor_id, target_name, rank_id})
-  end
-
-  def update_member_message(guild_id, character_id, message) do
-    call(guild_id, {:update_member_message, character_id, message})
-  end
-
-  def check_in(guild_id, character) do
-    call(guild_id, {:check_in, character})
-  end
-
-  def donate(guild_id, character, count) do
-    call(guild_id, {:donate, character, count})
-  end
-
-  def update_leader(guild_id, requestor_id, new_leader_name) do
-    call(guild_id, {:update_leader, requestor_id, new_leader_name})
-  end
-
-  def update_notice(guild_id, requestor_id, notice) do
-    call(guild_id, {:update_notice, requestor_id, notice})
-  end
-
-  def update_emblem(guild_id, requestor_id, emblem) do
-    call(guild_id, {:update_emblem, requestor_id, emblem})
-  end
-
-  def update_focus(guild_id, requestor_id, focus) do
-    call(guild_id, {:update_focus, requestor_id, focus})
-  end
-
-  def send_mail(guild_id, requestor_id, title, content) do
-    call(guild_id, {:send_mail, requestor_id, title, content})
-  end
-
-  def update_rank_def(guild_id, requestor_id, rank) do
-    call(guild_id, {:update_rank_def, requestor_id, rank})
-  end
-
-  def add_or_update_poster(guild_id, poster) do
-    call(guild_id, {:add_or_update_poster, poster})
-  end
-
-  def apply_to_guild(guild_id, character) do
-    call(guild_id, {:apply, character})
-  end
-
-  def respond_application(guild_id, requestor_id, application_id, accepted?) do
-    call(guild_id, {:respond_application, requestor_id, application_id, accepted?})
-  end
-
-  def list_applications(guild_id) do
-    call(guild_id, :list_applications)
-  end
-
-  def upgrade_house_rank(guild_id, requestor_id, rank) do
-    call(guild_id, {:upgrade_house_rank, requestor_id, rank})
-  end
-
-  def upgrade_house_theme(guild_id, requestor_id, theme) do
-    call(guild_id, {:upgrade_house_theme, requestor_id, theme})
-  end
-
-  def use_buff(guild_id, requestor_id, buff_id) do
-    call(guild_id, {:use_buff, requestor_id, buff_id})
-  end
-
-  def use_personal_buff(guild_id, requestor_id, buff_id) do
-    call(guild_id, {:use_personal_buff, requestor_id, buff_id})
-  end
-
-  def upgrade_buff(guild_id, requestor_id, buff_id) do
-    call(guild_id, {:upgrade_buff, requestor_id, buff_id})
-  end
-
-  def upgrade_npc(guild_id, requestor_id, npc_type) do
-    call(guild_id, {:upgrade_npc, requestor_id, npc_type})
   end
 
   # ---- Server Callbacks ----
@@ -445,7 +334,7 @@ defmodule Ms2ex.Managers.GuildServer do
   def handle_call({:update_notice, requestor_id, notice}, _from, state) do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_notice) do
-      Context.Guilds.update_guild(state.id, %{notice: notice})
+      Context.Guilds.update_guild(state.guild, %{notice: notice})
       guild = %{state.guild | notice: notice}
       state = %{state | guild: guild}
 
@@ -459,7 +348,7 @@ defmodule Ms2ex.Managers.GuildServer do
   def handle_call({:update_emblem, requestor_id, emblem}, _from, state) do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_emblem) do
-      Context.Guilds.update_guild(state.id, %{emblem: emblem})
+      Context.Guilds.update_guild(state.guild, %{emblem: emblem})
       guild = %{state.guild | emblem: emblem}
       state = %{state | guild: guild}
 
@@ -475,7 +364,7 @@ defmodule Ms2ex.Managers.GuildServer do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_notice) do
       focus_val = focus_value(focus)
-      Context.Guilds.update_guild(state.id, %{focus: focus_val})
+      Context.Guilds.update_guild(state.guild, %{focus: focus_val})
       guild = %{state.guild | focus: focus_val}
       state = %{state | guild: guild}
 
@@ -510,7 +399,7 @@ defmodule Ms2ex.Managers.GuildServer do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_rank) do
       ranks = update_rank_list(state.guild.ranks, rank)
-      Context.Guilds.update_guild(state.id, %{ranks: ranks})
+      Context.Guilds.update_guild(state.guild, %{ranks: ranks})
       guild = %{state.guild | ranks: ranks}
       state = %{state | guild: guild}
 
@@ -527,7 +416,7 @@ defmodule Ms2ex.Managers.GuildServer do
       |> Enum.reject(&(&1.id == poster.id))
       |> Kernel.++([poster])
 
-    Context.Guilds.update_guild(state.id, %{posters: posters})
+    Context.Guilds.update_guild(state.guild, %{posters: posters})
     guild = %{state.guild | posters: posters}
     state = %{state | guild: guild}
 
@@ -535,7 +424,7 @@ defmodule Ms2ex.Managers.GuildServer do
     {:reply, :ok, state}
   end
 
-  def handle_call({:apply, character}, _from, state) do
+  def handle_call({:apply_to_guild, character}, _from, state) do
     case Context.Guilds.create_application(state.id, character.id, character.account_id) do
       {:ok, application} ->
         broadcast(state.id, Packets.Guild.receive_application(application))
@@ -573,7 +462,7 @@ defmodule Ms2ex.Managers.GuildServer do
   def handle_call({:upgrade_house_rank, requestor_id, rank}, _from, state) do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_notice) do
-      Context.Guilds.update_guild(state.id, %{house_rank: rank})
+      Context.Guilds.update_guild(state.guild, %{house_rank: rank})
       guild = %{state.guild | house_rank: rank}
       state = %{state | guild: guild}
 
@@ -587,7 +476,7 @@ defmodule Ms2ex.Managers.GuildServer do
   def handle_call({:upgrade_house_theme, requestor_id, theme}, _from, state) do
     with {:ok, requestor} <- get_member(state, requestor_id),
          :ok <- check_permission(state, requestor, :edit_notice) do
-      Context.Guilds.update_guild(state.id, %{house_theme: theme})
+      Context.Guilds.update_guild(state.guild, %{house_theme: theme})
       guild = %{state.guild | house_theme: theme}
       state = %{state | guild: guild}
 
@@ -596,22 +485,6 @@ defmodule Ms2ex.Managers.GuildServer do
     else
       {:error, reason} -> {:reply, {:error, reason}, state}
     end
-  end
-
-  def handle_call({:use_buff, _requestor_id, _buff_id}, _from, state) do
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:use_personal_buff, _requestor_id, _buff_id}, _from, state) do
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:upgrade_buff, _requestor_id, _buff_id}, _from, state) do
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:upgrade_npc, _requestor_id, _npc_type}, _from, state) do
-    {:reply, :ok, state}
   end
 
   # ---- Helpers ----
@@ -648,7 +521,9 @@ defmodule Ms2ex.Managers.GuildServer do
         state = %{state | members: members}
 
         if target.online? and target.sender_session_pid do
-          SenderSession.run_async(target.sender_session_pid, fn -> Managers.GuildServer.unsubscribe(state.id) end)
+          SenderSession.run_async(target.sender_session_pid, fn ->
+            Managers.GuildServer.unsubscribe(state.id)
+          end)
 
           topic = Context.Field.field_name(target.map_id, target.channel)
           Context.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
@@ -667,7 +542,7 @@ defmodule Ms2ex.Managers.GuildServer do
   defp execute_leader_transfer(state, requestor_id, new_leader_name) do
     with {:ok, old_leader} <- get_member(state, requestor_id),
          {:ok, new_leader} <- find_member_by_name(state, new_leader_name) do
-      Context.Guilds.update_guild(state.id, %{leader_id: new_leader.character_id})
+      Context.Guilds.update_guild(state.guild, %{leader_id: new_leader.character_id})
       Context.Guilds.update_member(state.id, old_leader.character_id, %{rank: 1})
       Context.Guilds.update_member(state.id, new_leader.character_id, %{rank: 0})
 
@@ -697,7 +572,7 @@ defmodule Ms2ex.Managers.GuildServer do
     new_exp = state.guild.experience + prop.check_in_exp
     new_funds = min(state.guild.funds + prop.check_in_fund, prop.fund_max)
 
-    Context.Guilds.update_guild(state.id, %{experience: new_exp, funds: new_funds})
+    Context.Guilds.update_guild(state.guild, %{experience: new_exp, funds: new_funds})
 
     Context.Guilds.update_member(state.id, character.id, %{
       weekly_contribution: member.weekly_contribution + contribution,
@@ -729,7 +604,7 @@ defmodule Ms2ex.Managers.GuildServer do
     new_exp = state.guild.experience + prop.check_in_exp * count
     new_funds = min(state.guild.funds + prop.check_in_fund * count, prop.fund_max)
 
-    Context.Guilds.update_guild(state.id, %{experience: new_exp, funds: new_funds})
+    Context.Guilds.update_guild(state.guild, %{experience: new_exp, funds: new_funds})
 
     Context.Guilds.update_member(state.id, character.id, %{
       weekly_contribution: member.weekly_contribution + contribution,

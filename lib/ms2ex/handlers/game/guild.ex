@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp handle_mode(0x02, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id),
-         {:ok, guild_state} <- Managers.GuildServer.lookup(guild_id) do
+         {:ok, guild_state} <- Managers.GuildServer.call(guild_id, :lookup) do
       process_disband_guild(session, character, guild_id, guild_state)
     else
       _ -> push(session, Packets.Guild.error(:s_guild_err_null_guild))
@@ -48,7 +48,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.invite(guild_id, character.id, player_name) do
+      case Managers.GuildServer.call(guild_id, {:invite, character.id, player_name}) do
         :ok ->
           push(session, Packets.Guild.invited(player_name))
 
@@ -85,7 +85,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp handle_mode(0x07, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.leave(guild_id, character.id) do
+      case Managers.GuildServer.call(guild_id, {:leave, character.id}) do
         :ok -> process_leave_guild(session, character, guild_id)
         {:error, reason} -> push(session, Packets.Guild.error(reason))
       end
@@ -100,7 +100,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.expel(guild_id, character.id, player_name) do
+      case Managers.GuildServer.call(guild_id, {:expel, character.id, player_name}) do
         :ok ->
           push(session, Packets.Guild.expelled(player_name))
 
@@ -119,7 +119,10 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.update_member_rank(guild_id, character.id, player_name, rank_id) do
+      case Managers.GuildServer.call(
+             guild_id,
+             {:update_member_rank, character.id, player_name, rank_id}
+           ) do
         :ok ->
           push(session, Packets.Guild.update_member_rank(player_name, rank_id))
 
@@ -137,7 +140,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.update_member_message(guild_id, character.id, message) do
+      case Managers.GuildServer.call(guild_id, {:update_member_message, character.id, message}) do
         :ok ->
           push(session, Packets.Guild.update_member_message(message))
 
@@ -165,7 +168,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.update_leader(guild_id, character.id, leader_name) do
+      case Managers.GuildServer.call(guild_id, {:update_leader, character.id, leader_name}) do
         :ok ->
           push(session, Packets.Guild.update_leader(leader_name))
 
@@ -184,7 +187,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.update_notice(guild_id, character.id, notice) do
+      case Managers.GuildServer.call(guild_id, {:update_notice, character.id, notice}) do
         :ok ->
           push(session, Packets.Guild.update_notice(notice))
 
@@ -207,7 +210,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      Managers.GuildServer.update_rank_def(guild_id, character.id, rank)
+      Managers.GuildServer.call(guild_id, {:update_rank_def, character.id, rank})
     end
   end
 
@@ -218,7 +221,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      Managers.GuildServer.update_focus(guild_id, character.id, focus)
+      Managers.GuildServer.call(guild_id, {:update_focus, character.id, focus})
     end
   end
 
@@ -229,7 +232,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      case Managers.GuildServer.send_mail(guild_id, character.id, title, content) do
+      case Managers.GuildServer.call(guild_id, {:send_mail, character.id, title, content}) do
         :ok -> session
         {:error, reason} -> push(session, Packets.Guild.error(reason))
       end
@@ -243,7 +246,7 @@ defmodule Ms2ex.GameHandlers.Guild do
     {guild_id, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      case Managers.GuildServer.apply_to_guild(guild_id, character) do
+      case Managers.GuildServer.call(guild_id, {:apply_to_guild, character}) do
         {:ok, app} ->
           push(session, Packets.Guild.send_application(app.id, app.guild.name))
 
@@ -268,7 +271,10 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      Managers.GuildServer.respond_application(guild_id, character.id, application_id, accepted?)
+      Managers.GuildServer.call(
+        guild_id,
+        {:respond_application, character.id, application_id, accepted?}
+      )
     end
   end
 
@@ -276,7 +282,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp handle_mode(0x54, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id),
-         {:ok, apps} <- Managers.GuildServer.list_applications(guild_id) do
+         {:ok, apps} <- Managers.GuildServer.call(guild_id, :list_applications) do
       push(session, Packets.Guild.list_applications(apps))
     else
       _ ->
@@ -318,7 +324,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp handle_mode(0x64, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id),
-         {:ok, guild_state} <- Managers.GuildServer.lookup(guild_id) do
+         {:ok, guild_state} <- Managers.GuildServer.call(guild_id, :lookup) do
       house =
         Storage.Tables.Guild.get_house(
           guild_state.guild.house_rank,
@@ -337,7 +343,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      Managers.GuildServer.upgrade_house_rank(guild_id, character.id, rank)
+      Managers.GuildServer.call(guild_id, {:upgrade_house_rank, character.id, rank})
     end
   end
 
@@ -347,7 +353,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      Managers.GuildServer.upgrade_house_theme(guild_id, character.id, theme)
+      Managers.GuildServer.call(guild_id, {:upgrade_house_theme, character.id, theme})
     end
   end
 
@@ -384,7 +390,10 @@ defmodule Ms2ex.GameHandlers.Guild do
 
         Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
 
-        Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.subscribe(guild.id) end)
+        Ms2ex.Net.SenderSession.run_async(character, fn ->
+          Managers.GuildServer.subscribe(guild.id)
+        end)
+
         Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
 
         session
@@ -413,14 +422,17 @@ defmodule Ms2ex.GameHandlers.Guild do
             {:update, %{character | guild_name: "", guild_id: 0}}
           )
 
-        Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
+        Ms2ex.Net.SenderSession.run_async(character, fn ->
+          Managers.GuildServer.unsubscribe(guild_id)
+        end)
+
         Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
         push(session, Packets.Guild.disbanded())
     end
   end
 
   defp process_respond_invite(session, character, guild_id, invite, accepted?) do
-    case Managers.GuildServer.respond_invite(guild_id, character, accepted?) do
+    case Managers.GuildServer.call(guild_id, {:respond_invite, character, accepted?}) do
       {:ok, guild_state} ->
         :ok =
           Managers.Character.call(
@@ -430,8 +442,14 @@ defmodule Ms2ex.GameHandlers.Guild do
 
         Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
 
-        Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
-        Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild_state.guild.name))
+        Ms2ex.Net.SenderSession.run_async(character, fn ->
+          Managers.GuildServer.subscribe(guild_id)
+        end)
+
+        Context.Field.broadcast(
+          character,
+          Packets.Guild.add_tag(character.name, guild_state.guild.name)
+        )
 
         session
         |> push(Packets.Guild.invite_reply(invite, true))
@@ -446,7 +464,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   end
 
   defp process_check_in(session, character, guild_id) do
-    case Managers.GuildServer.check_in(guild_id, character) do
+    case Managers.GuildServer.call(guild_id, {:check_in, character}) do
       {:ok, prop} ->
         push(session, Packets.Guild.checked_in())
         deliver_checkin_rewards(character, prop)
@@ -482,7 +500,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   end
 
   defp execute_donation(session, character, guild_id, count, cost) do
-    case Managers.GuildServer.donate(guild_id, character, count) do
+    case Managers.GuildServer.call(guild_id, {:donate, character, count}) do
       {:ok, prop} ->
         Context.Wallets.update(character, :mesos, -cost)
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
@@ -537,7 +555,10 @@ defmodule Ms2ex.GameHandlers.Guild do
         {:update, %{character | guild_name: "", guild_id: 0}}
       )
 
-    Ms2ex.Net.SenderSession.run_async(character, fn -> Managers.GuildServer.unsubscribe(guild_id) end)
+    Ms2ex.Net.SenderSession.run_async(character, fn ->
+      Managers.GuildServer.unsubscribe(guild_id)
+    end)
+
     Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
     push(session, Packets.Guild.leave())
   end

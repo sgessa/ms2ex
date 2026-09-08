@@ -178,29 +178,21 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp maybe_set_guild(character) do
-    case Managers.GuildManager.lookup_by_character(character.id) do
-      {:ok, guild_id, _pid} ->
-        case Managers.GuildServer.lookup(guild_id) do
-          {:ok, guild_state} ->
-            %{character | guild_id: guild_id, guild_name: guild_state.guild.name}
-
-          _ ->
-            character
-        end
-
-      _ ->
-        character
+    with {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id),
+         {:ok, guild_state} <- Managers.GuildServer.call(guild_id, :lookup) do
+      %{character | guild_id: guild_id, guild_name: guild_state.guild.name}
+    else
+      _ -> character
     end
   end
 
-  defp push_guild(session, %{guild_id: guild_id} = character)
-       when is_integer(guild_id) and guild_id > 0 do
-    case Managers.GuildServer.lookup(guild_id) do
+  defp push_guild(session, %{guild_id: guild_id} = character) do
+    case Managers.GuildServer.call(guild_id, :lookup) do
       {:ok, _guild_state} ->
         # subscribe from the SenderSession process, since PubSub delivers {:push, _} there
         Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
 
-        case Managers.GuildServer.member_online(guild_id, character) do
+        case Managers.GuildServer.call(guild_id, {:member_online, character}) do
           {:ok, guild_state} -> push(session, Packets.Guild.load(guild_state))
           _ -> session
         end
@@ -209,6 +201,4 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         session
     end
   end
-
-  defp push_guild(session, _character), do: session
 end

@@ -167,22 +167,25 @@ defmodule Ms2ex.GuildTest do
       assert guild_id == guild.id
 
       # Invite member
-      assert :ok = Managers.GuildServer.invite(guild.id, leader.id, member.name)
+      assert :ok = Managers.GuildServer.call(guild.id, {:invite, leader.id, member.name})
 
       # Member accepts invite
-      assert {:ok, state} = Managers.GuildServer.respond_invite(guild.id, member, true)
+      assert {:ok, state} = Managers.GuildServer.call(guild.id, {:respond_invite, member, true})
       assert Map.has_key?(state.members, member.id)
 
       # Member updates message
       assert :ok =
-               Managers.GuildServer.update_member_message(guild.id, member.id, "Ready to raid!")
+               Managers.GuildServer.call(
+                 guild.id,
+                 {:update_member_message, member.id, "Ready to raid!"}
+               )
 
-      {:ok, current} = Managers.GuildServer.lookup(guild.id)
+      {:ok, current} = Managers.GuildServer.call(guild.id, :lookup)
       assert current.members[member.id].message == "Ready to raid!"
 
       # Member leaves
-      assert :ok = Managers.GuildServer.leave(guild.id, member.id)
-      {:ok, current} = Managers.GuildServer.lookup(guild.id)
+      assert :ok = Managers.GuildServer.call(guild.id, {:leave, member.id})
+      {:ok, current} = Managers.GuildServer.call(guild.id, :lookup)
       refute Map.has_key?(current.members, member.id)
 
       # Disband
@@ -193,10 +196,10 @@ defmodule Ms2ex.GuildTest do
     test "check in awards exp, funds, and contribution", %{leader: leader} do
       {:ok, guild} = Managers.GuildManager.create(leader, "Rising")
 
-      assert {:ok, prop} = Managers.GuildServer.check_in(guild.id, leader)
+      assert {:ok, prop} = Managers.GuildServer.call(guild.id, {:check_in, leader})
       assert prop.check_in_exp == 10
 
-      {:ok, current} = Managers.GuildServer.lookup(guild.id)
+      {:ok, current} = Managers.GuildServer.call(guild.id, :lookup)
       assert current.guild.experience == 10
       assert current.guild.funds == 1000
       assert current.members[leader.id].weekly_contribution == 10
@@ -204,15 +207,16 @@ defmodule Ms2ex.GuildTest do
       assert current.members[leader.id].checkin_time > 0
 
       # Second check in on same day is rejected
-      assert {:error, :already_checked_in} = Managers.GuildServer.check_in(guild.id, leader)
+      assert {:error, :already_checked_in} =
+               Managers.GuildServer.call(guild.id, {:check_in, leader})
     end
 
     test "donations increase funds and contributions", %{leader: leader} do
       {:ok, guild} = Managers.GuildManager.create(leader, "Donators")
 
-      assert {:ok, _prop} = Managers.GuildServer.donate(guild.id, leader, 2)
+      assert {:ok, _prop} = Managers.GuildServer.call(guild.id, {:donate, leader, 2})
 
-      {:ok, current} = Managers.GuildServer.lookup(guild.id)
+      {:ok, current} = Managers.GuildServer.call(guild.id, :lookup)
       assert current.guild.experience == 20
       assert current.guild.funds == 2000
       assert current.members[leader.id].weekly_contribution == 20
@@ -221,17 +225,22 @@ defmodule Ms2ex.GuildTest do
 
     test "rank updates and leadership transfer", %{leader: leader, member: member} do
       {:ok, guild} = Managers.GuildManager.create(leader, "Royalty")
-      Managers.GuildServer.invite(guild.id, leader.id, member.name)
-      {:ok, _} = Managers.GuildServer.respond_invite(guild.id, member, true)
+      Managers.GuildServer.call(guild.id, {:invite, leader.id, member.name})
+      {:ok, _} = Managers.GuildServer.call(guild.id, {:respond_invite, member, true})
 
       # Promote member to Jr. Master (rank 1)
-      assert :ok = Managers.GuildServer.update_member_rank(guild.id, leader.id, member.name, 1)
-      {:ok, state} = Managers.GuildServer.lookup(guild.id)
+      assert :ok =
+               Managers.GuildServer.call(
+                 guild.id,
+                 {:update_member_rank, leader.id, member.name, 1}
+               )
+
+      {:ok, state} = Managers.GuildServer.call(guild.id, :lookup)
       assert state.members[member.id].rank == 1
 
       # Transfer leader to member
-      assert :ok = Managers.GuildServer.update_leader(guild.id, leader.id, member.name)
-      {:ok, state} = Managers.GuildServer.lookup(guild.id)
+      assert :ok = Managers.GuildServer.call(guild.id, {:update_leader, leader.id, member.name})
+      {:ok, state} = Managers.GuildServer.call(guild.id, :lookup)
       assert state.guild.leader_id == member.id
       assert state.members[member.id].rank == 0
       assert state.members[leader.id].rank == 1
@@ -239,16 +248,16 @@ defmodule Ms2ex.GuildTest do
 
     test "expelling members", %{leader: leader, member: member} do
       {:ok, guild} = Managers.GuildManager.create(leader, "Enforcers")
-      Managers.GuildServer.invite(guild.id, leader.id, member.name)
-      {:ok, _} = Managers.GuildServer.respond_invite(guild.id, member, true)
+      Managers.GuildServer.call(guild.id, {:invite, leader.id, member.name})
+      {:ok, _} = Managers.GuildServer.call(guild.id, {:respond_invite, member, true})
 
       # Cannot expel master
       assert {:error, :s_guild_err_expel_target_master} =
-               Managers.GuildServer.expel(guild.id, leader.id, leader.name)
+               Managers.GuildServer.call(guild.id, {:expel, leader.id, leader.name})
 
       # Master expels member
-      assert :ok = Managers.GuildServer.expel(guild.id, leader.id, member.name)
-      {:ok, state} = Managers.GuildServer.lookup(guild.id)
+      assert :ok = Managers.GuildServer.call(guild.id, {:expel, leader.id, member.name})
+      {:ok, state} = Managers.GuildServer.call(guild.id, :lookup)
       refute Map.has_key?(state.members, member.id)
     end
   end

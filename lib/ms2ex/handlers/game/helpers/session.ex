@@ -55,10 +55,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
     Managers.PartyServer.member_offline(character)
   end
 
-  defp notify_guild_presence(%{guild_id: guild_id} = character)
-       when is_integer(guild_id) and guild_id > 0 do
-    Managers.GuildServer.member_offline(guild_id, character)
+  defp notify_guild_presence(character) do
+    Managers.GuildServer.call(character.guild_id, {:member_offline, character})
   end
-
-  defp notify_guild_presence(_character), do: :ok
 end
