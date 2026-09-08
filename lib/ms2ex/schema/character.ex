@@ -119,6 +119,7 @@ defmodule Ms2ex.Schema.Character do
     field :field_pid, EctoTypes.Term, virtual: true
     field :gender, Ms2ex.Enums.Gender, default: :male
     field :gear_score, :integer, virtual: true, default: 0
+    field :guild_id, :integer, virtual: true, default: 0
     field :guild_name, :string, virtual: true, default: ""
     field :home_name, :string, virtual: true, default: ""
     field :object_id, :integer, virtual: true, default: 0

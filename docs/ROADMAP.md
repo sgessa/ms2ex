@@ -458,9 +458,10 @@ the inventory with its descriptor persisted on `inventory_items.ugc`.
 
 What is still missing:
 
-- **Guild emblems and guild posters** — the packets, upload handling and the
-  `/guildmark` routes are wired, but there is no guild system for them to
-  attach to, so a confirmation only records the stored path
+- **Guild emblems and guild posters** — implemented: emblem uploads persist
+  to the guild row and broadcast live to online members (`UpdateEmblem` +
+  `NotifyUpdateEmblem`), and poster uploads attach to the guild's poster
+  list; see item 25 for remaining guild-system gaps
 - **Layout blueprints** — depend on the housing cube system; the blueprint
   block written next to the UGC descriptor is currently all zeroes
 - **Free design coupons** — `use_voucher` is parsed but ignored, so the player
@@ -503,6 +504,53 @@ What is still missing:
   remaining uses
 - **Ensemble room check** — members are matched on map and channel; the
   reference also compares the instanced room id, which ms2ex has no concept of
+
+### 25. Guild system gaps — [Partial]
+
+Core membership flows are implemented: create/disband, invite and respond,
+search (by focus and by name), applications (apply/cancel/respond), expel,
+leave, leadership transfer, rank editing, notice/emblem/focus updates, member
+mottos, check-in and donation (guild exp/funds/coin rewards), guild mail, and
+a guild-chat alert variant gated on the `send_alert` rank permission. Presence
+(login/logout, online roster, field guild-tag add/remove) and PubSub
+subscribe/unsubscribe are wired through every join/leave path (create, invite
+accept, application accept, expel, disband).
+
+What is still missing or stubbed:
+
+- **Guild buffs, personal buffs, buff upgrades** (`UseBuff` 0x58,
+  `UsePersonalBuff` 0x59, `UpgradeBuff` 0x5A), **NPC upgrades** (`UpgradeNpc`
+  0x6F), **gifting** (`SendGift` 0x6A, `UpdateGiftLog` 0x6D), and **capacity
+  increase** (`IncreaseCapacity` 0x40) — these opcodes are now wired and
+  accepted (the client no longer sees an unhandled-mode warning), but each is
+  a parse-only no-op: no funds/cost deduction, no buff/npc level change, no
+  gift log, no capacity change, and no reply packet. The reference project's
+  own handlers for all six opcodes are equally empty (they read the payload
+  and return), so there is no known request/response or cost/effect model to
+  port; only the metadata (`guild.xml` buff/npc cost, level and duration
+  tables) and default buff seeding at guild creation
+  (`Types.GuildBuff.default_buffs/0`, ids 1-4 and 10001-10005 at level 1)
+  exist today. Building real behavior here means designing new mechanics
+  rather than matching a known implementation
+- **Guild arcade / raids** (`StartArcade` 0x60, `EnterArcade` 0x61) and guild
+  events (`CreateGuildEvent` 0x70, `StartGuildEvent` 0x71, `JoinGuildEvent`
+  0x75) — entirely unimplemented; no packet handling, no room/instance model
+- **Guild house** — `EnterHouse` teleports to the configured house map and
+  `UpgradeHouseRank`/`UpgradeHouseTheme` persist and broadcast the change, but
+  the house map itself has no content: it depends on the housing/UGC cube
+  system (item 19), which is still open
+- **`ListApplications`/`ListAppliedGuilds` wire format is unverified** — the
+  reference project's own request handler for this opcode is an empty stub
+  (never exercised against a real client), so its packet layout could not be
+  fully confirmed; the current implementation was derived from repeated
+  client crash analysis rather than a known-good source. Treat this as the
+  least-trusted packet in the guild system if list-of-applications bugs
+  resurface
+- guild leveling (experience accumulation via check-in/donation) has not been
+  verified end-to-end against rank-up thresholds and rewards
+- no audit yet of `list_guilds`/search results reflecting "already applied"
+  state client-side (the Apply button does not currently indicate a pending
+  application)
 
 ---
 
@@ -561,6 +609,31 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Guild System: guild creation/disbanding, invites and responses, search and
+  applications, role/permission configurations (Master, Jr. Master, Veteran,
+  Member, Recruit), member mottos, daily check-in (player exp, guild exp,
+  funds, and guild coin rewards), donations, leadership transfer, notices,
+  UGC emblems and poster uploads, guild chat routing (`USER_CHAT` `:guild`),
+  and online/offline presence notifications across channels and maps via
+  `GuildServer` and `GuildManager`
+- Guild System stabilization pass: fixed a client-crashing malformed
+  `Error`/`Guild.Load`/`ListGuilds`/`GuildInvite` wire format (each missing
+  fields relative to the client's expected layout), a double guild-topic
+  PubSub subscribe that duplicated every guild broadcast (login/logout,
+  notice, emblem changes), missing subscribe calls on guild creation, invite
+  acceptance and application acceptance (members/leaders not seeing each
+  other join without relogging), missing unsubscribe on leave/expel/disband
+  (ex-members still receiving guild chat), a stale roster snapshot on login
+  showing the character as offline to themselves, live guild-member profile
+  picture and emblem updates (previously required a relogin), guild
+  nameplate tag add/remove on the field via `AddTag`/`RemoveTag` (previously
+  never implemented, so the tag persisted after leaving/being kicked), a
+  wrong notification on application acceptance (showed the invite-flow text
+  instead of the application-flow text), a misleading "Application not
+  found" message on a duplicate apply (now checks for an existing pending
+  application first), and implemented guild mail (`SendMail`) and the guild
+  chat alert variant (`guild_notice`/`guild_notice_noprefix`), both
+  previously unhandled. See item 25 for what's still open
 - Mail System & Reward Delivery Fallbacks: player-to-player mail, system mail
   with item/currency attachments and XML template argument formatting, account-wide
   mail binding at login, batched inbox loading, single/bulk reading, attachment

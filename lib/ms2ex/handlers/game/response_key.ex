@@ -42,7 +42,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       tick = Ms2ex.sync_ticks()
 
-      character = character |> set_spawn_position() |> maybe_set_party()
+      character = character |> set_spawn_position() |> maybe_set_party() |> maybe_set_guild()
 
       # the object id must exist before ServerEnter is built: the client reads
       # its own id from that packet and derives its session identity from it
@@ -112,6 +112,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.Mail.notify(unread_mail_count, unread_mail_count > 0))
       |> push(Packets.World.bytes())
       |> push_party(character)
+      |> push_guild(character)
     end
   end
 
@@ -171,6 +172,33 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       for m <- party.members, m.id != character.id do
         push(session, Packets.Party.update_hitpoints(m))
       end
+    end
+
+    session
+  end
+
+  defp maybe_set_guild(character) do
+    with {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id),
+         {:ok, guild_state} <- Managers.GuildServer.call(guild_id, :lookup) do
+      %{character | guild_id: guild_id, guild_name: guild_state.guild.name}
+    else
+      _ -> character
+    end
+  end
+
+  defp push_guild(session, %{guild_id: guild_id} = character) do
+    case Managers.GuildServer.call(guild_id, :lookup) do
+      {:ok, _guild_state} ->
+        # subscribe from the SenderSession process, since PubSub delivers {:push, _} there
+        Net.SenderSession.run(character, fn -> Managers.GuildServer.subscribe(guild_id) end)
+
+        case Managers.GuildServer.call(guild_id, {:member_online, character}) do
+          {:ok, guild_state} -> push(session, Packets.Guild.load(guild_state))
+          _ -> session
+        end
+
+      _ ->
+        session
     end
   end
 end

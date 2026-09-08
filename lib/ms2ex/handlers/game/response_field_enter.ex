@@ -51,6 +51,11 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     sticker_groups = Context.ChatStickers.list_groups(character)
     push(session, Packets.ChatSticker.load(favorite_stickers, sticker_groups))
 
+    Managers.GuildServer.call(
+      character.guild_id,
+      {:update_member_map, character.id, character.map_id}
+    )
+
     continent = Storage.Maps.get_property(character.map_id) |> Map.get(:continent, 0)
 
     Managers.Quest.update_conditions(character_id, :map, 1, "", 0, "", character.map_id)

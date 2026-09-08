@@ -66,6 +66,10 @@ defmodule Ms2ex.GameHandlers.Ugc do
          {:ok, character} <- Context.Characters.update(character, %{profile_url: url}) do
       Managers.Character.call(character.id, {:update, character})
       Context.Field.broadcast(character, Packets.Ugc.profile_picture(character))
+
+      with {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+        Managers.GuildServer.call(guild_id, {:update_member_profile, character.id, url})
+      end
     end
 
     session
@@ -203,6 +207,34 @@ defmodule Ms2ex.GameHandlers.Ugc do
           _ ->
             Logger.warning("Cannot confirm UGC banner resource #{resource_id}")
             session
+        end
+
+      resource when type == :guild_emblem ->
+        with {:ok, character} <- Managers.Character.lookup(session.character_id),
+             {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+          Managers.GuildServer.call(guild_id, {:update_emblem, character.id, resource.path})
+          push(session, Packets.Ugc.update_path(resource))
+        else
+          _ ->
+            push(session, Packets.Ugc.update_path(resource))
+        end
+
+      resource when type == :guild_banner ->
+        with {:ok, character} <- Managers.Character.lookup(session.character_id),
+             {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
+          poster = %Types.GuildPoster{
+            id: resource.id,
+            picture: resource.path,
+            owner_id: character.id,
+            owner_name: character.name,
+            resource_id: resource.id
+          }
+
+          Managers.GuildServer.call(guild_id, {:add_or_update_poster, poster})
+          push(session, Packets.Ugc.update_path(resource))
+        else
+          _ ->
+            push(session, Packets.Ugc.update_path(resource))
         end
 
       resource ->

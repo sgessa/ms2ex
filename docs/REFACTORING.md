@@ -47,3 +47,20 @@ character. They are only called at login and in tests. Consider moving them to
 | `context/inventory.ex:300` | Inventory slots are not read from DB |
 | `managers/party_server.ex:147` | Start-vote-kick packet not sent |
 | `managers/character/revival.ex:131` | Free-revive coupon not consumed |
+
+---
+
+## 5. Converge `Managers.Field` / `Context.Field` with the other servers
+
+The Guild refactor (see `managers/guild_server.ex`) established the pattern the
+other GenServer-backed managers should follow: `use Ms2ex.Managers.Managed`
+for `call/2`/`cast/2`/`process_name/1`, no thin per-message wrapper functions
+(callers use `call(id, {:message, args})` directly), and a single guard on the
+id's validity instead of re-checking it at every call site.
+
+`Managers.Field` still hand-rolls its own dispatch in `Context.Field`
+(`Process.whereis(field_name(map_id, channel_id))` + `GenServer.call/cast`
+in `context/field.ex`) instead of using `Managers.Managed`. Bring it in line:
+adopt `Managed` (or an equivalent keyed-by-`{map_id, channel_id}` lookup) and
+drop the ad-hoc `field_name/2`/`Process.whereis` plumbing once the rest of
+`Context.Field` is audited for wrapper duplication.
