@@ -317,16 +317,8 @@ no longer drops disabled portals before they reach field state (they now
 load with their true `enable` flag, matching the reference's load-everything,
 check-enabled-at-use-time model), and the change-field handler now refuses
 transition through a disabled portal instead of allowing it through on an id
-match alone. Interact-type portals (`action_type` 0) are now always rendered
-visible regardless of their authored flag: an invisible Interact portal has
-no rendered object for the client to prompt an interact on, and every
-dynamically-created Interact portal in the reference is paired with
-`Visible: true` — an xblock-authored one left invisible (Rien's exit to
-Bamboo Grove) was otherwise a dead end even standing exactly inside its
-trigger volume, no `RequestMoveField` ever sent. Touch-type portals keep
-their authored visibility (an invisible collision-only seam is a legitimate
-design for those). `FieldAddUser` and the battle-join packet set still have
-not been audited for byte-level client parity.
+match alone. `FieldAddUser` and the battle-join packet set still have not been
+audited for byte-level client parity.
 
 ### 8. Drop & field-item serialization — [Open]
 
