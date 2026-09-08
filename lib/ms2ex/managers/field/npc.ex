@@ -141,6 +141,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         npc: npc,
         position: npc_spawn[:position],
         rotation: npc_spawn[:rotation],
+        spawn_radius: npc_spawn[:spawn_radius],
         field: state.topic
       })
 

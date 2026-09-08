@@ -59,7 +59,15 @@ window before removal. Event spawn points (script-summoned mobs, the
 reference's `EventSpawnPointNPC`, ingested with `is_event: true`) are
 one-shot: they only appear through a `spawn_monster` trigger action and
 never join the regen machinery — quest fights like the soulbinder
-arena no longer resurrect their mobs every 10 s. Monster gates are data-driven from the map's trigger
+arena no longer resurrect their mobs every 10 s. Spawn-point npcs carry
+an explicit `spawn_radius` from the map data now: zero (the flat-buffer
+default) spawns the npc exactly at its configured position, and a
+positive radius scatters it within a circle of that size — a blanket
+±250 box jitter applied to every mob regardless of its actual radius
+used to displace scripted gate guards (e.g. the classic tutorial's exit
+barrier) far enough that skill hit-detection missed them outright. Open-world
+population spawns still carry no radius metadata and keep the coarse
+spread (see below). Monster gates are data-driven from the map's trigger
 script (ingested as `mob_gates`): when the last mob of a gated spawn point
 dies, the blocking trigger meshes drop (update packets broadcast, the gate
 stays latched open across respawns, late joiners load the meshes hidden) and
@@ -67,8 +75,9 @@ the gate's guide event fires. What is still missing:
 
 - pet spawn rolls for mob spawns (`pet_population` / `pet_spawn_rate`) — the
   metadata is not projected by the ingest yet
-- navmesh-valid spawn position picking — mobs currently randomize ±250 around
-  the spawn point instead of snapping to map spawn volumes
+- navmesh-valid spawn position picking for open-world population spawns —
+  they have no per-spawn radius metadata yet and still randomize ±250
+  around the spawn point instead of snapping to map spawn volumes
 - a general trigger-script runtime (states, conditions, cinematic/movie
   actions, per-job portal enables) — done; the machine core now runs on
   every map that ships trigger scripts, with
