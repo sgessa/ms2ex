@@ -16,6 +16,8 @@ defmodule Ms2ex.GameHandlers.Guild do
 
   @guild_create_price 2_000
   @guild_create_min_level 10
+  @guild_coin_id 30_000_861
+  @guild_coin_rarity 4
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -199,6 +201,9 @@ defmodule Ms2ex.GameHandlers.Guild do
     end
   end
 
+  # IncreaseCapacity (64 / 0x40) — accepted, no cost/limit model implemented
+  defp handle_mode(0x40, _packet, session), do: session
+
   # UpdateRank (65 / 0x41)
   defp handle_mode(0x41, packet, session) do
     {_code, packet} = get_byte(packet)
@@ -308,6 +313,40 @@ defmodule Ms2ex.GameHandlers.Guild do
     push(session, Packets.Guild.list_guilds(guilds))
   end
 
+  # UseBuff (88 / 0x58) — accepted, no buff effects implemented
+  defp handle_mode(0x58, packet, session) do
+    {_buff_id, _packet} = get_int(packet)
+    session
+  end
+
+  # UsePersonalBuff (89 / 0x59) — accepted, no buff effects implemented
+  defp handle_mode(0x59, packet, session) do
+    {_buff_id, _packet} = get_int(packet)
+    session
+  end
+
+  # UpgradeBuff (90 / 0x5A) — accepted, no cost/level model implemented
+  defp handle_mode(0x5A, packet, session) do
+    {_buff_id, _packet} = get_int(packet)
+    session
+  end
+
+  # SendGift (106 / 0x6A) — accepted, no gift log implemented
+  defp handle_mode(0x6A, packet, session) do
+    {_item_id, packet} = get_int(packet)
+    {_rarity, packet} = get_short(packet)
+    {_amount, packet} = get_int(packet)
+    {_unknown1, packet} = get_bool(packet)
+    {_unknown2, packet} = get_bool(packet)
+    {_unknown3, packet} = get_bool(packet)
+    {_unknown4, packet} = get_bool(packet)
+    {_player_name, _packet} = get_ustring(packet)
+    session
+  end
+
+  # UpdateGiftLog (109 / 0x6D) — accepted, no gift log implemented
+  defp handle_mode(0x6D, _packet, session), do: session
+
   # Donate (110 / 0x6E)
   defp handle_mode(0x6E, packet, session) do
     {count, _packet} = get_int(packet)
@@ -345,6 +384,12 @@ defmodule Ms2ex.GameHandlers.Guild do
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
       Managers.GuildServer.call(guild_id, {:upgrade_house_rank, character.id, rank})
     end
+  end
+
+  # UpgradeNpc (111 / 0x6F) — accepted, no npc upgrade model implemented
+  defp handle_mode(0x6F, packet, session) do
+    {_npc_type, _packet} = get_int(packet)
+    session
   end
 
   # UpgradeHouseTheme (99 / 0x63)
@@ -479,7 +524,12 @@ defmodule Ms2ex.GameHandlers.Guild do
 
   defp deliver_checkin_rewards(character, prop) do
     if prop.check_in_coin > 0 do
-      coin_item = Context.Items.init(90_000_004, %{amount: prop.check_in_coin, rarity: 1})
+      coin_item =
+        Context.Items.init(@guild_coin_id, %{
+          amount: prop.check_in_coin,
+          rarity: @guild_coin_rarity
+        })
+
       Managers.Inventory.add_item(character, coin_item)
     end
 
@@ -500,17 +550,22 @@ defmodule Ms2ex.GameHandlers.Guild do
   end
 
   defp execute_donation(session, character, guild_id, count, cost) do
-    case Managers.GuildServer.call(guild_id, {:donate, character, count}) do
-      {:ok, prop} ->
+    case Managers.GuildServer.call(guild_id, {:donate, character, count, cost}) do
+      {:ok, prop, member} ->
         Context.Wallets.update(character, :mesos, -cost)
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
 
         if prop.donate_coin > 0 do
           coin_item =
-            Context.Items.init(90_000_004, %{amount: prop.donate_coin * count, rarity: 1})
+            Context.Items.init(@guild_coin_id, %{
+              amount: prop.donate_coin * count,
+              rarity: @guild_coin_rarity
+            })
 
           Managers.Inventory.add_item(character, coin_item)
         end
+
+        push(session, Packets.Guild.donated(member.daily_donation_count, member.donation_time))
 
       {:error, reason} ->
         push(session, Packets.Guild.error(reason))

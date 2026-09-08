@@ -60,7 +60,7 @@ defmodule Ms2ex.Storage.Tables.Guild do
       experience: 0,
       capacity: 60,
       fund_max: 10_000_000,
-      donate_max: 5,
+      donate_max: 10,
       check_in_exp: 10,
       check_in_fund: 1000,
       check_in_coin: 1,

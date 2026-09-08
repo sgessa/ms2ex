@@ -41,6 +41,7 @@ defmodule Ms2ex.Packets.Guild do
     update_member_map: 0x1F,
     update_member: 0x20,
     update_name: 0x22,
+    check_in_time: 0x24,
     receive_application: 0x2D,
     withdraw_application: 0x2E,
     notify_application: 0x2F,
@@ -62,7 +63,8 @@ defmodule Ms2ex.Packets.Guild do
     list_applications: 0x53,
     list_applied_guilds: 0x54,
     list_guilds: 0x55,
-    send_application: 0x50
+    send_application: 0x50,
+    donated: 0x6E
   }
 
   def load(%{guild: guild, members: members}) do
@@ -233,6 +235,15 @@ defmodule Ms2ex.Packets.Guild do
     |> put_byte(@commands.checked_in)
   end
 
+  # lets the client update its cached checkin time without a relog
+  def check_in_time(player_name, time) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.check_in_time)
+    |> put_ustring(player_name)
+    |> put_long(time)
+  end
+
   def joined(requestor_name, member, notify \\ true) do
     __MODULE__
     |> build()
@@ -361,6 +372,15 @@ defmodule Ms2ex.Packets.Guild do
     |> put_byte(@commands.update_member)
     |> put_ustring(member.name)
     |> put_player_info(member)
+  end
+
+  # drives the client's daily donation progress bar
+  def donated(daily_donation_count, donation_time) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.donated)
+    |> put_int(daily_donation_count)
+    |> put_long(donation_time)
   end
 
   def update_name(guild_name) do

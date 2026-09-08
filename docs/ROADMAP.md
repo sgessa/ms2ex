@@ -519,17 +519,19 @@ accept, application accept, expel, disband).
 What is still missing or stubbed:
 
 - **Guild buffs, personal buffs, buff upgrades** (`UseBuff` 0x58,
-  `UsePersonalBuff` 0x59, `UpgradeBuff` 0x5A) — `GuildServer` has stub
-  handlers that reply `:ok` and do nothing (no funds deduction, no buff
-  applied, no broadcast), and none of the three recv opcodes are even wired
-  to a `handle_mode` clause in the packet handler, so the client's request
-  currently falls through as an unhandled mode
-- **Guild NPC upgrades** (`UpgradeNpc` 0x6F) — same stub-and-unwired state as
-  the buffs above
-- **Gifting** (`SendGift` 0x6A, `UpdateGiftLog` 0x6D) — no handler and no
-  `GuildServer` function exist at all
-- **Capacity increase** (`IncreaseCapacity` 0x40) — no handler exists; a
-  guild's member cap can currently only be set at creation
+  `UsePersonalBuff` 0x59, `UpgradeBuff` 0x5A), **NPC upgrades** (`UpgradeNpc`
+  0x6F), **gifting** (`SendGift` 0x6A, `UpdateGiftLog` 0x6D), and **capacity
+  increase** (`IncreaseCapacity` 0x40) — these opcodes are now wired and
+  accepted (the client no longer sees an unhandled-mode warning), but each is
+  a parse-only no-op: no funds/cost deduction, no buff/npc level change, no
+  gift log, no capacity change, and no reply packet. The reference project's
+  own handlers for all six opcodes are equally empty (they read the payload
+  and return), so there is no known request/response or cost/effect model to
+  port; only the metadata (`guild.xml` buff/npc cost, level and duration
+  tables) and default buff seeding at guild creation
+  (`Types.GuildBuff.default_buffs/0`, ids 1-4 and 10001-10005 at level 1)
+  exist today. Building real behavior here means designing new mechanics
+  rather than matching a known implementation
 - **Guild arcade / raids** (`StartArcade` 0x60, `EnterArcade` 0x61) and guild
   events (`CreateGuildEvent` 0x70, `StartGuildEvent` 0x71, `JoinGuildEvent`
   0x75) — entirely unimplemented; no packet handling, no room/instance model

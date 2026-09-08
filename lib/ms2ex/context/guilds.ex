@@ -87,7 +87,7 @@ defmodule Ms2ex.Context.Guilds do
       focus: focus,
       capacity: @default_capacity,
       ranks: Types.GuildRank.default_ranks(),
-      buffs: [],
+      buffs: Types.GuildBuff.default_buffs(),
       posters: [],
       npcs: [],
       bank: []
@@ -95,10 +95,13 @@ defmodule Ms2ex.Context.Guilds do
 
     result =
       Repo.transaction(fn ->
-        with {:ok, guild} <- %Schema.Guild{} |> Schema.Guild.changeset(guild_attrs) |> Repo.insert(),
+        with {:ok, guild} <-
+               %Schema.Guild{} |> Schema.Guild.changeset(guild_attrs) |> Repo.insert(),
              member_attrs = %{guild_id: guild.id, character_id: leader.id, rank: 0},
              {:ok, member} <-
-               %Schema.GuildMember{} |> Schema.GuildMember.changeset(member_attrs) |> Repo.insert() do
+               %Schema.GuildMember{}
+               |> Schema.GuildMember.changeset(member_attrs)
+               |> Repo.insert() do
           # Delete any pending applications for the leader
           delete_all_applications_for_character(leader.id)
           %{guild | members: [member], leader: leader, applications: []}

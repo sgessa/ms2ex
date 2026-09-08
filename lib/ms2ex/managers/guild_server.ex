@@ -307,7 +307,7 @@ defmodule Ms2ex.Managers.GuildServer do
     end
   end
 
-  def handle_call({:donate, character, count}, _from, state) do
+  def handle_call({:donate, character, count, cost}, _from, state) do
     case Map.get(state.members, character.id) do
       nil ->
         {:reply, {:error, :s_guild_err_null_member}, state}
@@ -318,7 +318,7 @@ defmodule Ms2ex.Managers.GuildServer do
         if member.daily_donation_count + count > prop.donate_max do
           {:reply, {:error, :s_guild_err_no_authority}, state}
         else
-          execute_donation(state, character, member, count, prop)
+          execute_donation(state, character, member, count, cost, prop)
         end
     end
   end
@@ -593,16 +593,17 @@ defmodule Ms2ex.Managers.GuildServer do
     broadcast(state.id, Packets.Guild.guild_experience(new_exp))
     broadcast(state.id, Packets.Guild.guild_funds(new_funds))
     broadcast(state.id, Packets.Guild.guild_contribution(updated_member, contribution))
+    broadcast(state.id, Packets.Guild.check_in_time(updated_member.name, now_unix))
     broadcast(state.id, Packets.Guild.update_member(updated_member))
 
     {:reply, {:ok, prop}, state}
   end
 
-  defp execute_donation(state, character, member, count, prop) do
+  defp execute_donation(state, character, member, count, cost, prop) do
     now_unix = DateTime.utc_now() |> DateTime.to_unix()
     contribution = 10 * count
     new_exp = state.guild.experience + prop.check_in_exp * count
-    new_funds = min(state.guild.funds + prop.check_in_fund * count, prop.fund_max)
+    new_funds = min(state.guild.funds + cost, prop.fund_max)
 
     Context.Guilds.update_guild(state.guild, %{experience: new_exp, funds: new_funds})
 
@@ -629,7 +630,7 @@ defmodule Ms2ex.Managers.GuildServer do
     broadcast(state.id, Packets.Guild.guild_contribution(updated_member, contribution))
     broadcast(state.id, Packets.Guild.update_member(updated_member))
 
-    {:reply, {:ok, prop}, state}
+    {:reply, {:ok, prop, updated_member}, state}
   end
 
   defp process_accept_application(state, requestor, application) do
@@ -638,9 +639,6 @@ defmodule Ms2ex.Managers.GuildServer do
            Context.Guilds.add_member(state.id, application.character_id, 4),
          %Schema.Character{} = db_char <-
            Context.Characters.get(application.character_id) do
-      # Context.Characters.get/1 reads a plain DB row, whose virtual
-      # online?/sender_session_pid fields are always defaults; look up the
-      # live character process to get the real presence state.
       applicant_char =
         case Managers.Character.lookup(application.character_id) do
           {:ok, live_char} -> live_char

@@ -50,7 +50,7 @@ defmodule Ms2ex.GuildTest do
           npcs: %{}
         }
       },
-      "item:90000004" => %{
+      "item:30000861" => %{
         limit: %{level: 0, gender: 0, job_recommends: [], transfer_type: 0},
         property: %{type: 3, ride: 0, tradable_count: 0, stack_limit: 999},
         slot_names: [],
@@ -214,11 +214,12 @@ defmodule Ms2ex.GuildTest do
     test "donations increase funds and contributions", %{leader: leader} do
       {:ok, guild} = Managers.GuildManager.create(leader, "Donators")
 
-      assert {:ok, _prop} = Managers.GuildServer.call(guild.id, {:donate, leader, 2})
+      assert {:ok, _prop, _member} =
+               Managers.GuildServer.call(guild.id, {:donate, leader, 2, 20_000})
 
       {:ok, current} = Managers.GuildServer.call(guild.id, :lookup)
       assert current.guild.experience == 20
-      assert current.guild.funds == 2000
+      assert current.guild.funds == 20_000
       assert current.members[leader.id].weekly_contribution == 20
       assert current.members[leader.id].daily_donation_count == 2
     end
