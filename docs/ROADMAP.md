@@ -274,7 +274,9 @@ move_user_path (invisible follow-dummy walks the patrol in 3D with
 velocity while the client walks the player behind it), create_item (a
 map's item spawn point drops a fixed-position, unowned field item —
 used directly when the action names an item id, or rolled from the
-spawn point's own individual/global drop box).
+spawn point's own individual/global drop box), set_time_scale (a new
+`TimeScale` opcode ramps the field's tick rate between two scales over
+a duration — cinematic bullet-time/slow-mo beats).
 
 Still missing:
 
@@ -607,7 +609,9 @@ combat-heavy characters from accumulating document copies.
   now projects `EventSpawnPointItem` entities (`item_spawns` per map),
   previously parsed but never written to any doc. Fixed the berserker
   chapter's "pick up an item from the ground" quest step, which had no
-  item to pick up
+  item to pick up. Also implemented `set_time_scale` (cinematic
+  bullet-time/slow-mo beats), which needed a new `TimeScale` send opcode
+  — it was never registered at all
 - Mail System & Reward Delivery Fallbacks: player-to-player mail, system mail
   with item/currency attachments and XML template argument formatting, account-wide
   mail binding at login, batched inbox loading, single/bulk reading, attachment

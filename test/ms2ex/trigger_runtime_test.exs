@@ -647,6 +647,27 @@ defmodule Ms2ex.TriggerRuntimeTest do
              receive_push()
   end
 
+  test "set_time_scale broadcasts the field tick-rate change" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{
+        name: "set_time_scale",
+        args: %{
+          enable: "1",
+          start_scale: "0.5",
+          end_scale: "0.5",
+          duration: "10.0",
+          interpolator: "1"
+        }
+      }
+    ])
+    |> tick()
+
+    assert {:push,
+            <<0xF5::little-16, 1, 0.5::little-float-32, 0.5::little-float-32,
+              10.0::little-float-32, 1>>} = receive_push()
+  end
+
   # -- helpers ---------------------------------------------------------
 
   defp base_state do

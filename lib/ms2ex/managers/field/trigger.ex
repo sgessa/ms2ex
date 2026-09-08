@@ -532,6 +532,23 @@ defmodule Ms2ex.Managers.Field.Trigger do
     state
   end
 
+  # slows/speeds up the field's tick rate for a cinematic beat (e.g. a
+  # bullet-time dodge sequence); enable false reverts to normal speed
+  defp execute_action("set_time_scale", args, _script_name, state) do
+    Context.Field.broadcast(
+      state.topic,
+      Packets.TimeScale.set(
+        bool_arg(args, :enable),
+        float_arg(args, :start_scale),
+        float_arg(args, :end_scale),
+        float_arg(args, :duration),
+        int_arg(args, :interpolator)
+      )
+    )
+
+    state
+  end
+
   defp execute_action("set_onetime_effect", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
