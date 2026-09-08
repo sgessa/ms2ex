@@ -11,15 +11,15 @@ defmodule Ms2ex.TriggerRuntimeTest do
     state_names: ["wait", "fight", "done"],
     states: %{
       "wait" => %{
-        on_enter: [%{name: "set_mesh", args: %{arg1: "1000", arg2: "1"}}],
+        on_enter: [%{name: "set_mesh", args: %{trigger_ids: "1000", visible: "1"}}],
         on_exit: [],
         conditions: [
           %{
             name: "user_detected",
             negate: false,
-            args: %{arg1: "9000"},
+            args: %{box_ids: "9000"},
             next_state: "fight",
-            actions: [%{name: "spawn_monster", args: %{arg1: "101"}}]
+            actions: [%{name: "spawn_monster", args: %{spawn_ids: "101"}}]
           }
         ],
         next_state: ""
@@ -31,9 +31,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
           %{
             name: "monster_dead",
             negate: false,
-            args: %{arg1: "101"},
+            args: %{spawn_ids: "101"},
             next_state: "done",
-            actions: [%{name: "set_portal", args: %{arg1: "1", arg2: "1", arg3: "1"}}]
+            actions: [%{name: "set_portal", args: %{portal_id: "1", visible: "1", enable: "1"}}]
           }
         ],
         next_state: ""
@@ -97,7 +97,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
         %{
           name: "user_detected",
           negate: false,
-          args: %{arg1: "9000", arg2: "10"},
+          args: %{box_ids: "9000", job_code: "10"},
           next_state: "fight",
           actions: []
         }
@@ -154,7 +154,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
         %{
           name: "widget_condition",
           negate: false,
-          args: %{arg1: "SceneMovie", arg2: "IsStop", arg3: "1"},
+          args: %{type: "SceneMovie", widget_name: "IsStop", condition: "1"},
           next_state: "fight",
           actions: []
         }
@@ -212,7 +212,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
         %{
           name: "widget_condition",
           negate: false,
-          args: %{arg1: "SceneMovie", arg2: "IsStop", arg3: "2"},
+          args: %{type: "SceneMovie", widget_name: "IsStop", condition: "2"},
           next_state: "fight",
           actions: []
         }
@@ -229,7 +229,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
         %{
           name: "user_detected",
           negate: true,
-          args: %{arg1: "9000"},
+          args: %{box_ids: "9000"},
           next_state: "fight",
           actions: []
         }
@@ -264,7 +264,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
     state =
       base_state()
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "set_effect", args: %{arg1: "5001-5003,5025", arg2: "1"}}
+        %{name: "set_effect", args: %{trigger_ids: "5001-5003,5025", visible: "1"}}
       ])
       |> tick()
 
@@ -275,7 +275,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "set_cinematic_ui type 9 broadcasts the opening black screen" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-      %{name: "set_cinematic_ui", args: %{arg1: "9", arg2: "X"}}
+      %{name: "set_cinematic_ui", args: %{type: "9", script: "X"}}
     ])
     |> tick()
 
@@ -285,7 +285,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "set_pc_emotion_loop broadcasts the player emote loop" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-      %{name: "set_pc_emotion_loop", args: %{arg1: "Talk_A", arg2: "8000"}}
+      %{name: "set_pc_emotion_loop", args: %{sequence_name: "Talk_A", duration: "8000"}}
     ])
     |> tick()
 
@@ -297,7 +297,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "set_pc_emotion_sequence broadcasts the player emote sequence" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-      %{name: "set_pc_emotion_sequence", args: %{arg1: "Bore_C, Talk_A"}}
+      %{name: "set_pc_emotion_sequence", args: %{sequence_names: "Bore_C, Talk_A"}}
     ])
     |> tick()
 
@@ -359,7 +359,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
       })
       |> put_player(%{x: 5.0, y: 5.0, z: 5.0}, 1)
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "set_achievement", args: %{arg1: "2001", arg2: "trigger", arg3: "jordy"}}
+        %{name: "set_achievement", args: %{trigger_id: "2001", type: "trigger", achieve: "jordy"}}
       ])
       |> tick()
 
@@ -375,7 +375,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
         %{
           name: "set_dialogue",
-          args: %{arg1: "1", arg2: "108", arg3: "$52000116_QD__MAIN__4$", arg4: "2"}
+          args: %{type: "1", spawn_id: "108", script: "$52000116_QD__MAIN__4$", time: "2"}
         }
       ])
       |> tick()
@@ -391,11 +391,11 @@ defmodule Ms2ex.TriggerRuntimeTest do
   end
 
   test "set_dialogue balloons the player when the spawn point is zero" do
-    state =
+    _state =
       base_state()
       |> Map.put(:players, %{1 => 777})
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "set_dialogue", args: %{arg1: "1", arg2: "0", arg3: "$hi$", arg4: "3"}}
+        %{name: "set_dialogue", args: %{type: "1", spawn_id: "0", script: "$hi$", time: "3"}}
       ])
       |> tick()
 
@@ -408,7 +408,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   end
 
   test "add_balloon_talk queues an npc balloon after the delay" do
-    state =
+    _state =
       base_state()
       |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
@@ -417,7 +417,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
           args: %{
             msg: "$52000135_QD__MAIN__12$",
             duration: "2000",
-            spawn_point_id: "108",
+            spawn_id: "108",
             delay_tick: "100"
           }
         }
@@ -435,12 +435,25 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "play_system_sound_in_box broadcasts the sound field-wide without boxes" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-      %{name: "play_system_sound_in_box", args: %{arg2: "System_Space_PopUp_01"}}
+      %{name: "play_system_sound_in_box", args: %{sound: "System_Space_PopUp_01"}}
     ])
     |> tick()
 
     expected = <<0xC5::little-16>> <> ustring("System_Space_PopUp_01")
     assert {:push, ^expected} = receive_push()
+  end
+
+  test "set_sound toggles a trigger sound object" do
+    state =
+      base_state()
+      |> Map.put(:trigger_sounds, %{3001 => %{id: 3001, visible: false}})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "set_sound", args: %{trigger_id: "3001", enable: "1"}}
+      ])
+      |> tick()
+
+    assert {:push, <<0x4F::little-16, 3, 3001::little-32, 1>>} = receive_push()
+    assert %{visible: true} = state.trigger_sounds[3001]
   end
 
   test "move_npc attaches the patrol to the matching story npc" do
@@ -465,7 +478,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
         701 => %{spawn_point_id: 109, animation: 255, patrol: nil, npc: %{id: 11_003_399}}
       })
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "move_npc", args: %{arg1: "108", arg2: "MS2PatrolData_2003"}}
+        %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
       ])
       |> tick()
 
@@ -496,7 +509,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
       })
       |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "move_npc", args: %{arg1: "108", arg2: "MS2PatrolData_2003"}}
+        %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
       ])
       |> tick()
 
@@ -508,7 +521,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "set_cinematic_ui frames the cutscene with a letterbox transition" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-      %{name: "set_cinematic_ui", args: %{arg1: "3"}}
+      %{name: "set_cinematic_ui", args: %{type: "3"}}
     ])
     |> tick()
 

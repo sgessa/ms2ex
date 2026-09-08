@@ -325,8 +325,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
     do: now > machine.entered_at + int_arg(args, :wait_tick)
 
   defp evaluate("user_detected", args, _machine, _now, state) do
-    box_ids = int_list_arg(args, :arg1)
-    job_code = int_arg(args, :arg2)
+    box_ids = int_list_arg(args, :box_ids)
+    job_code = int_arg(args, :job_code)
     boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
 
     state
@@ -342,7 +342,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp evaluate("monster_dead", args, _machine, _now, state) do
-    spawn_point_ids = int_list_arg(args, :arg1)
+    spawn_point_ids = int_list_arg(args, :spawn_ids)
 
     state.npc_spawns
     |> Map.values()
@@ -351,17 +351,17 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp evaluate("widget_condition", args, _machine, _now, state) do
-    conditions = get_in(state, [:widgets, widget_key(args[:arg1]), :conditions]) || %{}
-    value = Map.get(conditions, args[:arg2])
-    value != nil and value == int_arg(args, :arg3)
+    conditions = get_in(state, [:widgets, widget_key(args[:type]), :conditions]) || %{}
+    value = Map.get(conditions, args[:widget_name])
+    value != nil and value == int_arg(args, :condition)
   end
 
   # true when a player standing in one of the boxes has the quest in the
   # wanted state (1 = started; 2/3 = finished in ms2ex's simpler model)
   defp evaluate("quest_user_detected", args, _machine, _now, state) do
-    box_ids = int_list_arg(args, :arg1)
-    quest_id = int_arg(args, :arg2)
-    wanted = int_arg(args, :arg3)
+    box_ids = int_list_arg(args, :box_ids)
+    quest_id = int_arg(args, :quest_ids)
+    wanted = int_arg(args, :quest_states)
     boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
 
     Enum.any?(state.player_positions, fn {character_id, %{position: position}} ->
@@ -415,10 +415,10 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_actions(_actions, _script_name, state), do: state
 
   defp execute_action("set_mesh", args, _script_name, state) do
-    visible = bool_arg(args, :arg2)
+    visible = bool_arg(args, :visible)
     meshes = Map.get(state, :trigger_meshes, %{})
 
-    Enum.reduce(int_list_arg(args, :arg1), state, fn mesh_id, state ->
+    Enum.reduce(int_list_arg(args, :trigger_ids), state, fn mesh_id, state ->
       case Map.get(meshes, mesh_id) do
         %{} = mesh ->
           Context.Field.broadcast(state.topic, Packets.Trigger.update_mesh(visible, mesh))
@@ -431,7 +431,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp execute_action("set_portal", args, _script_name, state),
-    do: update_portal(int_arg(args, :arg1), args, state)
+    do: update_portal(int_arg(args, :portal_id), args, state)
 
   defp execute_action("guide_event", args, _script_name, state) do
     Context.Field.broadcast(state.topic, Packets.Trigger.guide_event(int_arg(args, :event_id)))
@@ -439,22 +439,22 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp execute_action("spawn_monster", args, _script_name, state) do
-    Enum.reduce(int_list_arg(args, :arg1), state, fn spawn_point_id, state ->
+    Enum.reduce(int_list_arg(args, :spawn_ids), state, fn spawn_point_id, state ->
       Field.Npc.trigger_spawn(state, spawn_point_id)
     end)
   end
 
   defp execute_action("destroy_monster", args, _script_name, state),
-    do: destroy_mobs(int_list_arg(args, :arg1), state)
+    do: destroy_mobs(int_list_arg(args, :spawn_ids), state)
 
   defp execute_action("create_widget", args, _script_name, state) do
     # widgets are recreated fresh, dropping any remembered conditions
-    put_in(state, [:widgets, widget_key(args[:arg1])], %{conditions: %{}})
+    put_in(state, [:widgets, widget_key(args[:type])], %{conditions: %{}})
   end
 
   defp execute_action("widget_action", args, _script_name, state) do
-    if to_string(args[:arg2]) == "clear" do
-      put_in(state, [:widgets, widget_key(args[:arg1]), :conditions], %{})
+    if to_string(args[:func]) == "clear" do
+      put_in(state, [:widgets, widget_key(args[:type]), :conditions], %{})
     else
       state
     end
@@ -474,9 +474,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp execute_action("set_effect", args, _script_name, state) do
-    visible = bool_arg(args, :arg2)
+    visible = bool_arg(args, :visible)
 
-    Enum.reduce(int_list_arg(args, :arg1), state, fn effect_id, state ->
+    Enum.reduce(int_list_arg(args, :trigger_ids), state, fn effect_id, state ->
       Context.Field.broadcast(
         state.topic,
         Packets.Trigger.update_effect(visible, %{id: effect_id})
@@ -489,7 +489,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action("select_camera_path", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
-      Packets.Trigger.camera_start(int_list_arg(args, :arg1), bool_arg(args, :arg2))
+      Packets.Trigger.camera_start(int_list_arg(args, :path_ids), bool_arg(args, :return_view))
     )
 
     state
@@ -564,9 +564,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # script buffs (carry poses, scene states) applied to players in boxes;
   # tracked so remove_buff can clear them later
   defp execute_action("add_buff", args, _script_name, state) do
-    buff_id = int_arg(args, :arg2)
-    level = int_arg(args, :arg3)
-    box_ids = int_list_arg(args, :arg1)
+    buff_id = int_arg(args, :skill_id)
+    level = int_arg(args, :level)
+    box_ids = int_list_arg(args, :box_ids)
 
     players_in_boxes(state, box_ids)
     |> Enum.reduce(state, fn character_id, state ->
@@ -575,8 +575,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp execute_action("remove_buff", args, _script_name, state) do
-    buff_id = int_arg(args, :arg2)
-    box_ids = int_list_arg(args, :arg1)
+    buff_id = int_arg(args, :skill_id)
+    box_ids = int_list_arg(args, :box_id)
 
     players_in_boxes(state, box_ids)
     |> Enum.reduce(state, fn character_id, state ->
@@ -587,7 +587,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # scripted carry: an invisible dummy npc walks the patrol path and each
   # player's client walks the player behind it
   defp execute_action("move_user_path", args, _script_name, state) do
-    path_name = to_string(args[:arg1])
+    path_name = to_string(args[:patrol_name])
     patrol = Map.get(state[:patrols] || %{}, path_name)
 
     case patrol do
@@ -608,8 +608,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # teleports the players: soft position move within the map, field change
   # across maps (the field empties and stops after a cross-map move)
   defp execute_action("move_user", args, _script_name, state) do
-    map_id = int_arg(args, :arg1)
-    portal_id = int_arg(args, :arg2)
+    map_id = int_arg(args, :map_id)
+    portal_id = int_arg(args, :portal_id)
 
     case Storage.Maps.get_portal(map_id, portal_id) do
       %{} = portal ->
@@ -631,33 +631,31 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action("start_tutorial", _args, _script_name, state), do: state
 
   defp execute_action("set_cinematic_ui", args, _script_name, state),
-    do: cinematic_ui(int_arg(args, :arg1), args, state)
+    do: cinematic_ui(int_arg(args, :type), args, state)
 
   # arms the cutscene skip: while set, a skip request jumps the script to
   # the armed state (an empty string disarms)
   defp execute_action("set_skip", args, script_name, state) do
-    skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:arg1]))
+    skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:state]))
     state = Map.put(state, :trigger_skips, skips)
     broadcast(state, Packets.Cinematic.set_skip_state(""))
   end
 
   # scene skips also tell the client which label to show on the skip button
   defp execute_action("set_scene_skip", args, script_name, state) do
-    skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:arg1]))
+    skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:state]))
     state = Map.put(state, :trigger_skips, skips)
-    broadcast(state, Packets.Cinematic.set_skip_scene(to_string(args[:arg2] || "")))
+    broadcast(state, Packets.Cinematic.set_skip_scene(to_string(args[:action] || "")))
   end
 
   # scripted dialogue: a speech balloon over the speaking actor's head, or a
-  # cinematic-styled talk anchored to the npc. Args are positional:
-  # arg1 = type (1 = balloon over the npc), arg2 = spawn point id (or the
-  # npc id for the cinematic talk), arg3 = script text, arg4 = display
-  # seconds
+  # cinematic-styled talk anchored to the npc. type = 1 means a balloon over
+  # the npc; spawn_id 0 means the player speaks; time is display seconds
   defp execute_action("set_dialogue", args, _script_name, state) do
-    type = int_arg(args, :arg1)
-    spawn_id = int_arg(args, :arg2)
-    script = to_string(args[:arg3] || "")
-    duration = int_arg(args, :arg4) * 1000
+    type = int_arg(args, :type)
+    spawn_id = int_arg(args, :spawn_id)
+    script = to_string(args[:script] || "")
+    duration = int_arg(args, :time) * 1000
 
     cond do
       spawn_id == 0 ->
@@ -700,7 +698,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
     script = to_string(args[:msg] || "")
     duration = int_arg(args, :duration)
     delay = int_arg(args, :delay_tick)
-    spawn_id = int_arg(args, :spawn_point_id)
+    spawn_id = int_arg(args, :spawn_id)
 
     if spawn_id == 0 do
       balloon_first_player(state, script, duration, delay)
@@ -723,8 +721,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # system sounds inside trigger boxes (or field-wide when no box is
   # configured)
   defp execute_action("play_system_sound_in_box", args, _script_name, state) do
-    sound = to_string(args[:arg2] || "")
-    box_ids = int_list_arg(args, :arg1)
+    sound = to_string(args[:sound] || "")
+    box_ids = int_list_arg(args, :box_ids)
 
     if box_ids == [] do
       Context.Field.broadcast(state.topic, Packets.PlaySystemSound.system(sound))
@@ -734,10 +732,6 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     state
   end
-
-  # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
-  # (sound setup, fade delays); unknown actions warn loudly so script
-  # coverage gaps surface in the log
 
   # loops an emote sequence on a story npc (the collapsed robe, lying
   # recruits): the sequence name resolves to a numeric animation id through
@@ -754,14 +748,14 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # walks a story npc along a named patrol path (script move_npc)
   defp execute_action("move_npc", args, _script_name, state) do
-    Field.Npc.move_npc(state, int_arg(args, :arg1), to_string(args[:arg2] || ""))
+    Field.Npc.move_npc(state, int_arg(args, :spawn_id), to_string(args[:patrol_name] || ""))
   end
 
   # the player loops an emote sequence for a scripted beat
   defp execute_action("set_pc_emotion_loop", args, _script_name, state) do
-    sequence = to_string(args[:arg1] || "")
-    duration = int_arg(args, :arg2)
-    loop = bool_arg(args, :arg3)
+    sequence = to_string(args[:sequence_name] || "")
+    duration = int_arg(args, :duration)
+    loop = bool_arg(args, :loop)
 
     Context.Field.broadcast(state.topic, Packets.Trigger.emotion_loop(sequence, duration, loop))
     state
@@ -771,7 +765,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action("set_pc_emotion_sequence", args, _script_name, state) do
     sequence_names =
       args
-      |> Map.get(:arg1, "")
+      |> Map.get(:sequence_names, "")
       |> to_string()
       |> String.split(",", trim: true)
       |> Enum.map(&String.trim/1)
@@ -781,8 +775,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   # a screen-space caption banner ending a scripted beat (the named-title
-  # card). The game data spells the offset attributes offestRate*; the
-  # ingest stores them snake-cased under that same spelling
+  # card)
   defp execute_action("show_caption", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
@@ -792,8 +785,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
         to_string(args[:desc] || ""),
         to_string(args[:align] || "center"),
         int_arg(args, :duration),
-        float_arg(args, :offest_rate_x),
-        float_arg(args, :offest_rate_y),
+        float_arg(args, :offset_rate_x),
+        float_arg(args, :offset_rate_y),
         float_arg(args, :scale)
       )
     )
@@ -805,16 +798,16 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # standing in the box, feeding both the quest and achievement condition
   # pipelines. The knight main quest's "trigger: jordy" beat completes here
   defp execute_action("set_achievement", args, _script_name, state) do
-    box_ids = int_list_arg(args, :arg1)
+    box_ids = int_list_arg(args, :trigger_id)
 
-    case event_condition_type(args[:arg2]) do
+    case event_condition_type(args[:type]) do
       nil ->
         # an unknown type matches no condition, same as the reference's
         # ConditionType.unknown
         state
 
       type ->
-        code = to_string(args[:arg3] || "")
+        code = to_string(args[:achieve] || "")
 
         players_in_boxes(state, box_ids)
         |> Enum.each(fn character_id ->
@@ -826,8 +819,64 @@ defmodule Ms2ex.Managers.Field.Trigger do
     end
   end
 
+  # toggles a trigger sound object (map ambience/chime anchored to the
+  # scene); the client resolves the sound data from the map by id
+  defp execute_action("set_sound", args, _script_name, state) do
+    sound_id = int_arg(args, :trigger_id)
+    enabled = bool_arg(args, :enable)
+    sounds = Map.get(state, :trigger_sounds, %{})
+
+    case Map.get(sounds, sound_id) do
+      %{} = sound ->
+        Context.Field.broadcast(state.topic, Packets.Trigger.update_sound(sound_id, enabled))
+        put_in(state, [:trigger_sounds, sound_id], Map.put(sound, :visible, enabled))
+
+      _ ->
+        state
+    end
+  end
+
+  # a facial expression overlay on the player (spawn point 0) or the
+  # spawn-point npcs
+  defp execute_action("face_emotion", args, _script_name, state) do
+    emotion = to_string(args[:emotion_name] || "")
+    spawn_id = int_arg(args, :spawn_id)
+
+    if spawn_id == 0 do
+      case Map.values(state.players) do
+        [object_id | _] ->
+          Context.Field.broadcast(state.topic, Packets.Trigger.face_emotion(object_id, emotion))
+
+        [] ->
+          :ok
+      end
+    else
+      state.npcs
+      |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
+      |> Enum.each(fn {object_id, _npc} ->
+        Context.Field.broadcast(state.topic, Packets.Trigger.face_emotion(object_id, emotion))
+      end)
+    end
+
+    state
+  end
+
+  # hides or reveals the player character during scripted camera beats
+  # (the hide_player field property)
+  defp execute_action("visible_my_pc", args, _script_name, state) do
+    visible = bool_arg(args, :is_visible)
+
+    if visible do
+      Context.Field.broadcast(state.topic, Packets.FieldProperty.remove(:hide_player))
+    else
+      Context.Field.broadcast(state.topic, Packets.FieldProperty.add(:hide_player))
+    end
+
+    Map.put(state, :hide_player, not visible)
+  end
+
   # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
-  # (sound setup, fade delays); unknown actions warn loudly so script
+  # (fade delays); unknown actions warn loudly so script
   # coverage gaps surface in the log
   defp execute_action(name, _args, _script_name, state) do
     Logger.warning("Unhandled trigger action " <> name)
@@ -872,8 +921,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp play_npc_emotion(args, state) do
-    spawn_id = int_arg(args, :arg1)
-    sequence = to_string(args[:arg2] || "")
+    spawn_id = int_arg(args, :spawn_id)
+    sequence = to_string(args[:sequence_name] || "")
 
     state.npcs
     |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
@@ -942,6 +991,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
     _ -> :center
   end
 
+  # the game data spells the attribute both ways across scripts
   defp players_in_boxes(state, box_ids) do
     boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
 
@@ -1007,9 +1057,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
       %{} = portal ->
         portal = %{
           portal
-          | visible: bool_arg(args, :arg2),
-            enable: bool_arg(args, :arg3),
-            minimap_visible: bool_arg(args, :arg4)
+          | visible: bool_arg(args, :visible),
+            enable: bool_arg(args, :enable),
+            minimap_visible: bool_arg(args, :minimap_visible)
         }
 
         Context.Field.broadcast(state.topic, Packets.AddPortal.update(portal))
@@ -1062,14 +1112,14 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # is what cinematic dialog bubbles render over; the script text overlays
   # the transition
   defp cinematic_ui(type, args, state) when type in 3..6 do
-    script = to_string(args[:arg2] || "")
+    script = to_string(args[:script] || "")
     Context.Field.broadcast(state.topic, Packets.Cinematic.view(type, script))
     state
   end
 
   # black screen with text (scripted intros)
   defp cinematic_ui(9, args, state) do
-    script = to_string(args[:arg2] || "")
+    script = to_string(args[:script] || "")
     Context.Field.broadcast(state.topic, Packets.Cinematic.opening(script, bool_arg(args, :arg3)))
     state
   end

@@ -40,6 +40,11 @@ defmodule Ms2ex.Packets.FieldProperty do
     |> put_int(end_tick)
   end
 
+  # hide_player carries no payload
+  defp put_property(packet, :hide_player) do
+    put_byte(packet, Enums.FieldProperty.get_value(:hide_player))
+  end
+
   defp put_property(packet, property) when is_atom(property) do
     packet
     |> put_byte(Enums.FieldProperty.get_value(property))

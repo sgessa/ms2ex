@@ -38,10 +38,14 @@ defmodule Ms2ex.NpcEmotionTest do
         states: %{
           "beat" => %{
             on_enter: [
-              %{name: "spawn_monster", args: %{arg1: "109"}},
+              %{name: "spawn_monster", args: %{spawn_ids: "109"}},
               %{
                 name: "set_npc_emotion_loop",
-                args: %{arg1: "109", arg2: "Emotion_lie_facedown_Idle_A", arg3: "600000"}
+                args: %{
+                  spawn_id: "109",
+                  sequence_name: "Emotion_lie_facedown_Idle_A",
+                  duration: "600000"
+                }
               }
             ],
             on_exit: [],

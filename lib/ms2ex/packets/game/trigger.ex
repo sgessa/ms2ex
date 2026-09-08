@@ -15,19 +15,21 @@ defmodule Ms2ex.Packets.Trigger do
     start_movie: 0x4,
     skip_movie: 0x5,
     emotion_sequence: 0x7,
-    emotion_loop: 0x8
+    emotion_loop: 0x8,
+    face_emotion: 0x9
   }
 
   # Sent once at field load: registers every trigger object id so the client
   # can resolve later references (mesh updates, camera paths, effects).
   # Meshes already dropped by opened gates join as hidden entries.
-  def load(meshes \\ [], cameras \\ []) do
+  def load(meshes \\ [], cameras \\ [], sounds \\ []) do
     __MODULE__
     |> build()
     |> put_byte(@modes.load)
-    |> put_int(length(meshes) + length(cameras))
+    |> put_int(length(meshes) + length(cameras) + length(sounds))
     |> reduce(meshes, fn mesh, packet -> put_mesh(packet, false, mesh) end)
     |> reduce(cameras, fn camera, packet -> put_camera(packet, camera) end)
+    |> reduce(sounds, fn sound, packet -> put_sound(packet, sound) end)
   end
 
   # camera entries only register the path ids so later CameraStart/
@@ -40,6 +42,13 @@ defmodule Ms2ex.Packets.Trigger do
     |> put_bool(false)
   end
 
+  # sound entries carry their initial enabled state
+  defp put_sound(packet, sound) do
+    packet
+    |> put_int(sound.id)
+    |> put_bool(sound.visible)
+  end
+
   # Notifies the client that a map trigger mesh changed state — e.g. a
   # barrier mesh dropping once its guard mobs are dead.
   def update_mesh(visible, mesh) do
@@ -47,6 +56,16 @@ defmodule Ms2ex.Packets.Trigger do
     |> build()
     |> put_byte(@modes.update)
     |> put_mesh(visible, mesh)
+  end
+
+  # toggles a trigger sound object (script set_sound); the body is just
+  # the id and the new state
+  def update_sound(id, visible) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update)
+    |> put_int(id)
+    |> put_bool(visible)
   end
 
   def hide_mesh(mesh), do: update_mesh(false, mesh)
@@ -104,6 +123,16 @@ defmodule Ms2ex.Packets.Trigger do
     |> reduce(sequence_names, fn sequence_name, packet ->
       put_ustring(packet, sequence_name)
     end)
+  end
+
+  # a facial expression overlay on an actor
+  def face_emotion(object_id, emotion) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.ui)
+    |> put_byte(@ui_modes.face_emotion)
+    |> put_int(object_id)
+    |> put_string(emotion)
   end
 
   # the objective pointer arrow marking where the current step wants the
