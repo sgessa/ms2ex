@@ -271,7 +271,10 @@ trigger-gated main quests such as the knight's complete),
 add/remove_buff (script buffs), move_user (same-map teleport refused for
 non-walkable portals via the navmesh, cross-map field change),
 move_user_path (invisible follow-dummy walks the patrol in 3D with
-velocity while the client walks the player behind it).
+velocity while the client walks the player behind it), create_item (a
+map's item spawn point drops a fixed-position, unowned field item —
+used directly when the action names an item id, or rolled from the
+spawn point's own individual/global drop box).
 
 Still missing:
 
@@ -281,9 +284,6 @@ Still missing:
   comparison with the reference. Load-time camera registration is fixed
   to arrive invisible (a visible entry activates the view client-side,
   stranding relogs outside the intro on a scripted vantage)
-- residual sound actions: `play_system_sound_in_box` is in (field-wide
-  broadcast when no box is configured, per-player push inside boxes);
-  still missing the background/BGM sound actions (`set_sound`)
 - balloon-family follow-ups: `remove_balloon_talk` and dialogue
   `delay_tick` scheduling (the client applies the delay itself, so
   scripts that gate via wait_tick are unaffected)
@@ -598,6 +598,16 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Trigger runtime: implemented the `npc_detected` condition (a story
+  npc's spawn point standing inside a trigger box — drives scripted
+  arrivals such as an npc that walked off via `move_npc` reaching its
+  destination) and the `create_item` action (a map's item spawn point
+  drops a fixed-position, unowned field item, either a named item id or
+  rolled from the spawn point's individual/global drop box). The ingest
+  now projects `EventSpawnPointItem` entities (`item_spawns` per map),
+  previously parsed but never written to any doc. Fixed the berserker
+  chapter's "pick up an item from the ground" quest step, which had no
+  item to pick up
 - Mail System & Reward Delivery Fallbacks: player-to-player mail, system mail
   with item/currency attachments and XML template argument formatting, account-wide
   mail binding at login, batched inbox loading, single/bulk reading, attachment

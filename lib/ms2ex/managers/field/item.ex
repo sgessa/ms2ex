@@ -110,8 +110,25 @@ defmodule Ms2ex.Managers.Field.Item do
     store(state, item)
   end
 
-  # metadata is re-read from the storage cache when the item is picked up;
-  # it is not kept in the field state
+  # a fixed-position, unowned field item (trigger-spawned quest pickups):
+  # no source entity, free for any player to take
+  def create_item(position, item, state) do
+    {object_id, state} = Managers.Field.next_local_id(state)
+
+    item = %{
+      item
+      | position: position,
+        object_id: object_id,
+        lock_character_id: 0,
+        mob_drop?: false,
+        source_object_id: 0,
+        target_object_id: 0
+    }
+
+    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    store(state, item)
+  end
+
   defp store(state, item) do
     items = Map.put(state.items, item.object_id, %{item | metadata: nil})
     %{state | items: items}

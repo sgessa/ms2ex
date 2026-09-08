@@ -165,6 +165,93 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert %{next: "fight"} = state.trigger_machines["tutorial"]
   end
 
+  test "create_item with an explicit item_id drops it at the spawn point, unowned" do
+    stub_metadata(%{
+      "item:30000783" => %{
+        limit: %{level: 1, transfer_type: 3},
+        property: %{type: 1},
+        slot_names: [],
+        option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
+      }
+    })
+
+    state =
+      base_state()
+      |> put_in([:item_spawns, 200], %{
+        spawn_point_id: 200,
+        position: %{x: 2264.0, y: 741.0, z: 2250.0},
+        individual_drop_box_id: 0,
+        global_drop_box_id: 0,
+        global_drop_level: 1
+      })
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "create_item", args: %{spawn_ids: "200", item_id: "30000783"}}
+      ])
+      |> tick()
+
+    assert [%{item_id: 30_000_783, lock_character_id: 0, source_object_id: 0}] =
+             Map.values(state.items)
+  end
+
+  test "create_item without an item_id rolls the spawn point's individual drop box" do
+    stub_metadata(%{
+      "item:30000783" => %{
+        limit: %{level: 1, transfer_type: 3},
+        property: %{type: 1},
+        slot_names: [],
+        option: %{constant_id: 0, pick_id: 0, static_id: 0, random_id: 0}
+      },
+      "table:individualdropitem.xml" => %{
+        table: %{
+          entries: %{
+            "390000068" => %{
+              "1" => %{
+                items: [
+                  %{
+                    ids: [30_000_783, 0],
+                    weight: 10_000,
+                    proper_job_weight: 10_000,
+                    improper_job_weight: 10_000,
+                    drop_count: %{min: 1, max: 1},
+                    rarities: [],
+                    quest_id: 0,
+                    map_ids: []
+                  }
+                ],
+                group_id: 1,
+                smart_drop_rate: 0,
+                smart_gender: false,
+                min_level: 0,
+                drop_counts: [%{count: 1, probability: 100}]
+              }
+            }
+          }
+        }
+      }
+    })
+
+    Mimic.stub(Ms2ex.Managers.Character, :call, fn _id, :lookup ->
+      {:ok, %Ms2ex.Schema.Character{id: 1, level: 1}}
+    end)
+
+    state =
+      base_state()
+      |> Map.put(:players, %{1 => 60_100_000})
+      |> put_in([:item_spawns, 200], %{
+        spawn_point_id: 200,
+        position: %{x: 2264.0, y: 741.0, z: 2250.0},
+        individual_drop_box_id: 390_000_068,
+        global_drop_box_id: 0,
+        global_drop_level: 1
+      })
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "create_item", args: %{spawn_ids: "200"}}
+      ])
+      |> tick()
+
+    assert [%{item_id: 30_000_783}] = Map.values(state.items)
+  end
+
   test "skip_cutscene jumps to the armed state and confirms" do
     state =
       base_state()
@@ -574,6 +661,8 @@ defmodule Ms2ex.TriggerRuntimeTest do
       trigger_meshes: %{1000 => @mesh},
       trigger_boxes: %{9000 => @box},
       widgets: %{},
+      item_spawns: %{},
+      items: %{},
       portals: %{50_000_001 => portal(1)},
       # the tutorial's gated spawn point, not yet filled
       npc_spawns: %{

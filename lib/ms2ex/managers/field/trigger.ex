@@ -18,7 +18,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
   alias Ms2ex.Navigation
   alias Ms2ex.Net
   alias Ms2ex.Packets
+  alias Ms2ex.Schema
   alias Ms2ex.Storage
+  alias Ms2ex.Types.Coord
   alias Ms2ex.Types.FieldNpc
 
   @tick_ms 100
@@ -61,12 +63,18 @@ defmodule Ms2ex.Managers.Field.Trigger do
       |> Map.get(:patrols, [])
       |> Map.new(fn patrol -> {patrol.name, patrol} end)
 
+    item_spawns =
+      meta
+      |> Map.get(:item_spawns, [])
+      |> Map.new(fn spawn -> {spawn.spawn_point_id, spawn} end)
+
     state
     |> Map.put(:trigger_scripts, scripts)
     |> Map.put(:trigger_meshes, trigger_meshes)
     |> Map.put(:trigger_cameras, trigger_cameras)
     |> Map.put(:trigger_boxes, trigger_boxes)
     |> Map.put(:patrols, patrols)
+    |> Map.put(:item_spawns, item_spawns)
     |> Map.put(:widgets, %{})
     |> Map.put(:trigger_skips, %{})
     |> init_machines()
@@ -895,6 +903,17 @@ defmodule Ms2ex.Managers.Field.Trigger do
     Map.put(state, :hide_player, not visible)
   end
 
+  # spawns a fixed-position, unowned field item at a map's item spawn
+  # point(s) — the ground pickups for scripted quest beats. item_id is used
+  # directly when given; otherwise the spawn point's individual/global drop
+  # box rolls whatever it is configured with
+  defp execute_action("create_item", args, _script_name, state) do
+    spawn_ids = int_list_arg(args, :spawn_ids)
+    item_id = int_arg(args, :item_id)
+
+    Enum.reduce(spawn_ids, state, &create_spawned_item(&2, &1, item_id))
+  end
+
   # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
   # (fade delays); unknown actions warn loudly so script
   # coverage gaps surface in the log
@@ -916,6 +935,61 @@ defmodule Ms2ex.Managers.Field.Trigger do
     end
 
     state
+  end
+
+  # item_id is used directly when given; the spawn point's own drop boxes
+  # (individual needs a character for level/gender/job gating — any online
+  # player works since these boxes are shared, unowned field pickups, not
+  # per-player rolls) roll on top of it
+  defp roll_item_spawn(spawn, item_id, state) do
+    direct = if item_id > 0, do: List.wrap(Context.Items.drop_item(item_id, 0, 1)), else: []
+
+    individual =
+      case {spawn[:individual_drop_box_id], drop_roll_character(state)} do
+        {id, %Schema.Character{} = character} when is_integer(id) and id > 0 ->
+          Context.Drops.individual_items(id, character, state.map_id)
+
+        _ ->
+          []
+      end
+
+    global =
+      case spawn[:global_drop_box_id] do
+        id when is_integer(id) and id > 0 ->
+          Context.Drops.global_items(id, spawn[:global_drop_level] || 1, state.map_id)
+
+        _ ->
+          []
+      end
+
+    direct ++ individual ++ global
+  end
+
+  defp drop_roll_character(state) do
+    case Map.keys(state.players) do
+      [character_id | _] ->
+        case Managers.Character.call(character_id, :lookup) do
+          {:ok, character} -> character
+          _ -> nil
+        end
+
+      [] ->
+        nil
+    end
+  end
+
+  defp create_spawned_item(state, spawn_id, item_id) do
+    case Map.get(state.item_spawns, spawn_id) do
+      nil ->
+        state
+
+      spawn ->
+        position = struct(Coord, spawn.position)
+
+        spawn
+        |> roll_item_spawn(item_id, state)
+        |> Enum.reduce(state, &Field.Item.create_item(position, &1, &2))
+    end
   end
 
   defp play_sound_for_players_in_boxes(state, box_ids, sound) do
