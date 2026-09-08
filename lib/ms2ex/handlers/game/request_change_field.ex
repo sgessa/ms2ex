@@ -22,7 +22,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
       {src_portal_id, _packet} = get_int(packet)
 
       case find_portal(portals, src_portal_id) do
-        %{target_map_id: dst_map_id} ->
+        %{target_map_id: dst_map_id, enable: true} ->
           maybe_complete_tutorial(character, current_map_id)
 
           spawn_point = arrival_point(dst_map_id, current_map_id)

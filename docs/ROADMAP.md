@@ -304,10 +304,21 @@ queries over the stored tiles, and auditing the generated meshes
 against the reference (nif assets whose llid lookup failed leave small
 gaps in walkable coverage).
 
-### 7. Join-flow packet audit — [Open]
+### 7. Join-flow packet audit — [Partial]
 
-`FieldAddUser`, `AddPortal` and the battle-join packet set have not been
-audited for byte-level client parity yet.
+`AddPortal`'s load packet (`Packets.AddPortal.bytes/1`) is now byte-correct:
+dimension, action type and the minimap-visible flag were in the wrong wire
+position (a stray empty field where `Dimension` belongs, `ActionType` never
+read from data, `MinimapVisible` written two fields later than the client
+expects), silently corrupting every field after it — invisible field-to-field
+portals such as Rien's exit to Bamboo Grove could end up unusable
+client-side even though the server considered them enabled. `Storage.Maps`
+no longer drops disabled portals before they reach field state (they now
+load with their true `enable` flag, matching the reference's load-everything,
+check-enabled-at-use-time model), and the change-field handler now refuses
+transition through a disabled portal instead of allowing it through on an id
+match alone. `FieldAddUser` and the battle-join packet set still have not been
+audited for byte-level client parity.
 
 ### 8. Drop & field-item serialization — [Open]
 
