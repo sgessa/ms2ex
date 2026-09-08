@@ -123,12 +123,20 @@ defmodule Ms2ex.Storage.Maps do
 
       portal
       |> Map.put(:enable, Map.get(portal, :enable, false))
-      |> Map.put(:visible, Map.get(portal, :visible, false))
+      |> Map.put(:visible, portal_visible?(portal))
       |> Map.put(:minimap_visible, Map.get(portal, :minimap_visible, false))
       |> Map.put(:position, struct(Coord, position))
       |> Map.put(:rotation, struct(Coord, rotation))
     end)
   end
+
+  # Interact-type portals have no touch-triggered transition: the client
+  # needs a rendered, discoverable object to prompt on. Every
+  # dynamically-created Interact portal is authored visible; an
+  # xblock-authored one left invisible has nothing for the player to find
+  # or use, so it is rendered regardless of its raw flag.
+  defp portal_visible?(%{action_type: 0}), do: true
+  defp portal_visible?(portal), do: Map.get(portal, :visible, false)
 
   def get_meta(map_id) do
     Storage.get(:map, map_id)

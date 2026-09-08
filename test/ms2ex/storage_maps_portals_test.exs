@@ -18,7 +18,8 @@ defmodule Ms2ex.Storage.MapsPortalsTest do
             position: %{x: 1, y: 2, z: 3},
             rotation: %{x: 0, y: 0, z: 0},
             target_map_id: 0,
-            target_portal_id: 0
+            target_portal_id: 0,
+            action_type: 1
           },
           %{
             id: 2,
@@ -28,7 +29,8 @@ defmodule Ms2ex.Storage.MapsPortalsTest do
             position: %{x: 4, y: 5, z: 6},
             rotation: %{x: 0, y: 0, z: 0},
             target_map_id: 52_000_105,
-            target_portal_id: 1
+            target_portal_id: 1,
+            action_type: 0
           }
         ]
       }
@@ -42,5 +44,17 @@ defmodule Ms2ex.Storage.MapsPortalsTest do
 
     assert Enum.map(portals, & &1.id) == [1, 2]
     assert Enum.find(portals, &(&1.id == 1)).enable == false
+  end
+
+  test "interact-type portals render visible even when authored invisible" do
+    portals = Maps.get_portals(52_000_104)
+
+    assert Enum.find(portals, &(&1.id == 2)).visible == true
+  end
+
+  test "touch-type portals keep their authored visibility" do
+    portals = Maps.get_portals(52_000_104)
+
+    assert Enum.find(portals, &(&1.id == 1)).visible == false
   end
 end
