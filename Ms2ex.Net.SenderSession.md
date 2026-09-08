@@ -15,6 +15,8 @@ See `Supervisor`.
 
 # `run`
 
+# `run_async`
+
 # `start_link`
 
 # `stop`

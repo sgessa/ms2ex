@@ -36,6 +36,7 @@
   gender: term(),
   group_chat_ids: term(),
   guide_records: term(),
+  guild_id: term(),
   guild_name: term(),
   home_name: term(),
   hot_bars: term(),

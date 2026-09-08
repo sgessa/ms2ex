@@ -19,6 +19,7 @@ Ms2ex.Context.Experience.md
 Ms2ex.Context.Field.md
 Ms2ex.Context.Fishing.md
 Ms2ex.Context.Friends.md
+Ms2ex.Context.Guilds.md
 Ms2ex.Context.HotBars.md
 Ms2ex.Context.Insignias.md
 Ms2ex.Context.Inventory.md
@@ -68,6 +69,9 @@ Ms2ex.Enums.FieldProperty.md
 Ms2ex.Enums.FishingError.md
 Ms2ex.Enums.Gender.md
 Ms2ex.Enums.GuideObjectType.md
+Ms2ex.Enums.GuildError.md
+Ms2ex.Enums.GuildFocus.md
+Ms2ex.Enums.GuildNpcType.md
 Ms2ex.Enums.InsigniaType.md
 Ms2ex.Enums.InventoryTab.md
 Ms2ex.Enums.ItemType.md
@@ -114,6 +118,7 @@ Ms2ex.GameHandlers.Friend.md
 Ms2ex.GameHandlers.GroupChat.md
 Ms2ex.GameHandlers.GuideObjectSync.md
 Ms2ex.GameHandlers.GuideRecord.md
+Ms2ex.GameHandlers.Guild.md
 Ms2ex.GameHandlers.Helper.Friend.md
 Ms2ex.GameHandlers.Helper.ItemBox.md
 Ms2ex.GameHandlers.Helper.Party.md
@@ -201,6 +206,8 @@ Ms2ex.Managers.Field.Trigger.md
 Ms2ex.Managers.Field.md
 Ms2ex.Managers.GlobalCounter.md
 Ms2ex.Managers.GroupChat.md
+Ms2ex.Managers.GuildManager.md
+Ms2ex.Managers.GuildServer.md
 Ms2ex.Managers.Inventory.md
 Ms2ex.Managers.Managed.md
 Ms2ex.Managers.PartyManager.md
@@ -260,6 +267,7 @@ Ms2ex.Packets.GameToLogin.md
 Ms2ex.Packets.GroupChat.md
 Ms2ex.Packets.GuideObject.md
 Ms2ex.Packets.GuideRecord.md
+Ms2ex.Packets.Guild.md
 Ms2ex.Packets.HomeCommand.md
 Ms2ex.Packets.InGameRank.md
 Ms2ex.Packets.Insignia.md
@@ -360,6 +368,9 @@ Ms2ex.Schema.ChatStickerGroup.md
 Ms2ex.Schema.Emote.md
 Ms2ex.Schema.FavoriteChatSticker.md
 Ms2ex.Schema.Friend.md
+Ms2ex.Schema.Guild.md
+Ms2ex.Schema.GuildApplication.md
+Ms2ex.Schema.GuildMember.md
 Ms2ex.Schema.HotBar.md
 Ms2ex.Schema.InventoryTab.md
 Ms2ex.Schema.Item.md
@@ -387,6 +398,7 @@ Ms2ex.Storage.Tables.FieldMission.md
 Ms2ex.Storage.Tables.Fish.md
 Ms2ex.Storage.Tables.FishingRods.md
 Ms2ex.Storage.Tables.GlobalDropItemBox.md
+Ms2ex.Storage.Tables.Guild.md
 Ms2ex.Storage.Tables.IndividualDropItem.md
 Ms2ex.Storage.Tables.Insignias.md
 Ms2ex.Storage.Tables.Instruments.md
@@ -409,6 +421,11 @@ Ms2ex.Types.Coord.md
 Ms2ex.Types.CoordF.md
 Ms2ex.Types.FieldInstrument.md
 Ms2ex.Types.FieldNpc.md
+Ms2ex.Types.GuildBuff.md
+Ms2ex.Types.GuildInvite.md
+Ms2ex.Types.GuildNpc.md
+Ms2ex.Types.GuildPoster.md
+Ms2ex.Types.GuildRank.md
 Ms2ex.Types.Hair.md
 Ms2ex.Types.HairData.md
 Ms2ex.Types.Item.md

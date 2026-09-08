@@ -20,6 +20,7 @@ Ms2ex.Context.Experience.html
 Ms2ex.Context.Field.html
 Ms2ex.Context.Fishing.html
 Ms2ex.Context.Friends.html
+Ms2ex.Context.Guilds.html
 Ms2ex.Context.HotBars.html
 Ms2ex.Context.Insignias.html
 Ms2ex.Context.Inventory.html
@@ -69,6 +70,9 @@ Ms2ex.Enums.FieldProperty.html
 Ms2ex.Enums.FishingError.html
 Ms2ex.Enums.Gender.html
 Ms2ex.Enums.GuideObjectType.html
+Ms2ex.Enums.GuildError.html
+Ms2ex.Enums.GuildFocus.html
+Ms2ex.Enums.GuildNpcType.html
 Ms2ex.Enums.InsigniaType.html
 Ms2ex.Enums.InventoryTab.html
 Ms2ex.Enums.ItemType.html
@@ -115,6 +119,7 @@ Ms2ex.GameHandlers.Friend.html
 Ms2ex.GameHandlers.GroupChat.html
 Ms2ex.GameHandlers.GuideObjectSync.html
 Ms2ex.GameHandlers.GuideRecord.html
+Ms2ex.GameHandlers.Guild.html
 Ms2ex.GameHandlers.Helper.Friend.html
 Ms2ex.GameHandlers.Helper.ItemBox.html
 Ms2ex.GameHandlers.Helper.Party.html
@@ -202,6 +207,8 @@ Ms2ex.Managers.Field.Trigger.html
 Ms2ex.Managers.Field.html
 Ms2ex.Managers.GlobalCounter.html
 Ms2ex.Managers.GroupChat.html
+Ms2ex.Managers.GuildManager.html
+Ms2ex.Managers.GuildServer.html
 Ms2ex.Managers.Inventory.html
 Ms2ex.Managers.Managed.html
 Ms2ex.Managers.PartyManager.html
@@ -261,6 +268,7 @@ Ms2ex.Packets.GameToLogin.html
 Ms2ex.Packets.GroupChat.html
 Ms2ex.Packets.GuideObject.html
 Ms2ex.Packets.GuideRecord.html
+Ms2ex.Packets.Guild.html
 Ms2ex.Packets.HomeCommand.html
 Ms2ex.Packets.InGameRank.html
 Ms2ex.Packets.Insignia.html
@@ -361,6 +369,9 @@ Ms2ex.Schema.ChatStickerGroup.html
 Ms2ex.Schema.Emote.html
 Ms2ex.Schema.FavoriteChatSticker.html
 Ms2ex.Schema.Friend.html
+Ms2ex.Schema.Guild.html
+Ms2ex.Schema.GuildApplication.html
+Ms2ex.Schema.GuildMember.html
 Ms2ex.Schema.HotBar.html
 Ms2ex.Schema.InventoryTab.html
 Ms2ex.Schema.Item.html
@@ -388,6 +399,7 @@ Ms2ex.Storage.Tables.FieldMission.html
 Ms2ex.Storage.Tables.Fish.html
 Ms2ex.Storage.Tables.FishingRods.html
 Ms2ex.Storage.Tables.GlobalDropItemBox.html
+Ms2ex.Storage.Tables.Guild.html
 Ms2ex.Storage.Tables.IndividualDropItem.html
 Ms2ex.Storage.Tables.Insignias.html
 Ms2ex.Storage.Tables.Instruments.html
@@ -410,6 +422,11 @@ Ms2ex.Types.Coord.html
 Ms2ex.Types.CoordF.html
 Ms2ex.Types.FieldInstrument.html
 Ms2ex.Types.FieldNpc.html
+Ms2ex.Types.GuildBuff.html
+Ms2ex.Types.GuildInvite.html
+Ms2ex.Types.GuildNpc.html
+Ms2ex.Types.GuildPoster.html
+Ms2ex.Types.GuildRank.html
 Ms2ex.Types.Hair.html
 Ms2ex.Types.HairData.html
 Ms2ex.Types.Item.html
@@ -461,8 +478,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-487C51FD.js
-dist/sidebar_items-D57AC006.js
+dist/search_data-D4EA75AE.js
+dist/sidebar_items-1944A668.js
 index.html
 license.html
 readme.html
