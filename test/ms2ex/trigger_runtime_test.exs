@@ -486,6 +486,35 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert_received {:quest_event, 1, :trigger, 1, "jordy"}
   end
 
+  test "set_achievement without a box reaches every player" do
+    Mimic.stub(Ms2ex.Managers.Quest, :update_conditions, fn
+      character_id, type, counter, _target_string, _target_long, code_string, _code_long ->
+        send(self(), {:quest_event, character_id, type, counter, code_string})
+    end)
+
+    Mimic.stub(Ms2ex.Managers.Achievement, :update, fn _character_id,
+                                                       _type,
+                                                       _c,
+                                                       _ts,
+                                                       _tl,
+                                                       _cs,
+                                                       _cl ->
+      :ok
+    end)
+
+    base_state()
+    |> put_player(%{x: 5.0, y: 5.0, z: 5.0}, 1)
+    |> put_player(%{x: -900.0, y: -900.0, z: 5.0}, 2)
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      # the raw action carries no box argument at all — the event is global
+      %{name: "set_achievement", args: %{type: "trigger", achieve: "jordysave"}}
+    ])
+    |> tick()
+
+    assert_received {:quest_event, 1, :trigger, 1, "jordysave"}
+    assert_received {:quest_event, 2, :trigger, 1, "jordysave"}
+  end
+
   test "set_dialogue balloons the spawn-point npc with the script text" do
     state =
       base_state()

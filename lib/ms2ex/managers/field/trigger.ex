@@ -1235,14 +1235,24 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   # the game data spells the attribute both ways across scripts
-  defp players_in_boxes(state, box_ids) do
-    boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
+  defp players_in_boxes(state, box_ids)
 
-    state.player_positions
-    |> Enum.filter(fn {_id, %{position: position}} ->
-      is_map(position) and Enum.any?(boxes, &box_contains?(&1, position))
-    end)
-    |> Enum.map(fn {character_id, _entry} -> character_id end)
+  # a missing box argument defaults to 0, and box 0 is every player on the
+  # field
+  defp players_in_boxes(state, []), do: Map.keys(state.player_positions)
+
+  defp players_in_boxes(state, box_ids) do
+    if 0 in box_ids do
+      Map.keys(state.player_positions)
+    else
+      boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
+
+      state.player_positions
+      |> Enum.filter(fn {_id, %{position: position}} ->
+        is_map(position) and Enum.any?(boxes, &box_contains?(&1, position))
+      end)
+      |> Enum.map(fn {character_id, _entry} -> character_id end)
+    end
   end
 
   defp spawn_player_dummy(state, character_id, way_points) do
