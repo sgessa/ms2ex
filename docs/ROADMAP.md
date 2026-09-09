@@ -269,7 +269,10 @@ beat), set_achievement (a trigger condition event for players in a
 box, feeding the quest and achievement pipelines — this is what lets
 trigger-gated main quests such as the knight's complete),
 add/remove_buff (script buffs), move_user (same-map teleport refused for
-non-walkable portals via the navmesh, cross-map field change),
+non-walkable portals via the navmesh, cross-map field change — the
+destination's portal id is a hint only, falling back to its return
+portal or default spawn when it has no such portal, e.g. the Door of
+Light transition),
 move_user_path (invisible follow-dummy walks the patrol in 3D with
 velocity while the client walks the player behind it), create_item (a
 map's item spawn point drops a fixed-position, unowned field item —

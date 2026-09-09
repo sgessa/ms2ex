@@ -668,6 +668,60 @@ defmodule Ms2ex.TriggerRuntimeTest do
               10.0::little-float-32, 1>>} = receive_push()
   end
 
+  test "move_user to a destination without the named portal uses its default spawn" do
+    stub_metadata(%{
+      "map:52000115" => %{
+        portals: [],
+        pc_spawns: [
+          %{
+            enable: true,
+            visible: true,
+            position: %{x: 5091, y: -1209, z: 1500},
+            rotation: %{x: 0, y: 0, z: 180}
+          }
+        ]
+      }
+    })
+
+    Mimic.stub(Ms2ex.Managers.Character, :call, fn
+      _id, :lookup ->
+        {:ok, %Ms2ex.Schema.Character{id: 1}}
+
+      _id, {:update, character} ->
+        send(self(), {:character_update, character})
+        :ok
+
+      _id, _message ->
+        :ok
+    end)
+
+    Mimic.stub(Ms2ex.Managers.Field.Character, :remove_character, fn character, state ->
+      %{state | players: Map.delete(state.players, character.id)}
+    end)
+
+    Mimic.stub(Ms2ex.Context.Characters, :maybe_discover_map, fn character, _map_id ->
+      character
+    end)
+
+    Mimic.stub(Ms2ex.Net.SenderSession, :push, fn _character, _packet -> :ok end)
+
+    state =
+      base_state()
+      |> Map.put(:map_id, 52_000_104)
+      |> Map.put(:players, %{1 => 60_100_000})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "move_user", args: %{map_id: "52000115", portal_id: "1"}}
+      ])
+      |> tick()
+
+    # the field no longer holds the player and the machine stopped itself
+    assert state.players == %{}
+    assert_receive({:character_update, %{change_map: change_map}}, 1000)
+    assert change_map.id == 52_000_115
+    # the default field spawn, lifted by the standard spawn height
+    assert change_map.position == %Ms2ex.Types.Coord{x: 5091, y: -1209, z: 1525}
+  end
+
   # -- helpers ---------------------------------------------------------
 
   defp base_state do

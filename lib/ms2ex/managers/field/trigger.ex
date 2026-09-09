@@ -656,7 +656,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
     map_id = int_arg(args, :map_id)
     portal_id = int_arg(args, :portal_id)
 
-    case Storage.Maps.get_portal(map_id, portal_id) do
+    case arrival(map_id, portal_id, state.map_id) do
       %{} = portal ->
         Enum.reduce(Map.keys(state.players), state, fn character_id, state ->
           {:ok, character} = Managers.Character.call(character_id, :lookup)
@@ -1159,6 +1159,21 @@ defmodule Ms2ex.Managers.Field.Trigger do
     )
 
     state
+  end
+
+  # same-map moves use the named portal (a missing one is a no-op, as in
+  # the reference). Cross-map moves pass the portal id as a hint only —
+  # the destination may not have it (e.g. the Door of Light transition map
+  # ships no portals at all), so fall back to its return portal, then its
+  # default spawn
+  defp arrival(map_id, portal_id, current_map_id) when map_id == current_map_id do
+    Storage.Maps.get_portal(map_id, portal_id)
+  end
+
+  defp arrival(map_id, portal_id, current_map_id) do
+    Storage.Maps.get_portal(map_id, portal_id) ||
+      Enum.find(Storage.Maps.get_portals(map_id), &(&1.target_map_id == current_map_id)) ||
+      Storage.Maps.get_field_spawn(map_id)
   end
 
   defp update_portal(portal_id, args, state) do
