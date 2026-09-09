@@ -1,4 +1,6 @@
 defmodule Ms2ex.GameHandlers.Taxi do
+  require Logger
+
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Packets
@@ -59,9 +61,24 @@ defmodule Ms2ex.GameHandlers.Taxi do
 
   defp ride_taxi(map_id, currency, cost, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, _wallet} <- Context.Wallets.update(character, currency, cost) do
+         {:ok, _wallet} <- charge_taxi(character, currency, cost) do
       Managers.Quest.update_conditions(character.id, :taxiuse)
-      Context.Field.change_field(character, map_id)
+
+      case Context.Field.change_field(character, map_id) do
+        :ok -> :ok
+        error -> Logger.warning("Taxi field change to #{map_id} failed: #{inspect(error)}")
+      end
     end
   end
+
+  defp charge_taxi(character, :mesos, cost) do
+    if Context.PremiumMemberships.active?(character.account_id) do
+      {:ok, Context.Wallets.find(character)}
+    else
+      Context.Wallets.update(character, :mesos, -cost)
+    end
+  end
+
+  defp charge_taxi(character, currency, cost),
+    do: Context.Wallets.update(character, currency, cost)
 end

@@ -14,6 +14,7 @@ defmodule Ms2ex.Schema.Account do
 
     field :password, :string, virtual: true
     field :password_hash, :string
+    field :premium_rewards_claimed, Ms2ex.EctoTypes.Term, default: []
     field :username, :string
 
     timestamps(type: :utc_datetime)
@@ -22,7 +23,7 @@ defmodule Ms2ex.Schema.Account do
   @doc false
   def changeset(account, attrs) do
     account
-    |> cast(attrs, [:username, :password])
+    |> cast(attrs, [:username, :password, :premium_rewards_claimed])
     |> cast_assoc(:wallet, with: &Schema.AccountWallet.changeset/2)
     |> maybe_encrypt_password()
     |> validate_required([:username, :password_hash])

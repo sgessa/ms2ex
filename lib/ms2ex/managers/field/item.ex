@@ -4,6 +4,7 @@ defmodule Ms2ex.Managers.Field.Item do
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
+  alias Ms2ex.Schema
 
   def pickup_item(character, item, state) do
     credit = consumable_credit(item)
@@ -95,6 +96,7 @@ defmodule Ms2ex.Managers.Field.Item do
   def add_mob_drop(mob, item, receiver \\ nil, state) do
     {object_id, state} = Managers.Field.next_local_id(state)
     receiver = receiver || mob.first_attacker || mob.last_attacker
+    item = increase_premium_meso_drop(item, receiver)
 
     item = %{
       item
@@ -109,6 +111,16 @@ defmodule Ms2ex.Managers.Field.Item do
     Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
+
+  defp increase_premium_meso_drop(item, %Schema.Character{} = character) do
+    if Context.Items.mesos?(item) and Context.PremiumMemberships.active?(character.account_id) do
+      %{item | amount: trunc(item.amount * 1.2)}
+    else
+      item
+    end
+  end
+
+  defp increase_premium_meso_drop(item, _receiver), do: item
 
   # a fixed-position, unowned field item (trigger-spawned quest pickups):
   # no source entity, free for any player to take

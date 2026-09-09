@@ -7,6 +7,7 @@ defmodule Ms2ex.Context.Mails do
   import Ecto.Query
 
   alias Ms2ex.Context
+  alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Net.SenderSession
   alias Ms2ex.Packets
@@ -139,9 +140,10 @@ defmodule Ms2ex.Context.Mails do
   @doc """
   Sends a system mail with optional currency and item attachments.
   """
-  @spec send_system_mail(integer(), String.t(), String.t(), keyword()) ::
+  @spec send_system_mail(integer(), String.t(), atom() | String.t(), keyword()) ::
           {:ok, Schema.Mail.t()} | {:error, atom()}
   def send_system_mail(receiver_id, title, content, opts \\ []) do
+    content = system_mail_content(content)
     mail_attrs = build_system_mail_attrs(receiver_id, title, content, opts)
     items = Keyword.get(opts, :items, [])
     receiver_type = Map.get(mail_attrs, :receiver_type, :character)
@@ -149,6 +151,17 @@ defmodule Ms2ex.Context.Mails do
     Repo.transaction(fn ->
       do_send_system_mail(receiver_id, receiver_type, mail_attrs, items)
     end)
+  end
+
+  defp system_mail_content(content) when is_binary(content), do: content
+
+  defp system_mail_content(content) when is_atom(content) do
+    with {:ok, _content} <- Enums.SystemMailContent.cast(content),
+         value when is_integer(value) <- Enums.SystemMailContent.get_value(content) do
+      Integer.to_string(value)
+    else
+      _ -> raise ArgumentError, "unknown system mail content: #{inspect(content)}"
+    end
   end
 
   defp do_send_system_mail(receiver_id, receiver_type, mail_attrs, items) do

@@ -124,6 +124,7 @@ defmodule Ms2ex.Schema.Character do
     field :home_name, :string, virtual: true, default: ""
     field :object_id, :integer, virtual: true, default: 0
     field :online?, :boolean, default: false, virtual: true
+    field :premium_time, :integer, virtual: true, default: 0
     field :group_chat_ids, {:array, :integer}, virtual: true, default: []
     field :dismantle_inventory, EctoTypes.Term, virtual: true
     field :mount, :map, virtual: true

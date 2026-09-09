@@ -55,12 +55,52 @@ defmodule Ms2ex.GameHandlers.UseItem do
   defp dispatch_item_use(session, character, item, packet) do
     case item.metadata.function_name do
       "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
+      "VIPCoupon" -> use_premium_coupon(session, character, item)
       "AddAdditionalEffect" -> add_additional_effect(session, character, item)
       "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
       "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
       "SelectItemBox" -> select_box(session, character, item, packet)
       _ -> maybe_use_bait(session, character, item)
     end
+  end
+
+  defp use_premium_coupon(session, character, item) do
+    was_active = Context.PremiumMemberships.active?(character.account_id)
+
+    with {:ok, period_hours} <- premium_coupon_period(item),
+         {:ok, membership} <-
+           Context.PremiumMemberships.extend_coupon(character.account_id, period_hours),
+         consumed_item <- Managers.Inventory.consume(item) do
+      push(session, Packets.InventoryItem.consume(consumed_item))
+      code = if was_active, do: "s_vip_coupon_extend_msg", else: "s_vip_coupon_new_msg"
+      push(session, Packets.Notice.message(code, 1 + 4))
+      push(session, Packets.PremiumClub.activate(character, membership))
+
+      Managers.Character.call(
+        character,
+        {:update, %{character | premium_time: DateTime.to_unix(membership.expires_at)}}
+      )
+
+      apply_premium_buffs(character)
+    else
+      _ -> session
+    end
+  end
+
+  defp premium_coupon_period(%Schema.Item{metadata: %{function_parameters: parameters}})
+       when is_binary(parameters) do
+    case Regex.run(~r/<v\s+period="(\d+)"\s*\/?\s*>/, parameters) do
+      [_, period] -> {:ok, String.to_integer(period)}
+      _ -> :error
+    end
+  end
+
+  defp premium_coupon_period(_item), do: :error
+
+  defp apply_premium_buffs(character) do
+    Enum.each(Storage.Tables.PremiumClub.buffs(), fn {_id, %{id: buff_id, level: level}} ->
+      Context.Field.call(character, {:add_effect_buff, buff_id, level, character})
+    end)
   end
 
   defp maybe_use_bait(session, character, %{metadata: %{property: %{tag: :fishing_lure}}} = item) do

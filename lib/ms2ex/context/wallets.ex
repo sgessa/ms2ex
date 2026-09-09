@@ -63,6 +63,24 @@ defmodule Ms2ex.Context.Wallets do
     end)
   end
 
+  def debit(%Schema.Character{account_id: account_id} = char, currency, amount)
+      when currency in @account_currencies and is_integer(amount) and amount > 0 do
+    Repo.transaction(fn ->
+      Schema.AccountWallet
+      |> where([w], w.account_id == ^account_id and field(w, ^currency) >= ^amount)
+      |> Repo.update_all(inc: [{currency, -amount}])
+      |> case do
+        {1, _} ->
+          wallet = Repo.get_by!(Schema.AccountWallet, account_id: account_id)
+          push(char, Packets.Wallet.update(wallet, currency, -amount))
+          wallet
+
+        _ ->
+          Repo.rollback(:insufficient_funds)
+      end
+    end)
+  end
+
   def set(%Schema.Character{account_id: account_id} = char, currency, value)
       when currency in @account_currencies do
     Repo.transaction(fn ->

@@ -20,6 +20,18 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   def add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0, opts \\ []) do
+    add_effect_buff_for(effect_id, effect_level, character, character, state, overlap_count, opts)
+  end
+
+  def add_effect_buff_for(
+        effect_id,
+        effect_level,
+        caster,
+        owner,
+        state,
+        overlap_count \\ 0,
+        opts \\ []
+      ) do
     if effect_available?(effect_id, effect_level) do
       {object_id, state} = Managers.Field.next_local_id(state)
       skill = %{id: effect_id, level: effect_level, overlap_count: overlap_count}
@@ -28,10 +40,10 @@ defmodule Ms2ex.Managers.Field.Buff do
         id: 0,
         skill_id: effect_id,
         skill_level: effect_level,
-        caster: character
+        caster: caster
       }
 
-      buff = Types.Buff.new(object_id, skill_cast, skill, character, character, opts)
+      buff = Types.Buff.new(object_id, skill_cast, skill, caster, owner, opts)
       apply_buff(buff, state, true)
     else
       {nil, state}

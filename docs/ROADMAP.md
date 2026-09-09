@@ -138,9 +138,9 @@ What is still missing:
   re-adds the bait
 - the "Use autobait" toggle has no server-side model yet; it likely needs state
   for auto-reapplying a lure when the active timed bait buff expires
-- the dedicated bait-slot packet or fishing subcommand is unknown. The C#
-  reference has no implementation for this either, so we need to reverse the
-  client around bait slot add/remove, bait use, and autobait toggle packets
+- the dedicated bait-slot packet or fishing subcommand is unknown.
+  We need to reverse the client around bait slot add/remove, bait use,
+  and autobait toggle packets
 
 ### 22. Insignia condition types — [Partial]
 
@@ -165,6 +165,24 @@ What is still missing:
 - **the thresholds are hardcoded** (level 50, 1000 trophy points, prestige
   100, 12 enchants / rarity > 3), matching the reference. Only `title` reads
   the table's `code` column, so the rest cannot be retuned from metadata
+
+### 23. Premium Club parity — [Partial]
+
+The Premium Club packet flow, metadata projection, membership persistence,
+claimed daily benefits, package purchases, bonus-item delivery, login
+activation, Premium Club buffs, daily claimed-item reset, and free meso taxi
+travel are implemented.
+
+What is still missing:
+
+- VIP-only dungeon entry checks and the corresponding failure response; the
+  Elixir dungeon-limit subsystem does not currently expose the reference
+  `VipOnly` gate
+- the Black Market seller tax discount for Premium Club sellers
+- package and daily-benefit regression tests are still missing. Add focused
+  coverage for unknown or unavailable metadata, sales windows, duplicate
+  claims, full inventory, mail fallback, insufficient Merets, concurrent
+  purchases, membership renewal after expiry, and packet payloads
 
 ### 19. Housing & UGC cube system — [Open]
 
