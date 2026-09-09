@@ -44,12 +44,38 @@ defmodule Ms2ex.Net.SenderSession do
   end
 
   def run(%Net.Session{sender_pid: pid}, fun) when is_function(fun) do
-    GenServer.call(pid, {:run, fun})
+    run(pid, fun)
   end
 
   def run(%Schema.Character{sender_session_pid: pid}, fun) when is_function(fun) do
+    run(pid, fun)
+  end
+
+  # avoid a self-call deadlock/crash when the "session" pid is the caller itself
+  # (e.g. tests invoking handlers directly without a real SenderSession process)
+  def run(pid, fun) when pid == self() and is_function(fun) do
+    fun.()
+  end
+
+  def run(pid, fun) when is_pid(pid) and is_function(fun) do
     GenServer.call(pid, {:run, fun})
   end
+
+  # fire-and-forget variant for callers (e.g. GuildServer) that don't need a
+  # reply and must not block on the target session's mailbox
+  def run_async(%Net.Session{sender_pid: pid}, fun) when is_function(fun) do
+    run_async(pid, fun)
+  end
+
+  def run_async(%Schema.Character{sender_session_pid: pid}, fun) when is_function(fun) do
+    run_async(pid, fun)
+  end
+
+  def run_async(pid, fun) when is_pid(pid) and is_function(fun) do
+    GenServer.cast(pid, {:run, fun})
+  end
+
+  def run_async(_pid, _fun), do: :ok
 
   def stop(pid) do
     GenServer.stop(pid)
@@ -72,6 +98,12 @@ defmodule Ms2ex.Net.SenderSession do
   @impl true
   def handle_call({:run, fun}, _from, state) do
     {:reply, fun.(), state}
+  end
+
+  @impl true
+  def handle_cast({:run, fun}, state) do
+    fun.()
+    {:noreply, state}
   end
 
   @impl true

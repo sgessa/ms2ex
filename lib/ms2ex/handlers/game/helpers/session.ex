@@ -17,6 +17,8 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
       notify_party_presence(character)
       SenderSession.run(character, fn -> Managers.PartyServer.subscribe(character.party_id) end)
     end
+
+    # guild presence/subscribe on login is handled by push_guild/2 (response_key.ex)
   end
 
   def cleanup(character) do
@@ -26,6 +28,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
     Managers.Achievement.stop(character)
     Context.Field.leave(character)
     notify_party_presence(character)
+    notify_guild_presence(character)
     notify_friend_presence(character)
     leave_group_chats(character)
   end
@@ -50,5 +53,9 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
   defp notify_party_presence(character) do
     Managers.PartyServer.member_offline(character)
+  end
+
+  defp notify_guild_presence(character) do
+    Managers.GuildServer.call(character.guild_id, {:member_offline, character})
   end
 end
