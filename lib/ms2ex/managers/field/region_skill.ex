@@ -79,7 +79,9 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     targets =
       state.npcs
       |> Enum.filter(fn {_id, npc} ->
-        not npc.dead? and in_splash_range?(npc, splash_cast)
+        # only hostile mobs take player splash damage — friendly npcs
+        # (quest givers, story spawns, ambient townsfolk) are untouchable
+        npc.type == :mob and not npc.dead? and in_splash_range?(npc, splash_cast)
       end)
       |> Enum.take(@splash_targets)
 

@@ -35,6 +35,39 @@ defmodule Ms2ex.FieldRegionSkillTest do
     assert new_state.npcs[@oid].stats.health.current < mob.stats.health.current
   end
 
+  test "region splash damage ignores friendly npcs" do
+    friendly_metadata = put_in(@npc_metadata, [:basic, :friendly], 1)
+
+    mob = field_npc(@oid, Types.Npc.new(%{id: @mob_id, metadata: @npc_metadata}))
+    friendly_oid = @oid + 1
+
+    friendly =
+      field_npc(friendly_oid, Types.Npc.new(%{id: 11_000_001, metadata: friendly_metadata}))
+
+    state = %{
+      npcs: %{@oid => mob, friendly_oid => friendly},
+      players: %{},
+      topic: "test-topic",
+      map_id: nil
+    }
+
+    new_state = RegionSkill.apply_splash(splash_cast(mob.position), state)
+
+    assert new_state.npcs[@oid].stats.health.current < mob.stats.health.current
+    assert new_state.npcs[friendly_oid].stats.health.current == friendly.stats.health.current
+  end
+
+  defp field_npc(object_id, npc) do
+    Types.FieldNpc.new(%{
+      object_id: object_id,
+      spawn_point_id: nil,
+      npc: npc,
+      position: %Types.Coord{x: 0, y: 0, z: 0},
+      rotation: %Types.Coord{x: 0, y: 0, z: 0},
+      field: self()
+    })
+  end
+
   defp splash_cast(position) do
     %Types.SkillCast{
       skill_id: 10_300_141,
