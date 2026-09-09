@@ -9,6 +9,6 @@ defmodule Ms2ex.Repo.Migrations.CreatePremiumMemberships do
       timestamps(type: :timestamptz)
     end
 
-    create index(:premium_memberships, [:account_id])
+    create unique_index(:premium_memberships, [:account_id])
   end
 end

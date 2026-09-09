@@ -325,6 +325,17 @@ defmodule Ms2ex.Managers.Field do
     {:reply, :ok, state}
   end
 
+  def handle_call(
+        {:add_effect_buff_for, effect_id, effect_level, caster, owner},
+        _from,
+        state
+      ) do
+    {_buff, state} =
+      Field.Buff.add_effect_buff_for(effect_id, effect_level, caster, owner, state)
+
+    {:reply, :ok, state}
+  end
+
   def handle_call({:has_buff?, owner_object_id, effect_id}, _from, state),
     do: {:reply, Field.Buff.owner_has_buff?(owner_object_id, effect_id, state), state}
 

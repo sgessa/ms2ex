@@ -5,12 +5,14 @@ defmodule Ms2ex.GameHandlers.UserChat do
   alias Ms2ex.Enums
   alias Ms2ex.Net
   alias Ms2ex.Packets
+  alias Ms2ex.Schema
   alias Ms2ex.Managers.PartyServer
 
   import Packets.PacketReader
   import Net.SenderSession, only: [push: 2]
 
   @world_chat_cost -30
+  @world_chat_voucher_id 20_300_607
 
   def handle(packet, session) do
     {type_id, packet} = get_int(packet)
@@ -55,15 +57,19 @@ defmodule Ms2ex.GameHandlers.UserChat do
   end
 
   defp handle_message({:world, msg, _rcpt_name}, character, session) do
-    # TODO check if user has a voucher
-
-    case Context.Wallets.update(character, :merets, @world_chat_cost) do
-      {:ok, wallet} ->
+    case find_world_chat_voucher(character) do
+      %Schema.Item{} = voucher ->
+        consume_world_chat_voucher(character, voucher)
         Context.World.broadcast(Packets.UserChat.bytes(:world, character, msg))
-        push(session, Packets.Wallet.update(wallet, :merets))
 
-      _ ->
-        push(session, Packets.UserChat.error(character, :notice_alert, :insufficient_merets))
+      nil ->
+        case Context.Wallets.debit(character, :merets, -@world_chat_cost) do
+          {:ok, _wallet} ->
+            Context.World.broadcast(Packets.UserChat.bytes(:world, character, msg))
+
+          _ ->
+            push(session, Packets.UserChat.error(character, :notice_alert, :insufficient_merets))
+        end
     end
   end
 
@@ -91,4 +97,15 @@ defmodule Ms2ex.GameHandlers.UserChat do
   end
 
   defp handle_message(_msg, _character, _session), do: :ok
+
+  defp find_world_chat_voucher(character) do
+    character
+    |> Managers.Inventory.list_items()
+    |> Enum.find(&(&1.item_id == @world_chat_voucher_id and &1.location == :inventory))
+  end
+
+  defp consume_world_chat_voucher(character, voucher) do
+    result = Managers.Inventory.consume(voucher)
+    push(character, Packets.InventoryItem.consume(result))
+  end
 end

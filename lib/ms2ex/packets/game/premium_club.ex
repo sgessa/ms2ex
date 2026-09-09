@@ -9,11 +9,12 @@ defmodule Ms2ex.Packets.PremiumClub do
     purchase_membership: 0x4
   }
 
-  def open() do
+  def load_claimed(benefit_ids) do
     __MODULE__
     |> build()
     |> put_byte(@mode.open)
-    |> put_int()
+    |> put_int(length(benefit_ids))
+    |> reduce(benefit_ids, fn benefit_id, packet -> put_int(packet, benefit_id) end)
   end
 
   def claim_item(benefit_id) do
@@ -37,11 +38,15 @@ defmodule Ms2ex.Packets.PremiumClub do
     |> put_int(package_id)
   end
 
-  def activate(character, membership) do
+  def activate(character, %Ms2ex.Schema.PremiumMembership{} = membership) do
+    activate(character, DateTime.to_unix(membership.expires_at))
+  end
+
+  def activate(character, expiration) when is_integer(expiration) do
     __MODULE__
     |> build()
     |> put_byte(@mode.activate)
     |> put_int(character.object_id)
-    |> put_long(DateTime.to_unix(membership.expires_at))
+    |> put_long(expiration)
   end
 end
