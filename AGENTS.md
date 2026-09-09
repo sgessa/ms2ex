@@ -71,6 +71,15 @@ host runs):
   Items.get_meta(item_id)
   ```
 
+- **Fail fast on server-side data; guard only client-sent data.** Ingested
+  metadata, storage documents, and manager state are ours — if their shape
+  is wrong, let it crash: a loud crash (pattern match, KeyError) surfaces
+  the bug immediately and points at the fix. Do not add defensive
+  `Map.get`/default/`Logger.warning`-and-continue guards around it; they
+  silently degrade behavior and hide the error. Validation and graceful
+  handling are for data that crosses the wire from the game client, where
+  a malicious or stale client must not take down a process.
+
 - **`Mimic.copy` calls live in `test/test_helper.exs`, not in per-test `setup`
   blocks.** Copying a module there lets every test stub it; test files only
   call `Mimic.stub`. If a test needs to stub a module that isn't copied yet,

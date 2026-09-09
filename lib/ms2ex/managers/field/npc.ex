@@ -39,19 +39,9 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   def load_spawn(state, npc_spawn, npc_ids) do
-    case Map.get(npc_spawn, :spawn_point_id) do
-      nil ->
-        Logger.warning("mob spawn doc without spawn_point_id on field " <> to_string(state.topic))
-        state
-
-      spawn_point_id ->
-        load_spawn(state, npc_spawn, npc_ids, spawn_point_id)
-    end
-  end
-
-  defp load_spawn(state, npc_spawn, npc_ids, spawn_point_id) do
     # npc_spawns is keyed by the map's spawn point id — the same id trigger
     # scripts use to spawn/destroy/emote the staged npcs
+    spawn_point_id = npc_spawn.spawn_point_id
 
     npc_spawn =
       npc_spawn
