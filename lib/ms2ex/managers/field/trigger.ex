@@ -74,6 +74,15 @@ defmodule Ms2ex.Managers.Field.Trigger do
       |> Map.get(:trigger_skills, [])
       |> Map.new(fn skill -> {skill.trigger_id, skill} end)
 
+    breakables =
+      meta
+      |> Map.get(:breakables, [])
+      |> Map.new(fn breakable ->
+        # the state byte follows the client's breakable table: 2 show, 3
+        # broken, 4 hidden
+        {breakable.breakable_id, Map.put(breakable, :state, 2)}
+      end)
+
     state
     |> Map.put(:trigger_scripts, scripts)
     |> Map.put(:trigger_meshes, trigger_meshes)
@@ -82,6 +91,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
     |> Map.put(:patrols, patrols)
     |> Map.put(:item_spawns, item_spawns)
     |> Map.put(:trigger_skills, trigger_skills)
+    |> Map.put(:breakables, breakables)
+    |> Map.put(:user_values, %{})
     |> Map.put(:widgets, %{})
     |> Map.put(:trigger_skips, %{})
     |> init_machines()
@@ -383,6 +394,13 @@ defmodule Ms2ex.Managers.Field.Trigger do
           npc.spawn_point_id in spawn_point_ids and box_contains?(box, npc.position)
         end)
     end
+  end
+
+  # matches when the script previously stored this value under the key via
+  # set_user_value
+  defp evaluate("user_value", args, _machine, _now, state) do
+    key = to_string(args[:key] || "")
+    Map.get(Map.get(state, :user_values, %{}), key) == int_arg(args, :value)
   end
 
   defp evaluate("widget_condition", args, _machine, _now, state) do
@@ -974,6 +992,77 @@ defmodule Ms2ex.Managers.Field.Trigger do
         disable_trigger_skill(state, trigger_id)
       end
     end)
+  end
+
+  # script variables: key/value pairs the state machine writes here and
+  # reads back through user_value conditions
+  defp execute_action("set_user_value", args, _script_name, state) do
+    key = to_string(args[:key] || "")
+    user_values = Map.put(Map.get(state, :user_values, %{}), key, int_arg(args, :value))
+    Map.put(state, :user_values, user_values)
+  end
+
+  # flips breakable objects between shown and hidden; the client treats the
+  # shown ones as active map features (lane pads, blocking props)
+  defp execute_action("set_breakable", args, _script_name, state) do
+    enabled = bool_arg(args, :enable)
+
+    set_breakables(state, int_list_arg(args, :trigger_ids), fn b ->
+      %{b | state: (enabled && 2) || 4}
+    end)
+  end
+
+  defp execute_action("set_visible_breakable_object", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+    set_breakables(state, int_list_arg(args, :trigger_ids), fn b -> %{b | visible: visible} end)
+  end
+
+  defp set_breakables(state, [], _fun), do: state
+
+  defp set_breakables(state, ids, fun) do
+    {entries, state} =
+      Enum.reduce(ids, {[], state}, fn id, {entries, state} ->
+        case Map.get(state.breakables, id) do
+          %{} = breakable ->
+            breakable = fun.(breakable)
+            entry = %{uuid: breakable.uuid, state: breakable.state, visible: breakable.visible}
+
+            {[%{entry | uuid: breakable.uuid} | entries],
+             put_in(state, [:breakables, id], breakable)}
+
+          nil ->
+            {entries, state}
+        end
+      end)
+
+    if entries != [] do
+      Context.Field.broadcast(state.topic, Packets.Breakable.update(Enum.reverse(entries)))
+    end
+
+    state
+  end
+
+  # flips interact objects between normal/reactable/hidden
+  defp execute_action("set_interact_object", args, _script_name, state) do
+    ids = int_list_arg(args, :trigger_ids)
+
+    state_atom =
+      case int_arg(args, :state) do
+        1 -> :reactable
+        2 -> :hidden
+        _ -> :normal
+      end
+
+    state.interactable
+    |> Enum.filter(fn {_uuid, object} -> object.id in ids end)
+    |> Enum.each(fn {uuid, object} ->
+      Context.Field.broadcast(
+        state.topic,
+        Packets.InteractObject.update(%{object | state: state_atom})
+      )
+    end)
+
+    state
   end
 
   # a facial expression overlay on the player (spawn point 0) or the

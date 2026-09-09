@@ -40,7 +40,7 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.LoadCubes.plot_state())
     push(character, Packets.LoadCubes.plot_expiry())
     push(character, Packets.Ugc.load_banners(Map.values(state.banners)))
-    push(character, Packets.Breakable.load())
+    push(character, Packets.Breakable.load_empty())
     # the liftable batch renders quest props (and honors their quest masks)
     push(character, Packets.Liftable.batch_update(Field.Liftable.liftables_for_enter(state)))
     push(character, Packets.FunctionCube.load())

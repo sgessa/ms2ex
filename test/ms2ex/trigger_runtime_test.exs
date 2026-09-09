@@ -554,6 +554,44 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert state.npc_spawns[104].spawned_npcs == []
   end
 
+  test "set_user_value stores the value and user_value reads it" do
+    state =
+      base_state()
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "user_value",
+          negate: false,
+          args: %{key: "chase", value: "2"},
+          next_state: "done",
+          actions: []
+        }
+      ])
+      |> enter_state("wait", entered_at: now_ms())
+      |> Map.put(:user_values, %{"chase" => 2})
+      |> tick()
+
+    assert %{next: "done"} = state.trigger_machines["tutorial"]
+  end
+
+  test "set_breakable broadcasts the hide state" do
+    state =
+      base_state()
+      |> Map.put(:breakables, %{
+        2001 => %{breakable_id: 2001, uuid: "abc", visible: true, state: 2}
+      })
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "set_breakable", args: %{trigger_ids: "2001", enable: "0"}}
+      ])
+      |> tick()
+
+    assert %{state: 4, visible: true} = state.breakables[2001]
+
+    assert {:push,
+            <<0x50::little-16, 0, 1::little-32, 3::little-16, "abc"::binary, 4, 1, 0::little-32,
+              0::little-32>>} =
+             receive_push()
+  end
+
   test "set_dialogue balloons the spawn-point npc with the script text" do
     state =
       base_state()
