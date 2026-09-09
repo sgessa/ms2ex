@@ -22,6 +22,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   alias Ms2ex.Storage
   alias Ms2ex.Types.Coord
   alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types.SkillCast
 
   @tick_ms 100
 
@@ -68,6 +69,11 @@ defmodule Ms2ex.Managers.Field.Trigger do
       |> Map.get(:item_spawns, [])
       |> Map.new(fn spawn -> {spawn.spawn_point_id, spawn} end)
 
+    trigger_skills =
+      meta
+      |> Map.get(:trigger_skills, [])
+      |> Map.new(fn skill -> {skill.trigger_id, skill} end)
+
     state
     |> Map.put(:trigger_scripts, scripts)
     |> Map.put(:trigger_meshes, trigger_meshes)
@@ -75,6 +81,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
     |> Map.put(:trigger_boxes, trigger_boxes)
     |> Map.put(:patrols, patrols)
     |> Map.put(:item_spawns, item_spawns)
+    |> Map.put(:trigger_skills, trigger_skills)
     |> Map.put(:widgets, %{})
     |> Map.put(:trigger_skips, %{})
     |> init_machines()
@@ -939,6 +946,25 @@ defmodule Ms2ex.Managers.Field.Trigger do
     end
   end
 
+  # enables/disables trigger skill zones — field-owned skill objects (magic
+  # practice circles, dungeon hazards) the client renders at the trigger's
+  # position until disabled again
+  # TODO: server-side zone ticks — field skills with attack effects should
+  # damage entities in range (count fires, 150ms apart) instead of only
+  # rendering client-side
+  defp execute_action("set_skill", args, _script_name, state) do
+    trigger_ids = int_list_arg(args, :trigger_ids)
+    enabled = bool_arg(args, :enable)
+
+    Enum.reduce(trigger_ids, state, fn trigger_id, state ->
+      if enabled do
+        enable_trigger_skill(state, trigger_id)
+      else
+        disable_trigger_skill(state, trigger_id)
+      end
+    end)
+  end
+
   # a facial expression overlay on the player (spawn point 0) or the
   # spawn-point npcs
   defp execute_action("face_emotion", args, _script_name, state) do
@@ -1050,6 +1076,43 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
       [] ->
         nil
+    end
+  end
+
+  defp enable_trigger_skill(state, trigger_id) do
+    case Map.get(state.trigger_skills, trigger_id) do
+      %{} = trigger_skill ->
+        source_id = Ms2ex.generate_int()
+        position = struct(Coord, trigger_skill.position)
+
+        cast =
+          SkillCast.build(0, %{
+            id: 0,
+            skill_id: trigger_skill.skill_id,
+            skill_level: trigger_skill.skill_level,
+            position: position,
+            rotation: struct(Coord, trigger_skill.rotation),
+            # first skill tick lands shortly after the zone is placed
+            next_tick: Ms2ex.sync_ticks() + 150
+          })
+
+        Context.Field.broadcast(state.topic, Packets.RegionSkill.add(source_id, cast, [position]))
+        put_in(state, [:trigger_skills, trigger_id, :source_id], source_id)
+
+      _ ->
+        state
+    end
+  end
+
+  defp disable_trigger_skill(state, trigger_id) do
+    case Map.get(state.trigger_skills, trigger_id) do
+      %{source_id: source_id} when is_integer(source_id) ->
+        Context.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+        {_, state} = pop_in(state, [:trigger_skills, trigger_id, :source_id])
+        state
+
+      _ ->
+        state
     end
   end
 

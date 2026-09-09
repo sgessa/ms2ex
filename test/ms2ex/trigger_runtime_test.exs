@@ -574,6 +574,72 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert %{visible: true} = state.trigger_sounds[3001]
   end
 
+  test "set_skill enables a trigger skill zone and removes it on disable" do
+    stub_metadata(%{
+      "skill:70000066" => %{id: 70_000_066, levels: %{"5" => %{motions: [], skills: []}}}
+    })
+
+    script = %{
+      state_names: ["wait", "disarm"],
+      states: %{
+        "wait" => %{
+          on_enter: [%{name: "set_skill", args: %{trigger_ids: "7005", enable: "1"}}],
+          on_exit: [],
+          conditions: [
+            %{
+              name: "wait_tick",
+              negate: false,
+              args: %{wait_tick: "1000"},
+              next_state: "disarm",
+              actions: []
+            }
+          ],
+          next_state: ""
+        },
+        "disarm" => %{
+          on_enter: [%{name: "set_skill", args: %{trigger_ids: "7005", enable: "0"}}],
+          on_exit: [],
+          conditions: [],
+          next_state: ""
+        }
+      }
+    }
+
+    state =
+      base_state()
+      |> Map.put(:trigger_scripts, %{"tutorial" => script})
+      |> Map.put(:trigger_skills, %{
+        7005 => %{
+          trigger_id: 7005,
+          skill_id: 70_000_066,
+          skill_level: 5,
+          count: 1,
+          position: %{x: 2444, y: -759, z: 2700},
+          rotation: %{x: 0, y: 0, z: 0}
+        }
+      })
+      |> tick()
+
+    assert {:push,
+            <<0x4D::little-16, 0, source_id::little-signed-integer-32,
+              source_id::little-signed-integer-32, _next_tick::little-32, 1,
+              2444.0::little-float-size(32), -759.0::little-float-size(32),
+              2700.0::little-float-size(32), 70_000_066::little-32, 5::little-16, _rest::binary>>} =
+             receive_push()
+
+    assert state.trigger_skills[7005].source_id == source_id
+
+    # the disarm transition queues on wait_tick, then lands next cycle
+    state =
+      put_in(state, [:trigger_machines, "tutorial", :entered_at], now_ms() - 1_500)
+      |> tick()
+      |> tick()
+
+    assert {:push, <<0x4D::little-16, 1, removed_id::little-signed-integer-32>>} = receive_push()
+    assert removed_id == source_id
+    refute Map.has_key?(state.trigger_skills[7005], :source_id)
+  end
+
   test "move_npc attaches the patrol to the matching story npc" do
     # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
     # approach falls back to the model's run sequence
