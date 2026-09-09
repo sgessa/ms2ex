@@ -34,6 +34,21 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   def add_item({:update, item}, _character), do: update_item(item.id, item.amount)
 
+  def put_badges(packet, badges, character) do
+    packet
+    |> put_byte(length(badges))
+    |> reduce(badges, fn badge, packet -> put_badge(packet, badge, character) end)
+  end
+
+  defp put_badge(packet, badge, character) do
+    packet
+    |> put_byte(Enums.BadgeType.get_value(Types.Item.badge_type(badge.item_id)))
+    |> put_int(badge.item_id)
+    |> put_long(badge.id)
+    |> put_int(badge.rarity)
+    |> put_item(badge, character)
+  end
+
   def mark_item_new(item) do
     __MODULE__
     |> build()
