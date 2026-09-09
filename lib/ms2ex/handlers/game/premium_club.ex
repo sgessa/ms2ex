@@ -112,7 +112,12 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
         push(character, Packets.InventoryItem.mark_item_new(new_inventory_item(result)))
 
       _ ->
-        Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
+        Context.Mails.send_system_mail(
+          character.id,
+          "",
+          :inventory_overflow,
+          items: [item]
+        )
     end
   end
 
