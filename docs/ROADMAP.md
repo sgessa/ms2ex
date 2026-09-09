@@ -283,7 +283,8 @@ a duration — cinematic bullet-time/slow-mo beats), set_event_ui (the
 ingest resolves the splitter into set_event_ui_round/script/countdown;
 a new `MassiveEvent` opcode drives round indicators, banners and
 countdowns, scoped to trigger boxes with `!` negation and box 0 as
-"everyone").
+"everyone"), set_ambient_light (field light tint as an
+`ambient_light` field property, "r, g, b" rounded to bytes).
 
 Still missing:
 

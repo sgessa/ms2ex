@@ -593,6 +593,20 @@ defmodule Ms2ex.Managers.Field.Trigger do
     state
   end
 
+  # tints the field's ambient light (e.g. red alert scenes): the color is
+  # "r, g, b" floats, rounded to bytes like the client's Byte3
+  defp execute_action("set_ambient_light", args, _script_name, state) do
+    case parse_rgb(args[:primary]) do
+      {r, g, b} ->
+        Context.Field.broadcast(state.topic, Packets.FieldProperty.add({:ambient_light, r, g, b}))
+
+      nil ->
+        :ok
+    end
+
+    state
+  end
+
   defp execute_action("set_onetime_effect", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
@@ -1412,6 +1426,26 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
       _ ->
         []
+    end
+  end
+
+  # "r, g, b" color component floats, rounded to bytes
+  defp parse_rgb(value) when is_binary(value) do
+    case value |> String.split(",") |> Enum.map(&String.trim/1) do
+      [r, g, b] ->
+        {round(parse_number(r)), round(parse_number(g)), round(parse_number(b))}
+
+      _ ->
+        nil
+    end
+  end
+
+  defp parse_rgb(_), do: nil
+
+  defp parse_number(value) do
+    case Float.parse(value) do
+      {number, _rest} -> number
+      :error -> 0.0
     end
   end
 
