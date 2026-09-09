@@ -17,28 +17,24 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
 
     {current_map_id, packet} = get_int(packet)
 
-    if current_map_id == character.map_id do
-      portals = Storage.Maps.get_portals(current_map_id)
-      {src_portal_id, _packet} = get_int(packet)
+    portals = Storage.Maps.get_portals(current_map_id)
+    {src_portal_id, _packet} = get_int(packet)
 
-      case find_portal(portals, src_portal_id) do
-        %{target_map_id: dst_map_id, enable: true} ->
-          maybe_complete_tutorial(character, current_map_id)
+    case find_portal(portals, src_portal_id) do
+      %{target_map_id: dst_map_id, enable: true} ->
+        maybe_complete_tutorial(character, current_map_id)
 
-          spawn_point = arrival_point(dst_map_id, current_map_id)
+        spawn_point = arrival_point(dst_map_id, current_map_id)
 
-          Context.Field.change_field(
-            character,
-            dst_map_id,
-            spawn_point.position,
-            spawn_point.rotation
-          )
+        Context.Field.change_field(
+          character,
+          dst_map_id,
+          spawn_point.position,
+          spawn_point.rotation
+        )
 
-        _ ->
-          :ok
-      end
-    else
-      :ok
+      _ ->
+        :ok
     end
   end
 

@@ -58,13 +58,7 @@ defmodule Ms2ex.Context.Insignias do
   """
   @spec display?(Schema.Character.t(), map()) :: boolean()
   def display?(character, %{type: :vip}) do
-    with %Schema.PremiumMembership{} = membership <-
-           Context.PremiumMemberships.get(character.account_id),
-         false <- Context.PremiumMemberships.expired?(membership) do
-      true
-    else
-      _ -> false
-    end
+    Context.PremiumMemberships.active?(character.account_id)
   end
 
   def display?(character, %{type: :level}), do: character.level >= 50

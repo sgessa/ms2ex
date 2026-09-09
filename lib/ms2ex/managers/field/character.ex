@@ -4,7 +4,7 @@ defmodule Ms2ex.Managers.Field.Character do
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Field
-  alias Ms2ex.Schema
+  alias Ms2ex.Storage
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
   require Logger
@@ -108,11 +108,24 @@ defmodule Ms2ex.Managers.Field.Character do
 
     push(character, Packets.SkillPoint.sources())
 
-    # Load Premium membership if active
-    with %Schema.PremiumMembership{} = membership <-
-           Context.PremiumMemberships.get(character.account_id),
-         false <- Context.PremiumMemberships.expired?(membership) do
-      push(character, Packets.PremiumClub.activate(character, membership))
+    membership = Context.PremiumMemberships.active(character.account_id)
+
+    expiration =
+      if membership,
+        do: DateTime.to_unix(membership.expires_at),
+        else: 0
+
+    character = %{character | premium_time: expiration}
+    Managers.Character.call(character, {:update, character})
+
+    push(character, Packets.PremiumClub.activate(character, expiration))
+    claimed = Context.PremiumMemberships.claimed(character.account_id)
+    push(character, Packets.PremiumClub.load_claimed(claimed))
+
+    if expiration > DateTime.to_unix(DateTime.utc_now()) do
+      Enum.each(Storage.Tables.PremiumClub.buffs(), fn {_id, %{id: buff_id, level: buff_level}} ->
+        Context.Field.call(character, {:add_effect_buff, buff_id, buff_level, character})
+      end)
     end
 
     push(character, Packets.DynamicChannel.bytes())

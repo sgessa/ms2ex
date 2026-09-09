@@ -223,6 +223,27 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
+  def handle_call({:equip_badge, item_id}, _from, character) do
+    case Character.Equips.equip_badge(character, item_id) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:unequip_badge, badge_type}, _from, character) do
+    case Character.Equips.unequip_badge(character, badge_type) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:update_badge_transparency, badge_type, transparency}, _from, character) do
+    case Character.Equips.update_badge_transparency(character, badge_type, transparency) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
   # --------------------------------
   # Skills
   # --------------------------------

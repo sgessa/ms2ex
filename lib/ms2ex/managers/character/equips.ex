@@ -18,6 +18,7 @@ defmodule Ms2ex.Managers.Character.Equips do
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
+  alias Ms2ex.Types
 
   # looks worn in these slots are discarded when unequipped rather than
   # returned to the inventory
@@ -66,6 +67,54 @@ defmodule Ms2ex.Managers.Character.Equips do
 
       _ ->
         :error
+    end
+  end
+
+  def equip_badge(character, item_id) do
+    with {:ok, item} <- load_inventory_item(character, item_id),
+         true <- item.inventory_tab == :badge,
+         badge_type <- Types.Item.badge_type(item.item_id),
+         true <- badge_type != :none,
+         true <- Types.Item.badge_type(item.item_id) == badge_type,
+         false <- badge_type == :pet_skin,
+         existing <- equipped_badge(character, badge_type),
+         {:ok, removed} <- replace_badge(existing, item.inventory_slot),
+         {:ok, item} <- Managers.Inventory.equip(item, :NONE) do
+      {:ok, commit_badge(character, item, removed)}
+    else
+      _ -> :error
+    end
+  end
+
+  def unequip_badge(character, badge_type) do
+    with badge_type when is_atom(badge_type) <- Enums.BadgeType.get_key(badge_type),
+         false <- badge_type == :pet_skin,
+         %Schema.Item{} = item <- equipped_badge(character, badge_type),
+         {:ok, item} <- Managers.Inventory.move_to_inventory(item) do
+      character = refresh(character)
+      Context.Field.broadcast(character, Packets.BadgeEquip.unequip(character, badge_type))
+
+      Net.SenderSession.push(
+        character,
+        Packets.InventoryItem.add_item({:create, item}, character)
+      )
+
+      {:ok, character}
+    else
+      _ -> :error
+    end
+  end
+
+  def update_badge_transparency(character, badge_type, transparency) do
+    with badge_type when is_atom(badge_type) <- Enums.BadgeType.get_key(badge_type),
+         true <- badge_type == :transparency,
+         %Schema.Item{} = item <- equipped_badge(character, badge_type),
+         data <- Map.put(item.data || %{}, :transparency, transparency),
+         {:ok, item} <- Managers.Inventory.update_item(item, %{data: data}) do
+      Context.Field.broadcast(character, Packets.BadgeEquip.equip(character, item))
+      {:ok, character}
+    else
+      _ -> :error
     end
   end
 
@@ -224,6 +273,40 @@ defmodule Ms2ex.Managers.Character.Equips do
 
   defp get_item(character, item_id) do
     Managers.Inventory.get(character, item_id)
+  end
+
+  defp equipped_badge(character, badge_type) do
+    character
+    |> Managers.Inventory.list_equips()
+    |> Enum.find(fn item ->
+      item.inventory_tab == :badge and Types.Item.badge_type(item.item_id) == badge_type
+    end)
+  end
+
+  defp commit_badge(character, item, removed) do
+    character = refresh(character)
+
+    if removed do
+      Context.Field.broadcast(
+        character,
+        Packets.BadgeEquip.unequip(character, Types.Item.badge_type(removed.item_id))
+      )
+
+      Net.SenderSession.push(
+        character,
+        Packets.InventoryItem.add_item({:create, removed}, character)
+      )
+    end
+
+    Context.Field.broadcast(character, Packets.BadgeEquip.equip(character, item))
+    Net.SenderSession.push(character, Packets.InventoryItem.remove_item(item.id))
+    character
+  end
+
+  defp replace_badge(nil, _preferred_slot), do: {:ok, nil}
+
+  defp replace_badge(item, preferred_slot) do
+    Managers.Inventory.move_to_inventory(item, preferred_slot)
   end
 
   # refreshes the cached equip list and derived stats once for the whole

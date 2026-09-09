@@ -19,6 +19,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x19 => "FIELD_ENTRANCE",
     0x25 => "EQUIP_ITEM",
     0x26 => "UNEQUIP_ITEM",
+    0x81 => "BADGE_EQUIP",
     0x1C => "USER_SYNC",
     0x1D => "USER_CHAT",
     0x1F => "EMOTE",

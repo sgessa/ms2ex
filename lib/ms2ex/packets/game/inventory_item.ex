@@ -34,6 +34,21 @@ defmodule Ms2ex.Packets.InventoryItem do
 
   def add_item({:update, item}, _character), do: update_item(item.id, item.amount)
 
+  def put_badges(packet, badges, character) do
+    packet
+    |> put_byte(length(badges))
+    |> reduce(badges, fn badge, packet -> put_badge(packet, badge, character) end)
+  end
+
+  defp put_badge(packet, badge, character) do
+    packet
+    |> put_byte(Enums.BadgeType.get_value(Types.Item.badge_type(badge.item_id)))
+    |> put_int(badge.item_id)
+    |> put_long(badge.id)
+    |> put_int(badge.rarity)
+    |> put_item(badge, character)
+  end
+
   def mark_item_new(item) do
     __MODULE__
     |> build()
@@ -145,6 +160,9 @@ defmodule Ms2ex.Packets.InventoryItem do
         |> Packets.Ugc.put_ugc(item.ugc)
         |> put_blueprint(item)
 
+      item.inventory_tab == :badge ->
+        put_badge(packet, item)
+
       custom_music_score?(item.metadata) ->
         put_music_score(packet, item)
 
@@ -152,6 +170,24 @@ defmodule Ms2ex.Packets.InventoryItem do
         packet
     end
   end
+
+  defp put_badge(packet, item) do
+    badge_type = Types.Item.badge_type(item.item_id)
+
+    packet
+    |> put_byte(1)
+    |> put_byte(Enums.BadgeType.get_value(badge_type))
+    |> put_ustring(Integer.to_string(item.item_id))
+    |> put_badge_state(item, badge_type)
+  end
+
+  defp put_badge_state(packet, item, :transparency) do
+    transparency = Map.get(item.data || %{}, :transparency, List.duplicate(false, 10))
+    Enum.reduce(0..9, packet, &put_bool(&2, Enum.at(transparency, &1, false)))
+  end
+
+  defp put_badge_state(packet, _item, :pet_skin), do: put_int(packet)
+  defp put_badge_state(packet, _item, _badge_type), do: packet
 
   defp custom_music_score?(%{music: %{is_custom_note: true}}), do: true
   defp custom_music_score?(_metadata), do: false

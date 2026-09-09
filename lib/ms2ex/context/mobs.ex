@@ -60,8 +60,16 @@ defmodule Ms2ex.Context.Mobs do
     player = mob.first_attacker || mob.last_attacker
 
     case exp_reward(mob) do
-      :none -> :ok
-      amount -> Managers.Character.cast(player, {:earn_exp, amount})
+      :none ->
+        :ok
+
+      amount ->
+        amount =
+          if Context.PremiumMemberships.active?(player.account_id),
+            do: trunc(amount * 1.2),
+            else: amount
+
+        Managers.Character.cast(player, {:earn_exp, amount})
     end
   end
 

@@ -253,7 +253,13 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
             :ok
 
           _ ->
-            Context.Mails.send_system_mail(character.id, "", "50000000", items: [item])
+            Context.Mails.send_system_mail(
+              character.id,
+              "",
+              :inventory_overflow,
+              items: [item]
+            )
+
             {:error, @error_inventory_full}
         end
     end

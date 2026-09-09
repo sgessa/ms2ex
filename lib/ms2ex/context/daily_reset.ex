@@ -9,6 +9,7 @@ defmodule Ms2ex.Context.DailyReset do
   sync. Add new daily fields and their refresh packets here as they appear.
   """
 
+  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Repo
@@ -22,6 +23,8 @@ defmodule Ms2ex.Context.DailyReset do
   def reset do
     Schema.Character
     |> Repo.update_all(set: [instant_revive_count: 0, gathering_counts: nil])
+
+    Context.PremiumMemberships.reset_claimed()
 
     Managers.Character.online_ids()
     |> Enum.each(&Managers.Character.cast(&1, :daily_reset))

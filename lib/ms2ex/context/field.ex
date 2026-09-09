@@ -495,7 +495,7 @@ defmodule Ms2ex.Context.Field do
   """
   @spec change_field(Schema.Character.t(), integer(), map(), map()) :: :ok | {:error, term()}
   def change_field(character, map_id, position, rotation) do
-    with :ok <- leave(character) do
+    with :ok <- leave_for_change(character) do
       character =
         character
         |> Context.Characters.maybe_discover_map(map_id)
@@ -507,6 +507,15 @@ defmodule Ms2ex.Context.Field do
         character,
         Packets.RequestFieldEnter.bytes(map_id, position, rotation)
       )
+    end
+  end
+
+  defp leave_for_change(%Schema.Character{field_pid: nil}), do: :ok
+
+  defp leave_for_change(%Schema.Character{} = character) do
+    case leave(character) do
+      :ok -> :ok
+      :error -> if is_pid(character.field_pid), do: :ok, else: :error
     end
   end
 

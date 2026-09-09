@@ -33,6 +33,8 @@ started.
 - [Fishing bait & autobait](features/fishing-bait.md) — [Partial]
 - [Item boxes & use-item functions](features/item-boxes.md) — [Partial]
 - [Item systems: gem sockets, pet items, gacha](features/item-systems.md) — [Open]
+- [Premium Club](features/premium-club.md) — [Partial]
+- [Badge system](features/badge-system.md) — [Partial]
 - [Name-tag insignias](features/insignia.md) — [Partial]
 - [Party damage meter](features/party-dps-meter.md) — [Open]
 

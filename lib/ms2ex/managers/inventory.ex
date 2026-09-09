@@ -54,7 +54,12 @@ defmodule Ms2ex.Managers.Inventory do
   def list_tab_items(character_id, tab), do: call(character_id, {:list_tab_items, tab})
 
   @doc "Lists a character's equipped items."
-  def list_equips(%Schema.Character{id: character_id}), do: call(character_id, :list_equips)
+  def list_equips(%Schema.Character{id: character_id}) do
+    case call(character_id, :list_equips) do
+      :error -> Context.Inventory.list_equipped(character_id)
+      equips -> equips
+    end
+  end
 
   @doc "Finds the first free slot of a tab."
   @spec find_first_available_slot(integer(), atom()) :: integer() | {:error, :full_inventory}

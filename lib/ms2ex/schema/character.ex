@@ -101,8 +101,6 @@ defmodule Ms2ex.Schema.Character do
     field :title_id, :integer, default: 0
 
     # Virtuals
-
-    # TODO
     field :badges, {:array, :map}, virtual: true, default: []
     field :clubs, {:array, :map}, virtual: true, default: []
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]
@@ -124,6 +122,7 @@ defmodule Ms2ex.Schema.Character do
     field :home_name, :string, virtual: true, default: ""
     field :object_id, :integer, virtual: true, default: 0
     field :online?, :boolean, default: false, virtual: true
+    field :premium_time, :integer, virtual: true, default: 0
     field :group_chat_ids, {:array, :integer}, virtual: true, default: []
     field :dismantle_inventory, EctoTypes.Term, virtual: true
     field :mount, :map, virtual: true

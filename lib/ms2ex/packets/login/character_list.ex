@@ -53,8 +53,7 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_long()
     |> put_byte(length(character.equips))
     |> Packets.InventoryItem.put_equips(character.equips, character)
-    |> put_byte(length(badges))
-    |> put_badges(badges)
+    |> put_badges(badges, character)
     |> put_bool(false)
     # TODO unknown bool logic
     |> put_entries(characters)
@@ -139,15 +138,13 @@ defmodule Ms2ex.Packets.CharacterList do
     end)
   end
 
-  defp put_badges(packet, []), do: packet
-  # TODO
-  defp put_badges(packet, [_b | badges]) do
-    packet
-    |> put_byte()
-    |> put_int()
-    |> put_long()
-    |> put_int()
-    |> put_badges(badges)
+  defp put_badges(packet, _badges, character) do
+    badges =
+      character
+      |> Managers.Inventory.list_equips()
+      |> Enum.filter(&(&1.inventory_tab == :badge))
+
+    Packets.InventoryItem.put_badges(packet, badges, character)
   end
 
   defp put_counter(packet, counter) do
