@@ -5,6 +5,8 @@
 
 # `add_effect_buff`
 
+# `add_effect_buff_for`
+
 # `add_mob_buff`
 
 # `modify_duration`

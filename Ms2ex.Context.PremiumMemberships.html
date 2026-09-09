@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-8E9C83BF.js"></script>
+    <script defer src="dist/sidebar_items-842B905A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -129,7 +129,43 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_or_extend/2" data-no-tooltip="" translate="no">create_or_extend(account_id, expiration)</a>
+        <a href="#active/1" data-no-tooltip="" translate="no">active(account_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#active?/1" data-no-tooltip="" translate="no">active?(account_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#claim/2" data-no-tooltip="" translate="no">claim(account_id, benefit_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Atomically records a benefit claim, returning <code class="inline">:already_claimed</code> when needed.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#claimed/1" data-no-tooltip="" translate="no">claimed(account_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the claimed Premium Club benefit ids for an account.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_or_extend/2" data-no-tooltip="" translate="no">create_or_extend(account_id, period_hours)</a>
 
       </div>
 
@@ -145,9 +181,37 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#extend_coupon/2" data-no-tooltip="" translate="no">extend_coupon(account_id, period_hours)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get/1" data-no-tooltip="" translate="no">get(account_id)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#purchase/3" data-no-tooltip="" translate="no">purchase(character, price, period_hours)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Charges Merets and extends membership in one database transaction.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#reset_claimed/0" data-no-tooltip="" translate="no">reset_claimed()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Clears the daily claimed-benefit list for every account.</p></div>
 
     </div>
 
@@ -165,6 +229,94 @@ MS2EX
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="active/1">
+
+  <div class="detail-header">
+    <a href="#active/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">active(account_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L146" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="active?/1">
+
+  <div class="detail-header">
+    <a href="#active?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">active?(account_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L142" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="claim/2">
+
+  <div class="detail-header">
+    <a href="#claim/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">claim(account_id, benefit_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L16" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Atomically records a benefit claim, returning <code class="inline">:already_claimed</code> when needed.</p>
+  </section>
+</section>
+<section class="detail" id="claimed/1">
+
+  <div class="detail-header">
+    <a href="#claimed/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">claimed(account_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L8" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Returns the claimed Premium Club benefit ids for an account.</p>
+  </section>
+</section>
 <section class="detail" id="create_or_extend/2">
 
   <div class="detail-header">
@@ -172,10 +324,10 @@ MS2EX
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">create_or_extend(account_id, expiration)</h1>
+      <h1 class="signature" translate="no">create_or_extend(account_id, period_hours)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L5" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L92" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -197,7 +349,29 @@ MS2EX
       <h1 class="signature" translate="no">expired?(map)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L133" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="extend_coupon/2">
+
+  <div class="detail-header">
+    <a href="#extend_coupon/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">extend_coupon(account_id, period_hours)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L101" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -219,7 +393,7 @@ MS2EX
       <h1 class="signature" translate="no">get(account_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L26" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L117" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -229,6 +403,50 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="purchase/3">
+
+  <div class="detail-header">
+    <a href="#purchase/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">purchase(character, price, period_hours)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L40" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Charges Merets and extends membership in one database transaction.</p>
+  </section>
+</section>
+<section class="detail" id="reset_claimed/0">
+
+  <div class="detail-header">
+    <a href="#reset_claimed/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">reset_claimed()</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/premium_memberships.ex#L87" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Clears the daily claimed-benefit list for every account.</p>
   </section>
 </section>
 

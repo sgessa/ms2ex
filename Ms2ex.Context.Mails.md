@@ -108,7 +108,7 @@ Sends a player-to-player mail.
 # `send_system_mail`
 
 ```elixir
-@spec send_system_mail(integer(), String.t(), String.t(), keyword()) ::
+@spec send_system_mail(integer(), String.t(), atom() | String.t(), keyword()) ::
   {:ok, Ms2ex.Schema.Mail.t()} | {:error, atom()}
 ```
 

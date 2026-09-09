@@ -92,6 +92,7 @@ Ms2ex.Enums.SkillRank.md
 Ms2ex.Enums.SmartPushCurrencyType.md
 Ms2ex.Enums.SpecialStatType.md
 Ms2ex.Enums.StringCode.md
+Ms2ex.Enums.SystemMailContent.md
 Ms2ex.Enums.SystemNotice.md
 Ms2ex.Enums.TransferType.md
 Ms2ex.Enums.UgcType.md
@@ -411,6 +412,7 @@ Ms2ex.Storage.Tables.Jobs.md
 Ms2ex.Storage.Tables.MasteryDifferentialFactors.md
 Ms2ex.Storage.Tables.MasteryRecipes.md
 Ms2ex.Storage.Tables.MasteryRewards.md
+Ms2ex.Storage.Tables.PremiumClub.md
 Ms2ex.Storage.Tables.SmartPush.md
 Ms2ex.Storage.Tables.UgcDesign.md
 Ms2ex.Storage.Tables.UserStats.md

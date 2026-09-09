@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-8E9C83BF.js"></script>
+    <script defer src="dist/sidebar_items-842B905A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -138,6 +138,14 @@ MS2EX
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#add_effect_buff/6" data-no-tooltip="" translate="no">add_effect_buff(effect_id, effect_level, character, state, overlap_count \\ 0, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_effect_buff_for/7" data-no-tooltip="" translate="no">add_effect_buff_for(effect_id, effect_level, caster, owner, state, overlap_count \\ 0, opts \\ [])</a>
 
       </div>
 
@@ -301,6 +309,32 @@ next field they enter, including after a relog.</p></div>
 
   </section>
 </section>
+<section class="detail" id="add_effect_buff_for/7">
+
+    <span id="add_effect_buff_for/5"></span>
+
+    <span id="add_effect_buff_for/6"></span>
+
+  <div class="detail-header">
+    <a href="#add_effect_buff_for/7" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_effect_buff_for(effect_id, effect_level, caster, owner, state, overlap_count \\ 0, opts \\ [])</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L26" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="add_mob_buff/6">
 
     <span id="add_mob_buff/5"></span>
@@ -313,7 +347,7 @@ next field they enter, including after a relog.</p></div>
       <h1 class="signature" translate="no">add_mob_buff(caster, effect_id, effect_level, mob, state, overlap_count \\ 0)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -335,7 +369,7 @@ next field they enter, including after a relog.</p></div>
       <h1 class="signature" translate="no">modify_duration(owner_object_id, effect_id, modify_tick, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L546" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L558" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -358,7 +392,7 @@ when they extend or cut a buff short.</p>
       <h1 class="signature" translate="no">owner_has_buff?(owner_object_id, effect_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L519" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L531" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -381,7 +415,7 @@ cast it.</p>
       <h1 class="signature" translate="no">owner_has_buff_event?(owner_object_id, event_type, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L529" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L541" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -406,7 +440,7 @@ auto-fish and auto-perform conveniences, safe riding, ...).</p>
       <h1 class="signature" translate="no">remove_buff(buff_id, state, force \\ false)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L63" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L75" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -428,7 +462,7 @@ auto-fish and auto-perform conveniences, safe riding, ...).</p>
       <h1 class="signature" translate="no">remove_owner_buffs(owner_object_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L505" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L517" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -450,7 +484,7 @@ auto-fish and auto-perform conveniences, safe riding, ...).</p>
       <h1 class="signature" translate="no">remove_owner_effect(owner_object_id, effect_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L568" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L580" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -472,7 +506,7 @@ auto-fish and auto-perform conveniences, safe riding, ...).</p>
       <h1 class="signature" translate="no">restore_buffs(character, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L600" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L612" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -494,7 +528,7 @@ auto-fish and auto-perform conveniences, safe riding, ...).</p>
       <h1 class="signature" translate="no">save_owner_buffs(character, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L580" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L592" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -517,7 +551,7 @@ next field they enter, including after a relog.</p>
       <h1 class="signature" translate="no">tick(buff_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L237" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/buff.ex#L249" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

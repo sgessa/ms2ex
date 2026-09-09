@@ -11,6 +11,7 @@
   inserted_at: term(),
   password: term(),
   password_hash: term(),
+  premium_rewards_claimed: term(),
   updated_at: term(),
   username: term(),
   wallet: term()

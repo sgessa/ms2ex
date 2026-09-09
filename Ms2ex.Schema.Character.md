@@ -59,6 +59,7 @@
   online?: term(),
   party_id: term(),
   position: term(),
+  premium_time: term(),
   prestige_exp: term(),
   prestige_level: term(),
   profile_url: term(),

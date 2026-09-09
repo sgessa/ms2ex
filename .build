@@ -93,6 +93,7 @@ Ms2ex.Enums.SkillRank.html
 Ms2ex.Enums.SmartPushCurrencyType.html
 Ms2ex.Enums.SpecialStatType.html
 Ms2ex.Enums.StringCode.html
+Ms2ex.Enums.SystemMailContent.html
 Ms2ex.Enums.SystemNotice.html
 Ms2ex.Enums.TransferType.html
 Ms2ex.Enums.UgcType.html
@@ -412,6 +413,7 @@ Ms2ex.Storage.Tables.Jobs.html
 Ms2ex.Storage.Tables.MasteryDifferentialFactors.html
 Ms2ex.Storage.Tables.MasteryRecipes.html
 Ms2ex.Storage.Tables.MasteryRewards.html
+Ms2ex.Storage.Tables.PremiumClub.html
 Ms2ex.Storage.Tables.SmartPush.html
 Ms2ex.Storage.Tables.UgcDesign.html
 Ms2ex.Storage.Tables.UserStats.html
@@ -481,8 +483,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-B11155DA.js
-dist/sidebar_items-8E9C83BF.js
+dist/search_data-B2E7FB1C.js
+dist/sidebar_items-842B905A.js
 index.html
 license.html
 readme.html

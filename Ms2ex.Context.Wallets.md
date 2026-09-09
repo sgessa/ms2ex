@@ -3,6 +3,8 @@
 
 # `currency_type`
 
+# `debit`
+
 # `find`
 
 # `set`

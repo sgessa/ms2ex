@@ -232,6 +232,7 @@ by recipe id (the id an interact object's `item.recipe_id` points at).
 - [Ms2ex.Storage.Tables.MasteryRewards](Ms2ex.Storage.Tables.MasteryRewards.md): `mastery.xml`: per mastery type, the mastery value each grade starts at and
 the reward box handed out for reaching it.
 
+- [Ms2ex.Storage.Tables.PremiumClub](Ms2ex.Storage.Tables.PremiumClub.md)
 - [Ms2ex.Storage.Tables.SmartPush](Ms2ex.Storage.Tables.SmartPush.md)
 - [Ms2ex.Storage.Tables.UgcDesign](Ms2ex.Storage.Tables.UgcDesign.md): Cost and rarity of the design shop templates a player can turn into an item.
 
@@ -337,6 +338,7 @@ mastery block written into the character packet.
   - [Ms2ex.Enums.SmartPushCurrencyType](Ms2ex.Enums.SmartPushCurrencyType.md)
   - [Ms2ex.Enums.SpecialStatType](Ms2ex.Enums.SpecialStatType.md)
   - [Ms2ex.Enums.StringCode](Ms2ex.Enums.StringCode.md)
+  - [Ms2ex.Enums.SystemMailContent](Ms2ex.Enums.SystemMailContent.md)
   - [Ms2ex.Enums.SystemNotice](Ms2ex.Enums.SystemNotice.md)
   - [Ms2ex.Enums.TransferType](Ms2ex.Enums.TransferType.md)
   - [Ms2ex.Enums.UgcType](Ms2ex.Enums.UgcType.md)

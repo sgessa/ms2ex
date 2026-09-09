@@ -5,7 +5,7 @@
 
 # `claim_item`
 
-# `open`
+# `load_claimed`
 
 # `purchase_membership`
 
