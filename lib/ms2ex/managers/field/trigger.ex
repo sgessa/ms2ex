@@ -579,13 +579,24 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp execute_action("set_event_ui_script", args, _script_name, state) do
     packet =
       Packets.MassiveEvent.banner(
-        int_arg(args, :type),
+        banner_type(args[:type]),
         to_string(args[:script] || ""),
         int_arg(args, :duration)
       )
 
     deliver_to_boxes(state, string_list_arg(args, :box_ids), packet)
   end
+
+  # the script action's type is the set_event_ui kind selector (1 = plain
+  # script banner, 3/4/5/6/7 = outcome banners); it maps onto the client's
+  # banner table rather than passing through as the banner id itself
+  defp banner_type("1"), do: 6
+  defp banner_type("3"), do: 2
+  defp banner_type("4"), do: 0
+  defp banner_type("5"), do: 1
+  defp banner_type("6"), do: 3
+  defp banner_type("7"), do: 5
+  defp banner_type(_), do: 6
 
   defp execute_action("set_event_ui_countdown", args, _script_name, state) do
     countdown = int_list_arg(args, :round_countdown)

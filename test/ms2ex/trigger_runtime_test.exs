@@ -760,8 +760,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
     ])
     |> tick()
 
+    # kind 5 is the game-over style banner in the client's banner table
     assert_receive {:banner_push,
-                    <<0x62::little-16, 2, 5, script_len::little-16,
+                    <<0x62::little-16, 2, 1, script_len::little-16,
                       script::binary-size(script_len)-unit(16), 3000::little-32>>},
                    1000
 
