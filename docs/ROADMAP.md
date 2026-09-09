@@ -55,7 +55,19 @@ population spawns on the first due cycle, mob deaths schedule the next cycle
 (full wipe → `regen_check_time` cooldown, partial kill → 2× cooldown while no
 cycle is pending), and every due cycle refills the population to full.
 Zero-cooldown spawns never refill. Mob bodies now stay for their `dead.time`
-window before removal. Monster gates are data-driven from the map's trigger
+window before removal. Event spawn points (script-summoned mobs, the
+reference's `EventSpawnPointNPC`, ingested with `is_event: true`) are
+one-shot: they only appear through a `spawn_monster` trigger action and
+never join the regen machinery — quest fights like the soulbinder
+arena no longer resurrect their mobs every 10 s. Spawn-point npcs carry
+an explicit `spawn_radius` from the map data now: zero (the flat-buffer
+default) spawns the npc exactly at its configured position, and a
+positive radius scatters it within a circle of that size — a blanket
+±250 box jitter applied to every mob regardless of its actual radius
+used to displace scripted gate guards (e.g. the classic tutorial's exit
+barrier) far enough that skill hit-detection missed them outright. Open-world
+population spawns still carry no radius metadata and keep the coarse
+spread (see below). Monster gates are data-driven from the map's trigger
 script (ingested as `mob_gates`): when the last mob of a gated spawn point
 dies, the blocking trigger meshes drop (update packets broadcast, the gate
 stays latched open across respawns, late joiners load the meshes hidden) and
@@ -63,8 +75,9 @@ the gate's guide event fires. What is still missing:
 
 - pet spawn rolls for mob spawns (`pet_population` / `pet_spawn_rate`) — the
   metadata is not projected by the ingest yet
-- navmesh-valid spawn position picking — mobs currently randomize ±250 around
-  the spawn point instead of snapping to map spawn volumes
+- navmesh-valid spawn position picking for open-world population spawns —
+  they have no per-spawn radius metadata yet and still randomize ±250
+  around the spawn point instead of snapping to map spawn volumes
 - a general trigger-script runtime (states, conditions, cinematic/movie
   actions, per-job portal enables) — done; the machine core now runs on
   every map that ships trigger scripts, with
@@ -232,7 +245,10 @@ actions warn in the server log so coverage gaps surface per map.
 Conditions: user_detected
 (job-gated, padded boxes), monster_dead, quest_user_detected (the
 reference's wanted states: 1 started-not-completable, 2 completable,
-3 completed), widget_condition (Guide/SceneMovie), negate. Int-list
+3 completed), npc_detected (a story npc's spawn point standing inside a
+box — drives scripted arrivals, e.g. an npc that walked off through
+move_npc reaching its destination), widget_condition (Guide/SceneMovie),
+negate. Int-list
 arguments accept single ids, comma lists and inclusive ranges
 (`5001-5025` → every id — this drives the tutorial's arrow trails).
 Actions: set_mesh/set_effect, set_portal, spawn/destroy_monster (mob and
@@ -243,13 +259,32 @@ cinematic talks), set_npc_emotion_loop + set_npc_emotion_sequence
 (emote sequences resolved through the model's animation table),
 move_npc (story npc walks a named patrol, staying at the last
 waypoint), set_pc_emotion_loop (the client loops the player's emote
-for the duration), show/hide_guide_summary (held while a
+for the duration), set_pc_emotion_sequence (the player plays a
+comma list of emote sequences back to back),
+show/hide_guide_summary (held while a
 cinematic or scripted path move has the player and flushed when control
 returns), set_skip + set_scene_skip + skip-cutscene handling,
+show_caption (the screen-space named-title card ending a scripted
+beat), set_achievement (a trigger condition event for players in a
+box, feeding the quest and achievement pipelines — this is what lets
+trigger-gated main quests such as the knight's complete),
 add/remove_buff (script buffs), move_user (same-map teleport refused for
-non-walkable portals via the navmesh, cross-map field change),
+non-walkable portals via the navmesh, cross-map field change — the
+destination's portal id is a hint only, falling back to its return
+portal or default spawn when it has no such portal, e.g. the Door of
+Light transition),
 move_user_path (invisible follow-dummy walks the patrol in 3D with
-velocity while the client walks the player behind it).
+velocity while the client walks the player behind it), create_item (a
+map's item spawn point drops a fixed-position, unowned field item —
+used directly when the action names an item id, or rolled from the
+spawn point's own individual/global drop box), set_time_scale (a new
+`TimeScale` opcode ramps the field's tick rate between two scales over
+a duration — cinematic bullet-time/slow-mo beats), set_event_ui (the
+ingest resolves the splitter into set_event_ui_round/script/countdown;
+a new `MassiveEvent` opcode drives round indicators, banners and
+countdowns, scoped to trigger boxes with `!` negation and box 0 as
+"everyone"), set_ambient_light (field light tint as an
+`ambient_light` field property, "r, g, b" rounded to bytes).
 
 Still missing:
 
@@ -259,7 +294,9 @@ Still missing:
   comparison with the reference. Load-time camera registration is fixed
   to arrive invisible (a visible entry activates the view client-side,
   stranding relogs outside the intro on a scripted vantage)
-- sound setup actions
+- balloon-family follow-ups: `remove_balloon_talk` and dialogue
+  `delay_tick` scheduling (the client applies the delay itself, so
+  scripts that gate via wait_tick are unaffected)
 
 ### 24. Navmesh position validation — [Partial]
 
@@ -280,10 +317,21 @@ queries over the stored tiles, and auditing the generated meshes
 against the reference (nif assets whose llid lookup failed leave small
 gaps in walkable coverage).
 
-### 7. Join-flow packet audit — [Open]
+### 7. Join-flow packet audit — [Partial]
 
-`FieldAddUser`, `AddPortal` and the battle-join packet set have not been
-audited for byte-level client parity yet.
+`AddPortal`'s load packet (`Packets.AddPortal.bytes/1`) is now byte-correct:
+dimension, action type and the minimap-visible flag were in the wrong wire
+position (a stray empty field where `Dimension` belongs, `ActionType` never
+read from data, `MinimapVisible` written two fields later than the client
+expects), silently corrupting every field after it — invisible field-to-field
+portals such as Rien's exit to Bamboo Grove could end up unusable
+client-side even though the server considered them enabled. `Storage.Maps`
+no longer drops disabled portals before they reach field state (they now
+load with their true `enable` flag, matching the reference's load-everything,
+check-enabled-at-use-time model), and the change-field handler now refuses
+transition through a disabled portal instead of allowing it through on an id
+match alone. `FieldAddUser` and the battle-join packet set still have not been
+audited for byte-level client parity.
 
 ### 8. Drop & field-item serialization — [Open]
 
@@ -389,11 +437,10 @@ What is still missing:
 - skill point rewards stay pending (no skill point API exists yet)
 - condition matching limitations shared by quests, exploration, and
   achievements: `party_count` and `guild_party_count` gates are ignored;
-  string-code conditions (`emotion`, `emotiontime`, `trigger`, `npc_race`) and
-  target ranges are not evaluated; `stay_cube` needs surface/material checks;
-  unique collection conditions need persisted item/fish albums; and
-  field-mission `progress_maps` / exploration-type restrictions are not
-  enforced
+  `target` range gates are not evaluated; `stay_cube` needs
+  surface/material checks; unique collection conditions need persisted
+  item/fish albums; and field-mission `progress_maps` / exploration-type
+  restrictions are not enforced
 - movement/time update throttling must compare the changed condition's counter
   rather than the highest counter on the quest, so an unrelated condition
   cannot suppress a five-step client update
@@ -609,6 +656,23 @@ combat-heavy characters from accumulating document copies.
 
 ## Recently completed
 
+- Trigger runtime: implemented the `npc_detected` condition (a story
+  npc's spawn point standing inside a trigger box — drives scripted
+  arrivals such as an npc that walked off via `move_npc` reaching its
+  destination) and the `create_item` action (a map's item spawn point
+  drops a fixed-position, unowned field item, either a named item id or
+  rolled from the spawn point's individual/global drop box). The ingest
+  now projects `EventSpawnPointItem` entities (`item_spawns` per map),
+  previously parsed but never written to any doc. Fixed the berserker
+  chapter's "pick up an item from the ground" quest step, which had no
+  item to pick up. Also implemented `set_time_scale` (cinematic
+  bullet-time/slow-mo beats), which needed a new `TimeScale` send opcode
+  — it was never registered at all, and `set_event_ui` (the ingest now
+  resolves that splitter action into round/script/countdown targets;
+  a new `MassiveEvent` send opcode drives the overlays, scoped to
+  trigger boxes with `!` negation and box 0 as "everyone"). Re-ingest
+  with `--drop-data` also cleared stale trigger docs that lingered
+  under doubled-prefix keys from an older ingest version
 - Guild System: guild creation/disbanding, invites and responses, search and
   applications, role/permission configurations (Master, Jr. Master, Veteran,
   Member, Recruit), member mottos, daily check-in (player exp, guild exp,
@@ -654,7 +718,41 @@ combat-heavy characters from accumulating document copies.
 - Script npc emotes (`set_npc_emotion_loop` + one-shot
   `set_npc_emotion_sequence`) and dialogue (`set_dialogue` balloons +
   cinematic talks) via the new `animation` ingest set (anikeytext per
-  model, sequence name -> id)
+  model, sequence name -> id); player emote sequences too
+  (`set_pc_emotion_sequence` → Trigger ui EmotionSequence frame with the
+  comma-split sequence list)
+- Story-npc walks play real locomotion instead of sliding: patrol legs
+  resolve each waypoint's approach animation against the npc model's
+  animation table (fallback Walk_A → Run_A — models like the striker
+  champion whose anikey table lacks Walk_A run instead of sliding), the
+  control packet streams the Walk actor state while the patrol moves the
+  npc (the client keys the locomotion animation on this state), and the
+  npc returns to its model's Idle_A when the path ends. A model with no
+  walk/run sequence at all stays put with a warning instead of drifting
+  in its idle pose
+- The knight main quest chain (52000116_qd, "A Natural Hero") completes:
+  its closing beat fires `set_achievement(box, "trigger", "jordy")` —
+  now implemented as the reference's ConditionUpdate (quest +
+  achievement condition event for players in the box), which is the
+  quest's only completion condition. The beat's `show_caption` named-title
+  card broadcasts the Cinematic Caption packet, and `reset_camera` reads
+  the script's `interpolation_time` (was reading a positional arg,
+  always sending 0.0)
+- String-code condition matching (shared by quests and achievements):
+  conditions configured with code strings (trigger names, emote keys,
+  npc races) now match the pushed event's code string — previously the
+  string was ignored and any event of the type counted. This fixes a
+  mass unlock where one script's `set_achievement("jordy")` event
+  advanced all 106 trigger-coded achievements (none of which are coded
+  "jordy"), and makes the 57 emotion quest conditions require the
+  actual emote key the client sends (reference: aniKey → codeString)
+- Speech balloons actually render now: `set_dialogue` reads its
+  positional args (type, spawn point, script, seconds) instead of named
+  keys the data never carries — every dialogue fell through to an empty
+  player-anchored balloon. `add_balloon_talk` (named args: msg,
+  duration, spawn_point_id, delay_tick) sends the unflagged balloon
+  variant, and `play_system_sound_in_box` fires the new
+  PLAY_SYSTEM_SOUND packet field-wide or per player inside the boxes
 - npc story walks (`move_npc` patrol attachment, staying at the last
   waypoint) and player emotion loops (`set_pc_emotion_loop` → Trigger ui
   EmotionLoop frame)

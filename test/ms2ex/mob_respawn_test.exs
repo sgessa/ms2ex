@@ -42,6 +42,20 @@ defmodule Ms2ex.MobRespawnTest do
     }
   end
 
+  # event spawn points (script-summoned mobs, e.g. the soulbinder fight)
+  defp event_spawn_doc do
+    %{
+      npc_ids: [@mob_id],
+      regen_check_time: @cooldown_s,
+      population: 1,
+      position: %{x: 0.0, y: 0.0, z: 0.0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 701,
+      on_field_create: true,
+      is_event: true
+    }
+  end
+
   defp load_spawn(state, doc) do
     state = Npc.load_spawn(state, doc, doc.npc_ids)
     tick(state)
@@ -76,6 +90,24 @@ defmodule Ms2ex.MobRespawnTest do
     assert map_size(state.npcs) == 2
     assert length(spawn.spawned_mobs) == 2
     assert Enum.all?(state.npcs, fn {_oid, npc} -> npc.spawn_point_id == spawn.spawn_point_id end)
+    assert spawn.spawn_tick == :infinity
+  end
+
+  test "event spawn points are one-shot script summons" do
+    # a script summons them via spawn_monster, never on field create —
+    # whatever the on-create flag says — and they never come back
+    state = load_spawn(base_state(), event_spawn_doc())
+    assert alive(state) == 0
+
+    state = Npc.trigger_spawn(state, 701)
+    assert alive(state) == 1
+
+    state = kill_all(state)
+    state = tick(state)
+
+    assert alive(state) == 0
+    spawn = spawn_state(state)
+    assert spawn.spawned_mobs == []
     assert spawn.spawn_tick == :infinity
   end
 

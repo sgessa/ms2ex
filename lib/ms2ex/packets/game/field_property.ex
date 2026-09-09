@@ -40,6 +40,20 @@ defmodule Ms2ex.Packets.FieldProperty do
     |> put_int(end_tick)
   end
 
+  # hide_player carries no payload
+  defp put_property(packet, :hide_player) do
+    put_byte(packet, Enums.FieldProperty.get_value(:hide_player))
+  end
+
+  # ambient light tints the whole field (r, g, b bytes)
+  defp put_property(packet, {:ambient_light, r, g, b}) do
+    packet
+    |> put_byte(Enums.FieldProperty.get_value(:ambient_light))
+    |> put_byte(r)
+    |> put_byte(g)
+    |> put_byte(b)
+  end
+
   defp put_property(packet, property) when is_atom(property) do
     packet
     |> put_byte(Enums.FieldProperty.get_value(property))

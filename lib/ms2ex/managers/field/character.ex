@@ -70,9 +70,17 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # trigger/ui state finalizes before the player stats load; meshes
     # already dropped by opened gates join as hidden
-    cameras = state |> Map.get(:trigger_cameras, []) |> Map.values()
-    push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, []), cameras))
-    push(character, Packets.FieldProperty.load(Field.PerformanceStage.properties(state)))
+    cameras = state |> Map.get(:trigger_cameras, %{}) |> Map.values()
+    sounds = state |> Map.get(:trigger_sounds, %{}) |> Map.values()
+
+    # a cutscene that hid the player keeps them hidden for late joiners
+    properties =
+      if Map.get(state, :hide_player, false),
+        do: [:hide_player | Field.PerformanceStage.properties(state)],
+        else: Field.PerformanceStage.properties(state)
+
+    push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, []), cameras, sounds))
+    push(character, Packets.FieldProperty.load(properties))
 
     # Load Emotes and Player Stats after Player Object is loaded
     push(character, Packets.Stats.set_character_stats(character))

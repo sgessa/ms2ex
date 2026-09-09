@@ -3,6 +3,7 @@ defmodule Ms2ex.NpcEmotionTest do
 
   alias Ms2ex.Managers.Field.Npc
   alias Ms2ex.Managers.Field.Trigger
+  alias Ms2ex.Packets
 
   @topic "npc-emotion-test"
 
@@ -37,10 +38,14 @@ defmodule Ms2ex.NpcEmotionTest do
         states: %{
           "beat" => %{
             on_enter: [
-              %{name: "spawn_monster", args: %{arg1: "109"}},
+              %{name: "spawn_monster", args: %{spawn_ids: "109"}},
               %{
                 name: "set_npc_emotion_loop",
-                args: %{arg1: "109", arg2: "Emotion_lie_facedown_Idle_A", arg3: "600000"}
+                args: %{
+                  spawn_id: "109",
+                  sequence_name: "Emotion_lie_facedown_Idle_A",
+                  duration: "600000"
+                }
               }
             ],
             on_exit: [],
@@ -63,6 +68,42 @@ defmodule Ms2ex.NpcEmotionTest do
                       _pos::6-bytes, _rot::little-signed-16, _vel::6-bytes,
                       _speed::little-signed-16, _state, 4::little-signed-16,
                       _counter::little-signed-16>>}
+  end
+
+  # a patrol in motion reports the Walk actor state, which is what plays
+  # the model's locomotion animation client-side; an idle npc stays Idle
+  test "patrolling npcs stream the walk state in the control packet" do
+    moving = walking_npc(9001, {10.0, 0.0, 0.0})
+    packet = Packets.ControlNpc.bytes([moving])
+
+    <<0x59::little-16, 1::little-16, _len::little-16, 9001::little-32, 2, _pos::6-bytes,
+      _rot::little-signed-16, _vel::6-bytes, _speed::little-signed-16, state,
+      animation::little-signed-16, _counter::little-signed-16>> = packet
+
+    assert state == 2
+    assert animation == 11
+
+    idle = %{walking_npc(9002, {0.0, 0.0, 0.0}) | animation: 3}
+    packet = Packets.ControlNpc.bytes([idle])
+
+    <<0x59::little-16, 1::little-16, _len::little-16, 9002::little-32, 2, _pos::6-bytes,
+      _rot::little-signed-16, _vel::6-bytes, _speed::little-signed-16, state,
+      _animation::little-signed-16, _counter::little-signed-16>> = packet
+
+    assert state == 1
+  end
+
+  defp walking_npc(object_id, velocity) do
+    %Ms2ex.Types.FieldNpc{
+      object_id: object_id,
+      npc: %{id: 11_003_401, boss?: false, metadata: %{model: %{name: "11003401_m_storynpc"}}},
+      position: %Ms2ex.Types.Coord{x: 100.0, y: 100.0, z: 0.0},
+      rotation: %Ms2ex.Types.Coord{x: 0.0, y: 0.0, z: 180.0},
+      velocity: velocity,
+      animation: 11,
+      seq_counter: 1,
+      last_control_at: System.monotonic_time(:millisecond)
+    }
   end
 
   defp base_state do

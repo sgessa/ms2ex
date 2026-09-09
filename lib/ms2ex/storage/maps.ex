@@ -117,7 +117,6 @@ defmodule Ms2ex.Storage.Maps do
     map_id
     |> get_meta()
     |> Map.get(:portals)
-    |> Enum.filter(& &1[:enable])
     |> Enum.map(fn portal ->
       position = Map.get(portal, :position, %{})
       rotation = Map.get(portal, :rotation, %{})

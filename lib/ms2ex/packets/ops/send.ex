@@ -66,6 +66,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x5E => "TOMBSTONE",
     0x5F => "ACHIEVEMENT",
     0x60 => "USER_MOVE_BY_PORTAL",
+    0x62 => "MASSIVE_EVENT",
     0x63 => "FRIEND",
     0x65 => "INTERACT_OBJECT",
     0x67 => "FALL_DAMAGE",
@@ -98,6 +99,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xB9 => "HOME_COMMAND",
     0xBA => "CHARACTER_MAX_COUNT",
     0xBB => "WORLD",
+    0xC5 => "PLAY_SYSTEM_SOUND",
     0xC6 => "FISHING",
     0x70 => "GUIDE_OBJECT",
     0xC8 => "NPS_INFO",
@@ -120,7 +122,8 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xDD => "ITEM_LOCK",
     0x72 => "FOLLOW_NPC",
     0xF3 => "ONE_TIME_EFFECT",
-    0xF4 => "CAMERA_INTERPOLATION"
+    0xF4 => "CAMERA_INTERPOLATION",
+    0xF5 => "TIME_SCALE"
   }
 
   def all_map(), do: @send_ops

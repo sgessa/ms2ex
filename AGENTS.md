@@ -71,6 +71,15 @@ host runs):
   Items.get_meta(item_id)
   ```
 
+- **Fail fast on server-side data; guard only client-sent data.** Ingested
+  metadata, storage documents, and manager state are ours — if their shape
+  is wrong, let it crash: a loud crash (pattern match, KeyError) surfaces
+  the bug immediately and points at the fix. Do not add defensive
+  `Map.get`/default/`Logger.warning`-and-continue guards around it; they
+  silently degrade behavior and hide the error. Validation and graceful
+  handling are for data that crosses the wire from the game client, where
+  a malicious or stale client must not take down a process.
+
 - **`Mimic.copy` calls live in `test/test_helper.exs`, not in per-test `setup`
   blocks.** Copying a module there lets every test stub it; test files only
   call `Mimic.stub`. If a test needs to stub a module that isn't copied yet,
@@ -126,6 +135,26 @@ host runs):
   or eager boot-time loading.
 - Metadata values are plain maps decoded from ETF (`:erlang.binary_to_term/1`);
   their shapes are defined by the projection layer in `../ms2ex-file-ingest`.
+- **Trigger action/condition arguments arrive canonically named, never
+  positional.** The client data mixes positional (`arg1`, `arg2`, ...),
+  misspelled (`agr2`, `spwnPointID`, `offestRateX`) and named attributes
+  for the same function across different scripts. `ms2ex-file-ingest`'s
+  `TriggerScriptExtractor.ArgsDoc` renames every attribute through the
+  ported definition-override table (`src/Utils/TriggerDefinitionOverride.cs`,
+  `ActionOverride`/`ConditionOverride`) before snake-casing, so every
+  document a trigger handler reads already carries one canonical key per
+  argument (e.g. `set_mesh` is always `trigger_ids`/`visible`, never
+  `arg1`/`arg2`). Handlers in `Ms2ex.Managers.Field.Trigger` must read only
+  that canonical key — never add a positional or misspelled fallback, and
+  never guess a canonical name by inspecting the override table alone.
+  When adding or auditing a trigger action/condition, look up its real
+  argument keys against a fresh ingest (dump `Storage.Triggers.get_scripts/1`
+  for a script that uses it) rather than deriving the rename by hand —
+  the snake-casing of some renames (e.g. `spawnPointID` → `spawnId`
+  collapses to `spawn_id`, not `spawn_point_id`) is easy to get wrong by
+  inspection. A rename-table change in the ingest requires re-running it
+  and re-auditing every affected handler and test fixture in the same
+  change.
 
 ## Roadmap & TODOs
 

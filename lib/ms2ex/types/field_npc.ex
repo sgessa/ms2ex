@@ -61,19 +61,44 @@ defmodule Ms2ex.Types.FieldNpc do
   end
 
   @spawn_distance 250
+
+  # spawn-point npcs (xblock scripted/regen spawns) carry an explicit
+  # spawn_radius from the map data: zero means the npc always appears
+  # exactly at its configured position, and a positive radius scatters it
+  # within a circle of that size around it. Open-world population spawns
+  # carry no spawn_radius metadata yet (still a coarse box spread pending
+  # navmesh-valid spawn position picking)
   defp randomize_pos(%{type: :mob} = attrs) do
     position = to_coord(attrs.position)
 
-    min_x = position.x - @spawn_distance
-    max_x = position.x + @spawn_distance
+    case Map.get(attrs, :spawn_radius) do
+      nil ->
+        min_x = position.x - @spawn_distance
+        max_x = position.x + @spawn_distance
+        min_y = position.y - @spawn_distance
+        max_y = position.y + @spawn_distance
 
-    min_y = position.y - @spawn_distance
-    max_y = position.y + @spawn_distance
+        x = Context.Utils.rand_float(min_x, max_x)
+        y = Context.Utils.rand_float(min_y, max_y)
 
-    x = Context.Utils.rand_float(min_x, max_x)
-    y = Context.Utils.rand_float(min_y, max_y)
+        Map.put(attrs, :position, %{position | x: x, y: y})
 
-    Map.put(attrs, :position, %{position | x: x, y: y})
+      radius when radius > 0 ->
+        angle = :rand.uniform() * 2 * :math.pi()
+        distance = :rand.uniform() * radius
+
+        %{
+          attrs
+          | position: %{
+              position
+              | x: position.x + :math.cos(angle) * distance,
+                y: position.y + :math.sin(angle) * distance
+            }
+        }
+
+      _zero_radius ->
+        Map.put(attrs, :position, position)
+    end
   end
 
   defp randomize_pos(attrs) do

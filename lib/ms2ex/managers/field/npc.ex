@@ -1,4 +1,6 @@
 defmodule Ms2ex.Managers.Field.Npc do
+  require Logger
+
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
@@ -58,9 +60,15 @@ defmodule Ms2ex.Managers.Field.Npc do
 
       mob_spawn?(npc_spawn) ->
         # mob spawn points fill their population through the tick-driven
-        # spawn cycle; the first cycle is due as soon as the spawn is loaded
+        # spawn cycle; the first cycle is due as soon as the spawn is loaded.
+        # event spawn points are script summons and only ever appear through
+        # a spawn_monster action, whatever their on-create flag says
         spawn_tick =
-          if npc_spawn[:on_field_create] == false, do: :infinity, else: Ms2ex.sync_ticks()
+          cond do
+            npc_spawn[:on_field_create] == false -> :infinity
+            npc_spawn[:is_event] == true -> :infinity
+            true -> Ms2ex.sync_ticks()
+          end
 
         put_in(state, [:npc_spawns, spawn_point_id, :spawn_tick], spawn_tick)
 
@@ -133,6 +141,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         npc: npc,
         position: npc_spawn[:position],
         rotation: npc_spawn[:rotation],
+        spawn_radius: npc_spawn[:spawn_radius],
         field: state.topic
       })
 
@@ -145,7 +154,8 @@ defmodule Ms2ex.Managers.Field.Npc do
   # A mob death frees its population slot and schedules the next spawn cycle:
   # a spawn wiped down to zero mobs starts its cooldown, while a partial kill
   # (with no cycle pending) respawns at twice the cooldown. A zero cooldown
-  # means the spawn point never refills.
+  # means the spawn point never refills. Event spawn points (script
+  # summons) never refill — the script decides when they appear again.
   def despawn(state, %FieldNpc{} = field_npc) do
     case get_in(state, [:npc_spawns, field_npc.spawn_point_id]) do
       %{} = spawn when is_map_key(spawn, :npc_ids) ->
@@ -157,6 +167,8 @@ defmodule Ms2ex.Managers.Field.Npc do
         state
     end
   end
+
+  defp schedule_spawn(%{is_event: true} = spawn), do: spawn
 
   defp schedule_spawn(%{regen_check_time: cooldown} = spawn) when cooldown <= 0, do: spawn
 
@@ -308,23 +320,25 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   # spawns the invisible follow-dummy that walks a patrol path while the
   # player's client walks the player behind it (scripted carry sequences).
-  # the dummy plays the waypoints' approach animation so the client keeps
+  # the dummy plays the waypoints' approach animations so the client keeps
   # the following player in a grounded walking state
-  def spawn_follow_dummy(state, character, waypoints, approach_animation) do
+  def spawn_follow_dummy(state, character, way_points) do
     npc_id = Map.fetch!(@follow_dummies, character.gender)
 
     case spawn_npc(state, npc_id, %{position: character.position, rotation: nil, id: nil}) do
       {%Types.FieldNpc{} = field_npc, state} ->
         # spawn_npc may randomize mob positions; the dummy must start
-        # exactly on the player it carries
-        animation = animation_id(npc_id, approach_animation)
+        # exactly on the player it carries. The carry proceeds even when
+        # the model cannot animate — the walk itself is client-side
+        animations = leg_animations(field_npc, way_points) || []
 
         field_npc = %{
           field_npc
           | position: character.position,
-            animation: animation || field_npc.animation,
+            animation: Enum.at(animations, 0) || field_npc.animation,
             patrol: %{
-              waypoints: waypoints,
+              waypoints: Enum.map(way_points, & &1[:position]),
+              animations: animations,
               index: 0,
               speed: @follow_speed,
               last_at: System.monotonic_time(:millisecond),
@@ -348,29 +362,11 @@ defmodule Ms2ex.Managers.Field.Npc do
     case patrol do
       %{way_points: way_points} when way_points != [] ->
         waypoints = Enum.map(way_points, & &1[:position])
-        approach = Enum.find_value(way_points, & &1[:approach_animation])
 
         state.npcs
         |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
         |> Enum.reduce(state, fn {object_id, npc}, state ->
-          animation = animation_id(npc.npc.id, approach)
-
-          patrol = %{
-            waypoints: waypoints,
-            index: 0,
-            speed: @follow_speed,
-            last_at: System.monotonic_time(:millisecond),
-            despawn_on_finish?: false
-          }
-
-          npc = %{
-            npc
-            | animation: animation || npc.animation,
-              patrol: patrol,
-              send_control?: true
-          }
-
-          put_in(state, [:npcs, object_id], npc)
+          attach_patrol(state, object_id, npc, waypoints, way_points)
         end)
 
       _ ->
@@ -378,22 +374,48 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
-  defp animation_id(npc_id, sequence_name) do
-    model =
-      case Storage.Npcs.get_meta(npc_id) do
-        %{model: %{name: name}} -> name
-        _ -> nil
-      end
+  defp attach_patrol(state, object_id, npc, waypoints, way_points) do
+    case leg_animations(npc, way_points) do
+      nil ->
+        # the model has no walk/run sequence; it stays put instead of
+        # sliding across the field in its idle pose
+        state
 
-    Storage.Animations.sequence_id(model, sequence_name) ||
-      standard_animation_id(sequence_name)
+      animations ->
+        patrol = %{
+          waypoints: waypoints,
+          animations: animations,
+          index: 0,
+          speed: @follow_speed,
+          last_at: System.monotonic_time(:millisecond),
+          despawn_on_finish?: false
+        }
+
+        npc = %{npc | animation: hd(animations), patrol: patrol, send_control?: true}
+        put_in(state, [:npcs, object_id], npc)
+    end
   end
 
-  # the follow dummies have no animation table of their own; humanoid
-  # sequence ids are standardized across models, so resolve the common
-  # locomotion names directly
-  @standard_animations %{"Run_A" => 7, "Walk_A" => 0, "Idle_A" => 5}
-  defp standard_animation_id(name), do: Map.get(@standard_animations, name)
+  # per-waypoint walk sequences: each waypoint's approach animation
+  # resolved against the npc model's animation table, falling back to the
+  # model's Walk_A / Run_A. nil when the model has no locomotion sequence
+  # at all
+  defp leg_animations(%Types.FieldNpc{} = npc, way_points) do
+    model = npc.npc.metadata.model.name
+
+    walk = sequence_id(model, "Walk_A") || sequence_id(model, "Run_A")
+
+    if is_nil(walk) do
+      Logger.warning("npc model " <> to_string(model) <> " has no walk animation")
+      nil
+    else
+      Enum.map(way_points, fn way_point ->
+        sequence_id(model, way_point[:approach_animation]) || walk
+      end)
+    end
+  end
+
+  defp sequence_id(model, name), do: Storage.Animations.sequence_id(model, name)
 
   defp spawn_missing_mobs(spawn, state) do
     missing = spawn.population - length(spawn.spawned_mobs)
@@ -568,7 +590,10 @@ defmodule Ms2ex.Managers.Field.Npc do
         finish_patrol(npc, patrol)
 
       arrived? ->
-        %{npc | patrol: Map.put(patrol, :index, patrol.index + 1), send_control?: true}
+        patrol = Map.put(patrol, :index, patrol.index + 1)
+        animation = Enum.at(patrol.animations, patrol.index) || npc.animation
+
+        %{npc | patrol: patrol, animation: animation, send_control?: true}
 
       true ->
         rotation = face_move_direction(npc.rotation, velocity)
@@ -598,16 +623,24 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   # end of the scripted path: follow dummies (carrying the player) despawn
   # and release the guide hold; story npcs on a move_npc stay where they
-  # stopped and return to rest
+  # stopped and return to their idle pose
   defp finish_patrol(npc, patrol) do
     if Map.get(patrol, :despawn_on_finish?, false) do
       send(self(), :release_guide_hold)
       Process.send_after(self(), {:remove_npc, npc}, 0)
       %{npc | patrol: nil}
     else
-      %{npc | patrol: nil, velocity: {0, 0, 0}, animation: 255, send_control?: true}
+      %{
+        npc
+        | patrol: nil,
+          velocity: {0, 0, 0},
+          animation: idle_animation_id(npc),
+          send_control?: true
+      }
     end
   end
+
+  defp idle_animation_id(npc), do: sequence_id(npc.npc.metadata.model.name, "Idle_A") || 255
 
   # full 3D step toward the waypoint (waypoints carry ground heights); the
   # velocity is what the control packet reports so the client interpolates

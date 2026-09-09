@@ -7,6 +7,7 @@ defmodule Ms2ex.Packets.Cinematic do
     view: 0x3,
     set_skip: 0x4,
     start_skip: 0x5,
+    caption: 0xA,
     opening: 0xB
   }
 
@@ -51,6 +52,31 @@ defmodule Ms2ex.Packets.Cinematic do
     |> put_bool(unknown)
   end
 
+  # a screen-space caption banner (type NameCaption renders the named-title
+  # card at the end of scripted beats); align carries the client's
+  # camel-case enum name verbatim. NameCaption entries zero both offset
+  # rates together when only one is set
+  def caption(type, title, script, align, duration, offset_rate_x, offset_rate_y, scale) do
+    {offset_rate_x, offset_rate_y} =
+      if type == "NameCaption" and (offset_rate_x == 0.0 or offset_rate_y == 0.0) do
+        {0.0, 0.0}
+      else
+        {offset_rate_x, offset_rate_y}
+      end
+
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.caption)
+    |> put_ustring(type)
+    |> put_ustring(title)
+    |> put_ustring(script)
+    |> put_ustring(align)
+    |> put_int(duration)
+    |> put_float(offset_rate_x)
+    |> put_float(offset_rate_y)
+    |> put_float(scale)
+  end
+
   # shows or hides the client's cutscene skip button; an empty scene hides it
   def set_skip_scene(scene) do
     __MODULE__
@@ -86,8 +112,11 @@ defmodule Ms2ex.Packets.Cinematic do
     center_right: 7
   }
 
-  # a speech balloon over an actor's head
-  def balloon_talk(object_id, script, duration) do
+  # a speech balloon over an actor's head. The npc flag stays unset: the
+  # client only renders unflagged balloons (a flagged npc balloon is sent
+  # and never appears; the reference's own set_dialogue also flags npc
+  # balloons false)
+  def balloon_talk(object_id, script, duration, delay \\ 0) do
     __MODULE__
     |> build()
     |> put_byte(0x8)
@@ -95,7 +124,7 @@ defmodule Ms2ex.Packets.Cinematic do
     |> put_int(object_id)
     |> put_ustring(script)
     |> put_int(duration)
-    |> put_int(0)
+    |> put_int(delay)
   end
 
   # a cinematic dialog bubble during scripted sequences
