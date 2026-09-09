@@ -32,7 +32,7 @@ defmodule Ms2ex.Packets.CharacterInfo do
     |> put_time(DateTime.utc_now())
     |> put_buffer(details(character, equipment_stats))
     |> put_buffer(equips(character))
-    |> put_buffer(badges())
+    |> put_buffer(badges(character))
   end
 
   defp details(character, equipment_stats) do
@@ -134,5 +134,12 @@ defmodule Ms2ex.Packets.CharacterInfo do
     |> put_byte()
   end
 
-  defp badges, do: put_byte("", 0)
+  defp badges(character) do
+    badges =
+      character
+      |> Managers.Inventory.list_equips()
+      |> Enum.filter(&(&1.inventory_tab == :badge))
+
+    Packets.InventoryItem.put_badges("", badges, character)
+  end
 end

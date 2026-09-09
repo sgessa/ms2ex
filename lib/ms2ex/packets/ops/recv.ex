@@ -22,6 +22,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x1F => "REVIVAL",
     0x20 => "SKILL",
     0x21 => "STATE_SKILL",
+    0x48 => "BADGE_EQUIP",
     0x34 => "FALL_DAMAGE",
     0x35 => "GUIDE_OBJECT_SYNC",
     0x25 => "JOB",

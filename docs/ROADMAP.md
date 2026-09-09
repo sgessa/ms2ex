@@ -48,7 +48,7 @@ still skipped:
 Flat skill damage (`damage.value`) is applied from metadata, and DoT damage
 scales with the caster's attack via the shared formula.
 
-### 13. Mob spawn cycles — [Partial]
+### 4. Mob spawn cycles — [Partial]
 
 Mob spawn points now run spawn cycles from the field tick loop: the initial
 population spawns on the first due cycle, mob deaths schedule the next cycle
@@ -92,7 +92,7 @@ the gate's guide event fires. What is still missing:
 
 ## P2 — Combat systems depth
 
-### 4. Buff & effect system gaps — [Partial]
+### 5. Buff & effect system gaps — [Partial]
 
 Applied today: `status.values` / `status.rates` stat modifiers, the
 `update.cancel` removal list, stacking via `overlap_count` /
@@ -122,7 +122,7 @@ The Tile (0x6) mode, tied to tile skills, is still unimplemented.
 
 ## P3 — Client parity & serialization
 
-### 23. Fishing bait-slot UI sync — [Partial]
+### 7. Fishing bait-slot UI sync — [Partial]
 
 Fishing bait mechanics are partially implemented: bait/lure items ingest with
 `property.tag = :fishing_lure`, fish metadata includes lure rows and
@@ -142,7 +142,7 @@ What is still missing:
   We need to reverse the client around bait slot add/remove, bait use,
   and autobait toggle packets
 
-### 22. Insignia condition types — [Partial]
+### 8. Insignia condition types — [Partial]
 
 The name tag symbol is complete against the reference: the id is validated
 against `nametagsymbol.xml`, persisted, its buff swapped on change, and the
@@ -166,7 +166,7 @@ What is still missing:
   100, 12 enchants / rarity > 3), matching the reference. Only `title` reads
   the table's `code` column, so the rest cannot be retuned from metadata
 
-### 23. Premium Club parity — [Partial]
+### 9. Premium Club parity — [Partial]
 
 The Premium Club packet flow, metadata projection, membership persistence,
 claimed daily benefits, package purchases, bonus-item delivery, login
@@ -184,7 +184,30 @@ What is still missing:
   claims, full inventory, mail fallback, insufficient Merets, concurrent
   purchases, membership renewal after expiry, and packet payloads
 
-### 19. Housing & UGC cube system — [Open]
+### 10. Badge system — [Partial]
+
+Badge items now have reference type classification and payload serialization.
+Equipped non-pet badges can be equipped, replaced by type, unequipped, edited
+for transparency, persisted through the inventory manager, and broadcast with
+the `BADGE_EQUIP` packet. Character-list, character-info, and field-player
+payloads include equipped badges separately from gear and outfit items.
+Focused badge type classification regression tests are also in place.
+
+Still missing:
+
+- pet-skin badge behavior and pet model updates; the pet subsystem is not
+  implemented in ms2ex
+- buddy pairing effects; this is not static metadata that can be ingested.
+  The reference stores runtime `ItemCoupleInfo` on each buddy badge
+  (`character_id`, name, creator flag) after the couple-effect/buddy flow
+  succeeds. ms2ex has a friend list but no couple relationship or buddy-badge
+  item state, so this needs a marriage/couple flow plus persisted item data
+- packet-level, replacement, transparency-persistence, and relog integration
+  tests; the pure badge ID/type regression coverage is implemented
+- fishing, auto-gather, damage, tombstone, swim-tube, chat-bubble, and effect
+  badges
+
+### 11. Housing & UGC cube system — [Open]
 
 The cube packet surface is almost entirely unimplemented: `RequestCube`
 handles only `remove_cube` (0x0C); every other mode falls into the
@@ -196,7 +219,7 @@ permissions, save/load home, blueprints, kick out, and background /
 lighting / camera. Plots, furnishings and home ownership have no server
 model yet; the field-load cube packets send empty data.
 
-### 17. Item systems: gem sockets, pet items, gacha — [Open]
+### 12. Item systems: gem sockets, pet items, gacha — [Open]
 
 The item packet writes the reference defaults for three systems ms2ex does
 not implement, so every item currently serializes identically to an item
@@ -206,7 +229,7 @@ socket unlocking and gemstones are unimplemented). Implementing any of
 these needs the feature system plus, for pets, ingest projection of pet
 metadata.
 
-### 21. Item boxes & use-item functions — [Partial]
+### 13. Item boxes & use-item functions — [Partial]
 
 Boxes open through the dedicated `RequestItemBox` handler with the
 `ItemBox.Open` response packet: contents are resolved from the box's
@@ -224,7 +247,7 @@ crystal special case. Some boxes have no drop-table content in this
 client's data (e.g. the welcome pack 20300002) — those refuse to open,
 matching the reference.
 
-### 22. Character tutorial — [Partial]
+### 14. Character tutorial — [Partial]
 
 New characters spawn on their job's tutorial start field (from the job
 table projection instead of a hardcoded map), the client's
@@ -253,7 +276,7 @@ during a test run; until verified, those characters skip via the job's
 skip item (`!item 15500095` for a striker, then use it on the start
 field).
 
-### 23. Trigger-script runtime — [Partial]
+### 15. Trigger-script runtime — [Partial]
 
 The xblock trigger scripts run on every map that has them (per-script
 state machines tick at 100ms with the semantics described above:
@@ -316,7 +339,7 @@ Still missing:
   `delay_tick` scheduling (the client applies the delay itself, so
   scripts that gate via wait_tick are unaffected)
 
-### 24. Navmesh position validation — [Partial]
+### 16. Navmesh position validation — [Partial]
 
 The ingest builds a Recast/Detour navmesh per xblock from the client's
 collision geometry (`--navmesh [xblocks]`; DotRecast pipeline ported
@@ -335,7 +358,7 @@ queries over the stored tiles, and auditing the generated meshes
 against the reference (nif assets whose llid lookup failed leave small
 gaps in walkable coverage).
 
-### 7. Join-flow packet audit — [Partial]
+### 17. Join-flow packet audit — [Partial]
 
 `AddPortal`'s load packet (`Packets.AddPortal.bytes/1`) is now byte-correct:
 dimension, action type and the minimap-visible flag were in the wrong wire
@@ -351,7 +374,7 @@ transition through a disabled portal instead of allowing it through on an id
 match alone. `FieldAddUser` and the battle-join packet set still have not been
 audited for byte-level client parity.
 
-### 8. Drop & field-item serialization — [Open]
+### 18. Drop & field-item serialization — [Open]
 
 The drop packet still has three deviations:
 
@@ -360,7 +383,7 @@ The drop packet still has three deviations:
 - SP/stamina/merets use the legacy currency blob instead of the full item
   class
 
-### 9. Region & splash attacks — [Partial]
+### 19. Region & splash attacks — [Partial]
 
 `ImmediateActive` / `Delay` are now projected by the ingest, but the server
 still uses a fixed radius instead of the exact skill geometry and always lands
@@ -368,7 +391,7 @@ the first hit immediately. Cube-magic-path placement also still has parity
 work left: rotated `fire_offset` is applied, but source-height alignment and
 `ignore_adjust` snapping are not matched yet.
 
-### 12. Party damage meter — [Open]
+### 20. Party damage meter — [Open]
 
 The client's party DPS meter never updates because the server never feeds it.
 The client requests the meter via recv `0x57` (DpsMode) and expects periodic
@@ -378,7 +401,7 @@ never implements them either). Field `SkillDamage` broadcasts already reach
 party members byte-correctly, so this is purely the missing server-side
 damage accumulation + `DpsStat` flow (see `docs/internal/party-dps-meter.md`).
 
-### 14. Quest flow — [Partial]
+### 21. Quest flow — [Partial]
 
 A first quest baseline is wired: quest recv/send opcodes are registered,
 quest-state packets can serialize, character/account quest rows can persist
@@ -433,7 +456,7 @@ What is still missing:
   guidance flow against client behavior
 - chapter rewards, job-advance hooks, and the remaining quest subcommands
 
-### 15. Achievements — [Partial]
+### 22. Achievements — [Partial]
 
 Achievement metadata is ingested with a condition-type index, and completed
 field missions now activate exploration quests, advance milestone progress and
@@ -512,7 +535,7 @@ What is still missing:
 - applying the `achievements` migration and re-ingesting metadata in each
   deployment before the feature is enabled
 
-### 20. User generated content — [Partial]
+### 23. User generated content — [Partial]
 
 The upload pipeline is in place end to end: the client is pointed at the
 `/ugc` prefix at login, announces an upload over the game session, posts the
@@ -536,7 +559,7 @@ What is still missing:
 - **Ranking and mentor boards** — `/irrq.aspx` and `/ruq.aspx` answer with a
   well-formed but empty payload
 
-### 21. Music performances — [Partial]
+### 24. Music performances — [Partial]
 
 Instruments are field objects owned by the performer: improvising relays midi
 notes to the map, scores play from their metadata file name or a composed MML
@@ -621,7 +644,7 @@ What is still missing or stubbed:
 
 ## P4 — Architecture
 
-### 15. Character-owned inventory — [Partial]
+### 26. Character-owned inventory — [Partial]
 
 The ownership model is in place: `Ms2ex.Managers.Inventory`
 (`inventories:<char_id>`, like the quest manager) owns every item row and tab
@@ -653,7 +676,7 @@ What is still missing:
   truth with the classic invalidation bugs, and none of the ownership
   benefits
 
-### 18. Metadata-free manager state — [Partial]
+### 27. Metadata-free manager state — [Partial]
 
 Metadata documents are virtual fields on items and get embedded wherever
 structs are cached in GenServer state, so manager memory grows with document
