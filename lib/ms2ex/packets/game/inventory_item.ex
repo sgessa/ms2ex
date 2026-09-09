@@ -182,7 +182,7 @@ defmodule Ms2ex.Packets.InventoryItem do
   end
 
   defp put_badge_state(packet, item, :transparency) do
-    transparency = get_in(item, [:data, :transparency]) || List.duplicate(false, 10)
+    transparency = Map.get(item.data || %{}, :transparency, List.duplicate(false, 10))
     Enum.reduce(0..9, packet, &put_bool(&2, Enum.at(transparency, &1, false)))
   end
 

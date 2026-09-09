@@ -223,8 +223,8 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
-  def handle_call({:equip_badge, item_id, badge_type}, _from, character) do
-    case Character.Equips.equip_badge(character, item_id, badge_type) do
+  def handle_call({:equip_badge, item_id}, _from, character) do
+    case Character.Equips.equip_badge(character, item_id) do
       {:ok, character} -> {:reply, {:ok, character}, character}
       :error -> {:reply, :error, character}
     end

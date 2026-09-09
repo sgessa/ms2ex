@@ -70,10 +70,11 @@ defmodule Ms2ex.Managers.Character.Equips do
     end
   end
 
-  def equip_badge(character, item_id, badge_type) do
+  def equip_badge(character, item_id) do
     with {:ok, item} <- load_inventory_item(character, item_id),
          true <- item.inventory_tab == :badge,
-         badge_type when is_atom(badge_type) <- Enums.BadgeType.get_key(badge_type),
+         badge_type <- Types.Item.badge_type(item.item_id),
+         true <- badge_type != :none,
          true <- Types.Item.badge_type(item.item_id) == badge_type,
          false <- badge_type == :pet_skin,
          existing <- equipped_badge(character, badge_type),

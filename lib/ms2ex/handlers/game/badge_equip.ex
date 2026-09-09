@@ -8,9 +8,8 @@ defmodule Ms2ex.GameHandlers.BadgeEquip do
 
     case command do
       0x0 ->
-        {item_id, packet} = get_long(packet)
-        {badge_type, _packet} = get_byte(packet)
-        Managers.Character.call(session.character_id, {:equip_badge, item_id, badge_type})
+        {item_uid, _packet} = get_long(packet)
+        Managers.Character.call(session.character_id, {:equip_badge, item_uid})
 
       0x1 ->
         {badge_type, _packet} = get_byte(packet)
