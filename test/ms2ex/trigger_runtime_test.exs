@@ -668,6 +668,44 @@ defmodule Ms2ex.TriggerRuntimeTest do
               10.0::little-float-32, 1>>} = receive_push()
   end
 
+  test "set_event_ui_script with box id 0 reaches every player exactly once" do
+    test_pid = self()
+
+    Mimic.stub(Ms2ex.Managers.Character, :call, fn
+      _id, :lookup -> {:ok, %Ms2ex.Schema.Character{id: 1}}
+      _id, _message -> :ok
+    end)
+
+    Mimic.stub(Ms2ex.Net.SenderSession, :push, fn _character, packet ->
+      send(test_pid, {:banner_push, packet})
+      :ok
+    end)
+
+    base_state()
+    |> Map.put(:player_positions, %{
+      1 => %{position: @box.position},
+      2 => %{position: %{x: 0.0, y: 0.0, z: 0.0}}
+    })
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{
+        name: "set_event_ui_script",
+        args: %{type: "5", script: "$X__0$", duration: "3000", box_ids: "0"}
+      }
+    ])
+    |> tick()
+
+    assert_receive {:banner_push,
+                    <<0x62::little-16, 2, 5, script_len::little-16,
+                      script::binary-size(script_len)-unit(16), 3000::little-32>>},
+                   1000
+
+    assert :unicode.characters_to_binary(script, {:utf16, :little}) == "$X__0$"
+
+    # one push per player, both covered
+    assert_receive {:banner_push, _}, 1000
+    refute_receive {:banner_push, _}, 100
+  end
+
   test "move_user to a destination without the named portal uses its default spawn" do
     stub_metadata(%{
       "map:52000115" => %{

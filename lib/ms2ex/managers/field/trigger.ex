@@ -549,6 +549,50 @@ defmodule Ms2ex.Managers.Field.Trigger do
     state
   end
 
+  # event/minigame UI overlays. rounds = [current, max, min]; a round UI
+  # whose min equals its max would display nothing, so it is skipped
+  defp execute_action("set_event_ui_round", args, _script_name, state) do
+    rounds = int_list_arg(args, :rounds)
+    round = Enum.at(rounds, 0) || 1
+    max_round = Enum.at(rounds, 1) || 1
+    min_round = Enum.at(rounds, 2) || 1
+
+    if min_round != max_round do
+      Context.Field.broadcast(
+        state.topic,
+        Packets.MassiveEvent.round(round, max_round, min_round, int_arg(args, :v_offset))
+      )
+    end
+
+    state
+  end
+
+  # banner text, optionally scoped to trigger boxes (ids prefixed with "!"
+  # select players outside the box; box id 0 means everyone on the field)
+  defp execute_action("set_event_ui_script", args, _script_name, state) do
+    packet =
+      Packets.MassiveEvent.banner(
+        int_arg(args, :type),
+        to_string(args[:script] || ""),
+        int_arg(args, :duration)
+      )
+
+    deliver_to_boxes(state, string_list_arg(args, :box_ids), packet)
+  end
+
+  defp execute_action("set_event_ui_countdown", args, _script_name, state) do
+    countdown = int_list_arg(args, :round_countdown)
+
+    if length(countdown) == 2 do
+      [round, seconds] = countdown
+
+      packet = Packets.MassiveEvent.countdown(to_string(args[:script] || ""), round, seconds)
+      deliver_to_boxes(state, string_list_arg(args, :box_ids), packet)
+    end
+
+    state
+  end
+
   defp execute_action("set_onetime_effect", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
@@ -1176,6 +1220,48 @@ defmodule Ms2ex.Managers.Field.Trigger do
       Storage.Maps.get_field_spawn(map_id)
   end
 
+  # box ids are strings, optionally negated with a leading "!"; id 0 means
+  # everyone on the field. Recipients are deduplicated across boxes
+  defp deliver_to_boxes(state, box_ids, packet) do
+    all_player_ids = Map.keys(state.player_positions)
+
+    recipients =
+      Enum.flat_map(box_ids, fn box_id ->
+        {negate?, id} = parse_box_id(box_id)
+
+        cond do
+          id == 0 and not negate? ->
+            all_player_ids
+
+          negate? ->
+            Enum.reject(all_player_ids, &(&1 in players_in_boxes(state, [id])))
+
+          true ->
+            players_in_boxes(state, [id])
+        end
+      end)
+      |> Enum.uniq()
+
+    Enum.each(recipients, fn character_id ->
+      case Managers.Character.call(character_id, :lookup) do
+        {:ok, character} -> Net.SenderSession.push(character, packet)
+        _ -> :ok
+      end
+    end)
+
+    state
+  end
+
+  defp parse_box_id(box_id) do
+    box_id = String.trim(box_id)
+
+    if String.starts_with?(box_id, "!") do
+      {true, box_id |> String.trim_leading("!") |> Integer.parse() |> elem(0)}
+    else
+      {false, Integer.parse(box_id) |> elem(0)}
+    end
+  end
+
   defp update_portal(portal_id, args, state) do
     portal = Enum.find(Map.values(state.portals || %{}), &(&1.id == portal_id))
 
@@ -1311,6 +1397,21 @@ defmodule Ms2ex.Managers.Field.Trigger do
     case Map.get(args, key) do
       value when is_binary(value) -> parse_int_list(value)
       _ -> []
+    end
+  end
+
+  # comma-separated strings kept verbatim (box ids may carry a leading "!"
+  # negation, so they cannot go through the int list parser)
+  defp string_list_arg(args, key) do
+    case Map.get(args, key) do
+      value when is_binary(value) ->
+        value
+        |> String.split(",")
+        |> Enum.map(&String.trim/1)
+        |> Enum.reject(&(&1 == ""))
+
+      _ ->
+        []
     end
   end
 

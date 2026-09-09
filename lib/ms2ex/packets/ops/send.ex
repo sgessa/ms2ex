@@ -66,6 +66,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x5E => "TOMBSTONE",
     0x5F => "ACHIEVEMENT",
     0x60 => "USER_MOVE_BY_PORTAL",
+    0x62 => "MASSIVE_EVENT",
     0x63 => "FRIEND",
     0x65 => "INTERACT_OBJECT",
     0x67 => "FALL_DAMAGE",

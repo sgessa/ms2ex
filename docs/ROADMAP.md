@@ -279,7 +279,11 @@ map's item spawn point drops a fixed-position, unowned field item —
 used directly when the action names an item id, or rolled from the
 spawn point's own individual/global drop box), set_time_scale (a new
 `TimeScale` opcode ramps the field's tick rate between two scales over
-a duration — cinematic bullet-time/slow-mo beats).
+a duration — cinematic bullet-time/slow-mo beats), set_event_ui (the
+ingest resolves the splitter into set_event_ui_round/script/countdown;
+a new `MassiveEvent` opcode drives round indicators, banners and
+countdowns, scoped to trigger boxes with `!` negation and box 0 as
+"everyone").
 
 Still missing:
 
@@ -662,7 +666,12 @@ combat-heavy characters from accumulating document copies.
   chapter's "pick up an item from the ground" quest step, which had no
   item to pick up. Also implemented `set_time_scale` (cinematic
   bullet-time/slow-mo beats), which needed a new `TimeScale` send opcode
-  — it was never registered at all
+  — it was never registered at all, and `set_event_ui` (the ingest now
+  resolves that splitter action into round/script/countdown targets;
+  a new `MassiveEvent` send opcode drives the overlays, scoped to
+  trigger boxes with `!` negation and box 0 as "everyone"). Re-ingest
+  with `--drop-data` also cleared stale trigger docs that lingered
+  under doubled-prefix keys from an older ingest version
 - Guild System: guild creation/disbanding, invites and responses, search and
   applications, role/permission configurations (Master, Jr. Master, Veteran,
   Member, Recruit), member mottos, daily check-in (player exp, guild exp,
