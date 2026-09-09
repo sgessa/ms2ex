@@ -5,6 +5,10 @@
 
 # `emotion_loop`
 
+# `emotion_sequence`
+
+# `face_emotion`
+
 # `guide_event`
 
 # `hide_mesh`
@@ -22,6 +26,8 @@
 # `update_effect`
 
 # `update_mesh`
+
+# `update_sound`
 
 ---
 

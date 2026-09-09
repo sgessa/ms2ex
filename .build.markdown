@@ -287,6 +287,7 @@ Ms2ex.Packets.LoginResult.md
 Ms2ex.Packets.LoginToGame.md
 Ms2ex.Packets.Mail.md
 Ms2ex.Packets.MarketInventory.md
+Ms2ex.Packets.MassiveEvent.md
 Ms2ex.Packets.Mastery.md
 Ms2ex.Packets.Mentor.md
 Ms2ex.Packets.Merets.md
@@ -303,6 +304,7 @@ Ms2ex.Packets.PacketReader.md
 Ms2ex.Packets.PacketWriter.md
 Ms2ex.Packets.Party.md
 Ms2ex.Packets.PlayInstrument.md
+Ms2ex.Packets.PlaySystemSound.md
 Ms2ex.Packets.PremiumClub.md
 Ms2ex.Packets.Prestige.md
 Ms2ex.Packets.ProxyGameObj.md
@@ -336,6 +338,7 @@ Ms2ex.Packets.StateSkill.md
 Ms2ex.Packets.Stats.md
 Ms2ex.Packets.SyncNumber.md
 Ms2ex.Packets.Taxi.md
+Ms2ex.Packets.TimeScale.md
 Ms2ex.Packets.Tombstone.md
 Ms2ex.Packets.Trigger.md
 Ms2ex.Packets.Ugc.md

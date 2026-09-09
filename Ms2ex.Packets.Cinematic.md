@@ -3,6 +3,8 @@
 
 # `balloon_talk`
 
+# `caption`
+
 # `hide_ui`
 
 # `opening`

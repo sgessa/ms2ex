@@ -17,10 +17,11 @@ reach for the progress to count.
 
 # `metadata_matches?`
 
-Whether one condition document accepts the pushed event: the code Long
-must satisfy the condition's code gate and the pushed value its target
-gate. Shared with the achievement conditions, which follow the same
-metadata layout.
+Whether one condition document accepts the pushed event: the code
+parameter must satisfy the condition's code gate (string codes match the
+pushed string, integer codes the pushed long) and the pushed value its
+target gate. Shared with the achievement conditions, which follow the
+same metadata layout.
 
 # `update`
 
