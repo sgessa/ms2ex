@@ -1386,19 +1386,32 @@ defmodule Ms2ex.Managers.Field.Trigger do
     |> Map.values()
     |> Enum.filter(&(&1[:spawn_point_id] in spawn_point_ids))
     |> Enum.flat_map(fn spawn ->
-      List.wrap(spawn[:spawned_mobs]) ++ Map.get(spawn, :spawned_npcs, [])
+      (List.wrap(spawn[:spawned_mobs]) ++ Map.get(spawn, :spawned_npcs, []))
+      |> Enum.map(&{&1, spawn.spawn_point_id})
     end)
-    |> Enum.reduce(state, fn object_id, state ->
+    |> Enum.reduce(state, fn {object_id, point_id}, state ->
       case Map.fetch(state.npcs, object_id) do
         {:ok, npc} ->
           # reuses the corpse-removal path; a pending removal is a no-op
           send(self(), {:remove_npc, npc})
-          state
+          # the destroyed npc frees its slot so a later spawn_monster on the
+          # same point can refill it
+          untrack_npc(state, point_id, object_id)
 
         :error ->
           state
       end
     end)
+  end
+
+  defp untrack_npc(state, point_id, object_id) do
+    spawn = state.npc_spawns[point_id]
+
+    spawn =
+      Map.update(spawn, :spawned_npcs, [], &List.delete(&1, object_id))
+      |> Map.update(:spawned_mobs, [], &List.delete(&1, object_id))
+
+    put_in(state, [:npc_spawns, point_id], spawn)
   end
 
   defp cinematic_ui(0, _args, state) do

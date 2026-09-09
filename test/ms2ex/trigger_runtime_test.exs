@@ -515,6 +515,45 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert_received {:quest_event, 2, :trigger, 1, "jordysave"}
   end
 
+  test "destroy_monster frees the spawn point so it can respawn" do
+    stub_metadata(%{
+      "npc:11003187" => %{
+        basic: %{friendly: 1, class: 0, level: 1},
+        stat: %{stats: %{health: 10}}
+      }
+    })
+
+    friendly_spawn = fn point ->
+      %{
+        spawn_point_id: point,
+        npc_list: [%{npc_id: 11_003_187, count: 1}],
+        on_field_create: false,
+        regen_check_time: 0,
+        spawned_npcs: [],
+        spawned_mobs: []
+      }
+    end
+
+    state =
+      base_state()
+      |> Map.put(:npc_spawns, %{101 => friendly_spawn.(101), 104 => friendly_spawn.(104)})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "spawn_monster", args: %{spawn_ids: "101"}},
+        %{name: "destroy_monster", args: %{spawn_ids: "101"}},
+        %{name: "spawn_monster", args: %{spawn_ids: "101"}}
+      ])
+      |> tick()
+
+    # joddy was destroyed once and the respawn filled his slot again with a
+    # fresh object; the untouched point 104 spawn is unaffected. the destroyed
+    # object's removal is an async field message the test never drains, so it
+    # still lingers in state.npcs
+    assert [new_id] = state.npc_spawns[101].spawned_npcs
+    assert Map.has_key?(state.npcs, new_id)
+    assert Map.size(state.npcs) == 2
+    assert state.npc_spawns[104].spawned_npcs == []
+  end
+
   test "set_dialogue balloons the spawn-point npc with the script text" do
     state =
       base_state()
