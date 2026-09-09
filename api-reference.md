@@ -20,6 +20,7 @@
 - [Ms2ex.Formulas.ItemStaticStats](Ms2ex.Formulas.ItemStaticStats.md)
 - [Ms2ex.Formulas.ItemWeaponAttack](Ms2ex.Formulas.ItemWeaponAttack.md)
 - [Ms2ex.GameHandlers.Achievement](Ms2ex.GameHandlers.Achievement.md)
+- [Ms2ex.GameHandlers.BadgeEquip](Ms2ex.GameHandlers.BadgeEquip.md)
 - [Ms2ex.GameHandlers.CharacterInfo](Ms2ex.GameHandlers.CharacterInfo.md)
 - [Ms2ex.GameHandlers.ChatSticker](Ms2ex.GameHandlers.ChatSticker.md)
 - [Ms2ex.GameHandlers.Dismantle](Ms2ex.GameHandlers.Dismantle.md)
@@ -292,6 +293,7 @@ to. The type in the envelope decides which resource the payload belongs to.
 - Enums
   - [Ms2ex.Enums.AchievementRewardType](Ms2ex.Enums.AchievementRewardType.md)
   - [Ms2ex.Enums.AttackType](Ms2ex.Enums.AttackType.md)
+  - [Ms2ex.Enums.BadgeType](Ms2ex.Enums.BadgeType.md)
   - [Ms2ex.Enums.BasicStatType](Ms2ex.Enums.BasicStatType.md)
   - [Ms2ex.Enums.BlueprintType](Ms2ex.Enums.BlueprintType.md)
   - [Ms2ex.Enums.CaughtFishType](Ms2ex.Enums.CaughtFishType.md): Which mastery notice the client shows for a caught fish.
@@ -459,6 +461,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
 - Packets
   - [Ms2ex.Packets.Achievement](Ms2ex.Packets.Achievement.md)
   - [Ms2ex.Packets.AddPortal](Ms2ex.Packets.AddPortal.md)
+  - [Ms2ex.Packets.BadgeEquip](Ms2ex.Packets.BadgeEquip.md)
   - [Ms2ex.Packets.BannerList](Ms2ex.Packets.BannerList.md)
   - [Ms2ex.Packets.Breakable](Ms2ex.Packets.Breakable.md)
   - [Ms2ex.Packets.Buff](Ms2ex.Packets.Buff.md)

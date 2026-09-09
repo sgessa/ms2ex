@@ -6,6 +6,10 @@ Item metadata helpers.
 The inventory tab an item belongs to is derived from its property type,
 subtype and skin/fragment flags rather than the raw type value.
 
+# `badge_type`
+
+Returns the wire badge type derived from a badge item id.
+
 # `inventory_tab`
 
 ```elixir

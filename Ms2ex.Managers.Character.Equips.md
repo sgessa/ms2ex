@@ -19,12 +19,18 @@ the result.
   {:ok, Ms2ex.Schema.Character.t()} | :error
 ```
 
+# `equip_badge`
+
 # `unequip`
 
 ```elixir
 @spec unequip(Ms2ex.Schema.Character.t(), integer()) ::
   {:ok, Ms2ex.Schema.Character.t()} | :error
 ```
+
+# `unequip_badge`
+
+# `update_badge_transparency`
 
 ---
 

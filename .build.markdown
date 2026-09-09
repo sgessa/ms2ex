@@ -60,6 +60,7 @@ Ms2ex.EctoTypes.TransferFlags.md
 Ms2ex.Enum.md
 Ms2ex.Enums.AchievementRewardType.md
 Ms2ex.Enums.AttackType.md
+Ms2ex.Enums.BadgeType.md
 Ms2ex.Enums.BasicStatType.md
 Ms2ex.Enums.BlueprintType.md
 Ms2ex.Enums.CaughtFishType.md
@@ -107,6 +108,7 @@ Ms2ex.Formulas.ItemRates.md
 Ms2ex.Formulas.ItemStaticStats.md
 Ms2ex.Formulas.ItemWeaponAttack.md
 Ms2ex.GameHandlers.Achievement.md
+Ms2ex.GameHandlers.BadgeEquip.md
 Ms2ex.GameHandlers.CharacterInfo.md
 Ms2ex.GameHandlers.ChatSticker.md
 Ms2ex.GameHandlers.Dismantle.md
@@ -229,6 +231,7 @@ Ms2ex.Net.Session.md
 Ms2ex.Net.Utils.md
 Ms2ex.Packets.Achievement.md
 Ms2ex.Packets.AddPortal.md
+Ms2ex.Packets.BadgeEquip.md
 Ms2ex.Packets.BannerList.md
 Ms2ex.Packets.Breakable.md
 Ms2ex.Packets.Buff.md

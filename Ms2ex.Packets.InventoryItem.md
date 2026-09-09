@@ -15,6 +15,8 @@
 
 # `move_item`
 
+# `put_badges`
+
 # `put_equips`
 
 # `put_item`

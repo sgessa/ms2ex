@@ -61,6 +61,7 @@ Ms2ex.EctoTypes.TransferFlags.html
 Ms2ex.Enum.html
 Ms2ex.Enums.AchievementRewardType.html
 Ms2ex.Enums.AttackType.html
+Ms2ex.Enums.BadgeType.html
 Ms2ex.Enums.BasicStatType.html
 Ms2ex.Enums.BlueprintType.html
 Ms2ex.Enums.CaughtFishType.html
@@ -108,6 +109,7 @@ Ms2ex.Formulas.ItemRates.html
 Ms2ex.Formulas.ItemStaticStats.html
 Ms2ex.Formulas.ItemWeaponAttack.html
 Ms2ex.GameHandlers.Achievement.html
+Ms2ex.GameHandlers.BadgeEquip.html
 Ms2ex.GameHandlers.CharacterInfo.html
 Ms2ex.GameHandlers.ChatSticker.html
 Ms2ex.GameHandlers.Dismantle.html
@@ -230,6 +232,7 @@ Ms2ex.Net.Session.html
 Ms2ex.Net.Utils.html
 Ms2ex.Packets.Achievement.html
 Ms2ex.Packets.AddPortal.html
+Ms2ex.Packets.BadgeEquip.html
 Ms2ex.Packets.BannerList.html
 Ms2ex.Packets.Breakable.html
 Ms2ex.Packets.Buff.html
@@ -483,8 +486,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-B2E7FB1C.js
-dist/sidebar_items-842B905A.js
+dist/search_data-1162F64B.js
+dist/sidebar_items-74CA77F6.js
 index.html
 license.html
 readme.html
