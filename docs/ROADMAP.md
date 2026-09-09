@@ -184,6 +184,29 @@ What is still missing:
   claims, full inventory, mail fallback, insufficient Merets, concurrent
   purchases, membership renewal after expiry, and packet payloads
 
+### 26. Badge system — [Partial]
+
+Badge items now have reference type classification and payload serialization.
+Equipped non-pet badges can be equipped, replaced by type, unequipped, edited
+for transparency, persisted through the inventory manager, and broadcast with
+the `BADGE_EQUIP` packet. Character-list, character-info, and field-player
+payloads include equipped badges separately from gear and outfit items.
+Focused badge type classification regression tests are also in place.
+
+Still missing:
+
+- pet-skin badge behavior and pet model updates; the pet subsystem is not
+  implemented in ms2ex
+- buddy pairing effects; this is not static metadata that can be ingested.
+  The reference stores runtime `ItemCoupleInfo` on each buddy badge
+  (`character_id`, name, creator flag) after the couple-effect/buddy flow
+  succeeds. ms2ex has a friend list but no couple relationship or buddy-badge
+  item state, so this needs a marriage/couple flow plus persisted item data
+- packet-level, replacement, transparency-persistence, and relog integration
+  tests; the pure badge ID/type regression coverage is implemented
+- fishing, auto-gather, damage, tombstone, swim-tube, chat-bubble, and effect
+  badges
+
 ### 19. Housing & UGC cube system — [Open]
 
 The cube packet surface is almost entirely unimplemented: `RequestCube`

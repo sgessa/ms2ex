@@ -59,7 +59,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
     packet
     |> put_deflated(appearance(character))
     |> put_deflated(<<0x0>>)
-    |> put_deflated(<<0x0>>)
+    |> put_deflated(badges(character))
     |> Packets.Job.put_passive_skills(character)
     |> put_int()
     |> put_int()
@@ -84,6 +84,7 @@ defmodule Ms2ex.Packets.FieldAddUser do
 
   def appearance(character) do
     equips = Managers.Inventory.list_equips(character)
+    equips = Enum.filter(equips, &(&1.inventory_tab in [:gear, :outfit]))
 
     ""
     |> put_byte(length(equips))
@@ -92,5 +93,14 @@ defmodule Ms2ex.Packets.FieldAddUser do
     |> put_long()
     |> put_long()
     |> put_byte()
+  end
+
+  defp badges(character) do
+    badges =
+      character
+      |> Managers.Inventory.list_equips()
+      |> Enum.filter(&(&1.inventory_tab == :badge))
+
+    Packets.InventoryItem.put_badges("", badges, character)
   end
 end
