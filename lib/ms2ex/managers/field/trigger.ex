@@ -559,6 +559,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # slows/speeds up the field's tick rate for a cinematic beat (e.g. a
   # bullet-time dodge sequence); enable false reverts to normal speed
+
+  # slows/speeds up the field's tick rate for a cinematic beat (e.g. a
+  # bullet-time dodge sequence); enable false reverts to normal speed
   defp execute_action("set_time_scale", args, _script_name, state) do
     Context.Field.broadcast(
       state.topic,
@@ -573,6 +576,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     state
   end
+
+  # event/minigame UI overlays. rounds = [current, max, min]; a round UI
+  # whose min equals its max would display nothing, so it is skipped
 
   # event/minigame UI overlays. rounds = [current, max, min]; a round UI
   # whose min equals its max would display nothing, so it is skipped
@@ -594,6 +600,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # banner text, optionally scoped to trigger boxes (ids prefixed with "!"
   # select players outside the box; box id 0 means everyone on the field)
+
+  # banner text, optionally scoped to trigger boxes (ids prefixed with "!"
+  # select players outside the box; box id 0 means everyone on the field)
   defp execute_action("set_event_ui_script", args, _script_name, state) do
     packet =
       Packets.MassiveEvent.banner(
@@ -604,17 +613,6 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     deliver_to_boxes(state, string_list_arg(args, :box_ids), packet)
   end
-
-  # the script action's type is the set_event_ui kind selector (1 = plain
-  # script banner, 3/4/5/6/7 = outcome banners); it maps onto the client's
-  # banner table rather than passing through as the banner id itself
-  defp banner_type("1"), do: 6
-  defp banner_type("3"), do: 2
-  defp banner_type("4"), do: 0
-  defp banner_type("5"), do: 1
-  defp banner_type("6"), do: 3
-  defp banner_type("7"), do: 5
-  defp banner_type(_), do: 6
 
   defp execute_action("set_event_ui_countdown", args, _script_name, state) do
     countdown = int_list_arg(args, :round_countdown)
@@ -628,6 +626,10 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     state
   end
+
+  # the script action's type is the set_event_ui kind selector (1 = plain
+  # script banner, 3/4/5/6/7 = outcome banners); it maps onto the client's
+  # banner table rather than passing through as the banner id itself
 
   # tints the field's ambient light (e.g. red alert scenes): the color is
   # "r, g, b" floats, rounded to bytes like the client's Byte3
@@ -675,6 +677,11 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # quest text so the player knows where to go next. While the player is
   # being path-moved (scripted sprint/carry) they cannot act on it, so the
   # hint is held until the move completes
+
+  # the objective pointer: the client marks the entity's position with the
+  # quest text so the player knows where to go next. While the player is
+  # being path-moved (scripted sprint/carry) they cannot act on it, so the
+  # hint is held until the move completes
   defp execute_action("show_guide_summary", args, _script_name, state) do
     guide = %{
       entity_id: int_arg(args, :entity_id),
@@ -702,6 +709,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # script buffs (carry poses, scene states) applied to players in boxes;
   # tracked so remove_buff can clear them later
+
+  # script buffs (carry poses, scene states) applied to players in boxes;
+  # tracked so remove_buff can clear them later
   defp execute_action("add_buff", args, _script_name, state) do
     buff_id = int_arg(args, :skill_id)
     level = int_arg(args, :level)
@@ -722,6 +732,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
       drop_script_buff(state, character_id, buff_id)
     end)
   end
+
+  # scripted carry: an invisible dummy npc walks the patrol path and each
+  # player's client walks the player behind it
 
   # scripted carry: an invisible dummy npc walks the patrol path and each
   # player's client walks the player behind it
@@ -746,6 +759,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # teleports the players: soft position move within the map, field change
   # across maps (the field empties and stops after a cross-map move)
+
+  # teleports the players: soft position move within the map, field change
+  # across maps (the field empties and stops after a cross-map move)
   defp execute_action("move_user", args, _script_name, state) do
     map_id = int_arg(args, :map_id)
     portal_id = int_arg(args, :portal_id)
@@ -767,10 +783,15 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   # the tutorial flow is server-driven already; nothing to start
+
+  # the tutorial flow is server-driven already; nothing to start
   defp execute_action("start_tutorial", _args, _script_name, state), do: state
 
   defp execute_action("set_cinematic_ui", args, _script_name, state),
     do: cinematic_ui(int_arg(args, :type), args, state)
+
+  # arms the cutscene skip: while set, a skip request jumps the script to
+  # the armed state (an empty string disarms)
 
   # arms the cutscene skip: while set, a skip request jumps the script to
   # the armed state (an empty string disarms)
@@ -781,11 +802,17 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   # scene skips also tell the client which label to show on the skip button
+
+  # scene skips also tell the client which label to show on the skip button
   defp execute_action("set_scene_skip", args, script_name, state) do
     skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:state]))
     state = Map.put(state, :trigger_skips, skips)
     broadcast(state, Packets.Cinematic.set_skip_scene(to_string(args[:action] || "")))
   end
+
+  # scripted dialogue: a speech balloon over the speaking actor's head, or a
+  # cinematic-styled talk anchored to the npc. type = 1 means a balloon over
+  # the npc; spawn_id 0 means the player speaks; time is display seconds
 
   # scripted dialogue: a speech balloon over the speaking actor's head, or a
   # cinematic-styled talk anchored to the npc. type = 1 means a balloon over
@@ -833,6 +860,10 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # a balloon speech queued by the script (add_balloon_talk): the balloon
   # appears over the player (spawn point 0) or the spawn-point npc after
   # delay_tick milliseconds; the duration is already milliseconds
+
+  # a balloon speech queued by the script (add_balloon_talk): the balloon
+  # appears over the player (spawn point 0) or the spawn-point npc after
+  # delay_tick milliseconds; the duration is already milliseconds
   defp execute_action("add_balloon_talk", args, _script_name, state) do
     script = to_string(args[:msg] || "")
     duration = int_arg(args, :duration)
@@ -859,6 +890,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # system sounds inside trigger boxes (or field-wide when no box is
   # configured)
+
+  # system sounds inside trigger boxes (or field-wide when no box is
+  # configured)
   defp execute_action("play_system_sound_in_box", args, _script_name, state) do
     sound = to_string(args[:sound] || "")
     box_ids = int_list_arg(args, :box_ids)
@@ -875,9 +909,16 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # loops an emote sequence on a story npc (the collapsed robe, lying
   # recruits): the sequence name resolves to a numeric animation id through
   # the model's animation table and streams in the control packet
+
+  # loops an emote sequence on a story npc (the collapsed robe, lying
+  # recruits): the sequence name resolves to a numeric animation id through
+  # the model's animation table and streams in the control packet
   defp execute_action("set_npc_emotion_loop", args, _script_name, state) do
     play_npc_emotion(args, state)
   end
+
+  # a one-shot emote sequence on a story npc — same streaming mechanism as
+  # the loop variant; the client plays the sequence's own repetition rules
 
   # a one-shot emote sequence on a story npc — same streaming mechanism as
   # the loop variant; the client plays the sequence's own repetition rules
@@ -886,9 +927,13 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   # walks a story npc along a named patrol path (script move_npc)
+
+  # walks a story npc along a named patrol path (script move_npc)
   defp execute_action("move_npc", args, _script_name, state) do
     Field.Npc.move_npc(state, int_arg(args, :spawn_id), to_string(args[:patrol_name] || ""))
   end
+
+  # the player loops an emote sequence for a scripted beat
 
   # the player loops an emote sequence for a scripted beat
   defp execute_action("set_pc_emotion_loop", args, _script_name, state) do
@@ -899,6 +944,8 @@ defmodule Ms2ex.Managers.Field.Trigger do
     Context.Field.broadcast(state.topic, Packets.Trigger.emotion_loop(sequence, duration, loop))
     state
   end
+
+  # the player plays one or more emote sequences back to back (comma list)
 
   # the player plays one or more emote sequences back to back (comma list)
   defp execute_action("set_pc_emotion_sequence", args, _script_name, state) do
@@ -912,6 +959,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
     Context.Field.broadcast(state.topic, Packets.Trigger.emotion_sequence(sequence_names))
     state
   end
+
+  # a screen-space caption banner ending a scripted beat (the named-title
+  # card)
 
   # a screen-space caption banner ending a scripted beat (the named-title
   # card)
@@ -932,6 +982,10 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     state
   end
+
+  # the scripted achievement gate: a trigger condition event for players
+  # standing in the box, feeding both the quest and achievement condition
+  # pipelines. The knight main quest's "trigger: jordy" beat completes here
 
   # the scripted achievement gate: a trigger condition event for players
   # standing in the box, feeding both the quest and achievement condition
@@ -960,6 +1014,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # toggles a trigger sound object (map ambience/chime anchored to the
   # scene); the client resolves the sound data from the map by id
+
+  # toggles a trigger sound object (map ambience/chime anchored to the
+  # scene); the client resolves the sound data from the map by id
   defp execute_action("set_sound", args, _script_name, state) do
     sound_id = int_arg(args, :trigger_id)
     enabled = bool_arg(args, :enable)
@@ -974,6 +1031,13 @@ defmodule Ms2ex.Managers.Field.Trigger do
         state
     end
   end
+
+  # enables/disables trigger skill zones — field-owned skill objects (magic
+  # practice circles, dungeon hazards) the client renders at the trigger's
+  # position until disabled again
+  # TODO: server-side zone ticks — field skills with attack effects should
+  # damage entities in range (count fires, 150ms apart) instead of only
+  # rendering client-side
 
   # enables/disables trigger skill zones — field-owned skill objects (magic
   # practice circles, dungeon hazards) the client renders at the trigger's
@@ -996,11 +1060,17 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # script variables: key/value pairs the state machine writes here and
   # reads back through user_value conditions
+
+  # script variables: key/value pairs the state machine writes here and
+  # reads back through user_value conditions
   defp execute_action("set_user_value", args, _script_name, state) do
     key = to_string(args[:key] || "")
     user_values = Map.put(Map.get(state, :user_values, %{}), key, int_arg(args, :value))
     Map.put(state, :user_values, user_values)
   end
+
+  # flips breakable objects between shown and hidden; the client treats the
+  # shown ones as active map features (lane pads, blocking props)
 
   # flips breakable objects between shown and hidden; the client treats the
   # shown ones as active map features (lane pads, blocking props)
@@ -1017,31 +1087,6 @@ defmodule Ms2ex.Managers.Field.Trigger do
     set_breakables(state, int_list_arg(args, :trigger_ids), fn b -> %{b | visible: visible} end)
   end
 
-  defp set_breakables(state, [], _fun), do: state
-
-  defp set_breakables(state, ids, fun) do
-    {entries, state} =
-      Enum.reduce(ids, {[], state}, fn id, {entries, state} ->
-        case Map.get(state.breakables, id) do
-          %{} = breakable ->
-            breakable = fun.(breakable)
-            entry = %{uuid: breakable.uuid, state: breakable.state, visible: breakable.visible}
-
-            {[%{entry | uuid: breakable.uuid} | entries],
-             put_in(state, [:breakables, id], breakable)}
-
-          nil ->
-            {entries, state}
-        end
-      end)
-
-    if entries != [] do
-      Context.Field.broadcast(state.topic, Packets.Breakable.update(Enum.reverse(entries)))
-    end
-
-    state
-  end
-
   # flips interact objects between normal/reactable/hidden
   defp execute_action("set_interact_object", args, _script_name, state) do
     ids = int_list_arg(args, :trigger_ids)
@@ -1055,7 +1100,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     state.interactable
     |> Enum.filter(fn {_uuid, object} -> object.id in ids end)
-    |> Enum.each(fn {uuid, object} ->
+    |> Enum.each(fn {_uuid, object} ->
       Context.Field.broadcast(
         state.topic,
         Packets.InteractObject.update(%{object | state: state_atom})
@@ -1064,6 +1109,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
     state
   end
+
+  # a facial expression overlay on the player (spawn point 0) or the
+  # spawn-point npcs
 
   # a facial expression overlay on the player (spawn point 0) or the
   # spawn-point npcs
@@ -1092,6 +1140,9 @@ defmodule Ms2ex.Managers.Field.Trigger do
 
   # hides or reveals the player character during scripted camera beats
   # (the hide_player field property)
+
+  # hides or reveals the player character during scripted camera beats
+  # (the hide_player field property)
   defp execute_action("visible_my_pc", args, _script_name, state) do
     visible = bool_arg(args, :is_visible)
 
@@ -1108,6 +1159,11 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # point(s) — the ground pickups for scripted quest beats. item_id is used
   # directly when given; otherwise the spawn point's individual/global drop
   # box rolls whatever it is configured with
+
+  # spawns a fixed-position, unowned field item at a map's item spawn
+  # point(s) — the ground pickups for scripted quest beats. item_id is used
+  # directly when given; otherwise the spawn point's individual/global drop
+  # box rolls whatever it is configured with
   defp execute_action("create_item", args, _script_name, state) do
     spawn_ids = int_list_arg(args, :spawn_ids)
     item_id = int_arg(args, :item_id)
@@ -1118,10 +1174,61 @@ defmodule Ms2ex.Managers.Field.Trigger do
   # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
   # (fade delays); unknown actions warn loudly so script
   # coverage gaps surface in the log
+
+  # TODO: cinematic transitions beyond the letterbox/fade/wipes and opening
+  # (fade delays); unknown actions warn loudly so script
+  # coverage gaps surface in the log
   defp execute_action(name, _args, _script_name, state) do
     Logger.warning("Unhandled trigger action " <> name)
     state
   end
+
+  # the script action's type is the set_event_ui kind selector (1 = plain
+  # script banner, 3/4/5/6/7 = outcome banners); it maps onto the client's
+  # banner table rather than passing through as the banner id itself
+  defp banner_type("1"), do: 6
+
+  defp banner_type("3"), do: 2
+
+  defp banner_type("4"), do: 0
+
+  defp banner_type("5"), do: 1
+
+  defp banner_type("6"), do: 3
+
+  defp banner_type("7"), do: 5
+
+  defp banner_type(_), do: 6
+
+  # tints the field's ambient light (e.g. red alert scenes): the color is
+  # "r, g, b" floats, rounded to bytes like the client's Byte3
+
+  defp set_breakables(state, [], _fun), do: state
+
+  defp set_breakables(state, ids, fun) do
+    {entries, state} =
+      Enum.reduce(ids, {[], state}, fn id, {entries, state} ->
+        case Map.get(state.breakables, id) do
+          %{} = breakable ->
+            breakable = fun.(breakable)
+            entry = %{uuid: breakable.uuid, state: breakable.state, visible: breakable.visible}
+
+            {[%{entry | uuid: breakable.uuid} | entries],
+             put_in(state, [:breakables, id], breakable)}
+
+          nil ->
+            {entries, state}
+        end
+      end)
+
+    if entries != [] do
+      Context.Field.broadcast(state.topic, Packets.Breakable.update(Enum.reverse(entries)))
+    end
+
+    state
+  end
+
+  # flips interact objects between normal/reactable/hidden
 
   defp balloon_first_player(state, script, duration, delay) do
     case Map.values(state.players) do

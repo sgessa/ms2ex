@@ -1,14 +1,8 @@
 defmodule Ms2ex.Packets.Breakable do
   import Ms2ex.Packets.PacketWriter
 
-  # BreakableState
-  @state_show 2
-  @state_break 3
-  @state_hide 4
-
   # commands
   @batch_update 0x0
-  @update 0x1
 
   @doc """
   Announces the field's breakable objects to a joining player. Breakables
