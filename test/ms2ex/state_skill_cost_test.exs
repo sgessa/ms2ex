@@ -224,13 +224,23 @@ defmodule Ms2ex.StateSkillCostTest do
         }
       })
 
+    t0 = System.monotonic_time(:millisecond)
+
     character = Character.Stats.decrease(character, :spirit, 10, [])
     assert character.regen_spirit? == true
 
     _character = Character.Stats.decrease(character, :spirit, 10, [])
 
-    refute_receive {:regen, :spirit}, 50
-    assert_receive {:regen, :spirit}, 150
+    # the raw 20ms interval clamps to the 100ms minimum; measuring the
+    # arrival keeps the assertion stable under scheduler stalls (a stall
+    # only delays the tick, never hastens it)
+    assert_receive {:regen, :spirit}, 400
+    assert System.monotonic_time(:millisecond) - t0 >= 100
+
+    # a re-arm on the second drain would deliver a second tick right behind
+    # the first; the next legal tick is a full interval away and the regen
+    # loop itself runs in the character manager, not in this process
+    refute_receive {:regen, :spirit}, 20
   end
 
   test "the character manager rejects a state-skill cast without resources" do
