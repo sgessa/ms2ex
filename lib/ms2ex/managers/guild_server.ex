@@ -146,6 +146,7 @@ defmodule Ms2ex.Managers.GuildServer do
           member
           |> Map.put(:map_id, map_id)
           |> Map.put(:field_instance, field_instance || 0)
+
         members = Map.put(state.members, character_id, updated_member)
         state = %{state | members: members}
 
@@ -529,7 +530,12 @@ defmodule Ms2ex.Managers.GuildServer do
           end)
 
           topic =
-            Managers.Field.field_name(target.map_id, target.channel, Map.get(target, :field_instance, 0))
+            Managers.Field.field_name(
+              target.map_id,
+              target.channel,
+              Map.get(target, :field_instance, 0)
+            )
+
           Managers.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
 
           SenderSession.push(
