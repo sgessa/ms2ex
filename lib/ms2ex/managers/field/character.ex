@@ -22,7 +22,7 @@ defmodule Ms2ex.Managers.Field.Character do
     # stays stable across field transitions; only the field changes here
     character = %{character | map_id: state.map_id}
 
-    character = Map.put(character, :field_pid, self())
+    character = %{character | field_pid: self(), field_instance: state.instance}
     Managers.Character.call(character, {:update, character})
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
@@ -100,7 +100,7 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.Wedding.update_hall())
     push(character, Packets.ResponseCube.design_rank_reward(character.account_id))
     push(character, Packets.ResponseCube.update_profile(character))
-    push(character, Packets.ResponseCube.return_map(character.map_id))
+    push(character, Packets.ResponseCube.return_map(Managers.Field.return_map_id(character.map_id)))
     push(character, Packets.Lapenshard.load())
 
     tick = Ms2ex.sync_ticks()

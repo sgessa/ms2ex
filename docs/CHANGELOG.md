@@ -2,6 +2,18 @@
 
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
+
+- Instanced maps: the instance-field table is now projected
+  (`server.instancefield.xml`) and `solo` maps (every tutorial and quest
+  instance) allocate a private field per entry instead of dropping
+  everyone into one shared map — fixes players colliding in the tutorial
+  and breaking each other's progression. The instance id is allocated
+  once per transition and carried on the character, and the field's
+  PubSub topic carries it too, so instances never hear each other's
+  packets; scripted cross-map moves stop the solo field they vacated.
+  A relog mid-instanced-map lands in a fresh instance of the same stage
+  (reference `SpawnPlayer` semantics). Ingest grew an
+  `--probe-instance-field` dump of the raw table.
 - Field manager reorganization: moved the field process API, PubSub
   broadcast topology and the enter/leave/change_field lifecycle out of
   `Context.Field` (deleted) onto `Managers.Field`, matching the

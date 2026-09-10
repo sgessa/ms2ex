@@ -47,11 +47,49 @@ defmodule Ms2ex.Managers.Field do
   @npc_tick_intval 15
   @banner_tick_intval :timer.seconds(30)
 
+  # how long an empty shared field stays up for players who walked out and
+  # may walk (or relog) back in; the reference loops on the same idea
+  # (FieldDisposeEmptyTime). Instanced fields are skipped: a fresh instance
+  # is allocated per entry, so an emptied one can never be rejoined
+  @shared_dispose_delay :timer.minutes(5)
+
   # one app-wide counter feeds players and mounts, while each field instance
   # owns a local counter for npcs, portals, spawn points and items
   @local_id_counter 50_000_000
 
   # -- lifecycle -------------------------------------------------------------
+
+  @doc """
+  The map a character who quit on `map_id` should return to: the map's
+  `enter_return_id` when it declares one, the map itself otherwise.
+  """
+  @spec return_map_id(integer()) :: integer()
+  def return_map_id(map_id) do
+    case Storage.Maps.get_meta(map_id) do
+      %{} = meta -> normalize_return(Map.get(meta, :enter_return_id), map_id)
+      _ -> map_id
+    end
+  end
+
+  defp normalize_return(id, _map_id) when is_integer(id) and id > 0, do: id
+  defp normalize_return(_, map_id), do: map_id
+
+  @doc """
+  Binds the character to a field instance: a pending `change_map` instance
+  (fresh allocation from `change_field/2,4`) wins, an existing stamp is
+  kept while the character stays on the same field, anything else
+  allocates.
+  """
+  @spec assign_instance(Schema.Character.t()) :: Schema.Character.t()
+  def assign_instance(%Schema.Character{change_map: %{instance: instance}} = character),
+    do: Map.put(character, :field_instance, instance)
+
+  def assign_instance(%Schema.Character{field_instance: instance} = character)
+      when is_integer(instance),
+      do: character
+
+  def assign_instance(%Schema.Character{} = character),
+    do: Map.put(character, :field_instance, instance_id(character.map_id))
 
   @doc """
   Adds a character to a field, creating the field process if it doesn't
@@ -60,16 +98,35 @@ defmodule Ms2ex.Managers.Field do
   """
   @spec enter(Schema.Character.t()) :: :ok | {:ok, pid()} | {:error, term()}
   def enter(%Schema.Character{} = character) do
-    pid = field_pid(character.map_id, character.channel_id)
+    # the instance is allocated once per transition and carried on the
+    # character (change_field stamps it into change_map): a repeated field
+    # enter for the same visit rejoins the same field instead of spawning
+    # another one
+    instance = character.field_instance || instance_id(character.map_id)
+    character = Map.put(character, :field_instance, instance)
+    opts = [name: field_name(character)]
 
-    if pid && Process.alive?(pid) do
-      call(pid, {:add_character, character})
+    case GenServer.start(__MODULE__, character, opts) do
+      {:error, {:already_started, pid}} ->
+        call(pid, {:add_character, character})
+
+      result ->
+        result
+    end
+  end
+
+  @doc """
+  The field instance id a character enters for the map: solo maps
+  (tutorials, quest instances) run one private field per entry, so a
+  fresh id is allocated per call; every other map — including
+  channel-scale ones — shares a single field per channel (id 0).
+  """
+  @spec instance_id(integer()) :: integer()
+  def instance_id(map_id) do
+    if Storage.Tables.InstanceFields.solo?(map_id) do
+      System.unique_integer([:positive])
     else
-      GenServer.start(
-        __MODULE__,
-        character,
-        name: field_name(character.map_id, character.channel_id)
-      )
+      0
     end
   end
 
@@ -93,11 +150,14 @@ defmodule Ms2ex.Managers.Field do
   @doc "Changes a character's field to a new map at a specific position."
   @spec change_field(Schema.Character.t(), integer(), map(), map()) :: :ok | {:error, term()}
   def change_field(character, map_id, position, rotation) do
+    instance = instance_id(map_id)
+    change_map = %{id: map_id, position: position, rotation: rotation, instance: instance}
+
     with :ok <- leave_for_change(character) do
       character =
         character
         |> Context.Characters.maybe_discover_map(map_id)
-        |> Map.put(:change_map, %{id: map_id, position: position, rotation: rotation})
+        |> Map.put(:change_map, change_map)
 
       Managers.Character.call(character, {:update, character})
 
@@ -122,7 +182,7 @@ defmodule Ms2ex.Managers.Field do
   @doc "Broadcasts a packet to every character on a field."
   @spec broadcast(Schema.Character.t() | term(), binary()) :: :ok
   def broadcast(%Schema.Character{} = character, packet) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character)
     broadcast(topic, packet)
   end
 
@@ -151,32 +211,41 @@ defmodule Ms2ex.Managers.Field do
   """
   @spec broadcast_from(Schema.Character.t(), binary(), pid()) :: :ok
   def broadcast_from(%Schema.Character{} = character, packet, from) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character)
     PubSub.broadcast_from(Ms2ex.PubSub, from, to_string(topic), {:push, packet})
   end
 
   @doc "Subscribes the current process to a character's field events."
   @spec subscribe(Schema.Character.t()) :: :ok | {:error, term()}
   def subscribe(%Schema.Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character)
     PubSub.subscribe(Ms2ex.PubSub, to_string(topic))
   end
 
   @doc "Unsubscribes the current process from a character's field events."
   @spec unsubscribe(Schema.Character.t()) :: :ok
   def unsubscribe(%Schema.Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character)
     PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
   end
 
-  @doc "Generates a unique field process name from a map ID and channel ID."
-  @spec field_name(integer(), integer()) :: atom()
-  def field_name(map_id, channel_id) do
-    :"field:#{map_id}:channel:#{channel_id}"
+  @doc """
+  Field process name / PubSub topic for the field a character is on. A
+  missing instance id is the map's shared field (instance 0).
+  """
+  @spec field_name(Schema.Character.t()) :: atom()
+  def field_name(%Schema.Character{} = character) do
+    field_name(character.map_id, character.channel_id, character.field_instance)
   end
 
-  defp field_pid(map_id, channel_id) do
-    Process.whereis(field_name(map_id, channel_id))
+  @doc """
+  Generates a unique field process name from a map ID, channel ID and
+  instance ID. Instance 0 is the shared field of the map on the channel;
+  instanced maps (see `Storage.Tables.InstanceFields`) carry their own id.
+  """
+  @spec field_name(integer(), integer(), integer() | nil) :: atom()
+  def field_name(map_id, channel_id, instance_id) do
+    :"field:#{map_id}:channel:#{channel_id}:instance:#{instance_id || 0}"
   end
 
   # -- process plumbing ------------------------------------------------------
@@ -521,7 +590,8 @@ defmodule Ms2ex.Managers.Field do
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
-    field_name = field_name(map_id, channel_id)
+    instance = character.field_instance || 0
+    field_name = field_name(map_id, channel_id, instance)
 
     {local_id_counter, portals} = __MODULE__.Portal.load(map_id, @local_id_counter)
     interactable = __MODULE__.InteractObject.load(map_id)
@@ -531,6 +601,7 @@ defmodule Ms2ex.Managers.Field do
         buffs: %{},
         banners: __MODULE__.Banner.load(map_id),
         channel_id: channel_id,
+        instance: instance,
         local_id_counter: local_id_counter,
         interactable: interactable,
         instruments: %{},
@@ -549,6 +620,7 @@ defmodule Ms2ex.Managers.Field do
         regions: %{},
         sessions: %{},
         stage: MapSet.new(),
+        dispose_timer: nil,
         tombstones: %{},
         topic: field_name
       }
@@ -563,11 +635,15 @@ defmodule Ms2ex.Managers.Field do
     {:ok, state, {:continue, {:add_character, character}}}
   end
 
-  def handle_continue({:add_character, character}, state),
-    do: {:noreply, __MODULE__.Character.add_character(character, state)}
+  def handle_continue({:add_character, character}, state) do
+    state = __MODULE__.Character.add_character(character, state)
+    {:noreply, maybe_cancel_dispose(state)}
+  end
 
-  def handle_call({:add_character, character}, _from, state),
-    do: {:reply, {:ok, self()}, __MODULE__.Character.add_character(character, state)}
+  def handle_call({:add_character, character}, _from, state) do
+    state = __MODULE__.Character.add_character(character, state)
+    {:reply, {:ok, self()}, maybe_cancel_dispose(state)}
+  end
 
   def handle_call({:remove_character, character}, _from, state) do
     send(self(), :maybe_stop)
@@ -893,17 +969,58 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
+  # sent whenever a character leaves the field: shared fields linger for
+  # a grace window (a party member may be right behind), instanced fields
+  # stop as soon as they empty out
   def handle_info(:maybe_stop, state) do
     if Enum.empty?(state.sessions) do
-      Logger.info("Field #{state.map_id} @ Channel #{state.channel_id} is empty. Stopping.")
-      {:stop, :normal, state}
+      if state.instance == 0 do
+        {:noreply, schedule_dispose(state)}
+      else
+        Logger.info(
+          "Field #{state.map_id} @ Channel #{state.channel_id} instance #{state.instance} is empty. Stopping."
+        )
+
+        {:stop, :normal, state}
+      end
     else
       {:noreply, state}
+    end
+  end
+
+  def handle_info(:dispose_if_empty, state) do
+    if Enum.empty?(state.sessions) do
+      Logger.info(
+        "Field #{state.map_id} @ Channel #{state.channel_id} empty for 5 minutes. Stopping."
+      )
+
+      {:stop, :normal, state}
+    else
+      {:noreply, %{state | dispose_timer: nil}}
     end
   end
 
   def handle_info(data, state) do
     Logger.warning("[Field] Unknown message: #{inspect(data)}")
     {:noreply, state}
+  end
+
+  defp schedule_dispose(state) do
+    if is_reference(state.dispose_timer), do: Process.cancel_timer(state.dispose_timer)
+
+    Logger.info(
+      "Field #{state.map_id} @ Channel #{state.channel_id} is empty. Stopping in 5 minutes unless someone joins."
+    )
+
+    %{state | dispose_timer: Process.send_after(self(), :dispose_if_empty, @shared_dispose_delay)}
+  end
+
+  defp maybe_cancel_dispose(%{sessions: sessions} = state) do
+    if Enum.empty?(sessions) do
+      state
+    else
+      if is_reference(state.dispose_timer), do: Process.cancel_timer(state.dispose_timer)
+      %{state | dispose_timer: nil}
+    end
   end
 end

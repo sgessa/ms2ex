@@ -63,8 +63,13 @@ process names come from `field_name/2` (`:"field:#{map}:channel:#{ch}"`).
 map instance is not up yet (init loads portals, interact objects, banners,
 liftables and trigger scripts; npc spawn docs stream in via messages so
 the first trigger ticks wait for them — `spawn_docs_pending`).
-`leave/1` removes a character; the process stops itself when the last
-session leaves (`:maybe_stop`). `change_field/2..4` leaves the old field,
+`leave/1` removes a character. When the last session leaves, what
+happens depends on the field: shared fields (instance 0) linger for five
+minutes — a one-shot timer cancelled by the next join — before stopping,
+so a player who walked out (or relogged) rejoins live state instead of a
+fresh field; instanced fields stop as soon as they empty out, since a
+fresh instance is allocated per entry and nothing can rejoin them.
+`change_field/2..4` leaves the old field,
 marks the discovered map, and pushes `RequestFieldEnter` to the client.
 
 ## Layering debt (follow-ups)
