@@ -60,7 +60,8 @@ defmodule Ms2ex.Managers.Field do
   """
   @spec enter(Schema.Character.t()) :: :ok | {:ok, pid()} | {:error, term()}
   def enter(%Schema.Character{} = character) do
-    pid = field_pid(character.map_id, character.channel_id)
+    instance_id = instance_id(character.map_id)
+    pid = field_pid(character.map_id, character.channel_id, instance_id)
 
     if pid && Process.alive?(pid) do
       call(pid, {:add_character, character})
@@ -68,8 +69,23 @@ defmodule Ms2ex.Managers.Field do
       GenServer.start(
         __MODULE__,
         character,
-        name: field_name(character.map_id, character.channel_id)
+        name: field_name(character.map_id, character.channel_id, instance_id)
       )
+    end
+  end
+
+  @doc """
+  The field instance id a character enters for the map: solo maps
+  (tutorials, quest instances) run one private field per entry, so a
+  fresh id is allocated per call; every other map — including
+  channel-scale ones — shares a single field per channel (id 0).
+  """
+  @spec instance_id(integer()) :: integer()
+  def instance_id(map_id) do
+    if Storage.Tables.InstanceFields.solo?(map_id) do
+      System.unique_integer([:positive])
+    else
+      0
     end
   end
 
@@ -169,14 +185,18 @@ defmodule Ms2ex.Managers.Field do
     PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
   end
 
-  @doc "Generates a unique field process name from a map ID and channel ID."
-  @spec field_name(integer(), integer()) :: atom()
-  def field_name(map_id, channel_id) do
-    :"field:#{map_id}:channel:#{channel_id}"
+  @doc """
+  Generates a unique field process name from a map ID, channel ID and
+  instance ID. Instance 0 is the shared field of the map on the channel;
+  instanced maps (see `Storage.Tables.InstanceFields`) carry their own id.
+  """
+  @spec field_name(integer(), integer(), integer()) :: atom()
+  def field_name(map_id, channel_id, instance_id \\ 0) do
+    :"field:#{map_id}:channel:#{channel_id}:instance:#{instance_id}"
   end
 
-  defp field_pid(map_id, channel_id) do
-    Process.whereis(field_name(map_id, channel_id))
+  defp field_pid(map_id, channel_id, instance_id) do
+    Process.whereis(field_name(map_id, channel_id, instance_id))
   end
 
   # -- process plumbing ------------------------------------------------------
