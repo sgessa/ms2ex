@@ -60,20 +60,6 @@ defmodule Ms2ex.Managers.Field do
   # -- lifecycle -------------------------------------------------------------
 
   @doc """
-  Persists the character's current map after a field change: maps that
-  declare an `enter_return_id` persist the return target instead (the
-  reference's logout reset, collapsed from its return-map stack), so a
-  relog inside a quest instance lands at its hub. The in-memory map id
-  still follows the actual map: the field process and quest conditions
-  are built from it.
-  """
-  @spec update_current_map(Schema.Character.t(), map()) :: Schema.Character.t()
-  def update_current_map(%Schema.Character{} = character, %{id: map_id} = _new_map) do
-    {:ok, character} = Context.Characters.update(character, %{map_id: return_map_id(map_id)})
-    Map.put(character, :map_id, map_id)
-  end
-
-  @doc """
   The map a character who quit on `map_id` should return to: the map's
   `enter_return_id` when it declares one, the map itself otherwise.
   """
@@ -121,9 +107,6 @@ defmodule Ms2ex.Managers.Field do
     opts = [name: field_name(character)]
 
     case GenServer.start(__MODULE__, character, opts) do
-      {:ok, pid} ->
-        {:ok, pid}
-
       {:error, {:already_started, pid}} ->
         call(pid, {:add_character, character})
 

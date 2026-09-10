@@ -79,7 +79,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     run(character, fn -> Managers.Field.unsubscribe(character) end)
 
     new_map = character.change_map
-    character = Managers.Field.update_current_map(character, new_map)
+    character = persist_current_map(character, new_map)
 
     # the safe position has to follow the map: out-of-bounds recovery teleports
     # to it, and a coordinate from the previous map is out of bounds here too
@@ -89,6 +89,16 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     |> Map.put(:position, new_map.position)
     |> Map.put(:safe_position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
+  end
+
+  # the persisted map is the map's enter_return_id when it declares one
+  # (a relog inside a quest instance lands at its hub); the in-memory map
+  # id follows the actual map — the field process is built from it
+  defp persist_current_map(character, new_map) do
+    {:ok, character} =
+      Context.Characters.update(character, %{map_id: Managers.Field.return_map_id(new_map.id)})
+
+    Map.put(character, :map_id, new_map.id)
   end
 
   defp start_quest_manager(character_id) do
