@@ -56,6 +56,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     case item.metadata.function_name do
       "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
       "VIPCoupon" -> use_premium_coupon(session, character, item)
+      "RecallParty" -> recall_party(session, character, item)
       "AddAdditionalEffect" -> add_additional_effect(session, character, item)
       "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
       "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
@@ -82,8 +83,30 @@ defmodule Ms2ex.GameHandlers.UseItem do
       )
 
       apply_premium_buffs(character)
-    else
-      _ -> session
+    end
+
+    session
+  end
+
+  defp recall_party(session, character, item) do
+    consumed_item = Managers.Inventory.consume(item)
+    push(session, Packets.InventoryItem.consume(consumed_item))
+
+    recall_online_members(character)
+
+    session
+  end
+
+  defp recall_online_members(character) do
+    with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup) do
+      Enum.each(party.members, &recall_member(&1, character))
+    end
+  end
+
+  defp recall_member(member, character) do
+    if member.id != character.id and Map.get(member, :online?, false) and
+         member.map_id != character.map_id do
+      Managers.Field.change_field(member, character.map_id, character.position, character.rotation)
     end
   end
 

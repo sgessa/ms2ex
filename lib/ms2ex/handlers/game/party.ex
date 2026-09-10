@@ -1,5 +1,6 @@
 defmodule Ms2ex.GameHandlers.Party do
   alias Ms2ex.Managers
+  alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
   alias Ms2ex.Managers.PartyServer
@@ -8,6 +9,9 @@ defmodule Ms2ex.GameHandlers.Party do
   import Packets.PacketReader
   import Ms2ex.GameHandlers.Helper.Party
   import Ms2ex.Net.SenderSession, only: [push: 2, run: 2]
+
+  @party_summon_scroll_id 20_300_053
+  @party_summon_price 30
 
   def handle(packet, session) do
     {mode, packet} = get_byte(packet)
@@ -52,7 +56,7 @@ defmodule Ms2ex.GameHandlers.Party do
 
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
-    case PartyServer.lookup(party_id) do
+    case PartyServer.call(party_id, :lookup) do
       {:ok, party} ->
         handle_invitation(session, response, party, character)
 
@@ -64,10 +68,10 @@ defmodule Ms2ex.GameHandlers.Party do
   # Leave
   defp handle_mode(0x3, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, _party} <- PartyServer.lookup(character.party_id) do
+         {:ok, _party} <- PartyServer.call(character.party_id, :lookup) do
       run(session, fn -> PartyServer.unsubscribe(character.party_id) end)
 
-      PartyServer.remove_member(character)
+      PartyServer.call(character.party_id, {:remove_member, character})
 
       character = %{character | party_id: nil}
       Managers.Character.call(character, {:update, character})
@@ -81,9 +85,9 @@ defmodule Ms2ex.GameHandlers.Party do
     {target_id, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, party} <- PartyServer.lookup(character.party_id),
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup),
          true <- Types.Party.leader?(party, character),
-         {:ok, target} <- PartyServer.kick_member(party, target_id) do
+         {:ok, target} <- PartyServer.call(party.id, {:kick_member, target_id}) do
       if target.online? do
         run(target, fn -> PartyServer.unsubscribe(party.id) end)
       end
@@ -98,9 +102,24 @@ defmodule Ms2ex.GameHandlers.Party do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, new_leader} <- Managers.Character.lookup_by_name(target_name),
-         {:ok, party} <- PartyServer.lookup(character.party_id),
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup),
          true <- party.leader_id == character.id do
       PartyServer.broadcast(party.id, Packets.Party.set_leader(new_leader))
+    end
+  end
+
+  # Summon Party: buy one party summon scroll from the party menu.
+  defp handle_mode(0x1D, _packet, session) do
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+         item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
+         {:ok, result} <- purchase_party_summon(character, item) do
+      push_summon_scroll(session, result, character)
+    else
+      {:error, :insufficient_funds} ->
+        :ok
+
+      _reason ->
+        :ok
     end
   end
 
@@ -109,11 +128,22 @@ defmodule Ms2ex.GameHandlers.Party do
     {target_id, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, party} <- PartyServer.lookup(character.party_id) do
-      if Enum.count(party.members) < 4 do
-        push(session, Packets.Party.notice(:insufficient_memmber_count_for_kick_vote, character))
-      else
-        PartyServer.start_vote_kick(party, target_id)
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
+      cond do
+        Enum.count(party.members) < 4 ->
+          push(
+            session,
+            Packets.Party.notice(:insufficient_memmber_count_for_kick_vote, character)
+          )
+
+        target_id == character.id ->
+          :ok
+
+        is_nil(Types.Party.get_member(party, target_id)) ->
+          :ok
+
+        true ->
+          PartyServer.cast(party.id, {:start_vote_kick, character, target_id})
       end
     end
   end
@@ -121,9 +151,9 @@ defmodule Ms2ex.GameHandlers.Party do
   # Start Ready Check
   defp handle_mode(0x2E, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, party} <- PartyServer.lookup(character.party_id) do
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
       if Types.Party.leader?(party, character) do
-        PartyServer.start_ready_check(party)
+        PartyServer.cast(party.id, :start_ready_check)
       end
     end
   end
@@ -134,13 +164,71 @@ defmodule Ms2ex.GameHandlers.Party do
     {resp, _packet} = get_bool(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, party} <- PartyServer.lookup(character.party_id),
-         false <- Enum.member?(party.ready_check, character.id) do
-      PartyServer.ready_check(party, character, resp)
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
+      cond do
+        party.vote_kick ->
+          PartyServer.cast(party.id, {:vote_kick, character, resp})
+
+        Enum.member?(party.ready_check, character.id) ->
+          :ok
+
+        true ->
+          PartyServer.cast(party.id, {:ready_check, character, resp})
+      end
     end
   end
 
   defp handle_mode(_, _packet, session), do: session
+
+  defp charge_party_summon(character) do
+    if Context.PremiumMemberships.active?(character.account_id) do
+      {:ok, :premium}
+    else
+      Context.Wallets.debit(character, :merets, @party_summon_price)
+    end
+  end
+
+  defp purchase_party_summon(character, item) do
+    premium? = Context.PremiumMemberships.active?(character.account_id)
+
+    case if(premium?, do: {:ok, :premium}, else: charge_party_summon(character)) do
+      {:ok, _wallet} ->
+        add_party_summon(character, item, premium?)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp add_party_summon(character, item, premium?) do
+    case Managers.Inventory.add_item(character, item) do
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, reason} ->
+        if not premium?, do: Context.Wallets.update(character, :merets, @party_summon_price)
+        {:error, reason}
+    end
+  end
+
+  defp push_summon_scroll(session, {:create, item}, character) do
+    session
+    |> push(Packets.InventoryItem.add_item({:create, item}, character))
+    |> push(Packets.InventoryItem.mark_item_new(item))
+  end
+
+  defp push_summon_scroll(session, {:update, item}, _character) do
+    session
+    |> push(Packets.InventoryItem.update_item(item.id, item.amount))
+    |> push(Packets.InventoryItem.mark_item_new(item))
+  end
+
+  defp push_summon_scroll(session, {:update_and_create, {_updated, _amount}, created}, character) do
+    session
+    |> push(Packets.InventoryItem.update_item(created.id, created.amount))
+    |> push(Packets.InventoryItem.add_item({:create, created}, character))
+    |> push(Packets.InventoryItem.mark_item_new(created))
+  end
 
   defp handle_invitation(session, response, party, character) do
     leader = Types.Party.get_leader(party)
@@ -159,7 +247,7 @@ defmodule Ms2ex.GameHandlers.Party do
         PartyServer.broadcast(party.id, Packets.Party.join(character))
 
         character = %{character | party_id: party.id}
-        {:ok, party} = PartyServer.update_member(character)
+        {:ok, party} = PartyServer.call(character.party_id, {:update_member, character})
 
         Managers.Character.call(character, {:update, character})
         run(session, fn -> PartyServer.subscribe(party.id) end)

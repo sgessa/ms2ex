@@ -114,7 +114,11 @@ defmodule Ms2ex.Packets.Party do
     |> build()
     |> put_byte(0xD)
     |> put_long(character.id)
-    |> Packets.CharacterList.put_character(character)
+    |> Packets.CharacterList.put_character(
+      character,
+      Map.get(character, :death_count, 0) || 0,
+      character.stats
+    )
     |> put_dungeon_info()
   end
 
@@ -148,7 +152,7 @@ defmodule Ms2ex.Packets.Party do
     |> put_byte(0x2F)
     |> put_byte(2)
     |> put_int(Enum.count(party.ready_check))
-    |> put_long(DateTime.to_unix(DateTime.utc_now()) + Ms2ex.sync_ticks())
+    |> put_long(DateTime.to_unix(DateTime.utc_now()))
     |> put_int(Enum.count(party.members))
     |> reduce(party.members, fn m, packet ->
       put_long(packet, m.id)
@@ -167,6 +171,31 @@ defmodule Ms2ex.Packets.Party do
   end
 
   def end_ready_check() do
+    __MODULE__
+    |> build()
+    |> put_byte(0x31)
+  end
+
+  def start_vote(vote) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x2F)
+    |> put_byte(1)
+    |> put_int()
+    |> put_long(DateTime.to_unix(DateTime.utc_now()))
+    |> put_int(Enum.count(vote.voters))
+    |> reduce(vote.voters, fn voter_id, packet -> put_long(packet, voter_id) end)
+    |> put_int(Enum.count(vote.approvals))
+    |> reduce(vote.approvals, fn voter_id, packet -> put_long(packet, voter_id) end)
+    |> put_int(Enum.count(vote.disapprovals))
+    |> reduce(vote.disapprovals, fn voter_id, packet -> put_long(packet, voter_id) end)
+    |> put_long(vote.initiator_id)
+    |> put_long(vote.target.id)
+    |> put_ustring(vote.target.name)
+    |> put_byte(vote.votes_needed)
+  end
+
+  def end_vote() do
     __MODULE__
     |> build()
     |> put_byte(0x31)

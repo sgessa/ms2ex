@@ -128,7 +128,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
       Managers.Field.add_effect_buff(character, buff_id, level)
     end)
 
-    case Managers.PartyServer.lookup(character.party_id) do
+    case Managers.PartyServer.call(character.party_id, :lookup) do
       {:ok, party} ->
         Enum.each(party.members, &apply_party_buff(character, &1))
 

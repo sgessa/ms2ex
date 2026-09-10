@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
   end
 
   def create_party(character, %{party_id: target_party_id} = target) do
-    {:ok, target_party} = PartyServer.lookup(target_party_id)
+    {:ok, target_party} = PartyServer.call(target_party_id, :lookup)
 
     if Enum.count(target_party.members) == 1 do
       {:ok, party} = PartyManager.create(character)
@@ -38,7 +38,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
   end
 
   def invite_to_party(character, target) do
-    with {:ok, party} <- PartyServer.lookup(character.party_id),
+    with {:ok, party} <- PartyServer.call(character.party_id, :lookup),
          :ok <- leader?(party, character),
          :ok <- target_already_in_party?(character, target) do
       push(target, Packets.Party.invite(character))
@@ -57,7 +57,7 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
   end
 
   defp target_already_in_party?(character, target) do
-    case PartyServer.lookup(target.party_id) do
+    case PartyServer.call(target.party_id, :lookup) do
       {:ok, party} ->
         if Enum.count(party.members) > 1 do
           {:error, Packets.Party.notice(:unable_to_invite, character)}

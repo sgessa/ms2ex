@@ -8,7 +8,9 @@ defmodule Ms2ex.Types.Party do
     :pid,
     members: [],
     ready_check: [],
-    vote_kick: []
+    vote_kick: nil,
+    dps_enabled?: false,
+    dps_damage: %{}
   ]
 
   def create(leader) do

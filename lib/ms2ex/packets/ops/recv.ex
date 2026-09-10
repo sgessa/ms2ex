@@ -48,6 +48,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x4C => "GUILD",
     0x4D => "GROUP_CHAT",
     0x56 => "SEND_LOG",
+    0x57 => "DPS_MODE",
     0x58 => "GUIDE_RECORD",
     0x5B => "DISMANTLE",
     0x6A => "USER_ENV",
