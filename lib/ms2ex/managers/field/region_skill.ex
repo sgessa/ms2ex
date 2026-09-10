@@ -2,16 +2,16 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
-  alias Ms2ex.Types.SkillCast
+  alias Ms2ex.Types
 
   @splash_radius 800
   @splash_targets 8
 
   def add(skill_cast, state) do
     source_id = Ms2ex.generate_int()
-    points = SkillCast.magic_path(skill_cast)
+    points = Types.SkillCast.magic_path(skill_cast)
 
-    case SkillCast.splash_skill_cast(skill_cast) do
+    case Types.SkillCast.splash_skill_cast(skill_cast) do
       {splash_cast, splash} ->
         reg_skill = Packets.RegionSkill.add(source_id, splash_cast, points)
         Managers.Field.broadcast(state.topic, reg_skill)
@@ -48,7 +48,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         reg_skill = Packets.RegionSkill.add(source_id, skill_cast, points)
         Managers.Field.broadcast(state.topic, reg_skill)
 
-        duration = SkillCast.duration(skill_cast)
+        duration = Types.SkillCast.duration(skill_cast)
         Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
         state
     end
