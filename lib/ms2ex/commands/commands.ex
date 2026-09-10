@@ -76,7 +76,7 @@ defmodule Ms2ex.Commands do
 
   def handle(["map", map_id], character, session) do
     case Integer.parse(map_id) do
-      {map_id, _} -> Context.Field.change_field(character, map_id)
+      {map_id, _} -> Managers.Field.change_field(character, map_id)
       _ -> push_notice(session, character, "Invalid Map: #{map_id}")
     end
   end
@@ -86,7 +86,7 @@ defmodule Ms2ex.Commands do
     with {insignia_id, ""} <- Integer.parse(insignia_id),
          {:ok, character, display} <-
            Context.Insignias.equip(character, insignia_id, force: true) do
-      Context.Field.broadcast(
+      Managers.Field.broadcast(
         character,
         Packets.Insignia.update(character, insignia_id, display)
       )
@@ -114,7 +114,7 @@ defmodule Ms2ex.Commands do
     with {mob_id, _} <- Integer.parse(mob_id),
          metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),
          %Types.Npc{} = npc <- Types.Npc.new(%{id: mob_id, metadata: metadata}) do
-      Context.Field.add_mob(character, %{npc | boss?: true})
+      Managers.Field.add_mob(character, %{npc | boss?: true})
       session
     else
       _ ->
@@ -126,7 +126,7 @@ defmodule Ms2ex.Commands do
     with {mob_id, _} <- Integer.parse(mob_id),
          metadata when not is_nil(metadata) <- Storage.Npcs.get_meta(mob_id),
          %Types.Npc{} = npc <- Types.Npc.new(%{id: mob_id, metadata: metadata}) do
-      Context.Field.add_mob(character, npc)
+      Managers.Field.add_mob(character, npc)
       session
     else
       _ ->
@@ -181,7 +181,7 @@ defmodule Ms2ex.Commands do
           true ->
             character = Map.put(character, :update_position, target.position)
             Managers.Character.call(character, {:update, character})
-            Context.Field.change_field(character, target.map_id)
+            Managers.Field.change_field(character, target.map_id)
         end
 
       _ ->

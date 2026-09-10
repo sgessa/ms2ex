@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
   end
 
   defp complete_interaction(character, uuid) do
-    case Context.Field.interact_object(character, uuid) do
+    case Managers.Field.interact_object(character, uuid) do
       {:ok, object} ->
         Managers.Quest.update_conditions(character.id, :interact_object, 1, "", 0, "", object.id)
 
@@ -96,7 +96,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
     position = %Coord{x: object.position.x, y: object.position.y, z: object.position.z + height}
 
     (global_items(character, drop) ++ individual_items(character, drop))
-    |> Enum.each(&Context.Field.drop_item(character, &1, position))
+    |> Enum.each(&Managers.Field.drop_item(character, &1, position))
   end
 
   defp drop_loot(_character, _object), do: :ok
@@ -125,7 +125,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
     |> Map.get(:invoke, [])
     |> Enum.filter(&rolled?/1)
     |> Enum.each(fn invoke ->
-      Context.Field.call(character, {:add_effect_buff, invoke.id, invoke.level, character})
+      Managers.Field.add_effect_buff(character, invoke.id, invoke.level)
     end)
 
     modify_duration(character, effect)
@@ -134,10 +134,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
   defp invoke_effects(_character, _object), do: :ok
 
   defp modify_duration(character, %{modify_code: code, modify_time: time}) when code > 0 do
-    Context.Field.call(
-      character,
-      {:modify_buff_duration, character.object_id, code, time}
-    )
+    Managers.Field.modify_buff_duration(character, code, time)
   end
 
   defp modify_duration(_character, _effect), do: :ok

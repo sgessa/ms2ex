@@ -1,5 +1,4 @@
 defmodule Ms2ex.GameHandlers.Liftable do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
 
@@ -15,7 +14,7 @@ defmodule Ms2ex.GameHandlers.Liftable do
       command when command == @pickup ->
         {uuid, _packet} = get_string(packet)
         {:ok, character} = Managers.Character.call(session.character_id, :lookup)
-        Context.Field.call(character.field_pid, {:pickup_liftable, character.id, uuid})
+        Managers.Field.pickup_liftable(character, uuid)
         session
 
       _ ->

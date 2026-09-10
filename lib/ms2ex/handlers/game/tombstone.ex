@@ -1,5 +1,4 @@
 defmodule Ms2ex.GameHandlers.Tombstone do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
 
   import Ms2ex.Packets.PacketReader
@@ -10,7 +9,7 @@ defmodule Ms2ex.GameHandlers.Tombstone do
     {hits, _packet} = get_int(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      Context.Field.hit_tombstone(character, object_id, hits)
+      Managers.Field.hit_tombstone(character, object_id, hits)
       Managers.Quest.update_conditions(character.id, :hit_tombstone)
     end
   end

@@ -341,7 +341,7 @@ defmodule Ms2ex.Managers.Quest do
           case Storage.Quests.get_meta(quest.quest_id) do
             %{go_to_npc: %{enabled: true, map_id: map_id}} ->
               {:ok, character} = Managers.Character.lookup(state.character_id)
-              Context.Field.change_field(character, map_id)
+              Managers.Field.change_field(character, map_id)
 
             _metadata ->
               :ok
@@ -833,7 +833,7 @@ defmodule Ms2ex.Managers.Quest do
       %{dispatch: %{map_id: map_id}}
       when quest.state != :completed and map_id > 0 ->
         {:ok, character} = Managers.Character.lookup(state.character_id)
-        Context.Field.change_field(character, map_id)
+        Managers.Field.change_field(character, map_id)
 
       _metadata ->
         :ok

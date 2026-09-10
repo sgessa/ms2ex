@@ -3,7 +3,6 @@ defmodule Ms2ex.Managers.Field.Character do
   alias Ms2ex.Packets
   alias Ms2ex.Context
   alias Ms2ex.Managers
-  alias Ms2ex.Managers.Field
   alias Ms2ex.Storage
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
@@ -31,8 +30,10 @@ defmodule Ms2ex.Managers.Field.Character do
     state = %{state | sessions: sessions, players: players}
 
     # trigger conditions read who is on the field and where they stand
-    state = Field.Trigger.track_position(state, character.id, character.position)
-    state = Field.Trigger.track_job(state, character.id, Enums.Job.get_value(character.job))
+    state = Managers.Field.Trigger.track_position(state, character.id, character.position)
+
+    state =
+      Managers.Field.Trigger.track_job(state, character.id, Enums.Job.get_value(character.job))
 
     # field-object systems must be initialized before entities load
     push(character, Packets.LoadCubes.load_plots())
@@ -42,7 +43,11 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.Ugc.load_banners(Map.values(state.banners)))
     push(character, Packets.Breakable.load_empty())
     # the liftable batch renders quest props (and honors their quest masks)
-    push(character, Packets.Liftable.batch_update(Field.Liftable.liftables_for_enter(state)))
+    push(
+      character,
+      Packets.Liftable.batch_update(Managers.Field.Liftable.liftables_for_enter(state))
+    )
+
     push(character, Packets.FunctionCube.load())
 
     # Load NPCs
@@ -60,8 +65,8 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.InteractObject.load(Map.values(state.interactable)))
 
     # Tell other characters in the map to load the new player
-    Context.Field.broadcast(character, Packets.FieldAddUser.bytes(character))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.load_player(character))
+    Managers.Field.broadcast(character, Packets.FieldAddUser.bytes(character))
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.load_player(character))
 
     # Load items
     for {_id, item} <- state.items do
@@ -76,8 +81,8 @@ defmodule Ms2ex.Managers.Field.Character do
     # a cutscene that hid the player keeps them hidden for late joiners
     properties =
       if Map.get(state, :hide_player, false),
-        do: [:hide_player | Field.PerformanceStage.properties(state)],
-        else: Field.PerformanceStage.properties(state)
+        do: [:hide_player | Managers.Field.PerformanceStage.properties(state)],
+        else: Managers.Field.PerformanceStage.properties(state)
 
     push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, []), cameras, sounds))
     push(character, Packets.FieldProperty.load(properties))
@@ -124,7 +129,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     if expiration > DateTime.to_unix(DateTime.utc_now()) do
       Enum.each(Storage.Tables.PremiumClub.buffs(), fn {_id, %{id: buff_id, level: buff_level}} ->
-        Context.Field.call(character, {:add_effect_buff, buff_id, buff_level, character})
+        Managers.Field.add_effect_buff(character, buff_id, buff_level)
       end)
     end
 
@@ -133,7 +138,7 @@ defmodule Ms2ex.Managers.Field.Character do
     # If character teleported or was summoned by an other user
     maybe_teleport_character(character)
 
-    Field.Buff.restore_buffs(character, state)
+    Managers.Field.Buff.restore_buffs(character, state)
   end
 
   # loads a peer character (and any mount they are riding) for the joining player
@@ -153,19 +158,19 @@ defmodule Ms2ex.Managers.Field.Character do
 
     state =
       character
-      |> Field.Buff.save_owner_buffs(state)
-      |> then(&Field.PerformanceStage.leave(character.id, &1))
+      |> Managers.Field.Buff.save_owner_buffs(state)
+      |> then(&Managers.Field.PerformanceStage.leave(character.id, &1))
 
     mounts = Map.delete(state.mounts, character.id)
     sessions = Map.delete(state.sessions, character.id)
     players = Map.delete(state.players, character.id)
     tombstones = Map.delete(state.tombstones, character.id)
     instruments = Map.delete(state.instruments, character.id)
-    state = Field.Liftable.drop(state, character)
-    state = Field.Trigger.drop_position(state, character.id)
+    state = Managers.Field.Liftable.drop(state, character)
+    state = Managers.Field.Trigger.drop_position(state, character.id)
 
-    Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
-    Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
+    Managers.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
+    Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
 
     %{
       state
@@ -193,7 +198,7 @@ defmodule Ms2ex.Managers.Field.Character do
     for char_id <- Map.keys(state.sessions) do
       with {:ok, char} <- Managers.Character.call(char_id, :lookup),
            false <- Map.get(char, :dead?, false) do
-        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+        Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
       end
     end
 
@@ -201,7 +206,7 @@ defmodule Ms2ex.Managers.Field.Character do
   end
 
   def leave_battle_stance(character) do
-    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
+    Managers.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
   end
 end

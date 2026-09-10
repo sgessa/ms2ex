@@ -92,7 +92,7 @@ defmodule Ms2ex.Managers.Character.Equips do
          %Schema.Item{} = item <- equipped_badge(character, badge_type),
          {:ok, item} <- Managers.Inventory.move_to_inventory(item) do
       character = refresh(character)
-      Context.Field.broadcast(character, Packets.BadgeEquip.unequip(character, badge_type))
+      Managers.Field.broadcast(character, Packets.BadgeEquip.unequip(character, badge_type))
 
       Net.SenderSession.push(
         character,
@@ -111,7 +111,7 @@ defmodule Ms2ex.Managers.Character.Equips do
          %Schema.Item{} = item <- equipped_badge(character, badge_type),
          data <- Map.put(item.data || %{}, :transparency, transparency),
          {:ok, item} <- Managers.Inventory.update_item(item, %{data: data}) do
-      Context.Field.broadcast(character, Packets.BadgeEquip.equip(character, item))
+      Managers.Field.broadcast(character, Packets.BadgeEquip.equip(character, item))
       {:ok, character}
     else
       _ -> :error
@@ -287,7 +287,7 @@ defmodule Ms2ex.Managers.Character.Equips do
     character = refresh(character)
 
     if removed do
-      Context.Field.broadcast(
+      Managers.Field.broadcast(
         character,
         Packets.BadgeEquip.unequip(character, Types.Item.badge_type(removed.item_id))
       )
@@ -298,7 +298,7 @@ defmodule Ms2ex.Managers.Character.Equips do
       )
     end
 
-    Context.Field.broadcast(character, Packets.BadgeEquip.equip(character, item))
+    Managers.Field.broadcast(character, Packets.BadgeEquip.equip(character, item))
     Net.SenderSession.push(character, Packets.InventoryItem.remove_item(item.id))
     character
   end
@@ -316,15 +316,15 @@ defmodule Ms2ex.Managers.Character.Equips do
     character = refresh(character)
 
     Enum.each(removed, fn {_kind, item} ->
-      Context.Field.broadcast(character, Packets.UnequipItem.bytes(character, item.id))
+      Managers.Field.broadcast(character, Packets.UnequipItem.bytes(character, item.id))
     end)
 
     if equipped do
-      Context.Field.broadcast(character, Packets.EquipItem.bytes(character, elem(equipped, 1)))
+      Managers.Field.broadcast(character, Packets.EquipItem.bytes(character, elem(equipped, 1)))
     end
 
-    Context.Field.broadcast_stats(character)
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
+    Managers.Field.broadcast_stats(character)
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_gear_score(character))
 
     # the bag slot of the equipped item frees up before the displaced items
     # are added, so the client never sees two items in one slot

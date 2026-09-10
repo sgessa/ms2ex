@@ -5,7 +5,6 @@ defmodule Ms2ex.GameHandlers.GuideObjectSync do
   with the last one.
   """
 
-  alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Character.Fishing
@@ -24,7 +23,7 @@ defmodule Ms2ex.GameHandlers.GuideObjectSync do
          ^type <- Enums.GuideObjectType.get_value(guide.type) do
       {sync_states, _packet} = read_states(segments, packet)
 
-      Context.Field.broadcast_from(
+      Managers.Field.broadcast_from(
         character,
         Packets.GuideObject.sync(guide.object_id, sync_states),
         session.sender_pid

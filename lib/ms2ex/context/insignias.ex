@@ -97,7 +97,7 @@ defmodule Ms2ex.Context.Insignias do
   defp remove_buff(character, worn) do
     with {:ok, %{buff_id: buff_id}} <- Storage.Tables.Insignias.get(worn),
          true <- buff_id > 0 do
-      Context.Field.remove_effect_buff(character, buff_id)
+      Managers.Field.remove_effect_buff(character, buff_id)
     else
       _ -> :ok
     end
@@ -106,7 +106,7 @@ defmodule Ms2ex.Context.Insignias do
   # the buff itself lives in the field's state and the field replies :ok,
   # so the response carries nothing worth keeping
   defp apply_buff(character, %{buff_id: buff_id, buff_level: buff_level}) when buff_id > 0 do
-    Context.Field.call(character, {:add_effect_buff, buff_id, buff_level, character})
+    Managers.Field.add_effect_buff(character, buff_id, buff_level)
     :ok
   end
 

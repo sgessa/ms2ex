@@ -26,7 +26,7 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
 
         spawn_point = arrival_point(dst_map_id, current_map_id)
 
-        Context.Field.change_field(
+        Managers.Field.change_field(
           character,
           dst_map_id,
           spawn_point.position,

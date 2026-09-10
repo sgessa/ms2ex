@@ -88,14 +88,14 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     # battle-start sequence in the order live servers emit it:
     # skill use, battle flag, full stat refresh, casting actor state
-    Context.Field.broadcast(character, use_packet)
+    Managers.Field.broadcast(character, use_packet)
 
     if Types.SkillCast.in_battle?(skill_cast) do
-      Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
+      Managers.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
     end
 
-    Context.Field.broadcast_stats(character)
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
+    Managers.Field.broadcast_stats(character)
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
 
     if fishing_lure_item? do
       consume_used_item(session, character, item_uid)
@@ -140,7 +140,7 @@ defmodule Ms2ex.GameHandlers.Skill do
         rotation: rotation
       })
 
-      Context.Field.broadcast(skill_cast.caster, Packets.SkillSync.bytes(skill_cast))
+      Managers.Field.broadcast(skill_cast.caster, Packets.SkillSync.bytes(skill_cast))
     end
   end
 
@@ -159,7 +159,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     {cast_id, _packet} = get_long(packet)
 
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
-      Context.Field.broadcast(skill_cast.caster, Packets.SkillCancel.bytes(skill_cast))
+      Managers.Field.broadcast(skill_cast.caster, Packets.SkillCancel.bytes(skill_cast))
     end
   end
 
@@ -228,7 +228,7 @@ defmodule Ms2ex.GameHandlers.Skill do
           rotation: rotation
         })
 
-      Context.Field.add_region_skill(skill_cast.caster, skill_cast)
+      Managers.Field.add_region_skill(skill_cast.caster, skill_cast)
     end
   end
 
@@ -237,7 +237,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   defp broadcast_damage(_skill_cast, []), do: :ok
 
   defp broadcast_damage(skill_cast, mobs) do
-    Context.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
+    Managers.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
   end
 
   defp damage_targets(skill_cast, crit?, target_count, mobs, packet)
@@ -246,10 +246,10 @@ defmodule Ms2ex.GameHandlers.Skill do
     {_, packet} = get_byte(packet)
 
     mobs =
-      case Context.Field.lookup_npc(skill_cast.caster, obj_id) do
+      case Managers.Field.lookup_npc(skill_cast.caster, obj_id) do
         {:ok, %{dead?: false, type: :mob} = mob} ->
           {mob, dmg} = damage_mob(skill_cast, mob, crit?)
-          Context.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
+          Managers.Field.broadcast(skill_cast.caster, Packets.Stats.update_mob_stat(mob, :health))
           mobs ++ [{mob, dmg}]
 
         _ ->
@@ -265,16 +265,16 @@ defmodule Ms2ex.GameHandlers.Skill do
     dmg = Context.Damage.calculate(skill_cast, mob, crit?)
 
     {:ok, mob} =
-      Context.Field.call(skill_cast.caster, {:inflict_dmg, skill_cast.caster, dmg, mob.object_id})
+      Managers.Field.inflict_dmg(skill_cast.caster, dmg, mob.object_id)
 
     # on-hit effects (e.g. Flame Wave's burn) apply to the target
-    Context.Field.call(skill_cast.caster, {:apply_skill_effects, skill_cast, mob.object_id})
+    Managers.Field.apply_skill_effects(skill_cast.caster, skill_cast, mob.object_id)
 
     # TODO Buff
     # if Types.SkillCast.element_debuff?(skill_cast) or
     #      Types.SkillCast.entity_debuff?(skill_cast) do
     #   status = Types.SkillStatus.new(skill_cast, mob.object_id, skill_cast.caster.object_id, 1)
-    #   Context.Field.add_status(skill_cast.caster, status)
+    #   Managers.Field.add_status(skill_cast.caster, status)
     # end
 
     {mob, dmg}

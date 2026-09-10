@@ -49,7 +49,7 @@ defmodule Ms2ex.Context.Fishing do
       Managers.Character.call(character.id, {:start_fishing, fishing})
 
       push(character, Packets.Fishing.load_tiles(tiles, rod.reduce_time))
-      Context.Field.broadcast(character, Packets.GuideObject.create(guide))
+      Managers.Field.broadcast(character, Packets.GuideObject.create(guide))
       push(character, Packets.Fishing.prepare(rod_uid))
       :ok
     else
@@ -95,7 +95,7 @@ defmodule Ms2ex.Context.Fishing do
          %{} <- Storage.Skills.get_effect(effect_id, effect_level),
          {:ok, lure} <- Storage.Tables.Fish.lure(effect_id),
          :ok <-
-           Context.Field.call(character, {:add_effect_buff, effect_id, effect_level, character}),
+           Managers.Field.add_effect_buff(character, effect_id, effect_level),
          {:ok, consumed} <- consume_lure_item(item) do
       push(character, Packets.InventoryItem.consume(consumed))
 
@@ -164,7 +164,7 @@ defmodule Ms2ex.Context.Fishing do
 
       %{guide: guide} ->
         push(character, Packets.Fishing.stop())
-        Context.Field.broadcast(character, Packets.GuideObject.remove(guide))
+        Managers.Field.broadcast(character, Packets.GuideObject.remove(guide))
         Managers.Character.call(character.id, :stop_fishing)
         :ok
     end
@@ -268,7 +268,7 @@ defmodule Ms2ex.Context.Fishing do
   defp spawn_guide(character, tiles) do
     tile = Enum.min_by(tiles, &distance_2d(&1.position, character.position))
 
-    case Context.Field.next_object_id(character) do
+    case Managers.Field.next_object_id(character) do
       {:ok, object_id} ->
         {:ok,
          %{
@@ -404,7 +404,7 @@ defmodule Ms2ex.Context.Fishing do
   # Smart Push sells the auto-fishing effect; the client reels in on its own
   # and never runs the fight minigame while it is up
   defp auto_fishing?(character) do
-    Context.Field.call(character, {:has_buff_event?, character.object_id, :auto_fish}) == true
+    Managers.Field.has_buff_event?(character, :auto_fish)
   end
 
   defp fishing_lure?(%{property: %{tag: :fishing_lure}}), do: true
@@ -453,11 +453,11 @@ defmodule Ms2ex.Context.Fishing do
   defp active_lure?(_character, nil), do: false
 
   defp active_lure?(character, %{effect_id: effect_id}),
-    do: Context.Field.has_buff?(character, effect_id)
+    do: Managers.Field.has_buff?(character, effect_id)
 
   defp active_lure(character) do
     Storage.Tables.Fish.lures()
-    |> Enum.find(fn %{id: effect_id} -> Context.Field.has_buff?(character, effect_id) end)
+    |> Enum.find(fn %{id: effect_id} -> Managers.Field.has_buff?(character, effect_id) end)
     |> case do
       nil -> nil
       lure -> %{effect_id: lure.id, effect_level: lure.buff_level, lure: lure}
@@ -499,7 +499,7 @@ defmodule Ms2ex.Context.Fishing do
 
     if prize? do
       update_conditions(character, :fish_big, fish.id)
-      Context.Field.broadcast(character, Packets.Fishing.prize_fish(character.name, fish.id))
+      Managers.Field.broadcast(character, Packets.Fishing.prize_fish(character.name, fish.id))
     end
 
     update_conditions(character, :fish, fish.id)

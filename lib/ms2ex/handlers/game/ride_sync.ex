@@ -32,7 +32,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
     {sync_states, _packet} = get_sync_states(segment_length, packet)
 
     sync_packet = Packets.RideSync.bytes(character, sync_states)
-    Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
+    Managers.Field.broadcast_from(character, sync_packet, session.sender_pid)
 
     unless dismount_in_water(character, sync_states) do
       track_riding_distance(character, sync_states)
@@ -47,7 +47,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
   defp dismount_in_water(character, sync_states) do
     if Enum.any?(sync_states, &(&1.state in @swim_states)) and not safe_water_riding?(character) do
       Managers.Character.call(character, {:update, %{character | mount: nil}})
-      Context.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, true))
+      Managers.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, true))
       true
     else
       false
@@ -57,7 +57,7 @@ defmodule Ms2ex.GameHandlers.RideSync do
   defp safe_water_riding?(character) do
     case Storage.Tables.SmartPush.effect_id(@safe_water_riding) do
       nil -> false
-      effect_id -> Context.Field.has_buff?(character, effect_id)
+      effect_id -> Managers.Field.has_buff?(character, effect_id)
     end
   end
 

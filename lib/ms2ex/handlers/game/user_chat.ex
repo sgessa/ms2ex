@@ -40,7 +40,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
   defp handle_message({:all, msg, _rcpt_name}, character, _session) do
     packet = Packets.UserChat.bytes(:all, character, msg)
-    Context.Field.broadcast(character, packet)
+    Managers.Field.broadcast(character, packet)
   end
 
   defp handle_message({:whisper_to, msg, rcpt_name}, character, session) do

@@ -1,5 +1,4 @@
 defmodule Ms2ex.GameHandlers.Quest do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Storage
@@ -126,6 +125,6 @@ defmodule Ms2ex.GameHandlers.Quest do
   defp npc_exists?(_character, 0), do: false
 
   defp npc_exists?(character, npc_object_id) do
-    Context.Field.lookup_npc(character, npc_object_id) != :error
+    Managers.Field.lookup_npc(character, npc_object_id) != :error
   end
 end

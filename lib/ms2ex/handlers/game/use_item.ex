@@ -39,7 +39,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
 
       push(session, Packets.InventoryItem.consume(consumed_item))
 
-      Context.Field.change_field(
+      Managers.Field.change_field(
         character,
         skip_field,
         spawn_point.position,
@@ -99,7 +99,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
 
   defp apply_premium_buffs(character) do
     Enum.each(Storage.Tables.PremiumClub.buffs(), fn {_id, %{id: buff_id, level: level}} ->
-      Context.Field.call(character, {:add_effect_buff, buff_id, level, character})
+      Managers.Field.add_effect_buff(character, buff_id, level)
     end)
   end
 
@@ -141,7 +141,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     with parameters when is_binary(parameters) <- item.metadata[:function_parameters],
          [effect_id, effect_level] <- parse_effect_params(parameters),
          :ok <-
-           Context.Field.call(character, {:add_effect_buff, effect_id, effect_level, character}) do
+           Managers.Field.add_effect_buff(character, effect_id, effect_level) do
       consumed_item = Managers.Inventory.consume(item)
       push(session, Packets.InventoryItem.consume(consumed_item))
     else

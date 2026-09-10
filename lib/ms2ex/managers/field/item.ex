@@ -70,8 +70,8 @@ defmodule Ms2ex.Managers.Field.Item do
   end
 
   defp remove_item(character, item, state) do
-    Context.Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
-    Context.Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
+    Managers.Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
+    Managers.Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
 
     items = Map.delete(state.items, item.object_id)
     %{state | items: items}
@@ -89,7 +89,7 @@ defmodule Ms2ex.Managers.Field.Item do
         source_object_id: character.object_id
     }
 
-    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 
@@ -108,7 +108,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: if(receiver, do: receiver.object_id, else: 0)
     }
 
-    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 
@@ -137,7 +137,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: 0
     }
 
-    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 

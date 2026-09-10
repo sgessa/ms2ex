@@ -6,7 +6,7 @@ defmodule Ms2ex.Managers.Field.InteractObject do
   configured. Normal objects return to Reactable after their reset time.
   """
 
-  alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Net.SenderSession
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -64,7 +64,7 @@ defmodule Ms2ex.Managers.Field.InteractObject do
           SenderSession.push(character, Packets.InteractObject.interact(object))
         end
 
-        Context.Field.broadcast(state.topic, Packets.InteractObject.update(object))
+        Managers.Field.broadcast(state.topic, Packets.InteractObject.update(object))
 
         interactable = Map.put(state.interactable, uuid, object)
         {:ok, object, %{state | interactable: interactable}}
@@ -105,7 +105,7 @@ defmodule Ms2ex.Managers.Field.InteractObject do
             {uuid, object}
 
           object ->
-            Context.Field.broadcast(state.topic, Packets.InteractObject.update(object))
+            Managers.Field.broadcast(state.topic, Packets.InteractObject.update(object))
             {uuid, object}
         end
       end)

@@ -1,12 +1,12 @@
 defmodule Ms2ex.Managers.Field.Instrument do
-  alias Ms2ex.Managers.Field
+  alias Ms2ex.Managers
 
   @doc """
   Spawns an instrument for its owner. A character can only hold one
   instrument at a time, so an existing one is replaced.
   """
   def add(instrument, state) do
-    {object_id, state} = Field.next_local_id(state)
+    {object_id, state} = Managers.Field.next_local_id(state)
     instrument = %{instrument | object_id: object_id}
 
     {instrument, put_in(state, [:instruments, instrument.owner_character_id], instrument)}

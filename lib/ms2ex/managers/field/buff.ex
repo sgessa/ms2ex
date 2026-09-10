@@ -89,7 +89,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   defp unregister_removed_buff(buff_id, buff, state) do
     remove_buff_status(buff)
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+    Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)
 
     case Map.get(state.buffs, buff_key(buff)) do
@@ -110,7 +110,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     Managers.Buff.start(buff)
     state = put_in(state, [:buffs, buff_key(buff)], buff.object_id)
 
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
+    Managers.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
 
     if apply_status?, do: apply_status(buff)
     state = modify_overlap(buff, state)
@@ -135,7 +135,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
     existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
     schedule_removal(existing)
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
+    Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
 
     state =
       if stacks >= max and previous < max and overlap > 0 do
@@ -222,7 +222,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         previous = target.stacks
         stacks = min(max(previous + offset, 0), max)
         target = Managers.Buff.update(target, %{stacks: stacks})
-        Context.Field.broadcast(state.topic, Packets.Buff.send(:update, target))
+        Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, target))
 
         cond do
           stacks <= 0 ->
@@ -340,7 +340,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     end
 
     if hp > 0 or sp > 0 or ep > 0 do
-      Context.Field.broadcast(
+      Managers.Field.broadcast(
         owner,
         Packets.SkillDamage.heal(%{
           caster_id: owner.object_id,
@@ -384,7 +384,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         end
 
         if hp > 0 do
-          Context.Field.broadcast(
+          Managers.Field.broadcast(
             owner,
             Packets.SkillDamage.dot_damage(%{
               caster_id: buff.caster.object_id,
@@ -412,7 +412,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     if npc_alive?(state, buff.owner.object_id) do
       case Managers.Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id) do
         {:ok, _mob, state} ->
-          Context.Field.broadcast(
+          Managers.Field.broadcast(
             state.topic,
             Packets.SkillDamage.dot_damage(%{
               caster_id: buff.caster.object_id,
@@ -567,7 +567,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
         buff ->
           buff = Managers.Buff.update(buff, %{end_tick: buff.end_tick + modify_tick})
-          Context.Field.broadcast(state.topic, Packets.Buff.send(:update, buff))
+          Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, buff))
       end
     end)
 
