@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-5E22709A.js"></script>
+    <script defer src="dist/sidebar_items-771011A4.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -232,6 +232,19 @@ can hit it to revive the owner.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#assign_instance/1" data-no-tooltip="" translate="no">assign_instance(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Binds the character to a field instance: a pending <code class="inline">change_map</code> instance
+(fresh allocation from <code class="inline">change_field/2,4</code>) wins, an existing stamp is
+kept while the character stays on the same field, anything else
+allocates.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#attach_banner/4" data-no-tooltip="" translate="no">attach_banner(character, banner_id, slot_ids, ugc)</a>
 
       </div>
@@ -409,11 +422,24 @@ character joined an existing one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#field_name/2" data-no-tooltip="" translate="no">field_name(map_id, channel_id)</a>
+        <a href="#field_name/1" data-no-tooltip="" translate="no">field_name(character)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Generates a unique field process name from a map ID and channel ID.</p></div>
+        <div class="summary-synopsis"><p>Field process name / PubSub topic for the field a character is on. A
+missing instance id is the map's shared field (instance 0).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#field_name/3" data-no-tooltip="" translate="no">field_name(map_id, channel_id, instance_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Generates a unique field process name from a map ID, channel ID and
+instance ID. Instance 0 is the shared field of the map on the channel;
+instanced maps (see <code class="inline">Storage.Tables.InstanceFields</code>) carry their own id.</p></div>
 
     </div>
 
@@ -476,6 +502,19 @@ remaining and revives the owner when it reaches zero.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#instance_id/1" data-no-tooltip="" translate="no">instance_id(map_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The field instance id a character enters for the map: solo maps
+(tutorials, quest instances) run one private field per entry, so a
+fresh id is allocated per call; every other map — including
+channel-scale ones — shares a single field per channel (id 0).</p></div>
 
     </div>
 
@@ -653,6 +692,17 @@ interact-object quest conditions and run gathering.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#return_map_id/1" data-no-tooltip="" translate="no">return_map_id(map_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The map a character who quit on <code class="inline">map_id</code> should return to: the map's
+<code class="inline">enter_return_id</code> when it declares one, the map itself otherwise.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#skip_cutscene/1" data-no-tooltip="" translate="no">skip_cutscene(character)</a>
 
       </div>
@@ -745,7 +795,7 @@ interact-object quest conditions and run gathering.</p></div>
       <h1 class="signature" translate="no">add_buff(character, skill_cast, skill)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L283" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L352" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -775,7 +825,7 @@ interact-object quest conditions and run gathering.</p></div>
       <h1 class="signature" translate="no">add_effect_buff(character, effect_id, effect_level, opts \\ [])</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L298" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L367" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -805,7 +855,7 @@ interact-object quest conditions and run gathering.</p></div>
       <h1 class="signature" translate="no">add_effect_buff_for(owner, caster, effect_id, effect_level)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L305" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L374" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -839,7 +889,7 @@ interact-object quest conditions and run gathering.</p></div>
       <h1 class="signature" translate="no">add_instrument(character, instrument)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L350" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L419" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -868,7 +918,7 @@ interact-object quest conditions and run gathering.</p></div>
       <h1 class="signature" translate="no">add_mob(character, npc)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L218" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L287" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -898,7 +948,7 @@ interact-object quest conditions and run gathering.</p></div>
       <h1 class="signature" translate="no">add_mob_drop(field_npc, item, receiver \\ nil)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L256" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L325" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -932,7 +982,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p>
       <h1 class="signature" translate="no">add_region_skill(character, skill_cast)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L487" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L556" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -961,7 +1011,7 @@ receiver when one is provided (nil for shared/unlocked drops).</p>
       <h1 class="signature" translate="no">add_tombstone(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L405" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L474" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -990,7 +1040,7 @@ can hit it to revive the owner.</p>
       <h1 class="signature" translate="no">apply_skill_effects(character, skill_cast, mob_object_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L244" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L313" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1008,6 +1058,37 @@ can hit it to revive the owner.</p>
 <p>Applies a skill cast's on-hit effects to a field npc.</p>
   </section>
 </section>
+<section class="detail" id="assign_instance/1">
+
+  <div class="detail-header">
+    <a href="#assign_instance/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">assign_instance(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L84" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> assign_instance(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()</pre>
+
+      </div>
+
+<p>Binds the character to a field instance: a pending <code class="inline">change_map</code> instance
+(fresh allocation from <code class="inline">change_field/2,4</code>) wins, an existing stamp is
+kept while the character stays on the same field, anything else
+allocates.</p>
+  </section>
+</section>
 <section class="detail" id="attach_banner/4">
 
   <div class="detail-header">
@@ -1018,7 +1099,7 @@ can hit it to revive the owner.</p>
       <h1 class="signature" translate="no">attach_banner(character, banner_id, slot_ids, ugc)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L445" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L514" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1047,7 +1128,7 @@ can hit it to revive the owner.</p>
       <h1 class="signature" translate="no">banners(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L457" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L526" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1075,7 +1156,7 @@ can hit it to revive the owner.</p>
       <h1 class="signature" translate="no">broadcast(character, packet)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L124" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L184" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1103,7 +1184,7 @@ can hit it to revive the owner.</p>
       <h1 class="signature" translate="no">broadcast_from(character, packet, from)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L153" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L213" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1132,7 +1213,7 @@ the given process.</p>
       <h1 class="signature" translate="no">broadcast_stats(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L138" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L198" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1161,7 +1242,7 @@ update to every other character in the same field.</p>
       <h1 class="signature" translate="no">call(pid, args)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L195" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L264" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1190,7 +1271,7 @@ the character has no field or the call fails.</p>
       <h1 class="signature" translate="no">cast(pid, args)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L210" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L279" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1218,7 +1299,7 @@ the character has no field or the call fails.</p>
       <h1 class="signature" translate="no">change_field(character, map_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L87" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L144" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1247,7 +1328,7 @@ point.</p>
       <h1 class="signature" translate="no">change_field(character, map_id, position, rotation)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L95" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L152" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1298,7 +1379,7 @@ point.</p>
       <h1 class="signature" translate="no">clear_tombstone(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L420" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L489" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1327,7 +1408,7 @@ owner revives); clients tear down the tombstone entity.</p>
       <h1 class="signature" translate="no">confirm_banner(character, resource_id, path)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L451" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L520" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1356,7 +1437,7 @@ owner revives); clients tear down the tombstone entity.</p>
       <h1 class="signature" translate="no">drop_item(character, item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L262" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L331" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1384,7 +1465,7 @@ owner revives); clients tear down the tombstone entity.</p>
       <h1 class="signature" translate="no">drop_item(character, item, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L268" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L337" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1413,7 +1494,7 @@ owner revives); clients tear down the tombstone entity.</p>
       <h1 class="signature" translate="no">end_performance(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L382" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L451" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1441,7 +1522,7 @@ owner revives); clients tear down the tombstone entity.</p>
       <h1 class="signature" translate="no">enter(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L62" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L100" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1471,7 +1552,7 @@ character joined an existing one.</p>
       <h1 class="signature" translate="no">enter_battle_stance(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L394" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L463" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1489,17 +1570,17 @@ character joined an existing one.</p>
 <p>Puts a character into battle stance (the field drops it after a beat).</p>
   </section>
 </section>
-<section class="detail" id="field_name/2">
+<section class="detail" id="field_name/1">
 
   <div class="detail-header">
-    <a href="#field_name/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#field_name/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">field_name(map_id, channel_id)</h1>
+      <h1 class="signature" translate="no">field_name(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L174" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L237" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1510,11 +1591,42 @@ character joined an existing one.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> field_name(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> field_name(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
 
       </div>
 
-<p>Generates a unique field process name from a map ID and channel ID.</p>
+<p>Field process name / PubSub topic for the field a character is on. A
+missing instance id is the map's shared field (instance 0).</p>
+  </section>
+</section>
+<section class="detail" id="field_name/3">
+
+  <div class="detail-header">
+    <a href="#field_name/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">field_name(map_id, channel_id, instance_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L247" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> field_name(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>Generates a unique field process name from a map ID, channel ID and
+instance ID. Instance 0 is the shared field of the map on the channel;
+instanced maps (see <code class="inline">Storage.Tables.InstanceFields</code>) carry their own id.</p>
   </section>
 </section>
 <section class="detail" id="handle_continue/2">
@@ -1527,7 +1639,7 @@ character joined an existing one.</p>
       <h1 class="signature" translate="no">handle_continue(arg, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L566" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L638" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1549,7 +1661,7 @@ character joined an existing one.</p>
       <h1 class="signature" translate="no">has_buff?(character, effect_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L311" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L380" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1577,7 +1689,7 @@ character joined an existing one.</p>
       <h1 class="signature" translate="no">has_buff_event?(character, event_type)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L320" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L389" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1606,7 +1718,7 @@ active on them (the auto-fish and auto-perform conveniences, safe riding).</p>
       <h1 class="signature" translate="no">hit_tombstone(character, object_id, hits)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L429" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L498" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1635,7 +1747,7 @@ remaining and revives the owner when it reaches zero.</p>
       <h1 class="signature" translate="no">inflict_dmg(attacker, dmg, object_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L238" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L307" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1664,7 +1776,7 @@ remaining and revives the owner when it reaches zero.</p>
       <h1 class="signature" translate="no">init(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L521" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L590" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1674,6 +1786,37 @@ remaining and revives the owner when it reaches zero.</p>
   <section class="docstring">
 
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="instance_id/1">
+
+  <div class="detail-header">
+    <a href="#instance_id/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">instance_id(map_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L125" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> instance_id(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()</pre>
+
+      </div>
+
+<p>The field instance id a character enters for the map: solo maps
+(tutorials, quest instances) run one private field per entry, so a
+fresh id is allocated per call; every other map — including
+channel-scale ones — shares a single field per channel (id 0).</p>
   </section>
 </section>
 <section class="detail" id="interact_object/2">
@@ -1686,7 +1829,7 @@ remaining and revives the owner when it reaches zero.</p>
       <h1 class="signature" translate="no">interact_object(character, uuid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L481" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L550" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1716,7 +1859,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">leave(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L78" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L135" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1744,7 +1887,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">lookup_instrument(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L356" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L425" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1773,7 +1916,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">lookup_npc(character, object_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L224" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L293" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1802,7 +1945,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">modify_buff_duration(character, effect_id, modify_tick)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L326" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L395" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1831,7 +1974,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">next_local_id(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L185" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L254" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1853,7 +1996,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">next_object_id(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L493" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L562" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1881,7 +2024,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">performance_stage?(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L370" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L439" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1909,7 +2052,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">pickup_item(character, object_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L275" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L344" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1938,7 +2081,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">pickup_liftable(character, uuid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L463" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L532" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1966,7 +2109,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">place_liftable(character, grid, item_id, rotation)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L469" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L538" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1995,7 +2138,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">remove_effect_buff(character, effect_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L335" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L404" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2023,7 +2166,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">remove_instrument(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L362" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L431" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2052,7 +2195,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">remove_npc(field_npc)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L230" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L299" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2080,7 +2223,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">remove_owner_buffs(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L341" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L410" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2108,7 +2251,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">remove_tombstone(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L411" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L480" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2136,7 +2279,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">reserve_banner_slots(character, banner_id, reservations)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L438" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L507" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2155,6 +2298,35 @@ interact-object quest conditions and run gathering.</p>
 <p>Reserves banner slots for a character.</p>
   </section>
 </section>
+<section class="detail" id="return_map_id/1">
+
+  <div class="detail-header">
+    <a href="#return_map_id/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">return_map_id(map_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> return_map_id(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()</pre>
+
+      </div>
+
+<p>The map a character who quit on <code class="inline">map_id</code> should return to: the map's
+<code class="inline">enter_return_id</code> when it declares one, the map itself otherwise.</p>
+  </section>
+</section>
 <section class="detail" id="skip_cutscene/1">
 
   <div class="detail-header">
@@ -2165,7 +2337,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">skip_cutscene(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L513" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L582" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2193,7 +2365,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">start_performance(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L376" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L445" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2221,7 +2393,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">subscribe(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L160" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L220" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2249,7 +2421,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">toggle_stage(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L388" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L457" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2277,7 +2449,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">unsubscribe(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L167" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L227" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2305,7 +2477,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">update_widget(character, widget_key, arg)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L507" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L576" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -2333,7 +2505,7 @@ interact-object quest conditions and run gathering.</p>
       <h1 class="signature" translate="no">user_position(character, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L501" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L570" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

@@ -412,6 +412,7 @@ Ms2ex.Storage.Tables.GlobalDropItemBox.md
 Ms2ex.Storage.Tables.Guild.md
 Ms2ex.Storage.Tables.IndividualDropItem.md
 Ms2ex.Storage.Tables.Insignias.md
+Ms2ex.Storage.Tables.InstanceFields.md
 Ms2ex.Storage.Tables.Instruments.md
 Ms2ex.Storage.Tables.InteractObjects.md
 Ms2ex.Storage.Tables.ItemOptions.md

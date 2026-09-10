@@ -413,6 +413,7 @@ Ms2ex.Storage.Tables.GlobalDropItemBox.html
 Ms2ex.Storage.Tables.Guild.html
 Ms2ex.Storage.Tables.IndividualDropItem.html
 Ms2ex.Storage.Tables.Insignias.html
+Ms2ex.Storage.Tables.InstanceFields.html
 Ms2ex.Storage.Tables.Instruments.html
 Ms2ex.Storage.Tables.InteractObjects.html
 Ms2ex.Storage.Tables.ItemOptions.html
@@ -490,8 +491,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-6354CBF1.js
-dist/sidebar_items-5E22709A.js
+dist/search_data-47F8B610.js
+dist/sidebar_items-771011A4.js
 index.html
 license.html
 readme.html

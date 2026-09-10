@@ -123,6 +123,17 @@ can hit it to revive the owner.
 
 Applies a skill cast's on-hit effects to a field npc.
 
+# `assign_instance`
+
+```elixir
+@spec assign_instance(Ms2ex.Schema.Character.t()) :: Ms2ex.Schema.Character.t()
+```
+
+Binds the character to a field instance: a pending `change_map` instance
+(fresh allocation from `change_field/2,4`) wins, an existing stamp is
+kept while the character stays on the same field, anything else
+allocates.
+
 # `attach_banner`
 
 ```elixir
@@ -271,10 +282,21 @@ Puts a character into battle stance (the field drops it after a beat).
 # `field_name`
 
 ```elixir
-@spec field_name(integer(), integer()) :: atom()
+@spec field_name(Ms2ex.Schema.Character.t()) :: atom()
 ```
 
-Generates a unique field process name from a map ID and channel ID.
+Field process name / PubSub topic for the field a character is on. A
+missing instance id is the map's shared field (instance 0).
+
+# `field_name`
+
+```elixir
+@spec field_name(integer(), integer(), integer() | nil) :: atom()
+```
+
+Generates a unique field process name from a map ID, channel ID and
+instance ID. Instance 0 is the shared field of the map on the channel;
+instanced maps (see `Storage.Tables.InstanceFields`) carry their own id.
 
 # `handle_continue`
 
@@ -314,6 +336,17 @@ remaining and revives the owner when it reaches zero.
 Applies damage to a field npc on the character's field.
 
 # `init`
+
+# `instance_id`
+
+```elixir
+@spec instance_id(integer()) :: integer()
+```
+
+The field instance id a character enters for the map: solo maps
+(tutorials, quest instances) run one private field per entry, so a
+fresh id is allocated per call; every other map — including
+channel-scale ones — shares a single field per channel (id 0).
 
 # `interact_object`
 
@@ -455,6 +488,15 @@ Removes a character's tombstone from the field (on field leave).
 ```
 
 Reserves banner slots for a character.
+
+# `return_map_id`
+
+```elixir
+@spec return_map_id(integer()) :: integer()
+```
+
+The map a character who quit on `map_id` should return to: the map's
+`enter_return_id` when it declares one, the map itself otherwise.
 
 # `skip_cutscene`
 

@@ -243,6 +243,11 @@ boxes a spot rolls its catches from.
 
 - [Ms2ex.Storage.Tables.IndividualDropItem](Ms2ex.Storage.Tables.IndividualDropItem.md)
 - [Ms2ex.Storage.Tables.Insignias](Ms2ex.Storage.Tables.Insignias.md)
+- [Ms2ex.Storage.Tables.InstanceFields](Ms2ex.Storage.Tables.InstanceFields.md): Instance-field table: maps that are instanced rather than shared.
+`solo` maps (tutorials, quest instances) allocate a private field per
+entry; `channel_scale` maps share one field per channel. Maps absent
+from the table are ordinary shared fields.
+
 - [Ms2ex.Storage.Tables.Instruments](Ms2ex.Storage.Tables.Instruments.md)
 - [Ms2ex.Storage.Tables.InteractObjects](Ms2ex.Storage.Tables.InteractObjects.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)

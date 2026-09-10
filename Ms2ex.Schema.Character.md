@@ -27,6 +27,7 @@
   equips: term(),
   exp: term(),
   favorite_stickers: term(),
+  field_instance: term(),
   field_pid: term(),
   fish_album: term(),
   fishing: term(),
