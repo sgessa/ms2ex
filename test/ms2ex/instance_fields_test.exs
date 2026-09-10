@@ -1,5 +1,6 @@
 defmodule Ms2ex.InstanceFieldsTest do
   use Ms2ex.DataCase, async: true
+  use Mimic
 
   alias Ms2ex.Managers
   alias Ms2ex.Schema
@@ -77,8 +78,13 @@ defmodule Ms2ex.InstanceFieldsTest do
              Managers.Field.assign_instance(%Schema.Character{map_id: @channel_scale_map})
   end
 
-  test "a field change to an instanced map moves the in-memory map, not the saved one" do
+  test "a field change persists and follows the new map (instanced or not)" do
     character = %Schema.Character{map_id: @shared_map, change_map: nil}
+
+    Mimic.expect(Ms2ex.Context.Characters, :update, fn char, attrs ->
+      assert attrs == %{map_id: @tutorial_map}
+      {:ok, %{char | map_id: @tutorial_map}}
+    end)
 
     new_map = %{id: @tutorial_map, position: %{x: 0, y: 0, z: 0}, rotation: nil, instance: 3}
 

@@ -54,20 +54,16 @@ defmodule Ms2ex.Managers.Field do
   # -- lifecycle -------------------------------------------------------------
 
   @doc """
-  Persists the character's current map after a field change. Instanced
-  maps are never persisted — the pre-instance map stays saved, so a relog
-  returns the player to where the instance was entered from — but the
-  in-memory map id follows the new map in both cases: the field process
-  for the visit is built from it.
+  Persists the character's current map after a field change; the in-memory
+  map id follows the new map. Instanced maps persist like any other: the
+  reference saves the current stage on quit (only maps that push a
+  return-map reset it, which plain solo maps never do), so a relog lands
+  in a fresh instance of the same stage.
   """
   @spec update_current_map(Schema.Character.t(), map()) :: Schema.Character.t()
   def update_current_map(%Schema.Character{} = character, %{id: map_id} = _new_map) do
-    if Storage.Tables.InstanceFields.instanced?(map_id) do
-      Map.put(character, :map_id, map_id)
-    else
-      {:ok, character} = Context.Characters.update(character, %{map_id: map_id})
-      character
-    end
+    {:ok, character} = Context.Characters.update(character, %{map_id: map_id})
+    character
   end
 
   @doc """
