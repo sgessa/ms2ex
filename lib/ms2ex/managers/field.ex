@@ -41,7 +41,6 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
-  alias Ms2ex.Managers.Field
   alias Phoenix.PubSub
 
   @updates_intval 1000
@@ -524,13 +523,13 @@ defmodule Ms2ex.Managers.Field do
 
     field_name = field_name(map_id, channel_id)
 
-    {local_id_counter, portals} = Field.Portal.load(map_id, @local_id_counter)
-    interactable = Field.InteractObject.load(map_id)
+    {local_id_counter, portals} = __MODULE__.Portal.load(map_id, @local_id_counter)
+    interactable = __MODULE__.InteractObject.load(map_id)
 
     state =
       %{
         buffs: %{},
-        banners: Field.Banner.load(map_id),
+        banners: __MODULE__.Banner.load(map_id),
         channel_id: channel_id,
         local_id_counter: local_id_counter,
         interactable: interactable,
@@ -553,8 +552,8 @@ defmodule Ms2ex.Managers.Field do
         tombstones: %{},
         topic: field_name
       }
-      |> Field.Liftable.init_liftables()
-      |> Field.Trigger.init_triggers()
+      |> __MODULE__.Liftable.init_liftables()
+      |> __MODULE__.Trigger.init_triggers()
 
     send(self(), :load_npc_spawns)
     send(self(), :tick_npcs)
@@ -565,31 +564,31 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_continue({:add_character, character}, state),
-    do: {:noreply, Field.Character.add_character(character, state)}
+    do: {:noreply, __MODULE__.Character.add_character(character, state)}
 
   def handle_call({:add_character, character}, _from, state),
-    do: {:reply, {:ok, self()}, Field.Character.add_character(character, state)}
+    do: {:reply, {:ok, self()}, __MODULE__.Character.add_character(character, state)}
 
   def handle_call({:remove_character, character}, _from, state) do
     send(self(), :maybe_stop)
 
-    {:reply, :ok, Field.Character.remove_character(character, state)}
+    {:reply, :ok, __MODULE__.Character.remove_character(character, state)}
   end
 
   def handle_call({:update_widget, widget_key, arg}, _from, state) do
-    {:reply, :ok, Field.Trigger.update_widget(state, widget_key, arg)}
+    {:reply, :ok, __MODULE__.Trigger.update_widget(state, widget_key, arg)}
   end
 
   def handle_call({:skip_cutscene}, _from, state) do
-    {:reply, :ok, Field.Trigger.skip_cutscene(state)}
+    {:reply, :ok, __MODULE__.Trigger.skip_cutscene(state)}
   end
 
   def handle_call({:pickup_liftable, character_id, uuid}, _from, state) do
-    {:reply, :ok, Field.Liftable.pickup(state, character_id, uuid)}
+    {:reply, :ok, __MODULE__.Liftable.pickup(state, character_id, uuid)}
   end
 
   def handle_call({:place_liftable, character_id, grid, item_id, rotation}, _from, state) do
-    {:reply, :ok, Field.Liftable.place(state, character_id, grid, item_id, rotation)}
+    {:reply, :ok, __MODULE__.Liftable.place(state, character_id, grid, item_id, rotation)}
   end
 
   def handle_call({:pickup_item, character, object_id}, _from, state) do
@@ -598,12 +597,12 @@ defmodule Ms2ex.Managers.Field do
         {:reply, :error, state}
 
       item ->
-        {:reply, {:ok, item}, Field.Item.pickup_item(character, item, state)}
+        {:reply, {:ok, item}, __MODULE__.Item.pickup_item(character, item, state)}
     end
   end
 
   def handle_call({:hit_tombstone, object_id, hits}, _from, state) do
-    case Field.Tombstone.hit(object_id, hits, state) do
+    case __MODULE__.Tombstone.hit(object_id, hits, state) do
       {:ok, state} ->
         {:reply, :ok, state}
 
@@ -613,7 +612,7 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:add_instrument, instrument}, _from, state) do
-    {instrument, state} = Field.Instrument.add(instrument, state)
+    {instrument, state} = __MODULE__.Instrument.add(instrument, state)
     {:reply, {:ok, instrument}, state}
   end
 
@@ -623,47 +622,47 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:lookup_instrument, character_id}, _from, state) do
-    case Field.Instrument.get(character_id, state) do
+    case __MODULE__.Instrument.get(character_id, state) do
       nil -> {:reply, :error, state}
       instrument -> {:reply, {:ok, instrument}, state}
     end
   end
 
   def handle_call({:remove_instrument, character_id}, _from, state) do
-    case Field.Instrument.get(character_id, state) do
+    case __MODULE__.Instrument.get(character_id, state) do
       nil -> {:reply, :error, state}
-      instrument -> {:reply, {:ok, instrument}, Field.Instrument.remove(character_id, state)}
+      instrument -> {:reply, {:ok, instrument}, __MODULE__.Instrument.remove(character_id, state)}
     end
   end
 
   def handle_call({:reserve_banner_slots, character, banner_id, reservations}, _from, state) do
-    case Field.Banner.reserve(character, banner_id, reservations, state) do
+    case __MODULE__.Banner.reserve(character, banner_id, reservations, state) do
       {:ok, slots, state} -> {:reply, {:ok, slots}, state}
       :error -> {:reply, :error, state}
     end
   end
 
   def handle_call({:attach_banner, character, banner_id, slot_ids, ugc}, _from, state) do
-    case Field.Banner.attach(character, banner_id, slot_ids, ugc, state) do
+    case __MODULE__.Banner.attach(character, banner_id, slot_ids, ugc, state) do
       {:ok, banner, state} -> {:reply, {:ok, banner}, state}
       :error -> {:reply, :error, state}
     end
   end
 
   def handle_call({:confirm_banner, resource_id, path}, _from, state) do
-    case Field.Banner.confirm(resource_id, path, state) do
+    case __MODULE__.Banner.confirm(resource_id, path, state) do
       {:ok, banner, state} -> {:reply, {:ok, banner}, state}
       :error -> {:reply, :error, state}
     end
   end
 
-  def handle_call(:banners, _from, state), do: {:reply, Field.Banner.all(state), state}
+  def handle_call(:banners, _from, state), do: {:reply, __MODULE__.Banner.all(state), state}
 
   def handle_call(:performance_stage?, _from, state),
-    do: {:reply, Field.PerformanceStage.stage?(state), state}
+    do: {:reply, __MODULE__.PerformanceStage.stage?(state), state}
 
   def handle_call({:interact_object, character, uuid}, _from, state) do
-    case Field.InteractObject.react(character, uuid, state) do
+    case __MODULE__.InteractObject.react(character, uuid, state) do
       {:ok, object, state} ->
         {:reply, {:ok, object}, state}
 
@@ -673,10 +672,10 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:add_region_skill, skill_cast}, _from, state),
-    do: {:reply, :ok, Field.RegionSkill.add(skill_cast, state)}
+    do: {:reply, :ok, __MODULE__.RegionSkill.add(skill_cast, state)}
 
   def handle_call({:add_buff, skill_cast, skill, character}, _from, state) do
-    case Field.Buff.add_buff(skill_cast, skill, character, state) do
+    case __MODULE__.Buff.add_buff(skill_cast, skill, character, state) do
       {nil, state} ->
         {:reply, :error, state}
 
@@ -690,7 +689,7 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_call({:add_effect_buff, effect_id, effect_level, character, opts}, _from, state) do
     {_buff, state} =
-      Field.Buff.add_effect_buff(effect_id, effect_level, character, state, 0, opts)
+      __MODULE__.Buff.add_effect_buff(effect_id, effect_level, character, state, 0, opts)
 
     {:reply, :ok, state}
   end
@@ -701,22 +700,24 @@ defmodule Ms2ex.Managers.Field do
         state
       ) do
     {_buff, state} =
-      Field.Buff.add_effect_buff_for(effect_id, effect_level, caster, owner, state)
+      __MODULE__.Buff.add_effect_buff_for(effect_id, effect_level, caster, owner, state)
 
     {:reply, :ok, state}
   end
 
   def handle_call({:has_buff?, owner_object_id, effect_id}, _from, state),
-    do: {:reply, Field.Buff.owner_has_buff?(owner_object_id, effect_id, state), state}
+    do: {:reply, __MODULE__.Buff.owner_has_buff?(owner_object_id, effect_id, state), state}
 
   def handle_call({:has_buff_event?, owner_object_id, event_type}, _from, state),
-    do: {:reply, Field.Buff.owner_has_buff_event?(owner_object_id, event_type, state), state}
+    do: {:reply, __MODULE__.Buff.owner_has_buff_event?(owner_object_id, event_type, state), state}
 
   def handle_call({:modify_buff_duration, owner_object_id, effect_id, modify_tick}, _from, state),
-    do: {:reply, :ok, Field.Buff.modify_duration(owner_object_id, effect_id, modify_tick, state)}
+    do:
+      {:reply, :ok,
+       __MODULE__.Buff.modify_duration(owner_object_id, effect_id, modify_tick, state)}
 
   def handle_call({:remove_effect_buff, owner_object_id, effect_id}, _from, state),
-    do: {:reply, :ok, Field.Buff.remove_owner_effect(owner_object_id, effect_id, state)}
+    do: {:reply, :ok, __MODULE__.Buff.remove_owner_effect(owner_object_id, effect_id, state)}
 
   def handle_call({:lookup_npc, object_id}, _from, state) do
     case Map.get(state.npcs, object_id) do
@@ -726,7 +727,7 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:inflict_dmg, attacker, %{dmg: dmg}, object_id}, _from, state) do
-    case Field.Npc.damage(state, attacker, dmg, object_id) do
+    case __MODULE__.Npc.damage(state, attacker, dmg, object_id) do
       {:ok, field_npc, state} ->
         {:reply, {:ok, field_npc}, state}
 
@@ -736,49 +737,49 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:apply_skill_effects, skill_cast, mob_id}, _from, state),
-    do: {:reply, :ok, Field.Npc.apply_skill_effects(state, skill_cast, mob_id)}
+    do: {:reply, :ok, __MODULE__.Npc.apply_skill_effects(state, skill_cast, mob_id)}
 
   def handle_cast({:drop_item, source, item}, state),
-    do: {:noreply, Field.Item.drop_item(source, item, state)}
+    do: {:noreply, __MODULE__.Item.drop_item(source, item, state)}
 
   # trigger conditions detect users by their live position
   def handle_cast({:user_position, character_id, position}, state) do
-    {:noreply, Field.Trigger.track_position(state, character_id, position)}
+    {:noreply, __MODULE__.Trigger.track_position(state, character_id, position)}
   end
 
   def handle_cast({:drop_item, source, item, position}, state),
-    do: {:noreply, Field.Item.drop_item(source, item, position, state)}
+    do: {:noreply, __MODULE__.Item.drop_item(source, item, position, state)}
 
   def handle_cast(
         {:add_mob_drop, %Types.FieldNpc{} = mob, %Schema.Item{} = item, receiver},
         state
       ),
-      do: {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
+      do: {:noreply, __MODULE__.Item.add_mob_drop(mob, item, receiver, state)}
 
   # a dead player's tombstone is announced with its hit counts so clients can
   # render the revive gauge and hit it; the owner is keyed by character id for
   # the revive lookup
   def handle_cast({:add_tombstone, character}, state),
-    do: {:noreply, Field.Tombstone.add(character, state)}
+    do: {:noreply, __MODULE__.Tombstone.add(character, state)}
 
   def handle_cast({:clear_tombstone, character_id}, state),
-    do: {:noreply, Field.Tombstone.clear(character_id, state)}
+    do: {:noreply, __MODULE__.Tombstone.clear(character_id, state)}
 
   def handle_cast({:remove_tombstone, character_id}, state),
-    do: {:noreply, Field.Tombstone.remove(character_id, state)}
+    do: {:noreply, __MODULE__.Tombstone.remove(character_id, state)}
 
   # buffs die with their owner; remove every buff owned by the object id
   def handle_cast({:remove_owner_buffs, owner_object_id}, state),
-    do: {:noreply, Field.Buff.remove_owner_buffs(owner_object_id, state)}
+    do: {:noreply, __MODULE__.Buff.remove_owner_buffs(owner_object_id, state)}
 
   def handle_cast({:start_performance, character}, state),
-    do: {:noreply, Field.PerformanceStage.start(character, state)}
+    do: {:noreply, __MODULE__.PerformanceStage.start(character, state)}
 
   def handle_cast({:end_performance, character_id}, state),
-    do: {:noreply, Field.PerformanceStage.stop(character_id, state)}
+    do: {:noreply, __MODULE__.PerformanceStage.stop(character_id, state)}
 
   def handle_cast({:toggle_stage, character}, state),
-    do: {:noreply, Field.PerformanceStage.toggle_stage(character, state)}
+    do: {:noreply, __MODULE__.PerformanceStage.toggle_stage(character, state)}
 
   def handle_cast({:enter_battle_stance, character}, state) do
     # battle-start packets are emitted by the cast handler in order; the
@@ -798,35 +799,35 @@ defmodule Ms2ex.Managers.Field do
     mob_count = length(Storage.Maps.get_mob_spawns(state.map_id))
     state = Map.put(state, :spawn_docs_pending, npc_count + mob_count)
 
-    Field.Npc.load_npc_spawns(state)
-    Field.Npc.load_mob_spawns(state)
+    __MODULE__.Npc.load_npc_spawns(state)
+    __MODULE__.Npc.load_mob_spawns(state)
     {:noreply, state}
   end
 
   def handle_info({:add_npc_spawn, npc_spawn, npc_ids}, state) do
-    state = Field.Npc.load_spawn(state, npc_spawn, npc_ids)
+    state = __MODULE__.Npc.load_spawn(state, npc_spawn, npc_ids)
     pending = Map.get(state, :spawn_docs_pending, 1) - 1
     {:noreply, Map.put(state, :spawn_docs_pending, max(pending, 0))}
   end
 
   def handle_info({:add_npc, npc_id, npc_spawn}, state),
-    do: {:noreply, Field.Npc.load_npc(state, npc_id, npc_spawn)}
+    do: {:noreply, __MODULE__.Npc.load_npc(state, npc_id, npc_spawn)}
 
   def handle_info({:add_mob, %Types.Npc{} = npc, position}, state),
-    do: {:noreply, Field.Npc.load_npc(state, npc, %{position: position, rotation: nil})}
+    do: {:noreply, __MODULE__.Npc.load_npc(state, npc, %{position: position, rotation: nil})}
 
   def handle_info({:remove_npc, field_npc}, state) do
     # destroy_monster and corpse timers can race; removal is idempotent
     case Map.get(state.npcs, field_npc.object_id) do
       %Types.FieldNpc{} ->
-        Field.broadcast(
+        broadcast(
           field_npc.field,
           Packets.FieldRemoveNpc.bytes(field_npc.object_id)
         )
 
-        Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
+        broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
-        {:noreply, Field.Npc.remove_npc(field_npc, state)}
+        {:noreply, __MODULE__.Npc.remove_npc(field_npc, state)}
 
       _ ->
         {:noreply, state}
@@ -834,7 +835,7 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_info(:release_guide_hold, state),
-    do: {:noreply, Field.Trigger.release_guide_hold(state)}
+    do: {:noreply, __MODULE__.Trigger.release_guide_hold(state)}
 
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
@@ -842,53 +843,53 @@ defmodule Ms2ex.Managers.Field do
     if Map.get(state, :spawn_docs_pending, 0) > 0 do
       {:noreply, state}
     else
-      state = Field.InteractObject.tick(state)
-      state = Field.Trigger.tick(state)
-      state = Field.Npc.tick(state)
-      {:noreply, Field.Liftable.expire_placed(state)}
+      state = __MODULE__.InteractObject.tick(state)
+      state = __MODULE__.Trigger.tick(state)
+      state = __MODULE__.Npc.tick(state)
+      {:noreply, __MODULE__.Liftable.expire_placed(state)}
     end
   end
 
   def handle_info({:region_tick, source_id}, state),
-    do: {:noreply, Field.RegionSkill.maybe_tick(source_id, state)}
+    do: {:noreply, __MODULE__.RegionSkill.maybe_tick(source_id, state)}
 
   def handle_info({:remove_region_skill, source_id}, state) do
-    Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    broadcast(state.topic, Packets.RegionSkill.remove(source_id))
     {:noreply, state}
   end
 
   def handle_info({:remove_status, status}, state) do
-    Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
+    broadcast(state.topic, Packets.Buff.send(:remove, status))
     {:noreply, state}
   end
 
   def handle_info({:buff_tick, buff_id}, state) do
-    state = Field.Buff.tick(buff_id, state)
+    state = __MODULE__.Buff.tick(buff_id, state)
     {:noreply, state}
   end
 
   def handle_info({:remove_buff, buff_id}, state) do
-    state = Field.Buff.remove_buff(buff_id, state)
+    state = __MODULE__.Buff.remove_buff(buff_id, state)
     {:noreply, state}
   end
 
   def handle_info({:leave_battle_stance, character}, state) do
-    Field.Character.leave_battle_stance(character)
+    __MODULE__.Character.leave_battle_stance(character)
     {:noreply, state}
   end
 
   def handle_info({:end_performance, character_id}, state),
-    do: {:noreply, Field.PerformanceStage.release(character_id, state)}
+    do: {:noreply, __MODULE__.PerformanceStage.release(character_id, state)}
 
   def handle_info(:send_updates, state) do
     Process.send_after(self(), :send_updates, @updates_intval)
-    {:noreply, Field.Character.send_updates(state)}
+    {:noreply, __MODULE__.Character.send_updates(state)}
   end
 
   def handle_info(:tick_banners, state) do
     Process.send_after(self(), :tick_banners, @banner_tick_intval)
-    {state, changed} = Field.Banner.activate(state)
-    Enum.each(changed, &Field.broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
+    {state, changed} = __MODULE__.Banner.activate(state)
+    Enum.each(changed, &broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
     {:noreply, state}
   end
 
