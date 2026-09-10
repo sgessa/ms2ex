@@ -37,6 +37,6 @@ defmodule Ms2ex.GameHandlers.Emote do
     # emote quest conditions match on the animation key the client sends
     Managers.Quest.update_conditions(character.id, :emotion, 1, "", character.map_id, ani_key, 0)
 
-    Context.Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
+    Managers.Field.broadcast_from(character, Packets.Emote.use(character, emote_id), self())
   end
 end

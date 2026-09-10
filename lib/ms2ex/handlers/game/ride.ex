@@ -50,7 +50,7 @@ defmodule Ms2ex.GameHandlers.Ride do
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
     Managers.Character.call(character, {:update, %{character | mount: nil}})
 
-    Context.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
+    Managers.Field.broadcast(character, Packets.ResponseRide.stop_ride(character, forced))
   end
 
   defp handle_mode(@change, packet, session) do
@@ -58,7 +58,7 @@ defmodule Ms2ex.GameHandlers.Ride do
     {id, _packet} = get_long(packet)
 
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
-    Context.Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
+    Managers.Field.broadcast(character, Packets.ResponseRide.change_ride(character, item_id, id))
   end
 
   defp handle_mode(_mode, _packet, _session) do
@@ -107,6 +107,6 @@ defmodule Ms2ex.GameHandlers.Ride do
 
     Managers.Character.call(character, {:update, %{character | mount: mount}})
 
-    Context.Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
+    Managers.Field.broadcast(character, Packets.ResponseRide.start_ride(character, mount))
   end
 end

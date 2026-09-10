@@ -1,6 +1,5 @@
 defmodule Ms2ex.GameHandlers.Vibrate do
   alias Ms2ex.Managers
-  alias Ms2ex.Context
   alias Ms2ex.Packets
 
   import Packets.PacketReader
@@ -19,7 +18,7 @@ defmodule Ms2ex.GameHandlers.Vibrate do
 
     tick = session.client_tick
 
-    Context.Field.broadcast(
+    Managers.Field.broadcast(
       character,
       Packets.Vibrate.bytes(character, entity_id, some_id, obj_id, flag, tick)
     )

@@ -64,7 +64,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
          {:ok, _wallet} <- charge_taxi(character, currency, cost) do
       Managers.Quest.update_conditions(character.id, :taxiuse)
 
-      case Context.Field.change_field(character, map_id) do
+      case Managers.Field.change_field(character, map_id) do
         :ok -> :ok
         error -> Logger.warning("Taxi field change to #{map_id} failed: #{inspect(error)}")
       end

@@ -1,5 +1,4 @@
 defmodule Ms2ex.GameHandlers.StateSkill do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Storage
@@ -45,14 +44,14 @@ defmodule Ms2ex.GameHandlers.StateSkill do
            }),
          {:ok, character} <-
            Managers.Character.call(character, {:cast_state_skill, skill_cast, state}) do
-      Context.Field.broadcast(
+      Managers.Field.broadcast(
         character,
         Packets.StateSkill.bytes(character, skill_id, cast_uid, state)
       )
 
       # state-skill costs are drained silently by the manager; a full stat
       # refresh here shows the initial consumption on every client
-      Context.Field.broadcast_stats(character)
+      Managers.Field.broadcast_stats(character)
     end
   end
 

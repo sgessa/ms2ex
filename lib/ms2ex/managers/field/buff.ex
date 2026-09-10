@@ -2,6 +2,7 @@ defmodule Ms2ex.Managers.Field.Buff do
   alias Ms2ex.Context
   alias Ms2ex.Types
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -9,7 +10,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   def add_buff(skill_cast, skill, character, state) do
     if effect_available?(skill.id, skill.level) do
-      {object_id, state} = Managers.Field.next_local_id(state)
+      {object_id, state} = Field.next_local_id(state)
       buff = Types.Buff.new(object_id, skill_cast, skill, character, character)
       {buff, state} = apply_buff(buff, state, false)
       reset_skill_cooldowns(buff, character)
@@ -33,7 +34,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         opts \\ []
       ) do
     if effect_available?(effect_id, effect_level) do
-      {object_id, state} = Managers.Field.next_local_id(state)
+      {object_id, state} = Field.next_local_id(state)
       skill = %{id: effect_id, level: effect_level, overlap_count: overlap_count}
 
       skill_cast = %Types.SkillCast{
@@ -53,7 +54,7 @@ defmodule Ms2ex.Managers.Field.Buff do
   # buff applied to a field npc (e.g. an on-hit burn from a skill)
   def add_mob_buff(caster, effect_id, effect_level, mob, state, overlap_count \\ 0) do
     if effect_available?(effect_id, effect_level) do
-      {object_id, state} = Managers.Field.next_local_id(state)
+      {object_id, state} = Field.next_local_id(state)
       skill = %{id: effect_id, level: effect_level, overlap_count: overlap_count}
 
       skill_cast = %Types.SkillCast{
@@ -89,7 +90,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   defp unregister_removed_buff(buff_id, buff, state) do
     remove_buff_status(buff)
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+    Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)
 
     case Map.get(state.buffs, buff_key(buff)) do
@@ -110,7 +111,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     Managers.Buff.start(buff)
     state = put_in(state, [:buffs, buff_key(buff)], buff.object_id)
 
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
+    Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
 
     if apply_status?, do: apply_status(buff)
     state = modify_overlap(buff, state)
@@ -135,7 +136,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
     existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
     schedule_removal(existing)
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
+    Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
 
     state =
       if stacks >= max and previous < max and overlap > 0 do
@@ -222,7 +223,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         previous = target.stacks
         stacks = min(max(previous + offset, 0), max)
         target = Managers.Buff.update(target, %{stacks: stacks})
-        Context.Field.broadcast(state.topic, Packets.Buff.send(:update, target))
+        Field.broadcast(state.topic, Packets.Buff.send(:update, target))
 
         cond do
           stacks <= 0 ->
@@ -340,7 +341,7 @@ defmodule Ms2ex.Managers.Field.Buff do
     end
 
     if hp > 0 or sp > 0 or ep > 0 do
-      Context.Field.broadcast(
+      Field.broadcast(
         owner,
         Packets.SkillDamage.heal(%{
           caster_id: owner.object_id,
@@ -384,7 +385,7 @@ defmodule Ms2ex.Managers.Field.Buff do
         end
 
         if hp > 0 do
-          Context.Field.broadcast(
+          Field.broadcast(
             owner,
             Packets.SkillDamage.dot_damage(%{
               caster_id: buff.caster.object_id,
@@ -410,9 +411,9 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   defp apply_npc_dot_damage(buff, state, hp) do
     if npc_alive?(state, buff.owner.object_id) do
-      case Managers.Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id) do
+      case Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id) do
         {:ok, _mob, state} ->
-          Context.Field.broadcast(
+          Field.broadcast(
             state.topic,
             Packets.SkillDamage.dot_damage(%{
               caster_id: buff.caster.object_id,
@@ -567,7 +568,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
         buff ->
           buff = Managers.Buff.update(buff, %{end_tick: buff.end_tick + modify_tick})
-          Context.Field.broadcast(state.topic, Packets.Buff.send(:update, buff))
+          Field.broadcast(state.topic, Packets.Buff.send(:update, buff))
       end
     end)
 

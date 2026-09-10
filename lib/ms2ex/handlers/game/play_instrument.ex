@@ -29,11 +29,11 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
     {item_uid, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         :error <- Context.Field.lookup_instrument(character),
+         :error <- Managers.Field.lookup_instrument(character),
          {:ok, item} <- get_instrument(character, item_uid),
          {:ok, instrument} <- FieldInstrument.from_item(character, item, improvising?: true),
-         {:ok, instrument} <- Context.Field.add_instrument(character, instrument) do
-      Context.Field.broadcast(character, Packets.PlayInstrument.start_improvise(instrument))
+         {:ok, instrument} <- Managers.Field.add_instrument(character, instrument) do
+      Managers.Field.broadcast(character, Packets.PlayInstrument.start_improvise(instrument))
     else
       _ -> :ok
     end
@@ -44,8 +44,8 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
     {note, _packet} = get_bytes(packet, 4)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, %{improvising?: true} = instrument} <- Context.Field.lookup_instrument(character) do
-      Context.Field.broadcast_from(
+         {:ok, %{improvising?: true} = instrument} <- Managers.Field.lookup_instrument(character) do
+      Managers.Field.broadcast_from(
         character,
         Packets.PlayInstrument.improvise(instrument, note),
         self()
@@ -58,9 +58,9 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
   # Stop Improvise
   defp handle_mode(0x2, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, %{improvising?: true}} <- Context.Field.lookup_instrument(character),
-         {:ok, instrument} <- Context.Field.remove_instrument(character) do
-      Context.Field.broadcast(character, Packets.PlayInstrument.stop_improvise(instrument))
+         {:ok, %{improvising?: true}} <- Managers.Field.lookup_instrument(character),
+         {:ok, instrument} <- Managers.Field.remove_instrument(character) do
+      Managers.Field.broadcast(character, Packets.PlayInstrument.stop_improvise(instrument))
     else
       _ -> :ok
     end
@@ -90,7 +90,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
   # Stop Score
   defp handle_mode(0x4, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, instrument} <- Context.Field.remove_instrument(character) do
+         {:ok, instrument} <- Managers.Field.remove_instrument(character) do
       elapsed = max(Ms2ex.sync_ticks() - instrument.start_tick, 0)
       seconds = div(elapsed, 1000)
 
@@ -116,7 +116,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
         )
       end
 
-      Context.Field.broadcast(character, Packets.PlayInstrument.stop_score(instrument))
+      Managers.Field.broadcast(character, Packets.PlayInstrument.stop_score(instrument))
     else
       _ -> :ok
     end
@@ -129,7 +129,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
     {score_uid, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         :error <- Context.Field.lookup_instrument(character),
+         :error <- Managers.Field.lookup_instrument(character),
          {:ok, _item} <- get_instrument(character, item_uid),
          {:ok, _score} <- get_score(character, score_uid),
          {:ok, party} <- PartyServer.lookup(character.party_id) do
@@ -192,28 +192,28 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
   # Start Perform
   defp handle_mode(0xB, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      Context.Field.start_performance(character)
+      Managers.Field.start_performance(character)
     end
   end
 
   # End Perform
   defp handle_mode(0xC, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      Context.Field.end_performance(character)
+      Managers.Field.end_performance(character)
     end
   end
 
   # Enter/Exit Stage
   defp handle_mode(0xD, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      Context.Field.toggle_stage(character)
+      Managers.Field.toggle_stage(character)
     end
   end
 
   # Fireworks
   defp handle_mode(0xE, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         true <- Context.Field.performance_stage?(character) do
+         true <- Managers.Field.performance_stage?(character) do
       push(session, Packets.PlayInstrument.fireworks(character.object_id))
     else
       _ -> :ok
@@ -251,13 +251,13 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
   defp award_music_mastery(_character, _instrument, _elapsed), do: :ok
 
   defp start_score(character, item_uid, score_uid, opts) do
-    with :error <- Context.Field.lookup_instrument(character),
+    with :error <- Managers.Field.lookup_instrument(character),
          {:ok, item} <- get_instrument(character, item_uid),
          {:ok, score} <- get_score(character, score_uid),
          {:ok, instrument} <- FieldInstrument.from_item(character, item, opts),
          {:ok, score, remaining} <- consume_use(score),
-         {:ok, instrument} <- Context.Field.add_instrument(character, mastery(instrument, score)) do
-      Context.Field.broadcast(character, Packets.PlayInstrument.start_score(instrument, score))
+         {:ok, instrument} <- Managers.Field.add_instrument(character, mastery(instrument, score)) do
+      Managers.Field.broadcast(character, Packets.PlayInstrument.start_score(instrument, score))
       push(character, Packets.PlayInstrument.remaining_uses(score.id, remaining))
       {:ok, score}
     else

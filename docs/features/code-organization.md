@@ -40,6 +40,12 @@ flags, or transform values is behavior, not a type.
   `Types.ItemTransfer`). Belongs in `context/` with the other
   `Context.Item*` behavior modules (`ItemConstantStats`, `ItemStaticStats`,
   `ItemRandomStats`, `ItemEnchantStats`, `ItemTypes`).
+- `Context.Field` — the field process API, PubSub broadcast topology and
+  enter/leave/change_field lifecycle moved onto `Managers.Field`
+  (contexts must not own processes or packets). Deleted.
+- `Helpers.TriggerArgs` — trigger argument coercion (int/float/bool/list
+  parsing, rgb, widget keys), extracted from `Managers.Field.Trigger`.
+  Seeds the `helpers/` namespace below.
 
 ## Proposed target layout
 

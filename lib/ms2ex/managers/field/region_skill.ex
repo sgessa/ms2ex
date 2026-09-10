@@ -14,7 +14,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     case SkillCast.splash_skill_cast(skill_cast) do
       {splash_cast, splash} ->
         reg_skill = Packets.RegionSkill.add(source_id, splash_cast, points)
-        Context.Field.broadcast(state.topic, reg_skill)
+        Field.broadcast(state.topic, reg_skill)
 
         interval = Map.get(splash, :interval, 0) || 0
         fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
@@ -46,7 +46,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
       nil ->
         reg_skill = Packets.RegionSkill.add(source_id, skill_cast, points)
-        Context.Field.broadcast(state.topic, reg_skill)
+        Field.broadcast(state.topic, reg_skill)
 
         duration = SkillCast.duration(skill_cast)
         Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
@@ -104,7 +104,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       end)
 
     if mobs != [] do
-      Context.Field.broadcast(
+      Field.broadcast(
         state.topic,
         Packets.SkillDamage.damage(splash_cast, Enum.reverse(mobs))
       )

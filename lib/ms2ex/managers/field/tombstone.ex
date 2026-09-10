@@ -1,6 +1,6 @@
 defmodule Ms2ex.Managers.Field.Tombstone do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Packets
 
   # the tombstone is tracked server-side and announced with its hit counts so
@@ -8,7 +8,7 @@ defmodule Ms2ex.Managers.Field.Tombstone do
   # the revive lookup. Later updates go out from hit/3 and clear/2
   def add(character, state) do
     tombstone = Ms2ex.Types.Tombstone.new(character, Map.get(character, :death_count, 0) || 0)
-    Context.Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
+    Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
     put_in(state, [:tombstones, character.id], tombstone)
   end
 
@@ -25,7 +25,7 @@ defmodule Ms2ex.Managers.Field.Tombstone do
 
       tombstone ->
         tombstone = %{tombstone | hits_remaining: 0}
-        Context.Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
+        Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
         remove(character_id, state)
     end
   end
@@ -35,7 +35,7 @@ defmodule Ms2ex.Managers.Field.Tombstone do
       {owner_id, tombstone} ->
         remaining = max(tombstone.hits_remaining - hits, 0)
         tombstone = %{tombstone | hits_remaining: remaining}
-        Context.Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
+        Field.broadcast(state.topic, Packets.Tombstone.bytes(tombstone))
         state = put_in(state, [:tombstones, owner_id], tombstone)
 
         if remaining == 0 do

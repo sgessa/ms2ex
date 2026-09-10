@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.UserEnv do
       {:ok, character} = Context.Characters.update(character, %{title_id: title_id})
       Managers.Character.call(character, {:update, character})
 
-      Context.Field.broadcast(character, Packets.UserEnv.update_title(character))
+      Managers.Field.broadcast(character, Packets.UserEnv.update_title(character))
     end
   end
 

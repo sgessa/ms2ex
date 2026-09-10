@@ -62,7 +62,7 @@ defmodule Ms2ex.GameHandlers.SmartPush do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          :ok <- consume_required_item(session, character, metadata),
          {:ok, session, opts} <- charge(session, character, metadata, package_id) do
-      Context.Field.call(character, {:add_effect_buff, metadata.value, 1, character, opts})
+      Managers.Field.add_effect_buff(character, metadata.value, 1, opts)
       session
     else
       # a failed charge gets a message box rather than silent failure

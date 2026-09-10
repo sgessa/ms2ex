@@ -60,8 +60,8 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.InteractObject.load(Map.values(state.interactable)))
 
     # Tell other characters in the map to load the new player
-    Context.Field.broadcast(character, Packets.FieldAddUser.bytes(character))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.load_player(character))
+    Field.broadcast(character, Packets.FieldAddUser.bytes(character))
+    Field.broadcast(character, Packets.ProxyGameObj.load_player(character))
 
     # Load items
     for {_id, item} <- state.items do
@@ -124,7 +124,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     if expiration > DateTime.to_unix(DateTime.utc_now()) do
       Enum.each(Storage.Tables.PremiumClub.buffs(), fn {_id, %{id: buff_id, level: buff_level}} ->
-        Context.Field.call(character, {:add_effect_buff, buff_id, buff_level, character})
+        Field.add_effect_buff(character, buff_id, buff_level)
       end)
     end
 
@@ -164,8 +164,8 @@ defmodule Ms2ex.Managers.Field.Character do
     state = Field.Liftable.drop(state, character)
     state = Field.Trigger.drop_position(state, character.id)
 
-    Context.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
-    Context.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
+    Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))
+    Field.broadcast(state.topic, Packets.ProxyGameObj.remove_player(character.object_id))
 
     %{
       state
@@ -193,7 +193,7 @@ defmodule Ms2ex.Managers.Field.Character do
     for char_id <- Map.keys(state.sessions) do
       with {:ok, char} <- Managers.Character.call(char_id, :lookup),
            false <- Map.get(char, :dead?, false) do
-        Context.Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
+        Field.broadcast(state.topic, Packets.ProxyGameObj.update_player(char))
       end
     end
 
@@ -201,7 +201,7 @@ defmodule Ms2ex.Managers.Field.Character do
   end
 
   def leave_battle_stance(character) do
-    Context.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
+    Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
+    Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 1))
   end
 end

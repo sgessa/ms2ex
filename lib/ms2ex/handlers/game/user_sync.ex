@@ -35,7 +35,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     {sync_states, _packet} = get_sync_states(segment_length, packet)
 
     sync_packet = Packets.UserSync.bytes(character, sync_states)
-    Context.Field.broadcast_from(character, sync_packet, session.sender_pid)
+    Managers.Field.broadcast_from(character, sync_packet, session.sender_pid)
 
     Managers.Character.cast(
       character.id,
@@ -71,7 +71,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
     character = %{character | animation: state, position: new_position}
 
     # trigger conditions detect users by their live position
-    Context.Field.cast(character, {:user_position, character.id, new_position})
+    Managers.Field.user_position(character, new_position)
     Managers.Character.call(character, {:update, character})
 
     if out_of_bounds?(character.map_id, character.position) do

@@ -6,8 +6,8 @@ defmodule Ms2ex.Managers.Field.Liftable do
   quest's item_move condition.
   """
 
-  alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -57,7 +57,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
         held = %{item_id: liftable.item_id, object_id: character.object_id, source: liftable}
         state = put_in(state, [:held_liftables, character_id], held)
 
-        Context.Field.broadcast(
+        Field.broadcast(
           state.topic,
           Packets.SetCraftMode.liftable(character.object_id, liftable.item_id)
         )
@@ -67,7 +67,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
       %{count: count} = liftable when count > 0 ->
         liftable = %{liftable | count: count - 1, state: :removed}
 
-        Context.Field.broadcast(state.topic, Packets.Liftable.update(liftable))
+        Field.broadcast(state.topic, Packets.Liftable.update(liftable))
         state = put_in(state, [:liftables, uuid], liftable)
 
         {:ok, character} = Managers.Character.call(character_id, :lookup)
@@ -75,7 +75,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
         held = %{item_id: liftable.item_id, object_id: character.object_id, source: liftable}
         state = put_in(state, [:held_liftables, character_id], held)
 
-        Context.Field.broadcast(
+        Field.broadcast(
           state.topic,
           Packets.SetCraftMode.liftable(character.object_id, liftable.item_id)
         )
@@ -106,12 +106,12 @@ defmodule Ms2ex.Managers.Field.Liftable do
   defp placed_expired?(_liftable, _now), do: false
 
   defp remove_placed(state, placed) do
-    Context.Field.broadcast(
+    Field.broadcast(
       state.topic,
       Packets.ResponseCube.remove_cube(placed.object_id, placed.grid)
     )
 
-    Context.Field.broadcast(state.topic, Packets.Liftable.remove(placed.uuid))
+    Field.broadcast(state.topic, Packets.Liftable.remove(placed.uuid))
 
     liftables = Map.delete(Map.get(state, :liftables, %{}), placed.uuid)
     Map.put(state, :liftables, liftables)
@@ -132,15 +132,15 @@ defmodule Ms2ex.Managers.Field.Liftable do
       {uuid, placed} = placed_liftable(grid, held, character.object_id)
       state = put_in(state, [:liftables, uuid], placed)
 
-      Context.Field.broadcast(state.topic, Packets.Liftable.add(placed))
+      Field.broadcast(state.topic, Packets.Liftable.add(placed))
 
-      Context.Field.broadcast(
+      Field.broadcast(
         state.topic,
         Packets.ResponseCube.place_liftable(character.object_id, item_id, grid, rotation)
       )
 
-      Context.Field.broadcast(state.topic, Packets.SetCraftMode.stop(character.object_id))
-      Context.Field.broadcast(state.topic, Packets.Liftable.update(placed))
+      Field.broadcast(state.topic, Packets.SetCraftMode.stop(character.object_id))
+      Field.broadcast(state.topic, Packets.Liftable.update(placed))
 
       case Map.get(state.liftable_target_boxes, grid) do
         %{target: target} ->
@@ -199,7 +199,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
   # character process
   def drop(state, %Schema.Character{} = character) do
     state = Map.put(state, :held_liftables, Map.delete(state.held_liftables, character.id))
-    Context.Field.broadcast(state.topic, Packets.SetCraftMode.stop(character.object_id))
+    Field.broadcast(state.topic, Packets.SetCraftMode.stop(character.object_id))
     state
   end
 

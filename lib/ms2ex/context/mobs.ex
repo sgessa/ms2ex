@@ -52,7 +52,7 @@ defmodule Ms2ex.Context.Mobs do
 
       (drop_info[:dead_global_drop_box_ids] || [])
       |> Enum.flat_map(&Context.Drops.global_items(&1, mob_level, map))
-      |> Enum.each(&Context.Field.add_mob_drop(mob, &1, character))
+      |> Enum.each(&Managers.Field.add_mob_drop(mob, &1, character))
     end
   end
 
@@ -127,14 +127,14 @@ defmodule Ms2ex.Context.Mobs do
   defp drop_global_boxes(mob, box_ids, mob_level, receiver, map) do
     Enum.each(box_ids, fn box_id ->
       Context.Drops.global_items(box_id, mob_level, map)
-      |> Enum.each(&Context.Field.add_mob_drop(mob, &1, receiver))
+      |> Enum.each(&Managers.Field.add_mob_drop(mob, &1, receiver))
     end)
   end
 
   defp drop_individual_boxes(mob, %Schema.Character{} = character, box_ids, map) do
     Enum.each(box_ids, fn box_id ->
       Context.Drops.individual_items(box_id, character, map)
-      |> Enum.each(&Context.Field.add_mob_drop(mob, &1, character))
+      |> Enum.each(&Managers.Field.add_mob_drop(mob, &1, character))
     end)
   end
 end

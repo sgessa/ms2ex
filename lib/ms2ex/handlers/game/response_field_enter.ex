@@ -14,7 +14,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     character = maybe_change_map(character)
     Managers.Character.call(character, {:update, character})
 
-    run(session, fn -> Context.Field.subscribe(character) end)
+    run(session, fn -> Managers.Field.subscribe(character) end)
 
     hot_bars = Context.HotBars.list(character)
 
@@ -38,7 +38,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
     push(session, Packets.GuideRecord.load(character.guide_records))
 
-    {:ok, _pid} = Context.Field.enter(character)
+    {:ok, _pid} = Managers.Field.enter(character)
 
     case start_quest_manager(character.id) do
       {:ok, _pid} -> Managers.Quest.load_quests(session)
@@ -75,7 +75,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
   defp maybe_change_map(%{change_map: nil} = character), do: character
 
   defp maybe_change_map(character) do
-    run(character, fn -> Context.Field.unsubscribe(character) end)
+    run(character, fn -> Managers.Field.unsubscribe(character) end)
 
     new_map = character.change_map
     {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})

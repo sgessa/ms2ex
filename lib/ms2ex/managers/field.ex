@@ -1,17 +1,51 @@
 defmodule Ms2ex.Managers.Field do
+  @moduledoc """
+  One field process owns the live state of a single map instance (map +
+  channel): the players on it, npcs, items, buffs, trigger-script machines
+  and every other field-object system.
+
+  The process state is transformed by the `Managers.Field.*` submodules —
+  each owns one field-object system and follows the state-in/state-out
+  pattern:
+
+  - `Field.Banner` — UGC banner slots (persistence via `Context.BannerSlots`)
+  - `Field.Buff` — effect buffs and their ticks
+  - `Field.Character` — the join/leave sequences and periodic stat updates
+  - `Field.Instrument` — instruments in play
+  - `Field.InteractObject` — interact-object lifecycles
+  - `Field.Item` — field drops and pickups
+  - `Field.Liftable` — quest liftable props
+  - `Field.Npc` — npc spawns, damage/death and spawn cycles
+  - `Field.Npc.Patrol` — npc movement along patrol paths
+  - `Field.PerformanceStage` — the concert stage
+  - `Field.Portal` — portal loading
+  - `Field.RegionSkill` — region skill zones and splash ticks
+  - `Field.Tombstone` — dead players' tombstones
+  - `Field.Trigger` — the trigger-script runtime (see also
+    `Field.Trigger.Actions` and `Field.Trigger.Conditions`)
+
+  This module is both the GenServer and the manager's API surface: handlers
+  and other processes go through the named functions below (or the generic
+  `call/2`/`cast/2` for the field process they are already talking to).
+  """
+
   use GenServer
 
   require Logger
 
   alias Ms2ex.Context
+  alias Ms2ex.Managers
+  alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
 
+  alias Ms2ex.Types.FieldInstrument
   alias Ms2ex.Types.FieldNpc
   alias Ms2ex.Types.Npc
 
   alias Ms2ex.Managers.Field
+  alias Phoenix.PubSub
 
   @updates_intval 1000
   @npc_tick_intval 15
@@ -21,122 +55,476 @@ defmodule Ms2ex.Managers.Field do
   # owns a local counter for npcs, portals, spawn points and items
   @local_id_counter 50_000_000
 
+  # -- lifecycle -------------------------------------------------------------
+
+  @doc """
+  Adds a character to a field, creating the field process if it doesn't
+  exist. Returns `{:ok, pid}` for a fresh field, `{:ok, field_pid}` when the
+  character joined an existing one.
+  """
+  @spec enter(Schema.Character.t()) :: :ok | {:ok, pid()} | {:error, term()}
+  def enter(%Schema.Character{} = character) do
+    pid = field_pid(character.map_id, character.channel_id)
+
+    if pid && Process.alive?(pid) do
+      call(pid, {:add_character, character})
+    else
+      GenServer.start(
+        __MODULE__,
+        character,
+        name: field_name(character.map_id, character.channel_id)
+      )
+    end
+  end
+
+  @doc "Removes a character from their current field."
+  @spec leave(Schema.Character.t()) :: :ok | {:error, term()}
+  def leave(character) do
+    call(character.field_pid, {:remove_character, character})
+  end
+
+  @doc """
+  Changes a character's field to a new map, using the map's default spawn
+  point.
+  """
+  @spec change_field(Schema.Character.t(), integer()) :: :ok | {:error, term()}
+  def change_field(character, map_id) do
+    with %{} = spawn_point <- Storage.Maps.get_field_spawn(map_id) do
+      change_field(character, map_id, spawn_point.position, spawn_point.rotation)
+    end
+  end
+
+  @doc "Changes a character's field to a new map at a specific position."
+  @spec change_field(Schema.Character.t(), integer(), map(), map()) :: :ok | {:error, term()}
+  def change_field(character, map_id, position, rotation) do
+    with :ok <- leave_for_change(character) do
+      character =
+        character
+        |> Context.Characters.maybe_discover_map(map_id)
+        |> Map.put(:change_map, %{id: map_id, position: position, rotation: rotation})
+
+      Managers.Character.call(character, {:update, character})
+
+      Net.SenderSession.push(
+        character,
+        Packets.RequestFieldEnter.bytes(map_id, position, rotation)
+      )
+    end
+  end
+
+  defp leave_for_change(%Schema.Character{field_pid: nil}), do: :ok
+
+  defp leave_for_change(%Schema.Character{} = character) do
+    case leave(character) do
+      :ok -> :ok
+      :error -> if is_pid(character.field_pid), do: :ok, else: :error
+    end
+  end
+
+  # -- distribution ----------------------------------------------------------
+
+  @doc "Broadcasts a packet to every character on a field."
+  @spec broadcast(Schema.Character.t() | term(), binary()) :: :ok
+  def broadcast(%Schema.Character{} = character, packet) do
+    topic = field_name(character.map_id, character.channel_id)
+    broadcast(topic, packet)
+  end
+
+  def broadcast(topic, packet) do
+    PubSub.broadcast(Ms2ex.PubSub, to_string(topic), {:push, packet})
+  end
+
+  @doc """
+  Sends the full stat set to the character and the compact player stat
+  update to every other character in the same field.
+  """
+  @spec broadcast_stats(Schema.Character.t()) :: :ok
+  def broadcast_stats(%Schema.Character{} = character) do
+    broadcast(character, Packets.Stats.set_character_stats(character))
+
+    broadcast_from(
+      character,
+      Packets.Stats.update_player_stats(character),
+      character.sender_session_pid
+    )
+  end
+
+  @doc """
+  Broadcasts a packet to every character on the character's field except
+  the given process.
+  """
+  @spec broadcast_from(Schema.Character.t(), binary(), pid()) :: :ok
+  def broadcast_from(%Schema.Character{} = character, packet, from) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.broadcast_from(Ms2ex.PubSub, from, to_string(topic), {:push, packet})
+  end
+
+  @doc "Subscribes the current process to a character's field events."
+  @spec subscribe(Schema.Character.t()) :: :ok | {:error, term()}
+  def subscribe(%Schema.Character{} = character) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.subscribe(Ms2ex.PubSub, to_string(topic))
+  end
+
+  @doc "Unsubscribes the current process from a character's field events."
+  @spec unsubscribe(Schema.Character.t()) :: :ok
+  def unsubscribe(%Schema.Character{} = character) do
+    topic = field_name(character.map_id, character.channel_id)
+    PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
+  end
+
+  @doc "Generates a unique field process name from a map ID and channel ID."
+  @spec field_name(integer(), integer()) :: atom()
+  def field_name(map_id, channel_id) do
+    :"field:#{map_id}:channel:#{channel_id}"
+  end
+
+  defp field_pid(map_id, channel_id) do
+    Process.whereis(field_name(map_id, channel_id))
+  end
+
+  # -- process plumbing ------------------------------------------------------
+
+  @doc "Allocates the next field-local object id (npcs, items, effects, ...)."
   def next_local_id(state) do
     id = state.local_id_counter + 1
     {id, %{state | local_id_counter: id}}
   end
 
-  defp banners(map_id) do
-    banners = Ms2ex.Storage.Tables.Banners.for_map(map_id)
-    slots = Ms2ex.Context.BannerSlots.list(Enum.map(banners, & &1.id))
+  @doc """
+  Makes a synchronous call to a character's field process; `:error` when
+  the character has no field or the call fails.
+  """
+  @spec call(Schema.Character.t() | pid() | nil, term()) :: term() | :error
+  def call(%Schema.Character{field_pid: field_pid}, args), do: call(field_pid, args)
+  def call(nil, _args), do: :error
 
-    banners
-    |> Map.new(fn banner ->
-      {banner.id, Map.put(banner, :slots, Enum.filter(slots, &(&1.banner_id == banner.id)))}
-    end)
-  end
-
-  defp activate_banners(state) do
-    now = DateTime.utc_now()
-    state = expire_banner_slots(state, now)
-
-    {banners, changed} =
-      Enum.map_reduce(state.banners, [], fn {banner_id, banner}, changed ->
-        active_slot = Enum.find(banner.slots, &current_slot?(&1, now))
-
-        slots =
-          Enum.map(banner.slots, &update_slot_active(&1, active_slot, now))
-
-        updated_banner = %{banner | slots: slots}
-        changed = if slots == banner.slots, do: changed, else: [updated_banner | changed]
-        {{banner_id, updated_banner}, changed}
-      end)
-
-    {%{state | banners: Map.new(banners)}, changed}
-  end
-
-  defp expire_banner_slots(state, now) do
-    {banners, expired_slots} =
-      Enum.map_reduce(state.banners, [], fn {banner_id, banner}, expired_slots ->
-        {expired, slots} = Enum.split_with(banner.slots, &expired?(&1, now))
-        {{banner_id, %{banner | slots: slots}}, expired ++ expired_slots}
-      end)
-
-    case expired_slots do
-      [] ->
-        state
-
-      _ ->
-        Ms2ex.Context.BannerSlots.expire(expired_slots)
-        %{state | banners: Map.new(banners)}
+  def call(pid, args) when is_pid(pid) do
+    if Process.alive?(pid) do
+      GenServer.call(pid, args)
+    else
+      :error
     end
+  catch
+    :exit, _reason -> :error
   end
 
-  defp current_slot?(
-         %{starts_at: %DateTime{} = starts_at, ends_at: %DateTime{} = ends_at} = slot,
-         now
-       ) do
-    not is_nil(slot.ugc) and DateTime.compare(starts_at, now) != :gt and
-      DateTime.compare(now, ends_at) == :lt
+  @doc "Makes an asynchronous cast to a character's field process."
+  @spec cast(Schema.Character.t() | pid() | nil, term()) :: :ok | :error
+  def cast(%Schema.Character{field_pid: field_pid}, args), do: GenServer.cast(field_pid, args)
+  def cast(nil, _args), do: :error
+  def cast(pid, args), do: GenServer.cast(pid, args)
+
+  # -- npcs & mobs -----------------------------------------------------------
+
+  @doc "Spawns a mob (field npc) on the character's field at their position."
+  @spec add_mob(Schema.Character.t(), Npc.t()) :: :ok
+  def add_mob(%Schema.Character{} = character, %Npc{} = npc) do
+    send(character.field_pid, {:add_mob, npc, character.position})
   end
 
-  defp current_slot?(slot, now) do
-    (slot.ugc && slot.date == now.year * 10_000 + now.month * 100 + now.day) and
-      slot.hour == now.hour
+  @doc "Looks up an npc by object id in the character's field."
+  @spec lookup_npc(Schema.Character.t(), integer()) :: {:ok, FieldNpc.t()} | :error
+  def lookup_npc(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:lookup_npc, object_id})
   end
 
-  defp update_slot_active(slot, nil, _now), do: Map.put(slot, :active, false)
-
-  defp update_slot_active(slot, %{id: id}, now) when slot.id == id do
-    slot
-    |> Map.put(:active, true)
-    |> Map.put_new(:activated_at, now)
+  @doc "Removes an npc from its field (idempotent)."
+  @spec remove_npc(FieldNpc.t()) :: :ok
+  def remove_npc(%FieldNpc{} = field_npc) do
+    field_pid = Process.whereis(field_npc.field)
+    send(field_pid, {:remove_npc, field_npc})
   end
 
-  defp update_slot_active(slot, _active_slot, _now), do: Map.put(slot, :active, false)
-
-  defp expired?(%{ends_at: %DateTime{} = ends_at}, now), do: DateTime.compare(now, ends_at) != :lt
-  defp expired?(_slot, _now), do: false
-
-  defp attach_banner(banner, character, slot_ids, ugc) do
-    with true <- Enum.all?(slot_ids, &attachable_slot?(banner.slots, character.id, &1)) do
-      {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_ugc(&1, slot_ids, ugc))}}
-    end
+  @doc "Applies damage to a field npc on the character's field."
+  @spec inflict_dmg(Schema.Character.t(), map(), integer()) ::
+          {:ok, FieldNpc.t()} | :error
+  def inflict_dmg(attacker, dmg, object_id) do
+    call(attacker, {:inflict_dmg, attacker, dmg, object_id})
   end
 
-  defp confirm_banner(banner, resource_id, path) do
-    with true <- Enum.any?(banner.slots, &slot_resource?(&1, resource_id)) do
-      {:ok, %{banner | slots: Enum.map(banner.slots, &put_slot_path(&1, resource_id, path))}}
-    end
+  @doc "Applies a skill cast's on-hit effects to a field npc."
+  @spec apply_skill_effects(Schema.Character.t(), map(), integer()) :: :ok
+  def apply_skill_effects(character, skill_cast, mob_object_id) do
+    call(character.field_pid, {:apply_skill_effects, skill_cast, mob_object_id})
   end
 
-  defp attachable_slot?(slots, character_id, id) do
-    Enum.any?(slots, &(&1.id == id and &1.character_id == character_id and is_nil(&1.ugc)))
+  # -- items -----------------------------------------------------------------
+
+  @doc """
+  Drops an item from a field npc (mob) into the field, locked to the given
+  receiver when one is provided (nil for shared/unlocked drops).
+  """
+  @spec add_mob_drop(FieldNpc.t(), Schema.Item.t(), Schema.Character.t() | nil) :: :ok | :error
+  def add_mob_drop(%FieldNpc{} = field_npc, item, receiver \\ nil) do
+    cast(field_npc.field, {:add_mob_drop, field_npc, item, receiver})
   end
 
-  defp slot_resource?(slot, resource_id), do: get_in(slot, [:ugc, :id]) == resource_id
-
-  defp put_slot_ugc(slot, ids, ugc) do
-    if slot.id in ids, do: Map.put(slot, :ugc, ugc), else: slot
+  @doc "Drops an item from a character's inventory into the field."
+  @spec drop_item(Schema.Character.t(), Schema.Item.t()) :: :ok | :error
+  def drop_item(%Schema.Character{} = character, item) do
+    cast(character.field_pid, {:drop_item, character, item})
   end
 
-  defp put_slot_path(slot, resource_id, path) do
-    if slot_resource?(slot, resource_id), do: put_in(slot, [:ugc, :url], path), else: slot
+  @doc "Drops an item at a fixed position instead of at the character's feet."
+  @spec drop_item(Schema.Character.t(), Schema.Item.t(), map()) :: :ok | :error
+  def drop_item(%Schema.Character{} = character, item, position) do
+    cast(character.field_pid, {:drop_item, character, item, position})
   end
 
-  defp find_confirmed_banner(banners, resource_id, path) do
-    Enum.find_value(banners, fn {banner_id, banner} ->
-      case confirm_banner(banner, resource_id, path) do
-        {:ok, banner} -> {banner_id, banner}
-        _ -> nil
-      end
-    end)
+  @doc "Picks up a field item by object id."
+  @spec pickup_item(Schema.Character.t(), integer()) ::
+          {:ok, Schema.Item.t()} | {:error, atom()}
+  def pickup_item(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:pickup_item, character, object_id})
   end
+
+  # -- buffs -----------------------------------------------------------------
+
+  @doc "Applies a skill's buff from a skill cast to its caster."
+  @spec add_buff(Schema.Character.t(), map(), map()) :: {:ok, map()} | :error
+  def add_buff(character, skill_cast, skill) do
+    call(character.field_pid, {:add_buff, skill_cast, skill, character})
+  end
+
+  @doc """
+  Applies an additional-effect buff to the character (caster = owner).
+
+  ## Options
+
+    * `:overlap_count` — initial stack count
+    * `:duration_tick` / `:elapsed_tick` — override the effect's window
+      (stored-buff restores)
+  """
+  @spec add_effect_buff(Schema.Character.t(), integer(), integer(), keyword()) ::
+          :ok | :error
+  def add_effect_buff(character, effect_id, effect_level, opts \\ []) do
+    call(character.field_pid, {:add_effect_buff, effect_id, effect_level, character, opts})
+  end
+
+  @doc "Applies an additional-effect buff cast by `caster` on `owner`."
+  @spec add_effect_buff_for(Schema.Character.t(), Schema.Character.t(), integer(), integer()) ::
+          :ok | :error
+  def add_effect_buff_for(owner, caster, effect_id, effect_level) do
+    call(owner.field_pid, {:add_effect_buff_for, effect_id, effect_level, caster, owner})
+  end
+
+  @doc "Whether the character currently has the given effect active, whoever cast it."
+  @spec has_buff?(Schema.Character.t(), integer()) :: boolean()
+  def has_buff?(%Schema.Character{} = character, effect_id) do
+    call(character.field_pid, {:has_buff?, character.object_id, effect_id}) == true
+  end
+
+  @doc """
+  Whether the character's field has an effect of the given event category
+  active on them (the auto-fish and auto-perform conveniences, safe riding).
+  """
+  @spec has_buff_event?(Schema.Character.t(), atom()) :: boolean()
+  def has_buff_event?(%Schema.Character{} = character, event_type) do
+    call(character.field_pid, {:has_buff_event?, character.object_id, event_type}) == true
+  end
+
+  @doc "Shifts the remaining duration of the character's effect."
+  @spec modify_buff_duration(Schema.Character.t(), integer(), integer()) :: :ok | :error
+  def modify_buff_duration(%Schema.Character{} = character, effect_id, modify_tick) do
+    call(
+      character.field_pid,
+      {:modify_buff_duration, character.object_id, effect_id, modify_tick}
+    )
+  end
+
+  @doc "Removes a single effect from the character, whoever cast it."
+  @spec remove_effect_buff(Schema.Character.t(), integer()) :: :ok | :error
+  def remove_effect_buff(%Schema.Character{} = character, effect_id) do
+    call(character.field_pid, {:remove_effect_buff, character.object_id, effect_id})
+  end
+
+  @doc "Removes all buffs owned by the character (e.g. on death)."
+  @spec remove_owner_buffs(Schema.Character.t()) :: :ok | :error
+  def remove_owner_buffs(%Schema.Character{} = character) do
+    cast(character.field_pid, {:remove_owner_buffs, character.object_id})
+  end
+
+  # -- instruments -----------------------------------------------------------
+
+  @doc "Spawns the instrument a character is playing, assigning a field object id."
+  @spec add_instrument(Schema.Character.t(), FieldInstrument.t()) ::
+          {:ok, FieldInstrument.t()} | :error
+  def add_instrument(%Schema.Character{} = character, %FieldInstrument{} = instrument) do
+    call(character.field_pid, {:add_instrument, instrument})
+  end
+
+  @doc "Looks up the instrument a character is currently playing."
+  @spec lookup_instrument(Schema.Character.t()) :: {:ok, FieldInstrument.t()} | :error
+  def lookup_instrument(%Schema.Character{} = character) do
+    call(character.field_pid, {:lookup_instrument, character.id})
+  end
+
+  @doc "Despawns a character's instrument, returning it so callers can announce the stop."
+  @spec remove_instrument(Schema.Character.t()) :: {:ok, FieldInstrument.t()} | :error
+  def remove_instrument(%Schema.Character{} = character) do
+    call(character.field_pid, {:remove_instrument, character.id})
+  end
+
+  # -- performance stage -----------------------------------------------------
+
+  @doc "Whether the character's field has a performance stage (the concert map)."
+  @spec performance_stage?(Schema.Character.t()) :: boolean()
+  def performance_stage?(%Schema.Character{} = character) do
+    call(character.field_pid, :performance_stage?) == true
+  end
+
+  @doc "Claims the performance stage, announcing the concert to everyone on the map."
+  @spec start_performance(Schema.Character.t()) :: :ok | :error
+  def start_performance(%Schema.Character{} = character) do
+    cast(character.field_pid, {:start_performance, character})
+  end
+
+  @doc "Releases the performance stage; ignored when not the current performer."
+  @spec end_performance(Schema.Character.t()) :: :ok | :error
+  def end_performance(%Schema.Character{} = character) do
+    cast(character.field_pid, {:end_performance, character.id})
+  end
+
+  @doc "Moves the character on or off the concert stage."
+  @spec toggle_stage(Schema.Character.t()) :: :ok | :error
+  def toggle_stage(%Schema.Character{} = character) do
+    cast(character.field_pid, {:toggle_stage, character})
+  end
+
+  @doc "Puts a character into battle stance (the field drops it after a beat)."
+  @spec enter_battle_stance(Schema.Character.t()) :: :ok | :error
+  def enter_battle_stance(%Schema.Character{} = character) do
+    cast(character.field_pid, {:enter_battle_stance, character})
+  end
+
+  # -- tombstones ------------------------------------------------------------
+
+  @doc """
+  Adds a tombstone for a dead character, broadcasting it so other players
+  can hit it to revive the owner.
+  """
+  @spec add_tombstone(Schema.Character.t()) :: :ok | :error
+  def add_tombstone(%Schema.Character{} = character) do
+    cast(character.field_pid, {:add_tombstone, character})
+  end
+
+  @doc "Removes a character's tombstone from the field (on field leave)."
+  @spec remove_tombstone(Schema.Character.t()) :: :ok | :error
+  def remove_tombstone(%Schema.Character{} = character) do
+    cast(character.field_pid, {:remove_tombstone, character.id})
+  end
+
+  @doc """
+  Broadcasts a tombstone with zero hits remaining and removes it (when its
+  owner revives); clients tear down the tombstone entity.
+  """
+  @spec clear_tombstone(Schema.Character.t()) :: :ok | :error
+  def clear_tombstone(%Schema.Character{} = character) do
+    cast(character.field_pid, {:clear_tombstone, character.id})
+  end
+
+  @doc """
+  Registers a hit against a dead character's tombstone; reduces the hits
+  remaining and revives the owner when it reaches zero.
+  """
+  @spec hit_tombstone(Schema.Character.t(), integer(), integer()) :: :ok | :error
+  def hit_tombstone(%Schema.Character{} = character, object_id, hits) do
+    call(character.field_pid, {:hit_tombstone, object_id, hits})
+  end
+
+  # -- banners ---------------------------------------------------------------
+
+  @doc "Reserves banner slots for a character."
+  @spec reserve_banner_slots(Schema.Character.t(), integer(), [map()]) ::
+          {:ok, [map()]} | :error
+  def reserve_banner_slots(%Schema.Character{} = character, banner_id, reservations) do
+    call(character.field_pid, {:reserve_banner_slots, character, banner_id, reservations})
+  end
+
+  @doc "Attaches artwork to the character's own empty banner slots."
+  @spec attach_banner(Schema.Character.t(), integer(), [integer()], map()) ::
+          {:ok, map()} | :error
+  def attach_banner(%Schema.Character{} = character, banner_id, slot_ids, ugc) do
+    call(character.field_pid, {:attach_banner, character, banner_id, slot_ids, ugc})
+  end
+
+  @doc "Confirms an artwork upload, storing the rendered image on its slot."
+  @spec confirm_banner(Schema.Character.t(), integer(), String.t()) :: {:ok, map()} | :error
+  def confirm_banner(%Schema.Character{} = character, resource_id, path) do
+    call(character.field_pid, {:confirm_banner, resource_id, path})
+  end
+
+  @doc "Lists every banner of the character's field."
+  @spec banners(Schema.Character.t()) :: [map()] | :error
+  def banners(%Schema.Character{} = character), do: call(character.field_pid, :banners)
+
+  # -- liftables ---------------------------------------------------------------
+
+  @doc "The character picks up a liftable prop with the interact key."
+  @spec pickup_liftable(Schema.Character.t(), String.t()) :: :ok | :error
+  def pickup_liftable(%Schema.Character{} = character, uuid) do
+    call(character.field_pid, {:pickup_liftable, character.id, uuid})
+  end
+
+  @doc "The character places a held liftable at a grid tile."
+  @spec place_liftable(Schema.Character.t(), tuple(), integer(), integer()) :: :ok | :error
+  def place_liftable(%Schema.Character{} = character, grid, item_id, rotation) do
+    call(character.field_pid, {:place_liftable, character.id, grid, item_id, rotation})
+  end
+
+  # -- interact objects & region skills ---------------------------------------
+
+  @doc """
+  Completes a player's interaction with a field interact object. Returns
+  `{:ok, object}` when the object exists so callers can progress
+  interact-object quest conditions and run gathering.
+  """
+  @spec interact_object(Schema.Character.t(), String.t()) :: {:ok, map()} | :error
+  def interact_object(%Schema.Character{} = character, uuid) do
+    call(character.field_pid, {:interact_object, character, uuid})
+  end
+
+  @doc "Adds a region skill (skill effect zone) to the character's field."
+  @spec add_region_skill(Schema.Character.t(), map()) :: {:ok, integer()} | {:error, atom()}
+  def add_region_skill(%Schema.Character{} = character, skill_cast) do
+    call(character.field_pid, {:add_region_skill, skill_cast})
+  end
+
+  @doc "Allocates a field-unique object id (guide objects, effects, ...)."
+  @spec next_object_id(Schema.Character.t()) :: {:ok, integer()} | :error
+  def next_object_id(%Schema.Character{} = character) do
+    call(character.field_pid, :next_object_id)
+  end
+
+  # -- trigger scripts ---------------------------------------------------------
+
+  @doc "Feeds a character's live position to the trigger conditions."
+  @spec user_position(Schema.Character.t(), map()) :: :ok | :error
+  def user_position(%Schema.Character{} = character, position) do
+    cast(character.field_pid, {:user_position, character.id, position})
+  end
+
+  @doc "Applies a client widget update (guide events, finished scene movies)."
+  @spec update_widget(Schema.Character.t(), atom(), integer()) :: :ok | :error
+  def update_widget(%Schema.Character{} = character, widget_key, arg) do
+    call(character.field_pid, {:update_widget, widget_key, arg})
+  end
+
+  @doc "The player pressed the cutscene skip button."
+  @spec skip_cutscene(Schema.Character.t()) :: :ok | :error
+  def skip_cutscene(%Schema.Character{} = character) do
+    call(character.field_pid, {:skip_cutscene})
+  end
+
+  #
+  # GenServer
+  #
 
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
-    field_name = Context.Field.field_name(map_id, channel_id)
+    field_name = field_name(map_id, channel_id)
 
     {local_id_counter, portals} = Field.Portal.load(map_id, @local_id_counter)
     interactable = Field.InteractObject.load(map_id)
@@ -144,7 +532,7 @@ defmodule Ms2ex.Managers.Field do
     state =
       %{
         buffs: %{},
-        banners: banners(map_id),
+        banners: Field.Banner.load(map_id),
         channel_id: channel_id,
         local_id_counter: local_id_counter,
         interactable: interactable,
@@ -251,43 +639,27 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:reserve_banner_slots, character, banner_id, reservations}, _from, state) do
-    case Map.fetch(state.banners, banner_id) do
-      :error ->
-        {:reply, :error, state}
-
-      {:ok, banner} ->
-        case Ms2ex.Context.BannerSlots.reserve(character, banner_id, reservations) do
-          {:ok, slots} ->
-            banners = Map.put(state.banners, banner_id, %{banner | slots: banner.slots ++ slots})
-            {:reply, {:ok, slots}, %{state | banners: banners}}
-
-          :error ->
-            {:reply, :error, state}
-        end
+    case Field.Banner.reserve(character, banner_id, reservations, state) do
+      {:ok, slots, state} -> {:reply, {:ok, slots}, state}
+      :error -> {:reply, :error, state}
     end
   end
 
   def handle_call({:attach_banner, character, banner_id, slot_ids, ugc}, _from, state) do
-    with {:ok, banner} <- Map.fetch(state.banners, banner_id),
-         {:ok, banner} <- attach_banner(banner, character, slot_ids, ugc),
-         {_count, _slots} <- Ms2ex.Context.BannerSlots.attach(slot_ids, ugc) do
-      {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
-    else
-      _ -> {:reply, :error, state}
+    case Field.Banner.attach(character, banner_id, slot_ids, ugc, state) do
+      {:ok, banner, state} -> {:reply, {:ok, banner}, state}
+      :error -> {:reply, :error, state}
     end
   end
 
   def handle_call({:confirm_banner, resource_id, path}, _from, state) do
-    case find_confirmed_banner(state.banners, resource_id, path) do
-      nil ->
-        {:reply, :error, state}
-
-      {banner_id, banner} ->
-        {:reply, {:ok, banner}, %{state | banners: Map.put(state.banners, banner_id, banner)}}
+    case Field.Banner.confirm(resource_id, path, state) do
+      {:ok, banner, state} -> {:reply, {:ok, banner}, state}
+      :error -> {:reply, :error, state}
     end
   end
 
-  def handle_call(:banners, _from, state), do: {:reply, Map.values(state.banners), state}
+  def handle_call(:banners, _from, state), do: {:reply, Field.Banner.all(state), state}
 
   def handle_call(:performance_stage?, _from, state),
     do: {:reply, Field.PerformanceStage.stage?(state), state}
@@ -446,12 +818,12 @@ defmodule Ms2ex.Managers.Field do
     # destroy_monster and corpse timers can race; removal is idempotent
     case Map.get(state.npcs, field_npc.object_id) do
       %FieldNpc{} ->
-        Context.Field.broadcast(
+        Field.broadcast(
           field_npc.field,
           Packets.FieldRemoveNpc.bytes(field_npc.object_id)
         )
 
-        Context.Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
+        Field.broadcast(field_npc.field, Packets.ProxyGameObj.remove_npc(field_npc))
 
         {:noreply, Field.Npc.remove_npc(field_npc, state)}
 
@@ -480,12 +852,12 @@ defmodule Ms2ex.Managers.Field do
     do: {:noreply, Field.RegionSkill.maybe_tick(source_id, state)}
 
   def handle_info({:remove_region_skill, source_id}, state) do
-    Context.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
     {:noreply, state}
   end
 
   def handle_info({:remove_status, status}, state) do
-    Context.Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
+    Field.broadcast(state.topic, Packets.Buff.send(:remove, status))
     {:noreply, state}
   end
 
@@ -514,8 +886,8 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_info(:tick_banners, state) do
     Process.send_after(self(), :tick_banners, @banner_tick_intval)
-    {state, changed} = activate_banners(state)
-    Enum.each(changed, &Context.Field.broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
+    {state, changed} = Field.Banner.activate(state)
+    Enum.each(changed, &Field.broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
     {:noreply, state}
   end
 

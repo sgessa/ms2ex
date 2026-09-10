@@ -18,7 +18,7 @@ defmodule Ms2ex.GameHandlers.PickupMoney do
   defp pickup_items(packet, character, count) do
     {object_id, packet} = get_int(packet)
 
-    with {:ok, item} <- Context.Field.pickup_item(character, object_id),
+    with {:ok, item} <- Managers.Field.pickup_item(character, object_id),
          true <- Context.Items.mesos?(item) do
       Context.Wallets.update(character, :mesos, item.amount)
 

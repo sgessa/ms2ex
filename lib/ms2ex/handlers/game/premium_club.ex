@@ -125,7 +125,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
     {:ok, character} = Managers.Character.call(character.id, :lookup)
 
     Enum.each(Storage.Tables.PremiumClub.buffs(), fn {_id, %{id: buff_id, level: level}} ->
-      Context.Field.call(character, {:add_effect_buff, buff_id, level, character})
+      Managers.Field.add_effect_buff(character, buff_id, level)
     end)
 
     case Managers.PartyServer.lookup(character.party_id) do
@@ -141,7 +141,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
 
   defp apply_party_buff(character, %{id: id}) when id != character.id do
     with {:ok, member} <- Managers.Character.call(id, :lookup) do
-      Context.Field.call(member, {:add_effect_buff_for, 100_000_045, 1, character, member})
+      Managers.Field.add_effect_buff_for(member, character, 100_000_045, 1)
     end
   end
 

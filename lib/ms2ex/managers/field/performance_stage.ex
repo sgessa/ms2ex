@@ -8,7 +8,7 @@ defmodule Ms2ex.Managers.Field.PerformanceStage do
   performance runs out of time.
   """
 
-  alias Ms2ex.Context
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Packets
 
   @map_id 2_000_064
@@ -34,7 +34,7 @@ defmodule Ms2ex.Managers.Field.PerformanceStage do
         end_tick = Ms2ex.sync_ticks() + @max_duration
         timer = Process.send_after(self(), {:end_performance, character.id}, @max_duration)
 
-        Context.Field.broadcast(
+        Field.broadcast(
           state.topic,
           Packets.FieldProperty.add({:music_concert, character.id, end_tick})
         )
@@ -107,13 +107,13 @@ defmodule Ms2ex.Managers.Field.PerformanceStage do
   end
 
   defp clear(state) do
-    Context.Field.broadcast(state.topic, Packets.FieldProperty.remove(:music_concert))
+    Field.broadcast(state.topic, Packets.FieldProperty.remove(:music_concert))
     %{state | performance: nil}
   end
 
   defp move_to(character, portal) do
     character = %{character | position: portal.position}
     Ms2ex.Managers.Character.call(character, {:update, character})
-    Context.Field.broadcast(character, Packets.UserMoveByPortal.bytes(character, portal.position))
+    Field.broadcast(character, Packets.UserMoveByPortal.bytes(character, portal.position))
   end
 end

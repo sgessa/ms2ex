@@ -65,7 +65,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, character} <- Context.Characters.update(character, %{profile_url: url}) do
       Managers.Character.call(character.id, {:update, character})
-      Context.Field.broadcast(character, Packets.Ugc.profile_picture(character))
+      Managers.Field.broadcast(character, Packets.Ugc.profile_picture(character))
 
       with {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
         Managers.GuildServer.call(guild_id, {:update_member_profile, character.id, url})
@@ -77,7 +77,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
 
   defp handle_command(@load_banners, _packet, session) do
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
-         banners when is_list(banners) <- Context.Field.banners(character) do
+         banners when is_list(banners) <- Managers.Field.banners(character) do
       push(session, Packets.Ugc.load_banners(banners))
     else
       _ -> session
@@ -91,7 +91,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
     with true <- count in 0..24,
          {:ok, reservations} <- read_banner_reservations(packet, count),
          {:ok, character} <- Managers.Character.lookup(session.character_id),
-         {:ok, slots} <- Context.Field.reserve_banner_slots(character, banner_id, reservations) do
+         {:ok, slots} <- Managers.Field.reserve_banner_slots(character, banner_id, reservations) do
       push(session, Packets.Ugc.reserve_banner_slots(banner_id, slots))
     else
       _ ->
@@ -146,7 +146,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
          :ok <- charge_banner(character, price),
          {:ok, resource} <- Context.Ugc.create(character.id, :banner),
          {:ok, _banner} <-
-           Context.Field.attach_banner(
+           Managers.Field.attach_banner(
              character,
              banner_id,
              slot_ids(reservations),
@@ -201,7 +201,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
 
       resource when type == :banner ->
         with {:ok, character} <- Managers.Character.lookup(session.character_id),
-             {:ok, banner} <- Context.Field.confirm_banner(character, resource.id, resource.path) do
+             {:ok, banner} <- Managers.Field.confirm_banner(character, resource.id, resource.path) do
           push(session, Packets.Ugc.update_banner(banner))
         else
           _ ->

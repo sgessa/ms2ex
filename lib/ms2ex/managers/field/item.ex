@@ -3,6 +3,7 @@ defmodule Ms2ex.Managers.Field.Item do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Packets
   alias Ms2ex.Schema
 
@@ -70,8 +71,8 @@ defmodule Ms2ex.Managers.Field.Item do
   end
 
   defp remove_item(character, item, state) do
-    Context.Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
-    Context.Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
+    Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
+    Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
 
     items = Map.delete(state.items, item.object_id)
     %{state | items: items}
@@ -80,7 +81,7 @@ defmodule Ms2ex.Managers.Field.Item do
   def drop_item(character, item, state), do: drop_item(character, item, character.position, state)
 
   def drop_item(character, item, position, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
+    {object_id, state} = Field.next_local_id(state)
 
     item = %{
       item
@@ -89,12 +90,12 @@ defmodule Ms2ex.Managers.Field.Item do
         source_object_id: character.object_id
     }
 
-    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 
   def add_mob_drop(mob, item, receiver \\ nil, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
+    {object_id, state} = Field.next_local_id(state)
     receiver = receiver || mob.first_attacker || mob.last_attacker
     item = increase_premium_meso_drop(item, receiver)
 
@@ -108,7 +109,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: if(receiver, do: receiver.object_id, else: 0)
     }
 
-    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 
@@ -125,7 +126,7 @@ defmodule Ms2ex.Managers.Field.Item do
   # a fixed-position, unowned field item (trigger-spawned quest pickups):
   # no source entity, free for any player to take
   def create_item(position, item, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
+    {object_id, state} = Field.next_local_id(state)
 
     item = %{
       item
@@ -137,7 +138,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: 0
     }
 
-    Context.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 

@@ -40,8 +40,8 @@ defmodule Ms2ex.GameHandlers.MyInfo do
            Context.Characters.update(character, %{motto: motto}) do
       Managers.Character.call(character, {:update, character})
 
-      Context.Field.broadcast(character, Packets.MyInfo.update_motto(character))
-      Context.Field.broadcast(character, Packets.ProxyGameObj.update_motto(character))
+      Managers.Field.broadcast(character, Packets.MyInfo.update_motto(character))
+      Managers.Field.broadcast(character, Packets.ProxyGameObj.update_motto(character))
     end
 
     session

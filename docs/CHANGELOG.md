@@ -2,6 +2,19 @@
 
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
+- Field manager reorganization: moved the field process API, PubSub
+  broadcast topology and the enter/leave/change_field lifecycle out of
+  `Context.Field` (deleted) onto `Managers.Field`, matching the
+  contexts-persist/managers-own-state rule; raw message tuples at call
+  sites became named API functions (`add_effect_buff`, `inflict_dmg`,
+  `pickup_liftable`, `user_position`, ...). Extracted the banner slot
+  logic into `Managers.Field.Banner`, split `Managers.Field.Trigger`
+  into runtime + `Trigger.Conditions` + `Trigger.Actions`, moved the
+  trigger argument coercion into a new `Ms2ex.Helpers.TriggerArgs`
+  (seeding the `helpers/` namespace from the code-organization guide),
+  and split npc movement math into `Field.Npc.Patrol`. Dropped the dead
+  `add_object`/`cancel_battle_stance` API. No behavior change; 365 tests
+  green.
 
 - Trigger runtime: implemented the `npc_detected` condition (a story
   npc's spawn point standing inside a trigger box — drives scripted
@@ -192,7 +205,6 @@ Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
   real values, and the `masteryreceipe.xml`, `mastery.xml`,
   `masterydifferentialfactor.xml` and `commonexp.xml` tables are projected by
   the ingest
-
 
 - Quest condition batching: quest condition counters accumulate in memory
   in the quest manager and mark quests dirty for a periodic flush (also

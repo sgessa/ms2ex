@@ -10,7 +10,6 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
   talk script.
   """
 
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Storage
@@ -54,7 +53,7 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
     {npc_object_id, _packet} = get_int(packet)
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
-         {:ok, field_npc} <- Context.Field.lookup_npc(character, npc_object_id) do
+         {:ok, field_npc} <- Managers.Field.lookup_npc(character, npc_object_id) do
       npc_id = field_npc.npc.id
       Managers.Quest.update_conditions(character.id, :dialogue, 1, "", 0, "", npc_id)
       Managers.Quest.update_conditions(character.id, :talk_in, 1, "", 0, "", npc_id)

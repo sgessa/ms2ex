@@ -27,8 +27,8 @@ defmodule Ms2ex.Managers.Character.Experience do
     if old_level != character.level do
       equips = Managers.Inventory.list_equips(character)
       {character, _equipment_stats} = Context.CharacterStats.apply(character, equips)
-      Context.Field.broadcast(character, Packets.LevelUp.bytes(character))
-      Context.Field.broadcast_stats(character)
+      Managers.Field.broadcast(character, Packets.LevelUp.bytes(character))
+      Managers.Field.broadcast_stats(character)
 
       # level-reach quest conditions; the level_up code param carries the job id
       Managers.Quest.update_conditions(character.id, :level, 1, "", character.level, "", 0)

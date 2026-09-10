@@ -1,5 +1,4 @@
 defmodule Ms2ex.Managers.Character.Skill do
-  alias Ms2ex.Context
   alias Ms2ex.Types
 
   alias Ms2ex.Managers
@@ -26,7 +25,7 @@ defmodule Ms2ex.Managers.Character.Skill do
           skill <- effect.skills,
           reduce: character do
         character ->
-          case Context.Field.call(character, {:add_buff, skill_cast, skill, character}) do
+          case Managers.Field.add_buff(character, skill_cast, skill) do
             {:ok, buff} ->
               apply_status(character, buff)
 
@@ -39,7 +38,7 @@ defmodule Ms2ex.Managers.Character.Skill do
     # also schedules the stance drop. battle-start packets are emitted by the
     # cast handler in live-server order
     if Types.SkillCast.in_battle?(skill_cast) do
-      Context.Field.enter_battle_stance(character)
+      Managers.Field.enter_battle_stance(character)
     end
 
     # costs are carried to clients inside the battle-start stat refresh
@@ -153,7 +152,7 @@ defmodule Ms2ex.Managers.Character.Skill do
 
     Managers.SkillCast.stop(skill_cast.id)
 
-    Context.Field.broadcast(
+    Managers.Field.broadcast(
       character,
       Packets.StateSkill.bytes(character, skill_cast.skill_id, skill_cast.id, 0)
     )

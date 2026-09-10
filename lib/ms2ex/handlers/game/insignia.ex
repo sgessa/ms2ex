@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.Insignia do
     # applied and the display flag broadcast
     case Context.Insignias.equip(character, insignia_id) do
       {:ok, character, display} ->
-        Context.Field.broadcast(
+        Managers.Field.broadcast(
           character,
           Packets.Insignia.update(character, insignia_id, display)
         )

@@ -8,6 +8,7 @@ defmodule Ms2ex.Managers.Character.Revival do
 
   alias Ms2ex.Constants
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -67,18 +68,18 @@ defmodule Ms2ex.Managers.Character.Revival do
     dark_tomb = only_dark_tomb?(character) or previous_count > 0
 
     # clear any craft/liftable pose field-wide before the corpse is posed
-    Context.Field.broadcast(character, Packets.SetCraftMode.stop(character.object_id))
+    Managers.Field.broadcast(character, Packets.SetCraftMode.stop(character.object_id))
 
-    Context.Field.broadcast(character, Packets.DeadUser.bytes(character.object_id, dark_tomb))
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
+    Managers.Field.broadcast(character, Packets.DeadUser.bytes(character.object_id, dark_tomb))
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
 
-    Context.Field.add_tombstone(character)
+    Managers.Field.add_tombstone(character)
 
     push(character, Packets.RevivalCount.bytes(Map.get(character, :instant_revive_count, 0)))
     push(character, Packets.RevivalConfirm.bytes(character.object_id, end_tick, death_count))
 
     # the corpse no longer carries its buffs
-    Context.Field.remove_owner_buffs(character)
+    Managers.Field.remove_owner_buffs(character)
 
     character
   end
@@ -160,9 +161,9 @@ defmodule Ms2ex.Managers.Character.Revival do
   end
 
   defp broadcast_revive(character) do
-    Context.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
-    Context.Field.clear_tombstone(character)
-    Context.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
+    Managers.Field.clear_tombstone(character)
+    Managers.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
 
     push(character, Packets.Stats.set_character_stats(character))
   end
@@ -199,7 +200,7 @@ defmodule Ms2ex.Managers.Character.Revival do
     return_map_id = Storage.Maps.get_revival_return_id(character.map_id)
 
     if return_map_id != 0 and return_map_id != character.map_id do
-      Context.Field.change_field(character, return_map_id)
+      Managers.Field.change_field(character, return_map_id)
       character
     else
       spawn_point = Storage.Maps.get_spawn(character.map_id)
@@ -210,7 +211,7 @@ defmodule Ms2ex.Managers.Character.Revival do
         |> Map.put(:rotation, spawn_point.rotation)
 
       push(character, Packets.UserMoveByPortal.bytes(character, spawn_point.position))
-      Context.Field.broadcast(character, Packets.ProxyGameObj.update_player(character))
+      Managers.Field.broadcast(character, Packets.ProxyGameObj.update_player(character))
       character
     end
   end

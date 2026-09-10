@@ -176,7 +176,7 @@ defmodule Ms2ex.Context.Mastery do
     for reward <- recipe.reward_items do
       case Context.Items.drop_item(reward.item_id, reward.rarity, reward.amount) do
         %Schema.Item{} = item ->
-          Context.Field.drop_item(character, item, object.position)
+          Managers.Field.drop_item(character, item, object.position)
 
         _ ->
           :ok

@@ -37,7 +37,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
          true <- :trade in item.transfer_flags,
          true <- :split in item.transfer_flags do
       consumed_item = Managers.Inventory.consume(item, amount)
-      Context.Field.drop_item(character, %{item | amount: amount})
+      Managers.Field.drop_item(character, %{item | amount: amount})
       update_inventory(session, consumed_item)
     end
   end

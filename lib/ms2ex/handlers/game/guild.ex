@@ -371,7 +371,7 @@ defmodule Ms2ex.GameHandlers.Guild do
         )
 
       if house && house.map_id > 0 do
-        Context.Field.change_field(character, house.map_id)
+        Managers.Field.change_field(character, house.map_id)
       end
     end
   end
@@ -439,7 +439,7 @@ defmodule Ms2ex.GameHandlers.Guild do
           Managers.GuildServer.subscribe(guild.id)
         end)
 
-        Context.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
+        Managers.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
 
         session
         |> push(Packets.Guild.created(guild.name))
@@ -471,7 +471,7 @@ defmodule Ms2ex.GameHandlers.Guild do
           Managers.GuildServer.unsubscribe(guild_id)
         end)
 
-        Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
+        Managers.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
         push(session, Packets.Guild.disbanded())
     end
   end
@@ -491,7 +491,7 @@ defmodule Ms2ex.GameHandlers.Guild do
           Managers.GuildServer.subscribe(guild_id)
         end)
 
-        Context.Field.broadcast(
+        Managers.Field.broadcast(
           character,
           Packets.Guild.add_tag(character.name, guild_state.guild.name)
         )
@@ -614,7 +614,7 @@ defmodule Ms2ex.GameHandlers.Guild do
       Managers.GuildServer.unsubscribe(guild_id)
     end)
 
-    Context.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
+    Managers.Field.broadcast(character, Packets.Guild.remove_tag(character.name))
     push(session, Packets.Guild.leave())
   end
 end

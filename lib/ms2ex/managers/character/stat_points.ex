@@ -1,5 +1,6 @@
 defmodule Ms2ex.Managers.Character.StatPoints do
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Context.StatPoints
   alias Ms2ex.Packets
   alias Ms2ex.Types.AttributePointSource
@@ -55,7 +56,7 @@ defmodule Ms2ex.Managers.Character.StatPoints do
            ) do
       character = StatPoints.apply_attribute(character, stat, 1)
       character = %{character | stat_point_allocation: allocation}
-      Context.Field.broadcast(character, Packets.Stats.update_char_stats(character, stat))
+      Managers.Field.broadcast(character, Packets.Stats.update_char_stats(character, stat))
       push(character, Packets.StatPoints.allocation(allocation, total))
       {:ok, character}
     else
@@ -76,7 +77,7 @@ defmodule Ms2ex.Managers.Character.StatPoints do
         character =
           Enum.reduce(character.stat_point_allocation, character, fn {stat, amount}, char ->
             char = StatPoints.apply_attribute(char, stat, -amount)
-            Context.Field.broadcast(char, Packets.Stats.update_char_stats(char, stat))
+            Managers.Field.broadcast(char, Packets.Stats.update_char_stats(char, stat))
             char
           end)
 

@@ -1,5 +1,4 @@
 defmodule Ms2ex.GameHandlers.Trigger do
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
 
@@ -23,7 +22,7 @@ defmodule Ms2ex.GameHandlers.Trigger do
   # no payload: the player pressed the cutscene skip button
   defp skip_cutscene(session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      Context.Field.call(character.field_pid, {:skip_cutscene})
+      Managers.Field.skip_cutscene(character)
     end
 
     session
@@ -35,7 +34,7 @@ defmodule Ms2ex.GameHandlers.Trigger do
 
     with {:ok, widget_key} <- Map.fetch(@widget_types, widget_type),
          {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      Context.Field.call(character.field_pid, {:update_widget, widget_key, arg})
+      Managers.Field.update_widget(character, widget_key, arg)
 
       # echoing the movie stop lets the client reset its player state
       if widget_key == :scene_movie, do: push(session, Packets.Trigger.skip_movie(arg))

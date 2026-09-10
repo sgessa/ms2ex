@@ -525,8 +525,8 @@ defmodule Ms2ex.Managers.GuildServer do
             Managers.GuildServer.unsubscribe(state.id)
           end)
 
-          topic = Context.Field.field_name(target.map_id, target.channel)
-          Context.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
+          topic = Managers.Field.field_name(target.map_id, target.channel)
+          Managers.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
 
           SenderSession.push(
             target.sender_session_pid,
@@ -674,7 +674,7 @@ defmodule Ms2ex.Managers.GuildServer do
           Managers.GuildServer.subscribe(state.id)
         end)
 
-        Context.Field.broadcast(
+        Managers.Field.broadcast(
           applicant_char,
           Packets.Guild.add_tag(applicant_char.name, state.guild.name)
         )
