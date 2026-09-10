@@ -550,7 +550,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
     # still lingers in state.npcs
     assert [new_id] = state.npc_spawns[101].spawned_npcs
     assert Map.has_key?(state.npcs, new_id)
-    assert Map.size(state.npcs) == 2
+    assert map_size(state.npcs) == 2
     assert state.npc_spawns[104].spawned_npcs == []
   end
 
