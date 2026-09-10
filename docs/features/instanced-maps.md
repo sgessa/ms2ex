@@ -46,6 +46,10 @@ absent from the table are ordinary shared fields.
 - The reference keys fields `(MapId, RoomId)` with a global id counter
   and creates a fresh room per entry for the default (solo) case.
 
+- instanced fields stop immediately when they empty out (nothing can
+  rejoin them); shared fields linger five minutes for returning players
+  (see `field-manager.md`)
+
 ## Still missing
 
 - party follow: joining a leader's existing instance (carry the

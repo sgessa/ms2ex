@@ -47,6 +47,12 @@ defmodule Ms2ex.Managers.Field do
   @npc_tick_intval 15
   @banner_tick_intval :timer.seconds(30)
 
+  # how long an empty shared field stays up for players who walked out and
+  # may walk (or relog) back in; the reference loops on the same idea
+  # (FieldDisposeEmptyTime). Instanced fields are skipped: a fresh instance
+  # is allocated per entry, so an emptied one can never be rejoined
+  @shared_dispose_delay :timer.minutes(5)
+
   # one app-wide counter feeds players and mounts, while each field instance
   # owns a local counter for npcs, portals, spawn points and items
   @local_id_counter 50_000_000
@@ -631,6 +637,7 @@ defmodule Ms2ex.Managers.Field do
         regions: %{},
         sessions: %{},
         stage: MapSet.new(),
+        dispose_timer: nil,
         tombstones: %{},
         topic: field_name
       }
@@ -645,11 +652,15 @@ defmodule Ms2ex.Managers.Field do
     {:ok, state, {:continue, {:add_character, character}}}
   end
 
-  def handle_continue({:add_character, character}, state),
-    do: {:noreply, __MODULE__.Character.add_character(character, state)}
+  def handle_continue({:add_character, character}, state) do
+    state = __MODULE__.Character.add_character(character, state)
+    {:noreply, maybe_cancel_dispose(state)}
+  end
 
-  def handle_call({:add_character, character}, _from, state),
-    do: {:reply, {:ok, self()}, __MODULE__.Character.add_character(character, state)}
+  def handle_call({:add_character, character}, _from, state) do
+    state = __MODULE__.Character.add_character(character, state)
+    {:reply, {:ok, self()}, maybe_cancel_dispose(state)}
+  end
 
   def handle_call({:remove_character, character}, _from, state) do
     send(self(), :maybe_stop)
@@ -975,17 +986,58 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
+  # sent whenever a character leaves the field: shared fields linger for
+  # a grace window (a party member may be right behind), instanced fields
+  # stop as soon as they empty out
   def handle_info(:maybe_stop, state) do
     if Enum.empty?(state.sessions) do
-      Logger.info("Field #{state.map_id} @ Channel #{state.channel_id} is empty. Stopping.")
-      {:stop, :normal, state}
+      if state.instance == 0 do
+        {:noreply, schedule_dispose(state)}
+      else
+        Logger.info(
+          "Field #{state.map_id} @ Channel #{state.channel_id} instance #{state.instance} is empty. Stopping."
+        )
+
+        {:stop, :normal, state}
+      end
     else
       {:noreply, state}
+    end
+  end
+
+  def handle_info(:dispose_if_empty, state) do
+    if Enum.empty?(state.sessions) do
+      Logger.info(
+        "Field #{state.map_id} @ Channel #{state.channel_id} empty for 5 minutes. Stopping."
+      )
+
+      {:stop, :normal, state}
+    else
+      {:noreply, %{state | dispose_timer: nil}}
     end
   end
 
   def handle_info(data, state) do
     Logger.warning("[Field] Unknown message: #{inspect(data)}")
     {:noreply, state}
+  end
+
+  defp schedule_dispose(state) do
+    if is_reference(state.dispose_timer), do: Process.cancel_timer(state.dispose_timer)
+
+    Logger.info(
+      "Field #{state.map_id} @ Channel #{state.channel_id} is empty. Stopping in 5 minutes unless someone joins."
+    )
+
+    %{state | dispose_timer: Process.send_after(self(), :dispose_if_empty, @shared_dispose_delay)}
+  end
+
+  defp maybe_cancel_dispose(%{sessions: sessions} = state) do
+    if Enum.empty?(sessions) do
+      state
+    else
+      if is_reference(state.dispose_timer), do: Process.cancel_timer(state.dispose_timer)
+      %{state | dispose_timer: nil}
+    end
   end
 end
