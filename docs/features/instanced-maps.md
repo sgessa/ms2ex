@@ -45,6 +45,9 @@ absent from the table are ordinary shared fields.
 
 - party follow: joining a leader's existing instance (carry the
   leader's instance id instead of allocating)
+- navmesh coverage: scripted maps whose xblock has no navmesh skip the
+  move_user walkable-ground check (see `navmesh.md` — the class-intro
+  chain is covered, the rest is flag-by-flag)
 - other instance types: dungeon lobbies/rooms, guild houses/events,
   wedding halls, massive events with room pools (`pool_count`)
 - `max_count` caps on channel-scale instances
