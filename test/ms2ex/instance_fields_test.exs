@@ -9,6 +9,7 @@ defmodule Ms2ex.InstanceFieldsTest do
   @tutorial_map 52_000_001
   @channel_scale_map 52_000_058
   @shared_map 2_000_000
+  @quest_instance 63_000_015
 
   @table_doc %{
     @tutorial_map => %{type: :solo, instance_id: 1_000_011, pool_count: 0, max_count: 0},
@@ -21,7 +22,11 @@ defmodule Ms2ex.InstanceFieldsTest do
   }
 
   setup do
-    stub_metadata(%{"table:server.instancefield.xml" => @table_doc})
+    stub_metadata(%{
+      "table:server.instancefield.xml" => @table_doc,
+      "map:63000015" => %{enter_return_id: 2_000_301}
+    })
+
     :ok
   end
 
@@ -76,6 +81,24 @@ defmodule Ms2ex.InstanceFieldsTest do
 
     assert %{field_instance: 0} =
              Managers.Field.assign_instance(%Schema.Character{map_id: @channel_scale_map})
+  end
+
+  test "a map with an enter_return_id persists the return target" do
+    Mimic.expect(Ms2ex.Context.Characters, :update, fn _char, attrs ->
+      assert attrs == %{map_id: 2_000_301}
+      {:ok, %Schema.Character{map_id: 2_000_301}}
+    end)
+
+    new_map = %{id: @quest_instance, position: %{x: 0, y: 0, z: 0}, rotation: nil, instance: 3}
+
+    # in-memory map id follows the actual map; the saved one is the hub
+    assert %{map_id: @quest_instance} =
+             Managers.Field.update_current_map(%Schema.Character{map_id: @shared_map}, new_map)
+  end
+
+  test "return_map_id falls back to the map itself" do
+    assert Managers.Field.return_map_id(@tutorial_map) == @tutorial_map
+    assert Managers.Field.return_map_id(@quest_instance) == 2_000_301
   end
 
   test "a field change persists and follows the new map (instanced or not)" do

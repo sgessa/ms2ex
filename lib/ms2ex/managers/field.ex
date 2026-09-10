@@ -54,17 +54,33 @@ defmodule Ms2ex.Managers.Field do
   # -- lifecycle -------------------------------------------------------------
 
   @doc """
-  Persists the character's current map after a field change; the in-memory
-  map id follows the new map. Instanced maps persist like any other: the
-  reference saves the current stage on quit (only maps that push a
-  return-map reset it, which plain solo maps never do), so a relog lands
-  in a fresh instance of the same stage.
+  Persists the character's current map after a field change: maps that
+  declare an `enter_return_id` persist the return target instead (the
+  reference's logout reset, collapsed from its return-map stack), so a
+  relog inside a quest instance lands at its hub. The in-memory map id
+  still follows the actual map: the field process and quest conditions
+  are built from it.
   """
   @spec update_current_map(Schema.Character.t(), map()) :: Schema.Character.t()
   def update_current_map(%Schema.Character{} = character, %{id: map_id} = _new_map) do
-    {:ok, character} = Context.Characters.update(character, %{map_id: map_id})
-    character
+    {:ok, character} = Context.Characters.update(character, %{map_id: return_map_id(map_id)})
+    Map.put(character, :map_id, map_id)
   end
+
+  @doc """
+  The map a character who quit on `map_id` should return to: the map's
+  `enter_return_id` when it declares one, the map itself otherwise.
+  """
+  @spec return_map_id(integer()) :: integer()
+  def return_map_id(map_id) do
+    case Storage.Maps.get_meta(map_id) do
+      %{} = meta -> normalize_return(Map.get(meta, :enter_return_id), map_id)
+      _ -> map_id
+    end
+  end
+
+  defp normalize_return(id, _map_id) when is_integer(id) and id > 0, do: id
+  defp normalize_return(_, map_id), do: map_id
 
   @doc """
   Binds the character to a field instance: a pending `change_map` instance

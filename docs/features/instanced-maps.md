@@ -27,6 +27,11 @@ absent from the table are ordinary shared fields.
   `character.field_instance`.
 - `Managers.Field.instance_id/1` allocates a fresh unique id for `solo`
   maps and returns 0 (shared) for everything else.
+- Return maps: when a field change enters a map that declares an
+  `enter_return_id`, the hub is persisted instead of the map itself (the
+  reference's logout reset, collapsed from its 3-deep return-map stack —
+  ms2ex deliberately skips that stack's stale-entry quirk). The cube
+  return-map packet advertises the same target.
 - Relog behavior: the current map persists through instanced maps too —
   the reference's `SpawnPlayer` sets `Character.MapId` on every entry and
   only maps that push a return-map (`InstanceType.none` with an
@@ -49,9 +54,6 @@ absent from the table are ordinary shared fields.
   teleport still runs while a cinematic or scripted path move controls
   the player (same gap as trigger-runtime's "movement is not locked"
   note) — guard it with the field's guide-hold state
-- return-map stack: the reference pushes `EnterReturnId` on
-  `InstanceType.none`/`SaveField` maps and resets the saved map to it at
-  logout (houses, dungeons); ms2ex has no return-map stack yet
 - navmesh coverage: scripted maps whose xblock has no navmesh skip the
   move_user walkable-ground check (see `navmesh.md` — the class-intro
   chain is covered, the rest is flag-by-flag)
