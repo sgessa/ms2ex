@@ -11,8 +11,11 @@ so coverage gaps surface per map.
 user_detected (job-gated, padded boxes), monster_dead, quest_user_detected
 (wanted states: 1 started-not-completable, 2 completable, 3 completed),
 npc_detected (a story npc's spawn point standing inside a box),
-widget_condition (Guide/SceneMovie), user_value (script variables set via
-set_user_value), wait_tick (against state entry), negate, always.
+object_interacted (an interact object — matched by table id — sitting in
+the wanted state: 0 normal, 1 reactable, 2 hidden; e.g. the tutorial car
+flip once boarded), widget_condition (Guide/SceneMovie), user_value
+(script variables set via set_user_value), wait_tick (against state
+entry), negate, always.
 
 Int-list arguments accept single ids, comma lists and inclusive ranges
 (`5001-5025` expands to every id).
@@ -20,14 +23,18 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
 ## Actions
 
 - scene/UI: set_mesh, set_effect, set_cinematic_ui (letterbox / fade / wipes
-  / opening black screen), set_onetime_effect, select_camera_path /
-  reset_camera, add_cinematic_talk, set_dialogue (player/npc speech balloons),
+  / opening black screen), set_onetime_effect, select_camera (map camera
+  vantage on/off), select_camera_path / reset_camera, add_cinematic_talk /
+  remove_cinematic_talk, set_dialogue (player/npc speech balloons),
   show_caption, show/hide_guide_summary (held during cinematics and scripted
   path moves, flushed when control returns), set_skip + set_scene_skip +
   skip-cutscene handling, set_time_scale (field tick-rate ramp),
   set_ambient_light (field light tint), set_event_ui (round/script/countdown
   overlays scoped to trigger boxes, `!` negation, box 0 = everyone)
-- actors: spawn_monster / destroy_monster (mob and friendly spawns),
+- actors: spawn_monster / destroy_monster (mob and friendly spawns) — event
+  spawn points load dormant and appear only when a script summons them; all
+  other spawns load with the field per their on-create flag, so plain quest
+  npcs coexist with scripted maps, set_agent (agent figure visibility),
   move_npc (patrol walk, stays at the last waypoint),
   set_npc_emotion_loop / set_npc_emotion_sequence,
   set_pc_emotion_loop / set_pc_emotion_sequence, move_user (same-map

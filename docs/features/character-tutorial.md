@@ -13,7 +13,10 @@ field enter.
 The classic chain (start field → job training yard) runs on the
 trigger-script runtime: the barrier monster gate, the carry quest (liftable
 pickup/install firing the item_move condition), job-portal selection, and
-the map-exit teleport all play through the xblock scripts.
+the map-exit teleport all play through the xblock scripts. Scripted maps
+stage only the spawn points their scripts summon (plus event points); plain
+field npcs — quest turn-in givers like the Striker's Bravo in the
+Underground Passage — load per their on-create flag alongside the script.
 
 ## Still missing
 

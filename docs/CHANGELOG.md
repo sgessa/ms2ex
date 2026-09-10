@@ -3,6 +3,28 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Trigger condition `object_interacted` is implemented: fires when an
+  interact object (matched by its table id) sits in the wanted state (0
+  normal, 1 reactable, 2 hidden). Gates the Blackstar Junkyard's car ride
+  (63000023 `gototria01`): the script arms the car via set_interact_object
+  and waits for the board to flip it back to normal, then runs the
+  cinematic drive and move_user to Lith Harbor — the whole gototria01
+  script is now fully covered by the runtime.
+- Trigger actions `select_camera`, `set_agent` and
+  `remove_cinematic_talk` are implemented: camera vantage on/off for the
+  map's registered cameras (enable=false releases the view), agent figure
+  visibility by trigger id (agents are not projected yet — the update
+  reaches the client by id alone), and clearing the cinematic dialog
+  bubble at the end of a talk beat. Surfaces during the class-intro
+  scripted chains (e.g. 63000026_cs).
+- Scripted maps no longer blanket-defer npc spawns to their trigger
+  scripts: event spawn points (`is_event`) stay script-summoned one-shots,
+  but every plain spawn — quest npcs and roaming mobs — loads per its
+  `on_field_create` flag exactly as on unscripted maps. The old map-wide
+  gate silently removed 525 story-npc spawn points across 275 scripted
+  maps — e.g. the Striker tutorial's Bravo in the Underground Passage
+  (63000017), which no script ever summons, dead-ending the "Into the
+  Underground Passage" turn-in with no npc to talk to.
 - Instanced maps: the instance-field table is now projected
   (`server.instancefield.xml`) and `solo` maps (every tutorial and quest
   instance) allocate a private field per entry instead of dropping

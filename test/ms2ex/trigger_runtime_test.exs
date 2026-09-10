@@ -340,6 +340,45 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert %{next: "fight"} = state.trigger_machines["tutorial"]
   end
 
+  test "object_interacted fires once the interact object reaches the wanted state" do
+    # the Blackstar Junkyard ride: the script arms the car (reactable) and
+    # waits for it to flip back to normal once the player boards
+    car = %{id: 10_001_001, uuid: "car-uuid", state: :normal}
+
+    state =
+      base_state()
+      |> Map.put(:interactable, %{"car-uuid" => car})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "object_interacted",
+          negate: false,
+          args: %{interact_ids: "10001001", state: "0"},
+          next_state: "fight",
+          actions: []
+        }
+      ])
+      |> tick()
+
+    assert %{next: "fight"} = state.trigger_machines["tutorial"]
+
+    # while the car is still armed (reactable), the gate holds
+    armed_state =
+      base_state()
+      |> Map.put(:interactable, %{"car-uuid" => %{car | state: :reactable}})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "object_interacted",
+          negate: false,
+          args: %{interact_ids: "10001001", state: "0"},
+          next_state: "fight",
+          actions: []
+        }
+      ])
+      |> tick()
+
+    assert %{current: "wait"} = armed_state.trigger_machines["tutorial"]
+  end
+
   test "negated conditions invert the match" do
     state =
       base_state()
@@ -398,6 +437,48 @@ defmodule Ms2ex.TriggerRuntimeTest do
     |> tick()
 
     assert {:push, <<0x68::little-16, 0xB, 1::little-16, 88, 0, 0>>} = receive_push()
+  end
+
+  test "select_camera activates a known camera vantage" do
+    base_state()
+    |> Map.put(:trigger_cameras, %{600 => %{id: 600, visible: false}})
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "select_camera", args: %{trigger_id: "600", enable: "1"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x4F::little-16, 0x3, 600::little-32, 1>>} = receive_push()
+  end
+
+  test "select_camera skips cameras the map does not ship" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "select_camera", args: %{trigger_id: "777", enable: "1"}}
+    ])
+    |> tick()
+
+    assert :nothing = receive_push()
+  end
+
+  test "set_agent toggles each agent figure by trigger id" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_agent", args: %{trigger_ids: "8000,8001", visible: "0"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x4F::little-16, 0x3, 8000::little-32, 0>>} = receive_push()
+    assert {:push, <<0x4F::little-16, 0x3, 8001::little-32, 0>>} = receive_push()
+  end
+
+  test "remove_cinematic_talk clears the dialog bubble" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "remove_cinematic_talk", args: %{}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x68::little-16, 0x7>>} = receive_push()
   end
 
   test "set_pc_emotion_loop broadcasts the player emote loop" do

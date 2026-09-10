@@ -73,6 +73,19 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
     Map.get(Map.get(state, :user_values, %{}), key) == int_arg(args, :value)
   end
 
+  # true when one of the interact objects (matched by its table id) currently
+  # sits in the wanted state (0 normal, 1 reactable, 2 hidden) — e.g. the
+  # tutorial car the moment the player boards it
+  def evaluate("object_interacted", args, _machine, _now, state) do
+    interact_ids = int_list_arg(args, :interact_ids)
+    wanted = int_arg(args, :state)
+
+    state
+    |> Map.get(:interactable, %{})
+    |> Map.values()
+    |> Enum.any?(&(&1.id in interact_ids and interact_state_code(&1.state) == wanted))
+  end
+
   def evaluate("widget_condition", args, _machine, _now, state) do
     conditions = get_in(state, [:widgets, widget_key(args[:type]), :conditions]) || %{}
     value = Map.get(conditions, args[:widget_name])
@@ -124,4 +137,8 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
       end
     end)
   end
+
+  defp interact_state_code(:reactable), do: 1
+  defp interact_state_code(:hidden), do: 2
+  defp interact_state_code(_state), do: 0
 end

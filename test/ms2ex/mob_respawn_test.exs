@@ -213,4 +213,50 @@ defmodule Ms2ex.MobRespawnTest do
     assert spawn.spawned_npcs == []
     assert state.npcs == %{}
   end
+
+  # maps with trigger scripts do not blanket-defer spawns: only event points
+  # wait for a script — plain story npcs (quest turn-in givers on scripted
+  # maps) still load eagerly
+  test "plain story npcs load eagerly even when the map runs scripts" do
+    doc = %{
+      npc_list: [%{npc_id: @mob_id, count: 1}],
+      regen_check_time: 0,
+      population: 1,
+      position: %{x: 0.0, y: 0.0, z: 0.0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 202,
+      on_field_create: true
+    }
+
+    state =
+      base_state()
+      |> Map.put(:script_controlled_npcs, true)
+      |> Npc.load_spawn(doc, [doc.npc_list |> hd() |> Map.get(:npc_id)])
+
+    assert length(spawn_state(state).spawned_npcs) == 1
+    assert map_size(state.npcs) == 1
+  end
+
+  test "friendly event spawn points are one-shot script summons" do
+    doc = %{
+      npc_list: [%{npc_id: @mob_id, count: 1}],
+      regen_check_time: 0,
+      population: 1,
+      position: %{x: 0.0, y: 0.0, z: 0.0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 301,
+      on_field_create: true,
+      is_event: true
+    }
+
+    state = Npc.load_spawn(base_state(), doc, [doc.npc_list |> hd() |> Map.get(:npc_id)])
+
+    assert state.npcs == %{}
+
+    # the script's spawn_monster action summons the staged point
+    state = Npc.trigger_spawn(state, 301)
+
+    assert length(spawn_state(state).spawned_npcs) == 1
+    assert map_size(state.npcs) == 1
+  end
 end

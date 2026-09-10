@@ -68,6 +68,26 @@ defmodule Ms2ex.Packets.Trigger do
     |> put_bool(visible)
   end
 
+  # activates or releases a map camera vantage during scripted shots; the
+  # body is just the trigger id and the new state
+  def update_camera(id, visible) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update)
+    |> put_int(id)
+    |> put_bool(visible)
+  end
+
+  # shows or hides a map agent figure during scripted beats; the body is
+  # just the trigger id and the new state
+  def update_agent(id, visible) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update)
+    |> put_int(id)
+    |> put_bool(visible)
+  end
+
   def hide_mesh(mesh), do: update_mesh(false, mesh)
 
   # advances the client's guide widget to the given step — e.g. the tutorial

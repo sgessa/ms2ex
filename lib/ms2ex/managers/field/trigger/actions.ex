@@ -98,6 +98,39 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     end)
   end
 
+  # selects a map camera vantage for the scripted shot; enable false releases
+  # the view. Like set_mesh, only known cameras are sent
+  # shows or hides the map's agent figures (scripted npc silhouettes such as
+  # the shadow agents in the class intros). Agents are not projected yet, so
+  # the update reaches the client by trigger id alone — the ids come from the
+  # map's own script, so the client can resolve them
+  # TODO: project trigger agents and track their visibility like cameras
+  defp execute_action("set_agent", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+
+    Enum.reduce(int_list_arg(args, :trigger_ids), state, fn trigger_id, state ->
+      Managers.Field.broadcast(state.topic, Packets.Trigger.update_agent(trigger_id, visible))
+      state
+    end)
+  end
+
+  defp execute_action("select_camera", args, _script_name, state) do
+    cameras = Map.get(state, :trigger_cameras, %{})
+
+    case Map.get(cameras, int_arg(args, :trigger_id)) do
+      %{} = camera ->
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.Trigger.update_camera(camera.id, bool_arg(args, :enable))
+        )
+
+        state
+
+      _ ->
+        state
+    end
+  end
+
   defp execute_action("select_camera_path", args, _script_name, state) do
     Managers.Field.broadcast(
       state.topic,
@@ -219,6 +252,12 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       )
     )
 
+    state
+  end
+
+  # clears the cinematic dialog bubble at the end of a scripted talk beat
+  defp execute_action("remove_cinematic_talk", _args, _script_name, state) do
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.remove_talk())
     state
   end
 
