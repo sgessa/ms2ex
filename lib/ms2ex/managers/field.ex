@@ -54,6 +54,23 @@ defmodule Ms2ex.Managers.Field do
   # -- lifecycle -------------------------------------------------------------
 
   @doc """
+  Persists the character's current map after a field change. Instanced
+  maps are never persisted — the pre-instance map stays saved, so a relog
+  returns the player to where the instance was entered from — but the
+  in-memory map id follows the new map in both cases: the field process
+  for the visit is built from it.
+  """
+  @spec update_current_map(Schema.Character.t(), map()) :: Schema.Character.t()
+  def update_current_map(%Schema.Character{} = character, %{id: map_id} = _new_map) do
+    if Storage.Tables.InstanceFields.instanced?(map_id) do
+      Map.put(character, :map_id, map_id)
+    else
+      {:ok, character} = Context.Characters.update(character, %{map_id: map_id})
+      character
+    end
+  end
+
+  @doc """
   Binds the character to a field instance: a pending `change_map` instance
   (fresh allocation from `change_field/2,4`) wins, an existing stamp is
   kept while the character stays on the same field, anything else
@@ -229,7 +246,6 @@ defmodule Ms2ex.Managers.Field do
   def field_name(map_id, channel_id, instance_id) do
     :"field:#{map_id}:channel:#{channel_id}:instance:#{instance_id || 0}"
   end
-
 
   # -- process plumbing ------------------------------------------------------
 

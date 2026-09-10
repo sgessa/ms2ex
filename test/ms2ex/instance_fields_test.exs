@@ -77,6 +77,14 @@ defmodule Ms2ex.InstanceFieldsTest do
              Managers.Field.assign_instance(%Schema.Character{map_id: @channel_scale_map})
   end
 
+  test "a field change to an instanced map moves the in-memory map, not the saved one" do
+    character = %Schema.Character{map_id: @shared_map, change_map: nil}
+
+    new_map = %{id: @tutorial_map, position: %{x: 0, y: 0, z: 0}, rotation: nil, instance: 3}
+
+    assert %{map_id: @tutorial_map} = Managers.Field.update_current_map(character, new_map)
+  end
+
   test "solo maps allocate a fresh instance id per entry, others share" do
     assert first = Managers.Field.instance_id(@tutorial_map)
     assert second = Managers.Field.instance_id(@tutorial_map)
