@@ -115,6 +115,9 @@ defmodule Ms2ex.Schema.Character do
     field :death_tick, :integer, default: 0
     field :instant_revive_count, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
+    # the field instance the session is bound to; allocated once per
+    # transition and never persisted (see Managers.Field.assign_instance/1)
+    field :field_instance, :integer, virtual: true
     field :gender, Ms2ex.Enums.Gender, default: :male
     field :gear_score, :integer, virtual: true, default: 0
     field :guild_id, :integer, virtual: true, default: 0

@@ -23,6 +23,7 @@ defmodule Ms2ex.Managers.Field.Character do
     character = %{character | map_id: state.map_id}
 
     character = Map.put(character, :field_pid, self())
+    character = Map.put(character, :field_instance, state.instance)
     Managers.Character.call(character, {:update, character})
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)

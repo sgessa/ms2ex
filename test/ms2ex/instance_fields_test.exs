@@ -2,6 +2,7 @@ defmodule Ms2ex.InstanceFieldsTest do
   use Ms2ex.DataCase, async: true
 
   alias Ms2ex.Managers
+  alias Ms2ex.Schema
   alias Ms2ex.Storage.Tables.InstanceFields
 
   @tutorial_map 52_000_001
@@ -44,6 +45,27 @@ defmodule Ms2ex.InstanceFieldsTest do
 
     assert Managers.Field.field_name(@tutorial_map, 1, 7) !=
              Managers.Field.field_name(@tutorial_map, 1, 8)
+  end
+
+  test "assign_instance keeps the pending change_map instance" do
+    character = %Schema.Character{map_id: @tutorial_map, change_map: %{instance: 9}}
+
+    assert %{field_instance: 9} = Managers.Field.assign_instance(character)
+  end
+
+  test "assign_instance keeps the current stamp while on the same field" do
+    character = %Schema.Character{map_id: @tutorial_map, field_instance: 5}
+
+    assert %{field_instance: 5} = Managers.Field.assign_instance(character)
+  end
+
+  test "assign_instance allocates for solo maps and binds shared maps to 0" do
+    assert first = Managers.Field.assign_instance(%Schema.Character{map_id: @tutorial_map})
+    assert second = Managers.Field.assign_instance(%Schema.Character{map_id: @tutorial_map})
+    assert first.field_instance != second.field_instance
+
+    assert %{field_instance: 0} =
+             Managers.Field.assign_instance(%Schema.Character{map_id: @channel_scale_map})
   end
 
   test "solo maps allocate a fresh instance id per entry, others share" do

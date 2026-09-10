@@ -16,8 +16,17 @@ absent from the table are ordinary shared fields.
   (`Managers.Field.field_name/3`): two players entering the same `solo`
   tutorial map land in two independent field processes — own npcs,
   own trigger machines, own drops.
-- `Managers.Field.instance_id/1` allocates a fresh unique id per call
-  for `solo` maps and returns 0 (shared) for everything else.
+- The instance id is allocated once per transition and carried on the
+  character: `change_field` stamps it into `change_map`,
+  `Managers.Field.assign_instance/1` binds it before the field subscribe,
+  and `enter/1` reuses it — a repeated field enter for the same visit
+  rejoins the same field instead of spawning another one.
+- The field's PubSub topic carries the instance id too (`init/3`-built
+  via `field_name/3`), so two solo instances of the same map never hear
+  each other's packets; session-side topic helpers read
+  `character.field_instance`.
+- `Managers.Field.instance_id/1` allocates a fresh unique id for `solo`
+  maps and returns 0 (shared) for everything else.
 - Relog parity: instanced maps are never persisted as the character's
   current map (`response_field_enter` skips the `map_id` update), so a
   relog returns the player to the map the instance was entered from.

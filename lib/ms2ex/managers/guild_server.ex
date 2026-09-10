@@ -136,13 +136,16 @@ defmodule Ms2ex.Managers.GuildServer do
     end
   end
 
-  def handle_call({:update_member_map, character_id, map_id}, _from, state) do
+  def handle_call({:update_member_map, character_id, map_id, field_instance}, _from, state) do
     case Map.get(state.members, character_id) do
       nil ->
         {:reply, :error, state}
 
       member ->
-        updated_member = Map.put(member, :map_id, map_id)
+        updated_member =
+          member
+          |> Map.put(:map_id, map_id)
+          |> Map.put(:field_instance, field_instance || 0)
         members = Map.put(state.members, character_id, updated_member)
         state = %{state | members: members}
 
@@ -525,7 +528,8 @@ defmodule Ms2ex.Managers.GuildServer do
             Managers.GuildServer.unsubscribe(state.id)
           end)
 
-          topic = Managers.Field.field_name(target.map_id, target.channel)
+          topic =
+            Managers.Field.field_name(target.map_id, target.channel, Map.get(target, :field_instance, 0))
           Managers.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
 
           SenderSession.push(
@@ -812,6 +816,7 @@ defmodule Ms2ex.Managers.GuildServer do
       job: char.job,
       map_id: char.map_id,
       channel: char.channel_id || 1,
+      field_instance: char.field_instance || 0,
       profile_url: char.profile_url || "",
       gear_score: char.gear_score || 0,
       trophies: char.trophies || [0, 0, 0],
@@ -829,6 +834,7 @@ defmodule Ms2ex.Managers.GuildServer do
       job: char.job || :beginner,
       map_id: char.map_id || 1,
       channel: 1,
+      field_instance: 0,
       profile_url: char.profile_url || "",
       gear_score: char.gear_score || 0,
       trophies: char.trophies || [0, 0, 0],

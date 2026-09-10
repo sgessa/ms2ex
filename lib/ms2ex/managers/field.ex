@@ -54,14 +54,39 @@ defmodule Ms2ex.Managers.Field do
   # -- lifecycle -------------------------------------------------------------
 
   @doc """
+  Binds the character to a field instance: a pending `change_map` instance
+  (fresh allocation from `change_field/2,4`) wins, an existing stamp is
+  kept while the character stays on the same field, anything else
+  allocates.
+  """
+  @spec assign_instance(Schema.Character.t()) :: Schema.Character.t()
+  def assign_instance(%Schema.Character{change_map: %{instance: instance}} = character),
+    do: Map.put(character, :field_instance, instance)
+
+  def assign_instance(%Schema.Character{field_instance: instance} = character)
+      when is_integer(instance),
+      do: character
+
+  def assign_instance(%Schema.Character{} = character),
+    do: Map.put(character, :field_instance, instance_id(character.map_id))
+
+  @doc """
   Adds a character to a field, creating the field process if it doesn't
   exist. Returns `{:ok, pid}` for a fresh field, `{:ok, field_pid}` when the
   character joined an existing one.
   """
   @spec enter(Schema.Character.t()) :: :ok | {:ok, pid()} | {:error, term()}
   def enter(%Schema.Character{} = character) do
-    instance_id = instance_id(character.map_id)
-    pid = field_pid(character.map_id, character.channel_id, instance_id)
+    # the instance is allocated once per transition and carried on the
+    # character (change_field stamps it into change_map): a repeated field
+    # enter for the same visit rejoins the same field instead of spawning
+    # another one
+    instance =
+      character.field_instance ||
+        instance_id(character.map_id)
+
+    character = Map.put(character, :field_instance, instance)
+    pid = field_pid(character.map_id, character.channel_id, instance)
 
     if pid && Process.alive?(pid) do
       call(pid, {:add_character, character})
@@ -69,7 +94,7 @@ defmodule Ms2ex.Managers.Field do
       GenServer.start(
         __MODULE__,
         character,
-        name: field_name(character.map_id, character.channel_id, instance_id)
+        name: field_name(character.map_id, character.channel_id, instance)
       )
     end
   end
@@ -109,11 +134,16 @@ defmodule Ms2ex.Managers.Field do
   @doc "Changes a character's field to a new map at a specific position."
   @spec change_field(Schema.Character.t(), integer(), map(), map()) :: :ok | {:error, term()}
   def change_field(character, map_id, position, rotation) do
+    instance = instance_id(map_id)
+
     with :ok <- leave_for_change(character) do
       character =
         character
         |> Context.Characters.maybe_discover_map(map_id)
-        |> Map.put(:change_map, %{id: map_id, position: position, rotation: rotation})
+        |> Map.put(
+          :change_map,
+          %{id: map_id, position: position, rotation: rotation, instance: instance}
+        )
 
       Managers.Character.call(character, {:update, character})
 
@@ -138,7 +168,7 @@ defmodule Ms2ex.Managers.Field do
   @doc "Broadcasts a packet to every character on a field."
   @spec broadcast(Schema.Character.t() | term(), binary()) :: :ok
   def broadcast(%Schema.Character{} = character, packet) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
     broadcast(topic, packet)
   end
 
@@ -167,21 +197,21 @@ defmodule Ms2ex.Managers.Field do
   """
   @spec broadcast_from(Schema.Character.t(), binary(), pid()) :: :ok
   def broadcast_from(%Schema.Character{} = character, packet, from) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
     PubSub.broadcast_from(Ms2ex.PubSub, from, to_string(topic), {:push, packet})
   end
 
   @doc "Subscribes the current process to a character's field events."
   @spec subscribe(Schema.Character.t()) :: :ok | {:error, term()}
   def subscribe(%Schema.Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
     PubSub.subscribe(Ms2ex.PubSub, to_string(topic))
   end
 
   @doc "Unsubscribes the current process from a character's field events."
   @spec unsubscribe(Schema.Character.t()) :: :ok
   def unsubscribe(%Schema.Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id)
+    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
     PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
   end
 
@@ -541,7 +571,8 @@ defmodule Ms2ex.Managers.Field do
   def init(%{map_id: map_id, channel_id: channel_id} = character) do
     Logger.info("Start Field #{map_id} @ Channel #{channel_id}")
 
-    field_name = field_name(map_id, channel_id)
+    instance = character.field_instance || 0
+    field_name = field_name(map_id, channel_id, instance)
 
     {local_id_counter, portals} = __MODULE__.Portal.load(map_id, @local_id_counter)
     interactable = __MODULE__.InteractObject.load(map_id)
@@ -551,6 +582,7 @@ defmodule Ms2ex.Managers.Field do
         buffs: %{},
         banners: __MODULE__.Banner.load(map_id),
         channel_id: channel_id,
+        instance: instance,
         local_id_counter: local_id_counter,
         interactable: interactable,
         instruments: %{},
