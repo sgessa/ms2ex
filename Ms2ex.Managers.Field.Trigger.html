@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-27124D8A.js"></script>
+    <script defer src="dist/sidebar_items-5E22709A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -117,9 +117,8 @@ MS2EX
 <p>Trigger-script runtime: every map script runs as an independent state
 machine. A machine enters a state (running its on-enter actions), then
 each cycle evaluates the state's conditions in document order — the
-first that evaluates true runs its inline actions and transitions.</p><p>Function arguments arrive verbatim from the client data (positional
-arg1..N or named); their meaning follows each function's catalog
-signature.</p>
+first that evaluates true runs its inline actions and transitions.</p><p>The condition and action catalogs live in <code class="inline">Trigger.Conditions</code> and
+<code class="inline">Trigger.Actions</code>.</p>
     </section>
 
 </div>
@@ -135,6 +134,17 @@ signature.</p>
   <h3>
     <a href="#functions">Functions</a>
   </h3>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#box_contains?/2" data-no-tooltip="" translate="no">box_contains?(box, map)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether a position is inside a trigger box; boxes grow by 10 units on
+every axis to compensate for entity size.</p></div>
+
+    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -171,14 +181,6 @@ signature.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#maybe_release_guide_hold/1" data-no-tooltip="" translate="no">maybe_release_guide_hold(state)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#quest_state_matches?/2" data-no-tooltip="" translate="no">quest_state_matches?(quest, wanted)</a>
 
       </div>
 
@@ -246,6 +248,29 @@ signature.</p>
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="box_contains?/2">
+
+  <div class="detail-header">
+    <a href="#box_contains?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">box_contains?(box, map)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L350" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Whether a position is inside a trigger box; boxes grow by 10 units on
+every axis to compensate for entity size.</p>
+  </section>
+</section>
 <section class="detail" id="drop_position/2">
 
   <div class="detail-header">
@@ -256,7 +281,7 @@ signature.</p>
       <h1 class="signature" translate="no">drop_position(state, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L149" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L146" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -278,7 +303,7 @@ signature.</p>
       <h1 class="signature" translate="no">guide_held?(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L213" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L211" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -300,7 +325,7 @@ signature.</p>
       <h1 class="signature" translate="no">init_machines(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L101" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L96" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -322,7 +347,7 @@ signature.</p>
       <h1 class="signature" translate="no">init_triggers(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L31" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -344,7 +369,7 @@ signature.</p>
       <h1 class="signature" translate="no">maybe_release_guide_hold(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L220" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L218" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -352,34 +377,6 @@ signature.</p>
   </div>
 
   <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="quest_state_matches?/2">
-
-  <div class="detail-header">
-    <a href="#quest_state_matches?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">quest_state_matches?(quest, wanted)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L431" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> quest_state_matches?(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
 
 
   </section>
@@ -394,7 +391,7 @@ signature.</p>
       <h1 class="signature" translate="no">release_guide_hold(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L216" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L214" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -416,7 +413,7 @@ signature.</p>
       <h1 class="signature" translate="no">skip_cutscene(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L171" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L170" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -460,7 +457,7 @@ signature.</p>
       <h1 class="signature" translate="no">track_job(state, character_id, job_code)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L129" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L126" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -482,7 +479,7 @@ signature.</p>
       <h1 class="signature" translate="no">track_position(state, character_id, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L117" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L114" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -504,7 +501,7 @@ signature.</p>
       <h1 class="signature" translate="no">update_widget(state, widget_key, arg)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L153" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L152" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

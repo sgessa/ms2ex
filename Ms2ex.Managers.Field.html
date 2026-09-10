@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-27124D8A.js"></script>
+    <script defer src="dist/sidebar_items-5E22709A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -113,6 +113,17 @@ MS2EX
   </div>
 
 
+    <section id="moduledoc">
+<p>One field process owns the live state of a single map instance (map +
+channel): the players on it, npcs, items, buffs, trigger-script machines
+and every other field-object system.</p><p>The process state is transformed by the <code class="inline">Managers.Field.*</code> submodules —
+each owns one field-object system and follows the state-in/state-out
+pattern:</p><ul><li><code class="inline">Field.Banner</code> — UGC banner slots (persistence via <code class="inline">Context.BannerSlots</code>)</li><li><code class="inline">Field.Buff</code> — effect buffs and their ticks</li><li><code class="inline">Field.Character</code> — the join/leave sequences and periodic stat updates</li><li><code class="inline">Field.Instrument</code> — instruments in play</li><li><code class="inline">Field.InteractObject</code> — interact-object lifecycles</li><li><code class="inline">Field.Item</code> — field drops and pickups</li><li><code class="inline">Field.Liftable</code> — quest liftable props</li><li><code class="inline">Field.Npc</code> — npc spawns, damage/death and spawn cycles</li><li><code class="inline">Field.Npc.Patrol</code> — npc movement along patrol paths</li><li><code class="inline">Field.PerformanceStage</code> — the concert stage</li><li><code class="inline">Field.Portal</code> — portal loading</li><li><code class="inline">Field.RegionSkill</code> — region skill zones and splash ticks</li><li><code class="inline">Field.Tombstone</code> — dead players' tombstones</li><li><code class="inline">Field.Trigger</code> — the trigger-script runtime (see also
+<code class="inline">Field.Trigger.Actions</code> and <code class="inline">Field.Trigger.Conditions</code>)</li></ul><p>This module is both the GenServer and the manager's API surface: handlers
+and other processes go through the named functions below (or the generic
+<a href="#call/2"><code class="inline">call/2</code></a>/<a href="#cast/2"><code class="inline">cast/2</code></a> for the field process they are already talking to).</p>
+    </section>
+
 </div>
 
   <section id="summary" class="details-list">
@@ -129,11 +140,280 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_buff/3" data-no-tooltip="" translate="no">add_buff(character, skill_cast, skill)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies a skill's buff from a skill cast to its caster.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_effect_buff/4" data-no-tooltip="" translate="no">add_effect_buff(character, effect_id, effect_level, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies an additional-effect buff to the character (caster = owner).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_effect_buff_for/4" data-no-tooltip="" translate="no">add_effect_buff_for(owner, caster, effect_id, effect_level)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies an additional-effect buff cast by <code class="inline">caster</code> on <code class="inline">owner</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_instrument/2" data-no-tooltip="" translate="no">add_instrument(character, instrument)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Spawns the instrument a character is playing, assigning a field object id.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_mob/2" data-no-tooltip="" translate="no">add_mob(character, npc)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Spawns a mob (field npc) on the character's field at their position.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_mob_drop/3" data-no-tooltip="" translate="no">add_mob_drop(field_npc, item, receiver \\ nil)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Drops an item from a field npc (mob) into the field, locked to the given
+receiver when one is provided (nil for shared/unlocked drops).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_region_skill/2" data-no-tooltip="" translate="no">add_region_skill(character, skill_cast)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds a region skill (skill effect zone) to the character's field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_tombstone/1" data-no-tooltip="" translate="no">add_tombstone(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds a tombstone for a dead character, broadcasting it so other players
+can hit it to revive the owner.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#apply_skill_effects/3" data-no-tooltip="" translate="no">apply_skill_effects(character, skill_cast, mob_object_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies a skill cast's on-hit effects to a field npc.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#attach_banner/4" data-no-tooltip="" translate="no">attach_banner(character, banner_id, slot_ids, ugc)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Attaches artwork to the character's own empty banner slots.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#banners/1" data-no-tooltip="" translate="no">banners(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists every banner of the character's field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#broadcast/2" data-no-tooltip="" translate="no">broadcast(character, packet)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Broadcasts a packet to every character on a field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#broadcast_from/3" data-no-tooltip="" translate="no">broadcast_from(character, packet, from)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Broadcasts a packet to every character on the character's field except
+the given process.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#broadcast_stats/1" data-no-tooltip="" translate="no">broadcast_stats(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Sends the full stat set to the character and the compact player stat
+update to every other character in the same field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#call/2" data-no-tooltip="" translate="no">call(pid, args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Makes a synchronous call to a character's field process; <code class="inline">:error</code> when
+the character has no field or the call fails.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cast/2" data-no-tooltip="" translate="no">cast(pid, args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Makes an asynchronous cast to a character's field process.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#change_field/2" data-no-tooltip="" translate="no">change_field(character, map_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Changes a character's field to a new map, using the map's default spawn
+point.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#change_field/4" data-no-tooltip="" translate="no">change_field(character, map_id, position, rotation)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Changes a character's field to a new map at a specific position.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#child_spec/1" data-no-tooltip="" translate="no">child_spec(init_arg)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#clear_tombstone/1" data-no-tooltip="" translate="no">clear_tombstone(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Broadcasts a tombstone with zero hits remaining and removes it (when its
+owner revives); clients tear down the tombstone entity.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#confirm_banner/3" data-no-tooltip="" translate="no">confirm_banner(character, resource_id, path)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Confirms an artwork upload, storing the rendered image on its slot.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#drop_item/2" data-no-tooltip="" translate="no">drop_item(character, item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Drops an item from a character's inventory into the field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#drop_item/3" data-no-tooltip="" translate="no">drop_item(character, item, position)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Drops an item at a fixed position instead of at the character's feet.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#end_performance/1" data-no-tooltip="" translate="no">end_performance(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Releases the performance stage; ignored when not the current performer.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#enter/1" data-no-tooltip="" translate="no">enter(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds a character to a field, creating the field process if it doesn't
+exist. Returns <code class="inline">{:ok, pid}</code> for a fresh field, <code class="inline">{:ok, field_pid}</code> when the
+character joined an existing one.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#enter_battle_stance/1" data-no-tooltip="" translate="no">enter_battle_stance(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Puts a character into battle stance (the field drops it after a beat).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#field_name/2" data-no-tooltip="" translate="no">field_name(map_id, channel_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Generates a unique field process name from a map ID and channel ID.</p></div>
 
     </div>
 
@@ -149,6 +429,48 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#has_buff?/2" data-no-tooltip="" translate="no">has_buff?(character, effect_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether the character currently has the given effect active, whoever cast it.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#has_buff_event?/2" data-no-tooltip="" translate="no">has_buff_event?(character, event_type)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether the character's field has an effect of the given event category
+active on them (the auto-fish and auto-perform conveniences, safe riding).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#hit_tombstone/3" data-no-tooltip="" translate="no">hit_tombstone(character, object_id, hits)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Registers a hit against a dead character's tombstone; reduces the hits
+remaining and revives the owner when it reaches zero.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#inflict_dmg/3" data-no-tooltip="" translate="no">inflict_dmg(attacker, dmg, object_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies damage to a field npc on the character's field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#init/1" data-no-tooltip="" translate="no">init(character)</a>
 
       </div>
@@ -159,9 +481,243 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#interact_object/2" data-no-tooltip="" translate="no">interact_object(character, uuid)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Completes a player's interaction with a field interact object. Returns
+<code class="inline">{:ok, object}</code> when the object exists so callers can progress
+interact-object quest conditions and run gathering.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#leave/1" data-no-tooltip="" translate="no">leave(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes a character from their current field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lookup_instrument/1" data-no-tooltip="" translate="no">lookup_instrument(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Looks up the instrument a character is currently playing.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lookup_npc/2" data-no-tooltip="" translate="no">lookup_npc(character, object_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Looks up an npc by object id in the character's field.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#modify_buff_duration/3" data-no-tooltip="" translate="no">modify_buff_duration(character, effect_id, modify_tick)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Shifts the remaining duration of the character's effect.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#next_local_id/1" data-no-tooltip="" translate="no">next_local_id(state)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Allocates the next field-local object id (npcs, items, effects, ...).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#next_object_id/1" data-no-tooltip="" translate="no">next_object_id(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Allocates a field-unique object id (guide objects, effects, ...).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#performance_stage?/1" data-no-tooltip="" translate="no">performance_stage?(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether the character's field has a performance stage (the concert map).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#pickup_item/2" data-no-tooltip="" translate="no">pickup_item(character, object_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Picks up a field item by object id.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#pickup_liftable/2" data-no-tooltip="" translate="no">pickup_liftable(character, uuid)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The character picks up a liftable prop with the interact key.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#place_liftable/4" data-no-tooltip="" translate="no">place_liftable(character, grid, item_id, rotation)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The character places a held liftable at a grid tile.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_effect_buff/2" data-no-tooltip="" translate="no">remove_effect_buff(character, effect_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes a single effect from the character, whoever cast it.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_instrument/1" data-no-tooltip="" translate="no">remove_instrument(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Despawns a character's instrument, returning it so callers can announce the stop.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_npc/1" data-no-tooltip="" translate="no">remove_npc(field_npc)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes an npc from its field (idempotent).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_owner_buffs/1" data-no-tooltip="" translate="no">remove_owner_buffs(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes all buffs owned by the character (e.g. on death).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_tombstone/1" data-no-tooltip="" translate="no">remove_tombstone(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes a character's tombstone from the field (on field leave).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#reserve_banner_slots/3" data-no-tooltip="" translate="no">reserve_banner_slots(character, banner_id, reservations)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Reserves banner slots for a character.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#skip_cutscene/1" data-no-tooltip="" translate="no">skip_cutscene(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The player pressed the cutscene skip button.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_performance/1" data-no-tooltip="" translate="no">start_performance(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Claims the performance stage, announcing the concert to everyone on the map.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#subscribe/1" data-no-tooltip="" translate="no">subscribe(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Subscribes the current process to a character's field events.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#toggle_stage/1" data-no-tooltip="" translate="no">toggle_stage(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Moves the character on or off the concert stage.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#unsubscribe/1" data-no-tooltip="" translate="no">unsubscribe(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Unsubscribes the current process from a character's field events.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_widget/3" data-no-tooltip="" translate="no">update_widget(character, widget_key, arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies a client widget update (guide events, finished scene movies).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#user_position/2" data-no-tooltip="" translate="no">user_position(character, position)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Feeds a character's live position to the trigger conditions.</p></div>
 
     </div>
 
@@ -179,6 +735,537 @@ MS2EX
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="add_buff/3">
+
+  <div class="detail-header">
+    <a href="#add_buff/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_buff(character, skill_cast, skill)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L283" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_buff(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | :error</pre>
+
+      </div>
+
+<p>Applies a skill's buff from a skill cast to its caster.</p>
+  </section>
+</section>
+<section class="detail" id="add_effect_buff/4">
+
+    <span id="add_effect_buff/3"></span>
+
+  <div class="detail-header">
+    <a href="#add_effect_buff/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_effect_buff(character, effect_id, effect_level, opts \\ [])</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L298" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_effect_buff(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">keyword</a>()) ::
+  :ok | :error</pre>
+
+      </div>
+
+<p>Applies an additional-effect buff to the character (caster = owner).</p><h2 id="add_effect_buff/4-options" class="section-heading"><a href="#add_effect_buff/4-options" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Options</span></h2><ul><li><code class="inline">:overlap_count</code> — initial stack count</li><li><code class="inline">:duration_tick</code> / <code class="inline">:elapsed_tick</code> — override the effect's window
+(stored-buff restores)</li></ul>
+  </section>
+</section>
+<section class="detail" id="add_effect_buff_for/4">
+
+  <div class="detail-header">
+    <a href="#add_effect_buff_for/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_effect_buff_for(owner, caster, effect_id, effect_level)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L305" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_effect_buff_for(
+  <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(),
+  <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()
+) ::
+  :ok | :error</pre>
+
+      </div>
+
+<p>Applies an additional-effect buff cast by <code class="inline">caster</code> on <code class="inline">owner</code>.</p>
+  </section>
+</section>
+<section class="detail" id="add_instrument/2">
+
+  <div class="detail-header">
+    <a href="#add_instrument/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_instrument(character, instrument)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L350" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_instrument(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Types.FieldInstrument.html#t:t/0">Ms2ex.Types.FieldInstrument.t</a>()) ::
+  {:ok, <a href="Ms2ex.Types.FieldInstrument.html#t:t/0">Ms2ex.Types.FieldInstrument.t</a>()} | :error</pre>
+
+      </div>
+
+<p>Spawns the instrument a character is playing, assigning a field object id.</p>
+  </section>
+</section>
+<section class="detail" id="add_mob/2">
+
+  <div class="detail-header">
+    <a href="#add_mob/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_mob(character, npc)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L218" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_mob(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), Ms2ex.Types.Npc.t()) :: :ok</pre>
+
+      </div>
+
+<p>Spawns a mob (field npc) on the character's field at their position.</p>
+  </section>
+</section>
+<section class="detail" id="add_mob_drop/3">
+
+    <span id="add_mob_drop/2"></span>
+
+  <div class="detail-header">
+    <a href="#add_mob_drop/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_mob_drop(field_npc, item, receiver \\ nil)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L256" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_mob_drop(
+  <a href="Ms2ex.Types.FieldNpc.html#t:t/0">Ms2ex.Types.FieldNpc.t</a>(),
+  <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(),
+  <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>() | nil
+) ::
+  :ok | :error</pre>
+
+      </div>
+
+<p>Drops an item from a field npc (mob) into the field, locked to the given
+receiver when one is provided (nil for shared/unlocked drops).</p>
+  </section>
+</section>
+<section class="detail" id="add_region_skill/2">
+
+  <div class="detail-header">
+    <a href="#add_region_skill/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_region_skill(character, skill_cast)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L487" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_region_skill(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+<p>Adds a region skill (skill effect zone) to the character's field.</p>
+  </section>
+</section>
+<section class="detail" id="add_tombstone/1">
+
+  <div class="detail-header">
+    <a href="#add_tombstone/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_tombstone(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L405" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Adds a tombstone for a dead character, broadcasting it so other players
+can hit it to revive the owner.</p>
+  </section>
+</section>
+<section class="detail" id="apply_skill_effects/3">
+
+  <div class="detail-header">
+    <a href="#apply_skill_effects/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">apply_skill_effects(character, skill_cast, mob_object_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L244" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> apply_skill_effects(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Applies a skill cast's on-hit effects to a field npc.</p>
+  </section>
+</section>
+<section class="detail" id="attach_banner/4">
+
+  <div class="detail-header">
+    <a href="#attach_banner/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">attach_banner(character, banner_id, slot_ids, ugc)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L445" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> attach_banner(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()], <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | :error</pre>
+
+      </div>
+
+<p>Attaches artwork to the character's own empty banner slots.</p>
+  </section>
+</section>
+<section class="detail" id="banners/1">
+
+  <div class="detail-header">
+    <a href="#banners/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">banners(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L457" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> banners(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()] | :error</pre>
+
+      </div>
+
+<p>Lists every banner of the character's field.</p>
+  </section>
+</section>
+<section class="detail" id="broadcast/2">
+
+  <div class="detail-header">
+    <a href="#broadcast/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">broadcast(character, packet)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L124" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> broadcast(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Broadcasts a packet to every character on a field.</p>
+  </section>
+</section>
+<section class="detail" id="broadcast_from/3">
+
+  <div class="detail-header">
+    <a href="#broadcast_from/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">broadcast_from(character, packet, from)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L153" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> broadcast_from(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Broadcasts a packet to every character on the character's field except
+the given process.</p>
+  </section>
+</section>
+<section class="detail" id="broadcast_stats/1">
+
+  <div class="detail-header">
+    <a href="#broadcast_stats/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">broadcast_stats(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L138" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> broadcast_stats(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Sends the full stat set to the character and the compact player stat
+update to every other character in the same field.</p>
+  </section>
+</section>
+<section class="detail" id="call/2">
+
+  <div class="detail-header">
+    <a href="#call/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">call(pid, args)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L195" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> call(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>() | :error</pre>
+
+      </div>
+
+<p>Makes a synchronous call to a character's field process; <code class="inline">:error</code> when
+the character has no field or the call fails.</p>
+  </section>
+</section>
+<section class="detail" id="cast/2">
+
+  <div class="detail-header">
+    <a href="#cast/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">cast(pid, args)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L210" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cast(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Makes an asynchronous cast to a character's field process.</p>
+  </section>
+</section>
+<section class="detail" id="change_field/2">
+
+  <div class="detail-header">
+    <a href="#change_field/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">change_field(character, map_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L87" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> change_field(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Changes a character's field to a new map, using the map's default spawn
+point.</p>
+  </section>
+</section>
+<section class="detail" id="change_field/4">
+
+  <div class="detail-header">
+    <a href="#change_field/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">change_field(character, map_id, position, rotation)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L95" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> change_field(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Changes a character's field to a new map at a specific position.</p>
+  </section>
+</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
@@ -189,7 +1276,7 @@ MS2EX
       <h1 class="signature" translate="no">child_spec(init_arg)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L2" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L32" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -199,6 +1286,235 @@ MS2EX
   <section class="docstring">
 
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="clear_tombstone/1">
+
+  <div class="detail-header">
+    <a href="#clear_tombstone/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">clear_tombstone(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L420" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> clear_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Broadcasts a tombstone with zero hits remaining and removes it (when its
+owner revives); clients tear down the tombstone entity.</p>
+  </section>
+</section>
+<section class="detail" id="confirm_banner/3">
+
+  <div class="detail-header">
+    <a href="#confirm_banner/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">confirm_banner(character, resource_id, path)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L451" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> confirm_banner(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | :error</pre>
+
+      </div>
+
+<p>Confirms an artwork upload, storing the rendered image on its slot.</p>
+  </section>
+</section>
+<section class="detail" id="drop_item/2">
+
+  <div class="detail-header">
+    <a href="#drop_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">drop_item(character, item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L262" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> drop_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Drops an item from a character's inventory into the field.</p>
+  </section>
+</section>
+<section class="detail" id="drop_item/3">
+
+  <div class="detail-header">
+    <a href="#drop_item/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">drop_item(character, item, position)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L268" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> drop_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  :ok | :error</pre>
+
+      </div>
+
+<p>Drops an item at a fixed position instead of at the character's feet.</p>
+  </section>
+</section>
+<section class="detail" id="end_performance/1">
+
+  <div class="detail-header">
+    <a href="#end_performance/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">end_performance(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L382" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> end_performance(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Releases the performance stage; ignored when not the current performer.</p>
+  </section>
+</section>
+<section class="detail" id="enter/1">
+
+  <div class="detail-header">
+    <a href="#enter/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">enter(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L62" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> enter(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Adds a character to a field, creating the field process if it doesn't
+exist. Returns <code class="inline">{:ok, pid}</code> for a fresh field, <code class="inline">{:ok, field_pid}</code> when the
+character joined an existing one.</p>
+  </section>
+</section>
+<section class="detail" id="enter_battle_stance/1">
+
+  <div class="detail-header">
+    <a href="#enter_battle_stance/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">enter_battle_stance(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L394" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> enter_battle_stance(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Puts a character into battle stance (the field drops it after a beat).</p>
+  </section>
+</section>
+<section class="detail" id="field_name/2">
+
+  <div class="detail-header">
+    <a href="#field_name/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">field_name(map_id, channel_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L174" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> field_name(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>Generates a unique field process name from a map ID and channel ID.</p>
   </section>
 </section>
 <section class="detail" id="handle_continue/2">
@@ -211,7 +1527,7 @@ MS2EX
       <h1 class="signature" translate="no">handle_continue(arg, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L181" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L566" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -221,6 +1537,121 @@ MS2EX
   <section class="docstring">
 
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:handle_continue/2"><code class="inline">GenServer.handle_continue/2</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="has_buff?/2">
+
+  <div class="detail-header">
+    <a href="#has_buff?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">has_buff?(character, effect_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L311" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> has_buff?(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Whether the character currently has the given effect active, whoever cast it.</p>
+  </section>
+</section>
+<section class="detail" id="has_buff_event?/2">
+
+  <div class="detail-header">
+    <a href="#has_buff_event?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">has_buff_event?(character, event_type)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L320" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> has_buff_event?(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Whether the character's field has an effect of the given event category
+active on them (the auto-fish and auto-perform conveniences, safe riding).</p>
+  </section>
+</section>
+<section class="detail" id="hit_tombstone/3">
+
+  <div class="detail-header">
+    <a href="#hit_tombstone/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">hit_tombstone(character, object_id, hits)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L429" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> hit_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Registers a hit against a dead character's tombstone; reduces the hits
+remaining and revives the owner when it reaches zero.</p>
+  </section>
+</section>
+<section class="detail" id="inflict_dmg/3">
+
+  <div class="detail-header">
+    <a href="#inflict_dmg/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">inflict_dmg(attacker, dmg, object_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L238" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> inflict_dmg(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  {:ok, <a href="Ms2ex.Types.FieldNpc.html#t:t/0">Ms2ex.Types.FieldNpc.t</a>()} | :error</pre>
+
+      </div>
+
+<p>Applies damage to a field npc on the character's field.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -233,7 +1664,7 @@ MS2EX
       <h1 class="signature" translate="no">init(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L136" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L521" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -243,6 +1674,151 @@ MS2EX
   <section class="docstring">
 
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="interact_object/2">
+
+  <div class="detail-header">
+    <a href="#interact_object/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">interact_object(character, uuid)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L481" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> interact_object(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | :error</pre>
+
+      </div>
+
+<p>Completes a player's interaction with a field interact object. Returns
+<code class="inline">{:ok, object}</code> when the object exists so callers can progress
+interact-object quest conditions and run gathering.</p>
+  </section>
+</section>
+<section class="detail" id="leave/1">
+
+  <div class="detail-header">
+    <a href="#leave/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">leave(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L78" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> leave(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Removes a character from their current field.</p>
+  </section>
+</section>
+<section class="detail" id="lookup_instrument/1">
+
+  <div class="detail-header">
+    <a href="#lookup_instrument/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">lookup_instrument(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L356" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lookup_instrument(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) ::
+  {:ok, <a href="Ms2ex.Types.FieldInstrument.html#t:t/0">Ms2ex.Types.FieldInstrument.t</a>()} | :error</pre>
+
+      </div>
+
+<p>Looks up the instrument a character is currently playing.</p>
+  </section>
+</section>
+<section class="detail" id="lookup_npc/2">
+
+  <div class="detail-header">
+    <a href="#lookup_npc/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">lookup_npc(character, object_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L224" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lookup_npc(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  {:ok, <a href="Ms2ex.Types.FieldNpc.html#t:t/0">Ms2ex.Types.FieldNpc.t</a>()} | :error</pre>
+
+      </div>
+
+<p>Looks up an npc by object id in the character's field.</p>
+  </section>
+</section>
+<section class="detail" id="modify_buff_duration/3">
+
+  <div class="detail-header">
+    <a href="#modify_buff_duration/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">modify_buff_duration(character, effect_id, modify_tick)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L326" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> modify_buff_duration(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  :ok | :error</pre>
+
+      </div>
+
+<p>Shifts the remaining duration of the character's effect.</p>
   </section>
 </section>
 <section class="detail" id="next_local_id/1">
@@ -255,7 +1831,7 @@ MS2EX
       <h1 class="signature" translate="no">next_local_id(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L185" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -264,7 +1840,515 @@ MS2EX
 
   <section class="docstring">
 
+<p>Allocates the next field-local object id (npcs, items, effects, ...).</p>
+  </section>
+</section>
+<section class="detail" id="next_object_id/1">
 
+  <div class="detail-header">
+    <a href="#next_object_id/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">next_object_id(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L493" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> next_object_id(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | :error</pre>
+
+      </div>
+
+<p>Allocates a field-unique object id (guide objects, effects, ...).</p>
+  </section>
+</section>
+<section class="detail" id="performance_stage?/1">
+
+  <div class="detail-header">
+    <a href="#performance_stage?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">performance_stage?(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L370" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> performance_stage?(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Whether the character's field has a performance stage (the concert map).</p>
+  </section>
+</section>
+<section class="detail" id="pickup_item/2">
+
+  <div class="detail-header">
+    <a href="#pickup_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">pickup_item(character, object_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L275" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pickup_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+<p>Picks up a field item by object id.</p>
+  </section>
+</section>
+<section class="detail" id="pickup_liftable/2">
+
+  <div class="detail-header">
+    <a href="#pickup_liftable/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">pickup_liftable(character, uuid)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L463" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pickup_liftable(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>The character picks up a liftable prop with the interact key.</p>
+  </section>
+</section>
+<section class="detail" id="place_liftable/4">
+
+  <div class="detail-header">
+    <a href="#place_liftable/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">place_liftable(character, grid, item_id, rotation)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L469" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> place_liftable(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+  :ok | :error</pre>
+
+      </div>
+
+<p>The character places a held liftable at a grid tile.</p>
+  </section>
+</section>
+<section class="detail" id="remove_effect_buff/2">
+
+  <div class="detail-header">
+    <a href="#remove_effect_buff/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_effect_buff(character, effect_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L335" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_effect_buff(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Removes a single effect from the character, whoever cast it.</p>
+  </section>
+</section>
+<section class="detail" id="remove_instrument/1">
+
+  <div class="detail-header">
+    <a href="#remove_instrument/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_instrument(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L362" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_instrument(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) ::
+  {:ok, <a href="Ms2ex.Types.FieldInstrument.html#t:t/0">Ms2ex.Types.FieldInstrument.t</a>()} | :error</pre>
+
+      </div>
+
+<p>Despawns a character's instrument, returning it so callers can announce the stop.</p>
+  </section>
+</section>
+<section class="detail" id="remove_npc/1">
+
+  <div class="detail-header">
+    <a href="#remove_npc/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_npc(field_npc)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L230" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_npc(<a href="Ms2ex.Types.FieldNpc.html#t:t/0">Ms2ex.Types.FieldNpc.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Removes an npc from its field (idempotent).</p>
+  </section>
+</section>
+<section class="detail" id="remove_owner_buffs/1">
+
+  <div class="detail-header">
+    <a href="#remove_owner_buffs/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_owner_buffs(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L341" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_owner_buffs(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Removes all buffs owned by the character (e.g. on death).</p>
+  </section>
+</section>
+<section class="detail" id="remove_tombstone/1">
+
+  <div class="detail-header">
+    <a href="#remove_tombstone/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_tombstone(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L411" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_tombstone(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Removes a character's tombstone from the field (on field leave).</p>
+  </section>
+</section>
+<section class="detail" id="reserve_banner_slots/3">
+
+  <div class="detail-header">
+    <a href="#reserve_banner_slots/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">reserve_banner_slots(character, banner_id, reservations)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L438" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> reserve_banner_slots(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]) ::
+  {:ok, [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]} | :error</pre>
+
+      </div>
+
+<p>Reserves banner slots for a character.</p>
+  </section>
+</section>
+<section class="detail" id="skip_cutscene/1">
+
+  <div class="detail-header">
+    <a href="#skip_cutscene/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">skip_cutscene(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L513" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> skip_cutscene(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>The player pressed the cutscene skip button.</p>
+  </section>
+</section>
+<section class="detail" id="start_performance/1">
+
+  <div class="detail-header">
+    <a href="#start_performance/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">start_performance(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L376" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_performance(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Claims the performance stage, announcing the concert to everyone on the map.</p>
+  </section>
+</section>
+<section class="detail" id="subscribe/1">
+
+  <div class="detail-header">
+    <a href="#subscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">subscribe(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L160" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> subscribe(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Subscribes the current process to a character's field events.</p>
+  </section>
+</section>
+<section class="detail" id="toggle_stage/1">
+
+  <div class="detail-header">
+    <a href="#toggle_stage/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">toggle_stage(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L388" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> toggle_stage(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Moves the character on or off the concert stage.</p>
+  </section>
+</section>
+<section class="detail" id="unsubscribe/1">
+
+  <div class="detail-header">
+    <a href="#unsubscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">unsubscribe(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L167" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> unsubscribe(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Unsubscribes the current process from a character's field events.</p>
+  </section>
+</section>
+<section class="detail" id="update_widget/3">
+
+  <div class="detail-header">
+    <a href="#update_widget/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_widget(character, widget_key, arg)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L507" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update_widget(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Applies a client widget update (guide events, finished scene movies).</p>
+  </section>
+</section>
+<section class="detail" id="user_position/2">
+
+  <div class="detail-header">
+    <a href="#user_position/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">user_position(character, position)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field.ex#L501" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> user_position(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>Feeds a character's live position to the trigger conditions.</p>
   </section>
 </section>
 

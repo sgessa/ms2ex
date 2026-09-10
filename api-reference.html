@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-27124D8A.js"></script>
+    <script defer src="dist/sidebar_items-5E22709A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -238,15 +238,6 @@ drop boxes), shared by mob loot and item boxes.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Context module for character experience-related operations.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Ms2ex.Context.Field.html" translate="no">Ms2ex.<wbr />Context.<wbr />Field</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Context module for field-related operations.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1469,6 +1460,18 @@ rider. Paying grants an additional effect.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Helpers.TriggerArgs.html" translate="no">Ms2ex.<wbr />Helpers.<wbr />TriggerArgs</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Coercion for trigger-script action and condition arguments. Script
+documents arrive with canonical snake_case keys whose values may be
+strings or numbers; these helpers normalize them to the types the
+runtime works with.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.LoginHandlers.CharacterManagement.html" translate="no">Ms2ex.<wbr />LoginHandlers.<wbr />CharacterManagement</a>
 
   </div>
@@ -1610,6 +1613,23 @@ grade reward boxes were claimed.</p></div>
 
   </div>
 
+    <div class="summary-synopsis"><p>One field process owns the live state of a single map instance (map +
+channel): the players on it, npcs, items, buffs, trigger-script machines
+and every other field-object system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Field.Banner.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Banner</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>UGC banners: each map's banners own a set of slots players reserve and
+attach artwork to. Slots are either hour-scoped (a fixed hour of the day)
+or event-scoped (an explicit start/end time). Slot documents persist
+through <code class="inline">Context.BannerSlots</code>; the field keeps the live copy, activates
+slots as their windows open and broadcasts the transitions.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -1672,6 +1692,17 @@ quest's item_move condition.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Managers.Field.Npc.Patrol.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Npc.<wbr />Patrol</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Npc movement along patrol paths: story npcs walk named patrol paths
+(script move_npc) and stay at the last waypoint; the movement math also
+seeds the scripted-carry follow-dummy that <code class="inline">Managers.Field.Npc</code> spawns.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Managers.Field.PerformanceStage.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />PerformanceStage</a>
 
   </div>
@@ -1712,6 +1743,28 @@ clients light up the stage and show the performance timer.</p></div>
 machine. A machine enters a state (running its on-enter actions), then
 each cycle evaluates the state's conditions in document order — the
 first that evaluates true runs its inline actions and transitions.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Field.Trigger.Actions.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Trigger.<wbr />Actions</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Trigger-script action catalog: the server-driven beats a script state
+fires — scene/UI, actors, world state, buffs, items and teleports.
+Unimplemented actions warn in the log so coverage gaps surface per map.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Field.Trigger.Conditions.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Field.<wbr />Trigger.<wbr />Conditions</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Trigger-script condition catalog. A condition evaluates against the
+machine's state and the field state; the runtime runs the first
+condition that returns true.</p></div>
 
 </div>
 <div class="summary-row">

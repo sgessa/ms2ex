@@ -16,7 +16,6 @@ Ms2ex.Context.Dismantle.md
 Ms2ex.Context.Drops.md
 Ms2ex.Context.Emotes.md
 Ms2ex.Context.Experience.md
-Ms2ex.Context.Field.md
 Ms2ex.Context.Fishing.md
 Ms2ex.Context.Friends.md
 Ms2ex.Context.Guilds.md
@@ -176,6 +175,7 @@ Ms2ex.GameHandlers.UserSync.md
 Ms2ex.GameHandlers.Vibrate.md
 Ms2ex.Handlers.ResponseServerEnter.md
 Ms2ex.Handlers.SendLog.md
+Ms2ex.Helpers.TriggerArgs.md
 Ms2ex.LoginHandlers.CharacterManagement.md
 Ms2ex.LoginHandlers.ResponseKey.md
 Ms2ex.LoginHandlers.ResponseLogin.md
@@ -194,17 +194,21 @@ Ms2ex.Managers.Character.SkillCooldown.md
 Ms2ex.Managers.Character.StatPoints.md
 Ms2ex.Managers.Character.Stats.md
 Ms2ex.Managers.Character.md
+Ms2ex.Managers.Field.Banner.md
 Ms2ex.Managers.Field.Buff.md
 Ms2ex.Managers.Field.Character.md
 Ms2ex.Managers.Field.Instrument.md
 Ms2ex.Managers.Field.InteractObject.md
 Ms2ex.Managers.Field.Item.md
 Ms2ex.Managers.Field.Liftable.md
+Ms2ex.Managers.Field.Npc.Patrol.md
 Ms2ex.Managers.Field.Npc.md
 Ms2ex.Managers.Field.PerformanceStage.md
 Ms2ex.Managers.Field.Portal.md
 Ms2ex.Managers.Field.RegionSkill.md
 Ms2ex.Managers.Field.Tombstone.md
+Ms2ex.Managers.Field.Trigger.Actions.md
+Ms2ex.Managers.Field.Trigger.Conditions.md
 Ms2ex.Managers.Field.Trigger.md
 Ms2ex.Managers.Field.md
 Ms2ex.Managers.GlobalCounter.md

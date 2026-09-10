@@ -6,9 +6,13 @@ machine. A machine enters a state (running its on-enter actions), then
 each cycle evaluates the state's conditions in document order — the
 first that evaluates true runs its inline actions and transitions.
 
-Function arguments arrive verbatim from the client data (positional
-arg1..N or named); their meaning follows each function's catalog
-signature.
+The condition and action catalogs live in `Trigger.Conditions` and
+`Trigger.Actions`.
+
+# `box_contains?`
+
+Whether a position is inside a trigger box; boxes grow by 10 units on
+every axis to compensate for entity size.
 
 # `drop_position`
 
@@ -19,12 +23,6 @@ signature.
 # `init_triggers`
 
 # `maybe_release_guide_hold`
-
-# `quest_state_matches?`
-
-```elixir
-@spec quest_state_matches?(map() | nil, integer()) :: boolean()
-```
 
 # `release_guide_hold`
 

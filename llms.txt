@@ -118,6 +118,11 @@ rider. Paying grants an additional effect.
 - [Ms2ex.GameHandlers.Vibrate](Ms2ex.GameHandlers.Vibrate.md)
 - [Ms2ex.Handlers.ResponseServerEnter](Ms2ex.Handlers.ResponseServerEnter.md)
 - [Ms2ex.Handlers.SendLog](Ms2ex.Handlers.SendLog.md)
+- [Ms2ex.Helpers.TriggerArgs](Ms2ex.Helpers.TriggerArgs.md): Coercion for trigger-script action and condition arguments. Script
+documents arrive with canonical snake_case keys whose values may be
+strings or numbers; these helpers normalize them to the types the
+runtime works with.
+
 - [Ms2ex.LoginHandlers.CharacterManagement](Ms2ex.LoginHandlers.CharacterManagement.md)
 - [Ms2ex.LoginHandlers.ResponseKey](Ms2ex.LoginHandlers.ResponseKey.md)
 - [Ms2ex.LoginHandlers.ResponseLogin](Ms2ex.LoginHandlers.ResponseLogin.md)
@@ -139,7 +144,15 @@ grade reward boxes were claimed.
 - [Ms2ex.Managers.Character.SkillCooldown](Ms2ex.Managers.Character.SkillCooldown.md)
 - [Ms2ex.Managers.Character.StatPoints](Ms2ex.Managers.Character.StatPoints.md)
 - [Ms2ex.Managers.Character.Stats](Ms2ex.Managers.Character.Stats.md)
-- [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md)
+- [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md): One field process owns the live state of a single map instance (map +
+channel): the players on it, npcs, items, buffs, trigger-script machines
+and every other field-object system.
+- [Ms2ex.Managers.Field.Banner](Ms2ex.Managers.Field.Banner.md): UGC banners: each map's banners own a set of slots players reserve and
+attach artwork to. Slots are either hour-scoped (a fixed hour of the day)
+or event-scoped (an explicit start/end time). Slot documents persist
+through `Context.BannerSlots`; the field keeps the live copy, activates
+slots as their windows open and broadcasts the transitions.
+
 - [Ms2ex.Managers.Field.Buff](Ms2ex.Managers.Field.Buff.md)
 - [Ms2ex.Managers.Field.Character](Ms2ex.Managers.Field.Character.md)
 - [Ms2ex.Managers.Field.Instrument](Ms2ex.Managers.Field.Instrument.md)
@@ -155,6 +168,10 @@ LIFTABLE), and installed at a liftable target box — which fires the
 quest's item_move condition.
 
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
+- [Ms2ex.Managers.Field.Npc.Patrol](Ms2ex.Managers.Field.Npc.Patrol.md): Npc movement along patrol paths: story npcs walk named patrol paths
+(script move_npc) and stay at the last waypoint; the movement math also
+seeds the scripted-carry follow-dummy that `Managers.Field.Npc` spawns.
+
 - [Ms2ex.Managers.Field.PerformanceStage](Ms2ex.Managers.Field.PerformanceStage.md): The Queenstown concert stage: one player (or their party) holds the stage
 at a time, announced to the field as the `music_concert` field property so
 clients light up the stage and show the performance timer.
@@ -165,6 +182,14 @@ clients light up the stage and show the performance timer.
 machine. A machine enters a state (running its on-enter actions), then
 each cycle evaluates the state's conditions in document order — the
 first that evaluates true runs its inline actions and transitions.
+- [Ms2ex.Managers.Field.Trigger.Actions](Ms2ex.Managers.Field.Trigger.Actions.md): Trigger-script action catalog: the server-driven beats a script state
+fires — scene/UI, actors, world state, buffs, items and teleports.
+Unimplemented actions warn in the log so coverage gaps surface per map.
+
+- [Ms2ex.Managers.Field.Trigger.Conditions](Ms2ex.Managers.Field.Trigger.Conditions.md): Trigger-script condition catalog. A condition evaluates against the
+machine's state and the field state; the runtime runs the first
+condition that returns true.
+
 - [Ms2ex.Managers.GlobalCounter](Ms2ex.Managers.GlobalCounter.md)
 - [Ms2ex.Managers.GroupChat](Ms2ex.Managers.GroupChat.md)
 - [Ms2ex.Managers.GuildManager](Ms2ex.Managers.GuildManager.md): Global registry and coordinator for Guild servers and member routing.
@@ -412,7 +437,6 @@ Provides functionality to serialize and deserialize sync state to and from packe
 drop boxes), shared by mob loot and item boxes.
   - [Ms2ex.Context.Emotes](Ms2ex.Context.Emotes.md): Context module for character emote-related operations.
   - [Ms2ex.Context.Experience](Ms2ex.Context.Experience.md): Context module for character experience-related operations.
-  - [Ms2ex.Context.Field](Ms2ex.Context.Field.md): Context module for field-related operations.
   - [Ms2ex.Context.Fishing](Ms2ex.Context.Fishing.md): Fishing, ported from the reference FishingManager.
   - [Ms2ex.Context.Friends](Ms2ex.Context.Friends.md): Context module for friend-related operations.
   - [Ms2ex.Context.Guilds](Ms2ex.Context.Guilds.md): Database context for the Guild System.

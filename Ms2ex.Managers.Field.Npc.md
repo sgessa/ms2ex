@@ -15,8 +15,6 @@
 
 # `load_spawn`
 
-# `move_npc`
-
 # `remove_npc`
 
 # `spawn_follow_dummy`
