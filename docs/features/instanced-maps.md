@@ -27,11 +27,11 @@ absent from the table are ordinary shared fields.
   `character.field_instance`.
 - `Managers.Field.instance_id/1` allocates a fresh unique id for `solo`
   maps and returns 0 (shared) for everything else.
-- Relog parity: instanced maps are never persisted as the character's
-  current map (`response_field_enter` skips the `map_id` update), so a
-  relog returns the player to the map the instance was entered from.
-  In-memory the character still carries the instance map, so quest
-  conditions and guild map updates keep working inside it.
+- Relog behavior: the current map persists through instanced maps too —
+  the reference's `SpawnPlayer` sets `Character.MapId` on every entry and
+  only maps that push a return-map (`InstanceType.none` with an
+  `EnterReturnId`, or `SaveField` maps) reset it at logout. A relog
+  mid-tutorial therefore lands in a fresh instance of the same stage.
 
 ## Reference parity notes
 
@@ -45,6 +45,13 @@ absent from the table are ordinary shared fields.
 
 - party follow: joining a leader's existing instance (carry the
   leader's instance id instead of allocating)
+- OOB recovery during scripted sequences: `user_sync`'s out-of-bounds
+  teleport still runs while a cinematic or scripted path move controls
+  the player (same gap as trigger-runtime's "movement is not locked"
+  note) — guard it with the field's guide-hold state
+- return-map stack: the reference pushes `EnterReturnId` on
+  `InstanceType.none`/`SaveField` maps and resets the saved map to it at
+  logout (houses, dungeons); ms2ex has no return-map stack yet
 - navmesh coverage: scripted maps whose xblock has no navmesh skip the
   move_user walkable-ground check (see `navmesh.md` — the class-intro
   chain is covered, the rest is flag-by-flag)
@@ -53,3 +60,5 @@ absent from the table are ordinary shared fields.
 - `max_count` caps on channel-scale instances
 - `save_field` (persist and restore a solo instance's state across
   sessions) and `npc_stat_factor_id` scaling
+- entry gating: `backup_source_portal` and `open_type`/`open_value` are
+  projected but unused
