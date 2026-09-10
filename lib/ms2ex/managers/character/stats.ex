@@ -1,7 +1,5 @@
 defmodule Ms2ex.Managers.Character.Stats do
   alias Ms2ex.Managers
-  alias Ms2ex.Managers.Character
-  alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Storage.Tables
@@ -120,7 +118,7 @@ defmodule Ms2ex.Managers.Character.Stats do
     # health reaching 0 kills the player; this is the single choke point all
     # health writes (decrease, set, damage) flow through
     if stat_id == :health do
-      Character.check_death(character)
+      Managers.Character.check_death(character)
     else
       character
     end
@@ -180,7 +178,10 @@ defmodule Ms2ex.Managers.Character.Stats do
     # the party HP packet must only be emitted when health itself changed;
     # spirit/stamina drains & regen fire constantly during combat
     if stat_id == :health do
-      PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
+      Managers.PartyServer.broadcast(
+        character.party_id,
+        Packets.Party.update_hitpoints(character)
+      )
     end
   end
 
@@ -194,7 +195,10 @@ defmodule Ms2ex.Managers.Character.Stats do
     Net.SenderSession.push(character, Packets.Stats.update_char_stats(character, [stat_id]))
 
     if stat_id == :health do
-      PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
+      Managers.PartyServer.broadcast(
+        character.party_id,
+        Packets.Party.update_hitpoints(character)
+      )
     end
   end
 end

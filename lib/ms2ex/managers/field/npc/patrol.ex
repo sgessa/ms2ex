@@ -2,13 +2,13 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   @moduledoc """
   Npc movement along patrol paths: story npcs walk named patrol paths
   (script move_npc) and stay at the last waypoint; the movement math also
-  seeds the scripted-carry follow-dummy that `Field.Npc` spawns.
+  seeds the scripted-carry follow-dummy that `Managers.Field.Npc` spawns.
   """
 
   require Logger
 
   alias Ms2ex.Storage
-  alias Ms2ex.Types.FieldNpc
+  alias Ms2ex.Types
 
   @follow_speed 150
 
@@ -98,7 +98,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   # resolved against the npc model's animation table, falling back to the
   # model's Walk_A / Run_A. nil when the model has no locomotion sequence
   # at all
-  def leg_animations(%FieldNpc{} = npc, way_points) do
+  def leg_animations(%Types.FieldNpc{} = npc, way_points) do
     model = npc.npc.metadata.model.name
 
     walk = sequence_id(model, "Walk_A") || sequence_id(model, "Run_A")

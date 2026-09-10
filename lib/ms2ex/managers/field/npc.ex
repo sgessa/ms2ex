@@ -1,12 +1,9 @@
 defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Context
   alias Ms2ex.Managers
-  alias Ms2ex.Managers.Field
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
-  alias Ms2ex.Types.FieldNpc
-  alias Ms2ex.Types.SkillCast
 
   alias Ms2ex.Managers.Field.Npc.Patrol
 
@@ -133,7 +130,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   def spawn_npc(state, %Types.Npc{} = npc, npc_spawn) do
-    {object_id, state} = Field.next_local_id(state)
+    {object_id, state} = Managers.Field.next_local_id(state)
 
     field_npc =
       Types.FieldNpc.new(%{
@@ -146,8 +143,8 @@ defmodule Ms2ex.Managers.Field.Npc do
         field: state.topic
       })
 
-    Field.broadcast(state.topic, Packets.FieldAddNpc.add_npc(field_npc))
-    Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddNpc.add_npc(field_npc))
+    Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
 
     {field_npc, put_in(state, [:npcs, object_id], field_npc)}
   end
@@ -157,7 +154,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   # (with no cycle pending) respawns at twice the cooldown. A zero cooldown
   # means the spawn point never refills. Event spawn points (script
   # summons) never refill — the script decides when they appear again.
-  def despawn(state, %FieldNpc{} = field_npc) do
+  def despawn(state, %Types.FieldNpc{} = field_npc) do
     case get_in(state, [:npc_spawns, field_npc.spawn_point_id]) do
       %{} = spawn when is_map_key(spawn, :npc_ids) ->
         spawned = List.delete(spawn.spawned_mobs, field_npc.object_id)
@@ -199,13 +196,13 @@ defmodule Ms2ex.Managers.Field.Npc do
       nil ->
         {:error, state}
 
-      %FieldNpc{} = field_npc ->
+      %Types.FieldNpc{} = field_npc ->
         field_npc = tag_attackers(field_npc, attacker)
 
         cond do
           field_npc.dead? && field_npc.corpse? ->
             field_npc = %{field_npc | seq_counter: field_npc.seq_counter + 1}
-            Field.broadcast(state.topic, Packets.ControlNpc.corpse_hit(field_npc))
+            Managers.Field.broadcast(state.topic, Packets.ControlNpc.corpse_hit(field_npc))
             Context.Mobs.drop_corpse_rewards(field_npc, attacker, state.map_id)
             {:ok, field_npc, put_in(state, [:npcs, object_id], field_npc)}
 
@@ -220,13 +217,13 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   def apply_skill_effects(state, skill_cast, mob_id) do
     case Map.get(state.npcs, mob_id) do
-      %FieldNpc{dead?: false} = mob ->
+      %Types.FieldNpc{dead?: false} = mob ->
         skill_cast
-        |> SkillCast.attack_skills()
+        |> Types.SkillCast.attack_skills()
         |> Enum.reject(&Map.get(&1, :has_splash, false))
         |> Enum.reduce(state, fn effect, state ->
           {_buff, state} =
-            Field.Buff.add_mob_buff(
+            Managers.Field.Buff.add_mob_buff(
               skill_cast.caster,
               effect.id,
               effect.level,
@@ -254,11 +251,11 @@ defmodule Ms2ex.Managers.Field.Npc do
     boss_target = state.players |> Map.values() |> List.first()
 
     for npc <- Enum.reverse(live_dirty) do
-      Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc], boss_target))
+      Managers.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc], boss_target))
     end
 
     for npc <- Enum.reverse(corpse_dirty) do
-      Field.broadcast(state.topic, Packets.ControlNpc.dead(npc))
+      Managers.Field.broadcast(state.topic, Packets.ControlNpc.dead(npc))
     end
 
     %{state | npcs: Map.new(npcs)}
@@ -359,7 +356,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
       case spawn_npc(state, Enum.random(spawn.npc_ids), spawn) do
-        {%FieldNpc{} = field_npc, state} ->
+        {%Types.FieldNpc{} = field_npc, state} ->
           spawned = spawn.spawned_mobs ++ [field_npc.object_id]
           {%{spawn | spawned_mobs: spawned}, state}
 
@@ -379,7 +376,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     |> Map.put(:send_control?, true)
   end
 
-  defp apply_live_damage(%FieldNpc{} = field_npc, dmg, state, object_id) do
+  defp apply_live_damage(%Types.FieldNpc{} = field_npc, dmg, state, object_id) do
     hp = max(0, field_npc.stats.health.current - dmg)
     stats = put_in(field_npc.stats, [:health, :current], hp)
 
@@ -412,8 +409,8 @@ defmodule Ms2ex.Managers.Field.Npc do
           last_control_at: System.monotonic_time(:millisecond)
       }
 
-    Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
-    Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
+    Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
+    Managers.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
 
     # bodies stay for their dead window (corpse-hittable ones keep it in
     # full so players can keep striking them) before the field removes them
@@ -467,10 +464,10 @@ defmodule Ms2ex.Managers.Field.Npc do
            get_in(state, [:npc_spawns, field_npc.spawn_point_id]),
          false <- MapSet.member?(opened, spid),
          %{meshes: meshes} = gate <- Map.get(gates, spid) do
-      Enum.each(meshes, &Field.broadcast(state.topic, Packets.Trigger.hide_mesh(&1)))
+      Enum.each(meshes, &Managers.Field.broadcast(state.topic, Packets.Trigger.hide_mesh(&1)))
 
       if guide_event = Map.get(gate, :guide_event) do
-        Field.broadcast(state.topic, Packets.Trigger.guide_event(guide_event))
+        Managers.Field.broadcast(state.topic, Packets.Trigger.guide_event(guide_event))
       end
 
       state

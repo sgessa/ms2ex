@@ -1,6 +1,6 @@
 defmodule Ms2ex.Managers.Field.RegionSkill do
   alias Ms2ex.Context
-  alias Ms2ex.Managers.Field
+  alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Types.SkillCast
 
@@ -14,7 +14,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     case SkillCast.splash_skill_cast(skill_cast) do
       {splash_cast, splash} ->
         reg_skill = Packets.RegionSkill.add(source_id, splash_cast, points)
-        Field.broadcast(state.topic, reg_skill)
+        Managers.Field.broadcast(state.topic, reg_skill)
 
         interval = Map.get(splash, :interval, 0) || 0
         fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
@@ -46,7 +46,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
       nil ->
         reg_skill = Packets.RegionSkill.add(source_id, skill_cast, points)
-        Field.broadcast(state.topic, reg_skill)
+        Managers.Field.broadcast(state.topic, reg_skill)
 
         duration = SkillCast.duration(skill_cast)
         Process.send_after(self(), {:remove_region_skill, source_id}, duration + 5000)
@@ -93,9 +93,9 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
         dmg = Context.Damage.calculate(splash_cast, mob, false)
 
-        case Field.Npc.damage(state, splash_cast.caster, dmg.dmg, object_id) do
+        case Managers.Field.Npc.damage(state, splash_cast.caster, dmg.dmg, object_id) do
           {:ok, damaged_mob, state} ->
-            state = Field.Npc.apply_skill_effects(state, splash_cast, object_id)
+            state = Managers.Field.Npc.apply_skill_effects(state, splash_cast, object_id)
             {[{damaged_mob, dmg} | mobs], state}
 
           {:error, state} ->
@@ -104,7 +104,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       end)
 
     if mobs != [] do
-      Field.broadcast(
+      Managers.Field.broadcast(
         state.topic,
         Packets.SkillDamage.damage(splash_cast, Enum.reverse(mobs))
       )

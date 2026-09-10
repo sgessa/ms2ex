@@ -11,15 +11,12 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers
-  alias Ms2ex.Managers.Field
   alias Ms2ex.Navigation
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
-  alias Ms2ex.Types.Coord
-  alias Ms2ex.Types.FieldNpc
-  alias Ms2ex.Types.SkillCast
+  alias Ms2ex.Types
 
   def execute_actions(actions, script_name, state) when is_list(actions) do
     Enum.reduce(actions, state, fn action, state ->
@@ -36,7 +33,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     Enum.reduce(int_list_arg(args, :trigger_ids), state, fn mesh_id, state ->
       case Map.get(meshes, mesh_id) do
         %{} = mesh ->
-          Field.broadcast(state.topic, Packets.Trigger.update_mesh(visible, mesh))
+          Managers.Field.broadcast(state.topic, Packets.Trigger.update_mesh(visible, mesh))
           state
 
         _ ->
@@ -49,13 +46,13 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     do: update_portal(int_arg(args, :portal_id), args, state)
 
   defp execute_action("guide_event", args, _script_name, state) do
-    Field.broadcast(state.topic, Packets.Trigger.guide_event(int_arg(args, :event_id)))
+    Managers.Field.broadcast(state.topic, Packets.Trigger.guide_event(int_arg(args, :event_id)))
     state
   end
 
   defp execute_action("spawn_monster", args, _script_name, state) do
     Enum.reduce(int_list_arg(args, :spawn_ids), state, fn spawn_point_id, state ->
-      Field.Npc.trigger_spawn(state, spawn_point_id)
+      Managers.Field.Npc.trigger_spawn(state, spawn_point_id)
     end)
   end
 
@@ -80,7 +77,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     widget = get_in(state, [:widgets, :scene_movie]) || %{conditions: %{}, movie_id: nil}
     state = put_in(state, [:widgets, :scene_movie], Map.put(widget, :movie_id, movie_id))
 
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.Trigger.start_movie(to_string(args[:file_name]), movie_id)
     )
@@ -92,13 +89,17 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     visible = bool_arg(args, :visible)
 
     Enum.reduce(int_list_arg(args, :trigger_ids), state, fn effect_id, state ->
-      Field.broadcast(state.topic, Packets.Trigger.update_effect(visible, %{id: effect_id}))
+      Managers.Field.broadcast(
+        state.topic,
+        Packets.Trigger.update_effect(visible, %{id: effect_id})
+      )
+
       state
     end)
   end
 
   defp execute_action("select_camera_path", args, _script_name, state) do
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.Trigger.camera_start(int_list_arg(args, :path_ids), bool_arg(args, :return_view))
     )
@@ -107,7 +108,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   defp execute_action("reset_camera", args, _script_name, state) do
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.CameraInterpolation.interpolate(float_arg(args, :interpolation_time))
     )
@@ -118,7 +119,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   # slows/speeds up the field's tick rate for a cinematic beat (e.g. a
   # bullet-time dodge sequence); enable false reverts to normal speed
   defp execute_action("set_time_scale", args, _script_name, state) do
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.TimeScale.set(
         bool_arg(args, :enable),
@@ -141,7 +142,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     min_round = Enum.at(rounds, 2) || 1
 
     if min_round != max_round do
-      Field.broadcast(
+      Managers.Field.broadcast(
         state.topic,
         Packets.MassiveEvent.round(round, max_round, min_round, int_arg(args, :v_offset))
       )
@@ -181,7 +182,10 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   defp execute_action("set_ambient_light", args, _script_name, state) do
     case rgb_arg(args[:primary]) do
       {r, g, b} ->
-        Field.broadcast(state.topic, Packets.FieldProperty.add({:ambient_light, r, g, b}))
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.FieldProperty.add({:ambient_light, r, g, b})
+        )
 
       nil ->
         :ok
@@ -191,7 +195,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   defp execute_action("set_onetime_effect", args, _script_name, state) do
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.OneTimeEffect.apply(
         int_arg(args, :id),
@@ -204,7 +208,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   defp execute_action("add_cinematic_talk", args, _script_name, state) do
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.Cinematic.talk(
         int_arg(args, :npc_id),
@@ -229,10 +233,10 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       duration: int_arg(args, :duration)
     }
 
-    if Field.Trigger.guide_held?(state) do
+    if Managers.Field.Trigger.guide_held?(state) do
       Map.put(state, :pending_guide, guide)
     else
-      Field.broadcast(
+      Managers.Field.broadcast(
         state.topic,
         Packets.Trigger.show_summary(guide.entity_id, guide.text_id, guide.duration)
       )
@@ -243,7 +247,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   defp execute_action("hide_guide_summary", args, _script_name, state) do
     state = Map.put(state, :pending_guide, nil)
-    Field.broadcast(state.topic, Packets.Trigger.hide_summary(int_arg(args, :entity_id)))
+    Managers.Field.broadcast(state.topic, Packets.Trigger.hide_summary(int_arg(args, :entity_id)))
     state
   end
 
@@ -324,7 +328,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   defp execute_action("set_skip", args, script_name, state) do
     skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:state]))
     state = Map.put(state, :trigger_skips, skips)
-    Field.broadcast(state.topic, Packets.Cinematic.set_skip_state(""))
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.set_skip_state(""))
     state
   end
 
@@ -332,7 +336,12 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   defp execute_action("set_scene_skip", args, script_name, state) do
     skips = Map.put(Map.get(state, :trigger_skips, %{}), script_name, to_string(args[:state]))
     state = Map.put(state, :trigger_skips, skips)
-    Field.broadcast(state.topic, Packets.Cinematic.set_skip_scene(to_string(args[:action] || "")))
+
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.Cinematic.set_skip_scene(to_string(args[:action] || ""))
+    )
+
     state
   end
 
@@ -355,7 +364,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
             state
 
           object_id ->
-            Field.broadcast(
+            Managers.Field.broadcast(
               state.topic,
               Packets.Cinematic.balloon_talk(object_id, script, duration, 0)
             )
@@ -364,7 +373,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         end
 
       true ->
-        Field.broadcast(
+        Managers.Field.broadcast(
           state.topic,
           Packets.Cinematic.talk(
             spawn_id,
@@ -396,7 +405,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
           state
 
         object_id ->
-          Field.broadcast(
+          Managers.Field.broadcast(
             state.topic,
             Packets.Cinematic.balloon_talk(object_id, script, duration, delay)
           )
@@ -413,7 +422,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     box_ids = int_list_arg(args, :box_ids)
 
     if box_ids == [] do
-      Field.broadcast(state.topic, Packets.PlaySystemSound.system(sound))
+      Managers.Field.broadcast(state.topic, Packets.PlaySystemSound.system(sound))
     else
       play_sound_for_players_in_boxes(state, box_ids, sound)
     end
@@ -436,7 +445,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   # walks a story npc along a named patrol path (script move_npc)
   defp execute_action("move_npc", args, _script_name, state) do
-    Field.Npc.Patrol.move_npc(
+    Managers.Field.Npc.Patrol.move_npc(
       state,
       int_arg(args, :spawn_id),
       to_string(args[:patrol_name] || "")
@@ -449,7 +458,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     duration = int_arg(args, :duration)
     loop = bool_arg(args, :loop)
 
-    Field.broadcast(state.topic, Packets.Trigger.emotion_loop(sequence, duration, loop))
+    Managers.Field.broadcast(state.topic, Packets.Trigger.emotion_loop(sequence, duration, loop))
     state
   end
 
@@ -462,14 +471,14 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       |> String.split(",", trim: true)
       |> Enum.map(&String.trim/1)
 
-    Field.broadcast(state.topic, Packets.Trigger.emotion_sequence(sequence_names))
+    Managers.Field.broadcast(state.topic, Packets.Trigger.emotion_sequence(sequence_names))
     state
   end
 
   # a screen-space caption banner ending a scripted beat (the named-title
   # card)
   defp execute_action("show_caption", args, _script_name, state) do
-    Field.broadcast(
+    Managers.Field.broadcast(
       state.topic,
       Packets.Cinematic.caption(
         to_string(args[:type] || ""),
@@ -519,7 +528,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
     case Map.get(sounds, sound_id) do
       %{} = sound ->
-        Field.broadcast(state.topic, Packets.Trigger.update_sound(sound_id, enabled))
+        Managers.Field.broadcast(state.topic, Packets.Trigger.update_sound(sound_id, enabled))
         put_in(state, [:trigger_sounds, sound_id], Map.put(sound, :visible, enabled))
 
       _ ->
@@ -583,7 +592,10 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     state.interactable
     |> Enum.filter(fn {_uuid, object} -> object.id in ids end)
     |> Enum.each(fn {_uuid, object} ->
-      Field.broadcast(state.topic, Packets.InteractObject.update(%{object | state: state_atom}))
+      Managers.Field.broadcast(
+        state.topic,
+        Packets.InteractObject.update(%{object | state: state_atom})
+      )
     end)
 
     state
@@ -598,7 +610,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     if spawn_id == 0 do
       case Map.values(state.players) do
         [object_id | _] ->
-          Field.broadcast(state.topic, Packets.Trigger.face_emotion(object_id, emotion))
+          Managers.Field.broadcast(state.topic, Packets.Trigger.face_emotion(object_id, emotion))
 
         [] ->
           :ok
@@ -607,7 +619,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       state.npcs
       |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
       |> Enum.each(fn {object_id, _npc} ->
-        Field.broadcast(state.topic, Packets.Trigger.face_emotion(object_id, emotion))
+        Managers.Field.broadcast(state.topic, Packets.Trigger.face_emotion(object_id, emotion))
       end)
     end
 
@@ -620,9 +632,9 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     visible = bool_arg(args, :is_visible)
 
     if visible do
-      Field.broadcast(state.topic, Packets.FieldProperty.remove(:hide_player))
+      Managers.Field.broadcast(state.topic, Packets.FieldProperty.remove(:hide_player))
     else
-      Field.broadcast(state.topic, Packets.FieldProperty.add(:hide_player))
+      Managers.Field.broadcast(state.topic, Packets.FieldProperty.add(:hide_player))
     end
 
     Map.put(state, :hide_player, not visible)
@@ -683,7 +695,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       end)
 
     if entries != [] do
-      Field.broadcast(state.topic, Packets.Breakable.update(Enum.reverse(entries)))
+      Managers.Field.broadcast(state.topic, Packets.Breakable.update(Enum.reverse(entries)))
     end
 
     state
@@ -692,7 +704,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   defp balloon_first_player(state, script, duration, delay) do
     case Map.values(state.players) do
       [object_id | _] ->
-        Field.broadcast(
+        Managers.Field.broadcast(
           state.topic,
           Packets.Cinematic.balloon_talk(object_id, script, duration, delay)
         )
@@ -749,20 +761,24 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     case Map.get(state.trigger_skills, trigger_id) do
       %{} = trigger_skill ->
         source_id = Ms2ex.generate_int()
-        position = struct(Coord, trigger_skill.position)
+        position = struct(Types.Coord, trigger_skill.position)
 
         cast =
-          SkillCast.build(0, %{
+          Types.SkillCast.build(0, %{
             id: 0,
             skill_id: trigger_skill.skill_id,
             skill_level: trigger_skill.skill_level,
             position: position,
-            rotation: struct(Coord, trigger_skill.rotation),
+            rotation: struct(Types.Coord, trigger_skill.rotation),
             # first skill tick lands shortly after the zone is placed
             next_tick: Ms2ex.sync_ticks() + 150
           })
 
-        Field.broadcast(state.topic, Packets.RegionSkill.add(source_id, cast, [position]))
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.RegionSkill.add(source_id, cast, [position])
+        )
+
         put_in(state, [:trigger_skills, trigger_id, :source_id], source_id)
 
       _ ->
@@ -773,7 +789,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   defp disable_trigger_skill(state, trigger_id) do
     case Map.get(state.trigger_skills, trigger_id) do
       %{source_id: source_id} when is_integer(source_id) ->
-        Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+        Managers.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
         {_, state} = pop_in(state, [:trigger_skills, trigger_id, :source_id])
         state
 
@@ -788,11 +804,11 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         state
 
       spawn ->
-        position = struct(Coord, spawn.position)
+        position = struct(Types.Coord, spawn.position)
 
         spawn
         |> roll_item_spawn(item_id, state)
-        |> Enum.reduce(state, &Field.Item.create_item(position, &1, &2))
+        |> Enum.reduce(state, &Managers.Field.Item.create_item(position, &1, &2))
     end
   end
 
@@ -847,7 +863,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   defp apply_script_buff(state, character_id, buff_id, level) do
     {:ok, character} = Managers.Character.call(character_id, :lookup)
-    {buff_object_id, state} = Field.next_local_id(state)
+    {buff_object_id, state} = Managers.Field.next_local_id(state)
 
     buff = %{
       owner: %{object_id: character.object_id},
@@ -861,7 +877,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       shield_health: 0
     }
 
-    Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
+    Managers.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
 
     sk = Map.get(state, :script_buffs, %{})
     Map.put(state, :script_buffs, Map.put(sk, {character_id, buff_id}, buff))
@@ -875,7 +891,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         state
 
       {buff, sk} ->
-        Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
+        Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
         Map.put(state, :script_buffs, sk)
     end
   end
@@ -901,7 +917,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
       state.player_positions
       |> Enum.filter(fn {_id, %{position: position}} ->
-        is_map(position) and Enum.any?(boxes, &Field.Trigger.box_contains?(&1, position))
+        is_map(position) and Enum.any?(boxes, &Managers.Field.Trigger.box_contains?(&1, position))
       end)
       |> Enum.map(fn {character_id, _entry} -> character_id end)
     end
@@ -952,11 +968,11 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   defp spawn_player_dummy(state, character_id, way_points) do
     {:ok, character} = Managers.Character.call(character_id, :lookup)
 
-    case Field.Npc.spawn_follow_dummy(state, character, way_points) do
+    case Managers.Field.Npc.spawn_follow_dummy(state, character, way_points) do
       {nil, state} ->
         state
 
-      {%FieldNpc{} = dummy, state} ->
+      {%Types.FieldNpc{} = dummy, state} ->
         Net.SenderSession.push(character, Packets.FollowNpc.follow(dummy.object_id))
         state
     end
@@ -968,7 +984,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     if Navigation.valid_position?(state.map_id, portal.position) do
       character = %{character | position: portal.position}
       Managers.Character.call(character, {:update, character})
-      Field.Trigger.track_position(state, character.id, portal.position)
+      Managers.Field.Trigger.track_position(state, character.id, portal.position)
 
       Net.SenderSession.push(
         character,
@@ -980,7 +996,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   defp move_player(state, character, map_id, portal) do
-    state = Field.Character.remove_character(character, state)
+    state = Managers.Field.Character.remove_character(character, state)
 
     character =
       character
@@ -1023,7 +1039,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
             minimap_visible: bool_arg(args, :minimap_visible)
         }
 
-        Field.broadcast(state.topic, Packets.AddPortal.update(portal))
+        Managers.Field.broadcast(state.topic, Packets.AddPortal.update(portal))
 
         %{state | portals: Map.put(state.portals, portal.id, portal)}
 
@@ -1067,18 +1083,18 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   defp cinematic_ui(0, _args, state) do
     # EndCinematic: the UI (and any held guide hint) returns to the player
-    Field.broadcast(state.topic, Packets.Cinematic.toggle_ui(false))
-    Field.Trigger.maybe_release_guide_hold(Map.put(state, :cinematic_on, false))
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.toggle_ui(false))
+    Managers.Field.Trigger.maybe_release_guide_hold(Map.put(state, :cinematic_on, false))
   end
 
   defp cinematic_ui(1, _args, state) do
     # BeginCinematic: guides held until the cinematic ends
-    Field.broadcast(state.topic, Packets.Cinematic.toggle_ui(true))
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.toggle_ui(true))
     Map.put(state, :cinematic_on, true)
   end
 
   defp cinematic_ui(2, _args, state) do
-    Field.broadcast(state.topic, Packets.Cinematic.hide_ui())
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.hide_ui())
     state
   end
 
@@ -1087,14 +1103,19 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   # the transition
   defp cinematic_ui(type, args, state) when type in 3..6 do
     script = to_string(args[:script] || "")
-    Field.broadcast(state.topic, Packets.Cinematic.view(type, script))
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.view(type, script))
     state
   end
 
   # black screen with text (scripted intros)
   defp cinematic_ui(9, args, state) do
     script = to_string(args[:script] || "")
-    Field.broadcast(state.topic, Packets.Cinematic.opening(script, bool_arg(args, :arg3)))
+
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.Cinematic.opening(script, bool_arg(args, :arg3))
+    )
+
     state
   end
 

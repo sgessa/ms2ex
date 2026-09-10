@@ -9,6 +9,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   `Trigger.Actions`.
   """
 
+  alias Ms2ex.Managers
   alias Ms2ex.Managers.Field.Trigger.Actions
   alias Ms2ex.Managers.Field.Trigger.Conditions
   alias Ms2ex.Packets
@@ -198,8 +199,7 @@ defmodule Ms2ex.Managers.Field.Trigger do
   end
 
   defp broadcast(state, packet) do
-    alias Ms2ex.Managers.Field
-    Field.broadcast(state.topic, packet)
+    Managers.Field.broadcast(state.topic, packet)
     state
   end
 
