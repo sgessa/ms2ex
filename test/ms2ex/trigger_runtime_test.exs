@@ -486,6 +486,112 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert_received {:quest_event, 1, :trigger, 1, "jordy"}
   end
 
+  test "set_achievement without a box reaches every player" do
+    Mimic.stub(Ms2ex.Managers.Quest, :update_conditions, fn
+      character_id, type, counter, _target_string, _target_long, code_string, _code_long ->
+        send(self(), {:quest_event, character_id, type, counter, code_string})
+    end)
+
+    Mimic.stub(Ms2ex.Managers.Achievement, :update, fn _character_id,
+                                                       _type,
+                                                       _c,
+                                                       _ts,
+                                                       _tl,
+                                                       _cs,
+                                                       _cl ->
+      :ok
+    end)
+
+    base_state()
+    |> put_player(%{x: 5.0, y: 5.0, z: 5.0}, 1)
+    |> put_player(%{x: -900.0, y: -900.0, z: 5.0}, 2)
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      # the raw action carries no box argument at all — the event is global
+      %{name: "set_achievement", args: %{type: "trigger", achieve: "jordysave"}}
+    ])
+    |> tick()
+
+    assert_received {:quest_event, 1, :trigger, 1, "jordysave"}
+    assert_received {:quest_event, 2, :trigger, 1, "jordysave"}
+  end
+
+  test "destroy_monster frees the spawn point so it can respawn" do
+    stub_metadata(%{
+      "npc:11003187" => %{
+        basic: %{friendly: 1, class: 0, level: 1},
+        stat: %{stats: %{health: 10}}
+      }
+    })
+
+    friendly_spawn = fn point ->
+      %{
+        spawn_point_id: point,
+        npc_list: [%{npc_id: 11_003_187, count: 1}],
+        on_field_create: false,
+        regen_check_time: 0,
+        spawned_npcs: [],
+        spawned_mobs: []
+      }
+    end
+
+    state =
+      base_state()
+      |> Map.put(:npc_spawns, %{101 => friendly_spawn.(101), 104 => friendly_spawn.(104)})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "spawn_monster", args: %{spawn_ids: "101"}},
+        %{name: "destroy_monster", args: %{spawn_ids: "101"}},
+        %{name: "spawn_monster", args: %{spawn_ids: "101"}}
+      ])
+      |> tick()
+
+    # joddy was destroyed once and the respawn filled his slot again with a
+    # fresh object; the untouched point 104 spawn is unaffected. the destroyed
+    # object's removal is an async field message the test never drains, so it
+    # still lingers in state.npcs
+    assert [new_id] = state.npc_spawns[101].spawned_npcs
+    assert Map.has_key?(state.npcs, new_id)
+    assert map_size(state.npcs) == 2
+    assert state.npc_spawns[104].spawned_npcs == []
+  end
+
+  test "set_user_value stores the value and user_value reads it" do
+    state =
+      base_state()
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "user_value",
+          negate: false,
+          args: %{key: "chase", value: "2"},
+          next_state: "done",
+          actions: []
+        }
+      ])
+      |> enter_state("wait", entered_at: now_ms())
+      |> Map.put(:user_values, %{"chase" => 2})
+      |> tick()
+
+    assert %{next: "done"} = state.trigger_machines["tutorial"]
+  end
+
+  test "set_breakable broadcasts the hide state" do
+    state =
+      base_state()
+      |> Map.put(:breakables, %{
+        2001 => %{breakable_id: 2001, uuid: "abc", visible: true, state: 2}
+      })
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+        %{name: "set_breakable", args: %{trigger_ids: "2001", enable: "0"}}
+      ])
+      |> tick()
+
+    assert %{state: 4, visible: true} = state.breakables[2001]
+
+    assert {:push,
+            <<0x50::little-16, 0, 1::little-32, 3::little-16, "abc"::binary, 4, 1, 0::little-32,
+              0::little-32>>} =
+             receive_push()
+  end
+
   test "set_dialogue balloons the spawn-point npc with the script text" do
     state =
       base_state()
@@ -574,6 +680,72 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert %{visible: true} = state.trigger_sounds[3001]
   end
 
+  test "set_skill enables a trigger skill zone and removes it on disable" do
+    stub_metadata(%{
+      "skill:70000066" => %{id: 70_000_066, levels: %{"5" => %{motions: [], skills: []}}}
+    })
+
+    script = %{
+      state_names: ["wait", "disarm"],
+      states: %{
+        "wait" => %{
+          on_enter: [%{name: "set_skill", args: %{trigger_ids: "7005", enable: "1"}}],
+          on_exit: [],
+          conditions: [
+            %{
+              name: "wait_tick",
+              negate: false,
+              args: %{wait_tick: "1000"},
+              next_state: "disarm",
+              actions: []
+            }
+          ],
+          next_state: ""
+        },
+        "disarm" => %{
+          on_enter: [%{name: "set_skill", args: %{trigger_ids: "7005", enable: "0"}}],
+          on_exit: [],
+          conditions: [],
+          next_state: ""
+        }
+      }
+    }
+
+    state =
+      base_state()
+      |> Map.put(:trigger_scripts, %{"tutorial" => script})
+      |> Map.put(:trigger_skills, %{
+        7005 => %{
+          trigger_id: 7005,
+          skill_id: 70_000_066,
+          skill_level: 5,
+          count: 1,
+          position: %{x: 2444, y: -759, z: 2700},
+          rotation: %{x: 0, y: 0, z: 0}
+        }
+      })
+      |> tick()
+
+    assert {:push,
+            <<0x4D::little-16, 0, source_id::little-signed-integer-32,
+              source_id::little-signed-integer-32, _next_tick::little-32, 1,
+              2444.0::little-float-size(32), -759.0::little-float-size(32),
+              2700.0::little-float-size(32), 70_000_066::little-32, 5::little-16, _rest::binary>>} =
+             receive_push()
+
+    assert state.trigger_skills[7005].source_id == source_id
+
+    # the disarm transition queues on wait_tick, then lands next cycle
+    state =
+      put_in(state, [:trigger_machines, "tutorial", :entered_at], now_ms() - 1_500)
+      |> tick()
+      |> tick()
+
+    assert {:push, <<0x4D::little-16, 1, removed_id::little-signed-integer-32>>} = receive_push()
+    assert removed_id == source_id
+    refute Map.has_key?(state.trigger_skills[7005], :source_id)
+  end
+
   test "move_npc attaches the patrol to the matching story npc" do
     # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
     # approach falls back to the model's run sequence
@@ -618,21 +790,24 @@ defmodule Ms2ex.TriggerRuntimeTest do
       }
     })
 
-    state =
-      base_state()
-      |> Map.put(:patrols, %{
-        "MS2PatrolData_2003" => %{
-          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
-        }
-      })
-      |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
-      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
-      ])
-      |> tick()
+    {state, _log} =
+      ExUnit.CaptureLog.with_log(fn ->
+        base_state()
+        |> Map.put(:patrols, %{
+          "MS2PatrolData_2003" => %{
+            way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
+          }
+        })
+        |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+        |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+          %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
+        ])
+        |> tick()
+      end)
 
     # no walk/run sequence on the model: the npc stays put instead of
-    # sliding across the field in its idle pose
+    # sliding across the field in its idle pose (the tick logs the missing
+    # walk animation warning — expected here)
     assert %{patrol: nil, animation: 255} = state.npcs[700]
   end
 
@@ -694,8 +869,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
     ])
     |> tick()
 
+    # kind 5 is the game-over style banner in the client's banner table
     assert_receive {:banner_push,
-                    <<0x62::little-16, 2, 5, script_len::little-16,
+                    <<0x62::little-16, 2, 1, script_len::little-16,
                       script::binary-size(script_len)-unit(16), 3000::little-32>>},
                    1000
 

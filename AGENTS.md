@@ -156,18 +156,25 @@ host runs):
   and re-auditing every affected handler and test fixture in the same
   change.
 
-## Roadmap & TODOs
+## Roadmap, feature docs & TODOs
 
-- **Update `docs/ROADMAP.md` whenever you touch a feature.** When an item is
-  implemented, fixed, or advances, update its `[Open]` / `[Partial]` status or
-  move it into "Recently completed". Completed items must be moved out of the
-  numbered backlog sections into "Recently completed". Keep the roadmap the
-  source of truth for what is still missing.
+- `docs/ROADMAP.md` is a compact list of open items only: one line per
+  item with an `[Open]`/`[Partial]` marker, linking to its feature document
+  under `docs/features/`. Never let it grow long-form content or completed
+  history.
+- **`docs/features/` (committed) documents each feature**: how the system
+  works today and what is still needed. Written for agents — packet layouts,
+  data shapes, state machines, open gaps. Never mention other
+  implementations or tooling; describe behavior in domain terms. When you
+  implement, fix, or advance a feature, update its feature doc and the
+  roadmap entry's status marker.
+- **Completed work goes to `docs/CHANGELOG.md`** (one entry per landed
+  change, newest first). Move nothing else there — no open work, no plans.
 - **Leave `TODO` comments for unimplemented behavior.** When a code path is
   incomplete or stubbed, add a `# TODO` comment (with a short note on what
   remains) so unfinished work can be found by grepping for `TODO`.
-- **Write investigation notes under `docs/internal/`.** When digging into a
-  feature, a divergence, or a client-packet layout, capture findings in a
-  per-feature note in `docs/internal/` (git-ignored) instead of one monolithic
-  comparison document. Update the matching `docs/ROADMAP.md` item when the
-  investigation concludes.
+- **Raw investigation notes live in `docs/internal/` (git-ignored)**: client
+  reverse-engineering, memory-dump sessions, packet-capture diffs, live-test
+  logs. When an investigation concludes, distill the durable knowledge into
+  the feature's `docs/features/` document (sanitized, no history) and drop
+  the rest; the internal scratch copy can stay for future digging.
