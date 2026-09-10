@@ -81,21 +81,19 @@ defmodule Ms2ex.Managers.Field do
     # character (change_field stamps it into change_map): a repeated field
     # enter for the same visit rejoins the same field instead of spawning
     # another one
-    instance =
-      character.field_instance ||
-        instance_id(character.map_id)
-
+    instance = character.field_instance || instance_id(character.map_id)
     character = Map.put(character, :field_instance, instance)
-    pid = field_pid(character.map_id, character.channel_id, instance)
+    opts = [name: field_name(character.map_id, character.channel_id, instance)]
 
-    if pid && Process.alive?(pid) do
-      call(pid, {:add_character, character})
-    else
-      GenServer.start(
-        __MODULE__,
-        character,
-        name: field_name(character.map_id, character.channel_id, instance)
-      )
+    case GenServer.start(__MODULE__, character, opts) do
+      {:ok, pid} ->
+        {:ok, pid}
+
+      {:error, {:already_started, pid}} ->
+        call(pid, {:add_character, character})
+
+      error ->
+        error
     end
   end
 
@@ -135,15 +133,13 @@ defmodule Ms2ex.Managers.Field do
   @spec change_field(Schema.Character.t(), integer(), map(), map()) :: :ok | {:error, term()}
   def change_field(character, map_id, position, rotation) do
     instance = instance_id(map_id)
+    change_map = %{id: map_id, position: position, rotation: rotation, instance: instance}
 
     with :ok <- leave_for_change(character) do
       character =
         character
         |> Context.Characters.maybe_discover_map(map_id)
-        |> Map.put(
-          :change_map,
-          %{id: map_id, position: position, rotation: rotation, instance: instance}
-        )
+        |> Map.put(:change_map, change_map)
 
       Managers.Character.call(character, {:update, character})
 
@@ -225,9 +221,6 @@ defmodule Ms2ex.Managers.Field do
     :"field:#{map_id}:channel:#{channel_id}:instance:#{instance_id}"
   end
 
-  defp field_pid(map_id, channel_id, instance_id) do
-    Process.whereis(field_name(map_id, channel_id, instance_id))
-  end
 
   # -- process plumbing ------------------------------------------------------
 

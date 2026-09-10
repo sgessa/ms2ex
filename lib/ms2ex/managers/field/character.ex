@@ -22,8 +22,7 @@ defmodule Ms2ex.Managers.Field.Character do
     # stays stable across field transitions; only the field changes here
     character = %{character | map_id: state.map_id}
 
-    character = Map.put(character, :field_pid, self())
-    character = Map.put(character, :field_instance, state.instance)
+    character = %{character | field_pid: self(), field_instance: state.instance}
     Managers.Character.call(character, {:update, character})
 
     sessions = Map.put(state.sessions, character.id, character.sender_session_pid)
