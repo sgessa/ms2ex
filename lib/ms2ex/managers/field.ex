@@ -39,10 +39,7 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
-
-  alias Ms2ex.Types.FieldInstrument
-  alias Ms2ex.Types.FieldNpc
-  alias Ms2ex.Types.Npc
+  alias Ms2ex.Types
 
   alias Ms2ex.Managers.Field
   alias Phoenix.PubSub
@@ -218,27 +215,27 @@ defmodule Ms2ex.Managers.Field do
   # -- npcs & mobs -----------------------------------------------------------
 
   @doc "Spawns a mob (field npc) on the character's field at their position."
-  @spec add_mob(Schema.Character.t(), Npc.t()) :: :ok
-  def add_mob(%Schema.Character{} = character, %Npc{} = npc) do
+  @spec add_mob(Schema.Character.t(), Types.Npc.t()) :: :ok
+  def add_mob(%Schema.Character{} = character, %Types.Npc{} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
 
   @doc "Looks up an npc by object id in the character's field."
-  @spec lookup_npc(Schema.Character.t(), integer()) :: {:ok, FieldNpc.t()} | :error
+  @spec lookup_npc(Schema.Character.t(), integer()) :: {:ok, Types.FieldNpc.t()} | :error
   def lookup_npc(%Schema.Character{} = character, object_id) do
     call(character.field_pid, {:lookup_npc, object_id})
   end
 
   @doc "Removes an npc from its field (idempotent)."
-  @spec remove_npc(FieldNpc.t()) :: :ok
-  def remove_npc(%FieldNpc{} = field_npc) do
+  @spec remove_npc(Types.FieldNpc.t()) :: :ok
+  def remove_npc(%Types.FieldNpc{} = field_npc) do
     field_pid = Process.whereis(field_npc.field)
     send(field_pid, {:remove_npc, field_npc})
   end
 
   @doc "Applies damage to a field npc on the character's field."
   @spec inflict_dmg(Schema.Character.t(), map(), integer()) ::
-          {:ok, FieldNpc.t()} | :error
+          {:ok, Types.FieldNpc.t()} | :error
   def inflict_dmg(attacker, dmg, object_id) do
     call(attacker, {:inflict_dmg, attacker, dmg, object_id})
   end
@@ -255,8 +252,9 @@ defmodule Ms2ex.Managers.Field do
   Drops an item from a field npc (mob) into the field, locked to the given
   receiver when one is provided (nil for shared/unlocked drops).
   """
-  @spec add_mob_drop(FieldNpc.t(), Schema.Item.t(), Schema.Character.t() | nil) :: :ok | :error
-  def add_mob_drop(%FieldNpc{} = field_npc, item, receiver \\ nil) do
+  @spec add_mob_drop(Types.FieldNpc.t(), Schema.Item.t(), Schema.Character.t() | nil) ::
+          :ok | :error
+  def add_mob_drop(%Types.FieldNpc{} = field_npc, item, receiver \\ nil) do
     cast(field_npc.field, {:add_mob_drop, field_npc, item, receiver})
   end
 
@@ -348,20 +346,20 @@ defmodule Ms2ex.Managers.Field do
   # -- instruments -----------------------------------------------------------
 
   @doc "Spawns the instrument a character is playing, assigning a field object id."
-  @spec add_instrument(Schema.Character.t(), FieldInstrument.t()) ::
-          {:ok, FieldInstrument.t()} | :error
-  def add_instrument(%Schema.Character{} = character, %FieldInstrument{} = instrument) do
+  @spec add_instrument(Schema.Character.t(), Types.FieldInstrument.t()) ::
+          {:ok, Types.FieldInstrument.t()} | :error
+  def add_instrument(%Schema.Character{} = character, %Types.FieldInstrument{} = instrument) do
     call(character.field_pid, {:add_instrument, instrument})
   end
 
   @doc "Looks up the instrument a character is currently playing."
-  @spec lookup_instrument(Schema.Character.t()) :: {:ok, FieldInstrument.t()} | :error
+  @spec lookup_instrument(Schema.Character.t()) :: {:ok, Types.FieldInstrument.t()} | :error
   def lookup_instrument(%Schema.Character{} = character) do
     call(character.field_pid, {:lookup_instrument, character.id})
   end
 
   @doc "Despawns a character's instrument, returning it so callers can announce the stop."
-  @spec remove_instrument(Schema.Character.t()) :: {:ok, FieldInstrument.t()} | :error
+  @spec remove_instrument(Schema.Character.t()) :: {:ok, Types.FieldInstrument.t()} | :error
   def remove_instrument(%Schema.Character{} = character) do
     call(character.field_pid, {:remove_instrument, character.id})
   end
@@ -751,8 +749,11 @@ defmodule Ms2ex.Managers.Field do
   def handle_cast({:drop_item, source, item, position}, state),
     do: {:noreply, Field.Item.drop_item(source, item, position, state)}
 
-  def handle_cast({:add_mob_drop, %FieldNpc{} = mob, %Schema.Item{} = item, receiver}, state),
-    do: {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
+  def handle_cast(
+        {:add_mob_drop, %Types.FieldNpc{} = mob, %Schema.Item{} = item, receiver},
+        state
+      ),
+      do: {:noreply, Field.Item.add_mob_drop(mob, item, receiver, state)}
 
   # a dead player's tombstone is announced with its hit counts so clients can
   # render the revive gauge and hit it; the owner is keyed by character id for
@@ -811,13 +812,13 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:add_npc, npc_id, npc_spawn}, state),
     do: {:noreply, Field.Npc.load_npc(state, npc_id, npc_spawn)}
 
-  def handle_info({:add_mob, %Npc{} = npc, position}, state),
+  def handle_info({:add_mob, %Types.Npc{} = npc, position}, state),
     do: {:noreply, Field.Npc.load_npc(state, npc, %{position: position, rotation: nil})}
 
   def handle_info({:remove_npc, field_npc}, state) do
     # destroy_monster and corpse timers can race; removal is idempotent
     case Map.get(state.npcs, field_npc.object_id) do
-      %FieldNpc{} ->
+      %Types.FieldNpc{} ->
         Field.broadcast(
           field_npc.field,
           Packets.FieldRemoveNpc.bytes(field_npc.object_id)
