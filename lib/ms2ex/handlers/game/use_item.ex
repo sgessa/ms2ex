@@ -113,9 +113,17 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp recall_member(member, character) do
-    if member.id != character.id and Map.get(member, :online?, false) and
-         member.map_id != character.map_id do
-      Managers.Field.change_field(member, character.map_id, character.position, character.rotation)
+    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
+         true <- live_member.id != character.id,
+         true <- Map.get(live_member, :online?, false),
+         false <- Map.get(live_member, :dead?, false),
+         true <- live_member.map_id != character.map_id do
+      Managers.Field.change_field(
+        live_member,
+        character.map_id,
+        character.position,
+        character.rotation
+      )
     end
   end
 
