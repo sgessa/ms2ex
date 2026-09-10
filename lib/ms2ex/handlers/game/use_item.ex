@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     {item_uid, packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %Schema.Item{} = item <- Managers.Inventory.get(character, item_uid),
+         %Schema.Item{} = item <- item_for_use(character, item_uid),
          item <- Context.Items.load_metadata(item) do
       case maybe_skip_tutorial(session, character, item) do
         :skipped ->
@@ -24,6 +24,15 @@ defmodule Ms2ex.GameHandlers.UseItem do
       end
     end
   end
+
+  # Party Summon Scroll purchase
+  defp item_for_use(character, 0) do
+    character
+    |> Managers.Inventory.all()
+    |> Enum.find(&(&1.item_id == 20_300_053 and &1.amount > 0))
+  end
+
+  defp item_for_use(character, item_uid), do: Managers.Inventory.get(character, item_uid)
 
   # the job tutorial's skip item teleports a character standing on the
   # tutorial's start field straight to the skip destination
@@ -56,6 +65,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     case item.metadata.function_name do
       "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
       "VIPCoupon" -> use_premium_coupon(session, character, item)
+      "RecallParty" -> recall_party(session, character, item)
       "AddAdditionalEffect" -> add_additional_effect(session, character, item)
       "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
       "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
@@ -82,8 +92,38 @@ defmodule Ms2ex.GameHandlers.UseItem do
       )
 
       apply_premium_buffs(character)
-    else
-      _ -> session
+    end
+
+    session
+  end
+
+  defp recall_party(session, character, item) do
+    consumed_item = Managers.Inventory.consume(item)
+    push(session, Packets.InventoryItem.consume(consumed_item))
+
+    recall_online_members(character)
+
+    session
+  end
+
+  defp recall_online_members(character) do
+    with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup) do
+      Enum.each(party.members, &recall_member(&1, character))
+    end
+  end
+
+  defp recall_member(member, character) do
+    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
+         true <- live_member.id != character.id,
+         true <- Map.get(live_member, :online?, false),
+         false <- Map.get(live_member, :dead?, false),
+         true <- live_member.map_id != character.map_id do
+      Managers.Field.change_field(
+        live_member,
+        character.map_id,
+        character.position,
+        character.rotation
+      )
     end
   end
 

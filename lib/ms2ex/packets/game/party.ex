@@ -110,11 +110,17 @@ defmodule Ms2ex.Packets.Party do
   end
 
   def update_member(character) do
+    death_count = if Map.get(character, :dead?, false), do: Map.get(character, :death_count, 0), else: 0
+
     __MODULE__
     |> build()
     |> put_byte(0xD)
     |> put_long(character.id)
-    |> Packets.CharacterList.put_character(character)
+    |> Packets.CharacterList.put_character(
+      character,
+      death_count || 0,
+      character.stats
+    )
     |> put_dungeon_info()
   end
 
@@ -131,9 +137,13 @@ defmodule Ms2ex.Packets.Party do
 
   # the packet carries the member's death state (alive, first death, metal);
   # the client uses it to render the party tombstone icon
-  defp death_state(%{dead?: false}), do: 0
-  defp death_state(%{death_count: count}) when count > 1, do: 2
-  defp death_state(_), do: 1
+  defp death_state(character) do
+    if Map.get(character, :dead?, false) do
+      if Map.get(character, :death_count, 0) > 1, do: 2, else: 1
+    else
+      0
+    end
+  end
 
   def join_request(character) do
     __MODULE__
@@ -148,7 +158,7 @@ defmodule Ms2ex.Packets.Party do
     |> put_byte(0x2F)
     |> put_byte(2)
     |> put_int(Enum.count(party.ready_check))
-    |> put_long(DateTime.to_unix(DateTime.utc_now()) + Ms2ex.sync_ticks())
+    |> put_long(DateTime.to_unix(DateTime.utc_now()) + 20)
     |> put_int(Enum.count(party.members))
     |> reduce(party.members, fn m, packet ->
       put_long(packet, m.id)
@@ -167,6 +177,31 @@ defmodule Ms2ex.Packets.Party do
   end
 
   def end_ready_check() do
+    __MODULE__
+    |> build()
+    |> put_byte(0x31)
+  end
+
+  def start_vote(vote) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x2F)
+    |> put_byte(1)
+    |> put_int()
+    |> put_long(DateTime.to_unix(DateTime.utc_now()) + 20)
+    |> put_int(Enum.count(vote.voters))
+    |> reduce(vote.voters, fn voter_id, packet -> put_long(packet, voter_id) end)
+    |> put_int(Enum.count(vote.approvals))
+    |> reduce(vote.approvals, fn voter_id, packet -> put_long(packet, voter_id) end)
+    |> put_int(Enum.count(vote.disapprovals))
+    |> reduce(vote.disapprovals, fn voter_id, packet -> put_long(packet, voter_id) end)
+    |> put_long(vote.initiator_id)
+    |> put_long(vote.target.id)
+    |> put_ustring(vote.target.name)
+    |> put_byte(vote.votes_needed)
+  end
+
+  def end_vote() do
     __MODULE__
     |> build()
     |> put_byte(0x31)

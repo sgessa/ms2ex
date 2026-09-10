@@ -132,7 +132,7 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
          :error <- Managers.Field.lookup_instrument(character),
          {:ok, _item} <- get_instrument(character, item_uid),
          {:ok, _score} <- get_score(character, score_uid),
-         {:ok, party} <- PartyServer.lookup(character.party_id) do
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
       Managers.Character.call(character.id, {:join_ensemble, item_uid, score_uid})
 
       if Types.Party.leader?(party, character), do: start_ensemble(party)

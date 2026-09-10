@@ -29,6 +29,7 @@ defmodule Ms2ex.Managers.Character.Experience do
       {character, _equipment_stats} = Context.CharacterStats.apply(character, equips)
       Managers.Field.broadcast(character, Packets.LevelUp.bytes(character))
       Managers.Field.broadcast_stats(character)
+      Managers.PartyServer.call(character.party_id, {:update_member, character})
 
       # level-reach quest conditions; the level_up code param carries the job id
       Managers.Quest.update_conditions(character.id, :level, 1, "", character.level, "", 0)
