@@ -39,6 +39,20 @@ defmodule Ms2ex.PartyDpsTest do
     assert state.dps_damage == %{leader.id => 500}
   end
 
+  test "repeated DPS mode requests do not reset accumulated party damage" do
+    leader = %{id: System.unique_integer([:positive])}
+    {:ok, pid} = Ms2ex.Managers.PartyServer.start(leader)
+    on_exit(fn -> Process.exit(pid, :kill) end)
+
+    {:ok, party} = GenServer.call(pid, :lookup)
+    {:ok, _party} = Ms2ex.Managers.PartyServer.call(party.id, {:set_dps_mode, true})
+    Ms2ex.Managers.PartyServer.record_damage(%{id: leader.id, party_id: party.id}, 500)
+    {:ok, _party} = Ms2ex.Managers.PartyServer.call(party.id, {:set_dps_mode, true})
+
+    {:ok, state} = Ms2ex.Managers.PartyServer.call(party.id, :lookup)
+    assert state.dps_damage == %{leader.id => 500}
+  end
+
   test "start vote packet includes voters and target" do
     vote = %{
       initiator_id: 101,

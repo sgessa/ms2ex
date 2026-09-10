@@ -3,6 +3,7 @@ defmodule Ms2ex.GameHandlers.Party do
   alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
+  alias Ms2ex.Schema
   alias Ms2ex.Managers.PartyServer
   alias Ms2ex.Types
 
@@ -111,15 +112,16 @@ defmodule Ms2ex.GameHandlers.Party do
   # Summon Party: buy one party summon scroll from the party menu.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
-         {:ok, result} <- purchase_party_summon(character, item) do
-      push_summon_scroll(session, result, character)
-    else
-      {:error, :insufficient_funds} ->
-        :ok
+         {:ok, _party} <- PartyServer.call(character.party_id, :lookup) do
+      case party_summon_item(character) do
+        %Schema.Item{} = item ->
+          recall_party(session, character, item)
 
-      _reason ->
-        :ok
+        nil ->
+          purchase_and_recall_party(session, character)
+      end
+    else
+      _ -> session
     end
   end
 
@@ -188,7 +190,7 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
-  defp purchase_party_summon(character, item) do
+  defp purchase_party_summon(session, character, item) do
     premium? = Context.PremiumMemberships.active?(character.account_id)
 
     case if(premium?, do: {:ok, :premium}, else: charge_party_summon(character)) do
@@ -196,7 +198,55 @@ defmodule Ms2ex.GameHandlers.Party do
         add_party_summon(character, item, premium?)
 
       {:error, reason} ->
+        if reason == :insufficient_funds,
+          do: push(session, Packets.Party.notice(:insufficient_merets, character))
         {:error, reason}
+    end
+  end
+
+  defp purchase_and_recall_party(session, character) do
+    with item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
+        {:ok, result} <- purchase_party_summon(session, character, item),
+        %Schema.Item{} = purchased_item <- purchased_item(result) do
+      recall_party(session, character, purchased_item)
+    else
+      _ -> session
+    end
+  end
+
+  defp purchased_item({:create, item}), do: item
+  defp purchased_item({:update, item}), do: item
+  defp purchased_item({:update_and_create, {_updated, _amount}, item}), do: item
+  defp purchased_item(_result), do: nil
+
+  defp party_summon_item(character) do
+    character
+    |> Managers.Inventory.all()
+    |> Enum.find(&(&1.item_id == @party_summon_scroll_id and &1.amount > 0))
+  end
+
+  defp recall_party(session, character, item) do
+    consumed_item = Managers.Inventory.consume(item)
+    push(session, Packets.InventoryItem.consume(consumed_item))
+
+    with {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
+      Enum.each(party.members, &recall_member(&1, character))
+    end
+
+    session
+  end
+
+  defp recall_member(member, character) do
+    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
+         true <- live_member.id != character.id,
+         true <- live_member.online?,
+         true <- live_member.map_id != character.map_id do
+      Managers.Field.change_field(
+        live_member,
+        character.map_id,
+        character.position,
+        character.rotation
+      )
     end
   end
 
@@ -209,25 +259,6 @@ defmodule Ms2ex.GameHandlers.Party do
         if not premium?, do: Context.Wallets.update(character, :merets, @party_summon_price)
         {:error, reason}
     end
-  end
-
-  defp push_summon_scroll(session, {:create, item}, character) do
-    session
-    |> push(Packets.InventoryItem.add_item({:create, item}, character))
-    |> push(Packets.InventoryItem.mark_item_new(item))
-  end
-
-  defp push_summon_scroll(session, {:update, item}, _character) do
-    session
-    |> push(Packets.InventoryItem.update_item(item.id, item.amount))
-    |> push(Packets.InventoryItem.mark_item_new(item))
-  end
-
-  defp push_summon_scroll(session, {:update_and_create, {_updated, _amount}, created}, character) do
-    session
-    |> push(Packets.InventoryItem.update_item(created.id, created.amount))
-    |> push(Packets.InventoryItem.add_item({:create, created}, character))
-    |> push(Packets.InventoryItem.mark_item_new(created))
   end
 
   defp handle_invitation(session, response, party, character) do

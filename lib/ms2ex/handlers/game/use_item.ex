@@ -13,7 +13,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
     {item_uid, packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         %Schema.Item{} = item <- Managers.Inventory.get(character, item_uid),
+         %Schema.Item{} = item <- item_for_use(character, item_uid),
          item <- Context.Items.load_metadata(item) do
       case maybe_skip_tutorial(session, character, item) do
         :skipped ->
@@ -24,6 +24,15 @@ defmodule Ms2ex.GameHandlers.UseItem do
       end
     end
   end
+
+  # Party Summon Scroll purchase
+  defp item_for_use(character, 0) do
+    character
+    |> Managers.Inventory.all()
+    |> Enum.find(&(&1.item_id == 20_300_053 and &1.amount > 0))
+  end
+
+  defp item_for_use(character, item_uid), do: Managers.Inventory.get(character, item_uid)
 
   # the job tutorial's skip item teleports a character standing on the
   # tutorial's start field straight to the skip destination

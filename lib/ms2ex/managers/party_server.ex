@@ -46,10 +46,7 @@ defmodule Ms2ex.Managers.PartyServer do
     do: {:reply, {:ok, state}, state}
 
   def handle_call({:set_dps_mode, enabled?}, _from, state) do
-    state = %{state | dps_enabled?: enabled?, dps_damage: %{}}
-
-    if enabled?, do: send(self(), :dps_tick)
-
+    state = set_dps_mode(state, enabled?)
     {:reply, {:ok, state}, state}
   end
 
@@ -272,7 +269,9 @@ defmodule Ms2ex.Managers.PartyServer do
   end
 
   defp set_dps_mode(state, enabled?) do
-    state = %{state | dps_enabled?: enabled?, dps_damage: %{}}
+    reset? = enabled? and not state.dps_enabled?
+    state = %{state | dps_enabled?: enabled?}
+    state = if reset?, do: %{state | dps_damage: %{}}, else: state
 
     if enabled?, do: send(self(), :dps_tick)
 

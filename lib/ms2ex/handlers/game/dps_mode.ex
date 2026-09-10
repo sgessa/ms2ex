@@ -6,12 +6,12 @@ defmodule Ms2ex.GameHandlers.DpsMode do
   import Ms2ex.Packets.PacketReader
 
   def handle(packet, session) do
-    {mode, _packet} = get_byte(packet)
+    {_mode, _packet} = get_byte(packet)
 
       with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
         {:ok, party_id} <- party_id_for(character),
         {:ok, party} <- PartyServer.call(party_id, :lookup) do
-      {:ok, party} = PartyServer.call(party.id, {:set_dps_mode, mode != 0})
+      {:ok, party} = PartyServer.call(party.id, {:set_dps_mode, true})
       run(session, fn -> PartyServer.subscribe(party.id) end)
       Ms2ex.Net.SenderSession.push(session, Ms2ex.Packets.DpsStat.bytes(party))
     end
