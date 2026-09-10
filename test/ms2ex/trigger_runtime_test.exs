@@ -790,21 +790,24 @@ defmodule Ms2ex.TriggerRuntimeTest do
       }
     })
 
-    state =
-      base_state()
-      |> Map.put(:patrols, %{
-        "MS2PatrolData_2003" => %{
-          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
-        }
-      })
-      |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
-      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
-        %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
-      ])
-      |> tick()
+    {state, _log} =
+      ExUnit.CaptureLog.with_log(fn ->
+        base_state()
+        |> Map.put(:patrols, %{
+          "MS2PatrolData_2003" => %{
+            way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
+          }
+        })
+        |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+        |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+          %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
+        ])
+        |> tick()
+      end)
 
     # no walk/run sequence on the model: the npc stays put instead of
-    # sliding across the field in its idle pose
+    # sliding across the field in its idle pose (the tick logs the missing
+    # walk animation warning — expected here)
     assert %{patrol: nil, animation: 255} = state.npcs[700]
   end
 
