@@ -92,8 +92,8 @@ defmodule Ms2ex.Managers.Field do
       {:error, {:already_started, pid}} ->
         call(pid, {:add_character, character})
 
-      error ->
-        error
+      result ->
+        result
     end
   end
 

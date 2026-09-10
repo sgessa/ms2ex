@@ -79,17 +79,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     run(character, fn -> Managers.Field.unsubscribe(character) end)
 
     new_map = character.change_map
-
-    # instanced maps are never persisted as the character's current map:
-    # the pre-instance map stays saved, so a relog returns the player to
-    # where the instance was entered from
-    character =
-      if Storage.Tables.InstanceFields.instanced?(new_map.id) do
-        character
-      else
-        {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
-        character
-      end
+    character = persist_current_map(character, new_map)
 
     # the safe position has to follow the map: out-of-bounds recovery teleports
     # to it, and a coordinate from the previous map is out of bounds here too
@@ -99,6 +89,18 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     |> Map.put(:position, new_map.position)
     |> Map.put(:safe_position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
+  end
+
+  # instanced maps are never persisted as the character's current map:
+  # the pre-instance map stays saved, so a relog returns the player to
+  # where the instance was entered from
+  defp persist_current_map(character, new_map) do
+    if Storage.Tables.InstanceFields.instanced?(new_map.id) do
+      character
+    else
+      {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
+      character
+    end
   end
 
   defp start_quest_manager(character_id) do

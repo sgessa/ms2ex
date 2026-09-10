@@ -526,12 +526,7 @@ defmodule Ms2ex.Managers.GuildServer do
             Managers.GuildServer.unsubscribe(state.id)
           end)
 
-          topic =
-            Managers.Field.field_name(
-              target.map_id,
-              target.channel,
-              Map.get(target, :field_instance, 0)
-            )
+          topic = Managers.Field.field_name(target.map_id, target.channel, target.field_instance)
 
           Managers.Field.broadcast(topic, Packets.Guild.remove_tag(target.name))
 
