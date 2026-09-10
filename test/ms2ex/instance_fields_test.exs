@@ -39,6 +39,15 @@ defmodule Ms2ex.InstanceFieldsTest do
     refute InstanceFields.solo?(@shared_map)
   end
 
+  test "field names normalize a missing instance to the shared field" do
+    assert Managers.Field.field_name(@shared_map, 1, nil) ==
+             :"field:2000000:channel:1:instance:0"
+
+    character = %Schema.Character{map_id: @shared_map, channel_id: 1}
+
+    assert Managers.Field.field_name(character) == :"field:2000000:channel:1:instance:0"
+  end
+
   test "field names separate instances of the same map and channel" do
     assert Managers.Field.field_name(@tutorial_map, 1, 0) ==
              :"field:52000001:channel:1:instance:0"

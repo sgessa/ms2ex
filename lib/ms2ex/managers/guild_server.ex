@@ -142,10 +142,7 @@ defmodule Ms2ex.Managers.GuildServer do
         {:reply, :error, state}
 
       member ->
-        updated_member =
-          member
-          |> Map.put(:map_id, map_id)
-          |> Map.put(:field_instance, field_instance || 0)
+        updated_member = Map.merge(member, %{map_id: map_id, field_instance: field_instance})
 
         members = Map.put(state.members, character_id, updated_member)
         state = %{state | members: members}
@@ -822,7 +819,7 @@ defmodule Ms2ex.Managers.GuildServer do
       job: char.job,
       map_id: char.map_id,
       channel: char.channel_id || 1,
-      field_instance: char.field_instance || 0,
+      field_instance: char.field_instance,
       profile_url: char.profile_url || "",
       gear_score: char.gear_score || 0,
       trophies: char.trophies || [0, 0, 0],
@@ -840,7 +837,7 @@ defmodule Ms2ex.Managers.GuildServer do
       job: char.job || :beginner,
       map_id: char.map_id || 1,
       channel: 1,
-      field_instance: 0,
+      field_instance: nil,
       profile_url: char.profile_url || "",
       gear_score: char.gear_score || 0,
       trophies: char.trophies || [0, 0, 0],

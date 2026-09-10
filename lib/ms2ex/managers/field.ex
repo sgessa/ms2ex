@@ -83,7 +83,7 @@ defmodule Ms2ex.Managers.Field do
     # another one
     instance = character.field_instance || instance_id(character.map_id)
     character = Map.put(character, :field_instance, instance)
-    opts = [name: field_name(character.map_id, character.channel_id, instance)]
+    opts = [name: field_name(character)]
 
     case GenServer.start(__MODULE__, character, opts) do
       {:ok, pid} ->
@@ -164,7 +164,7 @@ defmodule Ms2ex.Managers.Field do
   @doc "Broadcasts a packet to every character on a field."
   @spec broadcast(Schema.Character.t() | term(), binary()) :: :ok
   def broadcast(%Schema.Character{} = character, packet) do
-    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
+    topic = field_name(character)
     broadcast(topic, packet)
   end
 
@@ -193,22 +193,31 @@ defmodule Ms2ex.Managers.Field do
   """
   @spec broadcast_from(Schema.Character.t(), binary(), pid()) :: :ok
   def broadcast_from(%Schema.Character{} = character, packet, from) do
-    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
+    topic = field_name(character)
     PubSub.broadcast_from(Ms2ex.PubSub, from, to_string(topic), {:push, packet})
   end
 
   @doc "Subscribes the current process to a character's field events."
   @spec subscribe(Schema.Character.t()) :: :ok | {:error, term()}
   def subscribe(%Schema.Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
+    topic = field_name(character)
     PubSub.subscribe(Ms2ex.PubSub, to_string(topic))
   end
 
   @doc "Unsubscribes the current process from a character's field events."
   @spec unsubscribe(Schema.Character.t()) :: :ok
   def unsubscribe(%Schema.Character{} = character) do
-    topic = field_name(character.map_id, character.channel_id, character.field_instance || 0)
+    topic = field_name(character)
     PubSub.unsubscribe(Ms2ex.PubSub, to_string(topic))
+  end
+
+  @doc """
+  Field process name / PubSub topic for the field a character is on. A
+  missing instance id is the map's shared field (instance 0).
+  """
+  @spec field_name(Schema.Character.t()) :: atom()
+  def field_name(%Schema.Character{} = character) do
+    field_name(character.map_id, character.channel_id, character.field_instance)
   end
 
   @doc """
@@ -216,9 +225,9 @@ defmodule Ms2ex.Managers.Field do
   instance ID. Instance 0 is the shared field of the map on the channel;
   instanced maps (see `Storage.Tables.InstanceFields`) carry their own id.
   """
-  @spec field_name(integer(), integer(), integer()) :: atom()
-  def field_name(map_id, channel_id, instance_id \\ 0) do
-    :"field:#{map_id}:channel:#{channel_id}:instance:#{instance_id}"
+  @spec field_name(integer(), integer(), integer() | nil) :: atom()
+  def field_name(map_id, channel_id, instance_id) do
+    :"field:#{map_id}:channel:#{channel_id}:instance:#{instance_id || 0}"
   end
 
 
