@@ -5,6 +5,7 @@ defmodule Ms2ex.Managers.Character do
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
   alias Ms2ex.Schema
+  alias Ms2ex.Types
   alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
@@ -68,6 +69,14 @@ defmodule Ms2ex.Managers.Character do
   def handle_call({:update, character}, _from, state) do
     updated = update_state(character, state)
     {:reply, :ok, updated}
+  end
+
+  # buff rate modifiers scale the stats as they are at apply time — computed
+  # here so any pending removals already processed this tick are included;
+  # computing from a field-side snapshot would drift the amounts every time a
+  # buff is cancelled while another is applied (the water-crossing lanes)
+  def handle_call({:compute_buff_status, status}, _from, character) do
+    {:reply, Types.Buff.status_modifiers(status, character), character}
   end
 
   # the open npc select menu (npc + offered quests) — clients route their

@@ -122,6 +122,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
 
     stub(Managers.Character, :call, fn
       1, :lookup -> {:ok, character}
+      1, {:compute_buff_status, _status} -> %{movement_speed: 300}
       other, :lookup -> {:error, other}
     end)
 
@@ -181,6 +182,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
 
     stub(Managers.Character, :call, fn
       1, :lookup -> {:ok, character}
+      1, {:compute_buff_status, _status} -> %{movement_speed: 300}
       other, :lookup -> {:error, other}
     end)
 
@@ -223,6 +225,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
 
     stub(Managers.Character, :call, fn
       1, :lookup -> {:ok, character}
+      1, {:compute_buff_status, _status} -> %{movement_speed: 300}
       other, :lookup -> {:error, other}
     end)
 

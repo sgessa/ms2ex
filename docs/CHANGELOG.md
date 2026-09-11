@@ -3,6 +3,15 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Buff rate modifiers are computed in the character manager against its
+  live stats: the field tick computed amounts from a snapshot taken
+  before the previous buff's removal was processed, so switching lanes
+  quickly produced amounts for a dirty base (a -125 slow applied to a
+  max of 100 clamped it to zero; the removal then restored 125 onto a
+  base of 100). Every drift compounded — movement permanently fast or
+  slow. Apply now asks the character manager to compute and store the
+  amounts in the same message order the removals run in.
+
 - Movement syncs no longer overwrite the character manager's stats: the
   user sync handler pushed a full character snapshot twice per movement
   packet (position/animation and quest distance tracking), and each push

@@ -186,10 +186,12 @@ defmodule Ms2ex.Types.Buff do
     end
   end
 
-  def stat_modifiers(%__MODULE__{} = buff, character) do
-    status = buff.effect[:status] || %{}
-    values = Map.get(status, :values, %{})
-    rates = Map.get(status, :rates, %{})
+  # computes the concrete stat amounts an effect grants, scaled by the
+  # character's stats as they are RIGHT NOW — callers run this in the
+  # character manager so no stale snapshot can skew the amounts
+  def status_modifiers(status, character) do
+    values = Map.get(status || %{}, :values, %{})
+    rates = Map.get(status || %{}, :rates, %{})
 
     values
     |> Enum.reduce(%{}, fn {stat, value}, acc -> put_modifier(acc, character, stat, value) end)
@@ -198,6 +200,10 @@ defmodule Ms2ex.Types.Buff do
         put_modifier(acc, character, stat, trunc(rate * stat_max(character, stat)))
       end)
     end)
+  end
+
+  def stat_modifiers(%__MODULE__{} = buff, character) do
+    status_modifiers(buff.effect[:status], character)
   end
 
   defp put_modifier(acc, character, stat, amount) do
