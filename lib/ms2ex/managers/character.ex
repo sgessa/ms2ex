@@ -311,6 +311,19 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:remove_buff_status, modifiers}, character),
     do: {:noreply, Character.Stats.modify_max(character, modifiers, :reduce)}
 
+  # movement syncs arrive at 10-20Hz while the player moves; they merge only
+  # the fields a sync actually changes. A full-state update here would let a
+  # stale snapshot revert stat changes applied between the snapshot and the
+  # cast — leaving buffs permanently applied or permanently reverted
+  def handle_cast({:update_sync_state, position, animation, safe_position}, character) do
+    {:noreply,
+     %{character | position: position, animation: animation, safe_position: safe_position}}
+  end
+
+  def handle_cast({:update_condition_distances, distances}, character) do
+    {:noreply, %{character | condition_distances: distances}}
+  end
+
   def handle_cast({:increase_stats, stats}, character),
     do: {:noreply, Character.Stats.increase(character, stats)}
 

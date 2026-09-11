@@ -1,6 +1,4 @@
 defmodule Ms2ex.Managers.Field.Buff do
-  require Logger
-
   alias Ms2ex.Context
   alias Ms2ex.Types
   alias Ms2ex.Managers
@@ -90,11 +88,6 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp unregister_removed_buff(buff_id, buff, state) do
-    Logger.debug(
-      "buff removed: skill #{buff.skill[:id]} owner #{buff.owner.object_id} " <>
-        "restoring #{inspect(buff.stat_modifiers)}"
-    )
-
     remove_buff_status(buff)
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)

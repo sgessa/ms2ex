@@ -3,6 +3,16 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Movement syncs no longer overwrite the character manager's stats: the
+  user sync handler pushed a full character snapshot twice per movement
+  packet (position/animation and quest distance tracking), and each push
+  raced the relative stat changes buffs make — an apply landing between
+  a snapshot and its cast was reverted, an expiry landing on a reverted
+  state clamped stats to zero or re-applied stale values, leaving
+  movement permanently fast or slow after the buff icon expired. Syncs
+  now merge only the fields they own (position, animation, safe
+  position, condition distances), so buff apply/remove stay balanced.
+
 - Zone hit tests match the reference's body-overlap check: the player is
   a body prism (a radius-10 circle at their position rising 100 from the
   feet) and a zone connects when that body overlaps the volume. The
