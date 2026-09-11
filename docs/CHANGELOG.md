@@ -11,7 +11,9 @@ Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
   every active zone for the trigger id. This was the actual falling-rock
   gap: the rocks of the tutorial chase are trigger skills, not map cubes,
   so the earlier cube-zone damage work never reached them — set_skill only
-  rendered zones client-side.- Cube-skill zone attacks now deal their skill damage: the projected
+  rendered zones client-side. Unlike cube cells (which sit one block below
+  the surface they cover), trigger anchors sit at the ground plane and
+  their hit volume starts right there.- Cube-skill zone attacks now deal their skill damage: the projected
   attack carries the full damage rule (hit count, constant-damage flag,
   damage-by-target-max-hp share) and the zone tick applies it before the
   buff — max-health share, then constant value — reducing the player's

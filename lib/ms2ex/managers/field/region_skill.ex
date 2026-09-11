@@ -113,6 +113,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
           skill_level: doc.skill_level,
           position: doc.position,
           fires_left: doc.count,
+          z_offset: 0,
           range: attack[:range] || %{},
           damage: attack[:damage] || %{}
         }
@@ -313,10 +314,13 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   # box ranges form a rectangle centered on the cube cell (region-buff apply
   # target), cylinder ranges a circle of radius = distance; both are raised
   # one block so the base sits above the cell top and rise by the height
+  # cube cell positions sit one block below the surface they cover (the
+  # grid corner), so their volume raises one block; trigger skill anchors
+  # are placed at the ground plane and use the position as-is
   defp inside_zone?(position, zone) do
     range = Map.get(zone, :range, %{})
     zone_pos = zone.position
-    base_z = zone_pos.z + Context.MapBlock.block_size()
+    base_z = zone_pos.z + Map.get(zone, :z_offset, Context.MapBlock.block_size())
     top_z = base_z + (range[:height] || 0) + (range[:range_add_z] || 0)
 
     horizontal_hit? =
