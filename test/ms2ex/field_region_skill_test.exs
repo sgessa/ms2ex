@@ -82,7 +82,18 @@ defmodule Ms2ex.FieldRegionSkillTest do
       },
       "skill:70000008" => %{
         levels: %{
-          "1" => %{motions: [%{attacks: [%{range: %{type: 1, distance: 50, height: 70}}]}]}
+          "1" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    range: %{type: 1, distance: 50, height: 70},
+                    damage: %{rate: 0.0, value: 0, damage_by_target_max_hp: 0.0}
+                  }
+                ]
+              }
+            ]
+          }
         }
       }
     })
@@ -95,6 +106,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
     assert zone.skill_id == 70_000_008
     assert zone.skill_level == 1
     assert zone.range == %{type: 1, distance: 50, height: 70}
+    assert zone.damage == %{rate: 0.0, value: 0, damage_by_target_max_hp: 0.0}
     assert counter == 50_000_011
   end
 
@@ -194,6 +206,74 @@ defmodule Ms2ex.FieldRegionSkillTest do
     Phoenix.PubSub.subscribe(Ms2ex.PubSub, "cube-zone-topic")
     new_state = RegionSkill.tick_cube_zones(state)
     assert map_size(new_state.buffs) == 1
+  end
+
+  test "tick_cube_zones deals the attack's max-health damage to players" do
+    # the falling-rock zones carry no additional effect — pure attack damage
+    stub_metadata(%{})
+
+    character = %Ms2ex.Schema.Character{
+      id: 1,
+      name: "Testy",
+      object_id: 777,
+      stats: %{health_max: 5000, health_cur: 5000}
+    }
+
+    stub(Managers.Character, :call, fn
+      1, :lookup -> {:ok, character}
+      other, :lookup -> {:error, other}
+    end)
+
+    stub(Managers.Character, :cast, fn
+      %{id: 1}, {:consume_stat, :health, dmg} -> send(self(), {:zone_damage, dmg})
+      _target, _msg -> :ok
+    end)
+
+    state = %{
+      topic: "cube-zone-topic",
+      buffs: %{},
+      players: %{1 => 777},
+      player_positions: %{
+        # inside the circle: 90 < radius 150, z within the raised band
+        1 => %{position: %{x: 3950, y: 3600, z: 3160}, job_code: nil}
+      },
+      local_id_counter: 50_000_000,
+      cube_skill_zones: [
+        %{
+          source_id: 1,
+          skill_id: 70_000_099,
+          skill_level: 1,
+          position: %{x: 3900, y: 3600, z: 3000},
+          range: %{type: 2, distance: 150, height: 150, apply_target: 5},
+          damage: %{
+            rate: 0.0,
+            value: 0,
+            count: 1,
+            is_const_damage: false,
+            damage_by_target_max_hp: 0.1
+          }
+        }
+      ]
+    }
+
+    Phoenix.PubSub.subscribe(Ms2ex.PubSub, "cube-zone-topic")
+    new_state = RegionSkill.tick_cube_zones(state)
+
+    # 10% of the target's max health reached the character manager
+    assert_receive {:zone_damage, 500}
+
+    # and broadcast as a tile record: [op][mode 0x6][skill uid 0][skill id]
+    # [level][target count][object id][damage count][pos][dir][type][dmg]
+    assert_receive {:push,
+                    <<_op::16, 0x6, 0::size(64), skill_id::little-32, level::little-16, 1,
+                      object_id::little-32, 1, _rest::binary>>}
+
+    assert skill_id == 70_000_099
+    assert level == 1
+    assert object_id == 777
+
+    # the rock zone carries no additional effect, so no buff applies
+    assert map_size(new_state.buffs) == 0
   end
 
   defp speed_up_effect do

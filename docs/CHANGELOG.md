@@ -3,7 +3,15 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
-- Cube-skill zone hit volumes match the skill's attack prism: the zone's
+- Cube-skill zone attacks now deal their skill damage: the projected
+  attack carries the full damage rule (hit count, constant-damage flag,
+  damage-by-target-max-hp share) and the zone tick applies it before the
+  buff — max-health share, then constant value — reducing the player's
+  health through the shared stats path (regen deferral and death
+  included) and broadcasting a tile damage record with the push
+  direction. The tutorial chase's falling rocks (skill 70000099) hit for
+  10% of max health per tick; their rate/value fields are genuinely zero
+  in the data — the damage was hiding in the max-health share.- Cube-skill zone hit volumes match the skill's attack prism: the zone's
   range (type, distance, height, width, range adds, apply target) is
   projected with the skill set and resolved from skill metadata at zone
   load; box ranges form a rectangle centered on the cube cell, cylinders

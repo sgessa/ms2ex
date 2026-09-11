@@ -18,11 +18,13 @@ Two flavors of map-placed zones are projected:
   boost/slow lanes of Cave Depths, poison water, lava floors). The
   ingest keeps them even when the cube is also a fluid — the fluid case
   used to swallow the skill. Cube zones are not announced to clients;
-  the field ticks them every second and applies the zone skill's effect
-  as a buff to every player standing inside (movement-speed lanes grant
-  "Speed Up" +300% for 2s, refreshed while on the lane, mutually
-  exclusive with the slow lane's debuff). Zone damage for hurtful
-  effects rides the same buff pipeline (dot on the buff).
+  the field ticks them every second and applies the zone skill's attack
+  to every player standing inside: the attack's damage rule first (a
+  share of the target's max health for the falling rocks, broadcast as
+  a tile damage record with the push direction), then the zone skill's
+  effect as a buff (movement-speed lanes grant "Speed Up" +300% for 2s,
+  refreshed while on the lane, mutually exclusive with the slow lane's
+  debuff).
 
 ### Zone hit volume
 

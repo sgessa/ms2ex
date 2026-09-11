@@ -70,12 +70,15 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       |> Storage.Maps.get_cube_skills()
       |> Enum.with_index()
       |> Enum.map(fn {doc, index} ->
+        attack = first_attack(doc.skill_id, doc.skill_level)
+
         %{
           source_id: counter + index,
           skill_id: doc.skill_id,
           skill_level: doc.skill_level,
           position: doc.position,
-          range: attack_range(doc.skill_id, doc.skill_level)
+          range: attack[:range] || %{},
+          damage: attack[:damage] || %{}
         }
       end)
 
@@ -84,19 +87,20 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     {counter + length(zones), zones}
   end
 
-  # the zone hit volume comes from the skill's first attack: box ranges form
-  # a rectangle centered on the cell, cylinders a circle of radius = distance
-  defp attack_range(skill_id, skill_level) do
+  # the zone's hit volume and damage come from the skill's first attack:
+  # box ranges form a rectangle centered on the cell, cylinders a circle of
+  # radius = distance
+  defp first_attack(skill_id, skill_level) do
     skill = Storage.Skills.get_meta(skill_id)
     %{motions: [%{attacks: [attack | _]} | _]} = skill.levels[to_string(skill_level)]
-    attack.range
+    attack
   end
 
   @doc """
-  Applies each cube-skill zone's effect to the players standing inside
-  (e.g. the boost lanes' movement-speed buff). Re-applying while inside
-  refreshes the effect window; the short effect duration expires it
-  shortly after stepping off.
+  Applies each cube-skill zone's attack to the players standing inside:
+  the zone's damage rule, then its effect as a buff (e.g. the boost lanes'
+  movement-speed bonus). Re-applying while inside refreshes the effect
+  window; the short effect duration expires it shortly after stepping off.
   """
   def tick_cube_zones(state) do
     zones = Map.get(state, :cube_skill_zones, [])
@@ -105,32 +109,108 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   end
 
   defp tick_zone(zone, state) do
-    Enum.reduce(players_in_zone(state, zone), state, fn character_id, state ->
-      boost_player(character_id, zone, state)
-    end)
+    {hits, state} =
+      players_in_zone(state, zone)
+      |> Enum.reduce({[], state}, fn character_id, acc ->
+        apply_zone(zone, character_id, tracked_position(state, character_id), acc)
+      end)
+
+    broadcast_tile(zone, hits, state)
+    state
   end
 
-  defp boost_player(character_id, zone, state) do
-    character =
-      case Managers.Character.call(character_id, :lookup) do
-        {:ok, character} -> character
-        _ -> nil
-      end
+  # the field's tracked position is current (updated on every user move),
+  # unlike the character manager's copy
+  defp tracked_position(state, character_id) do
+    state
+    |> Map.get(:player_positions, %{})
+    |> Map.get(character_id, %{})
+    |> Access.get(:position)
+  end
 
-    if character do
-      {_buff, state} =
-        Managers.Field.Buff.add_effect_buff_for(
-          zone.skill_id,
-          zone.skill_level,
-          character,
-          character,
-          state
-        )
+  defp apply_zone(zone, character_id, position, {hits, state}) do
+    case Managers.Character.call(character_id, :lookup) do
+      {:ok, character} ->
+        {_buff, state} =
+          Managers.Field.Buff.add_effect_buff_for(
+            zone.skill_id,
+            zone.skill_level,
+            character,
+            character,
+            state
+          )
 
-      state
-    else
-      state
+        {zone_hit(zone, character, position, hits), state}
+
+      _ ->
+        {hits, state}
     end
+  end
+
+  # a hit reduces the target's health (the stats write handles death) and
+  # joins the tile record broadcast once per zone per tick
+  defp zone_hit(zone, character, position, hits) do
+    dmg = zone_damage(zone, character)
+
+    if dmg > 0 do
+      Managers.Character.cast(character, {:consume_stat, :health, dmg})
+
+      hit = %{
+        object_id: character.object_id,
+        position: zone.position,
+        direction: push_direction(position, zone.position),
+        # [{type, amount}] — type 0 is a normal hit
+        damages: [{0, dmg}]
+      }
+
+      [hit | hits]
+    else
+      hits
+    end
+  end
+
+  # the zone's damage rule mirrors the reference priority: a share of the
+  # target's max health, then a constant value
+  # TODO: rate-based zone damage needs a caster stat context the field
+  # doesn't have
+  defp zone_damage(zone, character) do
+    damage = Map.get(zone, :damage, %{})
+    max_hp = Map.get(character.stats, :health_max, 0)
+    hp_share = damage[:damage_by_target_max_hp] || 0
+
+    cond do
+      hp_share > 0 -> trunc(max_hp * hp_share)
+      damage[:is_const_damage] == true -> damage[:value] || 0
+      true -> 0
+    end
+  end
+
+  # pushed targets fly away from the source; direction is the normalized
+  # offset, zero when the source sits on the target
+  defp push_direction(position, zone_pos) do
+    dx = position.x - zone_pos.x
+    dy = position.y - zone_pos.y
+    dz = position.z - zone_pos.z
+    dist_sq = dx * dx + dy * dy + dz * dz
+
+    if dist_sq > 0.001 do
+      dist = :math.sqrt(dist_sq)
+      %{x: dx / dist, y: dy / dist, z: dz / dist}
+    else
+      %{x: 0, y: 0, z: 0}
+    end
+  end
+
+  defp broadcast_tile(_zone, [], _state), do: :ok
+
+  defp broadcast_tile(zone, hits, state) do
+    record = %{
+      skill_id: zone.skill_id,
+      skill_level: zone.skill_level,
+      targets: Enum.reverse(hits)
+    }
+
+    Managers.Field.broadcast(state.topic, Packets.SkillDamage.tile(record))
   end
 
   defp players_in_zone(state, zone) do
