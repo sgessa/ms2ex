@@ -3,6 +3,13 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Damage-over-time dots with no attack type (the poison water of the
+  tutorial chase: 1% of the target's max health per tick) no longer run
+  the attack-vs-defense calculator — a player target has no defense
+  stats, so the field crashed on the first poison tick. Rate damage now
+  only computes for typed dots and contributes zero when the target
+  carries no defense stats, mirroring the reference's fallback.
+
 - Buff rate modifiers are computed in the character manager against its
   live stats: the field tick computed amounts from a snapshot taken
   before the previous buff's removal was processed, so switching lanes
