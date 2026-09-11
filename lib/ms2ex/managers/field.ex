@@ -626,6 +626,7 @@ defmodule Ms2ex.Managers.Field do
         portals: portals,
         region_skill_zones: region_skill_zones,
         cube_skill_zones: cube_skill_zones,
+        trigger_skill_zones: %{},
         regions: %{},
         sessions: %{},
         stage: MapSet.new(),
@@ -986,6 +987,13 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(:tick_cube_zones, state) do
     Process.send_after(self(), :tick_cube_zones, @cube_zone_tick_ms)
     {:noreply, __MODULE__.RegionSkill.tick_cube_zones(state)}
+  end
+
+  # a trigger skill zone fires on the script's beat (set_skill enable
+  # schedules it); each fire hits whoever stands inside, and the zone
+  # expires once its fire count runs out
+  def handle_info({:fire_trigger_zone, source_id}, state) do
+    {:noreply, __MODULE__.RegionSkill.fire_trigger_zone(state, source_id)}
   end
 
   # sent whenever a character leaves the field: shared fields linger for

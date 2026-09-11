@@ -3,7 +3,15 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
-- Cube-skill zone attacks now deal their skill damage: the projected
+- Trigger skill zones (set_skill) now own a server-side attack: enable
+  spawns a fire-count-limited zone announced to clients, each fire applies
+  the zone skill's attack damage to players standing inside (max-health
+  share, constant value — the shared stats path, death included) plus its
+  effect as a buff, and broadcasts a tile damage record; disable removes
+  every active zone for the trigger id. This was the actual falling-rock
+  gap: the rocks of the tutorial chase are trigger skills, not map cubes,
+  so the earlier cube-zone damage work never reached them — set_skill only
+  rendered zones client-side.- Cube-skill zone attacks now deal their skill damage: the projected
   attack carries the full damage rule (hit count, constant-damage flag,
   damage-by-target-max-hp share) and the zone tick applies it before the
   buff — max-health share, then constant value — reducing the player's

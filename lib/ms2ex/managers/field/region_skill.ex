@@ -87,6 +87,88 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     {counter + length(zones), zones}
   end
 
+  # the map's script-spawned skill zones (the tutorial chase's falling
+  # rocks), keyed by trigger id for the set_skill action
+  @trigger_skill_interval_ms 150
+
+  @doc """
+  Spawns the trigger skill zone for the trigger id: a one-shot zone that
+  fires `count` times at the fixed interval, announced to clients so they
+  render the effect (the falling rocks).
+  """
+  def spawn_trigger_zone(state, trigger_id) do
+    case Map.get(Map.get(state, :trigger_skills, %{}), trigger_id) do
+      nil ->
+        state
+
+      doc ->
+        {source_id, state} = Managers.Field.next_local_id(state)
+        attack = first_attack(doc.skill_id, doc.skill_level)
+        next_tick = Ms2ex.sync_ticks() + @trigger_skill_interval_ms
+
+        zone = %{
+          source_id: source_id,
+          trigger_id: trigger_id,
+          skill_id: doc.skill_id,
+          skill_level: doc.skill_level,
+          position: doc.position,
+          fires_left: doc.count,
+          range: attack[:range] || %{},
+          damage: attack[:damage] || %{}
+        }
+
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.RegionSkill.add_zone(source_id, doc.skill_id, doc.skill_level, next_tick, [
+            doc.position
+          ])
+        )
+
+        Process.send_after(self(), {:fire_trigger_zone, source_id}, @trigger_skill_interval_ms)
+
+        put_in(state, [:trigger_skill_zones, source_id], zone)
+    end
+  end
+
+  @doc "Removes every active trigger skill zone spawned for the trigger id."
+  def remove_trigger_zones(state, trigger_id) do
+    zones = Map.get(state, :trigger_skill_zones, %{})
+
+    {removed, kept} =
+      Enum.split_with(zones, fn {_source_id, zone} -> zone.trigger_id == trigger_id end)
+
+    Enum.each(removed, fn {source_id, _zone} ->
+      Managers.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    end)
+
+    %{state | trigger_skill_zones: Map.new(kept)}
+  end
+
+  @doc """
+  Fires a trigger skill zone: applies the attack to whoever stands inside
+  (damage, then the skill's effect as a buff) and expires the zone once its
+  fire count runs out.
+  """
+  def fire_trigger_zone(state, source_id) do
+    case Map.get(state, :trigger_skill_zones, %{}) do
+      %{^source_id => zone} ->
+        state = apply_zone_to_players(state, zone)
+        fires_left = zone.fires_left - 1
+
+        if fires_left > 0 do
+          Process.send_after(self(), {:fire_trigger_zone, source_id}, @trigger_skill_interval_ms)
+
+          put_in(state, [:trigger_skill_zones, source_id, :fires_left], fires_left)
+        else
+          Managers.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+          %{state | trigger_skill_zones: Map.delete(state.trigger_skill_zones, source_id)}
+        end
+
+      _ ->
+        state
+    end
+  end
+
   # the zone's hit volume and damage come from the skill's first attack:
   # box ranges form a rectangle centered on the cell, cylinders a circle of
   # radius = distance
@@ -108,7 +190,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     Enum.reduce(zones, state, &tick_zone/2)
   end
 
-  defp tick_zone(zone, state) do
+  defp tick_zone(zone, state), do: apply_zone_to_players(state, zone)
+
+  # applies the zone's attack to every player standing inside and broadcasts
+  # the resulting tile record once for the whole zone
+  defp apply_zone_to_players(state, zone) do
     {hits, state} =
       players_in_zone(state, zone)
       |> Enum.reduce({[], state}, fn character_id, acc ->

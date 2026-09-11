@@ -793,7 +793,24 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
   test "set_skill enables a trigger skill zone and removes it on disable" do
     stub_metadata(%{
-      "skill:70000066" => %{id: 70_000_066, levels: %{"5" => %{motions: [], skills: []}}}
+      "skill:70000066" => %{
+        id: 70_000_066,
+        levels: %{
+          "5" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    range: %{type: 2, distance: 150, height: 150},
+                    damage: %{rate: 0.0, value: 0, damage_by_target_max_hp: 0.1}
+                  }
+                ]
+              }
+            ],
+            skills: []
+          }
+        }
+      }
     })
 
     script = %{
@@ -844,7 +861,13 @@ defmodule Ms2ex.TriggerRuntimeTest do
               2700.0::little-float-size(32), 70_000_066::little-32, 5::little-16, _rest::binary>>} =
              receive_push()
 
-    assert state.trigger_skills[7005].source_id == source_id
+    # the zone is field-owned: fire-count limited, with the skill's hit
+    # volume and damage rule resolved from the skill metadata
+    zone = state.trigger_skill_zones[source_id]
+    assert zone.skill_id == 70_000_066
+    assert zone.fires_left == 1
+    assert zone.range == %{type: 2, distance: 150, height: 150}
+    assert zone.damage.damage_by_target_max_hp == 0.1
 
     # the disarm transition queues on wait_tick, then lands next cycle
     state =
@@ -854,7 +877,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     assert {:push, <<0x4D::little-16, 1, removed_id::little-signed-integer-32>>} = receive_push()
     assert removed_id == source_id
-    refute Map.has_key?(state.trigger_skills[7005], :source_id)
+    refute Map.has_key?(state.trigger_skill_zones, source_id)
   end
 
   test "move_npc attaches the patrol to the matching story npc" do
@@ -1064,6 +1087,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
       item_spawns: %{},
       items: %{},
       portals: %{50_000_001 => portal(1)},
+      trigger_skill_zones: %{},
       # the tutorial's gated spawn point, not yet filled
       npc_spawns: %{
         50_000_002 => %{

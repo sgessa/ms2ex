@@ -49,9 +49,14 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
   create_widget / widget_action, play_scene_movie,
   play_system_sound_in_box, set_breakable / set_visible_breakable_object,
   set_interact_object, set_user_value, add/remove_buff, set_skill (trigger
-  skill zones — RegionSkill add/remove anchored to the zone position),
-  set_achievement (a condition event for players in a box feeding the quest
-  and achievement pipelines — completes trigger-gated main quests)
+  skill zones — the falling rocks of the tutorial chase. Enable spawns a
+  fire-count-limited zone announced to clients and owned by the field:
+  each fire applies the zone skill's attack to players standing inside —
+  max-health share, constant value — through the shared stats path, plus
+  the skill's effect as a buff, and broadcasts a tile damage record with
+  the push direction. Disable removes every active zone for the trigger
+  id), set_achievement (a condition event for players in a box feeding the
+  quest and achievement pipelines — completes trigger-gated main quests)
 
 ## Still missing
 
