@@ -98,8 +98,16 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     end)
   end
 
-  # selects a map camera vantage for the scripted shot; enable false releases
-  # the view. Like set_mesh, only known cameras are sent
+  # attaches or releases a map camera vantage for the local player view
+  defp execute_action("set_local_camera", args, _script_name, state) do
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.LocalCamera.set(int_arg(args, :camera_id), bool_arg(args, :enable))
+    )
+
+    state
+  end
+
   # shows or hides the map's agent figures (scripted npc silhouettes such as
   # the shadow agents in the class intros). Agents are not projected yet, so
   # the update reaches the client by trigger id alone — the ids come from the
@@ -114,6 +122,43 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     end)
   end
 
+  # toggles a map actor figure (a staged npc silhouette) and plays its
+  # animation sequence. Actors are not projected yet, so the update reaches
+  # the client by trigger id alone — the ids come from the map's own script
+  # TODO: project trigger actors and track their visibility like cameras
+  defp execute_action("set_actor", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+    sequence_name = to_string(args[:initial_sequence] || "")
+
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.Trigger.update_actor(int_arg(args, :trigger_id), visible, sequence_name)
+    )
+
+    state
+  end
+
+  # toggles a map ladder (climb-in animation replay after the fade delay).
+  # Ladders are not projected yet — the update reaches the client by trigger
+  # id alone
+  # TODO: project trigger ladders and track their visibility like cameras
+  defp execute_action("set_ladder", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+    animate = bool_arg(args, :enable)
+    fade = int_arg(args, :fade)
+
+    Enum.reduce(int_list_arg(args, :trigger_ids), state, fn trigger_id, state ->
+      Managers.Field.broadcast(
+        state.topic,
+        Packets.Trigger.update_ladder(trigger_id, visible, animate, fade)
+      )
+
+      state
+    end)
+  end
+
+  # selects a map camera vantage for the scripted shot; enable false releases
+  # the view. Like set_mesh, only known cameras are sent
   defp execute_action("select_camera", args, _script_name, state) do
     cameras = Map.get(state, :trigger_cameras, %{})
 

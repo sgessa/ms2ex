@@ -124,6 +124,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x72 => "FOLLOW_NPC",
     0xF3 => "ONE_TIME_EFFECT",
     0xF4 => "CAMERA_INTERPOLATION",
+    0xEB => "LOCAL_CAMERA",
     0xF5 => "TIME_SCALE"
   }
 

@@ -88,6 +88,28 @@ defmodule Ms2ex.Packets.Trigger do
     |> put_bool(visible)
   end
 
+  # toggles a map actor figure and plays its animation sequence
+  def update_actor(id, visible, sequence_name) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update)
+    |> put_int(id)
+    |> put_bool(visible)
+    |> put_ustring(sequence_name)
+  end
+
+  # toggles a map ladder; animate replays the climb-in animation after the
+  # fade delay
+  def update_ladder(id, visible, animate, delay) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.update)
+    |> put_int(id)
+    |> put_bool(visible)
+    |> put_bool(animate)
+    |> put_int(delay)
+  end
+
   def hide_mesh(mesh), do: update_mesh(false, mesh)
 
   # advances the client's guide widget to the given step — e.g. the tutorial

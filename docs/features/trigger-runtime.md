@@ -35,6 +35,7 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
   spawn points load dormant and appear only when a script summons them; all
   other spawns load with the field per their on-create flag, so plain quest
   npcs coexist with scripted maps, set_agent (agent figure visibility),
+  set_actor (actor figure visibility + animation sequence),
   move_npc (patrol walk, stays at the last waypoint),
   set_npc_emotion_loop / set_npc_emotion_sequence,
   set_pc_emotion_loop / set_pc_emotion_sequence, move_user (same-map
@@ -43,7 +44,8 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
   default spawn), move_user_path (invisible follow-dummy walks the patrol,
   the client walks the player behind it), create_item (fixed-position,
   unowned field item from a named id or the spawn point's drop box)
-- world: set_portal, set_ladder (unimplemented), guide_event,
+- world: set_portal, set_ladder (ladder visibility + climb-in animation —
+  ladders are not projected, the update reaches the client by id), guide_event,
   create_widget / widget_action, play_scene_movie,
   play_system_sound_in_box, set_breakable / set_visible_breakable_object,
   set_interact_object, set_user_value, add/remove_buff, set_skill (trigger
@@ -61,5 +63,6 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
 - balloon-family follow-ups: remove_balloon_talk and dialogue delay_tick
   scheduling (the client applies the delay itself, so wait_tick-gated
   scripts are unaffected)
-- set_ladder (ladder visibility toggles — ladders are not projected yet)
-- server-side trigger-skill-zone ticks (zone damage on entities)
+- server-side trigger-skill-zone ticks (zone damage on entities) — map
+  cube-skill zones (boost lanes, poison water, lava) now tick and apply
+  their effect to players inside, so the remaining gap is narrow

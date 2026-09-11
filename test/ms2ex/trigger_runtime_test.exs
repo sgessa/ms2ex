@@ -471,6 +471,36 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert {:push, <<0x4F::little-16, 0x3, 8001::little-32, 0>>} = receive_push()
   end
 
+  test "set_actor toggles the actor figure and plays its sequence" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_actor", args: %{trigger_id: "1901", visible: "1", initial_sequence: "Idle_A"}}
+    ])
+    |> tick()
+
+    # id + visible + u16 length + "Idle_A" utf16le
+    assert {:push,
+            <<0x4F::little-16, 0x3, 1901::little-32, 1, 6::little-16, "I", 0, "d", 0, "l", 0, "e",
+              0, "_", 0, "A", 0>>} = receive_push()
+  end
+
+  test "set_ladder toggles each ladder with animate and fade" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{
+        name: "set_ladder",
+        args: %{trigger_ids: "341,342", visible: "1", enable: "0", fade: "100"}
+      }
+    ])
+    |> tick()
+
+    assert {:push, <<0x4F::little-16, 0x3, 341::little-32, 1, 0, 100::little-32>>} =
+             receive_push()
+
+    assert {:push, <<0x4F::little-16, 0x3, 342::little-32, 1, 0, 100::little-32>>} =
+             receive_push()
+  end
+
   test "remove_cinematic_talk clears the dialog bubble" do
     base_state()
     |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [

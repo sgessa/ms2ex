@@ -64,6 +64,9 @@ defmodule Ms2ex.Managers.Field.Character do
     # Load Interactable Objects
     push(character, Packets.InteractObject.load(Map.values(state.interactable)))
 
+    # map-placed skill zones (boost lanes and the like) are client-executed
+    Managers.Field.RegionSkill.send_zones(character, Map.get(state, :region_skill_zones, []))
+
     # Tell other characters in the map to load the new player
     Managers.Field.broadcast(character, Packets.FieldAddUser.bytes(character))
     Managers.Field.broadcast(character, Packets.ProxyGameObj.load_player(character))

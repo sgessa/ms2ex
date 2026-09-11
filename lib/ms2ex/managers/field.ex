@@ -594,6 +594,13 @@ defmodule Ms2ex.Managers.Field do
     field_name = field_name(map_id, channel_id, instance)
 
     {local_id_counter, portals} = __MODULE__.Portal.load(map_id, @local_id_counter)
+
+    {local_id_counter, region_skill_zones} =
+      __MODULE__.RegionSkill.load_zones(map_id, local_id_counter)
+
+    {local_id_counter, cube_skill_zones} =
+      __MODULE__.RegionSkill.load_cube_zones(map_id, local_id_counter)
+
     interactable = __MODULE__.InteractObject.load(map_id)
 
     state =
@@ -617,6 +624,8 @@ defmodule Ms2ex.Managers.Field do
         performance: nil,
         players: %{},
         portals: portals,
+        region_skill_zones: region_skill_zones,
+        cube_skill_zones: cube_skill_zones,
         regions: %{},
         sessions: %{},
         stage: MapSet.new(),
@@ -631,6 +640,7 @@ defmodule Ms2ex.Managers.Field do
     send(self(), :tick_npcs)
     send(self(), :send_updates)
     send(self(), :tick_banners)
+    send(self(), :tick_cube_zones)
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
@@ -967,6 +977,15 @@ defmodule Ms2ex.Managers.Field do
     {state, changed} = __MODULE__.Banner.activate(state)
     Enum.each(changed, &broadcast(state.topic, Packets.Ugc.activate_banner(&1)))
     {:noreply, state}
+  end
+
+  # cube-skill zones re-apply their effect every cycle: while a player
+  # stands inside, re-adding refreshes the effect window; stepping off lets
+  # the short duration expire it naturally
+  @cube_zone_tick_ms 1_000
+  def handle_info(:tick_cube_zones, state) do
+    Process.send_after(self(), :tick_cube_zones, @cube_zone_tick_ms)
+    {:noreply, __MODULE__.RegionSkill.tick_cube_zones(state)}
   end
 
   # sent whenever a character leaves the field: shared fields linger for

@@ -73,6 +73,12 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
     Map.get(Map.get(state, :user_values, %{}), key) == int_arg(args, :value)
   end
 
+  # true once any player is on the field — quest maps wait on this gate
+  # before starting their intro cinematics
+  def evaluate("check_user", _args, _machine, _now, state) do
+    map_size(Map.get(state, :players, %{})) > 0
+  end
+
   # true when one of the interact objects (matched by its table id) currently
   # sits in the wanted state (0 normal, 1 reactable, 2 hidden) — e.g. the
   # tutorial car the moment the player boards it

@@ -3,6 +3,36 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Cube-skill zone hit volumes match the skill's attack prism: the zone's
+  range (type, distance, height, width, range adds, apply target) is
+  projected with the skill set and resolved from skill metadata at zone
+  load; box ranges form a rectangle centered on the cube cell, cylinders
+  a circle of radius = distance, both raised one block so the base sits
+  above the cell top. The earlier fixed-radius circle applied the Cave
+  Depths lane buffs when standing near but not on the lane tiles.
+- Cube-skill zones (boost/slow lanes, hazard water) are projected and
+  ticked: the ingest keeps `Ms2CubeSkill` entities even when the cube is
+  a fluid — the fluid case used to swallow them — and the field ticks
+  every second, applying the zone skill's effect as a buff to players
+  standing inside. Cave Depths' (52000066, the Berserker masked-figure
+  chase) lanes now grant "Speed Up" (+300% movement for 2s, refreshed
+  while on the lane) and their blue slow-lane counterpart, matching the
+  reference's cube-skill handling.
+- Map-placed region skills are projected and reach clients: the ingest
+  carries each map's `region_skills` (skill id, level, fire interval,
+  fixed position — boost lanes, zone hazards; cube-placed skills are
+  excluded), the field allocates every zone a stable source id at init,
+  and entering players receive the zone frame so the client executes the
+  effect while they stand inside. Kerning Interchange's launch lane
+  (skill 70000018) now works, unblocking the Masked Boy chase in the
+  main story.
+- Trigger actions `set_actor` and `set_ladder` are implemented: actor
+  figure visibility with its animation sequence, and ladder visibility
+  with the climb-in animation flag and fade delay. Both broadcast the
+  trigger-object update by id (actors and ladders are not projected
+  yet). Together with `select_camera`, `set_agent` and
+  `remove_cinematic_talk` this closes the unimplemented-action warnings
+  on the class-intro and interchange scripted maps.
 - Trigger condition `object_interacted` is implemented: fires when an
   interact object (matched by its table id) sits in the wanted state (0
   normal, 1 reactable, 2 hidden). Gates the Blackstar Junkyard's car ride

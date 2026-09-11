@@ -1,4 +1,6 @@
 defmodule Ms2ex.Managers.Field.Buff do
+  require Logger
+
   alias Ms2ex.Context
   alias Ms2ex.Types
   alias Ms2ex.Managers
@@ -88,6 +90,11 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp unregister_removed_buff(buff_id, buff, state) do
+    Logger.debug(
+      "buff removed: skill #{buff.skill[:id]} owner #{buff.owner.object_id} " <>
+        "restoring #{inspect(buff.stat_modifiers)}"
+    )
+
     remove_buff_status(buff)
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)
@@ -112,7 +119,11 @@ defmodule Ms2ex.Managers.Field.Buff do
 
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
 
-    if apply_status?, do: apply_status(buff)
+    # apply_status persists the stat modifiers onto the stored buff — the
+    # scheduled removal reads them back to restore the owner's stats
+    {buff, state} =
+      if apply_status?, do: apply_status(buff, state), else: {buff, state}
+
     state = modify_overlap(buff, state)
     schedule(buff)
 
@@ -299,19 +310,20 @@ defmodule Ms2ex.Managers.Field.Buff do
     {buff, state}
   end
 
-  defp apply_status(%Types.Buff{owner: %Schema.Character{}} = buff) do
+  defp apply_status(%Types.Buff{owner: %Schema.Character{}} = buff, state) do
     character = buff.owner
     modifiers = Types.Buff.stat_modifiers(buff, character)
 
     if map_size(modifiers) > 0 do
-      Managers.Buff.update(buff, %{stat_modifiers: modifiers})
+      buff = Managers.Buff.update(buff, %{stat_modifiers: modifiers})
       Managers.Character.cast(character, {:modify_buff_status, modifiers})
+      {buff, state}
+    else
+      {buff, state}
     end
-
-    :ok
   end
 
-  defp apply_status(_buff), do: :ok
+  defp apply_status(buff, state), do: {buff, state}
 
   defp remove_buff_status(%Types.Buff{owner: %Schema.Character{}} = buff) do
     modifiers = buff.stat_modifiers

@@ -1,11 +1,182 @@
 defmodule Ms2ex.Managers.Field.RegionSkill do
+  require Logger
+
   alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Net.SenderSession
   alias Ms2ex.Packets
+  alias Ms2ex.Storage
   alias Ms2ex.Types
 
   @splash_radius 800
   @splash_targets 8
+
+  @doc """
+  Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+  zones at a fixed position. Each zone gets a stable source id for the field
+  session; entering players receive the zone add frame and the client runs
+  the zone effect while they stand inside. Ids draw from the field's local
+  counter so they never collide with entities.
+  """
+  def load_zones(map_id, counter) do
+    zones =
+      map_id
+      |> Storage.Maps.get_region_skills()
+      |> Enum.with_index()
+      |> Enum.map(fn {doc, index} ->
+        %{
+          source_id: counter + index,
+          skill_id: doc.skill_id,
+          skill_level: doc.skill_level,
+          interval: doc[:interval] || 0,
+          position: doc.position
+        }
+      end)
+
+    Logger.debug(
+      "region zones: map #{map_id} counter #{inspect(counter)} loaded #{length(zones)}"
+    )
+
+    {counter + length(zones), zones}
+  end
+
+  @doc "Sends the field's map-placed skill zones to an entering player."
+  def send_zones(character, zones) do
+    next_tick = Ms2ex.sync_ticks()
+
+    Enum.each(zones, fn zone ->
+      SenderSession.push(
+        character,
+        Packets.RegionSkill.add_zone(
+          zone.source_id,
+          zone.skill_id,
+          zone.skill_level,
+          next_tick + zone.interval,
+          [zone.position]
+        )
+      )
+    end)
+  end
+
+  @doc """
+  Map cubes carrying a skill zone (boost/slow lanes, hazard water). Cube
+  zones are not announced to clients — the lane visuals are map decor —
+  the field ticks them and applies the zone skill's effect to players
+  standing inside.
+  """
+  def load_cube_zones(map_id, counter) do
+    zones =
+      map_id
+      |> Storage.Maps.get_cube_skills()
+      |> Enum.with_index()
+      |> Enum.map(fn {doc, index} ->
+        %{
+          source_id: counter + index,
+          skill_id: doc.skill_id,
+          skill_level: doc.skill_level,
+          position: doc.position,
+          range: attack_range(doc.skill_id, doc.skill_level)
+        }
+      end)
+
+    Logger.debug("cube zones: map #{map_id} counter #{inspect(counter)} loaded #{length(zones)}")
+
+    {counter + length(zones), zones}
+  end
+
+  # the zone hit volume comes from the skill's first attack: box ranges form
+  # a rectangle centered on the cell, cylinders a circle of radius = distance
+  defp attack_range(skill_id, skill_level) do
+    skill = Storage.Skills.get_meta(skill_id)
+    %{motions: [%{attacks: [attack | _]} | _]} = skill.levels[to_string(skill_level)]
+    attack.range
+  end
+
+  @doc """
+  Applies each cube-skill zone's effect to the players standing inside
+  (e.g. the boost lanes' movement-speed buff). Re-applying while inside
+  refreshes the effect window; the short effect duration expires it
+  shortly after stepping off.
+  """
+  def tick_cube_zones(state) do
+    zones = Map.get(state, :cube_skill_zones, [])
+
+    Enum.reduce(zones, state, &tick_zone/2)
+  end
+
+  defp tick_zone(zone, state) do
+    Enum.reduce(players_in_zone(state, zone), state, fn character_id, state ->
+      boost_player(character_id, zone, state)
+    end)
+  end
+
+  defp boost_player(character_id, zone, state) do
+    character =
+      case Managers.Character.call(character_id, :lookup) do
+        {:ok, character} -> character
+        _ -> nil
+      end
+
+    if character do
+      {_buff, state} =
+        Managers.Field.Buff.add_effect_buff_for(
+          zone.skill_id,
+          zone.skill_level,
+          character,
+          character,
+          state
+        )
+
+      state
+    else
+      state
+    end
+  end
+
+  defp players_in_zone(state, zone) do
+    state
+    |> Map.get(:player_positions, %{})
+    |> Enum.filter(fn {_character_id, entry} ->
+      position = entry[:position]
+      is_map(position) and inside_zone?(position, zone)
+    end)
+    |> Enum.map(fn {character_id, _entry} -> character_id end)
+  end
+
+  # the zone's hit volume follows the attack prism for the skill's range:
+  # box ranges form a rectangle centered on the cube cell (region-buff apply
+  # target), cylinder ranges a circle of radius = distance; both are raised
+  # one block so the base sits above the cell top and rise by the height
+  defp inside_zone?(position, zone) do
+    range = Map.get(zone, :range, %{})
+    zone_pos = zone.position
+    base_z = zone_pos.z + Context.MapBlock.block_size()
+    top_z = base_z + (range[:height] || 0) + (range[:range_add_z] || 0)
+
+    horizontal_hit? =
+      case range[:type] do
+        1 -> inside_box?(position, zone_pos, range)
+        2 -> inside_cylinder?(position, zone_pos, range)
+        _ -> false
+      end
+
+    horizontal_hit? and position.z >= base_z and position.z <= top_z
+  end
+
+  defp inside_box?(position, zone_pos, range) do
+    half_width = ((range[:width] || 0) + (range[:range_add_x] || 0)) / 2
+    half_length = ((range[:distance] || 0) + (range[:range_add_y] || 0)) / 2
+
+    abs(position.x - zone_pos.x) <= half_width and
+      abs(position.y - zone_pos.y) <= half_length
+  end
+
+  defp inside_cylinder?(position, zone_pos, range) do
+    dx = position.x - zone_pos.x
+    dy = position.y - zone_pos.y
+    radius = range[:distance] || 0
+    dx * dx + dy * dy <= radius * radius
+  end
 
   def add(skill_cast, state) do
     source_id = Ms2ex.generate_int()
