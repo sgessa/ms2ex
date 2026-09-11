@@ -58,10 +58,13 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
         false
 
       box ->
-        state.npcs
-        |> Map.values()
-        |> Enum.any?(fn npc ->
-          npc.spawn_point_id in spawn_point_ids and Trigger.box_contains?(box, npc.position)
+        matching =
+          state.npcs
+          |> Map.values()
+          |> Enum.filter(fn npc -> npc.spawn_point_id in spawn_point_ids end)
+
+        Enum.any?(matching, fn npc ->
+          Trigger.box_contains?(box, npc.position) or Trigger.npc_body_in_box?(box, npc)
         end)
     end
   end

@@ -356,6 +356,30 @@ defmodule Ms2ex.Managers.Field.Trigger do
       z >= pos.z - dims.z / 2 - @pad and z <= pos.z + dims.z / 2 + @pad
   end
 
+  @doc """
+  Whether an npc's body capsule overlaps a trigger box: the reference tests
+  the box against both the npc's position and its body shape, so a large npc
+  (or one riding a mount) registers while its body crosses the box edge even
+  when its position point never enters the box.
+  """
+  def npc_body_in_box?(box, %{npc: npc, position: npc_pos} = _npc_data) do
+    capsule = get_in(npc && npc.metadata, [:capsule]) || %{}
+    radius = capsule[:radius] || 0
+    height = capsule[:height] || 0
+    pos = box.position
+    dims = box.dimensions
+
+    horizontal? =
+      abs(npc_pos.x - pos.x) <= dims.x / 2 + @pad + radius and
+        abs(npc_pos.y - pos.y) <= dims.y / 2 + @pad + radius
+
+    z_overlap? =
+      npc_pos.z <= pos.z + dims.z / 2 + @pad and
+        npc_pos.z + height >= pos.z - dims.z / 2 - @pad
+
+    horizontal? and z_overlap?
+  end
+
   defp now_ms, do: System.monotonic_time(:millisecond)
 
   # scripts declare their execution order; the runtime starts at the first

@@ -3,6 +3,13 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- npc_detected also detects an npc whose body capsule overlaps the box,
+  not only its position point: the reference tests the box against both
+  the npc's position and its body shape, and the tutorial chase's escape
+  thief rides past the detection box without his position point ever
+  entering it. The ingest now projects each npc's body capsule (radius,
+  height) for the test.
+
 - Damage-over-time dots with no attack type (the poison water of the
   tutorial chase: 1% of the target's max health per tick) no longer run
   the attack-vs-defense calculator — a player target has no defense
