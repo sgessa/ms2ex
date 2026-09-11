@@ -328,6 +328,8 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   # cube cell positions sit one block below the surface they cover (the
   # grid corner), so their volume raises one block; trigger skill anchors
   # are placed at the ground plane and use the position as-is
+  @player_body_radius 10
+  @player_body_height 100
   defp inside_zone?(position, zone) do
     range = Map.get(zone, :range, %{})
     zone_pos = zone.position
@@ -345,11 +347,8 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         _ -> false
       end
 
-    horizontal_hit? and position.z <= top_z and base_z <= position.z + 100
+    horizontal_hit? and position.z <= top_z and base_z <= position.z + @player_body_height
   end
-
-  @player_body_radius 10
-  @player_body_height 100
 
   # region-buff boxes are centered on the cell; the body circle widens the
   # test by its radius on each axis
