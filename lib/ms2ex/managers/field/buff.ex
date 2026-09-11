@@ -130,25 +130,43 @@ defmodule Ms2ex.Managers.Field.Buff do
     previous = existing.stacks
     stacks = min(max(previous + overlap, 0), max)
 
-    # re-applying refreshes the effect's window and adds the condition's
-    # overlap_count stacks
-    new_end = Ms2ex.sync_ticks() + get_in(buff.effect, [:property, :duration_tick])
-    end_tick = if new_end > existing.end_tick, do: new_end, else: existing.end_tick
+    # re-application refresh semantics follow the effect's reset condition:
+    # persist_end_tick keeps the original expiry — a re-apply while active is
+    # a no-op (no update broadcast for the client to re-apply the effect);
+    # other conditions extend the window
+    end_tick = refreshed_end_tick(buff, existing)
 
-    # cancel the pending removal and reschedule for the extended window
-    if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
-    existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
-    schedule_removal(existing)
-    Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
+    if stacks == previous and end_tick == existing.end_tick do
+      # identical re-application: nothing changed, nothing to broadcast
+      {existing, state}
+    else
+      # cancel the pending removal and reschedule for the extended window
+      if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
 
-    state =
-      if stacks >= max and previous < max and overlap > 0 do
-        fire_skills(existing, state)
-      else
-        state
-      end
+      existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
+      schedule_removal(existing)
+      Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
 
-    {existing, state}
+      state =
+        if stacks >= max and previous < max and overlap > 0 do
+          fire_skills(existing, state)
+        else
+          state
+        end
+
+      {existing, state}
+    end
+  end
+
+  defp refreshed_end_tick(buff, existing) do
+    if Map.get(buff.effect || %{}, :reset_condition) == 1 do
+      existing.end_tick
+    else
+      max(
+        Ms2ex.sync_ticks() + get_in(buff.effect, [:property, :duration_tick]),
+        existing.end_tick
+      )
+    end
   end
 
   # re-applying the effect cancels buffs listed in its update.cancel metadata
