@@ -3,7 +3,11 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
-- Trigger skill zones (set_skill) now own a server-side attack: enable
+- Skill zones only apply the effects their attack actually lists: the
+  zone tick used to grant every player the zone skill's same-id effect
+  unconditionally, so the falling rocks (whose attack lists no effects)
+  handed out a stray, logout-persisting "water fun" buff. The lane
+  buffs, which the attacks do list, are unaffected.- Trigger skill zones (set_skill) now own a server-side attack: enable
   spawns a fire-count-limited zone announced to clients, each fire applies
   the zone skill's attack damage to players standing inside (max-health
   share, constant value — the shared stats path, death included) plus its

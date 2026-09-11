@@ -78,7 +78,8 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
           skill_level: doc.skill_level,
           position: doc.position,
           range: attack[:range] || %{},
-          damage: attack[:damage] || %{}
+          damage: attack[:damage] || %{},
+          skills: attack[:skills] || []
         }
       end)
 
@@ -115,7 +116,8 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
           fires_left: doc.count,
           z_offset: 0,
           range: attack[:range] || %{},
-          damage: attack[:damage] || %{}
+          damage: attack[:damage] || %{},
+          skills: attack[:skills] || []
         }
 
         Managers.Field.broadcast(
@@ -218,14 +220,23 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   defp apply_zone(zone, character_id, position, {hits, state}) do
     case Managers.Character.call(character_id, :lookup) do
       {:ok, character} ->
-        {_buff, state} =
-          Managers.Field.Buff.add_effect_buff_for(
-            zone.skill_id,
-            zone.skill_level,
-            character,
-            character,
+        # the attack carries the effects the zone applies — the rock skill
+        # lists none, so only listed effects ever reach the player
+        state =
+          zone
+          |> Map.get(:skills, [])
+          |> Enum.reduce(state, fn effect, state ->
+            {_buff, state} =
+              Managers.Field.Buff.add_effect_buff_for(
+                effect.id,
+                effect.level,
+                character,
+                character,
+                state
+              )
+
             state
-          )
+          end)
 
         {zone_hit(zone, character, position, hits), state}
 

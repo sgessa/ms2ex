@@ -147,7 +147,8 @@ defmodule Ms2ex.FieldRegionSkillTest do
             width: 100,
             height: 70,
             apply_target: 5
-          }
+          },
+          skills: [%{id: 70_000_008, level: 1}]
         }
       ]
     }
@@ -198,7 +199,8 @@ defmodule Ms2ex.FieldRegionSkillTest do
           skill_id: 70_000_099,
           skill_level: 1,
           position: %{x: 3900, y: 3600, z: 3000},
-          range: %{type: 2, distance: 150, height: 150, apply_target: 5}
+          range: %{type: 2, distance: 150, height: 150, apply_target: 5},
+          skills: [%{id: 70_000_099, level: 1}]
         }
       ]
     }
@@ -245,6 +247,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
           skill_level: 1,
           position: %{x: 3900, y: 3600, z: 3000},
           range: %{type: 2, distance: 150, height: 150, apply_target: 5},
+          skills: [%{id: 70_000_099, level: 1}],
           damage: %{
             rate: 0.0,
             value: 0,
