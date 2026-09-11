@@ -310,6 +310,13 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp run_enter(script_name, states, state_name, state) do
     case states[state_name] do
       %{} = entry ->
+        # TEMPORARY diagnostics
+        File.write(
+          "/tmp/zone_debug.log",
+          "state #{script_name} -> #{state_name}\n",
+          [:append]
+        )
+
         state = Actions.execute_actions(entry[:on_enter], script_name, state)
         {normalize_next(entry[:next_state]), state}
 

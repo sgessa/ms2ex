@@ -24,17 +24,35 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
     job_code = int_arg(args, :job_code)
     boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
 
-    state
-    |> Map.get(:player_positions, %{})
-    |> Map.values()
-    |> Enum.any?(fn
-      %{position: %{} = position, job_code: code} ->
-        (job_code == 0 or code == job_code) and
-          Enum.any?(boxes, &Trigger.box_contains?(&1, position))
+    hit? =
+      state
+      |> Map.get(:player_positions, %{})
+      |> Map.values()
+      |> Enum.any?(fn
+        %{position: %{} = position, job_code: code} ->
+          (job_code == 0 or code == job_code) and
+            Enum.any?(boxes, &Trigger.box_contains?(&1, position))
 
-      _ ->
-        false
-    end)
+        _ ->
+          false
+      end)
+
+    # TEMPORARY diagnostics
+    if boxes != [] do
+      positions =
+        state
+        |> Map.get(:player_positions, %{})
+        |> Map.values()
+        |> Enum.map(&inspect(&1[:position]))
+
+      File.write(
+        "/tmp/zone_debug.log",
+        "user_detected boxes=#{inspect(box_ids)} players=#{inspect(positions)} hit=#{hit?}\n",
+        [:append]
+      )
+    end
+
+    hit?
   end
 
   def evaluate("monster_dead", args, _machine, _now, state) do

@@ -330,6 +330,10 @@ defmodule Ms2ex.Managers.Field.Npc do
             patrol: %{
               waypoints: Enum.map(way_points, & &1[:position]),
               animations: animations,
+              speeds:
+                Enum.map(way_points, fn way_point ->
+                  Patrol.leg_speed(field_npc, way_point[:approach_animation])
+                end),
               index: 0,
               speed: @follow_speed,
               last_at: System.monotonic_time(:millisecond),

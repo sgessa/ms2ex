@@ -3,6 +3,14 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Holdtime achievements respect their map-code gate: hold time ticked
+  toward every holdtime achievement regardless of the map, so riding the
+  tutorial's mine cart unlocked Royale Park balloon achievements ("The
+  View Up High", "I'm Not Coming Down"). The tick now pushes the map id
+  as the event code and holdtime joins the code-gated condition types —
+  map-gated holdtime achievements only count on their own map, while
+  map-agnostic ones ("Hold on Tight!") count anywhere.
+
 - npc_detected also detects an npc whose body capsule overlaps the box,
   not only its position point: the reference tests the box against both
   the npc's position and its body shape, and the tutorial chase's escape

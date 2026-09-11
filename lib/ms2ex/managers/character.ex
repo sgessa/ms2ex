@@ -395,7 +395,18 @@ defmodule Ms2ex.Managers.Character do
         {:time_condition_tick, condition_type},
         %{condition_state: condition_type} = character
       ) do
-    Ms2ex.Managers.Quest.update_conditions(character.id, condition_type, 1, "", character.map_id)
+    # the map id rides in code_long so holdtime achievements gated to a
+    # specific map only count there
+    Ms2ex.Managers.Quest.update_conditions(
+      character.id,
+      condition_type,
+      1,
+      "",
+      0,
+      "",
+      character.map_id
+    )
+
     Process.send_after(self(), {:time_condition_tick, condition_type}, 1000)
     {:noreply, character}
   end

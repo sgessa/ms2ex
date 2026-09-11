@@ -43,9 +43,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     patrol = npc.patrol
     dt = max(now - Map.get(patrol, :last_at, now), 1)
     waypoint = Enum.fetch!(patrol.waypoints, patrol.index)
-    step = patrol.speed * dt / 1000.0
+    speed = Enum.at(patrol[:speeds] || [], patrol.index) || patrol.speed
+    step = speed * dt / 1000.0
 
-    {position, velocity, arrived?} = step_toward(npc.position, waypoint, step, patrol.speed, dt)
+    {position, velocity, arrived?} = step_toward(npc.position, waypoint, step, speed, dt)
     patrol = Map.put(patrol, :last_at, now)
 
     cond do
@@ -83,6 +84,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         patrol = %{
           waypoints: waypoints,
           animations: animations,
+          speeds: leg_speeds(npc, way_points),
           index: 0,
           speed: @follow_speed,
           last_at: System.monotonic_time(:millisecond),
@@ -92,6 +94,24 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         npc = %{npc | animation: hd(animations), patrol: patrol, send_control?: true}
         put_in(state, [:npcs, object_id], npc)
     end
+  end
+
+  # per-waypoint patrol speeds: Run_A legs run at the npc's run speed,
+  # Walk_A legs at its walk speed, falling back to the shared default
+  defp leg_speeds(npc, way_points) do
+    Enum.map(way_points, fn way_point -> leg_speed(npc, way_point[:approach_animation]) end)
+  end
+
+  def leg_speed(npc, approach_animation) do
+    case approach_animation do
+      "Run_A" -> npc_speed(npc, :run_speed)
+      _ -> npc_speed(npc, :walk_speed)
+    end
+  end
+
+  defp npc_speed(npc, key) do
+    speed = get_in(npc.npc.metadata, [:action, key]) || @follow_speed
+    if is_number(speed) and speed > 0, do: speed * 1.0, else: @follow_speed * 1.0
   end
 
   # per-waypoint walk sequences: each waypoint's approach animation
