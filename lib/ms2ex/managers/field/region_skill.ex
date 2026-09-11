@@ -334,6 +334,10 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     base_z = zone_pos.z + Map.get(zone, :z_offset, Context.MapBlock.block_size())
     top_z = base_z + (range[:height] || 0) + (range[:range_add_z] || 0)
 
+    # the player is a body prism (a small circle at their position rising
+    # 100 from the feet): the zone hits when the body overlaps the volume,
+    # so wading or stepping into a lane whose band sits at knee height
+    # still connects
     horizontal_hit? =
       case range[:type] do
         1 -> inside_box?(position, zone_pos, range)
@@ -341,12 +345,17 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         _ -> false
       end
 
-    horizontal_hit? and position.z >= base_z and position.z <= top_z
+    horizontal_hit? and position.z <= top_z and base_z <= position.z + 100
   end
 
+  @player_body_radius 10
+  @player_body_height 100
+
+  # region-buff boxes are centered on the cell; the body circle widens the
+  # test by its radius on each axis
   defp inside_box?(position, zone_pos, range) do
-    half_width = ((range[:width] || 0) + (range[:range_add_x] || 0)) / 2
-    half_length = ((range[:distance] || 0) + (range[:range_add_y] || 0)) / 2
+    half_width = ((range[:width] || 0) + (range[:range_add_x] || 0)) / 2 + @player_body_radius
+    half_length = ((range[:distance] || 0) + (range[:range_add_y] || 0)) / 2 + @player_body_radius
 
     abs(position.x - zone_pos.x) <= half_width and
       abs(position.y - zone_pos.y) <= half_length
@@ -355,7 +364,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   defp inside_cylinder?(position, zone_pos, range) do
     dx = position.x - zone_pos.x
     dy = position.y - zone_pos.y
-    radius = range[:distance] || 0
+    radius = (range[:distance] || 0) + @player_body_radius
     dx * dx + dy * dy <= radius * radius
   end
 

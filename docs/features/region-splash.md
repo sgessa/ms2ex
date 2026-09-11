@@ -40,5 +40,8 @@ block (150) so the volume's base sits above the cell top:
 - **cylinder** (`type: 2`): circle of radius = distance, rising by
   height. The falling-rock zones of the tutorial chase use this shape.
 
-Cells sit on a 150 grid and positions are exact multiples, so the z band
-hits a standing player's body for both cube-position conventions.
+The player is tested as a body, not a point: a circle of radius 10 at
+their position whose height spans feet to feet + 100. The zone hits
+when that body overlaps the volume — so a player wading with their feet
+below the band still connects (their body reaches into it), and the
+small circle gives a 10-unit forgiveness at every horizontal edge.

@@ -3,6 +3,14 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Zone hit tests match the reference's body-overlap check: the player is
+  a body prism (a radius-10 circle at their position rising 100 from the
+  feet) and a zone connects when that body overlaps the volume. The
+  previous feet-point test missed anyone wading into the water-crossing
+  slow lanes — their feet sat below the lane band while their body
+  reached into it — and also lacked the 10-unit edge forgiveness the
+  reference's circle grants.
+
 - Cube-skill zones tick at the constants table's cube skill cadence
   (100ms) instead of a hardcoded 1s, matching the reference: the thin
   hit volumes (70 units tall) sampled once a second missed whenever a
