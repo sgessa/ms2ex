@@ -982,10 +982,12 @@ defmodule Ms2ex.Managers.Field do
 
   # cube-skill zones re-apply their effect every cycle: while a player
   # stands inside, re-adding refreshes the effect window; stepping off lets
-  # the short duration expire it naturally
-  @cube_zone_tick_ms 1_000
+  # the short duration expire it naturally. The cycle comes from the
+  # constants table (stored in seconds — 0.1 = 100ms), matching the
+  # reference's cube skill cadence
+  @default_cube_zone_tick_ms 100
   def handle_info(:tick_cube_zones, state) do
-    Process.send_after(self(), :tick_cube_zones, @cube_zone_tick_ms)
+    Process.send_after(self(), :tick_cube_zones, cube_zone_interval())
     {:noreply, __MODULE__.RegionSkill.tick_cube_zones(state)}
   end
 
@@ -1030,6 +1032,13 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(data, state) do
     Logger.warning("[Field] Unknown message: #{inspect(data)}")
     {:noreply, state}
+  end
+
+  defp cube_zone_interval do
+    case Storage.Tables.Constants.get(:global_cube_skill_interval_time) do
+      seconds when is_number(seconds) and seconds > 0 -> trunc(seconds * 1000)
+      _ -> @default_cube_zone_tick_ms
+    end
   end
 
   defp schedule_dispose(state) do

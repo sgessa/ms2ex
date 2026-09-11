@@ -3,7 +3,11 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
-- Skill zones only apply the effects their attack actually lists: the
+- Cube-skill zones tick at the constants table's cube skill cadence
+  (100ms) instead of a hardcoded 1s, matching the reference: the thin
+  hit volumes (70 units tall) sampled once a second missed whenever a
+  player was mid-jump or bobbing in water — the slow lanes crossing the
+  cave's water pools never registered a hit between samples.- Skill zones only apply the effects their attack actually lists: the
   zone tick used to grant every player the zone skill's same-id effect
   unconditionally, so the falling rocks (whose attack lists no effects)
   handed out a stray, logout-persisting "water fun" buff. The lane
