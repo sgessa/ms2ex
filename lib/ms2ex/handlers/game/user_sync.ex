@@ -72,7 +72,13 @@ defmodule Ms2ex.GameHandlers.UserSync do
 
     # trigger conditions detect users by their live position
     Managers.Field.user_position(character, new_position)
-    Managers.Character.call(character, {:update, character})
+
+    # merge only the sync-owned fields — a full-state write here would let a
+    # stale snapshot revert stat changes (buff apply/remove) racing it
+    Managers.Character.cast(
+      character.id,
+      {:update_sync_state, new_position, state, character.safe_position}
+    )
 
     if out_of_bounds?(character.map_id, character.position) do
       character = handle_out_of_bounds(character)
@@ -105,10 +111,7 @@ defmodule Ms2ex.GameHandlers.UserSync do
         progress = trunc(total / block_size)
         distances = Map.put(distances, condition_type, total - progress * block_size)
 
-        Managers.Character.call(
-          character,
-          {:update, %{character | condition_distances: distances}}
-        )
+        Managers.Character.cast(character.id, {:update_condition_distances, distances})
 
         if progress > 0 do
           Managers.Quest.update_conditions(

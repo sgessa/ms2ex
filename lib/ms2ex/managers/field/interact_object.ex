@@ -94,6 +94,28 @@ defmodule Ms2ex.Managers.Field.InteractObject do
   defp dec_reacts_left(@infinity), do: @infinity
   defp dec_reacts_left(count), do: count - 1
 
+  @doc """
+  Script-driven state change (set_interact_object): flips matching objects to
+  the wanted state and broadcasts each actual change. Objects already in the
+  state are left untouched so a re-arming cycle does not spam clients, and no
+  reset timer is touched — the scripted state stands until a player reacts or
+  another script changes it.
+  """
+  def set_state(%{interactable: interactable} = state, ids, wanted) do
+    interactable =
+      Map.new(interactable, fn {uuid, object} ->
+        if object.id in ids and object.state != wanted do
+          object = %{object | state: wanted}
+          Managers.Field.broadcast(state.topic, Packets.InteractObject.update(object))
+          {uuid, object}
+        else
+          {uuid, object}
+        end
+      end)
+
+    %{state | interactable: interactable}
+  end
+
   @doc "Flips objects whose cooldown elapsed (Normal -> Reactable or Hidden)."
   def tick(%{interactable: interactable} = state) when map_size(interactable) > 0 do
     tick = now()

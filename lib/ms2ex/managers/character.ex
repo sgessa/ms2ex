@@ -5,6 +5,7 @@ defmodule Ms2ex.Managers.Character do
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
   alias Ms2ex.Schema
+  alias Ms2ex.Types
   alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
@@ -68,6 +69,14 @@ defmodule Ms2ex.Managers.Character do
   def handle_call({:update, character}, _from, state) do
     updated = update_state(character, state)
     {:reply, :ok, updated}
+  end
+
+  # buff rate modifiers scale the stats as they are at apply time — computed
+  # here so any pending removals already processed this tick are included;
+  # computing from a field-side snapshot would drift the amounts every time a
+  # buff is cancelled while another is applied (the water-crossing lanes)
+  def handle_call({:compute_buff_status, status}, _from, character) do
+    {:reply, Types.Buff.status_modifiers(status, character), character}
   end
 
   # the open npc select menu (npc + offered quests) — clients route their
@@ -311,6 +320,19 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:remove_buff_status, modifiers}, character),
     do: {:noreply, Character.Stats.modify_max(character, modifiers, :reduce)}
 
+  # movement syncs arrive at 10-20Hz while the player moves; they merge only
+  # the fields a sync actually changes. A full-state update here would let a
+  # stale snapshot revert stat changes applied between the snapshot and the
+  # cast — leaving buffs permanently applied or permanently reverted
+  def handle_cast({:update_sync_state, position, animation, safe_position}, character) do
+    {:noreply,
+     %{character | position: position, animation: animation, safe_position: safe_position}}
+  end
+
+  def handle_cast({:update_condition_distances, distances}, character) do
+    {:noreply, %{character | condition_distances: distances}}
+  end
+
   def handle_cast({:increase_stats, stats}, character),
     do: {:noreply, Character.Stats.increase(character, stats)}
 
@@ -373,7 +395,18 @@ defmodule Ms2ex.Managers.Character do
         {:time_condition_tick, condition_type},
         %{condition_state: condition_type} = character
       ) do
-    Ms2ex.Managers.Quest.update_conditions(character.id, condition_type, 1, "", character.map_id)
+    # the map id rides in code_long so holdtime achievements gated to a
+    # specific map only count there
+    Ms2ex.Managers.Quest.update_conditions(
+      character.id,
+      condition_type,
+      1,
+      "",
+      0,
+      "",
+      character.map_id
+    )
+
     Process.send_after(self(), {:time_condition_tick, condition_type}, 1000)
     {:noreply, character}
   end

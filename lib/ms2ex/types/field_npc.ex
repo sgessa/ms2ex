@@ -9,6 +9,7 @@ defmodule Ms2ex.Types.FieldNpc do
     :object_id,
     :npc,
     :field,
+    :map_id,
     :position,
     :rotation,
     :spawn_point_id,

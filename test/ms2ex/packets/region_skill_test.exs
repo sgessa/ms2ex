@@ -82,6 +82,37 @@ defmodule Ms2ex.Packets.RegionSkillTest do
     assert_in_delta point.z, 3.0, 1.0e-6
   end
 
+  test "add_zone writes the map zone frame with a fixed point" do
+    points = [%{x: -1350.0, y: 3000.0, z: 1650.0}]
+    packet = RegionSkill.add_zone(50_000_000, 70_000_018, 1, 700, points)
+
+    {_opcode, packet} = get_short(packet)
+    {mode, packet} = get_byte(packet)
+    {source_id, packet} = get_int(packet)
+    {source_id2, packet} = get_int(packet)
+    {next_tick, packet} = get_int(packet)
+    {point_count, packet} = get_byte(packet)
+    {point, packet} = get_coord(packet)
+    {skill_id, packet} = get_int(packet)
+    {skill_level, packet} = get_short(packet)
+    {rotation_h, packet} = get_float(packet)
+    {rotation_v, packet} = get_float(packet)
+
+    assert mode == 0
+    assert source_id == 50_000_000
+    assert source_id2 == 50_000_000
+    assert next_tick == 700
+    assert point_count == 1
+    assert_in_delta point.x, -1350.0, 1.0e-6
+    assert_in_delta point.y, 3000.0, 1.0e-6
+    assert_in_delta point.z, 1650.0, 1.0e-6
+    assert skill_id == 70_000_018
+    assert skill_level == 1
+    assert_in_delta rotation_h, 0.0, 1.0e-6
+    assert_in_delta rotation_v, 0.0, 1.0e-6
+    assert packet == <<>>
+  end
+
   test "splash_skill_cast skips non-splash side effects" do
     {splash_cast, splash} = SkillCast.splash_skill_cast(flame_tornado_cast())
 

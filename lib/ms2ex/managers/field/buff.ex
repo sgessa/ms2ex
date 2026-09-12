@@ -88,6 +88,12 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp unregister_removed_buff(buff_id, buff, state) do
+    File.write(
+      "/tmp/zone_debug.log",
+      "REMOVE obj=#{buff.object_id} skill=#{buff.skill[:id]} mods=#{inspect(buff.stat_modifiers)}\n",
+      [:append]
+    )
+
     remove_buff_status(buff)
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)
@@ -112,7 +118,11 @@ defmodule Ms2ex.Managers.Field.Buff do
 
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:add, buff))
 
-    if apply_status?, do: apply_status(buff)
+    # apply_status persists the stat modifiers onto the stored buff — the
+    # scheduled removal reads them back to restore the owner's stats
+    {buff, state} =
+      if apply_status?, do: apply_status(buff, state), else: {buff, state}
+
     state = modify_overlap(buff, state)
     schedule(buff)
 
@@ -126,25 +136,43 @@ defmodule Ms2ex.Managers.Field.Buff do
     previous = existing.stacks
     stacks = min(max(previous + overlap, 0), max)
 
-    # re-applying refreshes the effect's window and adds the condition's
-    # overlap_count stacks
-    new_end = Ms2ex.sync_ticks() + get_in(buff.effect, [:property, :duration_tick])
-    end_tick = if new_end > existing.end_tick, do: new_end, else: existing.end_tick
+    # re-application refresh semantics follow the effect's reset condition:
+    # persist_end_tick keeps the original expiry — a re-apply while active is
+    # a no-op (no update broadcast for the client to re-apply the effect);
+    # other conditions extend the window
+    end_tick = refreshed_end_tick(buff, existing)
 
-    # cancel the pending removal and reschedule for the extended window
-    if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
-    existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
-    schedule_removal(existing)
-    Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
+    if stacks == previous and end_tick == existing.end_tick do
+      # identical re-application: nothing changed, nothing to broadcast
+      {existing, state}
+    else
+      # cancel the pending removal and reschedule for the extended window
+      if existing.removal_timer, do: Process.cancel_timer(existing.removal_timer)
 
-    state =
-      if stacks >= max and previous < max and overlap > 0 do
-        fire_skills(existing, state)
-      else
-        state
-      end
+      existing = Managers.Buff.update(existing, %{stacks: stacks, end_tick: end_tick})
+      schedule_removal(existing)
+      Managers.Field.broadcast(state.topic, Packets.Buff.send(:update, existing))
 
-    {existing, state}
+      state =
+        if stacks >= max and previous < max and overlap > 0 do
+          fire_skills(existing, state)
+        else
+          state
+        end
+
+      {existing, state}
+    end
+  end
+
+  defp refreshed_end_tick(buff, existing) do
+    if Map.get(buff.effect || %{}, :reset_condition) == 1 do
+      existing.end_tick
+    else
+      max(
+        Ms2ex.sync_ticks() + get_in(buff.effect, [:property, :duration_tick]),
+        existing.end_tick
+      )
+    end
   end
 
   # re-applying the effect cancels buffs listed in its update.cancel metadata
@@ -173,6 +201,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   defp remove_cancelled(candidates, state) do
     Enum.reduce(candidates, state, fn {_key, buff_id}, state ->
+      File.write("/tmp/zone_debug.log", "CANCEL buff=#{buff_id}\n", [:append])
       remove_buff(buff_id, state, true)
     end)
   end
@@ -299,19 +328,25 @@ defmodule Ms2ex.Managers.Field.Buff do
     {buff, state}
   end
 
-  defp apply_status(%Types.Buff{owner: %Schema.Character{}} = buff) do
+  defp apply_status(%Types.Buff{owner: %Schema.Character{}} = buff, state) do
     character = buff.owner
-    modifiers = Types.Buff.stat_modifiers(buff, character)
+
+    # compute the concrete amounts in the character manager: rate modifiers
+    # scale the stats as they are right now — after any same-tick removal
+    # casts (mutual exclusion) the snapshot in `character` predates
+    modifiers =
+      Managers.Character.call(character.id, {:compute_buff_status, buff.effect[:status] || %{}})
 
     if map_size(modifiers) > 0 do
-      Managers.Buff.update(buff, %{stat_modifiers: modifiers})
+      buff = Managers.Buff.update(buff, %{stat_modifiers: modifiers})
       Managers.Character.cast(character, {:modify_buff_status, modifiers})
+      {buff, state}
+    else
+      {buff, state}
     end
-
-    :ok
   end
 
-  defp apply_status(_buff), do: :ok
+  defp apply_status(buff, state), do: {buff, state}
 
   defp remove_buff_status(%Types.Buff{owner: %Schema.Character{}} = buff) do
     modifiers = buff.stat_modifiers
