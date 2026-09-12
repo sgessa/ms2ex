@@ -37,21 +37,6 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
           false
       end)
 
-    # TEMPORARY diagnostics
-    if boxes != [] do
-      positions =
-        state
-        |> Map.get(:player_positions, %{})
-        |> Map.values()
-        |> Enum.map(&inspect(&1[:position]))
-
-      File.write(
-        "/tmp/zone_debug.log",
-        "user_detected boxes=#{inspect(box_ids)} players=#{inspect(positions)} hit=#{hit?}\n",
-        [:append]
-      )
-    end
-
     hit?
   end
 

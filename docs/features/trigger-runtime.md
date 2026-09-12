@@ -47,8 +47,14 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
 - world: set_portal, set_ladder (ladder visibility + climb-in animation —
   ladders are not projected, the update reaches the client by id), guide_event,
   create_widget / widget_action, play_scene_movie,
-  play_system_sound_in_box, set_breakable / set_visible_breakable_object,
-  set_interact_object, set_user_value, add/remove_buff, set_skill (trigger
+  play_system_sound_in_box, set_breakable / set_visible_breakable_object
+  (cube breakables and scene-actor breakables — the actor kind is the
+  client-side moving platforms such as the chase carts; each show stamps a
+  base tick so a platform's shuttle restarts from its start instead of
+  resuming mid-cycle),
+  set_interact_object (flips the field's interact state — server state and
+  client update together; scripts rely on object_interacted reading the same
+  state a player's react sets), set_user_value, add/remove_buff, set_skill (trigger
   skill zones — the falling rocks of the tutorial chase. Enable spawns a
   fire-count-limited zone announced to clients and owned by the field:
   each fire applies the zone skill's attack to players standing inside —

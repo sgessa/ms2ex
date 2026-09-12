@@ -74,8 +74,10 @@ defmodule Ms2ex.Managers.Field.Trigger do
       |> Map.get(:breakables, [])
       |> Map.new(fn breakable ->
         # the state byte follows the client's breakable table: 2 show, 3
-        # broken, 4 hidden
-        {breakable.breakable_id, Map.put(breakable, :state, 2)}
+        # broken, 4 hidden. base_tick re-phases client-side moving platforms
+        # (the chase carts) when a script shows them again; it is stamped on
+        # each hidden -> visible transition in set_visible_breakable_object
+        {breakable.breakable_id, breakable |> Map.put(:state, 2) |> Map.put(:base_tick, 0)}
       end)
 
     state
@@ -310,13 +312,6 @@ defmodule Ms2ex.Managers.Field.Trigger do
   defp run_enter(script_name, states, state_name, state) do
     case states[state_name] do
       %{} = entry ->
-        # TEMPORARY diagnostics
-        File.write(
-          "/tmp/zone_debug.log",
-          "state #{script_name} -> #{state_name}\n",
-          [:append]
-        )
-
         state = Actions.execute_actions(entry[:on_enter], script_name, state)
         {normalize_next(entry[:next_state]), state}
 
