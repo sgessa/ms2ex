@@ -23,7 +23,7 @@ expect a `.env` (see `.env-example`) and a running Redis.
 
 ```bash
 cd ../ms2ex-file-ingest
-dotnet run --project src   # re-runs are incremental (checksum per set)
+dotnet run --project src   # builds every set including all navmeshes; re-runs are incremental (checksum per set, navmesh hash sidecars)
 ```
 
 The ingest tool also ships probe flags for inspecting raw client data without

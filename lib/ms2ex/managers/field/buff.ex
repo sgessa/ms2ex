@@ -88,12 +88,6 @@ defmodule Ms2ex.Managers.Field.Buff do
   end
 
   defp unregister_removed_buff(buff_id, buff, state) do
-    File.write(
-      "/tmp/zone_debug.log",
-      "REMOVE obj=#{buff.object_id} skill=#{buff.skill[:id]} mods=#{inspect(buff.stat_modifiers)}\n",
-      [:append]
-    )
-
     remove_buff_status(buff)
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)
@@ -201,7 +195,6 @@ defmodule Ms2ex.Managers.Field.Buff do
 
   defp remove_cancelled(candidates, state) do
     Enum.reduce(candidates, state, fn {_key, buff_id}, state ->
-      File.write("/tmp/zone_debug.log", "CANCEL buff=#{buff_id}\n", [:append])
       remove_buff(buff_id, state, true)
     end)
   end

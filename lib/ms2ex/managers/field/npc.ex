@@ -130,6 +130,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         object_id: object_id,
         spawn_point_id: npc_spawn[:spawn_point_id],
         npc: npc,
+        map_id: state.map_id,
         position: npc_spawn[:position],
         rotation: npc_spawn[:rotation],
         spawn_radius: npc_spawn[:spawn_radius],
@@ -328,7 +329,7 @@ defmodule Ms2ex.Managers.Field.Npc do
           | position: character.position,
             animation: Enum.at(animations, 0) || field_npc.animation,
             patrol: %{
-              waypoints: Enum.map(way_points, & &1[:position]),
+              waypoints: way_points,
               animations: animations,
               speeds:
                 Enum.map(way_points, fn way_point ->

@@ -359,20 +359,16 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   # scripted carry: an invisible dummy npc walks the patrol path and each
-  # player's client walks the player behind it
+  # player's client walks the player behind it. the dummy rides the navmesh,
+  # so the carry is refused on maps without one instead of dragging the
+  # player along the raw line under the ground
   defp execute_action("move_user_path", args, _script_name, state) do
     path_name = to_string(args[:patrol_name])
     patrol = Map.get(state[:patrols] || %{}, path_name)
 
     case patrol do
       %{way_points: way_points} when way_points != [] ->
-        Enum.reduce(
-          Map.keys(state.players),
-          Map.put(state, :path_move_active, true),
-          fn character_id, state ->
-            spawn_player_dummy(state, character_id, way_points)
-          end
-        )
+        carry_players(state, path_name, way_points)
 
       _ ->
         state
@@ -658,7 +654,18 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   defp execute_action("set_visible_breakable_object", args, _script_name, state) do
     visible = bool_arg(args, :visible)
-    set_breakables(state, int_list_arg(args, :trigger_ids), fn b -> %{b | visible: visible} end)
+    now = System.monotonic_time(:millisecond)
+
+    set_breakables(state, int_list_arg(args, :trigger_ids), fn breakable ->
+      if visible and not breakable.visible do
+        # each hidden -> visible transition re-phases a moving platform's
+        # shuttle: the packet carries this tick and the client restarts the
+        # move cycle from it, so the platform rides forward from its start
+        %{breakable | visible: true, base_tick: now}
+      else
+        %{breakable | visible: visible}
+      end
+    end)
   end
 
   # flips interact objects between normal/reactable/hidden
@@ -672,16 +679,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         _ -> :normal
       end
 
-    state.interactable
-    |> Enum.filter(fn {_uuid, object} -> object.id in ids end)
-    |> Enum.each(fn {_uuid, object} ->
-      Managers.Field.broadcast(
-        state.topic,
-        Packets.InteractObject.update(%{object | state: state_atom})
-      )
-    end)
-
-    state
+    Managers.Field.InteractObject.set_state(state, ids, state_atom)
   end
 
   # a facial expression overlay on the player (spawn point 0) or the
@@ -767,10 +765,9 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         case Map.get(state.breakables, id) do
           %{} = breakable ->
             breakable = fun.(breakable)
-            entry = %{uuid: breakable.uuid, state: breakable.state, visible: breakable.visible}
+            entry = Map.take(breakable, [:uuid, :state, :visible, :base_tick])
 
-            {[%{entry | uuid: breakable.uuid} | entries],
-             put_in(state, [:breakables, id], breakable)}
+            {[entry | entries], put_in(state, [:breakables, id], breakable)}
 
           nil ->
             {entries, state}
@@ -1004,6 +1001,26 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       {true, box_id |> String.trim_leading("!") |> Integer.parse() |> elem(0)}
     else
       {false, Integer.parse(box_id) |> elem(0)}
+    end
+  end
+
+  defp carry_players(state, path_name, way_points) do
+    if Navigation.has_navmesh?(state.map_id) do
+      Enum.reduce(
+        Map.keys(state.players),
+        Map.put(state, :path_move_active, true),
+        fn character_id, state ->
+          spawn_player_dummy(state, character_id, way_points)
+        end
+      )
+    else
+      Logger.warning(
+        "map " <>
+          to_string(state.map_id) <>
+          " has no navmesh; move_user_path " <> path_name <> " ignored"
+      )
+
+      state
     end
   end
 

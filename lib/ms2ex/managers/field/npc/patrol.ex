@@ -7,6 +7,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   require Logger
 
+  alias Ms2ex.Navigation
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -22,12 +23,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
     case patrol do
       %{way_points: way_points} when way_points != [] ->
-        waypoints = Enum.map(way_points, & &1[:position])
-
         state.npcs
         |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
         |> Enum.reduce(state, fn {object_id, npc}, state ->
-          attach_patrol(state, object_id, npc, waypoints, way_points)
+          attach_patrol(state, object_id, npc, way_points)
         end)
 
       _ ->
@@ -42,22 +41,30 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   def advance_patrol(npc, now) do
     patrol = npc.patrol
     dt = max(now - Map.get(patrol, :last_at, now), 1)
-    waypoint = Enum.fetch!(patrol.waypoints, patrol.index)
+    way_point = Enum.fetch!(patrol.waypoints, patrol.index)
     speed = Enum.at(patrol[:speeds] || [], patrol.index) || patrol.speed
     step = speed * dt / 1000.0
 
-    {position, velocity, arrived?} = step_toward(npc.position, waypoint, step, speed, dt)
+    {position, velocity, arrived?} =
+      step_toward(npc.position, way_point[:position], step, speed, dt)
+
     patrol = Map.put(patrol, :last_at, now)
+    position = snap_to_floor(npc, way_point, position)
 
     cond do
+      is_nil(position) ->
+        # no walkable surface for this step: hold position. movement rides
+        # the navmesh or it does not happen
+        npc
+
       arrived? and patrol.index + 1 >= length(patrol.waypoints) ->
-        finish_patrol(npc, patrol)
+        finish_patrol(%{npc | position: position}, patrol)
 
       arrived? ->
         patrol = Map.put(patrol, :index, patrol.index + 1)
         animation = Enum.at(patrol.animations, patrol.index) || npc.animation
 
-        %{npc | patrol: patrol, animation: animation, send_control?: true}
+        %{npc | position: position, patrol: patrol, animation: animation, send_control?: true}
 
       true ->
         rotation = face_move_direction(npc.rotation, velocity)
@@ -73,7 +80,34 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  defp attach_patrol(state, object_id, npc, waypoints, way_points) do
+  # ground legs ride the navmesh surface: the straight line between waypoints
+  # cuts below the floor on slopes and stairs, sinking the model's feet into
+  # the ground. air legs keep the authored flight line. a nil result means
+  # the step cannot happen safely this tick
+  defp snap_to_floor(npc, way_point, position) do
+    case way_point[:air_way_point] do
+      true -> position
+      _ -> Navigation.snap_to_floor(npc.map_id, position)
+    end
+  end
+
+  defp attach_patrol(state, object_id, npc, way_points) do
+    if Navigation.has_navmesh?(npc.map_id) do
+      attach_legs(state, object_id, npc, way_points)
+    else
+      # patrols ride the navmesh; a map without one does not get silent
+      # straight-line movement — generate the navmesh instead
+      Logger.warning(
+        "map " <>
+          to_string(npc.map_id) <>
+          " has no navmesh; npc " <> to_string(npc.npc.id) <> " will not patrol"
+      )
+
+      state
+    end
+  end
+
+  defp attach_legs(state, object_id, npc, way_points) do
     case leg_animations(npc, way_points) do
       nil ->
         # the model has no walk/run sequence; it stays put instead of
@@ -82,7 +116,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
       animations ->
         patrol = %{
-          waypoints: waypoints,
+          waypoints: way_points,
           animations: animations,
           speeds: leg_speeds(npc, way_points),
           index: 0,

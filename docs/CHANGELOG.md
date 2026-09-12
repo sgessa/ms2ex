@@ -3,6 +3,47 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Walking npcs ride the ground instead of sinking into it: patrol legs now
+  snap the npc position onto the navmesh surface every step (the straight
+  line between waypoints cuts below the floor on slopes and stairs, so
+  models visibly hovered with their feet buried). Air-waypoint legs keep
+  their authored flight line. Like the reference — where every field
+  requires its navmesh and will not load without one — there is no
+  straight-line fallback: move_npc / move_user_path on a map without a
+  navmesh refuse with a warning, and a step with no walkable surface holds
+  position. This surfaced a closest-point-on-triangle bug in the navmesh
+  queries (Ericson 5.1.5 port had the C-region d5/d6 terms defined against
+  the wrong edges) and a crash on navmesh lookups for maps without a map
+  document; both fixed, with `Navigation.snap_to_floor/2` and
+  `Navigation.has_navmesh?/1` as the public queries.
+
+- Shown moving platforms restart their shuttle from the start: the
+  breakable packet now carries the (elapsed, base) tick pair the client
+  uses to phase the platform's move cycle, stamped on each hidden ->
+  visible transition. With zeros the client resumed its load-time cycle at
+  an arbitrary phase — during the Cave Depths escape cutscene the thief's
+  cart could ride the wrong way (mid-return) instead of departing forward.
+
+- The Cave Depths chase's two mine carts are scene-actor breakables
+  (4100 "Move_Agent" — the thief's, 4200 "Move_Train"): client-side moving
+  platforms that shuttle along their rails until a script hides them. The
+  ingest dropped actor breakables (the mapper's breakable case matched them
+  first but only projected plain cube breakables), so the script's
+  set_breakable / set_visible_breakable_object calls on the carts were
+  silent no-ops and the thief's cart looped back and forth from map load
+  instead of being staged by the chase script. Actor breakables now project
+  like cube breakables and the script controls them.
+
+- `set_interact_object` updates the field's interact state instead of only
+  broadcasting: the Cave Depths chase's mine-cart script re-arms its lever
+  (10001072) after every ride, but the server-side state stayed "used"
+  (normal), so `object_interacted` fired instantly and the cart was
+  re-summoned in an endless loop — riding away, despawning at the far end
+  and reappearing at its starting point without anyone pulling the lever.
+  Script state changes and player reacts now go through the same state
+  setter, and an already-in-state object is not re-broadcast.
+
+
 - Holdtime achievements respect their map-code gate: hold time ticked
   toward every holdtime achievement regardless of the map, so riding the
   tutorial's mine cart unlocked Royale Park balloon achievements ("The
