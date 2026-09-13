@@ -10,8 +10,10 @@ platform edge no longer drop players out of the world.
 
 ## Still missing
 
-- generating navmeshes for the remaining maps (the flag currently covers the
-  verified tutorial xblocks)
+- generating navmeshes for the remaining maps (the flag covers the
+  verified tutorial xblocks plus the class-intro chain 52000100-52000105;
+  the class intro's staging anchors hang off the platform edge, so these
+  maps are required for the wizard tutorial)
 - npc pathing queries over the stored tiles (prerequisite for mob AI)
 - auditing the generated meshes (nif assets whose llid lookup failed leave
   small gaps in walkable coverage)

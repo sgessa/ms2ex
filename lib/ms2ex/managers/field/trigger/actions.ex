@@ -997,11 +997,21 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   defp move_player(state, character, map_id, portal) do
     state = Managers.Field.Character.remove_character(character, state)
+    # the solo field the script just vacated has no reason to keep running
+    send(self(), :maybe_stop)
 
     character =
       character
       |> Context.Characters.maybe_discover_map(map_id)
-      |> Map.put(:change_map, %{id: map_id, position: portal.position, rotation: portal.rotation})
+      |> Map.put(
+        :change_map,
+        %{
+          id: map_id,
+          position: portal.position,
+          rotation: portal.rotation,
+          instance: Managers.Field.instance_id(map_id)
+        }
+      )
 
     Managers.Character.call(character, {:update, character})
 

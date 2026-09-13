@@ -14,6 +14,7 @@ started.
 ## P1 — Core combat loop
 
 - [Field manager](features/field-manager.md) — [Partial]
+- [Instanced maps](features/instanced-maps.md) — [Partial]
 - [Player death & revive](features/player-death-revive.md) — [Partial]
 - [Mob AI: aggro, chase & attack](features/mob-ai.md) — [Open]
 - [Damage pipeline](features/damage-pipeline.md) — [Partial]

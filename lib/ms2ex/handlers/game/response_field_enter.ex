@@ -12,6 +12,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
     # Check if character is changing map
     character = maybe_change_map(character)
+    character = Managers.Field.assign_instance(character)
     Managers.Character.call(character, {:update, character})
 
     run(session, fn -> Managers.Field.subscribe(character) end)
@@ -53,7 +54,7 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
 
     Managers.GuildServer.call(
       character.guild_id,
-      {:update_member_map, character.id, character.map_id}
+      {:update_member_map, character.id, character.map_id, character.field_instance}
     )
 
     continent = Storage.Maps.get_property(character.map_id) |> Map.get(:continent, 0)
@@ -78,15 +79,26 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     run(character, fn -> Managers.Field.unsubscribe(character) end)
 
     new_map = character.change_map
-    {:ok, character} = Context.Characters.update(character, %{map_id: new_map.id})
+    character = persist_current_map(character, new_map)
 
     # the safe position has to follow the map: out-of-bounds recovery teleports
     # to it, and a coordinate from the previous map is out of bounds here too
     character
     |> Map.put(:change_map, nil)
+    |> Map.put(:field_instance, new_map.instance)
     |> Map.put(:position, new_map.position)
     |> Map.put(:safe_position, new_map.position)
     |> Map.put(:rotation, new_map.rotation)
+  end
+
+  # the persisted map is the map's enter_return_id when it declares one
+  # (a relog inside a quest instance lands at its hub); the in-memory map
+  # id follows the actual map — the field process is built from it
+  defp persist_current_map(character, new_map) do
+    {:ok, character} =
+      Context.Characters.update(character, %{map_id: Managers.Field.return_map_id(new_map.id)})
+
+    Map.put(character, :map_id, new_map.id)
   end
 
   defp start_quest_manager(character_id) do
