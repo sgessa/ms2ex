@@ -24,6 +24,7 @@
 - [Ms2ex.GameHandlers.CharacterInfo](Ms2ex.GameHandlers.CharacterInfo.md)
 - [Ms2ex.GameHandlers.ChatSticker](Ms2ex.GameHandlers.ChatSticker.md)
 - [Ms2ex.GameHandlers.Dismantle](Ms2ex.GameHandlers.Dismantle.md)
+- [Ms2ex.GameHandlers.DpsMode](Ms2ex.GameHandlers.DpsMode.md)
 - [Ms2ex.GameHandlers.Emote](Ms2ex.GameHandlers.Emote.md)
 - [Ms2ex.GameHandlers.EquipItem](Ms2ex.GameHandlers.EquipItem.md)
 - [Ms2ex.GameHandlers.FallDamage](Ms2ex.GameHandlers.FallDamage.md)
@@ -65,6 +66,7 @@ crafting a mastery recipe at a workbench.
 
 - [Ms2ex.GameHandlers.NpcTalk](Ms2ex.GameHandlers.NpcTalk.md): NPC interaction flow (talk + quest selection).
 - [Ms2ex.GameHandlers.Party](Ms2ex.GameHandlers.Party.md)
+- [Ms2ex.GameHandlers.PartySearch](Ms2ex.GameHandlers.PartySearch.md)
 - [Ms2ex.GameHandlers.PickupItem](Ms2ex.GameHandlers.PickupItem.md)
 - [Ms2ex.GameHandlers.PickupMoney](Ms2ex.GameHandlers.PickupMoney.md)
 - [Ms2ex.GameHandlers.PlayInstrument](Ms2ex.GameHandlers.PlayInstrument.md): Instrument performances: freestyle improvising, playing music scores and
@@ -190,6 +192,7 @@ condition that returns true.
 - [Ms2ex.Managers.Inventory](Ms2ex.Managers.Inventory.md)
 - [Ms2ex.Managers.Managed](Ms2ex.Managers.Managed.md)
 - [Ms2ex.Managers.PartyManager](Ms2ex.Managers.PartyManager.md)
+- [Ms2ex.Managers.PartySearchServer](Ms2ex.Managers.PartySearchServer.md)
 - [Ms2ex.Managers.PartyServer](Ms2ex.Managers.PartyServer.md)
 - [Ms2ex.Managers.Quest](Ms2ex.Managers.Quest.md): GenServer to manage quest state for a character.
 - [Ms2ex.Managers.Quest.Conditions](Ms2ex.Managers.Quest.Conditions.md): Quest condition helpers.
@@ -349,6 +352,8 @@ mastery block written into the character packet.
   - [Ms2ex.Enums.MeretMarketCurrency](Ms2ex.Enums.MeretMarketCurrency.md)
   - [Ms2ex.Enums.MyInfoError](Ms2ex.Enums.MyInfoError.md)
   - [Ms2ex.Enums.PartyNotice](Ms2ex.Enums.PartyNotice.md)
+  - [Ms2ex.Enums.PartySearchError](Ms2ex.Enums.PartySearchError.md)
+  - [Ms2ex.Enums.PartySearchSort](Ms2ex.Enums.PartySearchSort.md)
   - [Ms2ex.Enums.QuestConditionType](Ms2ex.Enums.QuestConditionType.md): Quest/achievement condition type ids as used in metadata documents.
 
   - [Ms2ex.Enums.QuestError](Ms2ex.Enums.QuestError.md): Quest error codes sent to the client when quest operations fail.
@@ -387,6 +392,7 @@ mastery block written into the character packet.
   - [Ms2ex.Types.ItemStats](Ms2ex.Types.ItemStats.md)
   - [Ms2ex.Types.Npc](Ms2ex.Types.Npc.md)
   - [Ms2ex.Types.Party](Ms2ex.Types.Party.md)
+  - [Ms2ex.Types.PartySearch](Ms2ex.Types.PartySearch.md)
   - [Ms2ex.Types.Quest.Metadata](Ms2ex.Types.Quest.Metadata.md): Structure of quest metadata documents projected into Redis.
 
   - [Ms2ex.Types.Quest.Metadata.Basic](Ms2ex.Types.Quest.Metadata.Basic.md): Basic quest information.
@@ -504,6 +510,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.ControlNpc](Ms2ex.Packets.ControlNpc.md)
   - [Ms2ex.Packets.DeadUser](Ms2ex.Packets.DeadUser.md)
   - [Ms2ex.Packets.Dismantle](Ms2ex.Packets.Dismantle.md)
+  - [Ms2ex.Packets.DpsStat](Ms2ex.Packets.DpsStat.md)
   - [Ms2ex.Packets.DynamicChannel](Ms2ex.Packets.DynamicChannel.md)
   - [Ms2ex.Packets.Emote](Ms2ex.Packets.Emote.md)
   - [Ms2ex.Packets.EquipItem](Ms2ex.Packets.EquipItem.md)
@@ -576,6 +583,7 @@ crafted item results and the error notices the client renders.
   - [Ms2ex.Packets.PacketReader](Ms2ex.Packets.PacketReader.md)
   - [Ms2ex.Packets.PacketWriter](Ms2ex.Packets.PacketWriter.md)
   - [Ms2ex.Packets.Party](Ms2ex.Packets.Party.md)
+  - [Ms2ex.Packets.PartySearch](Ms2ex.Packets.PartySearch.md)
   - [Ms2ex.Packets.PlayInstrument](Ms2ex.Packets.PlayInstrument.md)
   - [Ms2ex.Packets.PlaySystemSound](Ms2ex.Packets.PlaySystemSound.md)
   - [Ms2ex.Packets.PremiumClub](Ms2ex.Packets.PremiumClub.md)

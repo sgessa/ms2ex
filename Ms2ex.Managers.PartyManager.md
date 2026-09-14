@@ -17,6 +17,8 @@ See `Supervisor`.
 
 # `start_link`
 
+# `unregister`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

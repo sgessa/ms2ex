@@ -17,29 +17,13 @@ See `Supervisor`.
 
 # `init`
 
-# `kick_member`
-
-# `lookup`
-
-# `lookup!`
-
-# `member_offline`
-
-# `ready_check`
-
-# `remove_member`
+# `record_damage`
 
 # `start`
-
-# `start_ready_check`
-
-# `start_vote_kick`
 
 # `subscribe`
 
 # `unsubscribe`
-
-# `update_member`
 
 ---
 

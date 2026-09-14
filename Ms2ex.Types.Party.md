@@ -15,6 +15,8 @@
 
 # `leader?`
 
+# `max_members`
+
 # `new?`
 
 # `ready_check_in_progress?`

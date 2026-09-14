@@ -83,6 +83,8 @@ Ms2ex.Enums.MasteryType.md
 Ms2ex.Enums.MeretMarketCurrency.md
 Ms2ex.Enums.MyInfoError.md
 Ms2ex.Enums.PartyNotice.md
+Ms2ex.Enums.PartySearchError.md
+Ms2ex.Enums.PartySearchSort.md
 Ms2ex.Enums.QuestConditionType.md
 Ms2ex.Enums.QuestError.md
 Ms2ex.Enums.QuestRemoteType.md
@@ -111,6 +113,7 @@ Ms2ex.GameHandlers.BadgeEquip.md
 Ms2ex.GameHandlers.CharacterInfo.md
 Ms2ex.GameHandlers.ChatSticker.md
 Ms2ex.GameHandlers.Dismantle.md
+Ms2ex.GameHandlers.DpsMode.md
 Ms2ex.GameHandlers.Emote.md
 Ms2ex.GameHandlers.EquipItem.md
 Ms2ex.GameHandlers.FallDamage.md
@@ -138,6 +141,7 @@ Ms2ex.GameHandlers.Mastery.md
 Ms2ex.GameHandlers.MyInfo.md
 Ms2ex.GameHandlers.NpcTalk.md
 Ms2ex.GameHandlers.Party.md
+Ms2ex.GameHandlers.PartySearch.md
 Ms2ex.GameHandlers.PickupItem.md
 Ms2ex.GameHandlers.PickupMoney.md
 Ms2ex.GameHandlers.PlayInstrument.md
@@ -218,6 +222,7 @@ Ms2ex.Managers.GuildServer.md
 Ms2ex.Managers.Inventory.md
 Ms2ex.Managers.Managed.md
 Ms2ex.Managers.PartyManager.md
+Ms2ex.Managers.PartySearchServer.md
 Ms2ex.Managers.PartyServer.md
 Ms2ex.Managers.Quest.Conditions.md
 Ms2ex.Managers.Quest.Requirements.md
@@ -249,6 +254,7 @@ Ms2ex.Packets.Cinematic.md
 Ms2ex.Packets.ControlNpc.md
 Ms2ex.Packets.DeadUser.md
 Ms2ex.Packets.Dismantle.md
+Ms2ex.Packets.DpsStat.md
 Ms2ex.Packets.DynamicChannel.md
 Ms2ex.Packets.Emote.md
 Ms2ex.Packets.EquipItem.md
@@ -311,6 +317,7 @@ Ms2ex.Packets.Ops.Send.md
 Ms2ex.Packets.PacketReader.md
 Ms2ex.Packets.PacketWriter.md
 Ms2ex.Packets.Party.md
+Ms2ex.Packets.PartySearch.md
 Ms2ex.Packets.PlayInstrument.md
 Ms2ex.Packets.PlaySystemSound.md
 Ms2ex.Packets.PremiumClub.md
@@ -447,6 +454,7 @@ Ms2ex.Types.ItemStat.md
 Ms2ex.Types.ItemStats.md
 Ms2ex.Types.Npc.md
 Ms2ex.Types.Party.md
+Ms2ex.Types.PartySearch.md
 Ms2ex.Types.Quest.Metadata.Basic.md
 Ms2ex.Types.Quest.Metadata.ConditionMetadata.md
 Ms2ex.Types.Quest.Metadata.Dispatch.md

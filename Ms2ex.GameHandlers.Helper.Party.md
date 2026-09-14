@@ -3,8 +3,6 @@
 
 # `create_party`
 
-# `create_party`
-
 # `invite_to_party`
 
 ---

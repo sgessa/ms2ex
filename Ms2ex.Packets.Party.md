@@ -7,6 +7,8 @@
 
 # `end_ready_check`
 
+# `end_vote`
+
 # `invite`
 
 # `join`
@@ -30,6 +32,8 @@
 # `set_leader`
 
 # `start_ready_check`
+
+# `start_vote`
 
 # `update_hitpoints`
 
