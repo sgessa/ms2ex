@@ -267,6 +267,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {:ok, mob} =
       Managers.Field.inflict_dmg(skill_cast.caster, dmg, mob.object_id)
 
+    Managers.PartyServer.record_damage(skill_cast.caster, dmg.dmg)
+
     # on-hit effects (e.g. Flame Wave's burn) apply to the target
     Managers.Field.apply_skill_effects(skill_cast.caster, skill_cast, mob.object_id)
 

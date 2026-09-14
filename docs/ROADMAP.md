@@ -38,7 +38,7 @@ started.
 - [Premium Club](features/premium-club.md) — [Partial]
 - [Badge system](features/badge-system.md) — [Partial]
 - [Name-tag insignias](features/insignia.md) — [Partial]
-- [Party damage meter](features/party-dps-meter.md) — [Open]
+- [Party damage meter](features/party-dps-meter.md) — [Partial]
 
 ## P3 — Client parity & serialization
 

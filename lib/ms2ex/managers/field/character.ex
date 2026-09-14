@@ -100,7 +100,12 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.Wedding.update_hall())
     push(character, Packets.ResponseCube.design_rank_reward(character.account_id))
     push(character, Packets.ResponseCube.update_profile(character))
-    push(character, Packets.ResponseCube.return_map(Managers.Field.return_map_id(character.map_id)))
+
+    push(
+      character,
+      Packets.ResponseCube.return_map(Managers.Field.return_map_id(character.map_id))
+    )
+
     push(character, Packets.Lapenshard.load())
 
     tick = Ms2ex.sync_ticks()

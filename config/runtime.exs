@@ -49,6 +49,7 @@ config :ms2ex, Oban,
 
 # Imports server constants
 config :ms2ex, :constants,
+  party_max_members: 10,
   character_max_level: 99,
   expand_skill_tab_cost: -990,
   out_of_bounds_fall_distance: 0,

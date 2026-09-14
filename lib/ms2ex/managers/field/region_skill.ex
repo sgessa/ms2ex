@@ -95,6 +95,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
         case Managers.Field.Npc.damage(state, splash_cast.caster, dmg.dmg, object_id) do
           {:ok, damaged_mob, state} ->
+            Managers.PartyServer.record_damage(splash_cast.caster, dmg.dmg)
             state = Managers.Field.Npc.apply_skill_effects(state, splash_cast, object_id)
             {[{damaged_mob, dmg} | mobs], state}
 

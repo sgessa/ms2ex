@@ -412,6 +412,8 @@ defmodule Ms2ex.Managers.Field.Buff do
     if npc_alive?(state, buff.owner.object_id) do
       case Managers.Field.Npc.damage(state, buff.caster, hp, buff.owner.object_id) do
         {:ok, _mob, state} ->
+          Managers.PartyServer.record_damage(buff.caster, hp)
+
           Managers.Field.broadcast(
             state.topic,
             Packets.SkillDamage.dot_damage(%{

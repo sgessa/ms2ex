@@ -72,6 +72,7 @@ defmodule Ms2ex.Managers.Character.Revival do
 
     Managers.Field.broadcast(character, Packets.DeadUser.bytes(character.object_id, dark_tomb))
     Managers.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
+    Managers.PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
 
     Managers.Field.add_tombstone(character)
 
@@ -164,6 +165,7 @@ defmodule Ms2ex.Managers.Character.Revival do
     Managers.Field.broadcast(character, Packets.ProxyGameObj.update_dead(character))
     Managers.Field.clear_tombstone(character)
     Managers.Field.broadcast(character, Packets.Revival.bytes(character.object_id))
+    Managers.PartyServer.broadcast(character.party_id, Packets.Party.update_hitpoints(character))
 
     push(character, Packets.Stats.set_character_stats(character))
   end
@@ -203,7 +205,7 @@ defmodule Ms2ex.Managers.Character.Revival do
       Managers.Field.change_field(character, return_map_id)
       character
     else
-      spawn_point = Storage.Maps.get_spawn(character.map_id)
+      spawn_point = Storage.Maps.get_field_spawn(character.map_id)
 
       character =
         character

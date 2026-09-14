@@ -52,7 +52,7 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
   end
 
   defp notify_party_presence(character) do
-    Managers.PartyServer.member_offline(character)
+    Managers.PartyServer.call(character.party_id, {:member_offline, character})
   end
 
   defp notify_guild_presence(character) do

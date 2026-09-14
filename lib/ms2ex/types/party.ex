@@ -1,6 +1,4 @@
 defmodule Ms2ex.Types.Party do
-  @max_members 10
-
   defstruct [
     :id,
     :leader_id,
@@ -8,7 +6,9 @@ defmodule Ms2ex.Types.Party do
     :pid,
     members: [],
     ready_check: [],
-    vote_kick: []
+    vote_kick: nil,
+    dps_enabled?: false,
+    dps_damage: %{}
   ]
 
   def create(leader) do
@@ -63,7 +63,8 @@ defmodule Ms2ex.Types.Party do
     party.leader_id == character.id
   end
 
-  def full?(party), do: Enum.count(party.members) >= @max_members
+  def max_members, do: Ms2ex.Constants.get(:party_max_members)
+  def full?(party), do: Enum.count(party.members) >= max_members()
   def new?(party), do: Enum.count(party.members) == 1
 
   def ready_check_in_progress?(%__MODULE__{ready_check: r}) do

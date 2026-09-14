@@ -125,7 +125,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     case PartyManager.lookup(character) do
       {:ok, party_id} ->
         character = %{character | party_id: party_id}
-        PartyServer.update_member(character)
+        PartyServer.call(character.party_id, {:update_member, character})
         character
 
       _ ->
@@ -158,7 +158,11 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp push_party(session, character) do
-    party = PartyServer.lookup!(character.party_id)
+    party =
+      case PartyServer.call(character.party_id, :lookup) do
+        {:ok, party} -> party
+        _ -> nil
+      end
 
     if party do
       push(session, Packets.Party.create(party, false))

@@ -165,4 +165,13 @@ defmodule Ms2ex.Net.SenderSession do
 
     {:noreply, state}
   end
+
+  def handle_info({:kick_party, party_id, character}, state) do
+    PartyServer.unsubscribe(party_id)
+
+    character = %{character | party_id: nil}
+    Managers.Character.call(character, {:update, character})
+
+    {:noreply, state}
+  end
 end
