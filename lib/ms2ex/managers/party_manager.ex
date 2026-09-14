@@ -9,6 +9,8 @@ defmodule Ms2ex.Managers.PartyManager do
 
   def register(party, character), do: cast({:register, party, character})
 
+  def unregister(character_id), do: cast({:unregister, character_id})
+
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
@@ -33,6 +35,10 @@ defmodule Ms2ex.Managers.PartyManager do
 
   def handle_cast({:register, party, character}, state) do
     {:noreply, Map.put(state, character.id, %{party_id: party.id, pid: party.pid})}
+  end
+
+  def handle_cast({:unregister, character_id}, state) do
+    {:noreply, Map.delete(state, character_id)}
   end
 
   def handle_info({:DOWN, _, _, pid, _reason}, state) do

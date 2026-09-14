@@ -18,7 +18,7 @@ defmodule Ms2ex.Packets.Party do
     __MODULE__
     |> build()
     |> put_byte(0x2)
-    |> Packets.CharacterList.put_character(character)
+    |> Packets.CharacterList.put_character(character, death_count(character), character.stats)
     |> put_int()
     |> Packets.Job.put_skills(character)
     |> put_long()
@@ -99,7 +99,7 @@ defmodule Ms2ex.Packets.Party do
     |> reduce(party.members, fn member, packet ->
       packet
       |> put_bool(!member.online?)
-      |> Packets.CharacterList.put_character(member)
+      |> Packets.CharacterList.put_character(member, death_count(member), member.stats)
       |> put_dungeon_info()
     end)
     |> put_byte()
@@ -110,7 +110,8 @@ defmodule Ms2ex.Packets.Party do
   end
 
   def update_member(character) do
-    death_count = if Map.get(character, :dead?, false), do: Map.get(character, :death_count, 0), else: 0
+    death_count =
+      if Map.get(character, :dead?, false), do: Map.get(character, :death_count, 0), else: 0
 
     __MODULE__
     |> build()
@@ -134,6 +135,9 @@ defmodule Ms2ex.Packets.Party do
     |> put_int(character.stats.health_cur)
     |> put_short(death_state(character))
   end
+
+  defp death_count(%{dead?: true, death_count: count}), do: count
+  defp death_count(_character), do: 0
 
   # the packet carries the member's death state (alive, first death, metal);
   # the client uses it to render the party tombstone icon

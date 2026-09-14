@@ -5,6 +5,7 @@ defmodule Ms2ex.Managers.PartyServer do
   alias Ms2ex.Packets
   alias Ms2ex.Managers
   alias Ms2ex.Managers.PartyManager
+  alias Ms2ex.Managers.PartySearchServer
   alias Ms2ex.Types
   alias Phoenix.PubSub
 
@@ -50,8 +51,26 @@ defmodule Ms2ex.Managers.PartyServer do
     {:reply, {:ok, state}, state}
   end
 
+  def handle_call({:set_leader, requestor_id, character_id}, _from, state) do
+    cond do
+      state.leader_id != requestor_id ->
+        {:reply, {:error, :not_leader}, state}
+
+      not Types.Party.in_party?(state, %{id: character_id}) ->
+        {:reply, {:error, :not_member}, state}
+
+      true ->
+        leader = Types.Party.get_member(state, character_id)
+        state = %{state | leader_id: character_id}
+        PartySearchServer.cast({:update, state})
+        broadcast(state.id, Packets.Party.set_leader(leader))
+        {:reply, {:ok, state}, state}
+    end
+  end
+
   def handle_call({:member_offline, character}, _from, state) do
     state = update_member(state, character)
+    PartySearchServer.cast({:update, state})
 
     case Enum.find(state.members, & &1.online?) do
       nil ->
@@ -66,17 +85,24 @@ defmodule Ms2ex.Managers.PartyServer do
   end
 
   def handle_call({:update_member, character}, _from, state) do
-    state = update_member(state, character)
+    if Types.Party.full?(state) and not Types.Party.in_party?(state, character) do
+      {:reply, {:error, :full}, state}
+    else
+      state = update_member(state, character)
+      PartySearchServer.cast({:update, state})
 
-    if !Types.Party.new?(state),
-      do: broadcast(state.id, Packets.Party.update_member(character))
+      if !Types.Party.new?(state),
+        do: broadcast(state.id, Packets.Party.update_member(character))
 
-    {:reply, {:ok, state}, state}
+      {:reply, {:ok, state}, state}
+    end
   end
 
   def handle_call({:remove_member, character}, _from, state) do
     broadcast(state.id, Packets.Party.member_left(character))
     state = Types.Party.remove_member(state, character)
+    PartyManager.unregister(character.id)
+    PartySearchServer.cast({:update, state})
 
     member_online = Enum.find(state.members, & &1.online?)
 
@@ -88,22 +114,29 @@ defmodule Ms2ex.Managers.PartyServer do
     end
   end
 
-  def handle_call({:kick_member, character_id}, _from, state) do
-    case Types.Party.get_member(state, character_id) do
-      nil ->
+  def handle_call({:kick_member, requestor_id, character_id}, _from, state) do
+    cond do
+      state.leader_id != requestor_id ->
+        {:reply, {:error, :not_leader}, state}
+
+      requestor_id == character_id ->
+        {:reply, {:error, :cannot_kick_self}, state}
+
+      is_nil(Types.Party.get_member(state, character_id)) ->
         {:reply, :error, state}
 
-      character ->
+      true ->
+        character = Types.Party.get_member(state, character_id)
         broadcast(state.id, Packets.Party.kick(character))
 
         state = Types.Party.remove_member(state, character)
+        PartyManager.unregister(character.id)
+        PartySearchServer.cast({:update, state})
 
-        if Types.Party.new?(state) do
-          disband(state)
-          {:reply, {:ok, character}, state}
-        else
-          {:reply, {:ok, character}, state}
-        end
+        if Types.Party.new?(state),
+          do: disband(state)
+
+        {:reply, {:ok, character}, state}
     end
   end
 
@@ -286,6 +319,8 @@ defmodule Ms2ex.Managers.PartyServer do
 
     Managers.Character.call(target, {:update, %{target | party_id: nil}})
     state = Types.Party.remove_member(state, target)
+    PartyManager.unregister(target.id)
+    PartySearchServer.cast({:update, state})
 
     case Enum.find(state.members, &Map.get(&1, :online?, false)) do
       nil -> state
@@ -295,12 +330,19 @@ defmodule Ms2ex.Managers.PartyServer do
 
   defp maybe_find_new_leader(party, character, new_leader) when character.id == party.leader_id do
     broadcast(party.id, Packets.Party.set_leader(new_leader))
-    %{party | leader_id: new_leader.id}
+    party = %{party | leader_id: new_leader.id}
+    PartySearchServer.cast({:update, party})
+    party
   end
 
   defp maybe_find_new_leader(party, _character, _new_leader), do: party
 
   defp disband(party) do
+    case PartySearchServer.call({:lookup_by_party, party.id}) do
+      nil -> :ok
+      listing -> PartySearchServer.call({:remove, listing.id})
+    end
+
     send(self(), :shutdown)
 
     for m <- party.members, m.online? do

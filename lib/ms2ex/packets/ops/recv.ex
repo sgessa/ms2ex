@@ -54,6 +54,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x6A => "USER_ENV",
     0x6C => "INSIGNIA",
     0x6D => "REQUEST_CHANGE_FIELD",
+    0x6F => "PARTY_SEARCH",
     0x75 => "PLAY_INSTRUMENT",
     0x74 => "FISHING",
     0x81 => "STATE",

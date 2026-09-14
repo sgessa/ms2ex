@@ -5,6 +5,7 @@ defmodule Ms2ex.GameHandlers.Party do
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Managers.PartyServer
+  alias Ms2ex.Managers.PartySearchServer
   alias Ms2ex.Types
 
   import Packets.PacketReader
@@ -88,7 +89,7 @@ defmodule Ms2ex.GameHandlers.Party do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.call(character.party_id, :lookup),
          true <- Types.Party.leader?(party, character),
-         {:ok, target} <- PartyServer.call(party.id, {:kick_member, target_id}) do
+         {:ok, target} <- PartyServer.call(party.id, {:kick_member, character.id, target_id}) do
       if target.online? do
         run(target, fn -> PartyServer.unsubscribe(party.id) end)
       end
@@ -104,9 +105,45 @@ defmodule Ms2ex.GameHandlers.Party do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, new_leader} <- Managers.Character.lookup_by_name(target_name),
          {:ok, party} <- PartyServer.call(character.party_id, :lookup),
-         true <- party.leader_id == character.id do
-      PartyServer.broadcast(party.id, Packets.Party.set_leader(new_leader))
+         true <- party.leader_id == character.id,
+         true <- Types.Party.in_party?(party, new_leader),
+         {:ok, _party} <- PartyServer.call(party.id, {:set_leader, character.id, new_leader.id}) do
+      :ok
     end
+  end
+
+  # Join Party Finder listing
+  defp handle_mode(0x17, packet, session) do
+    {party_id, packet} = get_int(packet)
+    {_leader_name, packet} = get_ustring(packet)
+    {listing_id, _packet} = get_long(packet)
+
+    with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+         nil <- character.party_id,
+         listing when not is_nil(listing) <-
+           PartySearchServer.call({:lookup, listing_id}),
+         true <- listing.party_id == party_id,
+         {:ok, party} <- PartyServer.call(party_id, :lookup),
+         true <- Enum.count(party.members) < listing.size do
+      if listing.no_approval do
+        PartyServer.broadcast(party.id, Packets.Party.join(character))
+        updated = %{character | party_id: party.id}
+        Managers.Character.call(updated, {:update, updated})
+        {:ok, party} = PartyServer.call(party.id, {:update_member, updated})
+        run(session, fn -> PartyServer.subscribe(party.id) end)
+        push(session, Packets.Party.create(party))
+      else
+        leader = Types.Party.get_leader(party)
+        push(leader, Packets.Party.join_request(character))
+        push(session, Packets.Party.notice(:request_to_join, character))
+      end
+    else
+      nil -> push(session, Packets.PartySearch.error(:server_db))
+      false -> push(session, Packets.PartySearch.error(:server_db))
+      _ -> :ok
+    end
+
+    session
   end
 
   # Summon Party: buy one party summon scroll from the party menu.
@@ -200,14 +237,15 @@ defmodule Ms2ex.GameHandlers.Party do
       {:error, reason} ->
         if reason == :insufficient_funds,
           do: push(session, Packets.Party.notice(:insufficient_merets, character))
+
         {:error, reason}
     end
   end
 
   defp purchase_and_recall_party(session, character) do
     with item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
-        {:ok, result} <- purchase_party_summon(session, character, item),
-        %Schema.Item{} = purchased_item <- purchased_item(result) do
+         {:ok, result} <- purchase_party_summon(session, character, item),
+         %Schema.Item{} = purchased_item <- purchased_item(result) do
       recall_party(session, character, purchased_item)
     else
       _ -> session
