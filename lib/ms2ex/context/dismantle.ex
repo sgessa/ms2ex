@@ -123,12 +123,36 @@ defmodule Ms2ex.Context.Dismantle do
     rewards =
       Enum.reduce(inventory.slots, %{}, fn {_slot, {item_uid, amount}}, total_rewards ->
         item = item_uid |> item_resolver.() |> Context.Items.load_metadata()
-        rewards = Map.get(item.metadata, :dismantle_rewards, [])
-        sum_item_rewards(rewards, total_rewards, amount)
+
+        case gacha_reward(item) do
+          nil ->
+            rewards = Map.get(item.metadata, :dismantle_rewards, [])
+            sum_item_rewards(rewards, total_rewards, amount)
+
+          {reward_item_id, reward_amount} ->
+            Map.update(
+              total_rewards,
+              reward_item_id,
+              reward_amount * amount,
+              &(&1 + reward_amount * amount)
+            )
+        end
       end)
 
     %{inventory | rewards: rewards}
   end
+
+  defp gacha_reward(%{gacha_dismantle_id: id}) when is_integer(id) and id > 0 do
+    case Ms2ex.Storage.Tables.GachaInfo.get(id) do
+      %{coin_item_id: item_id, coin_item_amount: amount} when item_id > 0 and amount > 0 ->
+        {item_id, amount}
+
+      _ ->
+        nil
+    end
+  end
+
+  defp gacha_reward(_item), do: nil
 
   defp sum_item_rewards(rewards, total_rewards, amount) do
     Enum.reduce(rewards, total_rewards, fn reward, total_rewards ->

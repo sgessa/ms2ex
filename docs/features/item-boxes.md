@@ -13,14 +13,12 @@ in this client's data refuse to open.
 Usable-item functions implemented in `USE_ITEM` include title scrolls,
 story books, quest scrolls, inventory expansion items, premium coupons,
 chat-sticker unlocks, party recall, additional effects, fishing bait,
-character-slot vouchers, gacha/Lullu box opening, and the three standard
-item-box functions. Regular
+character-slot vouchers, gacha/Lullu box opening, gacha dismantle provenance,
+and the three standard item-box functions. Regular
 taxi routing already exists through the dedicated `TAXI` handler.
 
 ## Still missing or blocked
 
-- gacha dismantle metadata (rolled gacha items need a persisted dismantle
-	source id and the corresponding dismantle reward flow)
 - spirit/stamina orbs (need the orb wallet/stat behavior)
 - the transcendence crystal special case (needs its item-type metadata and
 	reward semantics)

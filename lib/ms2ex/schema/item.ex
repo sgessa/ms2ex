@@ -15,6 +15,7 @@ defmodule Ms2ex.Schema.Item do
     :color,
     :data,
     :enchant_level,
+    :gacha_dismantle_id,
     :equip_slot,
     :item_id,
     :inventory_slot,
@@ -50,6 +51,7 @@ defmodule Ms2ex.Schema.Item do
     field :charges, :integer, virtual: true, default: 0
     field :enchant_exp, :integer, virtual: true, default: 0
     field :enchant_level, :integer, default: 0
+    field :gacha_dismantle_id, :integer, default: 0
     field :expires_at, :utc_datetime, virtual: true
     field :glamor_forges_left, :integer, virtual: true, default: 0
     field :is_locked, :boolean, default: false

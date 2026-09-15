@@ -108,12 +108,13 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
     end
   end
 
-  defp grant_gacha_open(session, character, item, _gacha_id, box_id) do
+  defp grant_gacha_open(session, character, item, gacha_id, box_id) do
     with :ok <- consume(session, character, item, 1),
          items <- Context.Drops.individual_items(box_id, character, character.map_id),
          true <- items != [],
-         :ok <- grant_items(items, session, character) do
-      {:ok, items, session}
+         gacha_items <- Enum.map(items, &%{&1 | gacha_dismantle_id: gacha_id}),
+         :ok <- grant_items(gacha_items, session, character) do
+      {:ok, gacha_items, session}
     else
       _ -> {:error, @error_inventory_fail, session}
     end
