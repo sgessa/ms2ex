@@ -5,6 +5,8 @@
 
 # `consume`
 
+# `error`
+
 # `expand_tab`
 
 # `load_items`

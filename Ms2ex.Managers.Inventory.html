@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-4539363B.js"></script>
+    <script defer src="dist/sidebar_items-A2CD94E8.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -141,6 +141,16 @@ flows notify the quest manager themselves (see
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_item_or_mail/2" data-no-tooltip="" translate="no">add_item_or_mail(character, item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds an item, mailing it when the relevant inventory tab is full.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#add_to_state/2" data-no-tooltip="" translate="no">add_to_state(state, item)</a>
 
       </div>
@@ -186,6 +196,14 @@ flows notify the quest manager themselves (see
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#call/2" data-no-tooltip="" translate="no">call(id, msg)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#can_expand_tab?/2" data-no-tooltip="" translate="no">can_expand_tab?(character, tab)</a>
 
       </div>
 
@@ -459,7 +477,7 @@ slot is cleared.</p></div>
       <h1 class="signature" translate="no">add_item(character, item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L83" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L84" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -484,6 +502,28 @@ flows notify the quest manager themselves (see
 <a href="Ms2ex.Managers.Quest.html#notify_item_acquired/2"><code class="inline">Ms2ex.Managers.Quest.notify_item_acquired/2</code></a>).</p>
   </section>
 </section>
+<section class="detail" id="add_item_or_mail/2">
+
+  <div class="detail-header">
+    <a href="#add_item_or_mail/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_item_or_mail(character, item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L89" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Adds an item, mailing it when the relevant inventory tab is full.</p>
+  </section>
+</section>
 <section class="detail" id="add_to_state/2">
 
   <div class="detail-header">
@@ -494,7 +534,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">add_to_state(state, item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L200" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L222" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -516,7 +556,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">alive?(id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -538,7 +578,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">all(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L45" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L46" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -560,7 +600,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">apply_consume_item_amounts(state, consumables)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L492" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L548" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -582,7 +622,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">bind(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L196" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L218" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -611,6 +651,28 @@ flows notify the quest manager themselves (see
 
 
         <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L3" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="can_expand_tab?/2">
+
+  <div class="detail-header">
+    <a href="#can_expand_tab?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">can_expand_tab?(character, tab)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L179" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -678,7 +740,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">consume(item, consumed \\ 1)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L106" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L124" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -709,7 +771,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">consume_amounts_from_state(state, consumables)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L215" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L237" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -731,7 +793,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">consume_from_state(state, item, consumed)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L204" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L226" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -753,7 +815,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">consume_item_amount(character, item_id, amount)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L117" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L135" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -784,7 +846,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">consume_item_amounts(character, consumables)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L132" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L150" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -815,7 +877,7 @@ completion counter no longer matches the live inventory in that case).</p>
       <h1 class="signature" translate="no">delete(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L138" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L156" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -844,7 +906,7 @@ completion counter no longer matches the live inventory in that case).</p>
       <h1 class="signature" translate="no">equip(item, equip_slot)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L165" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L187" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -874,7 +936,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">expand_tab(character, tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L156" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L175" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -885,7 +947,8 @@ metadata marks it bind-on-equip.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  <a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>() | {:error, :max_expansion}</pre>
 
       </div>
 
@@ -902,7 +965,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">expired?(item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L188" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L210" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -930,7 +993,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">find_first_available_slot(character_id, tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L66" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -959,7 +1022,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">free_slot_count(character_id, tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L71" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L72" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -987,7 +1050,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">get(character, uid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L43" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1015,7 +1078,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">get_from_state(state, uid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L202" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L224" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1037,7 +1100,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">list_equips(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L57" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L58" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1059,7 +1122,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">list_items(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L48" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L49" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1081,7 +1144,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">list_tab_items(character_id, tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L55" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1103,7 +1166,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">list_tabs(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L52" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1127,7 +1190,7 @@ metadata marks it bind-on-equip.</p>
       <h1 class="signature" translate="no">move_to_inventory(item, preferred_slot \\ nil)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L182" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L204" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1160,7 +1223,7 @@ slot is cleared.</p>
       <h1 class="signature" translate="no">sort_tab(character, tab)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L150" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L168" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1189,7 +1252,7 @@ slot is cleared.</p>
       <h1 class="signature" translate="no">start(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L19" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L20" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1211,7 +1274,7 @@ slot is cleared.</p>
       <h1 class="signature" translate="no">stop(id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L27" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1233,7 +1296,7 @@ slot is cleared.</p>
       <h1 class="signature" translate="no">swap(item, dst_slot)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L144" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L162" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -1261,7 +1324,7 @@ slot is cleared.</p>
       <h1 class="signature" translate="no">update_item(changeset, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L90" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L108" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

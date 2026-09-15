@@ -18,6 +18,8 @@
 
 # `extra_slots`
 
+# `max_expansion`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

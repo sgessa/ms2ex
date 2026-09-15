@@ -74,6 +74,7 @@ Ms2ex.Enums.GuildFocus.md
 Ms2ex.Enums.GuildNpcType.md
 Ms2ex.Enums.InsigniaType.md
 Ms2ex.Enums.InventoryTab.md
+Ms2ex.Enums.ItemInventoryError.md
 Ms2ex.Enums.ItemType.md
 Ms2ex.Enums.Job.md
 Ms2ex.Enums.MailError.md

@@ -350,6 +350,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Enums.GuildNpcType](Ms2ex.Enums.GuildNpcType.md)
   - [Ms2ex.Enums.InsigniaType](Ms2ex.Enums.InsigniaType.md)
   - [Ms2ex.Enums.InventoryTab](Ms2ex.Enums.InventoryTab.md)
+  - [Ms2ex.Enums.ItemInventoryError](Ms2ex.Enums.ItemInventoryError.md)
   - [Ms2ex.Enums.ItemType](Ms2ex.Enums.ItemType.md)
   - [Ms2ex.Enums.Job](Ms2ex.Enums.Job.md)
   - [Ms2ex.Enums.MailError](Ms2ex.Enums.MailError.md)

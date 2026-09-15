@@ -16,6 +16,10 @@ Adds an item, merging onto existing stacks when stackable. Acquisition
 flows notify the quest manager themselves (see
 `Ms2ex.Managers.Quest.notify_item_acquired/2`).
 
+# `add_item_or_mail`
+
+Adds an item, mailing it when the relevant inventory tab is full.
+
 # `add_to_state`
 
 # `alive?`
@@ -35,6 +39,8 @@ Lists every item of a character, equipped and carried.
 Placeholder bind marker.
 
 # `call`
+
+# `can_expand_tab?`
 
 # `cast`
 
@@ -103,7 +109,8 @@ metadata marks it bind-on-equip.
 # `expand_tab`
 
 ```elixir
-@spec expand_tab(Ms2ex.Schema.Character.t(), atom()) :: Ms2ex.Schema.InventoryTab.t()
+@spec expand_tab(Ms2ex.Schema.Character.t(), atom()) ::
+  Ms2ex.Schema.InventoryTab.t() | {:error, :max_expansion}
 ```
 
 Expands a tab by six slots.

@@ -75,6 +75,7 @@ Ms2ex.Enums.GuildFocus.html
 Ms2ex.Enums.GuildNpcType.html
 Ms2ex.Enums.InsigniaType.html
 Ms2ex.Enums.InventoryTab.html
+Ms2ex.Enums.ItemInventoryError.html
 Ms2ex.Enums.ItemType.html
 Ms2ex.Enums.Job.html
 Ms2ex.Enums.MailError.html
@@ -499,8 +500,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-1005529B.js
-dist/sidebar_items-4539363B.js
+dist/search_data-1F95CA31.js
+dist/sidebar_items-A2CD94E8.js
 index.html
 license.html
 readme.html
