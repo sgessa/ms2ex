@@ -267,6 +267,13 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_byte(@modes.expand_tab)
   end
 
+  def error(error) do
+    __MODULE__
+    |> build()
+    |> put_byte(0xF)
+    |> put_int(Enums.ItemInventoryError.get_value(error))
+  end
+
   def load_tab(tab_id, total_slots) do
     __MODULE__
     |> build()

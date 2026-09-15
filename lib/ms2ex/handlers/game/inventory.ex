@@ -70,20 +70,46 @@ defmodule Ms2ex.GameHandlers.Inventory do
     {tab, _packet} = get_byte(packet)
     tab = Enums.InventoryTab.get_key(tab)
 
-    meret_price = -390
+    meret_price = inventory_expand_price()
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, wallet} <- Context.Wallets.update(character, :merets, meret_price),
+         true <- Managers.Inventory.can_expand_tab?(character, tab),
+         {:ok, wallet} <- Context.Wallets.update(character, :merets, -meret_price),
          %Schema.InventoryTab{tab: tab, slots: slots} <-
            Managers.Inventory.expand_tab(character, tab) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.InventoryItem.load_tab(tab, slots))
       |> push(Packets.InventoryItem.expand_tab())
+    else
+      false ->
+        push(
+          session,
+          Packets.Notice.message_box(Enums.StringCode.get_value(:s_inventory_err_expand_max))
+        )
+
+      {:error, :insufficient_funds} ->
+        push(session, Packets.InventoryItem.error(:cannot_charge_meret))
+
+      {:error, :max_expansion} ->
+        push(
+          session,
+          Packets.Notice.message_box(Enums.StringCode.get_value(:s_inventory_err_expand_max))
+        )
+
+      {:error, :not_found} ->
+        push(session, Packets.InventoryItem.error(:not_active_tab))
     end
   end
 
   defp handle_mode(_mode, _packet, _session), do: :ok
+
+  defp inventory_expand_price do
+    case Ms2ex.Storage.Tables.Constants.get(:inventory_expand_price1_row) do
+      value when is_integer(value) and value > 0 -> value
+      _ -> 390
+    end
+  end
 
   defp update_inventory(session, {:update, item}) do
     push(session, Packets.InventoryItem.update_item(item.id, item.amount))

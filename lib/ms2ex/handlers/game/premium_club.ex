@@ -33,11 +33,18 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
            Storage.Tables.PremiumClub.benefit(benefit_id),
          true <- benefit_id not in Context.PremiumMemberships.claimed(session.account.id),
          %Schema.Item{} = item <- Context.Items.drop_item(item_id, rarity, amount),
-         {:ok, result} <- Managers.Inventory.add_item(character, item),
+         delivery <- Managers.Inventory.add_item_or_mail(character, item),
+         true <- delivery_success?(delivery),
          {:ok, _claimed} <- Context.PremiumMemberships.claim(session.account.id, benefit_id) do
-      session
-      |> push(Packets.PremiumClub.claim_item(benefit_id))
-      |> push(inventory_packet(result, character))
+      case delivery do
+        {:ok, result} ->
+          session
+          |> push(Packets.PremiumClub.claim_item(benefit_id))
+          |> push(inventory_packet(result, character))
+
+        {:mailed, _mail} ->
+          push(session, Packets.PremiumClub.claim_item(benefit_id))
+      end
     else
       reason ->
         Logger.warning("Premium Club purchase rejected: #{inspect(reason)}")
@@ -106,18 +113,16 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
   defp expire_item(item, _period), do: item
 
   defp deliver_item(character, item) do
-    case Managers.Inventory.add_item(character, item) do
+    case Managers.Inventory.add_item_or_mail(character, item) do
       {:ok, result} ->
         push(character, Packets.InventoryItem.add_item(result, character))
         push(character, Packets.InventoryItem.mark_item_new(new_inventory_item(result)))
 
+      {:mailed, _mail} ->
+        :ok
+
       _ ->
-        Context.Mails.send_system_mail(
-          character.id,
-          "",
-          :inventory_overflow,
-          items: [item]
-        )
+        :ok
     end
   end
 
@@ -170,4 +175,8 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
 
   defp inventory_packet({:update_and_create, {_updated, _amount}, created}, character),
     do: Packets.InventoryItem.add_item({:create, created}, character)
+
+  defp delivery_success?({:ok, _result}), do: true
+  defp delivery_success?({:mailed, _mail}), do: true
+  defp delivery_success?(_delivery), do: false
 end

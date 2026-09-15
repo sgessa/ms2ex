@@ -51,12 +51,17 @@ defmodule Ms2ex.Commands do
           transfer_flags: [:split, :trade]
         })
 
-      {:ok, {_, item} = result} = Managers.Inventory.add_item(character, item)
-      Managers.Quest.notify_item_acquired(character, item)
+      case Managers.Inventory.add_item_or_mail(character, item) do
+        {:ok, {_, item} = result} ->
+          Managers.Quest.notify_item_acquired(character, item)
 
-      session
-      |> push(Packets.InventoryItem.add_item(result, character))
-      |> push(Packets.InventoryItem.mark_item_new(item))
+          session
+          |> push(Packets.InventoryItem.add_item(result, character))
+          |> push(Packets.InventoryItem.mark_item_new(item))
+
+        {:mailed, _mail} ->
+          session
+      end
     else
       _ -> push_notice(session, character, "Invalid Item: #{item_id}")
     end

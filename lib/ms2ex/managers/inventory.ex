@@ -3,6 +3,7 @@ defmodule Ms2ex.Managers.Inventory do
   use Ms2ex.Managers.Managed, prefix: "inventories", key: :character_id
 
   alias Ms2ex.Context
+  alias Ms2ex.Context.Mails
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -84,6 +85,23 @@ defmodule Ms2ex.Managers.Inventory do
     call(character_id, {:add_item, item})
   end
 
+  @doc "Adds an item, mailing it when the relevant inventory tab is full."
+  def add_item_or_mail(%Schema.Character{} = character, item) do
+    case add_item(character, item) do
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, :full_inventory} ->
+        mail_overflow(character, item)
+
+      {:error, {:full_inventory, overflow}} ->
+        mail_overflow(character, overflow)
+
+      error ->
+        error
+    end
+  end
+
   @doc "Updates an item's fields, writing through."
   @spec update_item(Schema.Item.t() | Ecto.Changeset.t(), map()) ::
           {:ok, Schema.Item.t()} | {:error, any()}
@@ -152,10 +170,14 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   @doc "Expands a tab by six slots."
-  @spec expand_tab(Schema.Character.t(), atom()) :: Schema.InventoryTab.t()
+  @spec expand_tab(Schema.Character.t(), atom()) ::
+          Schema.InventoryTab.t() | {:error, :max_expansion}
   def expand_tab(%Schema.Character{id: character_id}, tab) do
     call(character_id, {:expand_tab, tab})
   end
+
+  def can_expand_tab?(%Schema.Character{id: character_id}, tab),
+    do: call(character_id, {:can_expand_tab, tab})
 
   @doc """
   Equips an item into the requested slot, binding it first when its
@@ -377,17 +399,38 @@ defmodule Ms2ex.Managers.Inventory do
   def handle_call({:expand_tab, tab}, _from, state) do
     extra_slots = 6
     tab_row = Enum.find(state.tabs, &(&1.tab == tab))
-    :ok = Context.Inventory.expand_tab(tab_row.id, extra_slots)
-    updated = %{tab_row | slots: tab_row.slots + extra_slots}
 
-    tabs = Enum.map(state.tabs, &if(&1.tab == tab, do: updated, else: &1))
+    if can_expand?(tab_row) do
+      :ok = Context.Inventory.expand_tab(tab_row.id, extra_slots)
+      updated = %{tab_row | slots: tab_row.slots + extra_slots}
 
-    {:reply, updated, %{state | tabs: tabs}}
+      tabs = Enum.map(state.tabs, &if(&1.tab == tab, do: updated, else: &1))
+
+      {:reply, updated, %{state | tabs: tabs}}
+    else
+      {:reply, {:error, :max_expansion}, state}
+    end
+  end
+
+  def handle_call({:can_expand_tab, tab}, _from, state) do
+    {:reply, can_expand?(Enum.find(state.tabs, &(&1.tab == tab)), tab), state}
   end
 
   # ---- stacking & creation ----
 
   defp get_item(state, uid), do: Enum.find(state.items, &(&1.id == uid))
+
+  defp can_expand?(nil, _tab), do: false
+
+  defp can_expand?(tab_row, _tab) do
+    base_slots = Schema.InventoryTab.default_slots()[tab_row.tab]
+    max_expansion = Schema.InventoryTab.max_expansion(tab_row.tab)
+    tab_row.slots - base_slots + 6 <= max_expansion
+  end
+
+  defp can_expand?(tab_row) do
+    can_expand?(tab_row, tab_row.tab)
+  end
 
   defp carry_items(state), do: Enum.filter(state.items, &(&1.location == :inventory))
 
@@ -442,9 +485,17 @@ defmodule Ms2ex.Managers.Inventory do
     amount_created = new_amount - amount_added
 
     {{:update, updated}, state} = update_qty(state, item, amount_added)
-    {{:create, created}, state} = create(state, Map.put(attrs, :amount, amount_created))
 
-    {{:update_and_create, {updated, new_amount}, created}, state}
+    case create(state, Map.put(attrs, :amount, amount_created)) do
+      {{:create, created}, state} ->
+        {{:update_and_create, {updated, new_amount}, created}, state}
+
+      {{:error, :full_inventory}, state} ->
+        {{:error, {:full_inventory, Map.put(attrs, :amount, amount_created)}}, state}
+
+      {error, state} ->
+        {error, state}
+    end
   end
 
   defp update_or_create(state, item, %{amount: new_amount}, _stack_limit) do
@@ -453,19 +504,24 @@ defmodule Ms2ex.Managers.Inventory do
 
   defp create(state, %{amount: n, metadata: meta} = attrs) when n > 0 do
     inventory_tab = Types.Item.inventory_tab(meta)
-    slot = first_available_slot(state, inventory_tab)
 
-    attrs =
-      attrs
-      |> Map.put(:inventory_tab, inventory_tab)
-      |> Map.put(:inventory_slot, slot)
-
-    case Context.Inventory.insert_item(state.character_id, attrs) do
-      {:ok, item} ->
-        {{:create, item}, %{state | items: state.items ++ [item]}}
-
-      error ->
+    case first_available_slot(state, inventory_tab) do
+      {:error, :full_inventory} = error ->
         {error, state}
+
+      slot ->
+        attrs =
+          attrs
+          |> Map.put(:inventory_tab, inventory_tab)
+          |> Map.put(:inventory_slot, slot)
+
+        case Context.Inventory.insert_item(state.character_id, attrs) do
+          {:ok, item} ->
+            {{:create, item}, %{state | items: state.items ++ [item]}}
+
+          error ->
+            {error, state}
+        end
     end
   end
 
@@ -596,6 +652,13 @@ defmodule Ms2ex.Managers.Inventory do
       end)
 
     %{state | items: items}
+  end
+
+  defp mail_overflow(character, item) do
+    case Mails.send_system_mail(character.id, "", :inventory_overflow, items: [item]) do
+      {:ok, mail} -> {:mailed, mail}
+      error -> error
+    end
   end
 
   # ---- move & slots ----
