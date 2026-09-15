@@ -115,6 +115,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xD3 => "SKILL_MACRO",
     0xD9 => "SMART_PUSH",
     0xF0 => "IN_GAME_RANK",
+    0xF7 => "ITEM_SCRIPT",
     0x10C => "MENTOR",
     0x10E => "SKILL_BOOK",
     0x11B => "LOGIN_REQUIRED",

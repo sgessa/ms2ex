@@ -12,12 +12,15 @@ in this client's data refuse to open.
 
 Usable-item functions implemented in `USE_ITEM` include title scrolls,
 story books, quest scrolls, inventory expansion items, premium coupons,
-chat-sticker unlocks, party recall, additional effects, fishing bait, and
-the three standard item-box functions.
+chat-sticker unlocks, party recall, additional effects, fishing bait,
+character-slot vouchers, gacha/Lullu box opening, and the three standard
+item-box functions. Regular
+taxi routing already exists through the dedicated `TAXI` handler.
 
 ## Still missing or blocked
 
-- gacha and Lullu box variants (need the gacha tables and `ItemScript.Gacha`)
+- gacha dismantle metadata (rolled gacha items need a persisted dismantle
+	source id and the corresponding dismantle reward flow)
 - spirit/stamina orbs (need the orb wallet/stat behavior)
 - the transcendence crystal special case (needs its item-type metadata and
 	reward semantics)
@@ -25,5 +28,5 @@ the three standard item-box functions.
 	result protocols)
 - buddy badge boxes (need cross-character mail/item-couple persistence)
 - massive portals, defense guards, HongBao, and air-taxi items (need the
-	corresponding field objects, NPC lifecycle, event, and taxi systems)
-- character-slot vouchers (need account character-cap persistence)
+	item-triggered `CallAirTaxi` request/validation path; regular taxi routing
+	already exists)

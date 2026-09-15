@@ -84,6 +84,9 @@ defmodule Ms2ex.GameHandlers.UseItem do
   defp dispatch_item_use("ExpandInven", session, character, item, _packet),
     do: use_inventory_expansion(session, character, item)
 
+  defp dispatch_item_use("ExpendCharacterSlot", session, character, item, _packet),
+    do: use_character_slot_voucher(session, character, item)
+
   defp dispatch_item_use("RecallParty", session, character, item, _packet),
     do: recall_party(session, character, item)
 
@@ -96,6 +99,13 @@ defmodule Ms2ex.GameHandlers.UseItem do
 
   defp dispatch_item_use("SelectItemBox", session, character, item, packet),
     do: select_box(session, character, item, packet)
+
+  defp dispatch_item_use("OpenGachaBox", session, character, item, packet),
+    do: open_gacha_box(session, character, item, packet)
+
+  defp dispatch_item_use(function, session, character, item, packet)
+       when function in ["OpenItemBoxLullu", "OpenItemBoxLulluSimple"],
+       do: open_lullu_box(session, character, item, packet)
 
   defp dispatch_item_use(_function, session, character, item, _packet),
     do: maybe_use_bait(session, character, item)
@@ -160,6 +170,29 @@ defmodule Ms2ex.GameHandlers.UseItem do
 
       _ ->
         session
+    end
+  end
+
+  defp use_character_slot_voucher(session, character, item) do
+    max_slots = 8
+    account = Context.Accounts.get(character.account_id)
+
+    cond do
+      is_nil(account) or account.max_characters >= max_slots ->
+        push(session, Packets.ItemUse.max_character_slots())
+
+      Context.Characters.count(account) >= account.max_characters ->
+        {:ok, _account} =
+          Context.Accounts.update(account, %{max_characters: account.max_characters + 1})
+
+        consumed_item = Managers.Inventory.consume(item)
+
+        session
+        |> push(Packets.ItemUse.character_slot_added())
+        |> push(Packets.InventoryItem.consume(consumed_item))
+
+      true ->
+        push(session, Packets.ItemUse.max_character_slots())
     end
   end
 
@@ -254,6 +287,23 @@ defmodule Ms2ex.GameHandlers.UseItem do
       apply_premium_buffs(character)
     end
 
+    session
+  end
+
+  defp open_gacha_box(session, character, item, packet) do
+    {amount, _packet} = get_ustring(packet)
+    count = if amount == "multi", do: 10, else: 1
+    {session, items} = ItemBox.gacha(session, character, item, count)
+    push(session, Packets.ItemScript.gacha(items))
+    session
+  end
+
+  defp open_lullu_box(session, character, item, packet) do
+    {amount, _packet} = get_ustring(packet)
+    count = if amount == "multi", do: 10, else: 1
+    auto_pay = String.contains?(amount, "autoPay")
+    {session, items} = ItemBox.lullu(session, character, item, count, auto_pay)
+    push(session, Packets.ItemScript.lullu_box(items))
     session
   end
 
