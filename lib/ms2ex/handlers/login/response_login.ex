@@ -40,7 +40,7 @@ defmodule Ms2ex.LoginHandlers.ResponseLogin do
     session
     |> push(Packets.LoginResult.success(account.id))
     |> push(Packets.Ugc.set_endpoint())
-    |> push(Packets.CharacterMaxCount.set_max(4, 6))
+    |> push(Packets.CharacterMaxCount.set_max(account.max_characters, 8))
     |> push(Packets.CharacterList.start_list())
     |> push(Packets.CharacterList.add_entries(account.characters))
     |> push(Packets.CharacterList.end_list())

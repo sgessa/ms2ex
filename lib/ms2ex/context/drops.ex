@@ -126,13 +126,29 @@ defmodule Ms2ex.Context.Drops do
   defp roll_individual_group(group, character, map) do
     amount = Context.Utils.pick_weighted(group.drop_counts, :probability).count
     items = eligible_individual_items(group, character, map)
+    items = smart_job_items(items, group, character)
 
     cond do
       amount == 0 -> []
+      items == [] -> []
       smart_zero?(group, items) -> roll_smart_item(items, character)
       true -> items |> job_weighted(group, character) |> roll_individual_items(amount)
     end
   end
+
+  defp smart_job_items(items, %{smart_drop_rate: rate}, character) when rate > 0 do
+    job = job_code(character)
+    job_specific = Enum.filter(items, &(job_recommends(&1) != []))
+    matching = Enum.filter(job_specific, &job_recommended?(&1, job))
+
+    cond do
+      matching != [] -> Enum.reject(items, &(job_recommends(&1) != [])) ++ matching
+      job_specific != [] -> []
+      true -> items
+    end
+  end
+
+  defp smart_job_items(items, _group, _character), do: items
 
   defp eligible_individual_items(group, character, map) do
     group.items

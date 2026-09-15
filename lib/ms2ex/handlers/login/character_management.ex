@@ -94,7 +94,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
         send(self(), {:update, %{character_id: character.id}})
 
         session
-        |> push(Packets.CharacterMaxCount.set_max(4, 6))
+        |> push(Packets.CharacterMaxCount.set_max(session.account.max_characters, 8))
         |> push(Packets.CharacterList.append(character))
 
       _error ->
@@ -161,7 +161,7 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
       characters = Context.Characters.list(session.account)
 
       session
-      |> push(Packets.CharacterMaxCount.set_max(4, 6))
+      |> push(Packets.CharacterMaxCount.set_max(session.account.max_characters, 8))
       |> push(Packets.CharacterList.start_list())
       |> push(Packets.CharacterList.add_entries(characters))
       |> push(Packets.CharacterList.end_list())

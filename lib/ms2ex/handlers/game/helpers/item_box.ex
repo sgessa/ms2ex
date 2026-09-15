@@ -50,6 +50,123 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
 
   def open(session, _character, _item, _count, _index), do: session
 
+  def gacha(session, character, item, count) do
+    with {gacha_id, ""} <- Integer.parse(item.metadata.function_parameters || ""),
+         %{drop_box_id: box_id} <- Ms2ex.Storage.Tables.GachaInfo.get(gacha_id),
+         true <- Ms2ex.Storage.Tables.IndividualDropItem.has_entries?(box_id) do
+      {items, session} =
+        Enum.reduce(1..count, {[], session}, fn _, acc ->
+          collect_gacha_open(acc, character, item, gacha_id, box_id)
+        end)
+
+      {session, items}
+    else
+      _ -> {session, []}
+    end
+  end
+
+  def lullu(session, character, item, count, auto_pay) do
+    params = named_params(item.metadata.function_parameters)
+
+    with {common_box, ""} <- Integer.parse(Map.get(params, "commonBoxId", "0")),
+         {uncommon_box, ""} <- Integer.parse(Map.get(params, "unCommonBoxId", "0")),
+         key_tag when not is_nil(key_tag) <- Map.get(params, "keyItemTag") do
+      Enum.reduce(1..count, {session, []}, fn _, acc ->
+        lullu_open(acc, character, key_tag, params, auto_pay, common_box, uncommon_box)
+      end)
+    else
+      _ -> {session, []}
+    end
+  end
+
+  defp collect_gacha_open({items, session}, character, item, gacha_id, box_id) do
+    case grant_gacha_open(session, character, item, gacha_id, box_id) do
+      {:ok, granted, session} -> {items ++ granted, session}
+      {:error, _code, session} -> {items, session}
+    end
+  end
+
+  defp lullu_open(
+         {session, items},
+         character,
+         key_tag,
+         params,
+         auto_pay,
+         common_box,
+         uncommon_box
+       ) do
+    with :ok <- consume_tagged(session, character, key_tag, 1),
+         :ok <-
+           consume_box_or_pay(session, character, Map.get(params, "boxItemTag"), params, auto_pay),
+         common <- Context.Drops.individual_items(common_box, character, character.map_id),
+         uncommon <- Context.Drops.individual_items(uncommon_box, character, character.map_id),
+         rolled when rolled != [] <- common ++ uncommon,
+         :ok <- grant_items(rolled, session, character) do
+      {session, items ++ rolled}
+    else
+      _ -> {session, items}
+    end
+  end
+
+  defp grant_gacha_open(session, character, item, gacha_id, box_id) do
+    with :ok <- consume(session, character, item, 1),
+         items <- Context.Drops.individual_items(box_id, character, character.map_id),
+         true <- items != [],
+         gacha_items <- Enum.map(items, &%{&1 | gacha_dismantle_id: gacha_id}),
+         :ok <- grant_items(gacha_items, session, character) do
+      {:ok, gacha_items, session}
+    else
+      _ -> {:error, @error_inventory_fail, session}
+    end
+  end
+
+  defp consume_box_or_pay(_session, _character, nil, _params, true), do: :ok
+
+  defp consume_box_or_pay(session, character, box_tag, params, true) do
+    case consume_tagged(session, character, box_tag, 1) do
+      :ok ->
+        :ok
+
+      :error ->
+        {price, ""} = Integer.parse(Map.get(params, "boxPrice", "0"))
+
+        case Context.Wallets.update(character, :mesos, -max(price, 0)) do
+          {:ok, _wallet} -> :ok
+          _ -> :error
+        end
+    end
+  end
+
+  defp consume_box_or_pay(_session, _character, nil, _params, _auto_pay), do: :ok
+
+  defp consume_box_or_pay(session, character, box_tag, _params, _auto_pay),
+    do: consume_tagged(session, character, box_tag, 1)
+
+  defp consume_tagged(session, character, tag, amount) do
+    items =
+      character
+      |> Managers.Inventory.list_items()
+      |> Enum.map(&Context.Items.load_metadata/1)
+      |> Enum.filter(&(to_string(get_in(&1.metadata, [:property, :tag])) == tag))
+      |> Enum.sort_by(&{&1.amount, &1.id})
+
+    if Enum.reduce(items, 0, &(&1.amount + &2)) >= amount do
+      {item, _} = List.first(items)
+      consumed = Managers.Inventory.consume(item, amount)
+      push(session, Packets.InventoryItem.consume(consumed))
+      :ok
+    else
+      :error
+    end
+  end
+
+  defp named_params(parameters) when is_binary(parameters) do
+    Regex.scan(~r/(\w+)="([^"]*)"/, parameters, capture: :all_but_first)
+    |> Map.new(fn [key, value] -> {key, value} end)
+  end
+
+  defp named_params(_parameters), do: %{}
+
   # an unknown function type cannot be opened
   defp open_box(_session, _character, _item, _type, _params, nil, _count, _index),
     do: {@error_inventory_fail, 0, nil}
@@ -248,8 +365,10 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
       true ->
         case Managers.Inventory.add_item(character, item) do
           {:ok, result} ->
+            inventory_item = added_item(result)
             push(session, Packets.InventoryItem.add_item(result, character))
-            Managers.Quest.notify_item_acquired(character, added_item(result))
+            push(session, Packets.InventoryItem.mark_item_new(inventory_item))
+            Managers.Quest.notify_item_acquired(character, inventory_item)
             :ok
 
           _ ->

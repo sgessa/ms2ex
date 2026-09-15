@@ -12,6 +12,12 @@ defmodule Ms2ex.Context.Characters do
     |> Enum.map(&load_equips/1)
   end
 
+  def count(%Schema.Account{id: account_id}) do
+    Schema.Character
+    |> where([c], c.account_id == ^account_id)
+    |> Repo.aggregate(:count, :id)
+  end
+
   def create(%Schema.Account{} = account, attrs) do
     attrs = Schema.Character.set_default_assocs(attrs)
 

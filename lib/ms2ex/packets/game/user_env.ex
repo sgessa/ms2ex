@@ -28,6 +28,13 @@ defmodule Ms2ex.Packets.UserEnv do
     |> put_int(character.title_id)
   end
 
+  def add_title(title_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x0)
+    |> put_int(title_id)
+  end
+
   def set_titles(titles) do
     __MODULE__
     |> build()
