@@ -169,11 +169,11 @@ defmodule Ms2ex.Managers.Inventory do
     call(character_id, {:sort_tab, tab})
   end
 
-  @doc "Expands a tab by six slots."
-  @spec expand_tab(Schema.Character.t(), atom()) ::
+  @doc "Expands a tab by a positive multiple of six slots."
+  @spec expand_tab(Schema.Character.t(), atom(), pos_integer()) ::
           Schema.InventoryTab.t() | {:error, :max_expansion}
-  def expand_tab(%Schema.Character{id: character_id}, tab) do
-    call(character_id, {:expand_tab, tab})
+  def expand_tab(%Schema.Character{id: character_id}, tab, extra_slots \\ 6) do
+    call(character_id, {:expand_tab, tab, extra_slots})
   end
 
   def can_expand_tab?(%Schema.Character{id: character_id}, tab),
@@ -396,11 +396,11 @@ defmodule Ms2ex.Managers.Inventory do
     {:reply, {:ok, updated}, state}
   end
 
-  def handle_call({:expand_tab, tab}, _from, state) do
-    extra_slots = 6
+  def handle_call({:expand_tab, tab, extra_slots}, _from, state) do
     tab_row = Enum.find(state.tabs, &(&1.tab == tab))
 
-    if can_expand?(tab_row) do
+    if is_integer(extra_slots) and extra_slots > 0 and rem(extra_slots, 6) == 0 and
+         can_expand?(tab_row, extra_slots) do
       :ok = Context.Inventory.expand_tab(tab_row.id, extra_slots)
       updated = %{tab_row | slots: tab_row.slots + extra_slots}
 
@@ -413,23 +413,19 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   def handle_call({:can_expand_tab, tab}, _from, state) do
-    {:reply, can_expand?(Enum.find(state.tabs, &(&1.tab == tab)), tab), state}
+    {:reply, can_expand?(Enum.find(state.tabs, &(&1.tab == tab)), 6), state}
   end
 
   # ---- stacking & creation ----
 
   defp get_item(state, uid), do: Enum.find(state.items, &(&1.id == uid))
 
-  defp can_expand?(nil, _tab), do: false
+  defp can_expand?(nil, _extra_slots), do: false
 
-  defp can_expand?(tab_row, _tab) do
+  defp can_expand?(tab_row, extra_slots) do
     base_slots = Schema.InventoryTab.default_slots()[tab_row.tab]
     max_expansion = Schema.InventoryTab.max_expansion(tab_row.tab)
-    tab_row.slots - base_slots + 6 <= max_expansion
-  end
-
-  defp can_expand?(tab_row) do
-    can_expand?(tab_row, tab_row.tab)
+    tab_row.slots - base_slots + extra_slots <= max_expansion
   end
 
   defp carry_items(state), do: Enum.filter(state.items, &(&1.location == :inventory))

@@ -1,5 +1,6 @@
 defmodule Ms2ex.GameHandlers.UseItem do
   alias Ms2ex.Managers
+  alias Ms2ex.Enums
   alias Ms2ex.Context
   alias Ms2ex.GameHandlers.Helper.ItemBox
   alias Ms2ex.Packets
@@ -62,15 +63,174 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp dispatch_item_use(session, character, item, packet) do
-    case item.metadata.function_name do
-      "ChatEmoticonAdd" -> add_emoticon(session, character, item, packet)
-      "VIPCoupon" -> use_premium_coupon(session, character, item)
-      "RecallParty" -> recall_party(session, character, item)
-      "AddAdditionalEffect" -> add_additional_effect(session, character, item)
-      "OpenItemBox" -> ItemBox.open(session, character, item, 1, -1)
-      "OpenItemBoxWithKey" -> ItemBox.open(session, character, item, 1, -1)
-      "SelectItemBox" -> select_box(session, character, item, packet)
-      _ -> maybe_use_bait(session, character, item)
+    dispatch_item_use(item.metadata.function_name, session, character, item, packet)
+  end
+
+  defp dispatch_item_use("ChatEmoticonAdd", session, character, item, packet),
+    do: add_emoticon(session, character, item, packet)
+
+  defp dispatch_item_use("VIPCoupon", session, character, item, _packet),
+    do: use_premium_coupon(session, character, item)
+
+  defp dispatch_item_use("TitleScroll", session, character, item, _packet),
+    do: use_title_scroll(session, character, item)
+
+  defp dispatch_item_use("StoryBook", session, character, item, _packet),
+    do: use_story_book(session, character, item)
+
+  defp dispatch_item_use("QuestScroll", session, character, item, _packet),
+    do: use_quest_scroll(session, character, item)
+
+  defp dispatch_item_use("ExpandInven", session, character, item, _packet),
+    do: use_inventory_expansion(session, character, item)
+
+  defp dispatch_item_use("RecallParty", session, character, item, _packet),
+    do: recall_party(session, character, item)
+
+  defp dispatch_item_use("AddAdditionalEffect", session, character, item, _packet),
+    do: add_additional_effect(session, character, item)
+
+  defp dispatch_item_use(function, session, character, item, _packet)
+       when function in ["OpenItemBox", "OpenItemBoxWithKey"],
+       do: ItemBox.open(session, character, item, 1, -1)
+
+  defp dispatch_item_use("SelectItemBox", session, character, item, packet),
+    do: select_box(session, character, item, packet)
+
+  defp dispatch_item_use(_function, session, character, item, _packet),
+    do: maybe_use_bait(session, character, item)
+
+  defp use_title_scroll(session, character, item) do
+    with {title_id, ""} <- Integer.parse(item.metadata.function_parameters || ""),
+         false <- title_id in Context.Characters.list_titles(character),
+         {:ok, _title} <- Context.Characters.learn_title(character, title_id),
+         consumed_item <- Managers.Inventory.consume(item) do
+      push(session, Packets.UserEnv.add_title(title_id))
+      push(session, Packets.InventoryItem.consume(consumed_item))
+    else
+      _ -> :ok
+    end
+
+    session
+  end
+
+  defp use_story_book(session, _character, item) do
+    with {story_book_id, ""} <- Integer.parse(item.metadata.function_parameters || ""),
+         consumed_item <- Managers.Inventory.consume(item) do
+      push(session, Packets.StoryBook.load(story_book_id))
+      push(session, Packets.InventoryItem.consume(consumed_item))
+    else
+      _ -> :ok
+    end
+
+    session
+  end
+
+  defp use_quest_scroll(session, character, item) do
+    quest_ids = quest_scroll_ids(item.metadata.function_parameters)
+
+    if quest_ids != [] do
+      results = Enum.map(quest_ids, &start_quest(character, &1))
+
+      if Enum.all?(results, &match?({:ok, _}, &1)) do
+        consumed_item = Managers.Inventory.consume(item)
+        push(session, Packets.InventoryItem.consume(consumed_item))
+        push(session, Packets.ItemUse.quest_scroll(item.item_id))
+      end
+    end
+
+    session
+  end
+
+  defp use_inventory_expansion(session, character, item) do
+    case parse_inventory_expansion(item.metadata.function_parameters) do
+      {amount, tab} when amount > 0 and not is_nil(tab) ->
+        case Managers.Inventory.expand_tab(character, tab, amount) do
+          %Schema.InventoryTab{slots: slots} ->
+            consumed_item = Managers.Inventory.consume(item)
+
+            session
+            |> push(Packets.ItemUse.expand_inventory())
+            |> push(Packets.InventoryItem.load_tab(tab, slots))
+            |> push(Packets.InventoryItem.consume(consumed_item))
+
+          _ ->
+            push(session, Packets.ItemUse.max_inventory())
+        end
+
+      _ ->
+        session
+    end
+  end
+
+  defp quest_scroll_ids(parameters) when is_binary(parameters) do
+    case Regex.run(~r/questID[=:]([^,;]+)/i, parameters, capture: :all_but_first) do
+      [ids] -> parse_ids(ids)
+      _ -> parse_ids(parameters)
+    end
+  end
+
+  defp quest_scroll_ids(_parameters), do: []
+
+  defp parse_ids(ids),
+    do: ids |> String.split([",", "|"], trim: true) |> Enum.flat_map(&parse_id/1)
+
+  defp parse_id(id) do
+    case Integer.parse(String.trim(id)) do
+      {value, ""} -> [value]
+      _ -> []
+    end
+  end
+
+  defp start_quest(character, quest_id) do
+    case Storage.Quests.get_meta(quest_id) do
+      quest when is_map(quest) -> Managers.Quest.start(character, quest)
+      _ -> {:error, :quest_not_found}
+    end
+  end
+
+  defp parse_inventory_expansion(parameters) when is_binary(parameters) do
+    case String.split(parameters, ",", trim: true) do
+      [amount, tab] ->
+        with {amount, ""} <- Integer.parse(String.trim(amount)),
+             tab when not is_nil(tab) <- inventory_tab(String.trim(tab)) do
+          {amount, tab}
+        else
+          _ -> nil
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  defp parse_inventory_expansion(_parameters), do: nil
+
+  defp inventory_tab(tab) do
+    case %{
+           "game" => :gear,
+           "mastery" => :life_skill,
+           "summon" => :mount,
+           "misc" => :misc,
+           "skin" => :outfit,
+           "gem" => :gemstone,
+           "material" => :catalyst,
+           "quest" => :quest,
+           "life" => :fishing_music,
+           "coin" => :currency,
+           "pet" => :pets,
+           "activeSkill" => :consumable,
+           "badge" => :badge,
+           "piece" => :fragment
+         }[tab] do
+      nil ->
+        case Integer.parse(tab) do
+          {value, ""} -> Enums.InventoryTab.get_key(value)
+          _ -> :invalid_enum
+        end
+
+      value ->
+        value
     end
   end
 
