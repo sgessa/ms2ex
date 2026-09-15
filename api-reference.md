@@ -232,6 +232,7 @@ boxes a spot rolls its catches from.
 - [Ms2ex.Storage.Tables.FishingRods](Ms2ex.Storage.Tables.FishingRods.md): `fishingrod.xml`: keyed by the rod code a fishing rod item carries in its
 `FishingRod` function parameter.
 
+- [Ms2ex.Storage.Tables.GachaInfo](Ms2ex.Storage.Tables.GachaInfo.md)
 - [Ms2ex.Storage.Tables.GlobalDropItemBox](Ms2ex.Storage.Tables.GlobalDropItemBox.md)
 - [Ms2ex.Storage.Tables.Guild](Ms2ex.Storage.Tables.Guild.md): `guild.xml`: Guild metadata containing buffs, houses, npcs, and properties.
 
@@ -553,6 +554,8 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.InventoryItem](Ms2ex.Packets.InventoryItem.md)
   - [Ms2ex.Packets.ItemBox](Ms2ex.Packets.ItemBox.md)
   - [Ms2ex.Packets.ItemLock](Ms2ex.Packets.ItemLock.md)
+  - [Ms2ex.Packets.ItemScript](Ms2ex.Packets.ItemScript.md)
+  - [Ms2ex.Packets.ItemUse](Ms2ex.Packets.ItemUse.md)
   - [Ms2ex.Packets.Job](Ms2ex.Packets.Job.md)
   - [Ms2ex.Packets.KeyTable](Ms2ex.Packets.KeyTable.md)
   - [Ms2ex.Packets.Lapenshard](Ms2ex.Packets.Lapenshard.md)
@@ -618,6 +621,7 @@ crafted item results and the error notices the client renders.
   - [Ms2ex.Packets.StatPoints](Ms2ex.Packets.StatPoints.md)
   - [Ms2ex.Packets.StateSkill](Ms2ex.Packets.StateSkill.md)
   - [Ms2ex.Packets.Stats](Ms2ex.Packets.Stats.md)
+  - [Ms2ex.Packets.StoryBook](Ms2ex.Packets.StoryBook.md)
   - [Ms2ex.Packets.SyncNumber](Ms2ex.Packets.SyncNumber.md)
   - [Ms2ex.Packets.Taxi](Ms2ex.Packets.Taxi.md)
   - [Ms2ex.Packets.TimeScale](Ms2ex.Packets.TimeScale.md)

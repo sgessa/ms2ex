@@ -9,6 +9,7 @@
   characters: term(),
   id: term(),
   inserted_at: term(),
+  max_characters: term(),
   password: term(),
   password_hash: term(),
   premium_rewards_claimed: term(),

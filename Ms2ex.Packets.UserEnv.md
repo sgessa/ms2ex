@@ -1,6 +1,8 @@
 # `Ms2ex.Packets.UserEnv`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/user_env.ex#L1)
 
+# `add_title`
+
 # `gathering_counts`
 
 How often each gathering recipe was already harvested.

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-A2CD94E8.js"></script>
+    <script defer src="dist/sidebar_items-1695AF85.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -299,11 +299,11 @@ metadata marks it bind-on-equip.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expand_tab/2" data-no-tooltip="" translate="no">expand_tab(character, tab)</a>
+        <a href="#expand_tab/3" data-no-tooltip="" translate="no">expand_tab(character, tab, extra_slots \\ 6)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Expands a tab by six slots.</p></div>
+        <div class="summary-synopsis"><p>Expands a tab by a positive multiple of six slots.</p></div>
 
     </div>
 
@@ -600,7 +600,7 @@ flows notify the quest manager themselves (see
       <h1 class="signature" translate="no">apply_consume_item_amounts(state, consumables)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L548" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L544" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -926,14 +926,16 @@ completion counter no longer matches the live inventory in that case).</p>
 metadata marks it bind-on-equip.</p>
   </section>
 </section>
-<section class="detail" id="expand_tab/2">
+<section class="detail" id="expand_tab/3">
+
+    <span id="expand_tab/2"></span>
 
   <div class="detail-header">
-    <a href="#expand_tab/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#expand_tab/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">expand_tab(character, tab)</h1>
+      <h1 class="signature" translate="no">expand_tab(character, tab, extra_slots \\ 6)</h1>
 
 
         <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/inventory.ex#L175" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -947,12 +949,12 @@ metadata marks it bind-on-equip.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> expand_tab(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) ::
   <a href="Ms2ex.Schema.InventoryTab.html#t:t/0">Ms2ex.Schema.InventoryTab.t</a>() | {:error, :max_expansion}</pre>
 
       </div>
 
-<p>Expands a tab by six slots.</p>
+<p>Expands a tab by a positive multiple of six slots.</p>
   </section>
 </section>
 <section class="detail" id="expired?/1">

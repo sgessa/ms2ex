@@ -18,6 +18,7 @@
   enchant_level: term(),
   equip_slot: term(),
   expires_at: term(),
+  gacha_dismantle_id: term(),
   glamor_forges_left: term(),
   id: term(),
   inserted_at: term(),

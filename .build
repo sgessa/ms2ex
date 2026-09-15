@@ -291,6 +291,8 @@ Ms2ex.Packets.InteractObject.html
 Ms2ex.Packets.InventoryItem.html
 Ms2ex.Packets.ItemBox.html
 Ms2ex.Packets.ItemLock.html
+Ms2ex.Packets.ItemScript.html
+Ms2ex.Packets.ItemUse.html
 Ms2ex.Packets.Job.html
 Ms2ex.Packets.KeyTable.html
 Ms2ex.Packets.Lapenshard.html
@@ -353,6 +355,7 @@ Ms2ex.Packets.SmartPush.html
 Ms2ex.Packets.StatPoints.html
 Ms2ex.Packets.StateSkill.html
 Ms2ex.Packets.Stats.html
+Ms2ex.Packets.StoryBook.html
 Ms2ex.Packets.SyncNumber.html
 Ms2ex.Packets.Taxi.html
 Ms2ex.Packets.TimeScale.html
@@ -417,6 +420,7 @@ Ms2ex.Storage.Tables.ExpTable.html
 Ms2ex.Storage.Tables.FieldMission.html
 Ms2ex.Storage.Tables.Fish.html
 Ms2ex.Storage.Tables.FishingRods.html
+Ms2ex.Storage.Tables.GachaInfo.html
 Ms2ex.Storage.Tables.GlobalDropItemBox.html
 Ms2ex.Storage.Tables.Guild.html
 Ms2ex.Storage.Tables.IndividualDropItem.html
@@ -500,8 +504,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-1F95CA31.js
-dist/sidebar_items-A2CD94E8.js
+dist/search_data-F6704D7C.js
+dist/sidebar_items-1695AF85.js
 index.html
 license.html
 readme.html

@@ -290,6 +290,8 @@ Ms2ex.Packets.InteractObject.md
 Ms2ex.Packets.InventoryItem.md
 Ms2ex.Packets.ItemBox.md
 Ms2ex.Packets.ItemLock.md
+Ms2ex.Packets.ItemScript.md
+Ms2ex.Packets.ItemUse.md
 Ms2ex.Packets.Job.md
 Ms2ex.Packets.KeyTable.md
 Ms2ex.Packets.Lapenshard.md
@@ -352,6 +354,7 @@ Ms2ex.Packets.SmartPush.md
 Ms2ex.Packets.StatPoints.md
 Ms2ex.Packets.StateSkill.md
 Ms2ex.Packets.Stats.md
+Ms2ex.Packets.StoryBook.md
 Ms2ex.Packets.SyncNumber.md
 Ms2ex.Packets.Taxi.md
 Ms2ex.Packets.TimeScale.md
@@ -416,6 +419,7 @@ Ms2ex.Storage.Tables.ExpTable.md
 Ms2ex.Storage.Tables.FieldMission.md
 Ms2ex.Storage.Tables.Fish.md
 Ms2ex.Storage.Tables.FishingRods.md
+Ms2ex.Storage.Tables.GachaInfo.md
 Ms2ex.Storage.Tables.GlobalDropItemBox.md
 Ms2ex.Storage.Tables.Guild.md
 Ms2ex.Storage.Tables.IndividualDropItem.md

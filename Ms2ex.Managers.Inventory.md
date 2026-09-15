@@ -109,11 +109,11 @@ metadata marks it bind-on-equip.
 # `expand_tab`
 
 ```elixir
-@spec expand_tab(Ms2ex.Schema.Character.t(), atom()) ::
+@spec expand_tab(Ms2ex.Schema.Character.t(), atom(), pos_integer()) ::
   Ms2ex.Schema.InventoryTab.t() | {:error, :max_expansion}
 ```
 
-Expands a tab by six slots.
+Expands a tab by a positive multiple of six slots.
 
 # `expired?`
 

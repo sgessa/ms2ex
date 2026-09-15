@@ -1,6 +1,8 @@
 # `Ms2ex.Context.Characters`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/characters.ex#L1)
 
+# `count`
+
 # `create`
 
 # `delete`

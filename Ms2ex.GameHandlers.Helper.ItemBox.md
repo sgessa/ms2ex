@@ -11,6 +11,10 @@ group) and OpenItemBoxWithKey (consumes key items). Rewards that do
 not fit the inventory are mailed to the character, stopping
 subsequent opens with the inventory-full error.
 
+# `gacha`
+
+# `lullu`
+
 # `open`
 
 Opens `count` copies of the box, pushing an `ItemBox.Open` response with
