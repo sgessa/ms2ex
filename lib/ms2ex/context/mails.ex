@@ -418,8 +418,11 @@ defmodule Ms2ex.Context.Mails do
 
   defp perform_collect(%Schema.Mail{} = mail, %Schema.Character{} = character) do
     transfer_mail_currencies(mail, character)
-    transfer_mail_items(mail.items, character)
-    update_mail_collected(mail)
+
+    case transfer_mail_items(mail.items, character) do
+      :ok -> update_mail_collected(mail)
+      {:error, _reason} = error -> error
+    end
   end
 
   defp transfer_mail_currencies(%Schema.Mail{} = mail, %Schema.Character{} = character) do
@@ -437,15 +440,23 @@ defmodule Ms2ex.Context.Mails do
   end
 
   defp transfer_mail_items(items, %Schema.Character{} = character) do
-    Enum.each(items, fn item ->
+    Enum.reduce_while(items, :ok, fn item, :ok ->
       item_to_add = %{item | location: :inventory, mail_id: nil, character_id: character.id}
-      {:ok, result} = Managers.Inventory.add_item(character, item_to_add)
-      Managers.Quest.notify_item_acquired(character, item_to_add)
 
-      SenderSession.push(character, Packets.InventoryItem.add_item(result, character))
-      SenderSession.push(character, Packets.InventoryItem.mark_item_new(item_to_add))
+      case Managers.Inventory.add_item(character, item_to_add) do
+        {:ok, result} ->
+          Managers.Quest.notify_item_acquired(character, item_to_add)
+          SenderSession.push(character, Packets.InventoryItem.add_item(result, character))
+          SenderSession.push(character, Packets.InventoryItem.mark_item_new(item_to_add))
+          Repo.delete(item)
+          {:cont, :ok}
 
-      Repo.delete(item)
+        {:error, :full_inventory} ->
+          {:halt, {:error, :s_mail_error_receiveitem_to_inven}}
+
+        error ->
+          {:halt, error}
+      end
     end)
   end
 

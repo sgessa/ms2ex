@@ -73,6 +73,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
     meret_price = -390
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
+         true <- Managers.Inventory.can_expand_tab?(character, tab),
          {:ok, wallet} <- Context.Wallets.update(character, :merets, meret_price),
          %Schema.InventoryTab{tab: tab, slots: slots} <-
            Managers.Inventory.expand_tab(character, tab) do

@@ -530,7 +530,7 @@ defmodule Ms2ex.GameHandlers.Guild do
           rarity: @guild_coin_rarity
         })
 
-      Managers.Inventory.add_item(character, coin_item)
+      Managers.Inventory.add_item_or_mail(character, coin_item)
     end
 
     if prop.check_in_player_exp_rate > 0 do
@@ -562,7 +562,7 @@ defmodule Ms2ex.GameHandlers.Guild do
               rarity: @guild_coin_rarity
             })
 
-          Managers.Inventory.add_item(character, coin_item)
+          Managers.Inventory.add_item_or_mail(character, coin_item)
         end
 
         push(session, Packets.Guild.donated(member.daily_donation_count, member.donation_time))

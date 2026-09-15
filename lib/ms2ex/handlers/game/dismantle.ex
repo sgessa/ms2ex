@@ -133,7 +133,7 @@ defmodule Ms2ex.GameHandlers.Dismantle do
     Enum.each(inventory.rewards, fn {item_id, amount} ->
       item = Context.Items.init(item_id, %{amount: amount})
 
-      with {:ok, result} <- Managers.Inventory.add_item(character, item) do
+      with {:ok, result} <- Managers.Inventory.add_item_or_mail(character, item) do
         push(session, Packets.InventoryItem.add_item(result, character))
         Managers.Quest.notify_item_acquired(character, added_item(result))
       end

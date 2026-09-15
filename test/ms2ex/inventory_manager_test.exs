@@ -73,6 +73,17 @@ defmodule Ms2ex.InventoryManagerTest do
     assert Managers.Inventory.free_slot_count(character.id, :gear) == 6
   end
 
+  test "adding to a full tab returns an error without crashing", %{character: character} do
+    add_item(character, @gear_id, 1)
+    add_item(character, @gear_id, 1)
+    add_item(character, @gear_id, 1)
+
+    item = Context.Items.init(@gear_id, %{rarity: 1, amount: 1})
+
+    assert {:error, :full_inventory} = Managers.Inventory.add_item(character, item)
+    assert Managers.Inventory.alive?(character.id)
+  end
+
   test "stackable items merge onto existing stacks and write through", %{character: character} do
     add_item(character, @potion_id, 4)
     add_item(character, @potion_id, 6)

@@ -40,7 +40,7 @@ defmodule Ms2ex.GameHandlers.RequestTutorialItem do
     Enum.each(1..missing, fn _unit ->
       item = Context.Items.init(entry.id, %{amount: 1, rarity: entry.rarity})
 
-      case Managers.Inventory.add_item(character, Context.Items.load_metadata(item)) do
+      case Managers.Inventory.add_item_or_mail(character, Context.Items.load_metadata(item)) do
         {:ok, {_status, inventory_item} = result} ->
           push(character, Packets.InventoryItem.add_item(result, character))
           push(character, Packets.InventoryItem.mark_item_new(inventory_item))

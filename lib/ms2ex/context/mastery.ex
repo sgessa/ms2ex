@@ -320,7 +320,7 @@ defmodule Ms2ex.Context.Mastery do
   # ---- shared ----
 
   defp grant_item(character, item) do
-    case Managers.Inventory.add_item(character, item) do
+    case Managers.Inventory.add_item_or_mail(character, item) do
       {:ok, result} ->
         {_status, inventory_item} = result
         push(character, Packets.InventoryItem.add_item(result, character))
@@ -328,14 +328,10 @@ defmodule Ms2ex.Context.Mastery do
         Managers.Quest.notify_item_acquired(character, inventory_item)
         :ok
 
-      _ ->
-        Context.Mails.send_system_mail(
-          character.id,
-          "",
-          :inventory_overflow,
-          items: [item]
-        )
+      {:mailed, _mail} ->
+        :ok
 
+      _ ->
         :ok
     end
   end
