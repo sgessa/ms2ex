@@ -14,8 +14,8 @@ Usable-item functions implemented in `USE_ITEM` include title scrolls,
 story books, quest scrolls, inventory expansion items, premium coupons,
 chat-sticker unlocks, party recall, additional effects, fishing bait,
 character-slot vouchers, gacha/Lullu box opening, gacha dismantle provenance,
-and the three standard item-box functions. Regular
-taxi routing already exists through the dedicated `TAXI` handler.
+air-taxi item routing, and the three standard item-box functions. Regular
+taxi routing also exists through the dedicated `TAXI` handler.
 
 ## Still missing or blocked
 
@@ -25,6 +25,5 @@ taxi routing already exists through the dedicated `TAXI` handler.
 - beauty/remake/socket/repacking scroll workflows (need their UI request and
 	result protocols)
 - buddy badge boxes (need cross-character mail/item-couple persistence)
-- massive portals, defense guards, HongBao, and air-taxi items (need the
-	item-triggered `CallAirTaxi` request/validation path; regular taxi routing
-	already exists)
+- massive portals, defense guards, and HongBao (need their corresponding
+	field objects, NPC lifecycle, and event systems)

@@ -87,6 +87,9 @@ defmodule Ms2ex.GameHandlers.UseItem do
   defp dispatch_item_use("ExpendCharacterSlot", session, character, item, _packet),
     do: use_character_slot_voucher(session, character, item)
 
+  defp dispatch_item_use("CallAirTaxi", session, character, item, packet),
+    do: use_air_taxi(session, character, item, packet)
+
   defp dispatch_item_use("RecallParty", session, character, item, _packet),
     do: recall_party(session, character, item)
 
@@ -194,6 +197,21 @@ defmodule Ms2ex.GameHandlers.UseItem do
       true ->
         push(session, Packets.ItemUse.max_character_slots())
     end
+  end
+
+  defp use_air_taxi(session, character, item, packet) do
+    {map_id_text, _packet} = get_ustring(packet)
+
+    with {map_id, ""} <- Integer.parse(map_id_text),
+         %{} <- Storage.Maps.get_meta(map_id),
+         :ok <- Managers.Field.change_field(character, map_id) do
+      consumed_item = Managers.Inventory.consume(item)
+      push(session, Packets.InventoryItem.consume(consumed_item))
+    else
+      _ -> :ok
+    end
+
+    session
   end
 
   defp quest_scroll_ids(parameters) when is_binary(parameters) do
