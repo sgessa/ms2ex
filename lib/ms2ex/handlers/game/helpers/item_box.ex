@@ -365,8 +365,10 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
       true ->
         case Managers.Inventory.add_item(character, item) do
           {:ok, result} ->
+            inventory_item = added_item(result)
             push(session, Packets.InventoryItem.add_item(result, character))
-            Managers.Quest.notify_item_acquired(character, added_item(result))
+            push(session, Packets.InventoryItem.mark_item_new(inventory_item))
+            Managers.Quest.notify_item_acquired(character, inventory_item)
             :ok
 
           _ ->

@@ -14,7 +14,7 @@ defmodule Ms2ex.Handlers.ResponseServerEnter do
     session
     |> push(Packets.BannerList.bytes())
     |> push(Packets.ServerList.bytes())
-    |> push(Packets.CharacterMaxCount.set_max(4, 6))
+    |> push(Packets.CharacterMaxCount.set_max(session.account.max_characters, 8))
     |> push(Packets.CharacterList.start_list())
     |> push(Packets.CharacterList.add_entries(characters))
     |> push(Packets.CharacterList.end_list())
