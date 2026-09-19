@@ -80,25 +80,35 @@ defmodule Ms2ex.Packets.ControlNpc do
 
   defp put_velocity(packet, _npc), do: put_short_coord(packet)
 
-  # The state byte tells the client which actor state to present: the
-  # PcSkill reaction (16) while a mob is engaged by a player, Walk (2)
-  # while a scripted patrol is moving the npc (this is what plays the
-  # locomotion animation instead of sliding), and idle (1) otherwise. The
-  # client shows the field HP bar for a mob reacting to a player skill, so
-  # the transition to the reaction state on the first hit is what arms it.
-  defp put_state(packet, %Types.FieldNpc{last_attacker: attacker}) when not is_nil(attacker),
-    do: put_byte(packet, 16)
+  # The state byte tells the client which actor state to present. A moving
+  # mob reports Walk (2) so the client plays the locomotion animation and
+  # interpolates the steps; a mob that is engaged but standing holds the
+  # PcSkill reaction (16), which is what arms the field HP bar; otherwise
+  # idle (1).
+  defp put_state(packet, %Types.FieldNpc{velocity: {vx, vy, _vz}})
+       when vx != 0 or vy != 0 do
+    put_byte(packet, 2)
+  end
 
-  defp put_state(packet, %Types.FieldNpc{velocity: {vx, vy, _vz}}) when vx != 0 or vy != 0,
-    do: put_byte(packet, 2)
+  defp put_state(packet, %Types.FieldNpc{battle: battle}) when is_map(battle) do
+    put_byte(packet, 16)
+  end
 
   defp put_state(packet, _npc), do: put_byte(packet, 1)
 
   # bosses carry their current target's object id; a non-zero value tells
   # the client the boss is in battle (drives the boss HP bar UI). While
-  # engaged it holds the attacker's object id; until the boss has been
-  # struck, it holds the field's default target (the nearest player),
-  # mirroring a freshly-aggroed boss.
+  # engaged it holds the aggro target's object id; until the boss has been
+  # struck (or its target dropped), it holds the field's default target (the
+  # nearest player), mirroring a freshly-aggroed boss.
+  defp put_target_id(
+         packet,
+         %Types.FieldNpc{npc: %{boss?: true}, battle: %{target_object_id: oid}},
+         _default_target
+       )
+       when is_integer(oid),
+       do: put_int(packet, oid)
+
   defp put_target_id(packet, %Types.FieldNpc{npc: %{boss?: true}, last_attacker: nil}, nil),
     do: put_int(packet, 0)
 

@@ -121,7 +121,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
           speeds: leg_speeds(npc, way_points),
           index: 0,
           speed: @follow_speed,
-          last_at: System.monotonic_time(:millisecond),
+          last_at: Ms2ex.sync_ticks(),
           despawn_on_finish?: false
         }
 
@@ -143,8 +143,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  defp npc_speed(npc, key) do
-    speed = get_in(npc.npc.metadata, [:action, key]) || @follow_speed
+  # npc ground speed for a gait (units/second) from the metadata's action
+  # speeds; zero/absent metadata falls back to the shared default
+  def npc_speed(npc, gait) do
+    speed = get_in(npc.npc.metadata, [:action, gait]) || @follow_speed
     if is_number(speed) and speed > 0, do: speed * 1.0, else: @follow_speed * 1.0
   end
 

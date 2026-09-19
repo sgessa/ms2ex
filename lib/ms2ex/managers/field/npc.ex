@@ -5,6 +5,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
+  alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Managers.Field.Npc.Patrol
 
   # animation transitions keep dirtying npcs on live servers, so even idle
@@ -192,6 +193,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
       %Types.FieldNpc{} = field_npc ->
         field_npc = tag_attackers(field_npc, attacker)
+        field_npc = Battle.aggro(field_npc, attacker, Ms2ex.sync_ticks())
 
         cond do
           field_npc.dead? && field_npc.corpse? ->
@@ -235,24 +237,43 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   def tick(state) do
-    now = System.monotonic_time(:millisecond)
+    now = Ms2ex.sync_ticks()
 
     {npcs, {live_dirty, corpse_dirty}} =
       Enum.flat_map_reduce(state.npcs, {[], []}, fn {object_id, npc}, acc ->
+        npc = Patrol.advance_patrol(npc, now)
+        npc = Battle.tick(npc, state, now)
         tick_npc(now, object_id, npc, acc)
       end)
 
     boss_target = state.players |> Map.values() |> List.first()
 
-    for npc <- Enum.reverse(live_dirty) do
+    # one control entry per packet: the reference's periodic loop sends
+    # single-npc controls, and the client demonstrably mishandles multi-entry
+    # batches here (frozen mobs, lost HP-bar transitions)
+    live = Enum.reverse(live_dirty)
+
+    # mobs that arrived home this tick healed: announce the new health
+    # before their idle control lands
+    for npc <- live, npc.stat_dirty? do
+      Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(npc, :health))
+    end
+
+    for npc <- live do
       Managers.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc], boss_target))
     end
+
+    npcs =
+      live
+      |> Enum.reduce(Map.new(npcs), fn npc, npcs ->
+        Map.put(npcs, npc.object_id, %{npc | stat_dirty?: false})
+      end)
 
     for npc <- Enum.reverse(corpse_dirty) do
       Managers.Field.broadcast(state.topic, Packets.ControlNpc.dead(npc))
     end
 
-    %{state | npcs: Map.new(npcs)}
+    %{state | npcs: npcs}
     |> tick_mob_spawns()
   end
 
@@ -337,7 +358,7 @@ defmodule Ms2ex.Managers.Field.Npc do
                 end),
               index: 0,
               speed: @follow_speed,
-              last_at: System.monotonic_time(:millisecond),
+              last_at: Ms2ex.sync_ticks(),
               despawn_on_finish?: true
             }
         }
@@ -404,7 +425,7 @@ defmodule Ms2ex.Managers.Field.Npc do
           send_control?: false,
           corpse?: corpse?,
           seq_counter: field_npc.seq_counter + 1,
-          last_control_at: System.monotonic_time(:millisecond)
+          last_control_at: Ms2ex.sync_ticks()
       }
 
     Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
@@ -477,8 +498,6 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do
-    npc = Patrol.advance_patrol(npc, now)
-
     cond do
       npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
         npc =
