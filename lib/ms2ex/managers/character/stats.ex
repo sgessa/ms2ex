@@ -79,6 +79,7 @@ defmodule Ms2ex.Managers.Character.Stats do
 
   def modify_max(character, stat_id, amount) do
     max = Map.get(character.stats, :"#{stat_id}_max", 0)
+
     cur = Map.get(character.stats, :"#{stat_id}_cur", 0)
 
     stats =

@@ -60,4 +60,29 @@ defmodule Ms2ex.Packets.SkillDamage do
     |> put_byte(record.type)
     |> put_int(record.hp_amount)
   end
+
+  # tile record: a map-placed skill zone hitting targets. SkillUid is unused
+  # (0); each target carries a short-coord block position, a float direction,
+  # and its damage entries (type byte + amount)
+  def tile(record) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x6)
+    |> put_long(0)
+    |> put_int(record.skill_id)
+    |> put_short(record.skill_level)
+    |> put_byte(length(record.targets))
+    |> reduce(record.targets, fn target, packet ->
+      packet
+      |> put_int(target.object_id)
+      |> put_byte(length(target.damages))
+      |> put_short_coord(target.position)
+      |> put_coord(target.direction)
+      |> reduce(target.damages, fn {type, amount}, packet ->
+        packet
+        |> put_byte(type)
+        |> put_long(amount)
+      end)
+    end)
+  end
 end

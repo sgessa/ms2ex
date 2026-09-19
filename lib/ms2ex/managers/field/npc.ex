@@ -48,25 +48,18 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     state = put_in(state, [:npc_spawns, spawn_point_id], npc_spawn)
 
-    # on script-controlled maps the trigger scripts own npc appearances:
-    # only what the running script spawns (spawn_monster) becomes visible
-    script_controlled? = Map.get(state, :script_controlled_npcs, false)
-
     cond do
-      script_controlled? ->
+      # event spawn points are script summons: they appear only through a
+      # spawn_monster action, whatever their on-create flag says. Every other
+      # spawn loads with the field per its on-create flag, scripted map or not
+      npc_spawn[:is_event] == true ->
         put_in(state, [:npc_spawns, spawn_point_id, :spawn_tick], :infinity)
 
       mob_spawn?(npc_spawn) ->
         # mob spawn points fill their population through the tick-driven
-        # spawn cycle; the first cycle is due as soon as the spawn is loaded.
-        # event spawn points are script summons and only ever appear through
-        # a spawn_monster action, whatever their on-create flag says
+        # spawn cycle; the first cycle is due as soon as the spawn is loaded
         spawn_tick =
-          cond do
-            npc_spawn[:on_field_create] == false -> :infinity
-            npc_spawn[:is_event] == true -> :infinity
-            true -> Ms2ex.sync_ticks()
-          end
+          if npc_spawn[:on_field_create] == false, do: :infinity, else: Ms2ex.sync_ticks()
 
         put_in(state, [:npc_spawns, spawn_point_id, :spawn_tick], spawn_tick)
 
@@ -137,6 +130,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         object_id: object_id,
         spawn_point_id: npc_spawn[:spawn_point_id],
         npc: npc,
+        map_id: state.map_id,
         position: npc_spawn[:position],
         rotation: npc_spawn[:rotation],
         spawn_radius: npc_spawn[:spawn_radius],
@@ -335,8 +329,12 @@ defmodule Ms2ex.Managers.Field.Npc do
           | position: character.position,
             animation: Enum.at(animations, 0) || field_npc.animation,
             patrol: %{
-              waypoints: Enum.map(way_points, & &1[:position]),
+              waypoints: way_points,
               animations: animations,
+              speeds:
+                Enum.map(way_points, fn way_point ->
+                  Patrol.leg_speed(field_npc, way_point[:approach_animation])
+                end),
               index: 0,
               speed: @follow_speed,
               last_at: System.monotonic_time(:millisecond),

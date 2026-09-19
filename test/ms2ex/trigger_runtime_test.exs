@@ -3,7 +3,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
   alias Ms2ex.Managers.Field
   alias Ms2ex.Managers.Field.Npc
+  alias Ms2ex.Types.Coord
   alias Ms2ex.Managers.Field.Trigger
+  alias Ms2ex.Managers.Field.Trigger.Actions
 
   # a script shaped like the classic tutorial: enter on user detection in a
   # box, release on the guard's death, finish after a delay
@@ -340,6 +342,119 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert %{next: "fight"} = state.trigger_machines["tutorial"]
   end
 
+  test "object_interacted fires once the interact object reaches the wanted state" do
+    # the Blackstar Junkyard ride: the script arms the car (reactable) and
+    # waits for it to flip back to normal once the player boards
+    car = %{id: 10_001_001, uuid: "car-uuid", state: :normal}
+
+    state =
+      base_state()
+      |> Map.put(:interactable, %{"car-uuid" => car})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "object_interacted",
+          negate: false,
+          args: %{interact_ids: "10001001", state: "0"},
+          next_state: "fight",
+          actions: []
+        }
+      ])
+      |> tick()
+
+    assert %{next: "fight"} = state.trigger_machines["tutorial"]
+
+    # while the car is still armed (reactable), the gate holds
+    armed_state =
+      base_state()
+      |> Map.put(:interactable, %{"car-uuid" => %{car | state: :reactable}})
+      |> put_in([:trigger_scripts, "tutorial", :states, "wait", :conditions], [
+        %{
+          name: "object_interacted",
+          negate: false,
+          args: %{interact_ids: "10001001", state: "0"},
+          next_state: "fight",
+          actions: []
+        }
+      ])
+      |> tick()
+
+    assert %{current: "wait"} = armed_state.trigger_machines["tutorial"]
+  end
+
+  test "set_interact_object re-arm holds object_interacted until the object is used again" do
+    # the mine-cart lever: the script arms the lever (reactable) when the
+    # ride state is entered and waits for it to flip back to normal once
+    # pulled; the re-arm must reach the server state, not just the clients,
+    # or the already-used lever keeps summoning the cart forever
+    lever = %{id: 10_001_072, uuid: "lever-uuid", state: :normal}
+
+    state =
+      base_state()
+      |> Map.put(:interactable, %{"lever-uuid" => lever})
+      |> put_in([:trigger_scripts, "tutorial", :states, "fight"], %{
+        on_enter: [
+          %{name: "set_interact_object", args: %{trigger_ids: "10001072", state: "1"}}
+        ],
+        on_exit: [],
+        conditions: [
+          %{
+            name: "object_interacted",
+            negate: false,
+            args: %{interact_ids: "10001072", state: "0"},
+            next_state: "done",
+            actions: []
+          }
+        ],
+        next_state: ""
+      })
+      |> put_in([:trigger_machines, "tutorial", :next], "fight")
+      |> tick()
+
+    # entering the ride state re-arms the lever: the used state no longer
+    # matches, so the machine holds instead of looping straight back
+    assert %{current: "fight"} = state.trigger_machines["tutorial"]
+    assert %{state: :reactable} = state.interactable["lever-uuid"]
+
+    drain_pushes()
+
+    # pulling the lever flips it back to normal and the machine advances
+    state = tick(put_in(state, [:interactable, "lever-uuid", :state], :normal))
+
+    assert %{next: "done"} = state.trigger_machines["tutorial"]
+  end
+
+  test "showing a hidden breakable stamps the moving-platform base tick" do
+    # the chase carts are client-side moving platforms: the show packet must
+    # carry the (elapsed, base) tick pair so the client restarts the shuttle
+    # at its start, riding forward — without it the platform resumes its
+    # load-time cycle at an arbitrary phase, often riding backwards
+    cart = %{id: 4100, uuid: "cart-uuid", state: 4, visible: false, base_tick: 0}
+
+    state = base_state() |> Map.put(:breakables, %{4100 => cart})
+    show = [%{name: "set_visible_breakable_object", args: %{trigger_ids: "4100", visible: "1"}}]
+
+    state = Actions.execute_actions(show, "tutorial", state)
+
+    shown = state.breakables[4100]
+    assert shown.visible
+    # the clock has an arbitrary origin; only != 0 marks the stamp
+    assert shown.base_tick != 0
+
+    assert {:push, packet} = receive_push()
+
+    <<80::little-16, 0, 1::little-32, 9::little-16, "cart-uuid", _state, 1,
+      elapsed::little-signed-integer-32, base::little-signed-integer-32, _::binary>> = packet
+
+    <<expected_base::little-signed-integer-32>> = <<shown.base_tick::little-signed-integer-32>>
+    assert base == expected_base
+    assert elapsed in 0..5_000
+
+    # a show on an already-visible cart leaves the running cycle alone
+    state = Actions.execute_actions(show, "tutorial", state)
+
+    assert state.breakables[4100].base_tick == shown.base_tick
+  end
+
   test "negated conditions invert the match" do
     state =
       base_state()
@@ -398,6 +513,78 @@ defmodule Ms2ex.TriggerRuntimeTest do
     |> tick()
 
     assert {:push, <<0x68::little-16, 0xB, 1::little-16, 88, 0, 0>>} = receive_push()
+  end
+
+  test "select_camera activates a known camera vantage" do
+    base_state()
+    |> Map.put(:trigger_cameras, %{600 => %{id: 600, visible: false}})
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "select_camera", args: %{trigger_id: "600", enable: "1"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x4F::little-16, 0x3, 600::little-32, 1>>} = receive_push()
+  end
+
+  test "select_camera skips cameras the map does not ship" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "select_camera", args: %{trigger_id: "777", enable: "1"}}
+    ])
+    |> tick()
+
+    assert :nothing = receive_push()
+  end
+
+  test "set_agent toggles each agent figure by trigger id" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_agent", args: %{trigger_ids: "8000,8001", visible: "0"}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x4F::little-16, 0x3, 8000::little-32, 0>>} = receive_push()
+    assert {:push, <<0x4F::little-16, 0x3, 8001::little-32, 0>>} = receive_push()
+  end
+
+  test "set_actor toggles the actor figure and plays its sequence" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "set_actor", args: %{trigger_id: "1901", visible: "1", initial_sequence: "Idle_A"}}
+    ])
+    |> tick()
+
+    # id + visible + u16 length + "Idle_A" utf16le
+    assert {:push,
+            <<0x4F::little-16, 0x3, 1901::little-32, 1, 6::little-16, "I", 0, "d", 0, "l", 0, "e",
+              0, "_", 0, "A", 0>>} = receive_push()
+  end
+
+  test "set_ladder toggles each ladder with animate and fade" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{
+        name: "set_ladder",
+        args: %{trigger_ids: "341,342", visible: "1", enable: "0", fade: "100"}
+      }
+    ])
+    |> tick()
+
+    assert {:push, <<0x4F::little-16, 0x3, 341::little-32, 1, 0, 100::little-32>>} =
+             receive_push()
+
+    assert {:push, <<0x4F::little-16, 0x3, 342::little-32, 1, 0, 100::little-32>>} =
+             receive_push()
+  end
+
+  test "remove_cinematic_talk clears the dialog bubble" do
+    base_state()
+    |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+      %{name: "remove_cinematic_talk", args: %{}}
+    ])
+    |> tick()
+
+    assert {:push, <<0x68::little-16, 0x7>>} = receive_push()
   end
 
   test "set_pc_emotion_loop broadcasts the player emote loop" do
@@ -682,7 +869,24 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
   test "set_skill enables a trigger skill zone and removes it on disable" do
     stub_metadata(%{
-      "skill:70000066" => %{id: 70_000_066, levels: %{"5" => %{motions: [], skills: []}}}
+      "skill:70000066" => %{
+        id: 70_000_066,
+        levels: %{
+          "5" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    range: %{type: 2, distance: 150, height: 150},
+                    damage: %{rate: 0.0, value: 0, damage_by_target_max_hp: 0.1}
+                  }
+                ]
+              }
+            ],
+            skills: []
+          }
+        }
+      }
     })
 
     script = %{
@@ -733,7 +937,13 @@ defmodule Ms2ex.TriggerRuntimeTest do
               2700.0::little-float-size(32), 70_000_066::little-32, 5::little-16, _rest::binary>>} =
              receive_push()
 
-    assert state.trigger_skills[7005].source_id == source_id
+    # the zone is field-owned: fire-count limited, with the skill's hit
+    # volume and damage rule resolved from the skill metadata
+    zone = state.trigger_skill_zones[source_id]
+    assert zone.skill_id == 70_000_066
+    assert zone.fires_left == 1
+    assert zone.range == %{type: 2, distance: 150, height: 150}
+    assert zone.damage.damage_by_target_max_hp == 0.1
 
     # the disarm transition queues on wait_tick, then lands next cycle
     state =
@@ -743,13 +953,25 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     assert {:push, <<0x4D::little-16, 1, removed_id::little-signed-integer-32>>} = receive_push()
     assert removed_id == source_id
-    refute Map.has_key?(state.trigger_skills[7005], :source_id)
+    refute Map.has_key?(state.trigger_skill_zones, source_id)
   end
 
   test "move_npc attaches the patrol to the matching story npc" do
     # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
     # approach falls back to the model's run sequence
     stub_metadata(%{
+      "map:52000099" => %{x_block: "nav_test"},
+      "navmesh:nav_test" => %{
+        tiles: [
+          %{
+            verts:
+              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
+            polys: [[0, 1, 2]]
+          }
+        ]
+      },
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
         sequences: %{Run_A: 11, Idle_A: 3}
@@ -760,11 +982,11 @@ defmodule Ms2ex.TriggerRuntimeTest do
       base_state()
       |> Map.put(:patrols, %{
         "MS2PatrolData_2003" => %{
-          way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
+          way_points: [%{position: %{x: 100.0, y: -50.0, z: 0.0}, approach_animation: "Walk_A"}]
         }
       })
       |> Map.put(:npcs, %{
-        700 => story_npc(108, 11_003_401),
+        700 => %{story_npc(108, 11_003_401) | map_id: 52_000_099},
         701 => %{spawn_point_id: 109, animation: 255, patrol: nil, npc: %{id: 11_003_399}}
       })
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
@@ -775,7 +997,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
     npc = state.npcs[700]
 
     assert %{patrol: %{waypoints: [waypoint], animations: [11], speed: speed}} = npc
-    assert waypoint == %{x: 100.0, y: 100.0, z: 0.0}
+    assert waypoint.position == %{x: 100.0, y: -50.0, z: 0.0}
     assert npc.animation == 11
     assert speed == 150
     # the other npc is untouched
@@ -784,6 +1006,18 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
   test "move_npc leaves npcs without a locomotion sequence in place" do
     stub_metadata(%{
+      "map:52000099" => %{x_block: "nav_test"},
+      "navmesh:nav_test" => %{
+        tiles: [
+          %{
+            verts:
+              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
+            polys: [[0, 1, 2]]
+          }
+        ]
+      },
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
         sequences: %{Idle_A: 3}
@@ -795,10 +1029,10 @@ defmodule Ms2ex.TriggerRuntimeTest do
         base_state()
         |> Map.put(:patrols, %{
           "MS2PatrolData_2003" => %{
-            way_points: [%{position: %{x: 100.0, y: 100.0, z: 0.0}, approach_animation: "Walk_A"}]
+            way_points: [%{position: %{x: 100.0, y: -50.0, z: 0.0}, approach_animation: "Walk_A"}]
           }
         })
-        |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+        |> Map.put(:npcs, %{700 => %{story_npc(108, 11_003_401) | map_id: 52_000_099}})
         |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
           %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
         ])
@@ -809,6 +1043,129 @@ defmodule Ms2ex.TriggerRuntimeTest do
     # sliding across the field in its idle pose (the tick logs the missing
     # walk animation warning — expected here)
     assert %{patrol: nil, animation: 255} = state.npcs[700]
+  end
+
+  test "move_npc refuses to patrol on a map without a navmesh" do
+    {state, log} =
+      ExUnit.CaptureLog.with_log(fn ->
+        base_state()
+        |> Map.put(:patrols, %{
+          "MS2PatrolData_2003" => %{
+            way_points: [%{position: %{x: 100.0, y: -50.0, z: 0.0}, approach_animation: "Walk_A"}]
+          }
+        })
+        |> Map.put(:npcs, %{700 => story_npc(108, 11_003_401)})
+        |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+          %{name: "move_npc", args: %{spawn_id: "108", patrol_name: "MS2PatrolData_2003"}}
+        ])
+        |> tick()
+      end)
+
+    # movement rides the navmesh or it does not happen: the npc keeps its
+    # post instead of walking the raw line under the ground
+    assert %{patrol: nil} = state.npcs[700]
+    assert log =~ "has no navmesh"
+  end
+
+  test "move_user_path is refused on a map without a navmesh" do
+    {state, log} =
+      ExUnit.CaptureLog.with_log(fn ->
+        base_state()
+        |> Map.put(:patrols, %{
+          "MS2PatrolData_1002" => %{
+            way_points: [%{position: %{x: 100.0, y: -50.0, z: 0.0}, approach_animation: "Walk_A"}]
+          }
+        })
+        |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
+          %{name: "move_user_path", args: %{patrol_name: "MS2PatrolData_1002"}}
+        ])
+        |> tick()
+      end)
+
+    # the scripted carry drags players along the path — without a navmesh it
+    # would drag them under the ground, so it does not happen at all
+    refute Map.get(state, :path_move_active, false)
+    assert log =~ "has no navmesh"
+  end
+
+  test "patrol ground legs ride the navmesh floor instead of sinking below it" do
+    stub_metadata(%{
+      "map:52000099" => %{x_block: "nav_test"},
+      "navmesh:nav_test" => %{
+        tiles: [
+          %{
+            verts:
+              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
+            polys: [[0, 1, 2]]
+          }
+        ]
+      }
+    })
+
+    now = now_ms()
+
+    npc = %{
+      story_npc(108, 11_003_401)
+      | map_id: 52_000_099,
+        position: %Coord{x: 50.0, y: -50.0, z: -5.0},
+        patrol: %{
+          waypoints: [%{position: %Coord{x: 100.0, y: -50.0, z: -5.0}, air_way_point: false}],
+          animations: [11],
+          speeds: [240],
+          index: 0,
+          speed: 240,
+          last_at: now - 100,
+          despawn_on_finish?: false
+        }
+    }
+
+    advanced = Npc.Patrol.advance_patrol(npc, now)
+
+    # the straight line runs 5 units under the floor; the step re-anchors
+    # the position onto the walkable surface
+    assert advanced.position.z == 0.0
+    assert advanced.send_control?
+  end
+
+  test "patrol air legs keep their authored flight line" do
+    # a navmesh exists for the map: the air gate is what keeps the line
+    stub_metadata(%{
+      "map:52000099" => %{x_block: "nav_test"},
+      "navmesh:nav_test" => %{
+        tiles: [
+          %{
+            verts:
+              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
+                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
+            polys: [[0, 1, 2]]
+          }
+        ]
+      }
+    })
+
+    now = now_ms()
+
+    npc = %{
+      story_npc(108, 11_003_401)
+      | map_id: 52_000_099,
+        position: %Coord{x: 50.0, y: -50.0, z: 500.0},
+        patrol: %{
+          waypoints: [%{position: %Coord{x: 100.0, y: -50.0, z: 500.0}, air_way_point: true}],
+          animations: [11],
+          speeds: [240],
+          index: 0,
+          speed: 240,
+          last_at: now - 100,
+          despawn_on_finish?: false
+        }
+    }
+
+    advanced = Npc.Patrol.advance_patrol(npc, now)
+
+    assert advanced.position.z == 500.0
   end
 
   test "set_cinematic_ui frames the cutscene with a letterbox transition" do
@@ -953,6 +1310,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
       item_spawns: %{},
       items: %{},
       portals: %{50_000_001 => portal(1)},
+      trigger_skill_zones: %{},
       # the tutorial's gated spawn point, not yet filled
       npc_spawns: %{
         50_000_002 => %{

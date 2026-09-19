@@ -66,6 +66,18 @@ defmodule Ms2ex.Storage.Maps do
     |> Map.new(fn gate -> {gate.spawn_point_id, gate} end)
   end
 
+  def get_region_skills(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:region_skills, [])
+  end
+
+  def get_cube_skills(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:cube_skills, [])
+  end
+
   def get_interact_objects(map_id) do
     map_id
     |> get_meta()

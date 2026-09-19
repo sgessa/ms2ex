@@ -126,6 +126,53 @@ defmodule Ms2ex.BuffStatusTest do
     assert Types.Buff.dot_amounts(buff) == {9, 0, 0}
   end
 
+  test "type-none dots deal only their max-health share (poison water)" do
+    dot = %{
+      is_const_damage: false,
+      type: 0,
+      element: 0,
+      rate: 0.0,
+      hp_value: 0,
+      sp_value: 0,
+      ep_value: 0,
+      damage_by_target_max_hp: 0.01,
+      recover_hp_by_damage: 0.0,
+      not_kill: false
+    }
+
+    buff = %Types.Buff{
+      effect: %{dot: %{damage: dot}},
+      caster: %Ms2ex.Schema.Character{stats: %{}},
+      owner: %Ms2ex.Schema.Character{stats: %{health_max: 5000, health_cur: 5000}}
+    }
+
+    assert Types.Buff.dot_amounts(buff) == {50, 0, 0}
+  end
+
+  test "typed dots on players without defense stats contribute no rate damage" do
+    dot = %{
+      is_const_damage: false,
+      type: 1,
+      element: 0,
+      rate: 1.0,
+      hp_value: 0,
+      sp_value: 0,
+      ep_value: 0,
+      damage_by_target_max_hp: 0.01,
+      not_kill: false
+    }
+
+    buff = %Types.Buff{
+      effect: %{dot: %{damage: dot}},
+      caster: %Ms2ex.Schema.Character{stats: %{}},
+      owner: %Ms2ex.Schema.Character{stats: %{health_max: 5000, health_cur: 5000}}
+    }
+
+    # the rate term cannot be computed against a player target (no defense
+    # stats) and contributes zero instead of crashing the field
+    assert Types.Buff.dot_amounts(buff) == {50, 0, 0}
+  end
+
   test "rate-based dot scales with the caster's attack" do
     dot = %{
       is_const_damage: false,

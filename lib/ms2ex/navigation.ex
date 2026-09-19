@@ -27,6 +27,42 @@ defmodule Ms2ex.Navigation do
 
   def valid_position?(_, _), do: true
 
+  @doc """
+  The closest walkable point to a position, or nil when the map has no
+  navmesh (or nothing walkable within the query box). Movement snaps npc
+  positions to this point every step — pathed movement rides the ground
+  surface instead of the straight line between waypoints, which cuts below
+  it on slopes and stairs.
+  """
+  def snap_to_floor(map_id, %Coord{} = position) when is_integer(map_id) do
+    case tiles(map_id) do
+      nil ->
+        nil
+
+      [] ->
+        nil
+
+      tiles ->
+        case nearest_poly(tiles, position) do
+          nil -> nil
+          {cx, cy, cz} -> %Coord{x: cx * 100, y: -cz * 100, z: cy * 100}
+        end
+    end
+  end
+
+  def snap_to_floor(_, _position), do: nil
+
+  @doc "Whether the map has walkable navmesh tiles."
+  def has_navmesh?(map_id) when is_integer(map_id) do
+    case tiles(map_id) do
+      nil -> false
+      [] -> false
+      _tiles -> true
+    end
+  end
+
+  def has_navmesh?(_), do: false
+
   # returns the closest point on the nearest walkable poly, or nil.
   # candidate polys are those whose closest point falls within the query
   # box around the position
@@ -90,7 +126,7 @@ defmodule Ms2ex.Navigation do
     cond do
       terms.d1 <= 0 and terms.d2 <= 0 -> dist_point(px, py, pz, a)
       terms.d3 >= 0 and terms.d4 <= terms.d3 -> dist_point(px, py, pz, b)
-      terms.d5 >= 0 and terms.d6 <= terms.d5 -> dist_point(px, py, pz, c)
+      terms.d6 >= 0 and terms.d5 <= terms.d6 -> dist_point(px, py, pz, c)
       true -> closest_on_edge_or_face(px, py, pz, a, b, c, terms)
     end
   end
@@ -104,8 +140,8 @@ defmodule Ms2ex.Navigation do
     d2 = dot(ac, sub({px, py, pz}, a))
     d3 = dot(ab, sub({px, py, pz}, b))
     d4 = dot(ac, sub({px, py, pz}, b))
-    d5 = dot(ac, sub({px, py, pz}, c))
-    d6 = dot(bc, sub({px, py, pz}, c))
+    d5 = dot(ab, sub({px, py, pz}, c))
+    d6 = dot(ac, sub({px, py, pz}, c))
 
     %{
       ab: ab,
@@ -161,8 +197,13 @@ defmodule Ms2ex.Navigation do
   # -- cached parsed tiles ---------------------------------------------------
 
   defp tiles(map_id) do
-    xblock = map_id |> Storage.Maps.get_meta() |> Map.get(:x_block)
+    case Storage.Maps.get_meta(map_id) do
+      %{x_block: xblock} -> tiles_for(xblock)
+      _ -> nil
+    end
+  end
 
+  defp tiles_for(xblock) do
     case :persistent_term.get({:navmesh, xblock}, :missing) do
       :missing ->
         case Storage.get("navmesh", xblock) do

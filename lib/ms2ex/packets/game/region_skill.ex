@@ -27,6 +27,28 @@ defmodule Ms2ex.Packets.RegionSkill do
     |> put_float()
   end
 
+  # a map-placed skill zone (boost lanes, zone hazards): one fixed point,
+  # executed client-side while the player stands inside. next_tick drives
+  # the zone's fire cadence
+  def add_zone(source_id, skill_id, skill_level, next_tick, points) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.add)
+    |> put_int(source_id)
+    |> put_int(source_id)
+    |> put_int(next_tick)
+    |> put_byte(length(points))
+    |> reduce(points, fn point, packet ->
+      put_coord(packet, point)
+    end)
+    |> put_int(skill_id)
+    |> put_short(skill_level)
+    # RotationH — map zones are not directional
+    |> put_float()
+    # RotationV / 100
+    |> put_float()
+  end
+
   defp region_rotation_z(skill_cast) do
     if SkillCast.splash_use_direction?(skill_cast) do
       skill_cast.rotation.z

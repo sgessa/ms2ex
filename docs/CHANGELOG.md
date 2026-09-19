@@ -3,6 +3,174 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Walking npcs ride the ground instead of sinking into it: patrol legs now
+  snap the npc position onto the navmesh surface every step (the straight
+  line between waypoints cuts below the floor on slopes and stairs, so
+  models visibly hovered with their feet buried). Air-waypoint legs keep
+  their authored flight line. Like the reference — where every field
+  requires its navmesh and will not load without one — there is no
+  straight-line fallback: move_npc / move_user_path on a map without a
+  navmesh refuse with a warning, and a step with no walkable surface holds
+  position. This surfaced a closest-point-on-triangle bug in the navmesh
+  queries (Ericson 5.1.5 port had the C-region d5/d6 terms defined against
+  the wrong edges) and a crash on navmesh lookups for maps without a map
+  document; both fixed, with `Navigation.snap_to_floor/2` and
+  `Navigation.has_navmesh?/1` as the public queries.
+
+- Shown moving platforms restart their shuttle from the start: the
+  breakable packet now carries the (elapsed, base) tick pair the client
+  uses to phase the platform's move cycle, stamped on each hidden ->
+  visible transition. With zeros the client resumed its load-time cycle at
+  an arbitrary phase — during the Cave Depths escape cutscene the thief's
+  cart could ride the wrong way (mid-return) instead of departing forward.
+
+- The Cave Depths chase's two mine carts are scene-actor breakables
+  (4100 "Move_Agent" — the thief's, 4200 "Move_Train"): client-side moving
+  platforms that shuttle along their rails until a script hides them. The
+  ingest dropped actor breakables (the mapper's breakable case matched them
+  first but only projected plain cube breakables), so the script's
+  set_breakable / set_visible_breakable_object calls on the carts were
+  silent no-ops and the thief's cart looped back and forth from map load
+  instead of being staged by the chase script. Actor breakables now project
+  like cube breakables and the script controls them.
+
+- `set_interact_object` updates the field's interact state instead of only
+  broadcasting: the Cave Depths chase's mine-cart script re-arms its lever
+  (10001072) after every ride, but the server-side state stayed "used"
+  (normal), so `object_interacted` fired instantly and the cart was
+  re-summoned in an endless loop — riding away, despawning at the far end
+  and reappearing at its starting point without anyone pulling the lever.
+  Script state changes and player reacts now go through the same state
+  setter, and an already-in-state object is not re-broadcast.
+
+
+- Holdtime achievements respect their map-code gate: hold time ticked
+  toward every holdtime achievement regardless of the map, so riding the
+  tutorial's mine cart unlocked Royale Park balloon achievements ("The
+  View Up High", "I'm Not Coming Down"). The tick now pushes the map id
+  as the event code and holdtime joins the code-gated condition types —
+  map-gated holdtime achievements only count on their own map, while
+  map-agnostic ones ("Hold on Tight!") count anywhere.
+
+- npc_detected also detects an npc whose body capsule overlaps the box,
+  not only its position point: the reference tests the box against both
+  the npc's position and its body shape, and the tutorial chase's escape
+  thief rides past the detection box without his position point ever
+  entering it. The ingest now projects each npc's body capsule (radius,
+  height) for the test.
+
+- Damage-over-time dots with no attack type (the poison water of the
+  tutorial chase: 1% of the target's max health per tick) no longer run
+  the attack-vs-defense calculator — a player target has no defense
+  stats, so the field crashed on the first poison tick. Rate damage now
+  only computes for typed dots and contributes zero when the target
+  carries no defense stats, mirroring the reference's fallback.
+
+- Buff rate modifiers are computed in the character manager against its
+  live stats: the field tick computed amounts from a snapshot taken
+  before the previous buff's removal was processed, so switching lanes
+  quickly produced amounts for a dirty base (a -125 slow applied to a
+  max of 100 clamped it to zero; the removal then restored 125 onto a
+  base of 100). Every drift compounded — movement permanently fast or
+  slow. Apply now asks the character manager to compute and store the
+  amounts in the same message order the removals run in.
+
+- Movement syncs no longer overwrite the character manager's stats: the
+  user sync handler pushed a full character snapshot twice per movement
+  packet (position/animation and quest distance tracking), and each push
+  raced the relative stat changes buffs make — an apply landing between
+  a snapshot and its cast was reverted, an expiry landing on a reverted
+  state clamped stats to zero or re-applied stale values, leaving
+  movement permanently fast or slow after the buff icon expired. Syncs
+  now merge only the fields they own (position, animation, safe
+  position, condition distances), so buff apply/remove stay balanced.
+
+- Zone hit tests match the reference's body-overlap check: the player is
+  a body prism (a radius-10 circle at their position rising 100 from the
+  feet) and a zone connects when that body overlaps the volume. The
+  previous feet-point test missed anyone wading into the water-crossing
+  slow lanes — their feet sat below the lane band while their body
+  reached into it — and also lacked the 10-unit edge forgiveness the
+  reference's circle grants.
+
+- Cube-skill zones tick at the constants table's cube skill cadence
+  (100ms) instead of a hardcoded 1s, matching the reference: the thin
+  hit volumes (70 units tall) sampled once a second missed whenever a
+  player was mid-jump or bobbing in water — the slow lanes crossing the
+  cave's water pools never registered a hit between samples.- Skill zones only apply the effects their attack actually lists: the
+  zone tick used to grant every player the zone skill's same-id effect
+  unconditionally, so the falling rocks (whose attack lists no effects)
+  handed out a stray, logout-persisting "water fun" buff. The lane
+  buffs, which the attacks do list, are unaffected.- Trigger skill zones (set_skill) now own a server-side attack: enable
+  spawns a fire-count-limited zone announced to clients, each fire applies
+  the zone skill's attack damage to players standing inside (max-health
+  share, constant value — the shared stats path, death included) plus its
+  effect as a buff, and broadcasts a tile damage record; disable removes
+  every active zone for the trigger id. This was the actual falling-rock
+  gap: the rocks of the tutorial chase are trigger skills, not map cubes,
+  so the earlier cube-zone damage work never reached them — set_skill only
+  rendered zones client-side. Unlike cube cells (which sit one block below
+  the surface they cover), trigger anchors sit at the ground plane and
+  their hit volume starts right there.- Cube-skill zone attacks now deal their skill damage: the projected
+  attack carries the full damage rule (hit count, constant-damage flag,
+  damage-by-target-max-hp share) and the zone tick applies it before the
+  buff — max-health share, then constant value — reducing the player's
+  health through the shared stats path (regen deferral and death
+  included) and broadcasting a tile damage record with the push
+  direction. The tutorial chase's falling rocks (skill 70000099) hit for
+  10% of max health per tick; their rate/value fields are genuinely zero
+  in the data — the damage was hiding in the max-health share.- Cube-skill zone hit volumes match the skill's attack prism: the zone's
+  range (type, distance, height, width, range adds, apply target) is
+  projected with the skill set and resolved from skill metadata at zone
+  load; box ranges form a rectangle centered on the cube cell, cylinders
+  a circle of radius = distance, both raised one block so the base sits
+  above the cell top. The earlier fixed-radius circle applied the Cave
+  Depths lane buffs when standing near but not on the lane tiles.
+- Cube-skill zones (boost/slow lanes, hazard water) are projected and
+  ticked: the ingest keeps `Ms2CubeSkill` entities even when the cube is
+  a fluid — the fluid case used to swallow them — and the field ticks
+  every second, applying the zone skill's effect as a buff to players
+  standing inside. Cave Depths' (52000066, the Berserker masked-figure
+  chase) lanes now grant "Speed Up" (+300% movement for 2s, refreshed
+  while on the lane) and their blue slow-lane counterpart, matching the
+  reference's cube-skill handling.
+- Map-placed region skills are projected and reach clients: the ingest
+  carries each map's `region_skills` (skill id, level, fire interval,
+  fixed position — boost lanes, zone hazards; cube-placed skills are
+  excluded), the field allocates every zone a stable source id at init,
+  and entering players receive the zone frame so the client executes the
+  effect while they stand inside. Kerning Interchange's launch lane
+  (skill 70000018) now works, unblocking the Masked Boy chase in the
+  main story.
+- Trigger actions `set_actor` and `set_ladder` are implemented: actor
+  figure visibility with its animation sequence, and ladder visibility
+  with the climb-in animation flag and fade delay. Both broadcast the
+  trigger-object update by id (actors and ladders are not projected
+  yet). Together with `select_camera`, `set_agent` and
+  `remove_cinematic_talk` this closes the unimplemented-action warnings
+  on the class-intro and interchange scripted maps.
+- Trigger condition `object_interacted` is implemented: fires when an
+  interact object (matched by its table id) sits in the wanted state (0
+  normal, 1 reactable, 2 hidden). Gates the Blackstar Junkyard's car ride
+  (63000023 `gototria01`): the script arms the car via set_interact_object
+  and waits for the board to flip it back to normal, then runs the
+  cinematic drive and move_user to Lith Harbor — the whole gototria01
+  script is now fully covered by the runtime.
+- Trigger actions `select_camera`, `set_agent` and
+  `remove_cinematic_talk` are implemented: camera vantage on/off for the
+  map's registered cameras (enable=false releases the view), agent figure
+  visibility by trigger id (agents are not projected yet — the update
+  reaches the client by id alone), and clearing the cinematic dialog
+  bubble at the end of a talk beat. Surfaces during the class-intro
+  scripted chains (e.g. 63000026_cs).
+- Scripted maps no longer blanket-defer npc spawns to their trigger
+  scripts: event spawn points (`is_event`) stay script-summoned one-shots,
+  but every plain spawn — quest npcs and roaming mobs — loads per its
+  `on_field_create` flag exactly as on unscripted maps. The old map-wide
+  gate silently removed 525 story-npc spawn points across 275 scripted
+  maps — e.g. the Striker tutorial's Bravo in the Underground Passage
+  (63000017), which no script ever summons, dead-ending the "Into the
+  Underground Passage" turn-in with no npc to talk to.
 - Instanced maps: the instance-field table is now projected
   (`server.instancefield.xml`) and `solo` maps (every tutorial and quest
   instance) allocate a private field per entry instead of dropping

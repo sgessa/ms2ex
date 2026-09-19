@@ -98,6 +98,84 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     end)
   end
 
+  # attaches or releases a map camera vantage for the local player view
+  defp execute_action("set_local_camera", args, _script_name, state) do
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.LocalCamera.set(int_arg(args, :camera_id), bool_arg(args, :enable))
+    )
+
+    state
+  end
+
+  # shows or hides the map's agent figures (scripted npc silhouettes such as
+  # the shadow agents in the class intros). Agents are not projected yet, so
+  # the update reaches the client by trigger id alone — the ids come from the
+  # map's own script, so the client can resolve them
+  # TODO: project trigger agents and track their visibility like cameras
+  defp execute_action("set_agent", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+
+    Enum.reduce(int_list_arg(args, :trigger_ids), state, fn trigger_id, state ->
+      Managers.Field.broadcast(state.topic, Packets.Trigger.update_agent(trigger_id, visible))
+      state
+    end)
+  end
+
+  # toggles a map actor figure (a staged npc silhouette) and plays its
+  # animation sequence. Actors are not projected yet, so the update reaches
+  # the client by trigger id alone — the ids come from the map's own script
+  # TODO: project trigger actors and track their visibility like cameras
+  defp execute_action("set_actor", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+    sequence_name = to_string(args[:initial_sequence] || "")
+
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.Trigger.update_actor(int_arg(args, :trigger_id), visible, sequence_name)
+    )
+
+    state
+  end
+
+  # toggles a map ladder (climb-in animation replay after the fade delay).
+  # Ladders are not projected yet — the update reaches the client by trigger
+  # id alone
+  # TODO: project trigger ladders and track their visibility like cameras
+  defp execute_action("set_ladder", args, _script_name, state) do
+    visible = bool_arg(args, :visible)
+    animate = bool_arg(args, :enable)
+    fade = int_arg(args, :fade)
+
+    Enum.reduce(int_list_arg(args, :trigger_ids), state, fn trigger_id, state ->
+      Managers.Field.broadcast(
+        state.topic,
+        Packets.Trigger.update_ladder(trigger_id, visible, animate, fade)
+      )
+
+      state
+    end)
+  end
+
+  # selects a map camera vantage for the scripted shot; enable false releases
+  # the view. Like set_mesh, only known cameras are sent
+  defp execute_action("select_camera", args, _script_name, state) do
+    cameras = Map.get(state, :trigger_cameras, %{})
+
+    case Map.get(cameras, int_arg(args, :trigger_id)) do
+      %{} = camera ->
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.Trigger.update_camera(camera.id, bool_arg(args, :enable))
+        )
+
+        state
+
+      _ ->
+        state
+    end
+  end
+
   defp execute_action("select_camera_path", args, _script_name, state) do
     Managers.Field.broadcast(
       state.topic,
@@ -222,6 +300,12 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     state
   end
 
+  # clears the cinematic dialog bubble at the end of a scripted talk beat
+  defp execute_action("remove_cinematic_talk", _args, _script_name, state) do
+    Managers.Field.broadcast(state.topic, Packets.Cinematic.remove_talk())
+    state
+  end
+
   # the objective pointer: the client marks the entity's position with the
   # quest text so the player knows where to go next. While the player is
   # being path-moved (scripted sprint/carry) they cannot act on it, so the
@@ -275,20 +359,16 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   # scripted carry: an invisible dummy npc walks the patrol path and each
-  # player's client walks the player behind it
+  # player's client walks the player behind it. the dummy rides the navmesh,
+  # so the carry is refused on maps without one instead of dragging the
+  # player along the raw line under the ground
   defp execute_action("move_user_path", args, _script_name, state) do
     path_name = to_string(args[:patrol_name])
     patrol = Map.get(state[:patrols] || %{}, path_name)
 
     case patrol do
       %{way_points: way_points} when way_points != [] ->
-        Enum.reduce(
-          Map.keys(state.players),
-          Map.put(state, :path_move_active, true),
-          fn character_id, state ->
-            spawn_player_dummy(state, character_id, way_points)
-          end
-        )
+        carry_players(state, path_name, way_points)
 
       _ ->
         state
@@ -536,21 +616,20 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     end
   end
 
-  # enables/disables trigger skill zones — field-owned skill objects (magic
-  # practice circles, dungeon hazards) the client renders at the trigger's
-  # position until disabled again
-  # TODO: server-side zone ticks — field skills with attack effects should
-  # damage entities in range (count fires, 150ms apart) instead of only
-  # rendering client-side
+  # enables/disables trigger skill zones — script-driven skill attacks (the
+  # tutorial chase's falling rocks) the field owns: enable spawns a fire
+  # count-limited zone announced to clients, disable removes every active
+  # zone for the trigger id. The zone applies its attack damage and effect
+  # on each fire, hitting whoever stands inside
   defp execute_action("set_skill", args, _script_name, state) do
     trigger_ids = int_list_arg(args, :trigger_ids)
     enabled = bool_arg(args, :enable)
 
     Enum.reduce(trigger_ids, state, fn trigger_id, state ->
       if enabled do
-        enable_trigger_skill(state, trigger_id)
+        Managers.Field.RegionSkill.spawn_trigger_zone(state, trigger_id)
       else
-        disable_trigger_skill(state, trigger_id)
+        Managers.Field.RegionSkill.remove_trigger_zones(state, trigger_id)
       end
     end)
   end
@@ -575,7 +654,18 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
   defp execute_action("set_visible_breakable_object", args, _script_name, state) do
     visible = bool_arg(args, :visible)
-    set_breakables(state, int_list_arg(args, :trigger_ids), fn b -> %{b | visible: visible} end)
+    now = System.monotonic_time(:millisecond)
+
+    set_breakables(state, int_list_arg(args, :trigger_ids), fn breakable ->
+      if visible and not breakable.visible do
+        # each hidden -> visible transition re-phases a moving platform's
+        # shuttle: the packet carries this tick and the client restarts the
+        # move cycle from it, so the platform rides forward from its start
+        %{breakable | visible: true, base_tick: now}
+      else
+        %{breakable | visible: visible}
+      end
+    end)
   end
 
   # flips interact objects between normal/reactable/hidden
@@ -589,16 +679,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         _ -> :normal
       end
 
-    state.interactable
-    |> Enum.filter(fn {_uuid, object} -> object.id in ids end)
-    |> Enum.each(fn {_uuid, object} ->
-      Managers.Field.broadcast(
-        state.topic,
-        Packets.InteractObject.update(%{object | state: state_atom})
-      )
-    end)
-
-    state
+    Managers.Field.InteractObject.set_state(state, ids, state_atom)
   end
 
   # a facial expression overlay on the player (spawn point 0) or the
@@ -684,10 +765,9 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         case Map.get(state.breakables, id) do
           %{} = breakable ->
             breakable = fun.(breakable)
-            entry = %{uuid: breakable.uuid, state: breakable.state, visible: breakable.visible}
+            entry = Map.take(breakable, [:uuid, :state, :visible, :base_tick])
 
-            {[%{entry | uuid: breakable.uuid} | entries],
-             put_in(state, [:breakables, id], breakable)}
+            {[entry | entries], put_in(state, [:breakables, id], breakable)}
 
           nil ->
             {entries, state}
@@ -754,47 +834,6 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
       [] ->
         nil
-    end
-  end
-
-  defp enable_trigger_skill(state, trigger_id) do
-    case Map.get(state.trigger_skills, trigger_id) do
-      %{} = trigger_skill ->
-        source_id = Ms2ex.generate_int()
-        position = struct(Types.Coord, trigger_skill.position)
-
-        cast =
-          Types.SkillCast.build(0, %{
-            id: 0,
-            skill_id: trigger_skill.skill_id,
-            skill_level: trigger_skill.skill_level,
-            position: position,
-            rotation: struct(Types.Coord, trigger_skill.rotation),
-            # first skill tick lands shortly after the zone is placed
-            next_tick: Ms2ex.sync_ticks() + 150
-          })
-
-        Managers.Field.broadcast(
-          state.topic,
-          Packets.RegionSkill.add(source_id, cast, [position])
-        )
-
-        put_in(state, [:trigger_skills, trigger_id, :source_id], source_id)
-
-      _ ->
-        state
-    end
-  end
-
-  defp disable_trigger_skill(state, trigger_id) do
-    case Map.get(state.trigger_skills, trigger_id) do
-      %{source_id: source_id} when is_integer(source_id) ->
-        Managers.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
-        {_, state} = pop_in(state, [:trigger_skills, trigger_id, :source_id])
-        state
-
-      _ ->
-        state
     end
   end
 
@@ -962,6 +1001,26 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       {true, box_id |> String.trim_leading("!") |> Integer.parse() |> elem(0)}
     else
       {false, Integer.parse(box_id) |> elem(0)}
+    end
+  end
+
+  defp carry_players(state, path_name, way_points) do
+    if Navigation.has_navmesh?(state.map_id) do
+      Enum.reduce(
+        Map.keys(state.players),
+        Map.put(state, :path_move_active, true),
+        fn character_id, state ->
+          spawn_player_dummy(state, character_id, way_points)
+        end
+      )
+    else
+      Logger.warning(
+        "map " <>
+          to_string(state.map_id) <>
+          " has no navmesh; move_user_path " <> path_name <> " ignored"
+      )
+
+      state
     end
   end
 

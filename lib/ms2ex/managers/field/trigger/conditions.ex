@@ -24,17 +24,20 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
     job_code = int_arg(args, :job_code)
     boxes = Enum.filter(Map.values(Map.get(state, :trigger_boxes, %{})), &(&1.id in box_ids))
 
-    state
-    |> Map.get(:player_positions, %{})
-    |> Map.values()
-    |> Enum.any?(fn
-      %{position: %{} = position, job_code: code} ->
-        (job_code == 0 or code == job_code) and
-          Enum.any?(boxes, &Trigger.box_contains?(&1, position))
+    hit? =
+      state
+      |> Map.get(:player_positions, %{})
+      |> Map.values()
+      |> Enum.any?(fn
+        %{position: %{} = position, job_code: code} ->
+          (job_code == 0 or code == job_code) and
+            Enum.any?(boxes, &Trigger.box_contains?(&1, position))
 
-      _ ->
-        false
-    end)
+        _ ->
+          false
+      end)
+
+    hit?
   end
 
   def evaluate("monster_dead", args, _machine, _now, state) do
@@ -58,10 +61,13 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
         false
 
       box ->
-        state.npcs
-        |> Map.values()
-        |> Enum.any?(fn npc ->
-          npc.spawn_point_id in spawn_point_ids and Trigger.box_contains?(box, npc.position)
+        matching =
+          state.npcs
+          |> Map.values()
+          |> Enum.filter(fn npc -> npc.spawn_point_id in spawn_point_ids end)
+
+        Enum.any?(matching, fn npc ->
+          Trigger.box_contains?(box, npc.position) or Trigger.npc_body_in_box?(box, npc)
         end)
     end
   end
@@ -71,6 +77,25 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
   def evaluate("user_value", args, _machine, _now, state) do
     key = to_string(args[:key] || "")
     Map.get(Map.get(state, :user_values, %{}), key) == int_arg(args, :value)
+  end
+
+  # true once any player is on the field — quest maps wait on this gate
+  # before starting their intro cinematics
+  def evaluate("check_user", _args, _machine, _now, state) do
+    map_size(Map.get(state, :players, %{})) > 0
+  end
+
+  # true when one of the interact objects (matched by its table id) currently
+  # sits in the wanted state (0 normal, 1 reactable, 2 hidden) — e.g. the
+  # tutorial car the moment the player boards it
+  def evaluate("object_interacted", args, _machine, _now, state) do
+    interact_ids = int_list_arg(args, :interact_ids)
+    wanted = int_arg(args, :state)
+
+    state
+    |> Map.get(:interactable, %{})
+    |> Map.values()
+    |> Enum.any?(&(&1.id in interact_ids and interact_state_code(&1.state) == wanted))
   end
 
   def evaluate("widget_condition", args, _machine, _now, state) do
@@ -124,4 +149,8 @@ defmodule Ms2ex.Managers.Field.Trigger.Conditions do
       end
     end)
   end
+
+  defp interact_state_code(:reactable), do: 1
+  defp interact_state_code(:hidden), do: 2
+  defp interact_state_code(_state), do: 0
 end

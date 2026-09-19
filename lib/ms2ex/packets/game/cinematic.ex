@@ -7,6 +7,9 @@ defmodule Ms2ex.Packets.Cinematic do
     view: 0x3,
     set_skip: 0x4,
     start_skip: 0x5,
+    talk: 0x6,
+    remove_talk: 0x7,
+    balloon_talk: 0x8,
     caption: 0xA,
     opening: 0xB
   }
@@ -131,11 +134,18 @@ defmodule Ms2ex.Packets.Cinematic do
   def talk(npc_id, illustration, msg, duration, align \\ :left) do
     __MODULE__
     |> build()
-    |> put_byte(0x6)
+    |> put_byte(@modes.talk)
     |> put_int(npc_id)
     |> put_string(illustration)
     |> put_ustring(msg)
     |> put_int(duration)
     |> put_byte(Map.get(@aligns, align, 0))
+  end
+
+  # clears the cinematic dialog bubble at the end of a scripted talk beat
+  def remove_talk do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.remove_talk)
   end
 end

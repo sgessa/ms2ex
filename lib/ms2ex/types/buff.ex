@@ -142,21 +142,31 @@ defmodule Ms2ex.Types.Buff do
       dot ->
         max_hp = owner_max_hp(buff.owner)
         cur_hp = owner_cur_hp(buff.owner)
-
-        hp =
-          if dot.is_const_damage do
-            dot.hp_value
-          else
-            rate_dmg =
-              Context.Damage.calculate_rate(dot.rate, buff.caster, buff.owner, dot.type == 1).dmg
-
-            rate_dmg + dot.hp_value
-          end
-
-        hp = hp + trunc(dot.damage_by_target_max_hp * max_hp)
+        hp = dot_hp(dot, buff) + trunc(dot.damage_by_target_max_hp * max_hp)
         hp = if dot.not_kill, do: min(hp, cur_hp - 1), else: hp
 
         {max(hp, 0), max(dot.sp_value, 0), max(dot.ep_value, 0)}
+    end
+  end
+
+  # rate damage scales off the source's attack and only exists for dots with
+  # an attack type — map hazards (poison water) deal their max-health share
+  # alone; a typed dot against a target without defense stats contributes
+  # zero rather than crashing the field
+  defp dot_hp(dot, buff) do
+    cond do
+      dot.is_const_damage ->
+        dot.hp_value
+
+      dot.type in [nil, 0] ->
+        dot.hp_value
+
+      true ->
+        try do
+          Context.Damage.calculate_rate(dot.rate, buff.caster, buff.owner, dot.type == 1).dmg
+        rescue
+          _ -> 0
+        end + dot.hp_value
     end
   end
 
@@ -186,10 +196,12 @@ defmodule Ms2ex.Types.Buff do
     end
   end
 
-  def stat_modifiers(%__MODULE__{} = buff, character) do
-    status = buff.effect[:status] || %{}
-    values = Map.get(status, :values, %{})
-    rates = Map.get(status, :rates, %{})
+  # computes the concrete stat amounts an effect grants, scaled by the
+  # character's stats as they are RIGHT NOW — callers run this in the
+  # character manager so no stale snapshot can skew the amounts
+  def status_modifiers(status, character) do
+    values = Map.get(status || %{}, :values, %{})
+    rates = Map.get(status || %{}, :rates, %{})
 
     values
     |> Enum.reduce(%{}, fn {stat, value}, acc -> put_modifier(acc, character, stat, value) end)
@@ -198,6 +210,10 @@ defmodule Ms2ex.Types.Buff do
         put_modifier(acc, character, stat, trunc(rate * stat_max(character, stat)))
       end)
     end)
+  end
+
+  def stat_modifiers(%__MODULE__{} = buff, character) do
+    status_modifiers(buff.effect[:status], character)
   end
 
   defp put_modifier(acc, character, stat, amount) do

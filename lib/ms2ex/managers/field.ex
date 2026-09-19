@@ -594,6 +594,13 @@ defmodule Ms2ex.Managers.Field do
     field_name = field_name(map_id, channel_id, instance)
 
     {local_id_counter, portals} = __MODULE__.Portal.load(map_id, @local_id_counter)
+
+    {local_id_counter, region_skill_zones} =
+      __MODULE__.RegionSkill.load_zones(map_id, local_id_counter)
+
+    {local_id_counter, cube_skill_zones} =
+      __MODULE__.RegionSkill.load_cube_zones(map_id, local_id_counter)
+
     interactable = __MODULE__.InteractObject.load(map_id)
 
     state =
@@ -617,6 +624,9 @@ defmodule Ms2ex.Managers.Field do
         performance: nil,
         players: %{},
         portals: portals,
+        region_skill_zones: region_skill_zones,
+        cube_skill_zones: cube_skill_zones,
+        trigger_skill_zones: %{},
         regions: %{},
         sessions: %{},
         stage: MapSet.new(),
@@ -631,6 +641,7 @@ defmodule Ms2ex.Managers.Field do
     send(self(), :tick_npcs)
     send(self(), :send_updates)
     send(self(), :tick_banners)
+    send(self(), :tick_cube_zones)
 
     {:ok, state, {:continue, {:add_character, character}}}
   end
@@ -969,6 +980,24 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
+  # cube-skill zones re-apply their effect every cycle: while a player
+  # stands inside, re-adding refreshes the effect window; stepping off lets
+  # the short duration expire it naturally. The cycle comes from the
+  # constants table (stored in seconds — 0.1 = 100ms), matching the
+  # reference's cube skill cadence
+  @default_cube_zone_tick_ms 100
+  def handle_info(:tick_cube_zones, state) do
+    Process.send_after(self(), :tick_cube_zones, cube_zone_interval())
+    {:noreply, __MODULE__.RegionSkill.tick_cube_zones(state)}
+  end
+
+  # a trigger skill zone fires on the script's beat (set_skill enable
+  # schedules it); each fire hits whoever stands inside, and the zone
+  # expires once its fire count runs out
+  def handle_info({:fire_trigger_zone, source_id}, state) do
+    {:noreply, __MODULE__.RegionSkill.fire_trigger_zone(state, source_id)}
+  end
+
   # sent whenever a character leaves the field: shared fields linger for
   # a grace window (a party member may be right behind), instanced fields
   # stop as soon as they empty out
@@ -1003,6 +1032,13 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(data, state) do
     Logger.warning("[Field] Unknown message: #{inspect(data)}")
     {:noreply, state}
+  end
+
+  defp cube_zone_interval do
+    case Storage.Tables.Constants.get(:global_cube_skill_interval_time) do
+      seconds when is_number(seconds) and seconds > 0 -> trunc(seconds * 1000)
+      _ -> @default_cube_zone_tick_ms
+    end
   end
 
   defp schedule_dispose(state) do
