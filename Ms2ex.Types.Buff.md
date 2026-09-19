@@ -21,6 +21,8 @@
 
 # `stat_modifiers`
 
+# `status_modifiers`
+
 # `stun`
 
 # `tick_skills`

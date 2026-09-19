@@ -3,6 +3,8 @@
 
 # `get_bounds`
 
+# `get_cube_skills`
+
 # `get_field_spawn`
 
 ```elixir
@@ -33,6 +35,8 @@ of a fluid column that is not shallow.
 # `get_portals`
 
 # `get_property`
+
+# `get_region_skills`
 
 # `get_revival_return_id`
 

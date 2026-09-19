@@ -299,6 +299,7 @@ Ms2ex.Packets.LevelUp.md
 Ms2ex.Packets.Liftable.md
 Ms2ex.Packets.LoadCubes.md
 Ms2ex.Packets.LoadUgcMap.md
+Ms2ex.Packets.LocalCamera.md
 Ms2ex.Packets.LoginRequired.md
 Ms2ex.Packets.LoginResult.md
 Ms2ex.Packets.LoginToGame.md

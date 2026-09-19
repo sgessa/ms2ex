@@ -24,6 +24,13 @@ every axis to compensate for entity size.
 
 # `maybe_release_guide_hold`
 
+# `npc_body_in_box?`
+
+Whether an npc's body capsule overlaps a trigger box: the reference tests
+the box against both the npc's position and its body shape, so a large npc
+(or one riding a mount) registers while its body crosses the box edge even
+when its position point never enters the box.
+
 # `release_guide_hold`
 
 # `skip_cutscene`

@@ -17,6 +17,14 @@ state transition is broadcast to the whole field.
 Gathering nodes get no animation here: the harvest decides success first
 and sends the animation with its result.
 
+# `set_state`
+
+Script-driven state change (set_interact_object): flips matching objects to
+the wanted state and broadcasts each actual change. Objects already in the
+state are left untouched so a re-arming cycle does not spam clients, and no
+reset timer is touched — the scripted state stands until a player reacts or
+another script changes it.
+
 # `tick`
 
 Flips objects whose cooldown elapsed (Normal -> Reactable or Hidden).

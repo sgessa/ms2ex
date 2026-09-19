@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-1695AF85.js"></script>
+    <script defer src="dist/sidebar_items-2490FD04.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -145,9 +145,93 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#fire_trigger_zone/2" data-no-tooltip="" translate="no">fire_trigger_zone(state, source_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fires a trigger skill zone: applies the attack to whoever stands inside
+(damage, then the skill's effect as a buff) and expires the zone once its
+fire count runs out.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#load_cube_zones/2" data-no-tooltip="" translate="no">load_cube_zones(map_id, counter)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Map cubes carrying a skill zone (boost/slow lanes, hazard water). Cube
+zones are not announced to clients — the lane visuals are map decor —
+the field ticks them and applies the zone skill's effect to players
+standing inside.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#load_zones/2" data-no-tooltip="" translate="no">load_zones(map_id, counter)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+zones at a fixed position. Each zone gets a stable source id for the field
+session; entering players receive the zone add frame and the client runs
+the zone effect while they stand inside. Ids draw from the field's local
+counter so they never collide with entities.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#maybe_tick/2" data-no-tooltip="" translate="no">maybe_tick(source_id, state)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_trigger_zones/2" data-no-tooltip="" translate="no">remove_trigger_zones(state, trigger_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes every active trigger skill zone spawned for the trigger id.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#send_zones/2" data-no-tooltip="" translate="no">send_zones(character, zones)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Sends the field's map-placed skill zones to an entering player.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#spawn_trigger_zone/2" data-no-tooltip="" translate="no">spawn_trigger_zone(state, trigger_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Spawns the trigger skill zone for the trigger id: a one-shot zone that
+fires <code class="inline">count</code> times at the fixed interval, announced to clients so they
+render the effect (the falling rocks).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#tick_cube_zones/1" data-no-tooltip="" translate="no">tick_cube_zones(state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies each cube-skill zone's attack to the players standing inside:
+the zone's damage rule, then its effect as a buff (e.g. the boost lanes'
+movement-speed bonus). Re-applying while inside refreshes the effect
+window; the short effect duration expires it shortly after stepping off.</p></div>
 
     </div>
 
@@ -175,7 +259,7 @@ MS2EX
       <h1 class="signature" translate="no">add(skill_cast, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L10" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L370" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -197,7 +281,7 @@ MS2EX
       <h1 class="signature" translate="no">apply_splash(splash_cast, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L78" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L438" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -207,6 +291,81 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="fire_trigger_zone/2">
+
+  <div class="detail-header">
+    <a href="#fire_trigger_zone/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fire_trigger_zone(state, source_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L155" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Fires a trigger skill zone: applies the attack to whoever stands inside
+(damage, then the skill's effect as a buff) and expires the zone once its
+fire count runs out.</p>
+  </section>
+</section>
+<section class="detail" id="load_cube_zones/2">
+
+  <div class="detail-header">
+    <a href="#load_cube_zones/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">load_cube_zones(map_id, counter)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Map cubes carrying a skill zone (boost/slow lanes, hazard water). Cube
+zones are not announced to clients — the lane visuals are map decor —
+the field ticks them and applies the zone skill's effect to players
+standing inside.</p>
+  </section>
+</section>
+<section class="detail" id="load_zones/2">
+
+  <div class="detail-header">
+    <a href="#load_zones/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">load_zones(map_id, counter)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+zones at a fixed position. Each zone gets a stable source id for the field
+session; entering players receive the zone add frame and the client runs
+the zone effect while they stand inside. Ids draw from the field's local
+counter so they never collide with entities.</p>
   </section>
 </section>
 <section class="detail" id="maybe_tick/2">
@@ -219,7 +378,7 @@ MS2EX
       <h1 class="signature" translate="no">maybe_tick(source_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L57" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L417" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -229,6 +388,99 @@ MS2EX
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="remove_trigger_zones/2">
+
+  <div class="detail-header">
+    <a href="#remove_trigger_zones/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">remove_trigger_zones(state, trigger_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L137" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Removes every active trigger skill zone spawned for the trigger id.</p>
+  </section>
+</section>
+<section class="detail" id="send_zones/2">
+
+  <div class="detail-header">
+    <a href="#send_zones/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">send_zones(character, zones)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L44" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Sends the field's map-placed skill zones to an entering player.</p>
+  </section>
+</section>
+<section class="detail" id="spawn_trigger_zone/2">
+
+  <div class="detail-header">
+    <a href="#spawn_trigger_zone/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">spawn_trigger_zone(state, trigger_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L100" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Spawns the trigger skill zone for the trigger id: a one-shot zone that
+fires <code class="inline">count</code> times at the fixed interval, announced to clients so they
+render the effect (the falling rocks).</p>
+  </section>
+</section>
+<section class="detail" id="tick_cube_zones/1">
+
+  <div class="detail-header">
+    <a href="#tick_cube_zones/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">tick_cube_zones(state)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L190" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Applies each cube-skill zone's attack to the players standing inside:
+the zone's damage rule, then its effect as a buff (e.g. the boost lanes'
+movement-speed bonus). Re-applying while inside refreshes the effect
+window; the short effect duration expires it shortly after stepping off.</p>
   </section>
 </section>
 

@@ -572,6 +572,7 @@ interact with (weeds, telescopes, gathering nodes, ...).
   - [Ms2ex.Packets.Liftable](Ms2ex.Packets.Liftable.md)
   - [Ms2ex.Packets.LoadCubes](Ms2ex.Packets.LoadCubes.md)
   - [Ms2ex.Packets.LoadUgcMap](Ms2ex.Packets.LoadUgcMap.md)
+  - [Ms2ex.Packets.LocalCamera](Ms2ex.Packets.LocalCamera.md)
   - [Ms2ex.Packets.LoginRequired](Ms2ex.Packets.LoginRequired.md)
   - [Ms2ex.Packets.LoginResult](Ms2ex.Packets.LoginResult.md)
   - [Ms2ex.Packets.LoginToGame](Ms2ex.Packets.LoginToGame.md)

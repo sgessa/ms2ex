@@ -3,6 +3,8 @@
 
 # `add`
 
+# `add_zone`
+
 # `remove`
 
 ---

@@ -9,6 +9,8 @@
 
 # `opening`
 
+# `remove_talk`
+
 # `set_skip_scene`
 
 # `set_skip_state`

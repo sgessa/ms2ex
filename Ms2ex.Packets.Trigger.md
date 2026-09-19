@@ -23,7 +23,15 @@
 
 # `start_movie`
 
+# `update_actor`
+
+# `update_agent`
+
+# `update_camera`
+
 # `update_effect`
+
+# `update_ladder`
 
 # `update_mesh`
 

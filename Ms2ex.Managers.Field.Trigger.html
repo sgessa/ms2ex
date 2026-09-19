@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-1695AF85.js"></script>
+    <script defer src="dist/sidebar_items-2490FD04.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -188,6 +188,19 @@ every axis to compensate for entity size.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#npc_body_in_box?/2" data-no-tooltip="" translate="no">npc_body_in_box?(box, npc_data)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether an npc's body capsule overlaps a trigger box: the reference tests
+the box against both the npc's position and its body shape, so a large npc
+(or one riding a mount) registers while its body crosses the box edge even
+when its position point never enters the box.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#release_guide_hold/1" data-no-tooltip="" translate="no">release_guide_hold(state)</a>
 
       </div>
@@ -258,7 +271,7 @@ every axis to compensate for entity size.</p></div>
       <h1 class="signature" translate="no">box_contains?(box, map)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L350" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L352" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -281,7 +294,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">drop_position(state, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L146" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L148" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -303,7 +316,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">guide_held?(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L211" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L213" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -325,7 +338,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">init_machines(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L96" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L98" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -369,7 +382,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">maybe_release_guide_hold(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L218" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L220" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -379,6 +392,31 @@ every axis to compensate for entity size.</p>
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="npc_body_in_box?/2">
+
+  <div class="detail-header">
+    <a href="#npc_body_in_box?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">npc_body_in_box?(box, npc_data)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L367" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Whether an npc's body capsule overlaps a trigger box: the reference tests
+the box against both the npc's position and its body shape, so a large npc
+(or one riding a mount) registers while its body crosses the box edge even
+when its position point never enters the box.</p>
   </section>
 </section>
 <section class="detail" id="release_guide_hold/1">
@@ -391,7 +429,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">release_guide_hold(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L214" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L216" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -413,7 +451,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">skip_cutscene(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L170" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L172" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -435,7 +473,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">tick(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L236" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L238" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -457,7 +495,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">track_job(state, character_id, job_code)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L126" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L128" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -479,7 +517,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">track_position(state, character_id, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L114" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L116" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -501,7 +539,7 @@ every axis to compensate for entity size.</p>
       <h1 class="signature" translate="no">update_widget(state, widget_key, arg)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L152" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/trigger.ex#L154" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

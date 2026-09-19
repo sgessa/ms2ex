@@ -300,6 +300,7 @@ Ms2ex.Packets.LevelUp.html
 Ms2ex.Packets.Liftable.html
 Ms2ex.Packets.LoadCubes.html
 Ms2ex.Packets.LoadUgcMap.html
+Ms2ex.Packets.LocalCamera.html
 Ms2ex.Packets.LoginRequired.html
 Ms2ex.Packets.LoginResult.html
 Ms2ex.Packets.LoginToGame.html
@@ -504,8 +505,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-F6704D7C.js
-dist/sidebar_items-1695AF85.js
+dist/search_data-B48FA2B6.js
+dist/sidebar_items-2490FD04.js
 index.html
 license.html
 readme.html

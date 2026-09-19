@@ -14,6 +14,7 @@
   first_attacker: term(),
   last_attacker: term(),
   last_control_at: term(),
+  map_id: term(),
   npc: term(),
   object_id: term(),
   patrol: term(),

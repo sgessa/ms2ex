@@ -9,6 +9,8 @@ seeds the scripted-carry follow-dummy that `Managers.Field.Npc` spawns.
 
 # `leg_animations`
 
+# `leg_speed`
+
 # `move_npc`
 
 Walks a story npc along a named patrol path (script move_npc): the walk
