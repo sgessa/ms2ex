@@ -1,8 +1,10 @@
 # Mob AI: aggro, chase & attack
 
 Status: partial. Mobs acquire targets by proximity and on being hit, chase
-the engaged player over the navmesh, and stop inside attack range. They do
-not yet attack, cast skills, or run the client's AI scripts.
+the engaged player over the navmesh, stop inside attack range, and cast
+their first skill entry against the target (with real damage). Not yet
+implemented: multiple skill entries / rotation, attack-prism target
+resolution, on-hit effects, and the client's AI scripts.
 
 ## How it works
 
@@ -71,6 +73,36 @@ target's live position and walks it:
 `stop_range` is the mob's first skill entry's attack `range.distance`
 (resolved through `Storage.Skills`), falling back to capsule radius + 80
 (melee contact) for mobs without usable attack metadata.
+
+### Cast cycle
+
+A mob standing inside `stop_range` swings on cooldown: it pins itself in
+place facing the target, plays the skill motion's sequence (state PcSkill,
+16) through a 400ms windup, then the swing resolves at the hit moment —
+damage only applies when the target is still within the attack range plus
+60 slack, otherwise the swing whiffs (cooldown still runs). The cast
+occupies the mob until the resolve; between swings it settles into
+Attack_Idle_A (fallback Idle_A) while the cooldown runs.
+
+- the active cast owns the mob's presentation: stand ticks during the
+  windup never touch the animation, so the client plays the full swing
+- every non-moving branch (stand, cast start, windup, resolve) touches
+  the battle's `last_move_at`, so the first chase step after a cast
+  integrates exactly the real elapsed time — without this, the step
+  clamp turns the post-cast resume into a clamped 2-tick lurch (reads
+  as the mob teleporting / moving very fast after every swing)
+- animation changes during stands request a control send (swing →
+  combat-idle), so the client sees the settle instead of looping the
+  swing through the whole cooldown
+- the hit flows to the field as an event; `Npc.tick` applies it through
+  the character manager (`{:mob_hit, params}`), where the damage is
+  computed against the character's own defenses (rate × mob physical
+  attack × resistance factor ÷ defense × 4, mirroring the player→mob
+  pipeline) — funneling death, regen deferral and the stat broadcast
+  through the normal paths — and the field broadcasts the SkillDamage
+  packet so every client sees the numbers
+- cooldowns: `cooldown_time` from the skill level doc, floor of 750ms
+  between swings
 
 ### Clock caveat
 
@@ -162,9 +194,10 @@ the npc) and a `distance` block (`sight`, `sight_height_up`,
   target-policy, conditions, weighted selects, per-node cool-times, ai
   presets, extra data) that drive per-mob combat behavior. `ai_path` is
   projected and ready to key them.
-- mob skill casting and mob→player damage: resolve attack-prism targets
-  server-side, run the damage pipeline in reverse (mob as attacker),
-  broadcast SkillDamage, apply on-hit effects. Player death flow exists.
+- mob skill casting beyond the first entry: skill rotation across entries,
+  attack-prism target resolution (multi-target / splash), apply on-hit
+  effects (dot, knockback, buffs). Single-entry cast + reverse damage
+  pipeline + SkillDamage broadcast are done; player death flow exists.
 - target policies beyond nearest: far / mid / random band / buff-marker
   / grabbed-user targets, aggro against other npcs (friendly == 1 mobs
   fight hostile mobs), pet taming behavior, summon/slave relationships.

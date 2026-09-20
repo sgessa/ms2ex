@@ -3,6 +3,15 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Mob attack casting: an engaged mob in stop range casts its first skill
+  entry — ControlNpc carries the motion's sequence in PcSkill state, the
+  swing lands at the windup's end if the target is still within the
+  attack range (else it whiffs), and the hit is applied through the
+  character manager (reverse damage pipeline) with a SkillDamage
+  broadcast. Cast holds keep `last_move_at` fresh so the post-cast chase
+  resumes at per-tick speed (no clamped lurch), and stands send a control
+  on animation changes so the swing → combat-idle settle is visible
+
 - Basic mob AI — aggro, chase and control state. Mobs acquire targets by a
   500ms proximity scan inside their metadata sight band and engage the
   attacker the moment they are hit (holding it for 5s so ranged pulls

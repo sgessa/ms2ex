@@ -376,6 +376,71 @@ defmodule Ms2ex.FieldNpcBattleTest do
     assert npc.position.x < 400
   end
 
+  test "a mob that stood through a cast resumes the chase at per-tick speed" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    # stub_metadata replaces the whole storage stub, so the navmesh keys
+    # are re-declared here alongside the skill/animation docs
+    verts = mesh_verts([{0, 0, 0}, {40, 0, 0}, {40, 0, 40}, {0, 0, 40}])
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh:#{xblock}" => %{tiles: [%{verts: verts, polys: [[0, 1, 2, 3]]}]},
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 1.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A"},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      },
+      # anikey docs key on the lowercased model name; declaring the keys
+      # here also makes the atoms exist for Storage.Animations' to_existing_atom
+      "animation:testmob" => %{
+        sequences: %{Attack_001_A: 7, Attack_Idle_A: 8, Run_A: 9, Idle_A: 10}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    # engage and complete one full cast cycle (windup, resolve, cooldown)
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+    assert npc.battle.cast
+
+    # the windup holds the swing animation — the cast owns the presentation
+    {npc, _} = Battle.tick(npc, state, 300)
+    assert npc.animation == 7
+
+    {npc, _} = Battle.tick(npc, state, 700)
+    assert npc.battle.cast == nil
+
+    # between swings the mob settles into its combat idle
+    {npc, _} = Battle.tick(npc, state, 750)
+    assert npc.animation == 8
+
+    # the player breaks away: the first chase tick advances exactly the run
+    # speed × real elapsed time (50ms since the last stand at 750), not a
+    # clamped multi-tick lurch
+    state = field_with_player_at(1400, 0)
+    {npc, _} = Battle.tick(npc, state, 800)
+    assert npc.velocity != {0, 0, 0}
+    assert_in_delta(npc.position.x, 15.0, 0.5)
+  end
+
   test "a mob in stop range swings at its target on cooldown" do
     {map_id, xblock} = unique_map()
     stub_navmesh(xblock, map_id)

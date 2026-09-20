@@ -308,7 +308,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       # standing with the target just beyond range: hold until it clearly
       # pulls away instead of flipping between stand and run every tick
       npc.velocity == {0, 0, 0} and d2 < square(battle.stop_range + @resume_margin) ->
-        {stand(npc, battle, target_position), []}
+        {stand(npc, battle, target_position, now), []}
 
       true ->
         walk(npc, battle, target_position, now)
@@ -323,24 +323,34 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       # the swing starts immediately: resolve its hit when due
       cast_tick(npc, npc.battle, field_state, target_position, now)
     else
-      {stand(npc, battle, target_position), []}
+      {stand(npc, battle, target_position, now), []}
     end
   end
 
   # inside attack range: hold position facing the target
-  defp stand(npc, battle, target_position) do
+  defp stand(npc, battle, target_position, now) do
     was_moving = npc.velocity != {0, 0, 0}
     rotation = face_toward(npc.position, target_position, npc.rotation)
 
+    # an active cast owns the presentation until it resolves; outside one
+    # the mob settles into its combat idle
+    animation =
+      if battle.cast do
+        npc.animation
+      else
+        sequence_id(npc, "Attack_Idle_A") || sequence_id(npc, "Idle_A") || npc.animation
+      end
+
+    anim_changed? = animation != npc.animation
+
     npc = %{
       npc
-      | battle: %{battle | path: nil, path_index: 1, goal: nil},
+      | battle: %{battle | path: nil, path_index: 1, goal: nil, last_move_at: now},
         velocity: {0, 0, 0},
-        animation:
-          sequence_id(npc, "Attack_Idle_A") || sequence_id(npc, "Idle_A") || npc.animation
+        animation: animation
     }
 
-    if was_moving or rotation != npc.rotation do
+    if was_moving or rotation != npc.rotation or anim_changed? do
       %{npc | rotation: rotation, send_control?: true}
     else
       npc
@@ -372,7 +382,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     npc = %{
       npc
-      | battle: %{battle | cast: cast},
+      | battle: %{battle | cast: cast, last_move_at: now},
         velocity: {0, 0, 0},
         rotation: rotation,
         animation: cast.sequence_id || npc.animation,
@@ -392,7 +402,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     cond do
       now < cast.hit_at ->
-        {stand(npc, battle, target_position), []}
+        {stand(npc, battle, target_position, now), []}
 
       true ->
         target_position = get_in(field_state, [:player_positions, battle.target_id, :position])
@@ -409,7 +419,12 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
             send_control?: true
         }
 
-        battle = %{battle | cast: nil, next_attack_at: now + @min_attack_interval_ms}
+        battle = %{
+          battle
+          | cast: nil,
+            next_attack_at: now + @min_attack_interval_ms,
+            last_move_at: now
+        }
 
         if in_range? do
           hit = %{
