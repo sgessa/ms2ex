@@ -3,6 +3,12 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Rooted mobs no longer move: an explicit zero in the npc's action
+  speeds (e.g. Nepenthus plants) means stationary, instead of falling
+  back to a default chase speed and sliding out of the ground; they
+  stand their ground and strike only when the target is within reach.
+  Walk-only mobs (zero run speed, positive walk speed) chase at their
+  walk gait
 - Aggro resets on player death: a player with a tombstone on the field
   is invisible to mob scans and is dropped as a target immediately, so
   mobs stop attacking the body and walk home (or go idle at their spawn

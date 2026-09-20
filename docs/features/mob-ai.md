@@ -56,6 +56,12 @@ new target when idle. Friendly npcs (`type: :npc`) never engage.
 While engaged and outside `stop_range`, the mob keeps a navmesh path to the
 target's live position and walks it:
 
+- a mob with no locomotion speed at all (both `action.walk_speed` and
+  `action.run_speed` zero — rooted mobs like the Nepenthus plants) cannot
+  pursue: it stands its ground, rises into its combat idle, and only
+  strikes when the target comes within reach. Walk-only mobs (run speed
+  zero, walk speed positive) chase at their walk gait
+
 - paths come from `Navigation.find_path/3` (below); the mob runs at its
   metadata `action.run_speed` (units/second) with velocity broadcast through
   ControlNpc so the client interpolates

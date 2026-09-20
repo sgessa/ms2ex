@@ -317,6 +317,58 @@ defmodule Ms2ex.FieldNpcBattleTest do
            "mob stood #{inspect(stutter_ticks)} ticks while clearly out of range"
   end
 
+  test "a rooted mob never moves and strikes only within reach" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    stub_metadata(%{
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 1.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A"},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      }
+    })
+
+    # zero movement speeds: the mob is rooted (e.g. a Nepenthus plant)
+    metadata =
+      mob_metadata(
+        action: %{walk_speed: 0, run_speed: 0},
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+
+    # a far target is not pursued: the mob holds its ground
+    state = field_with_player_at(1200, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    assert npc.battle.mode == :chase
+
+    {npc, _} = Battle.tick(npc, state, 200)
+    assert npc.position.x == 0
+    assert npc.velocity == {0, 0, 0}
+    refute npc.battle.cast
+
+    # the player steps into reach: the mob strikes without moving
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 300)
+    assert npc.battle.cast
+
+    {npc, hits} = Battle.tick(npc, state, 700)
+    assert [%{character_id: 1, attack: 500}] = hits
+    assert npc.position.x == 0
+    assert npc.velocity == {0, 0, 0}
+  end
+
   test "a mob drops a dead target and walks home" do
     {map_id, xblock} = unique_map()
     stub_navmesh(xblock, map_id)

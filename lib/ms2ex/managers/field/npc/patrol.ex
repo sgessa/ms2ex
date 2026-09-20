@@ -144,10 +144,15 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   # npc ground speed for a gait (units/second) from the metadata's action
-  # speeds; zero/absent metadata falls back to the shared default
+  # speeds. An explicit zero is meaningful — the mob is rooted and cannot
+  # move (the reference's walk task also cancels for models with no
+  # Run_A/Walk_A to play) — only absent metadata falls back to the shared
+  # default
   def npc_speed(npc, gait) do
-    speed = get_in(npc.npc.metadata, [:action, gait]) || @follow_speed
-    if is_number(speed) and speed > 0, do: speed * 1.0, else: @follow_speed * 1.0
+    case get_in(npc.npc.metadata, [:action, gait]) do
+      speed when is_number(speed) and speed >= 0 -> speed * 1.0
+      _ -> @follow_speed * 1.0
+    end
   end
 
   # per-waypoint walk sequences: each waypoint's approach animation

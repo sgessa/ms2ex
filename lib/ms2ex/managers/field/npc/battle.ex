@@ -473,6 +473,28 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
   # outside attack range: keep a fresh path to the target and advance along it
   defp walk(npc, battle, target_position, now) do
+    if stationary?(npc) do
+      # rooted mobs (zero movement speed — e.g. the plants of Ludibrium
+      # fields) cannot pursue: they stand their ground and only strike
+      # when the target comes into reach
+      {stand(npc, battle, target_position, now), []}
+    else
+      walk_chase(npc, battle, target_position, now)
+    end
+  end
+
+  # a mob with any locomotion speed moves at its fastest gait (Run_A, or
+  # Walk_A for walk-only mobs); one with neither is rooted in place
+  defp stationary?(npc), do: chase_speed(npc) == 0.0
+
+  defp chase_speed(npc) do
+    case Patrol.npc_speed(npc, :run_speed) do
+      0.0 -> Patrol.npc_speed(npc, :walk_speed)
+      speed -> speed
+    end
+  end
+
+  defp walk_chase(npc, battle, target_position, now) do
     stale? =
       battle.path == nil or
         square_distance(battle.goal, target_position) > square(@repath_target_drift) or
@@ -564,7 +586,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # waypoints may be consumed within one tick when they are close together
   defp advance(npc, battle, path, now) do
     dt = (now - battle.last_move_at) |> max(1) |> min(@max_step_ms)
-    speed = Patrol.npc_speed(npc, :run_speed)
+    speed = chase_speed(npc)
     budget = speed * dt / 1000.0
 
     battle = %{battle | last_move_at: now}
