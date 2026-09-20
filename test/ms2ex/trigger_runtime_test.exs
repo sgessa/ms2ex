@@ -1117,7 +1117,10 @@ defmodule Ms2ex.TriggerRuntimeTest do
           index: 0,
           speed: 240,
           last_at: now - 100,
-          despawn_on_finish?: false
+          despawn_on_finish?: false,
+          path: [%Coord{x: 100.0, y: -50.0, z: -5.0}],
+          path_index: 1,
+          routed?: true
         }
     }
 
@@ -1159,7 +1162,10 @@ defmodule Ms2ex.TriggerRuntimeTest do
           index: 0,
           speed: 240,
           last_at: now - 100,
-          despawn_on_finish?: false
+          despawn_on_finish?: false,
+          path: [%Coord{x: 100.0, y: -50.0, z: 500.0}],
+          path_index: 1,
+          routed?: true
         }
     }
 

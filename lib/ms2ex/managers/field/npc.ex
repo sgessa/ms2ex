@@ -1,6 +1,7 @@
 defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Navigation
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
@@ -132,16 +133,33 @@ defmodule Ms2ex.Managers.Field.Npc do
         spawn_point_id: npc_spawn[:spawn_point_id],
         npc: npc,
         map_id: state.map_id,
-        position: npc_spawn[:position],
+        position: ground_position(state.map_id, npc_spawn[:position]),
         rotation: npc_spawn[:rotation],
         spawn_radius: npc_spawn[:spawn_radius],
         field: state.topic
       })
 
+    # the mob spawn scatter moves x/y away from the grounded spawn point:
+    # ground the scattered spot as well — it is where the npc actually
+    # appeared, so the return-home origin follows it
+    position = ground_position(state.map_id, field_npc.position)
+    field_npc = %{field_npc | position: position, origin: position}
+
     Managers.Field.broadcast(state.topic, Packets.FieldAddNpc.add_npc(field_npc))
     Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
 
     {field_npc, put_in(state, [:npcs, object_id], field_npc)}
+  end
+
+  # spawn documents author heights against the client's own floor data, so
+  # models placed at the authored z hover above (or sink into) the ground.
+  # ride the generated navmesh instead, and keep the authored position when
+  # the spot has no walkable surface within tolerance
+  defp ground_position(map_id, position) do
+    case Navigation.snap_to_floor(map_id, position) do
+      nil -> position
+      ground -> ground
+    end
   end
 
   # A mob death frees its population slot and schedules the next spawn cycle:
@@ -367,18 +385,19 @@ defmodule Ms2ex.Managers.Field.Npc do
           field_npc
           | position: character.position,
             animation: Enum.at(animations, 0) || field_npc.animation,
-            patrol: %{
-              waypoints: way_points,
-              animations: animations,
-              speeds:
-                Enum.map(way_points, fn way_point ->
-                  Patrol.leg_speed(field_npc, way_point[:approach_animation])
-                end),
-              index: 0,
-              speed: @follow_speed,
-              last_at: Ms2ex.sync_ticks(),
-              despawn_on_finish?: true
-            }
+            patrol:
+              Patrol.start_leg(field_npc, %{
+                waypoints: way_points,
+                animations: animations,
+                speeds:
+                  Enum.map(way_points, fn way_point ->
+                    Patrol.leg_speed(field_npc, way_point[:approach_animation])
+                  end),
+                index: 0,
+                speed: @follow_speed,
+                last_at: Ms2ex.sync_ticks(),
+                despawn_on_finish?: true
+              })
         }
 
         {field_npc, put_in(state, [:npcs, field_npc.object_id], field_npc)}

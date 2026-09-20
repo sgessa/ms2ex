@@ -10,10 +10,20 @@ platform edge no longer drop players out of the world. `snap_to_floor/2`
 returns the closest walkable surface point, and npc patrol movement snaps
 every step onto it (mirroring how the reference walks npcs on the navmesh
 surface rather than the straight line between waypoints) — models no longer
-sink feet-deep into slopes and stairs while patrolling. There is no
+sink feet-deep into slopes and stairs while patrolling, and spawn positions
+are grounded the same way so npcs and mobs stand on the surface instead of
+hovering at their authored height (plain-map and Coord spawn positions both
+normalize through the snap; an authored position with no walkable surface
+within tolerance is kept). There is no
 straight-line fallback: like the reference, where every field requires its
 navmesh file, patrols and scripted carries on maps without one refuse to
-run (warning logged) and a step with no walkable surface holds position.
+run (warning logged). Where the mesh exists, ground steps ride its surface
+only while it agrees with the straight line between the authored waypoints
+(within 15 units); where coverage is missing (unresolved nif props leave
+small gaps) or the nearest layer deviates further, the step keeps the
+authored line height — the waypoints are authored on the visual ground, so
+the authored line is the truth and the mesh only corrects slopes and
+stairs.
 
 ## Still missing
 

@@ -34,7 +34,11 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  # advances an npc along its patrol path; called on every control tick
+  # advances an npc along its patrol path; called on every control tick.
+  # each authored waypoint is reached over a navmesh path (the reference's
+  # PathTo) so descents follow ramps and stairs instead of a straight line
+  # through the air; the last point of every leg is the authored waypoint
+  # itself
   def advance_patrol(%{patrol: nil} = npc, _now), do: npc
   def advance_patrol(%{patrol: %{waypoints: []}} = npc, _now), do: npc
 
@@ -46,48 +50,126 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     step = speed * dt / 1000.0
 
     {position, velocity, arrived?} =
-      step_toward(npc.position, way_point[:position], step, speed, dt)
+      step_toward(npc.position, leg_target(patrol), step, speed, dt)
 
     patrol = Map.put(patrol, :last_at, now)
-    position = snap_to_floor(npc, way_point, position)
+    position = snap_to_floor(npc, patrol, way_point, position)
 
-    cond do
-      is_nil(position) ->
-        # no walkable surface for this step: hold position. movement rides
-        # the navmesh or it does not happen
+    if arrived? do
+      advance_leg(%{npc | position: position}, patrol)
+    else
+      rotation = face_move_direction(npc.rotation, velocity)
+
+      %{
         npc
-
-      arrived? and patrol.index + 1 >= length(patrol.waypoints) ->
-        finish_patrol(%{npc | position: position}, patrol)
-
-      arrived? ->
-        patrol = Map.put(patrol, :index, patrol.index + 1)
-        animation = Enum.at(patrol.animations, patrol.index) || npc.animation
-
-        %{npc | position: position, patrol: patrol, animation: animation, send_control?: true}
-
-      true ->
-        rotation = face_move_direction(npc.rotation, velocity)
-
-        %{
-          npc
-          | position: position,
-            velocity: velocity,
-            rotation: rotation,
-            send_control?: true,
-            patrol: patrol
-        }
+        | position: position,
+          velocity: velocity,
+          rotation: rotation,
+          send_control?: true,
+          patrol: patrol
+      }
     end
   end
 
-  # ground legs ride the navmesh surface: the straight line between waypoints
-  # cuts below the floor on slopes and stairs, sinking the model's feet into
-  # the ground. air legs keep the authored flight line. a nil result means
-  # the step cannot happen safely this tick
-  defp snap_to_floor(npc, way_point, position) do
-    case way_point[:air_way_point] do
-      true -> position
-      _ -> Navigation.snap_to_floor(npc.map_id, position)
+  # the point the current leg is walking toward: the next point of the
+  # navmesh path, or the authored waypoint once the path is consumed
+  defp leg_target(patrol) do
+    case Enum.at(patrol.path, patrol.path_index) do
+      nil -> Enum.fetch!(patrol.waypoints, patrol.index)[:position]
+      point -> point
+    end
+  end
+
+  # a path point arrival continues the leg; consuming the whole path means
+  # the authored waypoint is reached — the next leg starts, or the patrol
+  # resolves its post-path behavior (story npcs return to their idle pose,
+  # follow dummies despawn)
+  defp advance_leg(npc, patrol) do
+    cond do
+      Enum.at(patrol.path, patrol.path_index + 1) != nil ->
+        patrol = Map.put(patrol, :path_index, patrol.path_index + 1)
+        %{npc | patrol: patrol, send_control?: true}
+
+      patrol.index + 1 >= length(patrol.waypoints) ->
+        finish_patrol(npc, patrol)
+
+      true ->
+        patrol = Map.put(patrol, :index, patrol.index + 1)
+        animation = Enum.at(patrol.animations, patrol.index) || npc.animation
+        patrol = start_leg(npc, patrol)
+
+        %{npc | patrol: patrol, animation: animation, send_control?: true}
+    end
+  end
+
+  @doc """
+  Resolves how the current authored waypoint is reached: over the navmesh
+  graph when a connected path exists — walking and snapping the mesh — or
+  along the straight authored line when it does not (coverage gaps). The
+  authored waypoint is appended so the leg always lands exactly on the
+  choreography point. The authored line is the choreography truth:
+  cutscene waypoints are authored on the visual ground, so an unroutable
+  leg is never mesh-snapped (a TOK collision layer above the visual floor
+  would otherwise float the model and stall the descent).
+  """
+  def start_leg(%Types.FieldNpc{} = npc, patrol) do
+    way_point = Enum.fetch!(patrol.waypoints, patrol.index)
+    target = way_point[:position]
+
+    {path, routed?} =
+      if way_point[:air_way_point] do
+        {[target], false}
+      else
+        case Navigation.find_path(npc.map_id, npc.position, target) do
+          {:ok, path} -> {path ++ [target], true}
+          :error -> {[target], false}
+        end
+      end
+
+    waypoint = Enum.fetch!(patrol.waypoints, patrol.index)
+    authored = waypoint[:position]
+
+    Logger.debug(
+      "[patrol] leg start npc=#{npc.object_id} waypoint=#{patrol.index + 1}/#{length(patrol.waypoints)} " <>
+        "from=(#{trunc(npc.position.x)}, #{trunc(npc.position.y)}, #{trunc(npc.position.z * 100) / 100}) " <>
+        "authored_z=#{trunc(authored.z * 100) / 100} routed=#{routed?} path_points=#{length(path)} " <>
+        "path_heights=#{inspect(Enum.map(path, fn p -> trunc(p.z * 100) / 100 end), limit: 8)}"
+    )
+
+    patrol
+    |> Map.put(:path, path)
+    |> Map.put(:path_index, 1)
+    |> Map.put(:routed?, routed?)
+  end
+
+  # ground legs walk the straight choreography line between waypoints (the
+  # authored heights are the visual ground — cutscene paths are authored on
+  # it) and use the navmesh as a correction: the straight line cuts below
+  # the floor on slopes and stairs, and the mesh fixes that. the mesh is
+  # only trustworthy where it agrees with the authored line, though —
+  # walkable coverage has gaps (unresolved nif props) and the nearest walkable
+  # layer there can sit well above the visual ground, floating the model.
+  # beyond the tolerance the authored line wins. air legs keep their
+  # authored flight line
+  @mesh_snap_tolerance 15
+
+  defp snap_to_floor(npc, %{routed?: routed?}, way_point, position) do
+    case {routed?, way_point[:air_way_point]} do
+      # unroutable leg: the mesh has no connected route here, so the authored
+      # line is walked unsnapped
+      {false, _} ->
+        position
+
+      # air legs keep their authored flight line
+      {_, true} ->
+        position
+
+      # mesh leg: the step rides the walkable surface the route was built on
+      {true, _} ->
+        case Navigation.snap_to_floor(npc.map_id, position) do
+          ground when abs(ground.z - position.z) <= @mesh_snap_tolerance -> ground
+          _ -> position
+        end
     end
   end
 
@@ -115,15 +197,18 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         state
 
       animations ->
-        patrol = %{
-          waypoints: way_points,
-          animations: animations,
-          speeds: leg_speeds(npc, way_points),
-          index: 0,
-          speed: @follow_speed,
-          last_at: Ms2ex.sync_ticks(),
-          despawn_on_finish?: false
-        }
+        patrol =
+          %{
+            waypoints: way_points,
+            animations: animations,
+            speeds: leg_speeds(npc, way_points),
+            index: 0,
+            speed: @follow_speed,
+            last_at: Ms2ex.sync_ticks(),
+            despawn_on_finish?: false
+          }
+
+        patrol = start_leg(npc, patrol)
 
         npc = %{npc | animation: hd(animations), patrol: patrol, send_control?: true}
         put_in(state, [:npcs, object_id], npc)
@@ -183,6 +268,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
       Process.send_after(self(), {:remove_npc, npc}, 0)
       %{npc | patrol: nil}
     else
+      Logger.debug(
+        "[patrol] finished npc=#{npc.object_id} at (#{trunc(npc.position.x)}, #{trunc(npc.position.y)}, #{trunc(npc.position.z * 100) / 100})"
+      )
+
       %{
         npc
         | patrol: nil,
@@ -209,7 +298,8 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   # full 3D step toward the waypoint (waypoints carry ground heights); the
   # velocity is what the control packet reports so the client interpolates
-  # the movement instead of snapping
+  # the movement instead of snapping. a step that reaches the waypoint
+  # lands exactly on it
   defp step_toward(pos, target, step, speed, _dt) do
     dx = Map.get(target, :x) - pos.x
     dy = Map.get(target, :y) - pos.y
@@ -217,7 +307,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     dist = :math.sqrt(dx * dx + dy * dy + dz * dz)
 
     if dist == 0 or dist <= step do
-      {Map.put(pos, :z, Map.get(target, :z)), {0, 0, 0}, true}
+      {target, {0, 0, 0}, true}
     else
       vx = dx / dist * speed
       vy = dy / dist * speed

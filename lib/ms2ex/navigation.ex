@@ -90,6 +90,11 @@ defmodule Ms2ex.Navigation do
     end
   end
 
+  # spawn documents project positions as plain x/y/z maps
+  def snap_to_floor(map_id, %{x: _, y: _, z: _} = position) when is_integer(map_id) do
+    snap_to_floor(map_id, struct(Coord, Map.to_list(position)))
+  end
+
   def snap_to_floor(_, _position), do: nil
 
   @doc "Whether the map has walkable navmesh tiles."

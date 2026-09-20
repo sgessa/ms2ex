@@ -3,6 +3,24 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Npc movement fixes for cutscene walking: patrols walk the straight
+  authored line between waypoints — the heights the client data authors on
+  the visual ground — and apply the navmesh only as a correction. Each leg
+  resolves a navmesh path when one connects to the waypoint and rides the
+  walkable surface; a leg with no connected route (navmesh coverage gaps
+  leave holes — verified live on 52000101, where the walkable layer sits
+  ~24 units above the visual floor) walks the authored line unsnapped, so
+  models can no longer float onto a higher collision layer or stall
+  mid-descent. The ControlNpc anim-speed slot now carries the reference's
+  sequence playback rate — the model ani_speed factor times the current
+  movement speed, projected by the ingest as model.ani_speed — instead of
+  a constant 100, so walk cycles advance at the pace the npc covers
+  ground. And npc spawn positions ground onto the navmesh before the
+  entity is announced (plain-map spawn docs included), with the return-home
+  origin following the grounded spot. Regression tests drive advance_patrol
+  through finishes, off-mesh legs, path points and multi-waypoint paths,
+  the control-packet playback rate, and spawn grounding
+
 - Character deletion reworked to the client's delete state machine: the
   character-management delete handler now acks with a dedicated
   CharacterList delete-entry packet (error code + character id) instead of
@@ -17,7 +35,6 @@ Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
   passes. Deletion is refused with client-facing error codes for unread
   mail, guild membership, and guild leadership; a regression test suite
   drives the handler through every branch
-
 
 - Rooted mobs no longer move: an explicit zero in the npc's action
   speeds (e.g. Nepenthus plants) means stationary, instead of falling
