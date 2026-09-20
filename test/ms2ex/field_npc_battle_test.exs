@@ -233,7 +233,10 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     {npc, _state} =
       Enum.reduce(1..400, {npc, state}, fn i, {npc, state} ->
-        {npc, _hits} = Battle.tick(npc, state, i * 100)
+        {npc, hits} = Battle.tick(npc, state, i * 100)
+        # the second element is always the list of hit events, even on
+        # mid-path ticks that only advance the run
+        assert is_list(hits)
         {npc, state}
       end)
 

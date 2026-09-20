@@ -104,11 +104,11 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     cond do
       npc.battle ->
         case tick_battle(npc, field_state, now) do
-          {%Ms2ex.Types.FieldNpc{} = result, hits} ->
+          {%Types.FieldNpc{} = result, hits} when is_list(hits) ->
             {result, hits}
 
           other ->
-            raise "tick_battle non-tuple mode=#{npc.battle.mode} val=#{inspect(other, limit: 2)} position=#{inspect(npc.position)}"
+            raise "tick_battle returned a non {npc, hits-list}: mode=#{npc.battle.mode} val=#{inspect(other, limit: 2)} position=#{inspect(npc.position)}"
         end
 
       now >= npc.next_target_scan_at ->
@@ -483,7 +483,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         if battle.path == nil do
           extend_path(npc, battle, target_position, now)
         else
-          {npc, battle}
+          # mid-path: the run continues on the next tick
+          {npc, []}
         end
     end
   end
@@ -498,8 +499,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
       path ->
         npc = start_running(npc)
-        {npc, battle} = advance(npc, battle, path, now)
-        {npc, battle}
+        {npc, _battle} = advance(npc, battle, path, now)
+        {npc, []}
     end
   end
 
