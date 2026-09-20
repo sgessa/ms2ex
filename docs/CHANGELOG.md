@@ -3,6 +3,22 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Character deletion reworked to the client's delete state machine: the
+  character-management delete handler now acks with a dedicated
+  CharacterList delete-entry packet (error code + character id) instead of
+  re-sending the whole list — the missing ack left the client's delete
+  dialog stuck after the first deletion, so a second character could never
+  be deleted. Characters at or above the destroy-division level (20, from
+  the server constants table) now enter the deletion wait
+  (character_destroy_wait_second) instead of being removed instantly: the
+  character keeps its list entry with a pending delete time (new
+  characters.delete_time column, serialized per list entry) that can be
+  cancelled via the new cancel-delete command, and is removed once the wait
+  passes. Deletion is refused with client-facing error codes for unread
+  mail, guild membership, and guild leadership; a regression test suite
+  drives the handler through every branch
+
+
 - Rooted mobs no longer move: an explicit zero in the npc's action
   speeds (e.g. Nepenthus plants) means stationary, instead of falling
   back to a default chase speed and sliding out of the ground; they

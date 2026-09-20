@@ -27,6 +27,16 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     handle_delete(packet, session)
   end
 
+  # Cancel Delete Character
+  def handle(<<0x3, packet::bytes>>, session) do
+    handle_cancel_delete(packet, session)
+  end
+
+  # Confirm Delete Character
+  def handle(<<0x4, packet::bytes>>, session) do
+    handle_delete(packet, session)
+  end
+
   defp handle_login(packet, %{account: account} = session) do
     {char_id, _packet} = get_long(packet)
 
@@ -156,17 +166,110 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
   defp handle_delete(packet, session) do
     {char_id, _packet} = get_long(packet)
 
-    with %Schema.Character{} = character <- Context.Characters.get(session.account, char_id),
-         {:ok, _} <- Context.Characters.delete(character) do
-      characters = Context.Characters.list(session.account)
+    case Context.Characters.get(session.account, char_id) do
+      %Schema.Character{} = character ->
+        case validate_delete(character) do
+          :ok -> delete_character(character, session)
+          {:error, reason} -> push(session, Packets.CharacterList.delete_entry(char_id, reason))
+        end
 
-      session
-      |> push(Packets.CharacterMaxCount.set_max(session.account.max_characters, 8))
-      |> push(Packets.CharacterList.start_list())
-      |> push(Packets.CharacterList.add_entries(characters))
-      |> push(Packets.CharacterList.end_list())
+      nil ->
+        push(session, Packets.CharacterList.delete_entry(char_id, :s_char_err_already_destroy))
+    end
+  end
+
+  # a pending deletion past its wait time is finalized; re-requesting an
+  # ongoing deletion only re-acks the scheduled time so the client keeps its
+  # countdown
+  defp delete_character(%Schema.Character{delete_time: delete_time} = character, session)
+       when delete_time != 0 do
+    if delete_time <= System.system_time(:second) do
+      finish_delete(character, session)
     else
-      _ -> session
+      push(
+        session,
+        Packets.CharacterList.begin_delete(
+          character.id,
+          delete_time,
+          :s_char_err_next_delete_char_date
+        )
+      )
+    end
+  end
+
+  # characters below the destroy-division level are removed immediately;
+  # higher levels start the deletion wait so the deletion can be cancelled
+  defp delete_character(%Schema.Character{} = character, session) do
+    division_level = Storage.Tables.Constants.get(:character_destroy_division_level)
+    wait_seconds = Storage.Tables.Constants.get(:character_destroy_wait_second)
+
+    if character.level >= division_level do
+      delete_time = System.system_time(:second) + wait_seconds
+
+      case Context.Characters.update(character, %{delete_time: delete_time}) do
+        {:ok, _} ->
+          push(session, Packets.CharacterList.begin_delete(character.id, delete_time))
+
+        _error ->
+          push(
+            session,
+            Packets.CharacterList.begin_delete(character.id, delete_time, :s_char_err_destroy)
+          )
+      end
+    else
+      finish_delete(character, session)
+    end
+  end
+
+  defp finish_delete(character, session) do
+    case Context.Characters.delete(character) do
+      {:ok, _} ->
+        push(session, Packets.CharacterList.delete_entry(character.id))
+
+      _error ->
+        push(session, Packets.CharacterList.delete_entry(character.id, :s_char_err_destroy))
+    end
+  end
+
+  defp handle_cancel_delete(packet, session) do
+    {char_id, _packet} = get_long(packet)
+
+    case Context.Characters.get(session.account, char_id) do
+      %Schema.Character{delete_time: delete_time} = character when delete_time != 0 ->
+        case Context.Characters.update(character, %{delete_time: 0}) do
+          {:ok, _} ->
+            push(session, Packets.CharacterList.cancel_delete(char_id))
+
+          _error ->
+            push(session, Packets.CharacterList.cancel_delete(char_id, :s_char_err_destroy))
+        end
+
+      %Schema.Character{} ->
+        push(session, Packets.CharacterList.cancel_delete(char_id, :s_char_err_no_destroy_wait))
+
+      nil ->
+        push(session, Packets.CharacterList.delete_entry(char_id, :s_char_err_already_destroy))
+    end
+  end
+
+  defp validate_delete(%Schema.Character{} = character) do
+    if Context.Mails.count_unread(character.id) > 0 do
+      {:error, :s_char_err_unread_mail}
+    else
+      validate_guild_membership(character)
+    end
+  end
+
+  defp validate_guild_membership(character) do
+    case Context.Guilds.get_by_character_id(character.id) do
+      %{leader_id: leader_id} when leader_id == character.id ->
+        {:error, :s_char_err_guild_master}
+
+      %Schema.Guild{} ->
+        {:error, :s_char_err_guild}
+
+      nil ->
+        :ok
     end
   end
 end

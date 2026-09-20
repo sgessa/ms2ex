@@ -55,7 +55,8 @@ started.
 ---
 
 Feature documentation for completed systems (how they work, no open work
-tracked): [state skills](features/state-skills.md),
+tracked): [character selection](features/character-select.md),
+[state skills](features/state-skills.md),
 [skill cooldowns](features/skill-cooldowns.md),
 [monster drops](features/monster-drops.md),
 [equipment stats](features/equip-stats.md),

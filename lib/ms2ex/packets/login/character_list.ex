@@ -10,8 +10,11 @@ defmodule Ms2ex.Packets.CharacterList do
   @modes %{
     add: 0x0,
     append: 0x1,
+    delete_entry: 0x2,
     start_list: 0x3,
-    end_list: 0x4
+    end_list: 0x4,
+    begin_delete: 0x5,
+    cancel_delete: 0x6
   }
 
   def add_entries(characters) do
@@ -42,6 +45,34 @@ defmodule Ms2ex.Packets.CharacterList do
     |> put_bool(false)
   end
 
+  # acks a completed deletion: the client drops the entry from the list
+  def delete_entry(character_id, error \\ :ok) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.delete_entry)
+    |> put_int(Enums.CharacterDeleteError.get_value(error))
+    |> put_long(character_id)
+  end
+
+  # marks the start of the deletion wait; the entry stays in the list with
+  # its delete time and can still be cancelled
+  def begin_delete(character_id, delete_time, error \\ :ok) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.begin_delete)
+    |> put_long(character_id)
+    |> put_int(Enums.CharacterDeleteError.get_value(error))
+    |> put_long(delete_time)
+  end
+
+  def cancel_delete(character_id, error \\ :ok) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.cancel_delete)
+    |> put_long(character_id)
+    |> put_int(Enums.CharacterDeleteError.get_value(error))
+  end
+
   defp put_entries(packet, []), do: packet
 
   defp put_entries(packet, [character | characters]) do
@@ -50,7 +81,7 @@ defmodule Ms2ex.Packets.CharacterList do
     packet
     |> put_character(character)
     |> put_ustring(character.profile_url)
-    |> put_long()
+    |> put_long(character.delete_time)
     |> put_byte(length(character.equips))
     |> Packets.InventoryItem.put_equips(character.equips, character)
     |> put_badges(badges, character)
