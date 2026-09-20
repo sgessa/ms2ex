@@ -489,8 +489,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
   defp chase_speed(npc) do
     case Patrol.npc_speed(npc, :run_speed) do
-      0.0 -> Patrol.npc_speed(npc, :walk_speed)
-      speed -> speed
+      speed when speed > 0.0 -> speed
+      _ -> Patrol.npc_speed(npc, :walk_speed)
     end
   end
 
