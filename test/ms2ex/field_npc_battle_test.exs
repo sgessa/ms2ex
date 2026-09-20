@@ -317,6 +317,60 @@ defmodule Ms2ex.FieldNpcBattleTest do
            "mob stood #{inspect(stutter_ticks)} ticks while clearly out of range"
   end
 
+  test "a mob drops a dead target and walks home" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    npc = mob(map_id: map_id)
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+
+    state = field_with_player_at(1200, 0)
+
+    # the mob chases well away from its spawn (displaced: >150 units)
+    {npc, _} =
+      Enum.reduce(1..7, {npc, state}, fn i, {npc, state} ->
+        {npc, _hits} = Battle.tick(npc, state, i * 100)
+        {npc, state}
+      end)
+
+    assert npc.battle.mode == :chase
+    assert npc.position.x > 150
+
+    # the player dies: a tombstone stands on the field where they fell
+    dead_state = Map.put(state, :tombstones, %{1 => %Types.Tombstone{object_id: 900}})
+    {npc, hits} = Battle.tick(npc, dead_state, 800)
+
+    # aggro resets: the mob stops attacking and turns straight back to its
+    # spawn point (it is displaced), taking no more swings at the body —
+    # the same tick already walks it home
+    assert %{mode: :return} = npc.battle
+    assert npc.battle.goal == npc.origin
+    assert npc.velocity == {-300.0, 0.0, 0.0}
+    assert hits == []
+    # the first homeward step is the 1ms floor (return_battle seeds the
+    # move clock at the drop tick), so barely any ground is lost this tick
+    assert_in_delta(npc.position.x, 209.7, 0.5)
+
+    # and it keeps making progress home on the following tick (the first
+    # homeward step is the 1ms floor: return_battle seeds the move clock
+    # at the drop tick)
+    {npc, _} = Battle.tick(npc, dead_state, 900)
+    assert_in_delta(npc.position.x, 179.7, 0.5)
+  end
+
+  test "a dead player is invisible to the scan" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    npc = mob(map_id: map_id)
+
+    # the player stands well inside sight but is dead (tombstone up)
+    state = Map.put(field_with_player_at(100, 0), :tombstones, %{1 => %Types.Tombstone{}})
+    {npc, _} = Battle.tick(npc, state, 100)
+
+    assert npc.battle == nil
+  end
+
   test "a mob leashes home when dragged beyond its last-sight from spawn" do
     {map_id, xblock} = unique_map()
     stub_navmesh(xblock, map_id)

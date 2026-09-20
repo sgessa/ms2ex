@@ -34,6 +34,13 @@ new target when idle. Friendly npcs (`type: :npc`) never engage.
   `last_sight_radius` from its spawn point (the leash — no dedicated
   leash field exists in the data, so the give-up radius doubles as the
   leash; bosses with huge last-sight effectively never leash)
+- dead targets are dropped at once: a player with a tombstone on the
+  field is removed from the mob's target and is invisible to the scan,
+  so aggro resets on death — the mob stops attacking and walks home
+  (when displaced), re-aggroing only by being attacked or by a later
+  scan after arriving home. As a boundary guard, the character manager
+  refuses mob hits on a dead character, so a swing that was already in
+  flight when its target died applies nothing
 - hit-aggro: damaging a mob engages the attacker immediately
   (`Battle.aggro/3`, called from `Managers.Field.Npc.damage/4`) instead of
   waiting for the next scan. Because ranged pulls start outside the

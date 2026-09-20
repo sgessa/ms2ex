@@ -146,9 +146,13 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
   # players standing on the field right now: {character_id, object_id,
   # live position}. players without a synced position yet (joined but no
-  # user sync) are invisible to the scan
+  # user sync) are invisible to the scan, and so are dead players — a
+  # tombstone never draws aggro
   defp player_positions(field_state) do
+    dead = Map.get(field_state, :tombstones, %{})
+
     field_state.players
+    |> Enum.reject(fn {character_id, _object_id} -> Map.has_key?(dead, character_id) end)
     |> Enum.flat_map(fn {character_id, object_id} ->
       case get_in(field_state, [:player_positions, character_id, :position]) do
         %Types.Coord{} = position -> [{character_id, object_id, position}]
@@ -191,13 +195,17 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       in_height_band?(position, target_position, bands.height_up, bands.height_down)
   end
 
-  # drops the target when it left the field or — past the hit-aggro hold
-  # window — escaped the last-sight band; a mob dragged beyond its
-  # last-sight radius from its spawn point is leashed home as well
+  # drops the target when it died (a tombstone stands on the field), left
+  # the field, or — past the hit-aggro hold window — escaped the
+  # last-sight band; a mob dragged beyond its last-sight radius from its
+  # spawn point is leashed home as well. A dropped target disengages the
+  # mob (walking home when displaced), and the regular scan can pick a
+  # new target from there
   defp validate_target(npc, field_state, now) do
     character_id = npc.battle.target_id
     on_field? = Map.has_key?(field_state.players, character_id)
     position = get_in(field_state, [:player_positions, character_id, :position])
+    dead? = Map.has_key?(Map.get(field_state, :tombstones, %{}), character_id)
 
     held? = now < npc.battle.keep_until
     bands = sight_bands(npc)
@@ -206,7 +214,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       square_distance(npc.position, npc.origin) > square(bands.last_sight)
 
     keep? =
-      on_field? and match?(%Types.Coord{}, position) and
+      not dead? and on_field? and match?(%Types.Coord{}, position) and
         (held? or (not leashed? and in_last_sight_band?(npc.position, position, bands)))
 
     if keep? do

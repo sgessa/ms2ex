@@ -70,6 +70,12 @@ defmodule Ms2ex.Managers.Character do
   # character resolves the final damage against its own defenses (which
   # funnels death, regen deferral and the stat broadcast through the normal
   # paths) and replies with the applied hit for the damage broadcast
+  # a dead character takes no damage: the swing's target may have died
+  # between the cast starting and the swing resolving
+  def handle_call({:mob_hit, _params}, _from, %{dead?: true} = character) do
+    {:reply, :error, character}
+  end
+
   def handle_call({:mob_hit, params}, _from, character) do
     hit = Context.Damage.calculate_mob_hit(character, params)
     character = Character.Stats.decrease(character, %{health: hit.dmg})
