@@ -3,6 +3,11 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Fix mobs chasing at ~13x speed: the chase tick's updated battle state
+  (move clock, path index) was dropped when returning from mid-path
+  ticks, so every step budget ballooned to the 200ms max-step clamp; the
+  battle map now merges back and a regression test pins per-tick
+  displacement to run speed x elapsed time
 - Mob attack casting: an engaged mob in stop range casts its first skill
   entry — ControlNpc carries the motion's sequence in PcSkill state, the
   swing lands at the windup's end if the target is still within the

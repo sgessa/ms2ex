@@ -249,6 +249,30 @@ defmodule Ms2ex.FieldNpcBattleTest do
     assert npc.velocity == {0, 0, 0}
   end
 
+  test "chase steps track real elapsed time across mid-path ticks" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    # run speed 300: each 100ms tick advances 30 units; a dropped battle map
+    # (stale last_move_at) would balloon the step to the 200ms clamp instead
+    npc = mob(map_id: map_id)
+    state = field_with_player_at(1400, 0)
+
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 100)
+    assert npc.battle
+
+    {npc, _} = Battle.tick(npc, state, 200)
+    assert npc.velocity != {0, 0, 0}
+    assert_in_delta(npc.position.x, 30.0, 0.5)
+
+    {npc, _} = Battle.tick(npc, state, 300)
+    assert_in_delta(npc.position.x, 60.0, 0.5)
+
+    {npc, _} = Battle.tick(npc, state, 400)
+    assert_in_delta(npc.position.x, 90.0, 0.5)
+    assert npc.battle.last_move_at == 400
+  end
+
   test "a chasing mob never stands while clearly out of range" do
     {map_id, xblock} = unique_map()
     stub_navmesh(xblock, map_id)

@@ -498,8 +498,10 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         if battle.path == nil do
           extend_path(npc, battle, target_position, now)
         else
-          # mid-path: the run continues on the next tick
-          {npc, []}
+          # mid-path: the run continues on the next tick — the updated battle
+          # (last_move_at, path index) must merge back into the npc or the
+          # next tick's step budget balloons to the max-step clamp
+          {%{npc | battle: battle}, []}
         end
     end
   end
@@ -514,8 +516,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
       path ->
         npc = start_running(npc)
-        {npc, _battle} = advance(npc, battle, path, now)
-        {npc, []}
+        {npc, battle} = advance(npc, battle, path, now)
+        {%{npc | battle: battle}, []}
     end
   end
 
