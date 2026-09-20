@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-2490FD04.js"></script>
+    <script defer src="dist/sidebar_items-930E2540.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,10 +114,14 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Point queries against a map's Recast navmesh: a position is valid when
-the navmesh has walkable ground for it. Navmesh coordinates are meters
-with Y up, so map positions transform by a -90 degree rotation about X
-and a 1/100 scale.</p>
+<p>Navmesh queries for a map: position validity, floor snapping and
+pathfinding. Navmesh coordinates are meters with Y up, so map positions
+transform by a -90 degree rotation about X and a 1/100 scale.</p><p>The navmesh is cached as a graph: one node per convex polygon, with
+adjacent polygons linked where they share an edge (polygon corners are
+welded by position, which also connects polygons across tile borders).
+Nearest-polygon queries run over a uniform grid index instead of scanning
+every tile, and paths come from A* over the graph pulled tight with the
+funnel algorithm.</p>
     </section>
 
 </div>
@@ -129,10 +133,65 @@ and a 1/100 scale.</p>
       </a>
       <span class="text">Summary</span>
     </h2>
+<div class="summary-types summary">
+  <h3>
+    <a href="#types">Types</a>
+  </h3>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:point/0" data-no-tooltip="" translate="no">point()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:poly_key/0" data-no-tooltip="" translate="no">poly_key()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:t/0" data-no-tooltip="" translate="no">t()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h3>
     <a href="#functions">Functions</a>
   </h3>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#__struct__/0" data-no-tooltip="" translate="no">%Ms2ex.Navigation{}</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Poly queries use these half extents (in navmesh meters): 2 across,
+4 of height tolerance, 2 across.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#find_path/3" data-no-tooltip="" translate="no">find_path(map_id, from, to)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A corridor of walkable points from <code class="inline">from</code> to <code class="inline">to</code>, or <code class="inline">:error</code> when
+either endpoint has no walkable ground or no connection exists between
+them. The first and last points are the closest walkable points to the
+requested positions; intermediate points are funnel-pulled corners of the
+polygon corridor.</p></div>
+
+    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -164,8 +223,8 @@ it on slopes and stairs.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Poly queries use these half extents (in navmesh meters): 2 across,
-4 of height tolerance, 2 across.</p></div>
+        <div class="summary-synopsis"><p>Whether a position stands on walkable ground. Maps without a navmesh
+accept every position.</p></div>
 
     </div>
 
@@ -173,6 +232,103 @@ it on slopes and stairs.</p></div>
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h2>
+
+    <div class="types-list">
+<section class="detail" id="t:point/0">
+
+  <div class="detail-header">
+    <a href="#t:point/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">point()</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> point() :: {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:poly_key/0">
+
+  <div class="detail-header">
+    <a href="#t:poly_key/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">poly_key()</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> poly_key() :: {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:t/0">
+
+  <div class="detail-header">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">t()</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L35" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Ms2ex.Navigation{by_key: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), grid: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h2 class="section-heading">
@@ -183,6 +339,64 @@ it on slopes and stairs.</p></div>
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="__struct__/0">
+
+  <div class="detail-header">
+    <a href="#__struct__/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">%Ms2ex.Navigation{}</h1>
+
+        <span class="note">(struct)</span>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L33" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Poly queries use these half extents (in navmesh meters): 2 across,
+4 of height tolerance, 2 across.</p>
+  </section>
+</section>
+<section class="detail" id="find_path/3">
+
+  <div class="detail-header">
+    <a href="#find_path/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">find_path(map_id, from, to)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L47" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> find_path(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), Ms2ex.Types.Coord.t(), Ms2ex.Types.Coord.t()) ::
+  {:ok, [Ms2ex.Types.Coord.t()]} | :error</pre>
+
+      </div>
+
+<p>A corridor of walkable points from <code class="inline">from</code> to <code class="inline">to</code>, or <code class="inline">:error</code> when
+either endpoint has no walkable ground or no connection exists between
+them. The first and last points are the closest walkable points to the
+requested positions; intermediate points are funnel-pulled corners of the
+polygon corridor.</p>
+  </section>
+</section>
 <section class="detail" id="has_navmesh?/1">
 
   <div class="detail-header">
@@ -193,7 +407,7 @@ it on slopes and stairs.</p></div>
       <h1 class="signature" translate="no">has_navmesh?(map_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L56" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L96" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -215,7 +429,7 @@ it on slopes and stairs.</p></div>
       <h1 class="signature" translate="no">snap_to_floor(map_id, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L83" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -241,7 +455,7 @@ it on slopes and stairs.</p>
       <h1 class="signature" translate="no">valid_position?(map_id, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L20" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -250,8 +464,8 @@ it on slopes and stairs.</p>
 
   <section class="docstring">
 
-<p>Poly queries use these half extents (in navmesh meters): 2 across,
-4 of height tolerance, 2 across.</p>
+<p>Whether a position stands on walkable ground. Maps without a navmesh
+accept every position.</p>
   </section>
 </section>
 

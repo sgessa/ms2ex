@@ -6,6 +6,7 @@
 ```elixir
 @type t() :: %Ms2ex.Types.FieldNpc{
   animation: term(),
+  battle: term(),
   corpse?: term(),
   damage_dealers: term(),
   dead?: term(),
@@ -15,14 +16,17 @@
   last_attacker: term(),
   last_control_at: term(),
   map_id: term(),
+  next_target_scan_at: term(),
   npc: term(),
   object_id: term(),
+  origin: term(),
   patrol: term(),
   position: term(),
   rotation: term(),
   send_control?: term(),
   seq_counter: term(),
   spawn_point_id: term(),
+  stat_dirty?: term(),
   stats: term(),
   type: term(),
   velocity: term()

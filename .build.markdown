@@ -206,6 +206,7 @@ Ms2ex.Managers.Field.Instrument.md
 Ms2ex.Managers.Field.InteractObject.md
 Ms2ex.Managers.Field.Item.md
 Ms2ex.Managers.Field.Liftable.md
+Ms2ex.Managers.Field.Npc.Battle.md
 Ms2ex.Managers.Field.Npc.Patrol.md
 Ms2ex.Managers.Field.Npc.md
 Ms2ex.Managers.Field.PerformanceStage.md

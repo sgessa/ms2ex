@@ -46,6 +46,22 @@ Calculates damage a character takes from falling.
     iex> calculate_fall_dmg(character, 0)
     24
 
+# `calculate_mob_hit`
+
+```elixir
+@spec calculate_mob_hit(Ms2ex.Schema.Character.t(), %{
+  attack: number(),
+  rate: number()
+}) :: %{
+  dmg: integer(),
+  crit?: boolean()
+}
+```
+
+Resolves a mob's swing against a character: the mob's physical attack
+drives the hit, scaled by the attack's damage rate and cut down by the
+character's defense and physical resistance.
+
 # `calculate_rate`
 
 Calculates damage for a given rate (e.g. a damage-over-time tick) instead of

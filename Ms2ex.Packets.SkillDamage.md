@@ -7,6 +7,8 @@
 
 # `heal`
 
+# `mob_hit`
+
 # `tile`
 
 ---

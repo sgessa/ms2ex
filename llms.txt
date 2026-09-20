@@ -170,6 +170,8 @@ LIFTABLE), and installed at a liftable target box — which fires the
 quest's item_move condition.
 
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
+- [Ms2ex.Managers.Field.Npc.Battle](Ms2ex.Managers.Field.Npc.Battle.md): Mob aggro and chase: target acquisition, target retention and pathed
+movement toward the engaged target.
 - [Ms2ex.Managers.Field.Npc.Patrol](Ms2ex.Managers.Field.Npc.Patrol.md): Npc movement along patrol paths: story npcs walk named patrol paths
 (script move_npc) and stay at the last waypoint; the movement math also
 seeds the scripted-carry follow-dummy that `Managers.Field.Npc` spawns.
@@ -211,11 +213,9 @@ condition that returns true.
 - [Ms2ex.Managers.Session](Ms2ex.Managers.Session.md)
 - [Ms2ex.Managers.SessionManager](Ms2ex.Managers.SessionManager.md)
 - [Ms2ex.Managers.SkillCast](Ms2ex.Managers.SkillCast.md)
-- [Ms2ex.Navigation](Ms2ex.Navigation.md): Point queries against a map's Recast navmesh: a position is valid when
-the navmesh has walkable ground for it. Navmesh coordinates are meters
-with Y up, so map positions transform by a -90 degree rotation about X
-and a 1/100 scale.
-
+- [Ms2ex.Navigation](Ms2ex.Navigation.md): Navmesh queries for a map: position validity, floor snapping and
+pathfinding. Navmesh coordinates are meters with Y up, so map positions
+transform by a -90 degree rotation about X and a 1/100 scale.
 - [Ms2ex.Packets](Ms2ex.Packets.md)
 - [Ms2ex.Release](Ms2ex.Release.md)
 - [Ms2ex.Repo](Ms2ex.Repo.md)

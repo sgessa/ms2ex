@@ -207,6 +207,7 @@ Ms2ex.Managers.Field.Instrument.html
 Ms2ex.Managers.Field.InteractObject.html
 Ms2ex.Managers.Field.Item.html
 Ms2ex.Managers.Field.Liftable.html
+Ms2ex.Managers.Field.Npc.Battle.html
 Ms2ex.Managers.Field.Npc.Patrol.html
 Ms2ex.Managers.Field.Npc.html
 Ms2ex.Managers.Field.PerformanceStage.html
@@ -505,8 +506,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-B48FA2B6.js
-dist/sidebar_items-2490FD04.js
+dist/search_data-E4637490.js
+dist/sidebar_items-930E2540.js
 index.html
 license.html
 readme.html

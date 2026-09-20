@@ -17,6 +17,8 @@ Walks a story npc along a named patrol path (script move_npc): the walk
 streams through the control broadcast and the npc stays at the last
 waypoint when the path ends.
 
+# `npc_speed`
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*
