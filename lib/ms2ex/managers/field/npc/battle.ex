@@ -153,32 +153,24 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # closest player inside the sight band, or nil
   defp closest_player(players, position, bands) do
     players
-    |> Enum.reduce(nil, fn entry = {_id, _oid, player_pos}, best ->
-      closer = best == nil or entry_distance(entry, position) < elem(best, 0)
-      visible = in_sight_band?(position, player_pos, bands)
-
-      if closer and visible do
-        {entry_distance(entry, position), entry}
-      else
-        best
-      end
+    |> Enum.map(fn entry = {_id, _oid, player_pos} ->
+      {square_distance(position, player_pos), entry}
     end)
+    |> Enum.filter(fn {_d2, {_id, _oid, player_pos}} ->
+      in_sight_band?(position, player_pos, bands)
+    end)
+    |> Enum.min_by(&elem(&1, 0), fn -> nil end)
     |> case do
       nil -> nil
       {_distance, entry} -> entry
     end
   end
 
-  defp entry_distance({_id, _oid, player_pos}, position),
-    do: square_distance(position, player_pos)
-
   defp in_sight_band?(position, target_position, bands) do
     square_distance(position, target_position) < square(bands.sight) and
       in_height_band?(position, target_position, bands.height_up, bands.height_down)
   end
 
-  # drops the target when it left the field or — past the hit-aggro hold
-  # window — escaped the last-sight band
   # drops the target when it left the field or — past the hit-aggro hold
   # window — escaped the last-sight band; a mob dragged beyond its
   # last-sight radius from its spawn point is leashed home as well
@@ -376,10 +368,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
   # an unreachable target (player on a ledge / other navmesh island) is
   # chased for a grace period, then dropped
-  defp give_up?(battle, now),
-    do:
-      battle.no_route_since != nil and
-        now - battle.no_route_since >= @give_up_ms
+  defp give_up?(%{no_route_since: nil}, _now), do: false
+
+  defp give_up?(%{no_route_since: since}, now), do: now - since >= @give_up_ms
 
   defp repath(npc, battle, target_position, now) do
     case Navigation.find_path(npc.map_id, npc.position, target_position) do
@@ -440,41 +431,42 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   defp commit_step(npc, battle, _path, waypoint, snapped, %{kind: :moving} = step, _speed) do
-    npc = %{
-      npc
-      | position: snapped,
-        velocity: step.velocity,
-        rotation: face_toward(snapped, waypoint, npc.rotation),
-        send_control?: true
-    }
-
+    npc = move_step(npc, snapped, waypoint, step.velocity)
     {npc, battle}
   end
 
   defp commit_step(npc, battle, path, waypoint, snapped, %{kind: :arrived} = step, speed) do
     battle = %{battle | path_index: battle.path_index + 1}
 
-    npc = %{
-      npc
-      | position: snapped,
-        # keep the run flowing through the corner: aim the velocity at the
-        # next waypoint instead of announcing a stand between segments
-        velocity: carry_velocity(snapped, path, battle.path_index, speed),
-        rotation: face_toward(snapped, waypoint, npc.rotation),
-        send_control?: true
-    }
+    # keep the run flowing through the corner: aim the velocity at the
+    # next waypoint instead of announcing a stand between segments
+    npc =
+      move_step(
+        npc,
+        snapped,
+        waypoint,
+        carry_velocity(snapped, path, battle.path_index, speed)
+      )
 
-    if step.leftover > 0 and battle.path != nil do
+    if step.leftover > 0 do
       walk_segments(npc, battle, path, step.leftover, speed)
     else
       {npc, battle}
     end
   end
 
+  defp move_step(npc, position, waypoint, velocity) do
+    %{
+      npc
+      | position: position,
+        velocity: velocity,
+        rotation: face_toward(position, waypoint, npc.rotation),
+        send_control?: true
+    }
+  end
+
   # keeps the velocity streaming across corners: aims at the next waypoint
   # when one follows, zero only at the end of the path
-  defp carry_velocity(_from, _path, index, _speed) when index < 1, do: {0.0, 0.0, 0.0}
-
   defp carry_velocity(from, path, index, speed) do
     case Enum.at(path, index) do
       nil ->

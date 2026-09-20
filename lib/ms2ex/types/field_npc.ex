@@ -63,11 +63,7 @@ defmodule Ms2ex.Types.FieldNpc do
       |> randomize_pos()
 
     field_npc = struct(__MODULE__, attrs)
-
-    case attrs[:origin] do
-      nil -> %{field_npc | origin: field_npc.position}
-      origin -> %{field_npc | origin: origin}
-    end
+    %{field_npc | origin: attrs[:origin] || field_npc.position}
   end
 
   defp to_coord(%Coord{} = coord), do: coord

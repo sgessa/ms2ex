@@ -247,10 +247,6 @@ defmodule Ms2ex.Managers.Field.Npc do
       end)
 
     boss_target = state.players |> Map.values() |> List.first()
-
-    # one control entry per packet: the reference's periodic loop sends
-    # single-npc controls, and the client demonstrably mishandles multi-entry
-    # batches here (frozen mobs, lost HP-bar transitions)
     live = Enum.reverse(live_dirty)
 
     # mobs that arrived home this tick healed: announce the new health
@@ -259,6 +255,9 @@ defmodule Ms2ex.Managers.Field.Npc do
       Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(npc, :health))
     end
 
+    # periodic controls stay single-npc entries: the reference's control
+    # loop sends one npc per packet, and the client demonstrably mishandles
+    # multi-entry batches here (frozen mobs, lost HP-bar transitions)
     for npc <- live do
       Managers.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc], boss_target))
     end
