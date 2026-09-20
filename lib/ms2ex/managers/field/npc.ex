@@ -239,15 +239,34 @@ defmodule Ms2ex.Managers.Field.Npc do
   def tick(state) do
     now = Ms2ex.sync_ticks()
 
-    {npcs, {live_dirty, corpse_dirty}} =
-      Enum.flat_map_reduce(state.npcs, {[], []}, fn {object_id, npc}, acc ->
+    {npcs, {live_dirty, corpse_dirty, hits}} =
+      Enum.flat_map_reduce(state.npcs, {[], [], []}, fn {object_id, npc},
+                                                        {live, corpses, all_hits} ->
         npc = Patrol.advance_patrol(npc, now)
-        npc = Battle.tick(npc, state, now)
-        tick_npc(now, object_id, npc, acc)
+        {npc, npc_hits} = Battle.tick(npc, state, now)
+        {entry, {live, corpses}} = tick_npc(now, object_id, npc, {live, corpses})
+        {entry, {live, corpses, all_hits ++ npc_hits}}
       end)
 
     boss_target = state.players |> Map.values() |> List.first()
     live = Enum.reverse(live_dirty)
+
+    # mob skill hits land here: the character manager resolves the damage
+    # against its own defenses (funneling death and the stat broadcast
+    # through the normal paths), and the field broadcasts the hit so every
+    # client sees the numbers
+    for hit <- hits do
+      case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
+        {:ok, applied} ->
+          Managers.Field.broadcast(
+            state.topic,
+            Packets.SkillDamage.mob_hit(Map.merge(hit, applied))
+          )
+
+        :error ->
+          :ok
+      end
+    end
 
     # mobs that arrived home this tick healed: announce the new health
     # before their idle control lands

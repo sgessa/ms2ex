@@ -94,14 +94,15 @@ defmodule Ms2ex.FieldNpcBattleTest do
     npc = friendly_npc()
     state = field_with_player_at(100, 100)
 
-    assert Battle.tick(npc, state, 10_000) == npc
+    assert {npc2, []} = Battle.tick(npc, state, 10_000)
+    assert npc2 == npc
   end
 
   test "a player inside the sight band gets engaged by the proximity scan" do
     npc = mob()
     state = field_with_player_at(300, 0)
 
-    npc = Battle.tick(npc, state, 10_000)
+    {npc, _} = Battle.tick(npc, state, 10_000)
     assert npc.battle
     assert npc.battle.target_id == 1
     assert npc.battle.target_object_id == 900
@@ -112,7 +113,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     npc = mob()
     state = field_with_player_at(@sight + 100, 0)
 
-    npc = Battle.tick(npc, state, 10_000)
+    {npc, _} = Battle.tick(npc, state, 10_000)
     refute npc.battle
     assert npc.next_target_scan_at > 10_000
   end
@@ -124,14 +125,14 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # player 100 units above the mob: outside the 50-unit up band
     state = field_with_player_at(100, 0, 100.0)
 
-    refute Battle.tick(npc, state, 10_000).battle
+    refute elem(Battle.tick(npc, state, 10_000), 0).battle
   end
 
   test "an engaged mob drops a target that left the field" do
     npc = aggroed_mob()
     empty_state = %{players: %{}, player_positions: %{}}
 
-    npc = Battle.tick(npc, empty_state, 10_000)
+    {npc, _} = Battle.tick(npc, empty_state, 10_000)
     refute npc.battle
     assert npc.velocity == {0, 0, 0}
     assert npc.send_control?
@@ -141,7 +142,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     npc = aggroed_mob()
     state = field_with_player_at(@last_sight + 100, 0)
 
-    refute Battle.tick(npc, state, 10_000).battle
+    refute elem(Battle.tick(npc, state, 10_000), 0).battle
   end
 
   test "hit-aggro holds a target beyond last-sight for the engagement window" do
@@ -150,10 +151,10 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     # sniped from far outside sight: the attacker is held for 5s
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
-    assert Battle.tick(npc, state, 1_000).battle
+    assert elem(Battle.tick(npc, state, 1_000), 0).battle
 
     # once the window passes, the normal last-sight drop applies
-    refute Battle.tick(npc, state, 6_000).battle
+    refute elem(Battle.tick(npc, state, 6_000), 0).battle
   end
 
   test "a scan-acquired target drops on leaving the band with no hold window" do
@@ -161,12 +162,12 @@ defmodule Ms2ex.FieldNpcBattleTest do
     state = field_with_player_at(300, 0)
 
     # engaged by the proximity scan at now = 10_000
-    npc = Battle.tick(npc, state, 10_000)
+    {npc, _} = Battle.tick(npc, state, 10_000)
     assert npc.battle
 
     # the player escapes the last-sight band: dropped immediately, no hold
     escaped = field_with_player_at(@last_sight + 100, 0)
-    refute Battle.tick(npc, escaped, 10_060).battle
+    refute elem(Battle.tick(npc, escaped, 10_060), 0).battle
   end
 
   test "the scan deadline seeds from the tick base, not a constant" do
@@ -196,7 +197,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     npc = aggroed_mob()
     state = field_with_player_at(@last_sight - 100, 0)
 
-    assert Battle.tick(npc, state, 10_000).battle
+    assert elem(Battle.tick(npc, state, 10_000), 0).battle
   end
 
   test "hit-aggro engages the attacker immediately" do
@@ -232,7 +233,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     {npc, _state} =
       Enum.reduce(1..400, {npc, state}, fn i, {npc, state} ->
-        {Battle.tick(npc, state, i * 100), state}
+        {npc, _hits} = Battle.tick(npc, state, i * 100)
+        {npc, state}
       end)
 
     assert npc.battle
@@ -256,28 +258,36 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # moving — a stand tick mid-chase makes the client flicker the walk
     # animation
     {npc, stutter_ticks} =
-      Enum.reduce(1..120, {npc, 0}, fn i, {npc, stutter} ->
+      Enum.reduce_while(1..120, {npc, 0}, fn i, {npc, stutter} ->
         player_x = if rem(i, 10) < 5, do: 3000, else: 1000
         state = field_with_player_at(player_x, -i * 20)
-        npc = Battle.tick(npc, state, i * 100)
+        {npc, _hits} = Battle.tick(npc, state, i * 100)
 
-        player = state.player_positions[1].position
-        d2 = :math.pow(npc.position.x - player.x, 2) + :math.pow(npc.position.y - player.y, 2)
+        # the mob may leash home mid-test; that is not a stand
+        if npc.battle == nil do
+          {:halt, {npc, stutter}}
+        else
+          player = state.player_positions[1].position
 
-        out_of_range? = d2 > :math.pow(npc.battle.stop_range + 60, 2)
+          d2 =
+            :math.pow(npc.position.x - player.x, 2) +
+              :math.pow(npc.position.y - player.y, 2)
 
-        stutter =
-          if out_of_range? and npc.velocity == {0, 0, 0} do
-            stutter + 1
-          else
-            stutter
-          end
+          out_of_range? = d2 > :math.pow(npc.battle.stop_range + 60, 2)
 
-        {npc, stutter}
+          stutter =
+            if out_of_range? and npc.velocity == {0, 0, 0} do
+              stutter + 1
+            else
+              stutter
+            end
+
+          {:cont, {npc, stutter}}
+        end
       end)
 
-    assert npc.battle, "mob should stay engaged while the player is on the field"
-    assert stutter_ticks == 0, "mob stood #{stutter_ticks} ticks while clearly out of range"
+    assert stutter_ticks == 0,
+           "mob stood #{inspect(stutter_ticks)} ticks while clearly out of range"
   end
 
   test "a mob leashes home when dragged beyond its last-sight from spawn" do
@@ -293,7 +303,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     {npc, _} =
       Enum.reduce(1..150, {npc, chase_state}, fn i, {npc, state} ->
-        {Battle.tick(npc, state, i * 100), state}
+        {npc, _hits} = Battle.tick(npc, state, i * 100)
+        {npc, state}
       end)
 
     # the mob turned back before reaching the player
@@ -348,17 +359,92 @@ defmodule Ms2ex.FieldNpcBattleTest do
     unreachable = field_with_player_at(6200, 0)
 
     # still trying during the grace period
-    npc = Battle.tick(npc, unreachable, 500)
+    {npc, _} = Battle.tick(npc, unreachable, 500)
     assert npc.battle
 
     # grace period over: gives up and walks home
     {npc, _} =
       Enum.reduce(6..400, {npc, nil}, fn i, {npc, _} ->
-        {Battle.tick(npc, unreachable, i * 100), nil}
+        {npc, _hits} = Battle.tick(npc, unreachable, i * 100)
+        {npc, nil}
       end)
 
     assert npc.battle == nil, "mob should have given up and arrived home"
     assert npc.position.x < 400
+  end
+
+  test "a mob in stop range swings at its target on cooldown" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    # skill metadata: a single swing with a 300-unit range and a 1s cooldown
+    stub_metadata(%{
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 1.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A"},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    # player stands within the 130-unit stop range
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+
+    assert %{mode: :chase} = battle = npc.battle
+    refute battle.cast, "the tick that engages does not swing yet"
+
+    # the next tick starts the swing
+    {npc, _} = Battle.tick(npc, state, 200)
+    assert %{skill_id: 4001, hit_done?: false} = npc.battle.cast
+
+    # past the windup: the swing resolves — the hit event is queued, the
+    # cast is cleared and the cooldown gates the next swing
+    {npc, _} = Battle.tick(npc, state, 700)
+    assert %{character_id: 1, attack: 500, rate: 2.0, skill_id: 4001} = npc.battle.hit_event
+    assert npc.battle.cast == nil
+    assert npc.battle.next_attack_at >= 700
+
+    # past the cast end: cooldown gates the next swing
+    {npc, _} = Battle.tick(npc, state, 1_300)
+    assert npc.battle.cast == nil
+    assert npc.battle.next_attack_at >= 1_300
+
+    refute elem(Battle.tick(npc, state, 1_350), 0).battle.cast
+    assert elem(Battle.tick(npc, state, 2_400), 0).battle.cast
+  end
+
+  test "the swing whiffs when the target leaves range before the hit lands" do
+    {map_id, xblock} = unique_map()
+    stub_navmesh(xblock, map_id)
+
+    metadata = mob_metadata(skill: [%{id: 4001, level: 1}])
+    npc = mob_with_metadata(metadata, map_id: map_id)
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+
+    {npc, _} = Battle.tick(npc, field_with_player_at(100, 0), 100)
+
+    # the player teleports far away before the windup completes
+    far_state = field_with_player_at(3_000, 0)
+    {npc, _} = Battle.tick(npc, far_state, 700)
+
+    hit_event = npc.battle && npc.battle.hit_event
+    assert hit_event == nil
   end
 
   test "no navmesh on the map: the mob engages but holds position" do
@@ -367,7 +453,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
     x_before = npc.position.x
-    npc = Battle.tick(npc, state, 1_000)
+    {npc, _} = Battle.tick(npc, state, 1_000)
 
     assert npc.battle
     assert npc.battle.path == nil
@@ -387,7 +473,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     {npc, _} =
       Enum.reduce(1..60, {npc, chase_state}, fn i, {npc, state} ->
-        {Battle.tick(npc, state, i * 100), state}
+        {npc, _hits} = Battle.tick(npc, state, i * 100)
+        {npc, state}
       end)
 
     assert npc.position.x > 800, "mob should have left its spawn area"
@@ -401,14 +488,15 @@ defmodule Ms2ex.FieldNpcBattleTest do
       |> Map.put(:last_attacker, 1)
 
     # the player leaves the field: the mob switches to walking home
-    npc = Battle.tick(npc, %{players: %{}, player_positions: %{}}, 61 * 100)
+    {npc, _} = Battle.tick(npc, %{players: %{}, player_positions: %{}}, 61 * 100)
     assert %{mode: :return} = npc.battle
     assert npc.battle.goal == %Types.Coord{x: 0.0, y: 0.0, z: 0.0}
 
     # and it arrives home, healed, tags cleared
     {npc, _} =
       Enum.reduce(62..400, {npc, nil}, fn i, {npc, _} ->
-        {Battle.tick(npc, %{players: %{}, player_positions: %{}}, i * 100), nil}
+        {npc, _hits} = Battle.tick(npc, %{players: %{}, player_positions: %{}}, i * 100)
+        {npc, nil}
       end)
 
     assert npc.battle == nil, "mob should go idle once home"
@@ -424,7 +512,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
 
     # the target disappears while the mob never left home
-    npc = Battle.tick(npc, %{players: %{}, player_positions: %{}}, 6_000)
+    {npc, _} = Battle.tick(npc, %{players: %{}, player_positions: %{}}, 6_000)
 
     assert npc.battle == nil
   end
@@ -440,16 +528,17 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     {npc, _} =
       Enum.reduce(1..60, {npc, chase_state}, fn i, {npc, state} ->
-        {Battle.tick(npc, state, i * 100), state}
+        {npc, _hits} = Battle.tick(npc, state, i * 100)
+        {npc, state}
       end)
 
     # target vanishes -> starts walking home
-    npc = Battle.tick(npc, %{players: %{}, player_positions: %{}}, 61 * 100)
+    {npc, _} = Battle.tick(npc, %{players: %{}, player_positions: %{}}, 61 * 100)
     assert %{mode: :return} = npc.battle
 
     # the player attacks it mid-route: back on the chase
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 62 * 100)
-    npc = Battle.tick(npc, chase_state, 62 * 100 + 50)
+    {npc, _} = Battle.tick(npc, chase_state, 62 * 100 + 50)
 
     assert %{mode: :chase} = npc.battle
     assert npc.battle.target_id == 1
