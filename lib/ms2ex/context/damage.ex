@@ -10,6 +10,30 @@ defmodule Ms2ex.Context.Damage do
   alias Ms2ex.Types.FieldNpc
   alias Ms2ex.Types.SkillCast
 
+  @attack_damage_factor 4
+  # resistance values normalize against this base: a target reaching it
+  # (after any piercing) resists the element fully and takes no damage
+  @resistance_base 1500
+
+  @doc """
+  Resolves a mob's swing against a character: the mob's physical attack
+  drives the hit, scaled by the attack's damage rate and cut down by the
+  character's defense and physical resistance.
+  """
+  @spec calculate_mob_hit(Schema.Character.t(), %{attack: number(), rate: number()}) :: %{
+          dmg: integer(),
+          crit?: boolean()
+        }
+  def calculate_mob_hit(%Schema.Character{} = character, %{attack: attack, rate: rate}) do
+    stats = character.stats
+    defense = max(stats.defense_cur, 1)
+    resistance = (@resistance_base - max(stats.physical_res_cur, 0)) / @resistance_base
+
+    dmg = trunc(rate * attack * resistance / defense * @attack_damage_factor)
+
+    %{dmg: max(dmg, 1), crit?: false}
+  end
+
   @doc """
   Determines if a character's attack results in a critical hit based on their critical rate.
 
@@ -88,7 +112,9 @@ defmodule Ms2ex.Context.Damage do
     target_res = if physical?, do: target.physical_res.total, else: target.magical_res.total
 
     resistance =
-      (1500 - max(target_res - 1500 * (stats.piercing_cur / 1000), 0)) / 1500
+      (@resistance_base -
+         max(target_res - @resistance_base * (stats.piercing_cur / 1000), 0)) /
+        @resistance_base
 
     damage_multiplier = damage_multiplier * attack_stat * resistance
 

@@ -3,6 +3,58 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Rooted mobs no longer move: an explicit zero in the npc's action
+  speeds (e.g. Nepenthus plants) means stationary, instead of falling
+  back to a default chase speed and sliding out of the ground; they
+  stand their ground and strike only when the target is within reach.
+  Walk-only mobs (zero run speed, positive walk speed) chase at their
+  walk gait
+- Aggro resets on player death: a player with a tombstone on the field
+  is invisible to mob scans and is dropped as a target immediately, so
+  mobs stop attacking the body and walk home (or go idle at their spawn
+  area); the character manager also refuses mob hits on dead characters,
+  covering swings already in flight when the target died
+- Fix mobs chasing at ~13x speed: the chase tick's updated battle state
+  (move clock, path index) was dropped when returning from mid-path
+  ticks, so every step budget ballooned to the 200ms max-step clamp; the
+  battle map now merges back and a regression test pins per-tick
+  displacement to run speed x elapsed time
+- Mob attack casting: an engaged mob in stop range casts its first skill
+  entry — ControlNpc carries the motion's sequence in PcSkill state, the
+  swing lands at the windup's end if the target is still within the
+  attack range (else it whiffs), and the hit is applied through the
+  character manager (reverse damage pipeline) with a SkillDamage
+  broadcast. Cast holds keep `last_move_at` fresh so the post-cast chase
+  resumes at per-tick speed (no clamped lurch), and stands send a control
+  on animation changes so the swing → combat-idle settle is visible
+
+- Basic mob AI — aggro, chase and control state. Mobs acquire targets by a
+  500ms proximity scan inside their metadata sight band and engage the
+  attacker the moment they are hit (holding it for 5s so ranged pulls
+  work); an engaged mob drops its target when it leaves the field or
+  escapes the wider last-sight band — and a mob that chased you away from
+  its spawn point then walks home over the navmesh, healing to full and
+  clearing its attacker tags on arrival, while still scanning so it can
+  re-engage you on the way. Chasing runs over the navmesh:
+  `Navigation.find_path/3` builds a per-map polygon graph (shared edges
+  welded across tiles, cached in `persistent_term`), paths with A* over
+  polygon centers pulled tight by the funnel algorithm, and
+  nearest-polygon queries ride a uniform grid index so per-step floor
+  snapping stays cheap with many mobs. Mobs run at their run speed with
+  velocity broadcast for client interpolation, re-path on target drift,
+  and stop inside their first skill's attack range (capsule melee
+  fallback), facing their target while engaged. The chase streams
+  smoothly — velocity carries across path corners, exhausted paths extend
+  in the same tick, and a standing mob only resumes once the target pulls
+  a margin beyond range. ControlNpc now reports Walk while moving, the
+  PcSkill reaction while engaged and standing, and the real aggro target
+  in the boss target slot. Mob deadlines (scan cadence, engagement holds)
+  run on the normalized per-VM tick base (`Ms2ex.sync_ticks/0`):
+  constant-zero deadlines compared against the raw BEAM monotonic clock —
+  whose base can sit below zero — never fire, which silently disabled
+  sight aggro and aggro reset on first deployment. The ingest projects
+  the npc `distance` (sight bands) and `ai_path` metadata this consumes.
+
 - Walking npcs ride the ground instead of sinking into it: patrol legs now
   snap the npc position onto the navmesh surface every step (the straight
   line between waypoints cuts below the floor on slopes and stairs, so

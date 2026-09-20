@@ -34,6 +34,28 @@ defmodule Ms2ex.Packets.SkillDamage do
     end)
   end
 
+  # mob → player hit: identical damage layout with the mob as caster; the
+  # fields arrive pre-resolved from the field's battle tick
+  def mob_hit(hit) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.damage)
+    |> put_long(0)
+    |> put_long(hit.caster_object_id * 0x1_0000_0000 + hit.attack_counter)
+    |> put_int(hit.caster_object_id)
+    |> put_int(hit.skill_id)
+    |> put_short(hit.skill_level)
+    |> put_byte(0)
+    |> put_byte(0)
+    |> put_short_coord(hit.position)
+    |> put_short_coord(hit.direction)
+    |> put_byte(1)
+    |> put_int(hit.target_object_id)
+    |> put_byte(0x1)
+    |> put_byte(0x0)
+    |> put_long(hit.dmg)
+  end
+
   # heal record layout: [caster][target][owner][hp][sp][ep] + animate flag;
   # unused amounts stay zero
   def heal(record) do

@@ -19,11 +19,21 @@ defmodule Ms2ex.Types.FieldNpc do
     :last_attacker,
     :damage_dealers,
     # TODO per-model sequence ids from anikey data (ingest projection)
-    animation: 255,
-    patrol: nil,
+    :animation,
+    :patrol,
+    # aggro state (mobs only): %Battle{} while engaged or returning, nil
+    # when idle
+    :battle,
+    :next_target_scan_at,
+    # where the mob actually appeared (post spawn scatter); the return-home
+    # walk targets this
+    :origin,
     dead?: false,
     corpse?: false,
     send_control?: true,
+    # set when the mob healed (arrived home): the field broadcasts a health
+    # stat update so clients drop the pre-heal HP
+    stat_dirty?: false,
     seq_counter: 0,
     last_control_at: 0,
     velocity: {0, 0, 0},
@@ -43,12 +53,17 @@ defmodule Ms2ex.Types.FieldNpc do
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
       |> Map.put_new(
         :last_control_at,
-        System.monotonic_time(:millisecond) + :rand.uniform(@idle_control_ms)
+        Ms2ex.sync_ticks() + :rand.uniform(@idle_control_ms)
       )
       |> Map.put_new(:damage_dealers, %{})
+      |> Map.put_new(:battle, nil)
+      # deadlines must seed from the live tick base: a constant 0 sits in
+      # the future forever against the raw BEAM monotonic base
+      |> Map.put_new(:next_target_scan_at, Ms2ex.sync_ticks())
       |> randomize_pos()
 
-    struct(__MODULE__, attrs)
+    field_npc = struct(__MODULE__, attrs)
+    %{field_npc | origin: attrs[:origin] || field_npc.position}
   end
 
   defp to_coord(%Coord{} = coord), do: coord

@@ -16,7 +16,7 @@ started.
 - [Field manager](features/field-manager.md) — [Partial]
 - [Instanced maps](features/instanced-maps.md) — [Partial]
 - [Player death & revive](features/player-death-revive.md) — [Partial]
-- [Mob AI: aggro, chase & attack](features/mob-ai.md) — [Open]
+- [Mob AI: aggro, chase & attack](features/mob-ai.md) — [Partial]
 - [Damage pipeline](features/damage-pipeline.md) — [Partial]
 - [Mob spawn cycles](features/mob-spawn-cycles.md) — [Partial]
 
