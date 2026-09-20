@@ -408,51 +408,50 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   defp cast_tick(npc, battle, field_state, target_position, now) do
     cast = battle.cast
 
-    cond do
-      now < cast.hit_at ->
-        {stand(npc, battle, target_position, now), []}
+    if now < cast.hit_at do
+      # windup: hold position facing the target
+      {stand(npc, battle, target_position, now), []}
+    else
+      target_position = get_in(field_state, [:player_positions, battle.target_id, :position])
 
-      true ->
-        target_position = get_in(field_state, [:player_positions, battle.target_id, :position])
+      in_range? =
+        match?(%Types.Coord{}, target_position) and
+          square_distance(npc.position, target_position) <
+            square(cast.range + @cast_range_slack)
 
-        in_range? =
-          match?(%Types.Coord{}, target_position) and
-            square_distance(npc.position, target_position) <
-              square(cast.range + @cast_range_slack)
+      npc = %{
+        npc
+        | velocity: {0, 0, 0},
+          rotation: face_toward(npc.position, target_position, npc.rotation),
+          send_control?: true
+      }
 
-        npc = %{
-          npc
-          | velocity: {0, 0, 0},
-            rotation: face_toward(npc.position, target_position, npc.rotation),
-            send_control?: true
+      battle = %{
+        battle
+        | cast: nil,
+          next_attack_at: now + @min_attack_interval_ms,
+          last_move_at: now
+      }
+
+      if in_range? do
+        hit = %{
+          character_id: battle.target_id,
+          caster_object_id: npc.object_id,
+          target_object_id: battle.target_object_id,
+          skill_id: cast.skill_id,
+          skill_level: cast.skill_level,
+          position: npc.position,
+          direction: aim_direction(npc.position, target_position),
+          attack: get_in(npc.npc.metadata, [:stat, :stats, :physical_atk]) || 0,
+          rate: cast.rate,
+          attack_counter: battle.attack_counter + 1
         }
 
-        battle = %{
-          battle
-          | cast: nil,
-            next_attack_at: now + @min_attack_interval_ms,
-            last_move_at: now
-        }
-
-        if in_range? do
-          hit = %{
-            character_id: battle.target_id,
-            caster_object_id: npc.object_id,
-            target_object_id: battle.target_object_id,
-            skill_id: cast.skill_id,
-            skill_level: cast.skill_level,
-            position: npc.position,
-            direction: aim_direction(npc.position, target_position),
-            attack: get_in(npc.npc.metadata, [:stat, :stats, :physical_atk]) || 0,
-            rate: cast.rate,
-            attack_counter: battle.attack_counter + 1
-          }
-
-          {%{npc | battle: %{battle | hit_event: hit, attack_counter: battle.attack_counter + 1}},
-           [hit]}
-        else
-          {%{npc | battle: battle}, []}
-        end
+        {%{npc | battle: %{battle | hit_event: hit, attack_counter: battle.attack_counter + 1}},
+         [hit]}
+      else
+        {%{npc | battle: battle}, []}
+      end
     end
   end
 
