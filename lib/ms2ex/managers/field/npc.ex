@@ -381,23 +381,39 @@ defmodule Ms2ex.Managers.Field.Npc do
         # the model cannot animate — the walk itself is client-side
         animations = Patrol.leg_animations(field_npc, way_points) || []
 
+        base = %{
+          waypoints: way_points,
+          animations: animations,
+          speeds:
+            Enum.map(way_points, fn way_point ->
+              Patrol.leg_speed(field_npc, way_point[:approach_animation])
+            end),
+          index: 0,
+          speed: @follow_speed,
+          last_at: Ms2ex.sync_ticks(),
+          despawn_on_finish?: true
+        }
+
+        # the carry dummy is invisible and the player's walk is choreographed
+        # client-side: when no navmesh route resolves, the dummy falls back to
+        # the straight authored line so the carry still completes
+        patrol =
+          case Patrol.start_leg(field_npc, base) do
+            {:ok, patrol} ->
+              patrol
+
+            :error ->
+              Map.merge(base, %{
+                path: Enum.map(way_points, fn way_point -> way_point[:position] end),
+                path_index: 1
+              })
+          end
+
         field_npc = %{
           field_npc
           | position: character.position,
-            animation: Enum.at(animations, 0) || field_npc.animation,
-            patrol:
-              Patrol.start_leg(field_npc, %{
-                waypoints: way_points,
-                animations: animations,
-                speeds:
-                  Enum.map(way_points, fn way_point ->
-                    Patrol.leg_speed(field_npc, way_point[:approach_animation])
-                  end),
-                index: 0,
-                speed: @follow_speed,
-                last_at: Ms2ex.sync_ticks(),
-                despawn_on_finish?: true
-              })
+            patrol: patrol,
+            animation: Enum.at(animations, 0) || field_npc.animation
         }
 
         {field_npc, put_in(state, [:npcs, field_npc.object_id], field_npc)}
