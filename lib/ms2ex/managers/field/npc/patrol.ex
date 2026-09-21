@@ -80,6 +80,35 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
+  # snapping applies to intermediate path points only: the final authored
+  # waypoint is walked exactly as authored, so a coverage edge near it (the
+  # mesh surface stopping short of the choreography point) can never pin
+  # the npc above the ground and stall the arrival
+  @mesh_snap_tolerance 15
+
+  defp snap_to_floor(npc, %{path: path, path_index: path_index} = patrol, way_point, position) do
+    final_point? = path_index >= length(path) - 1
+
+    case {routed_leg?(patrol), way_point[:air_way_point], final_point?} do
+      {_, _, true} ->
+        position
+
+      {_, true, _} ->
+        position
+
+      {true, _, false} ->
+        case Navigation.snap_to_floor(npc.map_id, position) do
+          ground when abs(ground.z - position.z) <= @mesh_snap_tolerance -> ground
+          _ -> position
+        end
+
+      {false, _, _} ->
+        position
+    end
+  end
+
+  defp routed_leg?(%{routed?: routed?}), do: routed?
+
   # a path point arrival continues the leg; consuming the whole path means
   # the authored waypoint is reached — the next leg starts, or the patrol
   # resolves its post-path behavior (story npcs return to their idle pose,
@@ -146,32 +175,6 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   # authored heights are the visual ground — cutscene paths are authored on
   # it) and use the navmesh as a correction: the straight line cuts below
   # the floor on slopes and stairs, and the mesh fixes that. the mesh is
-  # only trustworthy where it agrees with the authored line, though —
-  # walkable coverage has gaps (unresolved nif props) and the nearest walkable
-  # layer there can sit well above the visual ground, floating the model.
-  # beyond the tolerance the authored line wins. air legs keep their
-  # authored flight line
-  @mesh_snap_tolerance 15
-
-  defp snap_to_floor(npc, %{routed?: routed?}, way_point, position) do
-    case {routed?, way_point[:air_way_point]} do
-      # unroutable leg: the mesh has no connected route here, so the authored
-      # line is walked unsnapped
-      {false, _} ->
-        position
-
-      # air legs keep their authored flight line
-      {_, true} ->
-        position
-
-      # mesh leg: the step rides the walkable surface the route was built on
-      {true, _} ->
-        case Navigation.snap_to_floor(npc.map_id, position) do
-          ground when abs(ground.z - position.z) <= @mesh_snap_tolerance -> ground
-          _ -> position
-        end
-    end
-  end
 
   defp attach_patrol(state, object_id, npc, way_points) do
     if Navigation.has_navmesh?(npc.map_id) do

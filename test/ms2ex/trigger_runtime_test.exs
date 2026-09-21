@@ -1118,7 +1118,13 @@ defmodule Ms2ex.TriggerRuntimeTest do
           speed: 240,
           last_at: now - 100,
           despawn_on_finish?: false,
-          path: [%Coord{x: 100.0, y: -50.0, z: -5.0}],
+          # the navmesh route: the npc's own position, a corner riding the
+          # walkable surface, then the authored waypoint
+          path: [
+            %Coord{x: 50.0, y: -50.0, z: -5.0},
+            %Coord{x: 75.0, y: -50.0, z: 0.0},
+            %Coord{x: 100.0, y: -50.0, z: -5.0}
+          ],
           path_index: 1,
           routed?: true
         }
@@ -1126,8 +1132,8 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     advanced = Npc.Patrol.advance_patrol(npc, now)
 
-    # the straight line runs 5 units under the floor; the step re-anchors
-    # the position onto the walkable surface
+    # the straight line to the corner runs 2.5 units under the floor; the
+    # intermediate step re-anchors the position onto the walkable surface
     assert advanced.position.z == 0.0
     assert advanced.send_control?
   end
