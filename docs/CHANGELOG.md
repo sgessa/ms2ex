@@ -3,6 +3,16 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- Npc walk heights now sample the navmesh detail mesh: the projected
+  navmesh carried only the simplified polygon corners, whose interpolation
+  deviates from the source collision by up to recast's edge-max-error
+  (1.3m), so npc heights drifted off the visual ground on stairs and
+  slopes. Navigation resolves the poly containing a position and
+  interpolates the containing detail triangle's height — the same surface
+  the reference's Detour queries sample — for snaps, route endpoints and
+  per-step corrections (ms2ex-file-ingest now projects the detail mesh and
+  reprojects unchanged meshes so the data reaches Redis without a rebuild)
+
 - Npc movement fixes for cutscene walking: patrols walk the straight
   authored line between waypoints — the heights the client data authors on
   the visual ground — and apply the navmesh only as a correction. Each leg
