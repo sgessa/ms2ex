@@ -49,8 +49,18 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     speed = Enum.at(patrol[:speeds] || [], patrol.index) || patrol.speed
     step = speed * dt / 1000.0
 
+    # the authored waypoint terminates the leg: it is walked horizontally at
+    # ground level, so a stair or ledge edge at the end of a mesh route
+    # becomes a step-down instead of a slow float, and the facing follows
+    # the walk direction instead of degenerating on a near-vertical velocity
+    final_leg? = patrol.path_index >= length(patrol.path) - 1
+
     {position, velocity, arrived?} =
-      step_toward(npc.position, leg_target(patrol), step, speed, dt)
+      if final_leg? and way_point[:air_way_point] != true do
+        horizontal_step(npc.position, leg_target(patrol), step, speed)
+      else
+        step_toward(npc.position, leg_target(patrol), step, speed, dt)
+      end
 
     patrol = Map.put(patrol, :last_at, now)
     position = snap_to_floor(npc, patrol, way_point, position)
@@ -322,6 +332,26 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   defp face_move_direction(rotation, _velocity), do: rotation
+
+  # the final leg walks the horizontal distance to the authored waypoint at
+  # ground level: x/y advance at the gait speed while z sits at the authored
+  # height, so the model steps down onto the ground instead of descending in
+  # place above it
+  defp horizontal_step(pos, target, step, speed) do
+    dx = target.x - pos.x
+    dy = target.y - pos.y
+    dist = :math.sqrt(dx * dx + dy * dy)
+
+    if dist == 0 or dist <= step do
+      {target, {0, 0, 0}, true}
+    else
+      vx = dx / dist * speed
+      vy = dy / dist * speed
+
+      position = %{pos | x: pos.x + dx / dist * step, y: pos.y + dy / dist * step, z: target.z}
+      {position, {vx, vy, 0}, false}
+    end
+  end
 
   # full 3D step toward the waypoint (waypoints carry ground heights); the
   # velocity is what the control packet reports so the client interpolates
