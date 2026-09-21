@@ -53,7 +53,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
       step_toward(npc.position, leg_target(patrol), step, speed, dt)
 
     patrol = Map.put(patrol, :last_at, now)
-    position = snap_to_floor(npc, patrol, way_point, position)
+    position = snap_to_floor(npc, way_point, position)
 
     if arrived? do
       advance_leg(%{npc | position: position}, patrol)
@@ -80,34 +80,24 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  # snapping applies to intermediate path points only: the final authored
-  # waypoint is walked exactly as authored, so a coverage edge near it (the
-  # mesh surface stopping short of the choreography point) can never pin
-  # the npc above the ground and stall the arrival
+  # path points ride the walkable surface the route was built on; the
+  # nearest surface is only trusted when it agrees with the step (a higher
+  # collision layer must never pull the model off its route). air legs keep
+  # their authored flight line
   @mesh_snap_tolerance 15
 
-  defp snap_to_floor(npc, %{path: path, path_index: path_index} = patrol, way_point, position) do
-    final_point? = path_index >= length(path) - 1
-
-    case {routed_leg?(patrol), way_point[:air_way_point], final_point?} do
-      {_, _, true} ->
+  defp snap_to_floor(npc, way_point, position) do
+    case way_point[:air_way_point] do
+      true ->
         position
 
-      {_, true, _} ->
-        position
-
-      {true, _, false} ->
+      _ ->
         case Navigation.snap_to_floor(npc.map_id, position) do
           ground when abs(ground.z - position.z) <= @mesh_snap_tolerance -> ground
           _ -> position
         end
-
-      {false, _, _} ->
-        position
     end
   end
-
-  defp routed_leg?(%{routed?: routed?}), do: routed?
 
   # a path point arrival continues the leg; consuming the whole path means
   # the authored waypoint is reached — the next leg starts, or the patrol
@@ -125,50 +115,60 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
       true ->
         patrol = Map.put(patrol, :index, patrol.index + 1)
         animation = Enum.at(patrol.animations, patrol.index) || npc.animation
-        patrol = start_leg(npc, patrol)
 
-        %{npc | patrol: patrol, animation: animation, send_control?: true}
+        case start_leg(npc, patrol) do
+          {:ok, patrol} ->
+            %{npc | patrol: patrol, animation: animation, send_control?: true}
+
+          :error ->
+            finish_patrol(npc, patrol)
+        end
     end
   end
 
   @doc """
   Resolves how the current authored waypoint is reached: over the navmesh
-  graph when a connected path exists — walking and snapping the mesh — or
-  along the straight authored line when it does not (coverage gaps). The
-  authored waypoint is appended so the leg always lands exactly on the
-  choreography point. The authored line is the choreography truth:
-  cutscene waypoints are authored on the visual ground, so an unroutable
-  leg is never mesh-snapped (a TOK collision layer above the visual floor
-  would otherwise float the model and stall the descent).
+  graph, exactly like the reference's PathTo. Returns `:error` when no
+  connected route exists (unresolved nif props leave coverage gaps) — the
+  caller then leaves the npc standing instead of walking a straight line
+  that can float above the terrain.
   """
   def start_leg(%Types.FieldNpc{} = npc, patrol) do
     way_point = Enum.fetch!(patrol.waypoints, patrol.index)
-    target = way_point[:position]
+    # patrol documents project positions as plain maps; the route query
+    # needs a Coord
+    target = to_coord(way_point[:position])
+    authored_z = trunc(target.z * 100) / 100
 
-    {path, routed?} =
+    result =
       if way_point[:air_way_point] do
-        {[target], false}
+        {:ok, Map.put(patrol, :path, [target]) |> Map.put(:path_index, 1)}
       else
         case Navigation.find_path(npc.map_id, npc.position, target) do
-          {:ok, path} -> {path ++ [target], true}
-          :error -> {[target], false}
+          {:ok, path} -> {:ok, Map.put(patrol, :path, path) |> Map.put(:path_index, 1)}
+          :error -> :error
         end
       end
 
-    waypoint = Enum.fetch!(patrol.waypoints, patrol.index)
-    authored = waypoint[:position]
+    case result do
+      {:ok, patrol} ->
+        Logger.debug(
+          "[patrol] leg start npc=#{npc.object_id} waypoint=#{patrol.index + 1}/#{length(patrol.waypoints)} " <>
+            "from=(#{trunc(npc.position.x)}, #{trunc(npc.position.y)}, #{trunc(npc.position.z * 100) / 100}) " <>
+            "authored_z=#{authored_z} path_points=#{length(patrol.path)} " <>
+            "path_heights=#{inspect(Enum.map(patrol.path, fn p -> trunc(p.z * 100) / 100 end), limit: 8)}"
+        )
 
-    Logger.debug(
-      "[patrol] leg start npc=#{npc.object_id} waypoint=#{patrol.index + 1}/#{length(patrol.waypoints)} " <>
-        "from=(#{trunc(npc.position.x)}, #{trunc(npc.position.y)}, #{trunc(npc.position.z * 100) / 100}) " <>
-        "authored_z=#{trunc(authored.z * 100) / 100} routed=#{routed?} path_points=#{length(path)} " <>
-        "path_heights=#{inspect(Enum.map(path, fn p -> trunc(p.z * 100) / 100 end), limit: 8)}"
-    )
+        {:ok, patrol}
 
-    patrol
-    |> Map.put(:path, path)
-    |> Map.put(:path_index, 1)
-    |> Map.put(:routed?, routed?)
+      :error ->
+        Logger.debug(
+          "[patrol] leg start npc=#{npc.object_id} waypoint=#{patrol.index + 1}/#{length(patrol.waypoints)} " <>
+            "authored_z=#{authored_z} no navmesh route"
+        )
+
+        :error
+    end
   end
 
   # ground legs walk the straight choreography line between waypoints (the
@@ -211,10 +211,22 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
             despawn_on_finish?: false
           }
 
-        patrol = start_leg(npc, patrol)
+        case start_leg(npc, patrol) do
+          {:ok, patrol} ->
+            npc = %{npc | animation: hd(animations), patrol: patrol, send_control?: true}
+            put_in(state, [:npcs, object_id], npc)
 
-        npc = %{npc | animation: hd(animations), patrol: patrol, send_control?: true}
-        put_in(state, [:npcs, object_id], npc)
+          :error ->
+            # no connected route to the first waypoint: the npc keeps its
+            # post instead of walking a line that can leave the ground
+            Logger.warning(
+              "no navmesh route for npc " <>
+                to_string(npc.npc.id) <>
+                " on " <> to_string(npc.map_id) <> "; npc will not patrol"
+            )
+
+            state
+        end
     end
   end
 
@@ -328,4 +340,8 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   defp sequence_id(model, name), do: Storage.Animations.sequence_id(model, name)
+
+  defp to_coord(%Types.Coord{} = coord), do: coord
+  defp to_coord(pos) when is_map(pos), do: struct(Types.Coord, Map.to_list(pos))
+  defp to_coord(_), do: %Types.Coord{}
 end

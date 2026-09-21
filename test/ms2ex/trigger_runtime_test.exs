@@ -986,7 +986,11 @@ defmodule Ms2ex.TriggerRuntimeTest do
         }
       })
       |> Map.put(:npcs, %{
-        700 => %{story_npc(108, 11_003_401) | map_id: 52_000_099},
+        700 => %{
+          story_npc(108, 11_003_401)
+          | map_id: 52_000_099,
+            position: %Coord{x: 20.0, y: -20.0, z: 0.0}
+        },
         701 => %{spawn_point_id: 109, animation: 255, patrol: nil, npc: %{id: 11_003_399}}
       })
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [

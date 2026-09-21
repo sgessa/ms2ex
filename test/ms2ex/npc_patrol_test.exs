@@ -29,18 +29,14 @@ defmodule Ms2ex.NpcPatrolTest do
     assert npc.position == %Types.Coord{x: 500, y: 0, z: 0}
   end
 
-  test "a leg without mesh coverage walks its authored line" do
-    # the map has no navmesh, so the leg's fallback is the straight authored
-    # line: the walk follows it and the patrol terminates on the waypoint
+  test "a leg without a navmesh route fails to start" do
+    # the map has no navmesh, so find_path cannot route to the waypoint:
+    # start_leg reports the error and the caller leaves the npc standing
+    # (the reference's PathTo failure handling) instead of walking a line
+    # that can float above the terrain
     npc = patrolling_npc([way_point(air: false)], last_at: 0, path: [path_target(0)])
 
-    npc = Patrol.advance_patrol(npc, 5_000)
-
-    assert npc.patrol == nil
-    assert npc.velocity == {0, 0, 0}
-    assert npc.animation == 100
-    assert npc.send_control? == true
-    assert npc.position == %Types.Coord{x: 500, y: 0, z: 0}
+    assert Patrol.start_leg(npc, npc.patrol) == :error
   end
 
   test "a leg mid-path keeps walking toward the current path point" do
@@ -108,6 +104,25 @@ defmodule Ms2ex.NpcPatrolTest do
     assert npc.position == second.position
   end
 
+  test "a next leg without a navmesh route stands the npc where it stopped" do
+    ground = way_point(air: false)
+    first = way_point(air: true)
+
+    # arrived at the first waypoint; the next leg targets a ground waypoint
+    # on a map without a navmesh, so its route cannot resolve
+    npc = patrolling_npc([first, ground], last_at: 0, path: [first[:position]])
+
+    # the walk to the first (air) waypoint completes; the next leg targets a
+    # ground waypoint on a map without a navmesh, so its route cannot
+    # resolve — the npc stands where it stopped instead of floating on
+    npc = Patrol.advance_patrol(npc, 5_000)
+
+    assert npc.patrol == nil
+    assert npc.animation == 100
+    assert npc.velocity == {0, 0, 0}
+    assert npc.position == first.position
+  end
+
   defp patrolling_npc(way_points, opts) do
     %Types.FieldNpc{
       object_id: 1,
@@ -130,8 +145,7 @@ defmodule Ms2ex.NpcPatrolTest do
             last_at: Keyword.fetch!(opts, :last_at),
             despawn_on_finish?: false,
             path: Keyword.fetch!(opts, :path),
-            path_index: 1,
-            routed?: Keyword.get(opts, :routed?, false)
+            path_index: 1
           },
           %{}
         )
