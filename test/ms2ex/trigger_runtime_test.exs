@@ -1000,6 +1000,10 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     npc = state.npcs[700]
 
+    graph = :persistent_term.get({:navgraph, "nav_test"}, :missing)
+    IO.inspect(graph, label: "[debug] cached graph")
+    IO.inspect(Ms2ex.Navigation.find_path(52_000_099, %Coord{x: 20.0, y: -20.0, z: 0.0}, %Coord{x: 100.0, y: -50.0, z: 0.0}), label: "[debug] find_path")
+
     assert %{patrol: %{waypoints: [waypoint], animations: [11], speed: speed}} = npc
     assert waypoint.position == %{x: 100.0, y: -50.0, z: 0.0}
     assert npc.animation == 11
