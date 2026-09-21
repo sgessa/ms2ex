@@ -2,9 +2,9 @@
 
 Open and incomplete features, grouped by priority. Each entry links to its
 feature document under [features/](features/) with the technical detail —
-how the system works today and what is still needed. Completed work lives in
-[CHANGELOG.md](CHANGELOG.md). Client metadata projections are documented in
-[CLIENT_METADATA.md](CLIENT_METADATA.md).
+how the system works today and what is still needed. Completed work is
+recorded by merged PRs; release notes generate from them. Client metadata
+projections are documented in [CLIENT_METADATA.md](CLIENT_METADATA.md).
 
 Status markers: **[Partial]** — some pieces are in place; **[Open]** — not
 started.
