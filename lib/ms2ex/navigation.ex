@@ -672,10 +672,19 @@ defmodule Ms2ex.Navigation do
     i1 = Enum.find_index(a.verts, fn v -> v == c1 end)
     i2 = Enum.find_index(a.verts, fn v -> v == c2 end)
 
-    if rem(i1 + 1, n) == i2 do
-      {Enum.at(a.verts, i1), Enum.at(a.verts, i2)}
-    else
-      {Enum.at(a.verts, i2), Enum.at(a.verts, i1)}
+    # the winding edge c1 → c2: left = verts[c1], right = verts[c2]. The
+    # reversed order means the winding edge is c2 → c1. Tolerant portals
+    # (interpolated corners) pass through as-is
+    cond do
+      i1 != nil and i2 != nil and rem(i1 + 1, n) == i2 ->
+        {Enum.at(a.verts, i1), Enum.at(a.verts, i2)}
+
+      i1 != nil and i2 != nil and rem(i2 + 1, n) == i1 ->
+        {Enum.at(a.verts, i2), Enum.at(a.verts, i1)}
+
+      true ->
+        # the tolerant portal: the corners are already in nav space
+        {c1, c2}
     end
   end
 
