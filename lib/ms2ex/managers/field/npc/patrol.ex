@@ -45,25 +45,13 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   def advance_patrol(npc, now) do
     patrol = npc.patrol
     dt = max(now - Map.get(patrol, :last_at, now), 1)
-    way_point = Enum.fetch!(patrol.waypoints, patrol.index)
     speed = Enum.at(patrol[:speeds] || [], patrol.index) || patrol.speed
     step = speed * dt / 1000.0
 
-    # the authored waypoint terminates the leg: it is walked horizontally at
-    # ground level, so a stair or ledge edge at the end of a mesh route
-    # becomes a step-down instead of a slow float, and the facing follows
-    # the walk direction instead of degenerating on a near-vertical velocity
-    final_leg? = patrol.path_index >= length(patrol.path) - 1
-
     {position, velocity, arrived?} =
-      if final_leg? and way_point[:air_way_point] != true do
-        horizontal_step(npc.position, leg_target(patrol), step, speed)
-      else
-        step_toward(npc.position, leg_target(patrol), step, speed, dt)
-      end
+      step_toward(npc.position, leg_target(patrol), step, speed, dt)
 
     patrol = Map.put(patrol, :last_at, now)
-    position = snap_to_floor(npc, patrol, way_point, position)
 
     if arrived? do
       advance_leg(%{npc | position: position}, patrol)
@@ -87,29 +75,6 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     case Enum.at(patrol.path, patrol.path_index) do
       nil -> Enum.fetch!(patrol.waypoints, patrol.index)[:position]
       point -> point
-    end
-  end
-
-  # intermediate path points ride the walkable surface the route was built
-  # on: the reference re-snaps the walking npc's position onto the navmesh
-  # every tick (FindNearestPoly accepts anything within its query box), so
-  # the model tracks the collision floor even where the straight line to
-  # the next path point would cut through the air. air legs keep their
-  # authored flight line, and the authored waypoint terminates the leg
-  # walked exactly as authored — snapping it could pull the npc back onto a
-  # higher collision layer and stall the arrival
-  defp snap_to_floor(npc, %{mesh_leg?: mesh_leg?} = patrol, way_point, position) do
-    final? = patrol.path_index >= length(patrol.path) - 1
-
-    cond do
-      final? or way_point[:air_way_point] == true ->
-        position
-
-      mesh_leg? ->
-        Navigation.snap_to_floor(npc.map_id, position) || position
-
-      true ->
-        position
     end
   end
 
@@ -176,8 +141,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         {:ok,
          patrol
          |> Map.put(:path, path ++ [target])
-         |> Map.put(:path_index, 1)
-         |> Map.put(:mesh_leg?, true)}
+         |> Map.put(:path_index, 1)}
 
       :error ->
         Logger.debug(
@@ -328,26 +292,6 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   defp face_move_direction(rotation, _velocity), do: rotation
-
-  # the final leg walks the horizontal distance to the authored waypoint at
-  # ground level: x/y advance at the gait speed while z sits at the authored
-  # height, so the model steps down onto the ground instead of descending in
-  # place above it
-  defp horizontal_step(pos, target, step, speed) do
-    dx = target.x - pos.x
-    dy = target.y - pos.y
-    dist = :math.sqrt(dx * dx + dy * dy)
-
-    if dist == 0 or dist <= step do
-      {target, {0, 0, 0}, true}
-    else
-      vx = dx / dist * speed
-      vy = dy / dist * speed
-
-      position = %{pos | x: pos.x + dx / dist * step, y: pos.y + dy / dist * step, z: target.z}
-      {position, {vx, vy, 0}, false}
-    end
-  end
 
   # full 3D step toward the waypoint (waypoints carry ground heights); the
   # velocity is what the control packet reports so the client interpolates

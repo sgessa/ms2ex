@@ -50,9 +50,7 @@ defmodule Ms2ex.Navigation do
       path = [start_pt | funnel(graph, start_pt, goal_pt, corridor)]
       {:ok, Enum.map(path, &to_coord/1)}
     else
-      reason ->
-        IO.inspect(reason, label: "[debug find_path fail]")
-        :error
+      _ -> :error
     end
   end
 

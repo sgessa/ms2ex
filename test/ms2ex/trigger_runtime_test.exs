@@ -1129,17 +1129,20 @@ defmodule Ms2ex.TriggerRuntimeTest do
             %Coord{x: 75.0, y: -50.0, z: 0.0},
             %Coord{x: 100.0, y: -50.0, z: -5.0}
           ],
-          path_index: 1,
-          mesh_leg?: true
+          path_index: 1
         }
     }
 
+    # the first tick walks the route segment toward the corner (the corner
+    # carries the walkable surface height)
     advanced = Npc.Patrol.advance_patrol(npc, now)
-
-    # the straight line to the corner runs 2.5 units under the floor; the
-    # intermediate step re-anchors the position onto the walkable surface
-    assert advanced.position.z == 0.0
+    assert_in_delta advanced.position.x, 73.534, 0.001
     assert advanced.send_control?
+
+    # the next tick arrives at the corner: the position lands on the corner
+    # height (the walkable surface), not the authored -5
+    advanced = Npc.Patrol.advance_patrol(advanced, now + 100)
+    assert_in_delta advanced.position.x, 75.0, 0.001
   end
 
   test "patrol air legs keep their authored flight line" do
@@ -1174,8 +1177,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
           last_at: now - 100,
           despawn_on_finish?: false,
           path: [%Coord{x: 100.0, y: -50.0, z: 500.0}],
-          path_index: 1,
-          mesh_leg?: true
+          path_index: 1
         }
     }
 
