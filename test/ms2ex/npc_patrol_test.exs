@@ -29,6 +29,23 @@ defmodule Ms2ex.NpcPatrolTest do
     assert npc.position == %Types.Coord{x: 500, y: 0, z: 0}
   end
 
+  test "a loop patrol cycles back to its first waypoint" do
+    first = way_point(air: true, x: 500)
+    second = way_point(air: true, x: 900)
+
+    npc =
+      patrolling_npc([first, second], last_at: 0, path: [second[:position]])
+      |> Map.update!(:patrol, &Map.merge(&1, %{is_loop: true, index: 1}))
+
+    npc = Patrol.advance_patrol(npc, 10_000)
+
+    # the patrol survives and restarts from the first waypoint
+    assert npc.patrol != nil
+    assert npc.patrol.index == 0
+    assert npc.patrol.path_index == 1
+    assert npc.send_control? == true
+  end
+
   test "a leg without a navmesh route fails to start" do
     # the map has no navmesh, so find_path cannot route to the waypoint:
     # start_leg reports the error and the caller leaves the npc standing
@@ -155,7 +172,7 @@ defmodule Ms2ex.NpcPatrolTest do
 
   defp way_point(opts) do
     %{
-      position: %Types.Coord{x: 500, y: 0, z: 0},
+      position: %Types.Coord{x: Keyword.get(opts, :x, 500), y: 0, z: 0},
       air_way_point: Keyword.get(opts, :air, false),
       approach_animation: "Walk_A"
     }

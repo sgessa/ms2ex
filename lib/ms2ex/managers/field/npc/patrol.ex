@@ -15,8 +15,8 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   @doc """
   Walks a story npc along a named patrol path (script move_npc): the walk
-  streams through the control broadcast and the npc stays at the last
-  waypoint when the path ends.
+  streams through the control broadcast; loop patrols cycle their waypoints
+  forever, and a non-loop patrol leaves the npc at the last waypoint.
   """
   def move_npc(state, spawn_id, path_name) do
     patrol = Map.get(state[:patrols] || %{}, path_name)
@@ -26,7 +26,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         state.npcs
         |> Enum.filter(fn {_object_id, npc} -> npc.spawn_point_id == spawn_id end)
         |> Enum.reduce(state, fn {object_id, npc}, state ->
-          attach_patrol(state, object_id, npc, way_points)
+          attach_patrol(state, object_id, npc, patrol)
         end)
 
       _ ->
@@ -78,20 +78,25 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   # a path point arrival continues the leg; consuming the whole path means
-  # the authored waypoint is reached — the next leg starts, or the patrol
-  # resolves its post-path behavior (story npcs return to their idle pose,
-  # follow dummies despawn)
+  # the authored waypoint is reached — a loop patrol cycles back to its
+  # first waypoint, otherwise the next leg starts or the patrol resolves
+  # its post-path behavior (story npcs return to their idle pose, follow
+  # dummies despawn)
   defp advance_leg(npc, patrol) do
+    last? = patrol.index + 1 >= length(patrol.waypoints)
+
     cond do
       Enum.at(patrol.path, patrol.path_index + 1) != nil ->
         patrol = Map.put(patrol, :path_index, patrol.path_index + 1)
         %{npc | patrol: patrol, send_control?: true}
 
-      patrol.index + 1 >= length(patrol.waypoints) ->
+      last? and patrol[:is_loop] != true ->
         finish_patrol(npc, patrol)
 
       true ->
-        patrol = Map.put(patrol, :index, patrol.index + 1)
+        patrol = Map.put(patrol, :index, if(last?, do: 0, else: patrol.index + 1))
+        # TODO: a waypoint carrying an arrive animation plays it as an emote
+        # before the next leg departs (arrive_animation_time holds the beat)
         animation = Enum.at(patrol.animations, patrol.index) || npc.animation
 
         case start_leg(npc, patrol) do
@@ -152,9 +157,9 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  defp attach_patrol(state, object_id, npc, way_points) do
+  defp attach_patrol(state, object_id, npc, patrol_doc) do
     if Navigation.has_navmesh?(npc.map_id) do
-      attach_legs(state, object_id, npc, way_points)
+      attach_legs(state, object_id, npc, patrol_doc)
     else
       # patrols ride the navmesh; a map without one does not get silent
       # straight-line movement — generate the navmesh instead
@@ -168,7 +173,9 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  defp attach_legs(state, object_id, npc, way_points) do
+  defp attach_legs(state, object_id, npc, patrol_doc) do
+    way_points = patrol_doc[:way_points]
+
     case leg_animations(npc, way_points) do
       nil ->
         # the model has no walk/run sequence; it stays put instead of
@@ -180,7 +187,8 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
           %{
             waypoints: way_points,
             animations: animations,
-            speeds: leg_speeds(npc, way_points),
+            speeds: leg_speeds(npc, way_points, patrol_doc[:speed] || 0),
+            is_loop: patrol_doc[:is_loop] == true,
             index: 0,
             speed: @follow_speed,
             last_at: Ms2ex.sync_ticks(),
@@ -207,9 +215,19 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   # per-waypoint patrol speeds: Run_A legs run at the npc's run speed,
-  # Walk_A legs at its walk speed, falling back to the shared default
-  defp leg_speeds(npc, way_points) do
-    Enum.map(way_points, fn way_point -> leg_speed(npc, way_point[:approach_animation]) end)
+  # Walk_A legs at its walk speed, falling back to the shared default.
+  # A patrol that carries its own speed scales air legs by half of it —
+  # the flight pace the scripted paths author
+  def leg_speeds(npc, way_points, patrol_speed \\ 0) do
+    Enum.map(way_points, fn way_point ->
+      speed = leg_speed(npc, way_point[:approach_animation])
+
+      if way_point[:air_way_point] == true and patrol_speed > 0 do
+        speed * patrol_speed / 2
+      else
+        speed
+      end
+    end)
   end
 
   def leg_speed(npc, approach_animation) do

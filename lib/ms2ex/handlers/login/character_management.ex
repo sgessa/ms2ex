@@ -231,18 +231,14 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     end
   end
 
+  # the same validation gates deletion and cancellation: a character
+  # blocked from deletion is blocked from cancelling one too
   defp handle_cancel_delete(packet, session) do
     {char_id, _packet} = get_long(packet)
 
     case Context.Characters.get(session.account, char_id) do
       %Schema.Character{delete_time: delete_time} = character when delete_time != 0 ->
-        case Context.Characters.update(character, %{delete_time: 0}) do
-          {:ok, _} ->
-            push(session, Packets.CharacterList.cancel_delete(char_id))
-
-          _error ->
-            push(session, Packets.CharacterList.cancel_delete(char_id, :s_char_err_destroy))
-        end
+        cancel_pending(character, session)
 
       %Schema.Character{} ->
         push(session, Packets.CharacterList.cancel_delete(char_id, :s_char_err_no_destroy_wait))
@@ -252,6 +248,27 @@ defmodule Ms2ex.LoginHandlers.CharacterManagement do
     end
   end
 
+  defp cancel_pending(character, session) do
+    case validate_delete(character) do
+      :ok ->
+        clear_delete_time(character, session)
+
+      {:error, reason} ->
+        push(session, Packets.CharacterList.delete_entry(character.id, reason))
+    end
+  end
+
+  defp clear_delete_time(character, session) do
+    case Context.Characters.update(character, %{delete_time: 0}) do
+      {:ok, _} -> push(session, Packets.CharacterList.cancel_delete(character.id))
+      _error -> session
+    end
+  end
+
+  # gates a character must pass to delete or cancel a deletion: no unread
+  # mail and no guild membership (a leader doubly so). TODO: the full gate
+  # list also refuses black-market / meso-market / design-shop listings and
+  # marriages — add them as those systems land
   defp validate_delete(%Schema.Character{} = character) do
     if Context.Mails.count_unread(character.id) > 0 do
       {:error, :s_char_err_unread_mail}

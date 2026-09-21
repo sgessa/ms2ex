@@ -31,7 +31,7 @@ queries.
   height sampled from the containing detail triangle: the simplified
   polygon corners deviate from the source collision by up to recast's
   edge-max-error (1.3m), so heights interpolate the detail patch instead.
-  Npc patrol movement snaps every step onto it, and spawn positions ground
+  Mob movement snaps every step onto it, and spawn positions ground
   the same way (an authored position with no walkable surface within
   tolerance is kept).
 
@@ -58,7 +58,10 @@ ground; air waypoints fly straight; the final segment of every leg lands on
 the authored waypoint exactly), the trigger runtime's move_user refuses
 teleports to positions without walkable ground — scene-anchor portals off
 the platform edge no longer drop players out of the world — and mob
-movement rides the surface via per-step snaps.
+movement rides the surface via per-step snaps. Patrol legs walk the routed
+path's corner heights directly — the coarse polygon corners lie on the
+source surface, but mid-segment height re-sampling on stair polys (the
+smooth-path re-sample) arrives with the Detour migration.
 
 ## Still missing
 

@@ -126,6 +126,30 @@ defmodule Ms2ex.CharacterDeleteTest do
     assert_received {:pushed, ^expected}
   end
 
+  test "a character with unread mail cannot cancel a pending deletion", %{
+    account: account,
+    high: high
+  } do
+    {:ok, high} =
+      Context.Characters.update(high, %{delete_time: System.system_time(:second) + 60})
+
+    Repo.insert!(%Schema.Mail{
+      sender_id: 0,
+      sender_name: "tester",
+      receiver_id: high.id,
+      receiver_type: :character,
+      title: "unread",
+      content: "",
+      expires_at: DateTime.truncate(DateTime.add(DateTime.utc_now(), 86_400), :second)
+    })
+
+    CharacterManagement.handle(cancel_packet(high.id), %{account: account})
+
+    expected = delete_entry(high.id, 7)
+    assert_received {:pushed, ^expected}
+    assert Repo.get(Schema.Character, high.id).delete_time != 0
+  end
+
   test "a character with unread mail cannot be deleted", %{account: account, low: low} do
     Repo.insert!(%Schema.Mail{
       sender_id: 0,

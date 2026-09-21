@@ -139,12 +139,6 @@ defmodule Ms2ex.Managers.Field.Npc do
         field: state.topic
       })
 
-    # the mob spawn scatter moves x/y away from the grounded spawn point:
-    # ground the scattered spot as well — it is where the npc actually
-    # appeared, so the return-home origin follows it
-    position = ground_position(state.map_id, field_npc.position)
-    field_npc = %{field_npc | position: position, origin: position}
-
     Managers.Field.broadcast(state.topic, Packets.FieldAddNpc.add_npc(field_npc))
     Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
 
@@ -384,10 +378,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         base = %{
           waypoints: way_points,
           animations: animations,
-          speeds:
-            Enum.map(way_points, fn way_point ->
-              Patrol.leg_speed(field_npc, way_point[:approach_animation])
-            end),
+          speeds: Patrol.leg_speeds(field_npc, way_points),
           index: 0,
           speed: @follow_speed,
           last_at: Ms2ex.sync_ticks(),
