@@ -44,7 +44,8 @@ started.
 
 - [Join-flow packet audit](features/join-flow.md) — [Partial]
 - [Drop & field-item serialization](features/drops-serialization.md) — [Open]
-- [Navmesh position validation](features/navmesh.md) — [Partial]
+- [Navmesh movement & routing](features/navmesh.md) — [Partial]
+- [Detour migration](plans/detour-migration.md) — [Open]
 
 ## P4 — Architecture
 

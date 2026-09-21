@@ -3,6 +3,26 @@
 Completed work, newest first. Open items live in [ROADMAP.md](ROADMAP.md).
 
 
+- The funnel that collapses navmesh corridors into the minimal corner set
+  now matches the exact boundary conventions of the ported string-pulling:
+  portal vertices order along the from-polygon's winding, the pinch/tighten
+  comparisons use the horizontal signed area directly (the previous signs
+  were inverted — patrols wove side to side through route corners that
+  should have collapsed, and missed real corners), the goal portal's
+  legitimate pinch at the goal dedupes against the goal append, and a
+  start standing on the first portal skips it. Test fixtures now wind
+  their polygons clockwise like the ingested meshes (the funnel's signs
+  depend on the winding). Two graph-welding bugs fixed alongside: the
+  tolerant T-junction overlap ignored height, welding vertically stacked
+  floors into one graph so routes teleported between levels (the overlap
+  now requires both edges to ride the same height), and merging exact
+  with tolerant neighbor links crashed on maps where a polygon pair had
+  both (exact edges win per neighbor). The nearest-poly climb allowance
+  was also in the wrong units — 70 meters instead of the 0.7-meter
+  agent max climb the ingest builds with — so every polygon within 70m
+  vertically of a query tied at zero distance and stacked-floor snaps
+  picked an arbitrary floor
+
 - Npc walk heights now sample the navmesh detail mesh: the projected
   navmesh carried only the simplified polygon corners, whose interpolation
   deviates from the source collision by up to recast's edge-max-error
