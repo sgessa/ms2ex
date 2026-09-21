@@ -225,7 +225,81 @@ defmodule Ms2ex.Navigation do
           acc
       end)
 
-    Enum.map(polys, &%{&1 | edges: Map.get(links, &1.key, %{})})
+    # recast poly meshes have T-junctions: one polygon's long boundary edge
+    # can span several shorter edges of its neighbors, so exact endpoint
+    # matches miss whole strips of floor. Boundary edges of different
+    # polygons that overlap collinearly (within tolerance) are linked too —
+    # the portal being the overlapping segment projected on the first edge
+    boundary =
+      edge_map
+      |> Enum.filter(fn {_key, pairs} -> length(pairs) == 1 end)
+      |> Enum.map(fn {_key, [{poly, edge}]} -> {poly.key, edge} end)
+
+    tol = 0.15
+
+    tolerant_links =
+      for {{key_a, {a0, a1}}, ia} <- Enum.with_index(boundary),
+          {key_b, {b0, b1}} <- Enum.drop(boundary, ia + 1),
+          key_a != key_b,
+          portal = collinear_overlap(a0, a1, {b0, b1}, tol),
+          portal != nil,
+          reduce: %{} do
+        acc ->
+          acc
+          |> Map.update(key_a, %{key_b => portal}, &Map.put(&1, key_b, portal))
+          |> Map.update(key_b, %{key_a => portal}, &Map.put(&1, key_a, portal))
+      end
+
+    Enum.map(polys, fn poly ->
+      edges =
+        Map.merge(Map.get(links, poly.key, %{}), Map.get(tolerant_links, poly.key, %{}), fn
+          _k, exact, tolerant -> if map_size(exact) > 0, do: exact, else: tolerant
+        end)
+
+      %{poly | edges: edges}
+    end)
+  end
+
+  # the overlapping sub-segment of two roughly collinear boundary edges, or
+  # nil when they neither overlap along their axis nor lie within tolerance
+  # of each other's line
+  defp collinear_overlap({a0x, a0y, a0z}, {a1x, a1y, a1z}, {b0, b1}, tol) do
+    dx = a1x - a0x
+    dz = a1z - a0z
+    len2 = dx * dx + dz * dz
+
+    if len2 < 1.0e-9 do
+      nil
+    else
+      tb0 = ((elem(b0, 0) - a0x) * dx + (elem(b0, 2) - a0z) * dz) / len2
+      tb1 = ((elem(b1, 0) - a0x) * dx + (elem(b1, 2) - a0z) * dz) / len2
+      lo = max(min(tb0, tb1), 0.0)
+      hi = min(max(tb0, tb1), 1.0)
+
+      collinear? =
+        point_near_line?(elem(b0, 0), elem(b0, 2), a0x, a0z, dx, dz, tol) and
+          point_near_line?(elem(b1, 0), elem(b1, 2), a0x, a0z, dx, dz, tol)
+
+      if collinear? and hi - lo > 1.0e-6 do
+        dy = a1y - a0y
+
+        p0 = {a0x + lo * dx, a0y + lo * dy, a0z + lo * dz}
+        p1 = {a0x + hi * dx, a0y + hi * dy, a0z + hi * dz}
+        {p0, p1}
+      end
+    end
+  end
+
+  defp point_near_line?(px, pz, a0x, a0z, dx, dz, tol) do
+    len = :math.sqrt(dx * dx + dz * dz)
+
+    if len < 1.0e-9 do
+      false
+    else
+      ex = px - a0x
+      ez = pz - a0z
+      abs(ex * dz - ez * dx) / len <= tol
+    end
   end
 
   # fan-triangle edges of a convex polygon (corners in fan order)
@@ -515,8 +589,11 @@ defmodule Ms2ex.Navigation do
     end
   end
 
-  defp settle(_graph, to_key, _goal_center, key, _open, _g, parents, _counter) when key == to_key,
-    do: walk_back(parents, to_key)
+  defp settle(_graph, to_key, _goal_center, key, _open, _g, parents, _counter)
+       when key == to_key do
+    corridor = walk_back(parents, to_key)
+    corridor
+  end
 
   defp settle(graph, to_key, goal_center, key, open, g, parents, counter) do
     poly = Map.fetch!(graph.by_key, key)
@@ -570,101 +647,108 @@ defmodule Ms2ex.Navigation do
   # consecutive corridor polygons and keeps only the corner points the path
   # actually bends around. returns the full point list ending at the goal;
   # the caller prepends the start
+  # string-pulled straight path through the corridor: the portals are the
+  # corridor polygons' shared winding edges (left = verts[edge], right =
+  # verts[edge + 1], exactly like GetPortalPoints), and the funnel is a
+  # direct port of DotRecast's findStraightPath loop
   defp funnel(graph, start_pt, goal_pt, corridor) do
-    portals = portal_edges(graph, corridor) |> List.to_tuple()
-    # state: the apex (last emitted corner, the start at first) and the
-    # current left/right boundary endpoints with the portal indices they
-    # came from; both boundaries start uninitialized at the apex
-    s = %{apex: start_pt, left: start_pt, right: start_pt, left_idx: 0, right_idx: 0}
-    funnel_run(portals, 0, s, [], goal_pt)
+    portals =
+      corridor
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(fn [a_key, b_key] -> portal_winding(graph, a_key, b_key) end)
+      |> Enum.concat([{goal_pt, goal_pt}])
+      |> List.to_tuple()
+
+    s = %{apex: start_pt, left: start_pt, right: start_pt, apex_idx: 0, left_idx: 0, right_idx: 0}
+    funnel_run(portals, 0, s, [corners: []], goal_pt)
   end
 
-  # shared edges between consecutive corridor polygons, each oriented as
-  # {left, right} relative to the walk direction through the corridor
-  defp portal_edges(graph, [a_key, b_key | rest]) do
+  # the winding edge of poly a shared with poly b: (left, right) = the
+  # poly's winding edge vertices, matching GetPortalPoints
+  defp portal_winding(graph, a_key, b_key) do
     a = Map.fetch!(graph.by_key, a_key)
-    b = Map.fetch!(graph.by_key, b_key)
-    {p1, p2} = Map.fetch!(a.edges, b_key)
+    {c1, c2} = Map.fetch!(a.edges, b_key)
+    n = length(a.verts)
+    i1 = Enum.find_index(a.verts, fn v -> v == c1 end)
+    i2 = Enum.find_index(a.verts, fn v -> v == c2 end)
 
-    portal =
-      if area2(a.center, b.center, p1) > 0 do
-        {p1, p2}
-      else
-        {p2, p1}
+    if rem(i1 + 1, n) == i2 do
+      {Enum.at(a.verts, i1), Enum.at(a.verts, i2)}
+    else
+      {Enum.at(a.verts, i2), Enum.at(a.verts, i1)}
+    end
+  end
+
+  defp funnel_run(portals, i, _s, opts, goal) when i >= tuple_size(portals),
+    do: Enum.reverse(Keyword.get(opts, :corners, [])) ++ [goal]
+
+  defp funnel_run(portals, i, s, opts, goal) do
+    {new_left, new_right} = elem(portals, i)
+
+    if area2(s.apex, s.right, new_right) >= 0 do
+      cond do
+        # the left boundary crossed past the new right: emit the left vertex
+        s.left != s.apex and area2(s.apex, s.left, new_right) < 0 ->
+          corners = [s.left | Keyword.get(opts, :corners, [])]
+
+          s = %{
+            s
+            | apex: s.left,
+              left: s.left,
+              right: s.left,
+              apex_idx: s.left_idx,
+              left_idx: s.left_idx,
+              right_idx: s.left_idx
+          }
+
+          funnel_run(portals, s.apex_idx + 1, s, [corners: corners], goal)
+
+        true ->
+          # tighten the right boundary
+          s = %{s | right: new_right, right_idx: i}
+          funnel_run(portals, i + 1, s, opts, goal)
       end
+    else
+      cond do
+        # the left boundary doesn't tighten: skip this portal
+        area2(s.apex, s.left, new_left) > 0 ->
+          funnel_run(portals, i + 1, s, opts, goal)
 
-    [portal | portal_edges(graph, [b_key | rest])]
-  end
+        # the right boundary crossed past the new left: emit the right vertex
+        s.right != s.apex and area2(s.apex, s.right, new_left) >= 0 ->
+          corners = [s.right | Keyword.get(opts, :corners, [])]
 
-  defp portal_edges(_graph, _corridor), do: []
+          s = %{
+            s
+            | apex: s.right,
+              left: s.right,
+              right: s.right,
+              apex_idx: s.right_idx,
+              left_idx: s.right_idx,
+              right_idx: s.right_idx
+          }
 
-  defp funnel_run(portals, i, _s, corners, goal) when i >= tuple_size(portals),
-    do: Enum.reverse(corners) ++ [goal]
+          funnel_run(portals, s.apex_idx + 1, s, [corners: corners], goal)
 
-  defp funnel_run(portals, i, s, corners, goal) do
-    {pl, pr} = elem(portals, i)
-
-    case left_update(s, pl, i) do
-      {:emit, s, restart_idx} ->
-        funnel_run(portals, restart_idx, s, [s.apex | corners], goal)
-
-      {:tighten, s} ->
-        funnel_run(portals, i, s, corners, goal)
-
-      :skip ->
-        case right_update(s, pr, i) do
-          {:emit, s, restart_idx} ->
-            funnel_run(portals, restart_idx, s, [s.apex | corners], goal)
-
-          {:tighten, s} ->
-            funnel_run(portals, i + 1, s, corners, goal)
-
-          :skip ->
-            funnel_run(portals, i + 1, s, corners, goal)
-        end
+        true ->
+          # tighten the left boundary
+          s = %{s | left: new_left, left_idx: i}
+          funnel_run(portals, i + 1, s, opts, goal)
+      end
     end
   end
 
-  # left boundary update: the candidate pulls inward when it moves the left
-  # boundary toward the right side; a boundary still sitting on the apex
-  # tightens to its first real candidate (a candidate equal to the boundary
-  # is a no-op). a pulled candidate that crosses over the right boundary
-  # emits the right endpoint as a corner
-  defp left_update(s, pl, i) do
-    pulls? = (s.apex == s.left and s.left != pl) or area2(s.apex, s.left, pl) < 0
-    crosses? = s.apex != s.left and area2(s.apex, s.right, pl) > 0
+  # DotRecast's TriArea2D
+  # DotRecast's TriArea2D
 
-    cond do
-      pulls? and crosses? -> emit_corner(s, s.right, s.right_idx)
-      pulls? -> {:tighten, %{s | left: pl, left_idx: i}}
-      true -> :skip
-    end
+  # twice the signed area of the triangle a-b-c in the x/z plane (the
+  # negation of tri_area2)
+  defp area2(a, b, c) do
+    (elem(b, 0) - elem(a, 0)) * (elem(c, 2) - elem(a, 2)) -
+      (elem(c, 0) - elem(a, 0)) * (elem(b, 2) - elem(a, 2))
   end
 
-  defp right_update(s, pr, i) do
-    pulls? = (s.apex == s.right and s.right != pr) or area2(s.apex, s.right, pr) > 0
-    crosses? = s.apex != s.right and area2(s.apex, s.left, pr) < 0
-
-    cond do
-      pulls? and crosses? -> emit_corner(s, s.left, s.left_idx)
-      pulls? -> {:tighten, %{s | right: pr, right_idx: i}}
-      true -> :skip
-    end
-  end
-
-  defp emit_corner(_s, corner, corner_idx) do
-    {:emit,
-     %{apex: corner, left: corner, right: corner, left_idx: corner_idx, right_idx: corner_idx},
-     corner_idx}
-  end
-
-  # twice the signed area of the triangle a-b-c in the x/z plane: positive
-  # when c is left of the a→b direction
-  defp area2({ax, _ay, az}, {bx, _by, bz}, {cx, _cy, cz}) do
-    (bx - ax) * (cz - az) - (cx - ax) * (bz - az)
-  end
-
-  # -- coordinate conversion ---------------------------------------------------------
+  # -- coordinate conversion  # -- coordinate conversion ---------------------------------------------------------
 
   # MS2 is Z-up; the navmesh is meters with Y up
   defp to_nav(%Coord{x: x, y: y, z: z}), do: {x / 100, z / 100, -y / 100}
