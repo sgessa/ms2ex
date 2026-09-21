@@ -35,10 +35,9 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   # advances an npc along its patrol path; called on every control tick.
-  # each authored waypoint is reached over a navmesh path (the reference's
-  # PathTo) so descents follow ramps and stairs instead of a straight line
-  # through the air; the last point of every leg is the authored waypoint
-  # itself
+  # each authored waypoint is reached over a navmesh path so descents
+  # follow ramps and stairs instead of a straight line through the air;
+  # the last point of every leg is the authored waypoint itself
   def advance_patrol(%{patrol: nil} = npc, _now), do: npc
   def advance_patrol(%{patrol: %{waypoints: []}} = npc, _now), do: npc
 
@@ -107,10 +106,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   @doc """
   Resolves how the current authored waypoint is reached: over the navmesh
-  graph, exactly like the reference's PathTo. Returns `:error` when no
-  connected route exists (unresolved nif props leave coverage gaps) — the
-  caller then leaves the npc standing instead of walking a straight line
-  that can float above the terrain.
+  graph, walking ramps and stairs instead of a straight line through the
+  air. Returns `:error` when no connected route exists (unresolved nif
+  props leave coverage gaps) — the caller then leaves the npc standing
+  instead of walking a straight line that can float above the terrain.
   """
   def start_leg(%Types.FieldNpc{} = npc, patrol) do
     way_point = Enum.fetch!(patrol.waypoints, patrol.index)
@@ -152,11 +151,6 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         :error
     end
   end
-
-  # ground legs walk the straight choreography line between waypoints (the
-  # authored heights are the visual ground — cutscene paths are authored on
-  # it) and use the navmesh as a correction: the straight line cuts below
-  # the floor on slopes and stairs, and the mesh fixes that. the mesh is
 
   defp attach_patrol(state, object_id, npc, way_points) do
     if Navigation.has_navmesh?(npc.map_id) do
@@ -227,9 +221,8 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   # npc ground speed for a gait (units/second) from the metadata's action
   # speeds. An explicit zero is meaningful — the mob is rooted and cannot
-  # move (the reference's walk task also cancels for models with no
-  # Run_A/Walk_A to play) — only absent metadata falls back to the shared
-  # default
+  # move (a model with no walk sequence stays put) — only absent metadata
+  # falls back to the shared default
   def npc_speed(npc, gait) do
     case get_in(npc.npc.metadata, [:action, gait]) do
       speed when is_number(speed) and speed >= 0 -> speed * 1.0

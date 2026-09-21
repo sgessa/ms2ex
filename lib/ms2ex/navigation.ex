@@ -46,8 +46,13 @@ defmodule Ms2ex.Navigation do
          {start_key, start_pt} <- nearest_poly_entry(graph, to_nav(from)),
          {goal_key, goal_pt} <- nearest_poly_entry(graph, to_nav(to)),
          corridor when is_list(corridor) <- astar(graph, start_key, goal_key) do
-      # the funnel returns the corner points ending at the goal
-      path = [start_pt | funnel(graph, start_pt, goal_pt, corridor)]
+      # the funnel can pinch at a point it already emitted (the goal portal
+      # collapsing onto the goal), and a corner can land exactly on the
+      # start — the path never repeats a position
+      path =
+        [start_pt | funnel(graph, start_pt, goal_pt, corridor)]
+        |> Enum.dedup()
+
       {:ok, Enum.map(path, &to_coord/1)}
     else
       _ -> :error
@@ -251,10 +256,8 @@ defmodule Ms2ex.Navigation do
       end
 
     Enum.map(polys, fn poly ->
-      edges =
-        Map.merge(Map.get(links, poly.key, %{}), Map.get(tolerant_links, poly.key, %{}), fn
-          _k, exact, tolerant -> if map_size(exact) > 0, do: exact, else: tolerant
-        end)
+      # exact edge matches win over tolerant overlaps on the same neighbor
+      edges = Map.merge(Map.get(tolerant_links, poly.key, %{}), Map.get(links, poly.key, %{}))
 
       %{poly | edges: edges}
     end)
@@ -280,7 +283,14 @@ defmodule Ms2ex.Navigation do
         point_near_line?(elem(b0, 0), elem(b0, 2), a0x, a0z, dx, dz, tol) and
           point_near_line?(elem(b1, 0), elem(b1, 2), a0x, a0z, dx, dz, tol)
 
-      if collinear? and hi - lo > 1.0e-6 do
+      # the overlap must also ride the same height: T-junction edges lie on
+      # one surface, while vertically stacked floors have horizontally
+      # collinear boundary edges meters apart
+      same_height? =
+        heights_converge?(lo, tb0, tb1, elem(b0, 1), elem(b1, 1), a0y, a1y, tol) and
+          heights_converge?(hi, tb0, tb1, elem(b0, 1), elem(b1, 1), a0y, a1y, tol)
+
+      if collinear? and same_height? and hi - lo > 1.0e-6 do
         dy = a1y - a0y
 
         p0 = {a0x + lo * dx, a0y + lo * dy, a0z + lo * dz}
@@ -288,6 +298,14 @@ defmodule Ms2ex.Navigation do
         {p0, p1}
       end
     end
+  end
+
+  # the two edges' heights at a shared horizontal position along their
+  # common axis, within tolerance when they ride the same surface
+  defp heights_converge?(t, tb0, tb1, b0y, b1y, a0y, a1y, tol) do
+    tb = if abs(tb1 - tb0) < 1.0e-9, do: 0.0, else: (t - tb0) / (tb1 - tb0)
+    tb = min(max(tb, 0.0), 1.0)
+    abs(a0y + t * (a1y - a0y) - (b0y + tb * (b1y - b0y))) <= tol
   end
 
   defp point_near_line?(px, pz, a0x, a0z, dx, dz, tol) do
@@ -366,12 +384,12 @@ defmodule Ms2ex.Navigation do
   # the query cell; the search stops once the best hit is closer than any
   # polygon a further ring could still hold
   @spec nearest_poly_entry(t(), point()) :: {poly_key(), point()} | nil
-  # the reference's FindNearestPoly: every candidate polygon is evaluated
-  # with ClosestPointOnPoly (interior points take their height from the
+  # nearest-poly resolution: every candidate polygon is evaluated at its
+  # closest surface point (interior points take their height from the
   # detail mesh; boundary points from the closest edge) and the winner is
   # the smallest distance, where the vertical delta of an over-poly point
   # only counts beyond the walkable climb allowance
-  # Detour's PointInPolygon: ray-cast in the x/z plane over the poly corners
+  # point-in-polygon test: ray-cast in the x/z plane over the poly corners
   defp point_in_poly?(x, z, verts) do
     inside =
       Enum.reduce(Enum.zip(verts, tl(verts ++ [hd(verts)])), false, fn {vi, vj}, c ->
@@ -407,8 +425,8 @@ defmodule Ms2ex.Navigation do
   end
 
   # candidate polys: every tile poly in the grid cells ringing the query
-  # point (4m cells; one ring reaches well past the reference's 2m query
-  # box, so coverage matches while the enumeration stays grid-driven)
+  # point (4m cells; one ring reaches well past a 2m query box, so
+  # coverage matches while the enumeration stays grid-driven)
   defp do_nearest_candidates(graph, {bx, bz}) do
     for dx <- -1..1//1,
         dz <- -1..1//1,
@@ -430,7 +448,7 @@ defmodule Ms2ex.Navigation do
       # poly_height over an in-poly point always yields a surface height
       {:ok, y} = poly_height(poly, pos)
 
-      dy = abs(qy - y) - 70.0
+      dy = abs(qy - y) - 0.7
       dist2 = if dy > 0, do: dy * dy, else: 0.0
       {poly, {qx, y, qz}, dist2}
     else
@@ -643,14 +661,15 @@ defmodule Ms2ex.Navigation do
 
   # -- funnel (string pulling) ----------------------------------------------------
 
-  # pulls the polygon corridor tight: walks the shared edges (portals) between
-  # consecutive corridor polygons and keeps only the corner points the path
-  # actually bends around. returns the full point list ending at the goal;
+  # string-pulled straight path through the polygon corridor: every pair
+  # of consecutive corridor polygons contributes a portal — the shared
+  # edge ordered along the first polygon's vertex winding. the funnel walks
+  # the portals keeping the tightest wedge (apex plus left/right boundary
+  # rays) the corridor allows; a portal vertex that swings past the
+  # opposite boundary pinches the wedge at that boundary's current vertex,
+  # which becomes a corner of the path — the apex moves onto it and the
+  # walk restarts from behind it. returns the corners ending at the goal;
   # the caller prepends the start
-  # string-pulled straight path through the corridor: the portals are the
-  # corridor polygons' shared winding edges (left = verts[edge], right =
-  # verts[edge + 1], exactly like GetPortalPoints), and the funnel is a
-  # direct port of DotRecast's findStraightPath loop
   defp funnel(graph, start_pt, goal_pt, corridor) do
     portals =
       corridor
@@ -663,8 +682,9 @@ defmodule Ms2ex.Navigation do
     funnel_run(portals, 0, s, [corners: []], goal_pt)
   end
 
-  # the winding edge of poly a shared with poly b: (left, right) = the
-  # poly's winding edge vertices, matching GetPortalPoints
+  # the portal edge of poly a shared with poly b, ordered along a's vertex
+  # winding: the first tuple element is the edge's from-vertex in that
+  # winding, the second its to-vertex
   defp portal_winding(graph, a_key, b_key) do
     a = Map.fetch!(graph.by_key, a_key)
     {c1, c2} = Map.fetch!(a.edges, b_key)
@@ -672,9 +692,6 @@ defmodule Ms2ex.Navigation do
     i1 = Enum.find_index(a.verts, fn v -> v == c1 end)
     i2 = Enum.find_index(a.verts, fn v -> v == c2 end)
 
-    # the winding edge c1 → c2: left = verts[c1], right = verts[c2]. The
-    # reversed order means the winding edge is c2 → c1. Tolerant portals
-    # (interpolated corners) pass through as-is
     cond do
       i1 != nil and i2 != nil and rem(i1 + 1, n) == i2 ->
         {Enum.at(a.verts, i1), Enum.at(a.verts, i2)}
@@ -682,8 +699,9 @@ defmodule Ms2ex.Navigation do
       i1 != nil and i2 != nil and rem(i2 + 1, n) == i1 ->
         {Enum.at(a.verts, i2), Enum.at(a.verts, i1)}
 
+      # interpolated portal corners (T-junction overlaps) already lie along
+      # a's winding edge, in winding order
       true ->
-        # the tolerant portal: the corners are already in nav space
         {c1, c2}
     end
   end
@@ -694,70 +712,99 @@ defmodule Ms2ex.Navigation do
   defp funnel_run(portals, i, s, opts, goal) do
     {new_left, new_right} = elem(portals, i)
 
-    if area2(s.apex, s.right, new_right) >= 0 do
-      cond do
-        # the left boundary crossed past the new right: emit the left vertex
-        s.left != s.apex and area2(s.apex, s.left, new_right) < 0 ->
-          corners = [s.left | Keyword.get(opts, :corners, [])]
-
-          s = %{
-            s
-            | apex: s.left,
-              left: s.left,
-              right: s.left,
-              apex_idx: s.left_idx,
-              left_idx: s.left_idx,
-              right_idx: s.left_idx
-          }
-
-          funnel_run(portals, s.apex_idx + 1, s, [corners: corners], goal)
-
-        true ->
-          # tighten the right boundary
-          s = %{s | right: new_right, right_idx: i}
-          funnel_run(portals, i + 1, s, opts, goal)
-      end
+    # a start standing on the first portal (within a millimeter) cannot
+    # bend around it — the walk begins after that portal
+    if i == 0 and seg_dist2(s.apex, new_left, new_right) < 1.0e-6 do
+      funnel_run(portals, 1, s, opts, goal)
     else
-      cond do
-        # the left boundary doesn't tighten: skip this portal
-        area2(s.apex, s.left, new_left) > 0 ->
-          funnel_run(portals, i + 1, s, opts, goal)
-
-        # the right boundary crossed past the new left: emit the right vertex
-        s.right != s.apex and area2(s.apex, s.right, new_left) >= 0 ->
-          corners = [s.right | Keyword.get(opts, :corners, [])]
-
-          s = %{
-            s
-            | apex: s.right,
-              left: s.right,
-              right: s.right,
-              apex_idx: s.right_idx,
-              left_idx: s.right_idx,
-              right_idx: s.right_idx
-          }
-
-          funnel_run(portals, s.apex_idx + 1, s, [corners: corners], goal)
-
-        true ->
-          # tighten the left boundary
-          s = %{s | left: new_left, left_idx: i}
-          funnel_run(portals, i + 1, s, opts, goal)
+      case funnel_right(portals, i, s, opts, new_right, goal) do
+        {:emit, path} -> path
+        s -> funnel_left(portals, i, s, opts, new_left, goal)
       end
     end
   end
 
-  # DotRecast's TriArea2D
-  # DotRecast's TriArea2D
-
-  # twice the signed area of the triangle a-b-c in the x/z plane (the
-  # negation of tri_area2)
-  defp area2(a, b, c) do
-    (elem(b, 0) - elem(a, 0)) * (elem(c, 2) - elem(a, 2)) -
-      (elem(c, 0) - elem(a, 0)) * (elem(b, 2) - elem(a, 2))
+  # the new right vertex: it turns the right boundary inward (a clockwise
+  # squeeze) and tightens the wedge — unless it sweeps past the left
+  # boundary, which pinches the corridor at the left vertex. a right vertex
+  # turning outward leaves the wedge (and the left handling) untouched
+  defp funnel_right(portals, i, s, opts, new_right, goal) do
+    if tri_area2(s.apex, s.right, new_right) <= 0 do
+      if s.left != s.apex and tri_area2(s.apex, s.left, new_right) <= 0 do
+        {:emit, emit_corner(portals, s, s.left, s.left_idx, opts, goal)}
+      else
+        %{s | right: new_right, right_idx: i}
+      end
+    else
+      s
+    end
   end
 
-  # -- coordinate conversion  # -- coordinate conversion ---------------------------------------------------------
+  # the new left vertex: skipped when it turns the left boundary outward
+  # (widening), tightens the boundary while it stays inside the right one,
+  # and pinches the corridor at the right vertex otherwise
+  defp funnel_left(portals, i, s, opts, new_left, goal) do
+    cond do
+      tri_area2(s.apex, s.left, new_left) < 0 ->
+        funnel_run(portals, i + 1, s, opts, goal)
+
+      s.apex == s.left or tri_area2(s.apex, s.right, new_left) < 0 ->
+        funnel_run(portals, i + 1, %{s | left: new_left, left_idx: i}, opts, goal)
+
+      true ->
+        emit_corner(portals, s, s.right, s.right_idx, opts, goal)
+    end
+  end
+
+  # the pinch vertex becomes a path corner: the apex moves onto it, both
+  # boundaries collapse onto the apex and the walk restarts from the
+  # portal following the one the corner came from
+  defp emit_corner(portals, s, corner, corner_idx, opts, goal) do
+    corners = [corner | Keyword.get(opts, :corners, [])]
+
+    s = %{
+      s
+      | apex: corner,
+        left: corner,
+        right: corner,
+        apex_idx: corner_idx,
+        left_idx: corner_idx,
+        right_idx: corner_idx
+    }
+
+    funnel_run(portals, s.apex_idx + 1, s, [corners: corners], goal)
+  end
+
+  # twice the signed area of the triangle a-b-c in the horizontal plane:
+  # positive when a→b→c turn counter-clockwise seen from above (navmesh y
+  # up), zero when collinear
+  defp tri_area2(a, b, c) do
+    (elem(c, 0) - elem(a, 0)) * (elem(b, 2) - elem(a, 2)) -
+      (elem(b, 0) - elem(a, 0)) * (elem(c, 2) - elem(a, 2))
+  end
+
+  # squared horizontal distance from p to the segment a-b
+  defp seg_dist2(p, a, b) do
+    ax = elem(a, 0)
+    az = elem(a, 2)
+    dx = elem(b, 0) - ax
+    dz = elem(b, 2) - az
+    len2 = dx * dx + dz * dz
+
+    t =
+      if len2 < 1.0e-12 do
+        0.0
+      else
+        clamp = ((elem(p, 0) - ax) * dx + (elem(p, 2) - az) * dz) / len2
+        min(max(clamp, 0.0), 1.0)
+      end
+
+    ex = elem(p, 0) - (ax + t * dx)
+    ez = elem(p, 2) - (az + t * dz)
+    ex * ex + ez * ez
+  end
+
+  # -- coordinate conversion -----------------------------------------------------
 
   # MS2 is Z-up; the navmesh is meters with Y up
   defp to_nav(%Coord{x: x, y: y, z: z}), do: {x / 100, z / 100, -y / 100}

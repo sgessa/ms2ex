@@ -13,7 +13,9 @@ defmodule Ms2ex.NavigationTest do
   #     0 4 8
   #
   # A covers x 0..4 / z 0..4, B covers x 4..8 / z 0..4, C covers x 4..8 /
-  # z 4..8. Tiles store float32 vertices and polys as vertex index loops.
+  # z 4..8. Tiles store float32 vertices and polys as vertex index loops,
+  # wound clockwise seen from above (y up) like the ingested meshes — the
+  # funnel's boundary signs depend on that winding
   setup do
     suffix = System.unique_integer([:positive])
     xblock = "test_nav_#{suffix}"
@@ -25,7 +27,7 @@ defmodule Ms2ex.NavigationTest do
         acc <> <<x::little-float-32, y::little-float-32, z::little-float-32>>
       end)
 
-    doc = %{tiles: [%{verts: verts, polys: [[0, 1, 2, 3], [1, 4, 5, 2], [2, 5, 7, 6]]}]}
+    doc = %{tiles: [%{verts: verts, polys: [[0, 3, 2, 1], [1, 2, 5, 4], [2, 6, 7, 5]]}]}
 
     stub_metadata(%{
       "map:#{map_id}" => %{x_block: xblock},
@@ -70,6 +72,36 @@ defmodule Ms2ex.NavigationTest do
 
   test "a goal off the mesh errors", %{map_id: map_id} do
     assert Navigation.find_path(map_id, coord(1, 1), coord(30, 30)) == :error
+  end
+
+  # two identical quads stacked 3m apart: their boundary edges are
+  # horizontally collinear (a perfect T-junction overlap if height is
+  # ignored), but they are separate floors and must never weld into one
+  # graph — routes between them do not exist
+  test "vertically stacked floors never connect", ctx do
+    suffix = System.unique_integer([:positive])
+    xblock = "test_stacked_#{suffix}"
+    map_id = 991_000_000 + suffix
+
+    verts =
+      [{0, 0, 0}, {4, 0, 0}, {4, 0, 4}, {0, 0, 4}, {0, 3, 0}, {4, 3, 0}, {4, 3, 4}, {0, 3, 4}]
+      |> Enum.reduce(<<>>, fn {x, y, z}, acc ->
+        acc <> <<x::little-float-32, y::little-float-32, z::little-float-32>>
+      end)
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh:#{xblock}" => %{tiles: [%{verts: verts, polys: [[0, 3, 2, 1], [4, 7, 6, 5]]}]}
+    })
+
+    on_exit(fn -> :persistent_term.erase({:navgraph, xblock}) end)
+
+    # a route staying on one floor works
+    assert {:ok, path} = Navigation.find_path(map_id, coord(1, 1), coord(3, 3))
+    assert length(path) == 2
+    # a route to the floor above has no connection
+    above = %Coord{x: 300, y: -300, z: 300}
+    assert Navigation.find_path(map_id, coord(1, 1), above) == :error
   end
 
   test "snap_to_floor returns the closest walkable surface point", %{map_id: map_id} do
