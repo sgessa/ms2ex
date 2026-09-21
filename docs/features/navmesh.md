@@ -32,8 +32,9 @@ queries.
   polygon corners deviate from the source collision by up to recast's
   edge-max-error (1.3m), so heights interpolate the detail patch instead.
   Mob movement snaps every step onto it, and spawn positions ground
-  the same way (an authored position with no walkable surface within
-  tolerance is kept).
+  the same way — a mesh-era workaround pending removal (see the
+  migration plan): the meshes already match the authored ground, so
+  spawns should keep their authored positions.
 
 ## Routing
 

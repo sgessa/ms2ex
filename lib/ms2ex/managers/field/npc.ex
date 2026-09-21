@@ -145,10 +145,11 @@ defmodule Ms2ex.Managers.Field.Npc do
     {field_npc, put_in(state, [:npcs, object_id], field_npc)}
   end
 
-  # spawn documents author heights against the client's own floor data, so
-  # models placed at the authored z hover above (or sink into) the ground.
-  # ride the generated navmesh instead, and keep the authored position when
-  # the spot has no walkable surface within tolerance
+  # TODO: drop the grounding — the generated meshes are built from the
+  # same collision the client renders, so authored spawn heights already
+  # stand on the ground and positions should be kept verbatim. The
+  # grounding was a workaround for meshes built before the ingest's cube
+  # index-buffer fix; it retires with the Detour migration
   defp ground_position(map_id, position) do
     case Navigation.snap_to_floor(map_id, position) do
       nil -> position

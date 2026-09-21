@@ -137,6 +137,14 @@ settings).
 ### Phase 3 — cutover + deletion
 
 - Flip the default, soak, remove the flag.
+- Drop the mesh-era compensations the migration obsoletes (each carries a
+  `TODO` in the code): keep authored spawn positions verbatim (no
+  grounding), end patrol legs at the mesh-snapped waypoint (no appended
+  authored tail; the raw target stays only for air waypoints), and let a
+  model without a walk sequence stand still (no Run_A substitution). The
+  ingest builds meshes from the same collision the client renders, so
+  these workarounds — from the broken-cube-index era — have no remaining
+  justification once the runtime rides the same queries
 - Delete from `navigation.ex`: `astar`, `funnel`/`portal_winding`/
   `tri_area2`/`seg_dist2`/`emit_corner`, `weld_edges`/`collinear_overlap`/
   `heights_converge?`, `build_grid`, `nearest_poly_entry`/`poly_closest`/

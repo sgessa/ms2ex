@@ -132,9 +132,11 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
     case result do
       {:ok, path} ->
-        # the authored waypoint terminates the leg: its final segment walks
-        # to it exactly (never mesh-snapped), so the npc lands on the
-        # choreography point even where the mesh coverage stops short of it
+        # TODO: legs should end at the route's mesh-snapped endpoint — the
+        # mesh already matches the authored ground, so walking the appended
+        # authored tail (never mesh-snapped) is a leftover from the
+        # broken-cube-index mesh era; drop the append with the Detour
+        # migration, keeping the raw target only for air waypoints
         Logger.debug(
           "[patrol] leg start npc=#{npc.object_id} waypoint=#{patrol.index + 1}/#{length(patrol.waypoints)} " <>
             "from=(#{trunc(npc.position.x)}, #{trunc(npc.position.y)}, #{trunc(npc.position.z * 100) / 100}) " <>
@@ -252,6 +254,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   # resolved against the npc model's animation table, falling back to the
   # model's Walk_A / Run_A. nil when the model has no locomotion sequence
   # at all
+  # TODO: a model whose table lacks Walk_A should stand still rather than
+  # substitute Run_A — the substitution masked animation-projection gaps
+  # (verify the ingest's anikey projection actually lacks Walk_A for those
+  # models); drop it with the Detour migration
   def leg_animations(%Types.FieldNpc{} = npc, way_points) do
     model = npc.npc.metadata.model.name
 
