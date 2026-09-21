@@ -284,7 +284,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # clearly outside its stop range (past the resume margin) it must be
     # moving — a stand tick mid-chase makes the client flicker the walk
     # animation
-    {npc, stutter_ticks} =
+    {_npc, stutter_ticks} =
       Enum.reduce_while(1..120, {npc, 0}, fn i, {npc, stutter} ->
         player_x = if rem(i, 10) < 5, do: 3000, else: 1000
         state = field_with_player_at(player_x, -i * 20)
