@@ -134,21 +134,18 @@ defmodule Ms2ex.NpcPatrolTest do
       animation: 101,
       velocity: {30, 0, 0},
       send_control?: false,
-      patrol:
-        Map.merge(
-          %{
-            waypoints: way_points,
-            animations: Enum.map(way_points, fn _ -> 101 end),
-            speeds: nil,
-            index: 0,
-            speed: 500.0,
-            last_at: Keyword.fetch!(opts, :last_at),
-            despawn_on_finish?: false,
-            path: Keyword.fetch!(opts, :path),
-            path_index: 1
-          },
-          %{}
-        )
+      patrol: %{
+        waypoints: way_points,
+        animations: Enum.map(way_points, fn _ -> 101 end),
+        speeds: nil,
+        index: 0,
+        speed: 500.0,
+        last_at: Keyword.fetch!(opts, :last_at),
+        despawn_on_finish?: false,
+        mesh_leg?: true,
+        path: Keyword.fetch!(opts, :path),
+        path_index: 1
+      }
     }
   end
 

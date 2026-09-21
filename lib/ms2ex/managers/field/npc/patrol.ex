@@ -53,7 +53,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
       step_toward(npc.position, leg_target(patrol), step, speed, dt)
 
     patrol = Map.put(patrol, :last_at, now)
-    position = snap_to_floor(npc, way_point, position)
+    position = snap_to_floor(npc, patrol, way_point, position)
 
     if arrived? do
       advance_leg(%{npc | position: position}, patrol)
@@ -80,22 +80,30 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  # path points ride the walkable surface the route was built on; the
-  # nearest surface is only trusted when it agrees with the step (a higher
-  # collision layer must never pull the model off its route). air legs keep
-  # their authored flight line
+  # intermediate path points ride the walkable surface the route was built
+  # on; the nearest surface is only trusted when it agrees with the step (a
+  # higher collision layer must never pull the model off its route). air
+  # legs keep their authored flight line
   @mesh_snap_tolerance 15
 
-  defp snap_to_floor(npc, way_point, position) do
-    case way_point[:air_way_point] do
-      true ->
+  defp snap_to_floor(npc, %{mesh_leg?: mesh_leg?} = patrol, way_point, position) do
+    # the authored waypoint terminates the leg and is walked exactly as
+    # authored — snapping it could pull the npc back onto a higher
+    # collision layer and stall the arrival
+    final? = patrol.path_index >= length(patrol.path) - 1
+
+    cond do
+      final? or way_point[:air_way_point] == true ->
         position
 
-      _ ->
+      mesh_leg? ->
         case Navigation.snap_to_floor(npc.map_id, position) do
           ground when abs(ground.z - position.z) <= @mesh_snap_tolerance -> ground
           _ -> position
         end
+
+      true ->
+        position
     end
   end
 
@@ -142,24 +150,28 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
     result =
       if way_point[:air_way_point] do
-        {:ok, Map.put(patrol, :path, [target]) |> Map.put(:path_index, 1)}
+        {:ok, [target]}
       else
-        case Navigation.find_path(npc.map_id, npc.position, target) do
-          {:ok, path} -> {:ok, Map.put(patrol, :path, path) |> Map.put(:path_index, 1)}
-          :error -> :error
-        end
+        Navigation.find_path(npc.map_id, npc.position, target)
       end
 
     case result do
-      {:ok, patrol} ->
+      {:ok, path} ->
+        # the authored waypoint terminates the leg: its final segment walks
+        # to it exactly (never mesh-snapped), so the npc lands on the
+        # choreography point even where the mesh coverage stops short of it
         Logger.debug(
           "[patrol] leg start npc=#{npc.object_id} waypoint=#{patrol.index + 1}/#{length(patrol.waypoints)} " <>
             "from=(#{trunc(npc.position.x)}, #{trunc(npc.position.y)}, #{trunc(npc.position.z * 100) / 100}) " <>
-            "authored_z=#{authored_z} path_points=#{length(patrol.path)} " <>
-            "path_heights=#{inspect(Enum.map(patrol.path, fn p -> trunc(p.z * 100) / 100 end), limit: 8)}"
+            "authored_z=#{authored_z} path_points=#{length(path) + 1} " <>
+            "path_heights=#{inspect(Enum.map(path ++ [target], fn p -> trunc(p.z * 100) / 100 end), limit: 8)}"
         )
 
-        {:ok, patrol}
+        {:ok,
+         patrol
+         |> Map.put(:path, path ++ [target])
+         |> Map.put(:path_index, 1)
+         |> Map.put(:mesh_leg?, true)}
 
       :error ->
         Logger.debug(

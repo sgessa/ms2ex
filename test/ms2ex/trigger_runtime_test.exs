@@ -1130,7 +1130,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
             %Coord{x: 100.0, y: -50.0, z: -5.0}
           ],
           path_index: 1,
-          routed?: true
+          mesh_leg?: true
         }
     }
 
@@ -1175,7 +1175,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
           despawn_on_finish?: false,
           path: [%Coord{x: 100.0, y: -50.0, z: 500.0}],
           path_index: 1,
-          routed?: true
+          mesh_leg?: true
         }
     }
 
