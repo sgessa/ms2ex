@@ -91,15 +91,14 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   end
 
   # intermediate path points ride the walkable surface the route was built
-  # on; the nearest surface is only trusted when it agrees with the step (a
-  # higher collision layer must never pull the model off its route). air
-  # legs keep their authored flight line
-  @mesh_snap_tolerance 15
-
+  # on: the reference re-snaps the walking npc's position onto the navmesh
+  # every tick (FindNearestPoly accepts anything within its query box), so
+  # the model tracks the collision floor even where the straight line to
+  # the next path point would cut through the air. air legs keep their
+  # authored flight line, and the authored waypoint terminates the leg
+  # walked exactly as authored — snapping it could pull the npc back onto a
+  # higher collision layer and stall the arrival
   defp snap_to_floor(npc, %{mesh_leg?: mesh_leg?} = patrol, way_point, position) do
-    # the authored waypoint terminates the leg and is walked exactly as
-    # authored — snapping it could pull the npc back onto a higher
-    # collision layer and stall the arrival
     final? = patrol.path_index >= length(patrol.path) - 1
 
     cond do
@@ -107,10 +106,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         position
 
       mesh_leg? ->
-        case Navigation.snap_to_floor(npc.map_id, position) do
-          ground when abs(ground.z - position.z) <= @mesh_snap_tolerance -> ground
-          _ -> position
-        end
+        Navigation.snap_to_floor(npc.map_id, position) || position
 
       true ->
         position
