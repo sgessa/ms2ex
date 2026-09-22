@@ -20,7 +20,7 @@ defmodule Ms2ex.FieldNpcSpawnPositionTest do
   defp mob_npc(metadata \\ @mob_metadata),
     do: %Ms2ex.Types.Npc{id: 29_000_128, metadata: metadata}
 
-  defp new_field_npc(npc, attrs \\ []) do
+  defp new_field_npc(npc, attrs) do
     FieldNpc.new(
       Map.merge(
         %{
