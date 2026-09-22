@@ -296,7 +296,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  defp idle_animation_id(npc), do: sequence_id(npc.npc.metadata.model.name, "Idle_A") || 255
+  defp idle_animation_id(npc), do: sequence_id(npc.npc.metadata.model.name, "Idle_A") || 0
 
   # actors face along their move direction: yaw from the horizontal
   # velocity, degrees. With the front axis stored negated in the transform

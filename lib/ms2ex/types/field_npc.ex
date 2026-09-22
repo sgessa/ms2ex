@@ -1,4 +1,5 @@
 defmodule Ms2ex.Types.FieldNpc do
+  alias Ms2ex.Storage
   alias Ms2ex.Types.Coord
   alias Ms2ex.Enums
   alias Ms2ex.Context
@@ -49,7 +50,7 @@ defmodule Ms2ex.Types.FieldNpc do
       attrs
       |> Map.put(:rotation, to_coord(attrs.rotation))
       |> Map.put(:type, get_type(attrs.npc))
-      |> Map.put(:animation, 255)
+      |> Map.put(:animation, idle_sequence_id(attrs.npc))
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
       |> Map.put_new(
         :last_control_at,
@@ -74,6 +75,17 @@ defmodule Ms2ex.Types.FieldNpc do
     friendly = get_in(npc.metadata, [:basic, :friendly]) || 0
 
     if friendly > 0, do: :npc, else: :mob
+  end
+
+  # every control packet names the sequence the client must loop; a fresh
+  # npc reports its model's idle sequence. Models with no rig report 0 —
+  # the client then plays its own default idle. Sending a raw sentinel id
+  # instead would make the client loop whatever animation happens to sit
+  # at that index on rigs large enough to have one (story-npc rigs do),
+  # which surfaces as wrong, slowed idle motion
+  defp idle_sequence_id(npc) do
+    model = get_in(npc.metadata, [:model, :name])
+    Storage.Animations.sequence_id(model, "Idle_A") || 0
   end
 
   @spawn_distance 250
