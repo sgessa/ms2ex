@@ -97,7 +97,7 @@ defmodule Ms2ex.Navigation do
     case :persistent_term.get({:navmesh_native, xblock}, :missing) do
       :missing ->
         mesh =
-          case Storage.get("navmesh_bin", xblock) do
+          case Storage.get_raw("navmesh_bin", xblock) do
             bytes when is_binary(bytes) -> Native.load_mesh(bytes)
             _ -> nil
           end

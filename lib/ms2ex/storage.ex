@@ -29,6 +29,22 @@ defmodule Ms2ex.Storage do
   end
 
   @doc """
+  Fetches a raw (non-ETF) document from Redis and caches it: the bytes
+  come back as-is. Binary sets — the navmesh mesh binaries — are not
+  ETF-encoded terms and must never go through `get/2`.
+  """
+  @spec get_raw(set(), id()) :: binary() | nil
+  def get_raw(set, id) do
+    key = "#{set}:#{id}"
+
+    case :ets.lookup(@table, key) do
+      [{^key, {:ok, value}}] -> value
+      [{^key, :missing}] -> nil
+      [] -> load_raw(key)
+    end
+  end
+
+  @doc """
   Fetches a single document from Redis and caches it. Missing keys are
   stored as tombstones so later lookups skip Redis entirely.
   """
@@ -43,6 +59,21 @@ defmodule Ms2ex.Storage do
         value = :erlang.binary_to_term(blob)
         :ets.insert(@table, {key, {:ok, value}})
         value
+
+      _ ->
+        nil
+    end
+  end
+
+  defp load_raw(key) do
+    case Redix.command(Ms2ex.Redix, ["GET", key]) do
+      {:ok, nil} ->
+        :ets.insert(@table, {key, :missing})
+        nil
+
+      {:ok, blob} when is_binary(blob) ->
+        :ets.insert(@table, {key, {:ok, blob}})
+        blob
 
       _ ->
         nil
