@@ -99,12 +99,19 @@ jobs:
       # the cached _build only holds test artifacts and mix test reuses them
       - name: Compile
         run: |
-          # a restored cache can lack the built NIF (rustler writes it into
-          # the source priv, which git ignores): removing the module's beam
-          # forces the compiler to rerun the crate build when the library
-          # is missing
-          test -f _build/test/lib/ms2ex/priv/native/navigation.so || \
-            rm -f _build/test/lib/ms2ex/ebin/Elixir.Ms2ex.Navigation.Native.beam
+          # rustler writes the built NIFs into the source priv, which the
+          # cache archive never carries: a restored _build can hold a Native
+          # beam whose library is missing, and loading it fails on on_load.
+          # Rebuild any missing NIF straight through cargo before compiling.
+          for crate_dir in native/*/; do
+            crate=$(basename "$crate_dir")
+            so="_build/test/lib/ms2ex/priv/native/$crate.so"
+            if [ ! -f "$so" ]; then
+              cargo build --release --manifest-path "$crate_dir/Cargo.toml"
+              mkdir -p "$(dirname "$so")"
+              cp "$crate_dir/target/release/lib$crate.so" "$so"
+            fi
+          done
           mix compile --warnings-as-errors
         env:
           MIX_ENV: test
