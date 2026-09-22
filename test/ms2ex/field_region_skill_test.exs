@@ -49,6 +49,23 @@ defmodule Ms2ex.FieldRegionSkillTest do
             rotation: %{x: 0, y: 0, z: 0}
           }
         ]
+      },
+      "skill:70000018" => %{
+        levels: %{
+          "1" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    range: %{type: 2, distance: 300, height: 150, apply_target: 6},
+                    damage: %{rate: 0.0, value: 0, damage_by_target_max_hp: 0.0},
+                    skills: [%{id: 70_000_018, level: 1}]
+                  }
+                ]
+              }
+            ]
+          }
+        }
       }
     })
 
@@ -61,6 +78,13 @@ defmodule Ms2ex.FieldRegionSkillTest do
     assert zone.skill_level == 1
     assert zone.interval == 700
     assert zone.position == %{x: -1350.0, y: 3000.0, z: 1650.0}
+
+    # the zone carries its skill's first attack: the hit volume the tick
+    # tests players against and the effects it applies to them
+    assert zone.range == %{type: 2, distance: 300, height: 150, apply_target: 6}
+    assert zone.skills == [%{id: 70_000_018, level: 1}]
+    # placed zones anchor at their authored position (no cube-cell raise)
+    assert zone.z_offset == 0
     assert counter == 50_000_001
 
     # a map without zones leaves the counter untouched
@@ -280,6 +304,92 @@ defmodule Ms2ex.FieldRegionSkillTest do
 
     # the rock zone carries no additional effect, so no buff applies
     assert map_size(new_state.buffs) == 0
+  end
+
+  test "tick_placed_zone applies the tower's recovery buff to players standing inside" do
+    stub_metadata(%{"additional-effect:70000018_1" => heal_tower_effect()})
+
+    character = %Ms2ex.Schema.Character{
+      id: 1,
+      name: "Testy",
+      object_id: 777,
+      stats: %{movement_speed_max: 100}
+    }
+
+    stub(Managers.Character, :call, fn
+      1, :lookup -> {:ok, character}
+      1, {:compute_buff_status, _status} -> %{}
+      other, :lookup -> {:error, other}
+    end)
+
+    state = %{
+      topic: "placed-zone-topic",
+      buffs: %{},
+      players: %{1 => 777, 2 => 778},
+      player_positions: %{
+        1 => %{position: %{x: -1050, y: -450, z: 1500}, job_code: nil},
+        2 => %{position: %{x: 50_000, y: 0, z: 1500}, job_code: nil}
+      },
+      local_id_counter: 50_000_000,
+      region_skill_zones: [
+        %{
+          source_id: 1,
+          skill_id: 70_000_018,
+          skill_level: 1,
+          interval: 700,
+          position: %{x: -1050, y: -450, z: 1500},
+          z_offset: 0,
+          range: %{type: 2, distance: 300, height: 150, apply_target: 6},
+          damage: %{rate: 0.0, value: 0, damage_by_target_max_hp: 0.0},
+          skills: [%{id: 70_000_018, level: 1}]
+        }
+      ]
+    }
+
+    Phoenix.PubSub.subscribe(Ms2ex.PubSub, "placed-zone-topic")
+    new_state = RegionSkill.tick_placed_zone(state, 1)
+
+    # the inside player got the tower's recovery buff registered and broadcast
+    assert map_size(new_state.buffs) == 1
+
+    assert_receive {:push,
+                    <<0x48::little-16, 0, owner::little-32, _buff_object::little-32,
+                      _caster::little-32, _::binary>>},
+                   200
+
+    assert owner == 777
+    # the zone re-arms itself for the next interval
+    assert_receive {:placed_region_tick, 1}, 3_000
+  end
+
+  defp heal_tower_effect do
+    %{
+      id: 70_000_018,
+      level: 1,
+      status: %{values: %{}, rates: %{}, special_values: %{}, special_rates: %{}},
+      update: %{cancel: nil, reset_cooldown: []},
+      dot: %{damage: nil, buff: nil},
+      property: %{
+        type: 1,
+        category: 0,
+        delay_tick: 0,
+        duration_tick: 100,
+        max_count: 1,
+        interval_tick: 100,
+        stun: 0,
+        remove_on_logout: false,
+        keep_on_death: false,
+        keep_condition: :timer_duration,
+        event_type: :none
+      },
+      skills: [],
+      reset_condition: 0,
+      persist_end_tick: 1,
+      shield: nil,
+      recovery: %{hp_rate: 0.03, recovery_rate: 0.0, hp_value: 0, sp_value: 0},
+      tick_skills: [],
+      modify_overlap: nil
+    }
   end
 
   defp speed_up_effect do

@@ -115,15 +115,17 @@ defmodule Ms2ex.Packets.Cinematic do
     center_right: 7
   }
 
-  # a speech balloon over an actor's head. The npc flag stays unset: the
-  # client only renders unflagged balloons (a flagged npc balloon is sent
-  # and never appears; the reference's own set_dialogue also flags npc
-  # balloons false)
-  def balloon_talk(object_id, script, duration, delay \\ 0) do
+  # a speech balloon over an actor's head. Npc balloons must stay on the
+  # unflagged form: the client drops flagged npc balloons entirely (they
+  # never render — confirmed twice in live testing), while the unflagged
+  # form renders anchored to the actor. The caveat is that it uses the
+  # player balloon offset, so a balloon can clip under the cinematic frame
+  # in tight shots — visible-but-clipped beats invisible
+  def balloon_talk(object_id, script, duration, delay \\ 0, is_npc \\ false) do
     __MODULE__
     |> build()
-    |> put_byte(0x8)
-    |> put_bool(false)
+    |> put_byte(@modes.balloon_talk)
+    |> put_bool(is_npc)
     |> put_int(object_id)
     |> put_ustring(script)
     |> put_int(duration)

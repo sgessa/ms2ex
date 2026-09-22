@@ -9,6 +9,7 @@ defmodule Ms2ex.Managers.Field do
   pattern:
 
   - `Field.Banner` — UGC banner slots (persistence via `Context.BannerSlots`)
+  - `Field.BattleStance` — the player battle stance (weapon drawn) and its quiet-window expiry
   - `Field.Buff` — effect buffs and their ticks
   - `Field.Character` — the join/leave sequences and periodic stat updates
   - `Field.Instrument` — instruments in play
@@ -643,6 +644,10 @@ defmodule Ms2ex.Managers.Field do
     send(self(), :tick_banners)
     send(self(), :tick_cube_zones)
 
+    Enum.each(state.region_skill_zones, fn zone ->
+      Process.send_after(self(), {:placed_region_tick, zone.source_id}, zone.interval)
+    end)
+
     {:ok, state, {:continue, {:add_character, character}}}
   end
 
@@ -870,9 +875,9 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_cast({:enter_battle_stance, character}, state) do
     # battle-start packets are emitted by the cast handler in order; the
-    # field process only schedules the eventual stance drop
-    Process.send_after(self(), {:leave_battle_stance, character}, 5_000)
-    {:noreply, state}
+    # field process owns the stance deadline, re-stamped by every in-battle
+    # cast so continuous combat holds the stance until a quiet window
+    {:noreply, __MODULE__.BattleStance.arm(state, character)}
   end
 
   #
@@ -924,6 +929,9 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(:release_guide_hold, state),
     do: {:noreply, __MODULE__.Trigger.release_guide_hold(state)}
 
+  def handle_info({:carry_finished, dummy}, state),
+    do: {:noreply, __MODULE__.Npc.finish_carry(state, dummy)}
+
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
 
@@ -960,9 +968,11 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
-  def handle_info({:leave_battle_stance, character}, state) do
-    __MODULE__.Character.leave_battle_stance(character)
-    {:noreply, state}
+  def handle_info({:battle_stance_drop, character_id}, state) do
+    case __MODULE__.BattleStance.drop(state, character_id) do
+      {:stay, state} -> {:noreply, state}
+      {:leave, state} -> {:noreply, state}
+    end
   end
 
   def handle_info({:end_performance, character_id}, state),
@@ -989,6 +999,10 @@ defmodule Ms2ex.Managers.Field do
   def handle_info(:tick_cube_zones, state) do
     Process.send_after(self(), :tick_cube_zones, cube_zone_interval())
     {:noreply, __MODULE__.RegionSkill.tick_cube_zones(state)}
+  end
+
+  def handle_info({:placed_region_tick, source_id}, state) do
+    {:noreply, __MODULE__.RegionSkill.tick_placed_zone(state, source_id)}
   end
 
   # a trigger skill zone fires on the script's beat (set_skill enable

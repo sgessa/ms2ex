@@ -16,6 +16,10 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   # arrive animations without a recorded beat play for this long
   @emote_fallback_ms 4_000
 
+  # after a leg fails to start, the npc stands in its idle pose for this
+  # long before the patrol attempts the next waypoint
+  @route_fail_hold_ms 1_000
+
   @doc """
   Walks a story npc along a named patrol path (script move_npc): the walk
   streams through the control broadcast; loop patrols cycle their waypoints
@@ -54,19 +58,32 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
     cond do
       (depart_at = Map.get(patrol, :depart_at)) && now >= depart_at ->
-        # the arrive beat played out: depart to the next waypoint
-        start_next_leg(%{npc | velocity: {0, 0, 0}}, Map.put(patrol, :depart_at, nil))
+        # the hold played out (an arrive emote or a skipped waypoint held
+        # this one): attempt the next leg
+        start_leg(%{npc | velocity: {0, 0, 0}, patrol: Map.put(patrol, :depart_at, nil)}, now)
 
       Map.get(patrol, :depart_at) != nil ->
-        # the arrive emote is playing: hold the waypoint
+        # an arrive emote is playing or a skipped waypoint is waiting out
+        # its beat: hold the waypoint
         %{npc | velocity: {0, 0, 0}, patrol: patrol}
 
       true ->
-        {position, velocity, arrived?} =
+        {position, velocity, arrived?, direction} =
           step_toward(npc.position, leg_target(patrol), step, speed, dt)
 
         if arrived? do
-          advance_leg(%{npc | position: position}, patrol, now)
+          # the facing turns toward each path point as it is picked, even
+          # when the leg completes within the same tick — tiny authored legs
+          # exist to reorient a npc between scripted beats
+          npc =
+            %{
+              npc
+              | position: position,
+                velocity: {0, 0, 0},
+                rotation: face_move_direction(npc.rotation, direction)
+            }
+
+          advance_leg(npc, patrol, now)
         else
           rotation = face_move_direction(npc.rotation, velocity)
 
@@ -116,7 +133,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
           # the arrive emote holds the patrol until its beat elapses
           %{npc | patrol: Map.put(patrol, :depart_at, npc.emote.revert_at), velocity: {0, 0, 0}}
         else
-          start_next_leg(npc, patrol)
+          start_leg(%{npc | patrol: patrol}, now)
         end
     end
   end
@@ -151,49 +168,127 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end
   end
 
-  # starts (or restarts) the leg toward the patrol's current waypoint
-  defp start_next_leg(npc, patrol) do
-    animation = Enum.at(patrol.animations, patrol.index) || npc.animation
+  @doc """
+  Attempts (or restarts) the leg toward the patrol's current waypoint.
 
-    case start_leg(npc, patrol) do
-      {:ok, patrol} ->
-        %{npc | patrol: patrol, animation: animation, emote: nil, send_control?: true}
+  A leg that cannot start — no connected navmesh route, or no approach
+  animation the model can play — does not end the patrol: that would freeze
+  story npcs mid-script on maps whose mesh has coverage gaps. Instead the
+  npc stands in its idle pose for a beat while the patrol advances past the
+  waypoint, and the next leg is attempted once the beat elapses (loop
+  patrols wrap and keep attempting; only the last waypoint of a non-loop
+  patrol ends the patrol when it fails to start). The one exception is the
+  scripted-carry dummy: its walk is choreographed client-side and the carry
+  must complete, so an unroutable leg falls back to the authored straight
+  line instead of stalling the script mid-carry.
+  """
+  def start_leg(%Types.FieldNpc{patrol: nil} = npc, _now), do: npc
 
-      :error ->
-        finish_patrol(npc, patrol)
+  def start_leg(%Types.FieldNpc{} = npc, now) do
+    patrol = npc.patrol
+    animation = Enum.at(patrol.animations, patrol.index)
+    carry? = Map.get(patrol, :despawn_on_finish?, false)
+
+    if is_nil(animation) and not carry? do
+      Logger.warning(
+        "npc model " <>
+          to_string(npc.npc.metadata.model.name) <>
+          " has no patrol approach animation for waypoint " <>
+          waypoint_label(patrol) <> "; skipping the waypoint"
+      )
+
+      leg_failed(npc, patrol, now)
+    else
+      case leg_route(npc, patrol, carry?) do
+        {:ok, path} ->
+          # the route starts at the npc's position and its last point is
+          # the authored waypoint itself
+          patrol = patrol |> Map.put(:path, path) |> Map.put(:path_index, 1)
+
+          %{
+            npc
+            | patrol: patrol,
+              animation: animation || npc.animation,
+              emote: nil,
+              send_control?: true
+          }
+
+        :error ->
+          Logger.warning(
+            "no navmesh route to patrol waypoint " <>
+              waypoint_label(patrol) <>
+              " for npc " <>
+              to_string(npc.npc.id) <>
+              " on " <> to_string(npc.map_id) <> "; skipping the waypoint"
+          )
+
+          leg_failed(npc, patrol, now)
+      end
     end
   end
 
-  @doc """
-  Resolves how the current authored waypoint is reached: over the navmesh
-  graph, walking ramps and stairs instead of a straight line through the
-  air. Returns `:error` when no connected route exists (unresolved nif
-  props leave coverage gaps) — the caller then leaves the npc standing
-  instead of walking a straight line that can float above the terrain.
-  """
-  def start_leg(%Types.FieldNpc{} = npc, patrol) do
+  # resolves how the current authored waypoint is reached: over the navmesh
+  # graph for ground waypoints, walking ramps and stairs instead of a
+  # straight line through the air; air waypoints fly straight. The
+  # scripted-carry dummy always resolves — an unroutable leg walks the
+  # authored straight line (see `start_leg/2`)
+  defp leg_route(npc, patrol, carry?) do
     way_point = Enum.fetch!(patrol.waypoints, patrol.index)
 
     # patrol documents project positions as plain maps; the route query
     # needs a Coord
     target = to_coord(way_point[:position])
 
-    result =
-      if way_point[:air_way_point] do
-        {:ok, [target]}
-      else
-        Navigation.find_path(npc.map_id, npc.position, target)
+    if way_point[:air_way_point] do
+      {:ok, [target]}
+    else
+      case Navigation.find_path(npc.map_id, npc.position, target) do
+        {:ok, path} ->
+          {:ok, path}
+
+        :error when carry? ->
+          Logger.warning(
+            "no navmesh route for the scripted carry of npc " <>
+              to_string(npc.npc.id) <>
+              " on " <> to_string(npc.map_id) <> "; walking the authored straight line"
+          )
+
+          {:ok, [target]}
+
+        :error ->
+          :error
       end
-
-    case result do
-      # the route starts at the npc's position and its last point is the
-      # authored waypoint itself
-      {:ok, path} ->
-        {:ok, patrol |> Map.put(:path, path) |> Map.put(:path_index, 1)}
-
-      :error ->
-        :error
     end
+  end
+
+  # the waypoint the patrol is heading for cannot be walked: advance past
+  # it and hold the npc in its idle pose until the next leg is attempted.
+  # Arrive animations only ever play at waypoints the npc actually reached
+  defp leg_failed(npc, patrol, now) do
+    last? = patrol.index + 1 >= length(patrol.waypoints)
+
+    if last? and patrol[:is_loop] != true do
+      finish_patrol(npc, patrol)
+    else
+      patrol =
+        patrol
+        |> Map.put(:index, next_index(patrol, last?))
+        |> Map.put(:depart_at, now + @route_fail_hold_ms)
+
+      %{
+        npc
+        | patrol: patrol,
+          velocity: {0, 0, 0},
+          animation: idle_animation_id(npc),
+          emote: nil,
+          send_control?: true
+      }
+    end
+  end
+
+  defp waypoint_label(patrol) do
+    way_point = Enum.at(patrol.waypoints, patrol.index)
+    Map.get(way_point, :id) || ""
   end
 
   defp attach_patrol(state, object_id, npc, patrol_doc) do
@@ -215,41 +310,29 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   defp attach_legs(state, object_id, npc, patrol_doc) do
     way_points = patrol_doc[:way_points]
 
-    case leg_animations(npc, way_points) do
-      nil ->
-        # the model cannot animate the patrol's gaits; it stays put instead
-        # of sliding across the field in its idle pose
-        state
+    patrol =
+      %{
+        waypoints: way_points,
+        animations: leg_animations(npc, way_points),
+        speeds: leg_speeds(npc, way_points, patrol_doc[:speed] || 0),
+        is_loop: patrol_doc[:is_loop] == true,
+        index: 0,
+        speed: @follow_speed,
+        last_at: Ms2ex.sync_ticks(),
+        despawn_on_finish?: false
+      }
 
-      animations ->
-        patrol =
-          %{
-            waypoints: way_points,
-            animations: animations,
-            speeds: leg_speeds(npc, way_points, patrol_doc[:speed] || 0),
-            is_loop: patrol_doc[:is_loop] == true,
-            index: 0,
-            speed: @follow_speed,
-            last_at: Ms2ex.sync_ticks(),
-            despawn_on_finish?: false
-          }
+    # the first leg attempts through the same machinery as every other leg:
+    # attaching does not route ahead, so a patrol whose early waypoints
+    # cannot be walked still attaches and skips ahead toward its first
+    # walkable waypoint (an all-unwalkable non-loop patrol ends itself
+    # within one attempt cycle, leaving the npc at its post)
+    npc = start_leg(%{npc | patrol: patrol}, Ms2ex.sync_ticks())
 
-        case start_leg(npc, patrol) do
-          {:ok, patrol} ->
-            npc = %{npc | animation: hd(animations), patrol: patrol, send_control?: true}
-            put_in(state, [:npcs, object_id], npc)
-
-          :error ->
-            # no connected route to the first waypoint: the npc keeps its
-            # post instead of walking a line that can leave the ground
-            Logger.warning(
-              "no navmesh route for npc " <>
-                to_string(npc.npc.id) <>
-                " on " <> to_string(npc.map_id) <> "; npc will not patrol"
-            )
-
-            state
-        end
+    if npc.patrol do
+      put_in(state, [:npcs, object_id], npc)
+    else
+      state
     end
   end
 
@@ -269,10 +352,30 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     end)
   end
 
+  # npc ground speed for a leg (units/second): the waypoint's approach
+  # gait resolved from the metadata's action speeds. A gait authored as
+  # zero carries no speed data on story models (their pacing comes from
+  # the patrol document, not the model) — the leg then moves at the
+  # model's other gait, falling back to the shared default. Resolving a
+  # gait to zero here would root the npc mid-scene while it keeps playing
+  # its locomotion sequence
   def leg_speed(npc, approach_animation) do
     case approach_animation do
-      "Run_A" -> npc_speed(npc, :run_speed)
-      _ -> npc_speed(npc, :walk_speed)
+      "Run_A" -> gait_speed(npc, :run_speed, :walk_speed)
+      _ -> gait_speed(npc, :walk_speed, :run_speed)
+    end
+  end
+
+  defp gait_speed(npc, gait, other_gait) do
+    case npc_speed(npc, gait) do
+      +0.0 ->
+        case npc_speed(npc, other_gait) do
+          +0.0 -> @follow_speed * 1.0
+          speed -> speed
+        end
+
+      speed ->
+        speed
     end
   end
 
@@ -289,32 +392,27 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   # per-waypoint walk sequences: each waypoint's approach animation
   # resolved against the npc model's animation table, falling back to the
-  # model's Walk_A for ground legs and Fly_A for air legs. nil when a leg
-  # has no resolvable sequence — the npc stays put instead of gliding
-  # through the field without an animation
+  # model's Walk_A for ground legs and Fly_A for air legs. A leg whose
+  # sequence cannot be resolved carries nil — the patrol skips that
+  # waypoint when its turn comes instead of gliding through the field
+  # without an animation
   def leg_animations(%Types.FieldNpc{} = npc, way_points) do
     model = npc.npc.metadata.model.name
 
-    animations =
-      Enum.map(way_points, fn way_point ->
-        fallback = if way_point[:air_way_point], do: "Fly_A", else: "Walk_A"
-        sequence_id(model, way_point[:approach_animation]) || sequence_id(model, fallback)
-      end)
-
-    if Enum.all?(animations, &is_integer/1) do
-      animations
-    else
-      Logger.warning("npc model " <> to_string(model) <> " lacks a patrol approach animation")
-      nil
-    end
+    Enum.map(way_points, fn way_point ->
+      fallback = if way_point[:air_way_point], do: "Fly_A", else: "Walk_A"
+      sequence_id(model, way_point[:approach_animation]) || sequence_id(model, fallback)
+    end)
   end
 
-  # end of the scripted path: follow dummies (carrying the player) despawn
-  # and release the guide hold; story npcs on a move_npc stay where they
-  # stopped and return to their idle pose
+  # end of the scripted path: follow dummies (carrying the player) despawn,
+  # release the guide hold, and hand the player their end-of-carry position
+  # and facing; story npcs on a move_npc stay where they stopped and return
+  # to their idle pose
   defp finish_patrol(npc, patrol) do
     if Map.get(patrol, :despawn_on_finish?, false) do
       send(self(), :release_guide_hold)
+      send(self(), {:carry_finished, npc})
       Process.send_after(self(), {:remove_npc, npc}, 0)
       %{npc | patrol: nil}
     else
@@ -355,7 +453,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
     dist = :math.sqrt(dx * dx + dy * dy + dz * dz)
 
     if dist == 0 or dist <= step do
-      {target, {0, 0, 0}, true}
+      {target, {0, 0, 0}, true, {dx, dy, 0}}
     else
       vx = dx / dist * speed
       vy = dy / dist * speed
@@ -368,7 +466,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
           z: pos.z + dz / dist * step
       }
 
-      {position, {vx, vy, vz}, false}
+      {position, {vx, vy, vz}, false, {dx, dy, 0}}
     end
   end
 
