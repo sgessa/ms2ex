@@ -36,6 +36,9 @@ defmodule Ms2ex.Types.FieldNpc do
     # where the mob actually appeared (post spawn scatter); the return-home
     # walk targets this
     :origin,
+    # the scripted-carry follow dummy records the player it walks; on the
+    # carry's end the player is repositioned to the route's last waypoint
+    :follow_character_id,
     dead?: false,
     corpse?: false,
     send_control?: true,

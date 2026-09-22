@@ -54,7 +54,13 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
   resuming mid-cycle),
   set_interact_object (flips the field's interact state — server state and
   client update together; scripts rely on object_interacted reading the same
-  state a player's react sets), set_user_value, add/remove_buff, set_skill (trigger
+  state a player's react sets), set_user_value, add/remove_buff (applies
+  the buff skill to players inside the boxes and broadcasts the buff; the
+  client resolves the skill's own metadata from its data — a script can
+  reference a ghost skill id the client data never defined, as in the
+  Ellinel sparring's 70000109, and the buff is inert there too, so missing
+  skill metadata alone is not an ingest gap; verify against the client
+  archives with the ingest's --probe-skill before chasing it), set_skill (trigger
   skill zones — the falling rocks of the tutorial chase. Enable spawns a
   fire-count-limited zone announced to clients and owned by the field:
   each fire applies the zone skill's attack to players standing inside —
@@ -63,6 +69,14 @@ Int-list arguments accept single ids, comma lists and inclusive ranges
   the push direction. Disable removes every active zone for the trigger
   id), set_achievement (a condition event for players in a box feeding the
   quest and achievement pipelines — completes trigger-gated main quests)
+
+Map-placed region-skill zones (the Healing Forest's HP-recovery towers,
+skill 70000018 — 3% max HP per 100 ms while inside) are ticked server-side
+on each zone's own interval: the zone add frame the client holds is only
+the visual, so the field applies the zone skill to players standing inside
+its attack prism (the tower's range, friends-only), riding the effect-buff
+pipeline — the recovery buff heals through the normal buff tick path and
+shears when the player steps out.
 
 ## Still missing
 

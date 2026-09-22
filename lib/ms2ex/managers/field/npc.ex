@@ -1,6 +1,8 @@
 defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Net
+  alias Ms2ex.Navigation
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
@@ -352,6 +354,81 @@ defmodule Ms2ex.Managers.Field.Npc do
   # spawns the invisible follow-dummy that walks a patrol path while the
   # player's client walks the player behind it (scripted carry sequences).
   # the dummy plays the waypoints' approach animations so the client keeps
+  # end of a scripted carry: the player takes the route's last authored
+  # waypoint, turned toward the npc standing nearest it. The cutscene camera
+  # transition back to gameplay lands on that facing — without it the player
+  # keeps whatever the client-side follow left them facing and the camera
+  # swings to a stale angle. With no npc within talkable distance the player
+  # is left alone (the follow already walked them to the endpoint)
+  def finish_carry(state, %Types.FieldNpc{} = dummy) do
+    character_id = dummy.follow_character_id
+
+    with character_id when is_integer(character_id) <- character_id,
+         true <- Map.has_key?(state.players, character_id),
+         {:ok, character} <- Managers.Character.call(character_id, :lookup) do
+      last_position = List.last(dummy.patrol.waypoints)[:position]
+      npc = nearest_npc(state, dummy, last_position)
+
+      if npc && Navigation.valid_position?(state.map_id, last_position) do
+        rotation = face_toward(last_position, npc.position)
+
+        character = %{character | position: last_position, rotation: rotation}
+        Managers.Character.call(character, {:update, character})
+
+        state = Managers.Field.Trigger.track_position(state, character_id, last_position)
+
+        Net.SenderSession.push(
+          character,
+          Packets.UserMoveByPortal.bytes(character, last_position, rotation)
+        )
+
+        state
+      else
+        state
+      end
+    else
+      _ -> state
+    end
+  end
+
+  # squared distance to candidates is full 3D, like every other range check;
+  # the talkable radius comes from the server constants table
+  defp nearest_npc(state, dummy, position) do
+    talkable = Storage.Tables.Constants.get(:talkable_distance) || 0
+
+    state.npcs
+    |> Map.delete(dummy.object_id)
+    |> Enum.reduce(nil, fn
+      {_object_id, %Types.FieldNpc{dead?: true}}, closest ->
+        closest
+
+      {_object_id, npc}, closest ->
+        dist = distance_squared(npc.position, position)
+
+        if dist < talkable * talkable and
+             (closest == nil or dist < distance_squared(closest.position, position)) do
+          npc
+        else
+          closest
+        end
+    end)
+  end
+
+  defp distance_squared(a, b) do
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = a.z - b.z
+
+    dx * dx + dy * dy + dz * dz
+  end
+
+  # actors face along their front axis: yaw = atan2(dx, -dy) degrees, the
+  # same convention the npc control packets encode
+  defp face_toward(from, to) do
+    yaw = :math.atan2(to.x - from.x, -(to.y - from.y)) * 180 / :math.pi()
+    %{x: 0.0, y: 0.0, z: yaw}
+  end
+
   # the following player in a grounded walking state
   def spawn_follow_dummy(state, character, way_points) do
     npc_id = Map.fetch!(@follow_dummies, character.gender)
@@ -361,7 +438,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         # spawn_npc may randomize mob positions; the dummy must start
         # exactly on the player it carries. The carry proceeds even when
         # the model cannot animate — the walk itself is client-side
-        animations = Patrol.leg_animations(field_npc, way_points) || []
+        animations = Patrol.leg_animations(field_npc, way_points)
 
         base = %{
           waypoints: way_points,
@@ -373,27 +450,18 @@ defmodule Ms2ex.Managers.Field.Npc do
           despawn_on_finish?: true
         }
 
-        # the carry dummy is invisible and the player's walk is choreographed
-        # client-side: when no navmesh route resolves, the dummy falls back to
-        # the straight authored line so the carry still completes
-        patrol =
-          case Patrol.start_leg(field_npc, base) do
-            {:ok, patrol} ->
-              patrol
-
-            :error ->
-              Map.merge(base, %{
-                path: Enum.map(way_points, fn way_point -> way_point[:position] end),
-                path_index: 1
-              })
-          end
-
+        # the first leg starts through the patrol machinery so every leg of
+        # the carry resolves the same way: over the navmesh when possible,
+        # on the authored straight line when the mesh has no route (the
+        # carry must complete — the dummy never skips waypoints)
         field_npc = %{
           field_npc
           | position: character.position,
-            patrol: patrol,
-            animation: Enum.at(animations, 0) || field_npc.animation
+            patrol: base,
+            follow_character_id: character.id
         }
+
+        field_npc = Patrol.start_leg(field_npc, Ms2ex.sync_ticks())
 
         {field_npc, put_in(state, [:npcs, field_npc.object_id], field_npc)}
 

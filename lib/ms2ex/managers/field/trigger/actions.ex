@@ -444,9 +444,10 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
             state
 
           object_id ->
+            # dialogue type 1 keeps the unflagged (player-style) anchor
             Managers.Field.broadcast(
               state.topic,
-              Packets.Cinematic.balloon_talk(object_id, script, duration, 0)
+              Packets.Cinematic.balloon_talk(object_id, script, duration, 0, false)
             )
 
             state
@@ -469,8 +470,14 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
   end
 
   # a balloon speech queued by the script (add_balloon_talk): the balloon
+  # appears over the player (spawn point 0) or, npc-flagged, above the
+  # spawn-point npc's head after delay_tick milliseconds; the duration is
+  # already milliseconds
+  # a balloon speech queued by the script (add_balloon_talk): the balloon
   # appears over the player (spawn point 0) or the spawn-point npc after
-  # delay_tick milliseconds; the duration is already milliseconds
+  # delay_tick milliseconds; the duration is already milliseconds. Npc
+  # balloons keep the unflagged (player-style) form — flagged npc balloons
+  # are dropped by the client entirely
   defp execute_action("add_balloon_talk", args, _script_name, state) do
     script = to_string(args[:msg] || "")
     duration = int_arg(args, :duration)
@@ -487,7 +494,7 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
         object_id ->
           Managers.Field.broadcast(
             state.topic,
-            Packets.Cinematic.balloon_talk(object_id, script, duration, delay)
+            Packets.Cinematic.balloon_talk(object_id, script, duration, delay, false)
           )
 
           state

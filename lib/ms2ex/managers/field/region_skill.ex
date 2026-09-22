@@ -12,11 +12,12 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   @splash_targets 8
 
   @doc """
-  Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+  Map-placed skill zones (heal towers, aura pads): perpetual client-side
   zones at a fixed position. Each zone gets a stable source id for the field
-  session; entering players receive the zone add frame and the client runs
-  the zone effect while they stand inside. Ids draw from the field's local
-  counter so they never collide with entities.
+  session; entering players receive the zone add frame — that frame is only
+  the visual, so the field ticks the zone on its own interval and applies
+  the skill to players standing inside (the Healing Forest's recovery
+  towers heal through this).
   """
   def load_zones(map_id, counter) do
     zones =
@@ -24,12 +25,18 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       |> Storage.Maps.get_region_skills()
       |> Enum.with_index()
       |> Enum.map(fn {doc, index} ->
+        attack = first_attack(doc.skill_id, doc.skill_level)
+
         %{
           source_id: counter + index,
           skill_id: doc.skill_id,
           skill_level: doc.skill_level,
           interval: doc[:interval] || 0,
-          position: doc.position
+          position: doc.position,
+          z_offset: 0,
+          range: attack[:range] || %{},
+          damage: attack[:damage] || %{},
+          skills: attack[:skills] || []
         }
       end)
 
@@ -56,6 +63,31 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         )
       )
     end)
+  end
+
+  @doc """
+  Fires a placed region zone on its own interval: applies the zone skill to
+  every player standing inside (the tower's HP recovery rides the skill's
+  effect buff) and reschedules the next fire. Placed zones are perpetual —
+  they live as long as the field does. An interval-less zone fires once.
+  """
+  def tick_placed_zone(state, source_id) do
+    state
+    |> Map.get(:region_skill_zones, [])
+    |> Enum.find(&(&1.source_id == source_id))
+    |> case do
+      nil ->
+        state
+
+      zone ->
+        state = apply_zone_to_players(state, zone)
+
+        if zone.interval > 0 do
+          Process.send_after(self(), {:placed_region_tick, source_id}, zone.interval)
+        end
+
+        state
+    end
   end
 
   @doc """
