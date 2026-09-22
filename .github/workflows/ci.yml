@@ -40,6 +40,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Setup Rust (the native navigation crate)
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
       # Setup Elixir
       - name: Set up Elixir
         id: beam
@@ -73,19 +77,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-hex-
 
-      # Cache dependencies and build artifacts. The key pins the OTP/Elixir
-      # versions so _build artifacts are never reused across toolchain bumps;
-      # restore-keys lets an older mix.lock build be reused incrementally.
+      # v2: the first cache entry was saved while the unanchored
+      # priv/native/ gitignore pattern excluded the built NIF from the
+      # archive; the suffix abandons that poisoned entry. no broad fallback:
+      # it would restore that entry again
       - name: Cache deps and _build
         uses: actions/cache@v5
         with:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-v2-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-
-            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-
+            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-v2-
 
       # Install dependencies
       - name: Install dependencies
@@ -94,7 +98,14 @@ jobs:
       # Compile project in the test environment (with warnings as errors) so
       # the cached _build only holds test artifacts and mix test reuses them
       - name: Compile
-        run: mix compile --warnings-as-errors
+        run: |
+          # a restored cache can lack the built NIF (rustler writes it into
+          # the source priv, which git ignores): removing the module's beam
+          # forces the compiler to rerun the crate build when the library
+          # is missing
+          test -f _build/test/lib/ms2ex/priv/native/navigation.so || \
+            rm -f _build/test/lib/ms2ex/ebin/Elixir.Ms2ex.Navigation.Native.beam
+          mix compile --warnings-as-errors
         env:
           MIX_ENV: test
 

@@ -363,22 +363,36 @@ defmodule Ms2ex.Managers.Field.Npc do
         # the model cannot animate — the walk itself is client-side
         animations = Patrol.leg_animations(field_npc, way_points) || []
 
+        base = %{
+          waypoints: way_points,
+          animations: animations,
+          speeds: Patrol.leg_speeds(field_npc, way_points),
+          index: 0,
+          speed: @follow_speed,
+          last_at: Ms2ex.sync_ticks(),
+          despawn_on_finish?: true
+        }
+
+        # the carry dummy is invisible and the player's walk is choreographed
+        # client-side: when no navmesh route resolves, the dummy falls back to
+        # the straight authored line so the carry still completes
+        patrol =
+          case Patrol.start_leg(field_npc, base) do
+            {:ok, patrol} ->
+              patrol
+
+            :error ->
+              Map.merge(base, %{
+                path: Enum.map(way_points, fn way_point -> way_point[:position] end),
+                path_index: 1
+              })
+          end
+
         field_npc = %{
           field_npc
           | position: character.position,
-            animation: Enum.at(animations, 0) || field_npc.animation,
-            patrol: %{
-              waypoints: way_points,
-              animations: animations,
-              speeds:
-                Enum.map(way_points, fn way_point ->
-                  Patrol.leg_speed(field_npc, way_point[:approach_animation])
-                end),
-              index: 0,
-              speed: @follow_speed,
-              last_at: Ms2ex.sync_ticks(),
-              despawn_on_finish?: true
-            }
+            patrol: patrol,
+            animation: Enum.at(animations, 0) || field_npc.animation
         }
 
         {field_npc, put_in(state, [:npcs, field_npc.object_id], field_npc)}
@@ -515,7 +529,27 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
+  @doc """
+  Expires a finished scripted emotion: once the emote's playback window
+  elapses the npc falls back to its idle sequence and flags itself dirty
+  so the next control broadcast carries the revert.
+  """
+  @spec expire_emote(Types.FieldNpc.t(), integer()) :: Types.FieldNpc.t()
+  def expire_emote(%Types.FieldNpc{} = npc, now) do
+    case npc.emote do
+      %{revert_at: revert_at} when now >= revert_at ->
+        %{npc | animation: npc.emote.idle_sequence_id, emote: nil, send_control?: true}
+
+      _ ->
+        npc
+    end
+  end
+
+  def expire_emote(npc, _now), do: npc
+
   defp tick_npc(now, object_id, npc, {live, corpses}) do
+    npc = expire_emote(npc, now)
+
     cond do
       npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
         npc =

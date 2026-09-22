@@ -168,8 +168,9 @@ host runs):
   implementations or tooling; describe behavior in domain terms. When you
   implement, fix, or advance a feature, update its feature doc and the
   roadmap entry's status marker.
-- **Completed work goes to `docs/CHANGELOG.md`** (one entry per landed
-  change, newest first). Move nothing else there — no open work, no plans.
+- **Completed work needs no doc of its own**: merged PRs are the record;
+  release notes generate from them. Never create a changelog or log file
+  under `docs/`.
 - **Leave `TODO` comments for unimplemented behavior.** When a code path is
   incomplete or stubbed, add a `# TODO` comment (with a short note on what
   remains) so unfinished work can be found by grepping for `TODO`.

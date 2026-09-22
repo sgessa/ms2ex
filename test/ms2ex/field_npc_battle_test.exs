@@ -1,6 +1,12 @@
 defmodule Ms2ex.FieldNpcBattleTest do
   use Ms2ex.DataCase, async: true
 
+  # synthetic mesh-set binaries (regenerable with the crate's
+  # gen_fixtures binary): an open 40x40 floor, and a main island with a
+  # detached one
+  @open File.read!("test/fixtures/navmesh/open.mset")
+  @islands File.read!("test/fixtures/navmesh/islands.mset")
+
   alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Types
 
@@ -284,7 +290,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # clearly outside its stop range (past the resume margin) it must be
     # moving — a stand tick mid-chase makes the client flicker the walk
     # animation
-    {npc, stutter_ticks} =
+    {_npc, stutter_ticks} =
       Enum.reduce_while(1..120, {npc, 0}, fn i, {npc, stutter} ->
         player_x = if rem(i, 10) < 5, do: 3000, else: 1000
         state = field_with_player_at(player_x, -i * 20)
@@ -456,27 +462,12 @@ defmodule Ms2ex.FieldNpcBattleTest do
   test "a mob gives up on an unreachable target and walks home" do
     {map_id, xblock} = unique_map()
 
-    # main island 0..4000 plus a detached island at 6000..6400
-    verts =
-      mesh_verts([
-        {0, 0, 0},
-        {40, 0, 0},
-        {40, 0, 40},
-        {0, 0, 40},
-        {60, 0, 0},
-        {64, 0, 0},
-        {64, 0, 40},
-        {60, 0, 40}
-      ])
-
-    doc = %{tiles: [%{verts: verts, polys: [[0, 1, 2, 3], [4, 5, 6, 7]]}]}
-
     stub_metadata(%{
       "map:#{map_id}" => %{x_block: xblock},
-      "navmesh:#{xblock}" => doc
+      "navmesh_bin:#{xblock}" => @islands
     })
 
-    on_exit(fn -> :persistent_term.erase({:navgraph, xblock}) end)
+    on_exit(fn -> :persistent_term.erase({:navmesh_native, xblock}) end)
 
     # the mob's home is the main island but it stands near its edge; the
     # player is on the detached island, inside last-sight but unreachable
@@ -512,11 +503,9 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     # stub_metadata replaces the whole storage stub, so the navmesh keys
     # are re-declared here alongside the skill/animation docs
-    verts = mesh_verts([{0, 0, 0}, {40, 0, 0}, {40, 0, 40}, {0, 0, 40}])
-
     stub_metadata(%{
       "map:#{map_id}" => %{x_block: xblock},
-      "navmesh:#{xblock}" => %{tiles: [%{verts: verts, polys: [[0, 1, 2, 3]]}]},
+      "navmesh_bin:#{xblock}" => @open,
       "skill:4001" => %{
         levels: %{
           "1" => %{
@@ -757,21 +746,12 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
   # a flat 40x40 navmesh quad (navmesh meters) for chase movement
   defp stub_navmesh(xblock, map_id) do
-    verts = mesh_verts([{0, 0, 0}, {40, 0, 0}, {40, 0, 40}, {0, 0, 40}])
-    doc = %{tiles: [%{verts: verts, polys: [[0, 1, 2, 3]]}]}
-
     stub_metadata(%{
       "map:#{map_id}" => %{x_block: xblock},
-      "navmesh:#{xblock}" => doc
+      "navmesh_bin:#{xblock}" => @open
     })
 
-    on_exit(fn -> :persistent_term.erase({:navgraph, xblock}) end)
+    on_exit(fn -> :persistent_term.erase({:navmesh_native, xblock}) end)
     :ok
-  end
-
-  defp mesh_verts(points) do
-    Enum.reduce(points, <<>>, fn {x, y, z}, acc ->
-      acc <> <<x::little-float-32, y::little-float-32, z::little-float-32>>
-    end)
   end
 end

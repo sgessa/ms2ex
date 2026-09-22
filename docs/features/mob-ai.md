@@ -73,7 +73,10 @@ target's live position and walks it:
   micro-teleports); velocity carries across path corners for the same
   reason
 - movement snaps onto the navmesh surface every step (`snap_to_floor`); a
-  step with no walkable surface holds position — same rule as patrols
+  mid-step with no walkable surface holds position (velocity dropped so the
+  mob reads as standing). Patrols differ: they walk the authored straight
+  line and apply the mesh only as a correction within 15 units of it, so a
+  coverage gap cannot float the model onto a higher walkable layer
 - inside `stop_range` the mob stands and faces its target
 - no walkable route (target on another navmesh island, or the map has no
   mesh): the mob holds position and re-tries on the re-path cadence. A

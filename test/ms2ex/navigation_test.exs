@@ -4,37 +4,30 @@ defmodule Ms2ex.NavigationTest do
   alias Ms2ex.Navigation
   alias Ms2ex.Types.Coord
 
-  # a flat L-shaped navmesh (navmesh meters, Y up) of three convex quads:
-  #
-  #   z
-  #   8 ┌─────┐
-  #   4 │B│C│
-  #   0 ─A─B──  x
-  #     0 4 8
-  #
-  # A covers x 0..4 / z 0..4, B covers x 4..8 / z 0..4, C covers x 4..8 /
-  # z 4..8. Tiles store float32 vertices and polys as vertex index loops.
+  # synthetic mesh-set binaries (regenerable with the crate's gen_fixtures
+  # binary) covering the query behaviors: a flat L-shaped floor of three
+  # convex quads (A covers x 0..4 / z 0..4, B x 4..8 / z 0..4, C x 4..8 /
+  # z 4..8) and two identical floors stacked 3m apart with no connection.
+  # Meshes live in navmesh meters, Y up
+  @l_shape File.read!("test/fixtures/navmesh/l_shape.mset")
+  @stacked File.read!("test/fixtures/navmesh/stacked.mset")
+
   setup do
     suffix = System.unique_integer([:positive])
     xblock = "test_nav_#{suffix}"
     map_id = 990_000_000 + suffix
 
-    verts =
-      [{0, 0, 0}, {4, 0, 0}, {4, 0, 4}, {0, 0, 4}, {8, 0, 0}, {8, 0, 4}, {4, 0, 8}, {8, 0, 8}]
-      |> Enum.reduce(<<>>, fn {x, y, z}, acc ->
-        acc <> <<x::little-float-32, y::little-float-32, z::little-float-32>>
-      end)
-
-    doc = %{tiles: [%{verts: verts, polys: [[0, 1, 2, 3], [1, 4, 5, 2], [2, 5, 7, 6]]}]}
-
     stub_metadata(%{
       "map:#{map_id}" => %{x_block: xblock},
-      "navmesh:#{xblock}" => doc
+      "navmesh_bin:#{xblock}" => @l_shape
     })
 
-    on_exit(fn -> :persistent_term.erase({:navgraph, xblock}) end)
+    on_exit(fn ->
+      :persistent_term.erase({:navmesh_native, xblock})
+      :persistent_term.erase({:navgraph, xblock})
+    end)
 
-    %{map_id: map_id, xblock: xblock}
+    %{map_id: map_id}
   end
 
   # navmesh meters -> client units (MS2 is Z-up, y = -nav z)
@@ -61,7 +54,7 @@ defmodule Ms2ex.NavigationTest do
     assert_in_delta goal.y, -700.0, 0.01
   end
 
-  test "endpoints snap to the closest walkable point", %{map_id: map_id} do
+  test "endpoints inside the mesh come back unchanged", %{map_id: map_id} do
     assert {:ok, path} = Navigation.find_path(map_id, coord(0.5, 0.5), coord(7.5, 3.5))
     [start, goal] = path
     assert %Coord{x: 50.0, y: -50.0} = start
@@ -97,5 +90,34 @@ defmodule Ms2ex.NavigationTest do
 
   test "has_navmesh? reflects the mesh presence" do
     assert Navigation.has_navmesh?(-1) == false
+  end
+
+  # two identical floors stacked 3m apart: never welded into one graph, so
+  # routes only exist within a floor and snaps pick the floor the query
+  # position is actually at
+  test "vertically stacked floors never connect", ctx do
+    suffix = System.unique_integer([:positive])
+    xblock = "test_stacked_#{suffix}"
+    map_id = 991_000_000 + suffix
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @stacked
+    })
+
+    on_exit(fn -> :persistent_term.erase({:navmesh_native, xblock}) end)
+    _ = ctx
+
+    # a route staying on one floor works
+    assert {:ok, path} = Navigation.find_path(map_id, coord(1, 1), coord(3, 3))
+    assert length(path) == 2
+    # a route to the floor above has no connection
+    above = %Coord{x: 300, y: -300, z: 300}
+    assert Navigation.find_path(map_id, coord(1, 1), above) == :error
+    # snaps land on the floor the position is at
+    assert %{z: z_low} = Navigation.snap_to_floor(map_id, %Coord{x: 300, y: -300, z: 50})
+    assert_in_delta z_low, 0.0, 0.01
+    assert %{z: z_high} = Navigation.snap_to_floor(map_id, %Coord{x: 300, y: -300, z: 350})
+    assert_in_delta z_high, 300.0, 0.01
   end
 end

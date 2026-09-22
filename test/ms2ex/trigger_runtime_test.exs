@@ -1,6 +1,10 @@
 defmodule Ms2ex.TriggerRuntimeTest do
   use Ms2ex.DataCase, async: true
 
+  # synthetic mesh-set binary (regenerable with the crate's gen_fixtures
+  # binary) standing in for a walkable floor
+  @open File.read!("test/fixtures/navmesh/open.mset")
+
   alias Ms2ex.Managers.Field
   alias Ms2ex.Managers.Field.Npc
   alias Ms2ex.Types.Coord
@@ -957,24 +961,14 @@ defmodule Ms2ex.TriggerRuntimeTest do
   end
 
   test "move_npc attaches the patrol to the matching story npc" do
-    # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
-    # approach falls back to the model's run sequence
+    # each waypoint walks its authored approach animation resolved on the
+    # model's animation table
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      },
+      "navmesh_bin:nav_test" => @open,
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
-        sequences: %{Run_A: 11, Idle_A: 3}
+        sequences: %{Walk_A: 7, Idle_A: 3}
       }
     })
 
@@ -986,7 +980,11 @@ defmodule Ms2ex.TriggerRuntimeTest do
         }
       })
       |> Map.put(:npcs, %{
-        700 => %{story_npc(108, 11_003_401) | map_id: 52_000_099},
+        700 => %{
+          story_npc(108, 11_003_401)
+          | map_id: 52_000_099,
+            position: %Coord{x: 20.0, y: -20.0, z: 0.0}
+        },
         701 => %{spawn_point_id: 109, animation: 255, patrol: nil, npc: %{id: 11_003_399}}
       })
       |> put_in([:trigger_scripts, "tutorial", :states, "wait", :on_enter], [
@@ -996,9 +994,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     npc = state.npcs[700]
 
-    assert %{patrol: %{waypoints: [waypoint], animations: [11], speed: speed}} = npc
+    assert %{patrol: %{waypoints: [waypoint], animations: [7], speed: speed}} = npc
     assert waypoint.position == %{x: 100.0, y: -50.0, z: 0.0}
-    assert npc.animation == 11
+    assert npc.animation == 7
     assert speed == 150
     # the other npc is untouched
     assert state.npcs[701][:patrol] == nil
@@ -1007,17 +1005,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "move_npc leaves npcs without a locomotion sequence in place" do
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      },
+      "navmesh_bin:nav_test" => @open,
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
         sequences: %{Idle_A: 3}
@@ -1091,17 +1079,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "patrol ground legs ride the navmesh floor instead of sinking below it" do
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      }
+      "navmesh_bin:nav_test" => @open
     })
 
     now = now_ms()
@@ -1117,33 +1095,35 @@ defmodule Ms2ex.TriggerRuntimeTest do
           index: 0,
           speed: 240,
           last_at: now - 100,
-          despawn_on_finish?: false
+          despawn_on_finish?: false,
+          # the navmesh route: the npc's own position, a corner riding the
+          # walkable surface, then the authored waypoint
+          path: [
+            %Coord{x: 50.0, y: -50.0, z: -5.0},
+            %Coord{x: 75.0, y: -50.0, z: 0.0},
+            %Coord{x: 100.0, y: -50.0, z: -5.0}
+          ],
+          path_index: 1
         }
     }
 
+    # the first tick walks the route segment toward the corner (the corner
+    # carries the walkable surface height)
     advanced = Npc.Patrol.advance_patrol(npc, now)
-
-    # the straight line runs 5 units under the floor; the step re-anchors
-    # the position onto the walkable surface
-    assert advanced.position.z == 0.0
+    assert_in_delta advanced.position.x, 73.534, 0.001
     assert advanced.send_control?
+
+    # the next tick arrives at the corner: the position lands on the corner
+    # height (the walkable surface), not the authored -5
+    advanced = Npc.Patrol.advance_patrol(advanced, now + 100)
+    assert_in_delta advanced.position.x, 75.0, 0.001
   end
 
   test "patrol air legs keep their authored flight line" do
     # a navmesh exists for the map: the air gate is what keeps the line
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      }
+      "navmesh_bin:nav_test" => @open
     })
 
     now = now_ms()
@@ -1159,7 +1139,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
           index: 0,
           speed: 240,
           last_at: now - 100,
-          despawn_on_finish?: false
+          despawn_on_finish?: false,
+          path: [%Coord{x: 100.0, y: -50.0, z: 500.0}],
+          path_index: 1
         }
     }
 

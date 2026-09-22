@@ -59,11 +59,10 @@ defmodule Ms2ex.Packets.ControlNpc do
     # every alive entry regardless of combat state.
     |> put_byte(0x2)
     |> put_short_coord(npc.position)
-    # TODO convert Z to degree
     |> put_short(trunc(npc.rotation.z * 10))
     # movement velocity lets the client interpolate between control packets
     |> put_velocity(npc)
-    |> put_short(100)
+    |> put_anim_speed(npc)
     |> put_target_id(npc, boss_target)
     |> put_state(npc)
     |> put_short(npc.animation)
@@ -79,6 +78,34 @@ defmodule Ms2ex.Packets.ControlNpc do
   end
 
   defp put_velocity(packet, _npc), do: put_short_coord(packet)
+
+  # sequence playback rate (100 = 1.0x): the client scales the played
+  # animation by it, so a walk cycle has to ride the gait speed the npc is
+  # actually covering ground at — otherwise the model glides over its own
+  # stride and the feet never plant on the ground. the rate is the model's
+  # ani_speed factor times the current movement speed (x100); a standing
+  # npc plays at its bare ani_speed, and a scripted emotion always plays
+  # at bare 1.0x regardless of the model's ani_speed
+  defp put_anim_speed(packet, %Types.FieldNpc{emote: emote}) when is_map(emote) do
+    put_short(packet, 100)
+  end
+
+  defp put_anim_speed(packet, %Types.FieldNpc{} = npc) do
+    # a standing npc (zero velocity) plays at its bare ani_speed
+    speed = max(velocity_magnitude(npc), 1.0)
+    put_short(packet, trunc(ani_speed(npc) * speed * 100))
+  end
+
+  defp velocity_magnitude(%Types.FieldNpc{velocity: {vx, vy, vz}}) do
+    :math.sqrt(vx * vx + vy * vy + vz * vz)
+  end
+
+  defp ani_speed(%Types.FieldNpc{} = npc) do
+    case get_in(npc.npc.metadata, [:model, :ani_speed]) do
+      rate when is_number(rate) and rate > 0 -> rate
+      _ -> 1.0
+    end
+  end
 
   # The state byte tells the client which actor state to present. A moving
   # mob reports Walk (2) so the client plays the locomotion animation and

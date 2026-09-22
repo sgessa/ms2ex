@@ -2,9 +2,9 @@
 
 Open and incomplete features, grouped by priority. Each entry links to its
 feature document under [features/](features/) with the technical detail —
-how the system works today and what is still needed. Completed work lives in
-[CHANGELOG.md](CHANGELOG.md). Client metadata projections are documented in
-[CLIENT_METADATA.md](CLIENT_METADATA.md).
+how the system works today and what is still needed. Completed work is
+recorded by merged PRs; release notes generate from them. Client metadata
+projections are documented in [CLIENT_METADATA.md](CLIENT_METADATA.md).
 
 Status markers: **[Partial]** — some pieces are in place; **[Open]** — not
 started.
@@ -44,7 +44,7 @@ started.
 
 - [Join-flow packet audit](features/join-flow.md) — [Partial]
 - [Drop & field-item serialization](features/drops-serialization.md) — [Open]
-- [Navmesh position validation](features/navmesh.md) — [Partial]
+- [Navmesh movement & routing](features/navmesh.md) — [Partial]
 
 ## P4 — Architecture
 
@@ -55,7 +55,8 @@ started.
 ---
 
 Feature documentation for completed systems (how they work, no open work
-tracked): [state skills](features/state-skills.md),
+tracked): [character selection](features/character-select.md),
+[state skills](features/state-skills.md),
 [skill cooldowns](features/skill-cooldowns.md),
 [monster drops](features/monster-drops.md),
 [equipment stats](features/equip-stats.md),

@@ -34,6 +34,7 @@ defmodule Ms2ex.Schema.Character do
 
   @optional_fields [
     :active_skill_tab_id,
+    :delete_time,
     :discovered_objects,
     :fish_album,
     :gathering_counts,
@@ -64,6 +65,10 @@ defmodule Ms2ex.Schema.Character do
     has_one :wallet, Schema.Wallet
 
     field :awakened, :boolean, default: false
+
+    # pending deletion: unix seconds when the character is removed, zero
+    # while no deletion is scheduled
+    field :delete_time, :integer, default: 0
 
     field :active_skill_tab_id, :integer
     field :discovered_maps, {:array, :integer}, default: []

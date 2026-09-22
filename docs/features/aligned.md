@@ -32,6 +32,13 @@ sub-feature docs hold the detail.
   broadcasts actor state transitions (casting/idle) through the State flag;
   ControlNpc streams continuously at ~30ms for every npc; boss entries flip
   flags bit-2 and the target-id slot only on aggro (idle->in-battle).
+- ControlNpc anim-speed slot: the sequence playback rate (100 = 1.0x) the
+  client scales the played animation by. It rides the model's projected
+  `model.ani_speed` factor times the current movement speed (a standing npc
+  plays at its bare ani_speed), matching the reference's
+  `TryPlaySequence(aniSpeed * Speed)` + `SequenceSpeed * 100` — previously a
+  constant 100 left walk cycles unsynced with the ground speed (models
+  gliding over their own stride).
 - Inventory tabs: tab derived via item type + subtype + `is_skin`/`is_fragment`,
   matching the client's mapping; the item projection emits
   `property.subtype`/`is_skin`/`is_fragment`.
