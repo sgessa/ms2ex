@@ -1,6 +1,7 @@
 defmodule Ms2ex.NpcSpawnGroundingTest do
-  # spawn positions ride the navmesh: the grounding is stubbed at the
-  # Navigation boundary so the tests pin the spawn plumbing, not the mesh
+  # scattered spawn positions snap to the walkable surface; the snap is
+  # stubbed at the Navigation boundary so the tests pin the spawn plumbing,
+  # not the mesh
   use Ms2ex.DataCase, async: false
 
   alias Ms2ex.Managers.Field.Npc
@@ -15,48 +16,24 @@ defmodule Ms2ex.NpcSpawnGroundingTest do
     }
   end
 
-  test "a friendly npc spawns on the walkable surface, not at the authored height", %{
+  test "a spawn without a radius stands at its authored position", %{
     state: state,
     position: position
   } do
-    stub_grounding(fn _map_id, pos -> %{pos | z: 1000.0} end)
-
-    {field_npc, _state} = Npc.spawn_npc(state, friendly_npc(), npc_spawn(position))
-
-    assert field_npc.position == %{position | z: 1000.0}
-    assert field_npc.origin == field_npc.position
-  end
-
-  test "plain-map spawn positions ground through the same path", %{
-    state: state,
-    position: position
-  } do
-    stub_grounding(fn _map_id, pos -> %{pos | z: 1000.0} end)
-
-    {field_npc, _state} =
-      Npc.spawn_npc(state, friendly_npc(), npc_spawn(Map.from_struct(position)))
-
-    assert field_npc.position == %{position | z: 1000.0}
-  end
-
-  test "an authored position without a walkable surface is kept", %{
-    state: state,
-    position: position
-  } do
-    stub_grounding(fn _map_id, _pos -> nil end)
-
     {field_npc, _state} = Npc.spawn_npc(state, friendly_npc(), npc_spawn(position))
 
     assert field_npc.position == position
+    assert field_npc.origin == field_npc.position
   end
 
-  test "a scattered mob spawn is grounded on its scattered spot", %{
+  test "a scattered spawn lands on the walkable surface at its scattered spot", %{
     state: state,
     position: position
   } do
-    stub_grounding(fn _map_id, pos -> %{pos | z: 1000.0} end)
+    Mimic.stub(Ms2ex.Navigation, :snap_to_floor, fn _map_id, pos -> %{pos | z: 1000.0} end)
 
-    {field_npc, _state} = Npc.spawn_npc(state, mob_npc(), npc_spawn(position, spawn_radius: 50.0))
+    {field_npc, _state} =
+      Npc.spawn_npc(state, mob_npc(), npc_spawn(position, spawn_radius: 50.0))
 
     assert field_npc.position.z == 1000.0
 
@@ -69,7 +46,29 @@ defmodule Ms2ex.NpcSpawnGroundingTest do
     assert distance <= 50.0
   end
 
-  defp stub_grounding(fun), do: Mimic.stub(Ms2ex.Navigation, :snap_to_floor, fun)
+  test "a scattered spawn without walkable ground falls back to the authored spawn", %{
+    state: state,
+    position: position
+  } do
+    Mimic.stub(Ms2ex.Navigation, :snap_to_floor, fn _map_id, _pos -> nil end)
+
+    {field_npc, _state} =
+      Npc.spawn_npc(state, mob_npc(), npc_spawn(position, spawn_radius: 50.0))
+
+    assert field_npc.position == position
+  end
+
+  test "plain-map spawn positions flow through the same scatter path", %{
+    state: state,
+    position: position
+  } do
+    Mimic.stub(Ms2ex.Navigation, :snap_to_floor, fn _map_id, pos -> %{pos | z: 1000.0} end)
+
+    {field_npc, _state} =
+      Npc.spawn_npc(state, mob_npc(), npc_spawn(Map.from_struct(position), spawn_radius: 50.0))
+
+    assert field_npc.position.z == 1000.0
+  end
 
   defp npc_spawn(position, attrs \\ []) do
     Map.merge(%{spawn_point_id: 101, position: position, rotation: nil}, Map.new(attrs))

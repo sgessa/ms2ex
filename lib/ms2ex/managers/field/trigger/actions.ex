@@ -894,17 +894,13 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
           state
 
         animation_id ->
-          ms = emote_duration_ms(model, sequence, opts)
-          idle_id = Map.get(npc, :idle_sequence_id) || animation_id
-
           npc =
-            npc
-            |> Map.put(:animation, animation_id)
-            |> Map.put(
-              :emote,
-              %{revert_at: Ms2ex.sync_ticks() + ms, idle_sequence_id: idle_id}
+            Types.FieldNpc.play_emote(
+              npc,
+              animation_id,
+              emote_duration_ms(model, sequence, opts),
+              Ms2ex.sync_ticks()
             )
-            |> Map.put(:send_control?, true)
 
           put_in(state, [:npcs, object_id], npc)
       end

@@ -1,4 +1,5 @@
 defmodule Ms2ex.Types.FieldNpc do
+  alias Ms2ex.Navigation
   alias Ms2ex.Storage
   alias Ms2ex.Types.Coord
   alias Ms2ex.Enums
@@ -19,14 +20,13 @@ defmodule Ms2ex.Types.FieldNpc do
     :first_attacker,
     :last_attacker,
     :damage_dealers,
-    # TODO per-model sequence ids from anikey data (ingest projection)
     :animation,
     # the model's resolved idle sequence: what a standing npc reports and
     # what scripted emotions revert to after playing
     :idle_sequence_id,
-    # a scripted emotion in progress: %{revert_at, sequence_id,
-    # idle_sequence_id} — one-shot emotions revert to the idle sequence
-    # once their natural playback length elapses
+    # a scripted emotion in progress: %{revert_at, idle_sequence_id} —
+    # one-shot emotions revert to the idle sequence once their playback
+    # length elapses
     :emote,
     :patrol,
     # aggro state (mobs only): %Battle{} while engaged or returning, nil
@@ -44,8 +44,7 @@ defmodule Ms2ex.Types.FieldNpc do
     stat_dirty?: false,
     seq_counter: 0,
     last_control_at: 0,
-    velocity: {0, 0, 0},
-    emote_loop: nil
+    velocity: {0, 0, 0}
   ]
 
   # must match @idle_control_ms in Managers.Field; staggering keeps npcs from
@@ -53,12 +52,14 @@ defmodule Ms2ex.Types.FieldNpc do
   @idle_control_ms 30
 
   def new(attrs) do
+    idle_sequence_id = idle_sequence_id(attrs.npc)
+
     attrs =
       attrs
       |> Map.put(:rotation, to_coord(attrs.rotation))
       |> Map.put(:type, get_type(attrs.npc))
-      |> Map.put(:idle_sequence_id, idle_sequence_id(attrs.npc))
-      |> Map.put(:animation, idle_sequence_id(attrs.npc))
+      |> Map.put(:idle_sequence_id, idle_sequence_id)
+      |> Map.put(:animation, idle_sequence_id)
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
       |> Map.put_new(
         :last_control_at,
@@ -98,16 +99,19 @@ defmodule Ms2ex.Types.FieldNpc do
 
   @spawn_distance 250
 
-  # spawn-point npcs (xblock scripted/regen spawns) carry an explicit
-  # spawn_radius from the map data: zero means the npc always appears
-  # exactly at its configured position, and a positive radius scatters it
-  # within a circle of that size around it. Open-world population spawns
-  # carry no spawn_radius metadata yet (still a coarse box spread pending
-  # navmesh-valid spawn position picking)
+  # spawn scatter mirrors the spawn kinds: hostile population docs spread
+  # mobs in a coarse box around the spawn point keeping its ground height;
+  # an explicit spawn radius scatters a circle whose scattered spot snaps
+  # to the walkable surface (falling back to the authored spawn when the
+  # scattered spot has none); every other spawn stands verbatim at its
+  # authored position
   defp randomize_pos(%{type: :mob} = attrs) do
     position = to_coord(attrs.position)
 
     case Map.get(attrs, :spawn_radius) do
+      radius when is_number(radius) and radius > 0 ->
+        scatter_circle(attrs, position, radius)
+
       nil ->
         min_x = position.x - @spawn_distance
         max_x = position.x + @spawn_distance
@@ -119,26 +123,53 @@ defmodule Ms2ex.Types.FieldNpc do
 
         Map.put(attrs, :position, %{position | x: x, y: y})
 
-      radius when radius > 0 ->
-        angle = :rand.uniform() * 2 * :math.pi()
-        distance = :rand.uniform() * radius
-
-        %{
-          attrs
-          | position: %{
-              position
-              | x: position.x + :math.cos(angle) * distance,
-                y: position.y + :math.sin(angle) * distance
-            }
-        }
-
       _zero_radius ->
         Map.put(attrs, :position, position)
     end
   end
 
   defp randomize_pos(attrs) do
-    Map.put(attrs, :position, to_coord(attrs.position))
+    position = to_coord(attrs.position)
+
+    case Map.get(attrs, :spawn_radius) do
+      radius when is_number(radius) and radius > 0 ->
+        scatter_circle(attrs, position, radius)
+
+      _ ->
+        Map.put(attrs, :position, position)
+    end
+  end
+
+  defp scatter_circle(attrs, position, radius) do
+    angle = :rand.uniform() * 2 * :math.pi()
+    distance = :rand.uniform() * radius
+
+    scattered = %{
+      position
+      | x: position.x + :math.cos(angle) * distance,
+        y: position.y + :math.sin(angle) * distance
+    }
+
+    Map.put(
+      attrs,
+      :position,
+      Navigation.snap_to_floor(Map.get(attrs, :map_id), scattered) || position
+    )
+  end
+
+  # a scripted emotion takes over the npc's animation: it plays at bare
+  # 1.0x rate (the control packet rides a 100 rate while an emote is
+  # active) and reverts to the model's idle sequence once its playback
+  # length elapses
+  def play_emote(%__MODULE__{} = npc, animation_id, ms, now) do
+    idle_sequence_id = npc.idle_sequence_id || animation_id
+
+    %{
+      npc
+      | animation: animation_id,
+        emote: %{revert_at: now + ms, idle_sequence_id: idle_sequence_id},
+        send_control?: true
+    }
   end
 
   defp build_stats(stats) do

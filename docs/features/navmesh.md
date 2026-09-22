@@ -33,11 +33,13 @@ lineage that builds the meshes.
 - `valid_position?/2` — whether a position stands on walkable ground
 
 Consumers: npc patrols route every authored waypoint over the mesh (legs
-with no connected route leave the npc standing; air waypoints fly straight;
-the final segment of every leg walks to the authored waypoint — see the
-TODOs in `patrol.ex` for the mesh-era workarounds pending removal), mob
-movement rides the surface via per-step snaps, spawn positions ground onto
-the mesh (also pending the same TODO), and the trigger runtime's move_user
+with no connected route leave the npc standing; air waypoints fly
+straight; each route already ends exactly on the authored waypoint).
+Waypoints carrying an arrive animation play it as an emote — the emote
+machinery (`Types.FieldNpc.play_emote/4`) holds the next leg until its
+beat, then the patrol departs. Mob movement rides the surface via per-step
+snaps, radius-scattered spawns snap their scattered spot to the mesh
+(falling back to the authored spawn), and the trigger runtime's move_user
 refuses teleports to positions without walkable ground.
 
 ## Tests
@@ -56,4 +58,9 @@ client happens over a real ingest.
   though both patches are walkable. Stale ETF mesh documents from earlier
   ingest generations (meshes whose map is no longer ingested) also linger
   in Redis; they are dead keys, never read
+- a patrol leg whose route cannot resolve ends the whole patrol (the npc
+  stands where it stopped); a more forgiving contract would skip the
+  unreachable waypoint and keep the remaining legs — the reference does
+  this. Same bucket: patrol population docs (script move_npc on a map
+  whose first waypoint cannot path) refuse the patrol outright
 - the crowd manager (agent steering for mobs) remains an option for later

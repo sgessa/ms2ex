@@ -10,7 +10,7 @@ defmodule Ms2ex.NpcPatrolTest do
 
   setup do
     stub_metadata(%{
-      "animation:cutscenenpc" => %{sequences: %{:Idle_A => 100, :Walk_A => 101}}
+      "animation:cutscenenpc" => %{sequences: %{:Idle_A => 100, :Walk_A => 101, :Bore_B => 102}}
     })
 
     :ok
@@ -121,6 +121,41 @@ defmodule Ms2ex.NpcPatrolTest do
     assert npc.position == second.position
   end
 
+  test "a waypoint with an arrive animation plays it before the next leg departs" do
+    first = way_point(air: true, arrive_animation: "Bore_B", arrive_animation_time: 2_000)
+    second = way_point(air: true, x: 900)
+
+    npc = patrolling_npc([first, second], last_at: 0, path: [first[:position]])
+
+    # arrival at the first waypoint plays its arrive animation as an emote
+    # and holds the next leg until the beat elapses
+    npc = Patrol.advance_patrol(npc, 5_000)
+
+    assert npc.patrol != nil
+    assert npc.patrol.index == 1
+    assert npc.patrol.depart_at == 7_000
+    assert npc.animation == 102
+    assert npc.emote.revert_at == 7_000
+    assert npc.velocity == {0, 0, 0}
+
+    # mid-beat: the npc holds the waypoint, emote still playing
+    npc = Patrol.advance_patrol(npc, 6_000)
+
+    assert npc.patrol.index == 1
+    assert npc.animation == 102
+    assert npc.emote
+    assert npc.position == first.position
+
+    # the beat elapses: the next leg departs and the emote clears
+    npc = Patrol.advance_patrol(npc, 7_500)
+
+    assert npc.emote == nil
+    assert npc.patrol.depart_at == nil
+    assert npc.patrol.index == 1
+    assert npc.animation == 101
+    assert npc.send_control? == true
+  end
+
   test "a next leg without a navmesh route stands the npc where it stopped" do
     ground = way_point(air: false)
     first = way_point(air: true)
@@ -176,5 +211,10 @@ defmodule Ms2ex.NpcPatrolTest do
       air_way_point: Keyword.get(opts, :air, false),
       approach_animation: "Walk_A"
     }
+    |> maybe_put(:arrive_animation, Keyword.get(opts, :arrive_animation))
+    |> maybe_put(:arrive_animation_time, Keyword.get(opts, :arrive_animation_time))
   end
+
+  defp maybe_put(map, _key, nil), do: map
+  defp maybe_put(map, key, value), do: Map.put(map, key, value)
 end

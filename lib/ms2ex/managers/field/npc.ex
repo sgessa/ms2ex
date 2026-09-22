@@ -1,7 +1,6 @@
 defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Context
   alias Ms2ex.Managers
-  alias Ms2ex.Navigation
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
@@ -133,7 +132,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         spawn_point_id: npc_spawn[:spawn_point_id],
         npc: npc,
         map_id: state.map_id,
-        position: ground_position(state.map_id, npc_spawn[:position]),
+        position: npc_spawn[:position],
         rotation: npc_spawn[:rotation],
         spawn_radius: npc_spawn[:spawn_radius],
         field: state.topic
@@ -143,18 +142,6 @@ defmodule Ms2ex.Managers.Field.Npc do
     Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.load_npc(field_npc))
 
     {field_npc, put_in(state, [:npcs, object_id], field_npc)}
-  end
-
-  # TODO: drop the grounding — the generated meshes are built from the
-  # same collision the client renders, so authored spawn heights already
-  # stand on the ground and positions should be kept verbatim. The
-  # grounding was a workaround for meshes built before the ingest's cube
-  # index-buffer fix; it retires with the Detour migration
-  defp ground_position(map_id, position) do
-    case Navigation.snap_to_floor(map_id, position) do
-      nil -> position
-      ground -> ground
-    end
   end
 
   # A mob death frees its population slot and schedules the next spawn cycle:

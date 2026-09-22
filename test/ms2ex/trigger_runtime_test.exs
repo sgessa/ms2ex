@@ -961,14 +961,14 @@ defmodule Ms2ex.TriggerRuntimeTest do
   end
 
   test "move_npc attaches the patrol to the matching story npc" do
-    # the model animates Run_A but not Walk_A, so the waypoint's Walk_A
-    # approach falls back to the model's run sequence
+    # each waypoint walks its authored approach animation resolved on the
+    # model's animation table
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
       "navmesh_bin:nav_test" => @open,
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
-        sequences: %{Run_A: 11, Idle_A: 3}
+        sequences: %{Walk_A: 7, Idle_A: 3}
       }
     })
 
@@ -994,9 +994,9 @@ defmodule Ms2ex.TriggerRuntimeTest do
 
     npc = state.npcs[700]
 
-    assert %{patrol: %{waypoints: [waypoint], animations: [11], speed: speed}} = npc
+    assert %{patrol: %{waypoints: [waypoint], animations: [7], speed: speed}} = npc
     assert waypoint.position == %{x: 100.0, y: -50.0, z: 0.0}
-    assert npc.animation == 11
+    assert npc.animation == 7
     assert speed == 150
     # the other npc is untouched
     assert state.npcs[701][:patrol] == nil

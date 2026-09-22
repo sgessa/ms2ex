@@ -59,7 +59,6 @@ defmodule Ms2ex.Packets.ControlNpc do
     # every alive entry regardless of combat state.
     |> put_byte(0x2)
     |> put_short_coord(npc.position)
-    # TODO convert Z to degree
     |> put_short(trunc(npc.rotation.z * 10))
     # movement velocity lets the client interpolate between control packets
     |> put_velocity(npc)
