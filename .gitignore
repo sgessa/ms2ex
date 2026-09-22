@@ -47,7 +47,10 @@ ms2ex-*.tar
 # client tools
 /scripts/
 __pycache__/
-priv/native/
+# rustler build artifacts land in the root priv of the source tree; the
+# anchored pattern keeps _build/test/lib/ms2ex/priv/native (the copy the
+# NIF actually loads from) cacheable by CI
+/priv/native/
 native/navigation/target/
 inspect_positions.sh
 watch_cutscene.sh
