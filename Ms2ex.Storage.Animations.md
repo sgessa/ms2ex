@@ -7,6 +7,12 @@
 @spec sequence_id(String.t() | nil, String.t() | nil) :: integer() | nil
 ```
 
+# `sequence_time`
+
+```elixir
+@spec sequence_time(String.t() | nil, String.t() | nil) :: float() | nil
+```
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

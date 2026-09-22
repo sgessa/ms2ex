@@ -63,6 +63,7 @@ Ms2ex.Enums.BadgeType.md
 Ms2ex.Enums.BasicStatType.md
 Ms2ex.Enums.BlueprintType.md
 Ms2ex.Enums.CaughtFishType.md
+Ms2ex.Enums.CharacterDeleteError.md
 Ms2ex.Enums.ChatType.md
 Ms2ex.Enums.EquipSlot.md
 Ms2ex.Enums.FieldProperty.md

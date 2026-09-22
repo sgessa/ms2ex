@@ -5,6 +5,12 @@
 
 # `append`
 
+# `begin_delete`
+
+# `cancel_delete`
+
+# `delete_entry`
+
 # `end_list`
 
 # `put_character`

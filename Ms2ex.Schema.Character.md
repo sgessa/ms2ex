@@ -20,6 +20,7 @@
   dead?: term(),
   death_count: term(),
   death_tick: term(),
+  delete_time: term(),
   discovered_maps: term(),
   discovered_objects: term(),
   dismantle_inventory: term(),

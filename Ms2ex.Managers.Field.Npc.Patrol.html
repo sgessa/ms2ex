@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-930E2540.js"></script>
+    <script defer src="dist/sidebar_items-15607B23.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -159,13 +159,21 @@ seeds the scripted-carry follow-dummy that <code class="inline">Managers.Field.N
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#leg_speeds/3" data-no-tooltip="" translate="no">leg_speeds(npc, way_points, patrol_speed \\ 0)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#move_npc/3" data-no-tooltip="" translate="no">move_npc(state, spawn_id, path_name)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Walks a story npc along a named patrol path (script move_npc): the walk
-streams through the control broadcast and the npc stays at the last
-waypoint when the path ends.</p></div>
+streams through the control broadcast; loop patrols cycle their waypoints
+forever, and a non-loop patrol leaves the npc at the last waypoint.</p></div>
 
     </div>
 
@@ -174,6 +182,20 @@ waypoint when the path ends.</p></div>
         <a href="#npc_speed/2" data-no-tooltip="" translate="no">npc_speed(npc, gait)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_leg/2" data-no-tooltip="" translate="no">start_leg(npc, patrol)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Resolves how the current authored waypoint is reached: over the navmesh
+graph, walking ramps and stairs instead of a straight line through the
+air. Returns <code class="inline">:error</code> when no connected route exists (unresolved nif
+props leave coverage gaps) — the caller then leaves the npc standing
+instead of walking a straight line that can float above the terrain.</p></div>
 
     </div>
 
@@ -201,7 +223,7 @@ waypoint when the path ends.</p></div>
       <h1 class="signature" translate="no">advance_patrol(npc, now)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L38" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L45" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -223,7 +245,7 @@ waypoint when the path ends.</p></div>
       <h1 class="signature" translate="no">leg_animations(npc, way_points)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L162" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L295" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -245,7 +267,31 @@ waypoint when the path ends.</p></div>
       <h1 class="signature" translate="no">leg_speed(npc, approach_animation)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L139" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L272" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="leg_speeds/3">
+
+    <span id="leg_speeds/2"></span>
+
+  <div class="detail-header">
+    <a href="#leg_speeds/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">leg_speeds(npc, way_points, patrol_speed \\ 0)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L260" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -267,7 +313,7 @@ waypoint when the path ends.</p></div>
       <h1 class="signature" translate="no">move_npc(state, spawn_id, path_name)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -277,8 +323,8 @@ waypoint when the path ends.</p></div>
   <section class="docstring">
 
 <p>Walks a story npc along a named patrol path (script move_npc): the walk
-streams through the control broadcast and the npc stays at the last
-waypoint when the path ends.</p>
+streams through the control broadcast; loop patrols cycle their waypoints
+forever, and a non-loop patrol leaves the npc at the last waypoint.</p>
   </section>
 </section>
 <section class="detail" id="npc_speed/2">
@@ -291,7 +337,7 @@ waypoint when the path ends.</p>
       <h1 class="signature" translate="no">npc_speed(npc, gait)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L151" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L283" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -301,6 +347,32 @@ waypoint when the path ends.</p>
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="start_leg/2">
+
+  <div class="detail-header">
+    <a href="#start_leg/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">start_leg(npc, patrol)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/patrol.ex#L174" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Resolves how the current authored waypoint is reached: over the navmesh
+graph, walking ramps and stairs instead of a straight line through the
+air. Returns <code class="inline">:error</code> when no connected route exists (unresolved nif
+props leave coverage gaps) — the caller then leaves the npc standing
+instead of walking a straight line that can float above the terrain.</p>
   </section>
 </section>
 

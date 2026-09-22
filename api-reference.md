@@ -331,6 +331,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Enums.BasicStatType](Ms2ex.Enums.BasicStatType.md)
   - [Ms2ex.Enums.BlueprintType](Ms2ex.Enums.BlueprintType.md)
   - [Ms2ex.Enums.CaughtFishType](Ms2ex.Enums.CaughtFishType.md): Which mastery notice the client shows for a caught fish.
+  - [Ms2ex.Enums.CharacterDeleteError](Ms2ex.Enums.CharacterDeleteError.md)
   - [Ms2ex.Enums.ChatType](Ms2ex.Enums.ChatType.md)
   - [Ms2ex.Enums.EquipSlot](Ms2ex.Enums.EquipSlot.md)
   - [Ms2ex.Enums.FieldProperty](Ms2ex.Enums.FieldProperty.md)

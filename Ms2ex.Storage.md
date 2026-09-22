@@ -38,6 +38,16 @@ repeated lookups of nonexistent ids never hit Redis again.
 
 Reads a raw blob straight from Redis without touching the cache.
 
+# `get_raw`
+
+```elixir
+@spec get_raw(set(), id()) :: binary() | nil
+```
+
+Fetches a raw (non-ETF) document from Redis and caches it: the bytes
+come back as-is. Binary sets — the navmesh mesh binaries — are not
+ETF-encoded terms and must never go through `get/2`.
+
 # `load`
 
 ```elixir

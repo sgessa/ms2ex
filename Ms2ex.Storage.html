@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-930E2540.js"></script>
+    <script defer src="dist/sidebar_items-15607B23.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -178,6 +178,18 @@ repeated lookups of nonexistent ids never hit Redis again.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_raw/2" data-no-tooltip="" translate="no">get_raw(set, id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches a raw (non-ETF) document from Redis and caches it: the bytes
+come back as-is. Binary sets — the navmesh mesh binaries — are not
+ETF-encoded terms and must never go through <a href="#get/2"><code class="inline">get/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#load/1" data-no-tooltip="" translate="no">load(key)</a>
 
       </div>
@@ -308,7 +320,7 @@ stored as tombstones so later lookups skip Redis entirely.</p></div>
       <h1 class="signature" translate="no">get_from_redis(key)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage.ex#L85" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -326,6 +338,36 @@ stored as tombstones so later lookups skip Redis entirely.</p></div>
 <p>Reads a raw blob straight from Redis without touching the cache.</p>
   </section>
 </section>
+<section class="detail" id="get_raw/2">
+
+  <div class="detail-header">
+    <a href="#get_raw/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_raw(set, id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_raw(<a href="#t:set/0">set</a>(), <a href="#t:id/0">id</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>() | nil</pre>
+
+      </div>
+
+<p>Fetches a raw (non-ETF) document from Redis and caches it: the bytes
+come back as-is. Binary sets — the navmesh mesh binaries — are not
+ETF-encoded terms and must never go through <a href="#get/2"><code class="inline">get/2</code></a>.</p>
+  </section>
+</section>
 <section class="detail" id="load/1">
 
   <div class="detail-header">
@@ -336,7 +378,7 @@ stored as tombstones so later lookups skip Redis entirely.</p></div>
       <h1 class="signature" translate="no">load(key)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage.ex#L36" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/storage.ex#L52" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

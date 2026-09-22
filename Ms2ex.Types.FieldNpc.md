@@ -10,9 +10,10 @@
   corpse?: term(),
   damage_dealers: term(),
   dead?: term(),
-  emote_loop: term(),
+  emote: term(),
   field: term(),
   first_attacker: term(),
+  idle_sequence_id: term(),
   last_attacker: term(),
   last_control_at: term(),
   map_id: term(),
@@ -36,6 +37,8 @@
 # `get_type`
 
 # `new`
+
+# `play_emote`
 
 ---
 

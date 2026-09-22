@@ -64,6 +64,7 @@ Ms2ex.Enums.BadgeType.html
 Ms2ex.Enums.BasicStatType.html
 Ms2ex.Enums.BlueprintType.html
 Ms2ex.Enums.CaughtFishType.html
+Ms2ex.Enums.CharacterDeleteError.html
 Ms2ex.Enums.ChatType.html
 Ms2ex.Enums.EquipSlot.html
 Ms2ex.Enums.FieldProperty.html
@@ -506,8 +507,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-E4637490.js
-dist/sidebar_items-930E2540.js
+dist/search_data-623E4981.js
+dist/sidebar_items-15607B23.js
 index.html
 license.html
 readme.html

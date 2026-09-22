@@ -5,36 +5,11 @@ Navmesh queries for a map: position validity, floor snapping and
 pathfinding. Navmesh coordinates are meters with Y up, so map positions
 transform by a -90 degree rotation about X and a 1/100 scale.
 
-The navmesh is cached as a graph: one node per convex polygon, with
-adjacent polygons linked where they share an edge (polygon corners are
-welded by position, which also connects polygons across tile borders).
-Nearest-polygon queries run over a uniform grid index instead of scanning
-every tile, and paths come from A* over the graph pulled tight with the
-funnel algorithm.
-
-# `point`
-
-```elixir
-@type point() :: {float(), float(), float()}
-```
-
-# `poly_key`
-
-```elixir
-@type poly_key() :: {non_neg_integer(), non_neg_integer()}
-```
-
-# `t`
-
-```elixir
-@type t() :: %Ms2ex.Navigation{by_key: term(), grid: term()}
-```
-
-# `__struct__`
-*struct* 
-
-Poly queries use these half extents (in navmesh meters): 2 across,
-4 of height tolerance, 2 across.
+Queries run on the native Detour runtime over the full mesh binary the
+ingest ships (the `navmesh_bin` set) — the same library lineage the
+meshes are built with. Meshes load lazily once per map and are cached
+for the node's lifetime; maps without a binary mesh have no walkable
+ground.
 
 # `find_path`
 
@@ -45,9 +20,8 @@ Poly queries use these half extents (in navmesh meters): 2 across,
 
 A corridor of walkable points from `from` to `to`, or `:error` when
 either endpoint has no walkable ground or no connection exists between
-them. The first and last points are the closest walkable points to the
-requested positions; intermediate points are funnel-pulled corners of the
-polygon corridor.
+them. Intermediate points are the string-pulled bends of the polygon
+corridor, carrying the mesh surface heights at each bend.
 
 # `has_navmesh?`
 
