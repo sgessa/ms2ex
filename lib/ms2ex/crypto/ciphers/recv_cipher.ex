@@ -3,10 +3,12 @@ defmodule Ms2ex.Crypto.RecvCipher do
   Handles decryption of incoming packets in the MapleStory 2 encryption protocol.
 
   This module manages packet header parsing and decryption for data received
-  from the client.
+  from the client. The payload transform runs in the native crypto library,
+  applied in the reverse of the send order.
   """
 
-  alias Ms2ex.Crypto.{Cipher, RearrangeCrypter, TableCrypter, XorCrypter}
+  alias Ms2ex.Crypto.Cipher
+  alias Ms2ex.Crypto.Native
   alias Ms2ex.Packets.PacketReader
 
   require Logger, as: L
@@ -17,7 +19,7 @@ defmodule Ms2ex.Crypto.RecvCipher do
   @type t :: %__MODULE__{
           version: non_neg_integer(),
           iv: non_neg_integer(),
-          crypt_seq: [module() | struct()]
+          crypt_seq: Cipher.crypt_seq()
         }
 
   defstruct [:version, :iv, :crypt_seq]
@@ -56,13 +58,7 @@ defmodule Ms2ex.Crypto.RecvCipher do
   @spec decrypt(t(), binary()) :: {t(), binary()}
   def decrypt(%__MODULE__{} = cipher, data) do
     {cipher, packet} = read_header(cipher, data)
-
-    packet =
-      Enum.reduce(cipher.crypt_seq, :binary.bin_to_list(packet), fn crypter, acc ->
-        _decrypt(crypter, acc)
-      end)
-
-    {cipher, :binary.list_to_bin(packet)}
+    {cipher, Native.transform(cipher.crypt_seq, packet, false)}
   end
 
   defp read_header(cipher, packet) do
@@ -90,8 +86,4 @@ defmodule Ms2ex.Crypto.RecvCipher do
     cipher = Cipher.advance_iv(cipher)
     {cipher, dec_seq}
   end
-
-  defp _decrypt(RearrangeCrypter, data), do: RearrangeCrypter.decrypt(data)
-  defp _decrypt(%TableCrypter{} = tc, data), do: TableCrypter.decrypt(tc, data)
-  defp _decrypt(%XorCrypter{} = xc, data), do: XorCrypter.decrypt(xc, data)
 end

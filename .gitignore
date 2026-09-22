@@ -52,5 +52,6 @@ __pycache__/
 # NIF actually loads from) cacheable by CI
 /priv/native/
 native/navigation/target/
+native/crypto/target/
 inspect_positions.sh
 watch_cutscene.sh
