@@ -49,3 +49,5 @@ ms2ex-*.tar
 __pycache__/
 priv/native/
 native/navigation/target/
+inspect_positions.sh
+watch_cutscene.sh
