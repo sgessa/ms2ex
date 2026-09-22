@@ -47,3 +47,5 @@ ms2ex-*.tar
 # client tools
 /scripts/
 __pycache__/
+priv/native/
+native/navigation/target/

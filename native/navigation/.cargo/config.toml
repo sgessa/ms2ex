@@ -1,0 +1,4 @@
+# the vendored recastnavigation cmake declares a pre-3.5 minimum, which
+# CMake 4 refuses without this policy override
+[env]
+CMAKE_POLICY_VERSION_MINIMUM = "3.5"

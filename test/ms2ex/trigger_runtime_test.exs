@@ -1,6 +1,10 @@
 defmodule Ms2ex.TriggerRuntimeTest do
   use Ms2ex.DataCase, async: true
 
+  # synthetic mesh-set binary (regenerable with the crate's gen_fixtures
+  # binary) standing in for a walkable floor
+  @open File.read!("test/fixtures/navmesh/open.mset")
+
   alias Ms2ex.Managers.Field
   alias Ms2ex.Managers.Field.Npc
   alias Ms2ex.Types.Coord
@@ -961,17 +965,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
     # approach falls back to the model's run sequence
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      },
+      "navmesh_bin:nav_test" => @open,
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
         sequences: %{Run_A: 11, Idle_A: 3}
@@ -1011,17 +1005,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "move_npc leaves npcs without a locomotion sequence in place" do
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      },
+      "navmesh_bin:nav_test" => @open,
       "animation:11003401_m_storynpc" => %{
         model: "11003401_m_storynpc",
         sequences: %{Idle_A: 3}
@@ -1095,17 +1079,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
   test "patrol ground legs ride the navmesh floor instead of sinking below it" do
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      }
+      "navmesh_bin:nav_test" => @open
     })
 
     now = now_ms()
@@ -1149,17 +1123,7 @@ defmodule Ms2ex.TriggerRuntimeTest do
     # a navmesh exists for the map: the air gate is what keeps the line
     stub_metadata(%{
       "map:52000099" => %{x_block: "nav_test"},
-      "navmesh:nav_test" => %{
-        tiles: [
-          %{
-            verts:
-              <<0.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                1.0::little-float-32, 0.0::little-float-32, 0.0::little-float-32,
-                0.0::little-float-32, 0.0::little-float-32, 1.0::little-float-32>>,
-            polys: [[0, 1, 2]]
-          }
-        ]
-      }
+      "navmesh_bin:nav_test" => @open
     })
 
     now = now_ms()

@@ -40,6 +40,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Setup Rust (the native navigation crate)
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
       # Setup Elixir
       - name: Set up Elixir
         id: beam

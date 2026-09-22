@@ -1,6 +1,31 @@
 # Plan: run navigation on Detour
 
-Status: proposed — not started. Related: [navmesh feature doc](../features/navmesh.md).
+Status: **implemented** — the native runtime landed and the in-Elixir
+geometry core was deleted. This document stays as the record of what was
+built and why; current behavior lives in
+[the navmesh feature doc](../features/navmesh.md).
+
+How it landed (compressed from the phases below): the vendored Detour C
+sources compile into the NIF crate (`native/navigation`, no third-party
+bindings crate — the published ones were stale against the sys layer);
+the ingest sinks the full mesh-set binary under `navmesh_bin`; the NIF
+parses the `MSET` container and hands the C-layout tiles to the library
+as-is; queries run with the (2, 4, 2) query box and a corridor must reach
+the goal poly (stacked floors never connect). Synthetic mesh-set fixtures
+(the crate's `gen_fixtures` binary) drive the behavioral suite. The
+shadow/differential phase and the config flag were dropped at cutover —
+the fixtures, the reference audit on this branch and live replay cover
+the verification instead. Still open: the full ingest `--navmesh` re-run
+so every map carries a binary mesh, and the mesh-era patrol workarounds
+(the `TODO`s in `patrol.ex` / `npc.ex`) due for removal now that the
+runtime is native.
+
+Related: [navmesh feature doc](../features/navmesh.md).
+
+---
+
+The original plan follows.
+
 
 Replace the hand-ported navigation geometry core with the upstream Detour
 library (recast-navigation, C) behind a thin native (NIF) boundary, keeping

@@ -74,6 +74,7 @@ defmodule Ms2ex.MixProject do
       {:bcrypt_elixir, "~> 3.0"},
       {:libgraph, "~> 0.13"},
       {:ranch, "~> 2.0", override: true},
+      {:rustler, "~> 0.38", runtime: false},
 
       # Development and testing tools
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},

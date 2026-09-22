@@ -1,0 +1,22 @@
+[package]
+name = "navigation"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "navigation"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.38"
+byteorder = "1"
+
+[build-dependencies]
+cc = "1"
+
+[profile.release]
+debug = true
+
+[[bin]]
+name = "gen_fixtures"
+path = "src/bin/gen_fixtures.rs"
