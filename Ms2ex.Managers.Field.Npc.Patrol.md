@@ -23,11 +23,18 @@ forever, and a non-loop patrol leaves the npc at the last waypoint.
 
 # `start_leg`
 
-Resolves how the current authored waypoint is reached: over the navmesh
-graph, walking ramps and stairs instead of a straight line through the
-air. Returns `:error` when no connected route exists (unresolved nif
-props leave coverage gaps) — the caller then leaves the npc standing
-instead of walking a straight line that can float above the terrain.
+Attempts (or restarts) the leg toward the patrol's current waypoint.
+
+A leg that cannot start — no connected navmesh route, or no approach
+animation the model can play — does not end the patrol: that would freeze
+story npcs mid-script on maps whose mesh has coverage gaps. Instead the
+npc stands in its idle pose for a beat while the patrol advances past the
+waypoint, and the next leg is attempted once the beat elapses (loop
+patrols wrap and keep attempting; only the last waypoint of a non-loop
+patrol ends the patrol when it fails to start). The one exception is the
+scripted-carry dummy: its walk is choreographed client-side and the carry
+must complete, so an unroutable leg falls back to the authored straight
+line instead of stalling the script mid-carry.
 
 ---
 

@@ -10,6 +10,7 @@ each owns one field-object system and follows the state-in/state-out
 pattern:
 
 - `Field.Banner` — UGC banner slots (persistence via `Context.BannerSlots`)
+- `Field.BattleStance` — the player battle stance (weapon drawn) and its quiet-window expiry
 - `Field.Buff` — effect buffs and their ticks
 - `Field.Character` — the join/leave sequences and periodic stat updates
 - `Field.Instrument` — instruments in play

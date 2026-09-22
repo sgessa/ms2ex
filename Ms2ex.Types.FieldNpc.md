@@ -13,6 +13,7 @@
   emote: term(),
   field: term(),
   first_attacker: term(),
+  follow_character_id: term(),
   idle_sequence_id: term(),
   last_attacker: term(),
   last_control_at: term(),

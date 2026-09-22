@@ -197,6 +197,7 @@ Ms2ex.Managers.Character.StatPoints.html
 Ms2ex.Managers.Character.Stats.html
 Ms2ex.Managers.Character.html
 Ms2ex.Managers.Field.Banner.html
+Ms2ex.Managers.Field.BattleStance.html
 Ms2ex.Managers.Field.Buff.html
 Ms2ex.Managers.Field.Character.html
 Ms2ex.Managers.Field.Instrument.html
@@ -502,8 +503,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-32E47623.js
-dist/sidebar_items-8E454392.js
+dist/search_data-64A2B013.js
+dist/sidebar_items-77EDA77E.js
 index.html
 license.html
 readme.html

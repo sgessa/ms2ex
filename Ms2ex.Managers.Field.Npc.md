@@ -17,6 +17,8 @@ Expires a finished scripted emotion: once the emote's playback window
 elapses the npc falls back to its idle sequence and flags itself dirty
 so the next control broadcast carries the revert.
 
+# `finish_carry`
+
 # `load_mob_spawns`
 
 # `load_npc`

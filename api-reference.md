@@ -146,6 +146,10 @@ or event-scoped (an explicit start/end time). Slot documents persist
 through `Context.BannerSlots`; the field keeps the live copy, activates
 slots as their windows open and broadcasts the transitions.
 
+- [Ms2ex.Managers.Field.BattleStance](Ms2ex.Managers.Field.BattleStance.md): The player battle stance (weapon drawn) and its quiet-window expiry. The
+client renders a player's weapon in hand only while the player is in the
+battle state, which the server signals with the UserBattle packet on every
+stance change (see `Packets.UserBattle`).
 - [Ms2ex.Managers.Field.Buff](Ms2ex.Managers.Field.Buff.md)
 - [Ms2ex.Managers.Field.Character](Ms2ex.Managers.Field.Character.md)
 - [Ms2ex.Managers.Field.Instrument](Ms2ex.Managers.Field.Instrument.md)

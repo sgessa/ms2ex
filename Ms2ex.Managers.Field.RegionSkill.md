@@ -20,11 +20,12 @@ standing inside.
 
 # `load_zones`
 
-Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+Map-placed skill zones (heal towers, aura pads): perpetual client-side
 zones at a fixed position. Each zone gets a stable source id for the field
-session; entering players receive the zone add frame and the client runs
-the zone effect while they stand inside. Ids draw from the field's local
-counter so they never collide with entities.
+session; entering players receive the zone add frame — that frame is only
+the visual, so the field ticks the zone on its own interval and applies
+the skill to players standing inside (the Healing Forest's recovery
+towers heal through this).
 
 # `maybe_tick`
 
@@ -48,6 +49,13 @@ Applies each cube-skill zone's attack to the players standing inside:
 the zone's damage rule, then its effect as a buff (e.g. the boost lanes'
 movement-speed bonus). Re-applying while inside refreshes the effect
 window; the short effect duration expires it shortly after stepping off.
+
+# `tick_placed_zone`
+
+Fires a placed region zone on its own interval: applies the zone skill to
+every player standing inside (the tower's HP recovery rides the skill's
+effect buff) and reschedules the next fire. Placed zones are perpetual —
+they live as long as the field does. An interval-less zone fires once.
 
 ---
 

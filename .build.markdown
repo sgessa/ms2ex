@@ -196,6 +196,7 @@ Ms2ex.Managers.Character.StatPoints.md
 Ms2ex.Managers.Character.Stats.md
 Ms2ex.Managers.Character.md
 Ms2ex.Managers.Field.Banner.md
+Ms2ex.Managers.Field.BattleStance.md
 Ms2ex.Managers.Field.Buff.md
 Ms2ex.Managers.Field.Character.md
 Ms2ex.Managers.Field.Instrument.md

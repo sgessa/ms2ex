@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-8E454392.js"></script>
+    <script defer src="dist/sidebar_items-77EDA77E.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -174,11 +174,12 @@ standing inside.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+        <div class="summary-synopsis"><p>Map-placed skill zones (heal towers, aura pads): perpetual client-side
 zones at a fixed position. Each zone gets a stable source id for the field
-session; entering players receive the zone add frame and the client runs
-the zone effect while they stand inside. Ids draw from the field's local
-counter so they never collide with entities.</p></div>
+session; entering players receive the zone add frame — that frame is only
+the visual, so the field ticks the zone on its own interval and applies
+the skill to players standing inside (the Healing Forest's recovery
+towers heal through this).</p></div>
 
     </div>
 
@@ -235,6 +236,19 @@ window; the short effect duration expires it shortly after stepping off.</p></di
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#tick_placed_zone/2" data-no-tooltip="" translate="no">tick_placed_zone(state, source_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fires a placed region zone on its own interval: applies the zone skill to
+every player standing inside (the tower's HP recovery rides the skill's
+effect buff) and reschedules the next fire. Placed zones are perpetual —
+they live as long as the field does. An interval-less zone fires once.</p></div>
+
+    </div>
+
 </div>
 
   </section>
@@ -259,7 +273,7 @@ window; the short effect duration expires it shortly after stepping off.</p></di
       <h1 class="signature" translate="no">add(skill_cast, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L370" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L402" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -281,7 +295,7 @@ window; the short effect duration expires it shortly after stepping off.</p></di
       <h1 class="signature" translate="no">apply_splash(splash_cast, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L438" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L470" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -303,7 +317,7 @@ window; the short effect duration expires it shortly after stepping off.</p></di
       <h1 class="signature" translate="no">fire_trigger_zone(state, source_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L155" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L187" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -327,7 +341,7 @@ fire count runs out.</p>
       <h1 class="signature" translate="no">load_cube_zones(map_id, counter)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L67" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L99" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -352,7 +366,7 @@ standing inside.</p>
       <h1 class="signature" translate="no">load_zones(map_id, counter)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L22" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -361,11 +375,12 @@ standing inside.</p>
 
   <section class="docstring">
 
-<p>Map-placed skill zones (boost lanes, zone hazards): perpetual client-side
+<p>Map-placed skill zones (heal towers, aura pads): perpetual client-side
 zones at a fixed position. Each zone gets a stable source id for the field
-session; entering players receive the zone add frame and the client runs
-the zone effect while they stand inside. Ids draw from the field's local
-counter so they never collide with entities.</p>
+session; entering players receive the zone add frame — that frame is only
+the visual, so the field ticks the zone on its own interval and applies
+the skill to players standing inside (the Healing Forest's recovery
+towers heal through this).</p>
   </section>
 </section>
 <section class="detail" id="maybe_tick/2">
@@ -378,7 +393,7 @@ counter so they never collide with entities.</p>
       <h1 class="signature" translate="no">maybe_tick(source_id, state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L417" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L449" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -400,7 +415,7 @@ counter so they never collide with entities.</p>
       <h1 class="signature" translate="no">remove_trigger_zones(state, trigger_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L137" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L169" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -422,7 +437,7 @@ counter so they never collide with entities.</p>
       <h1 class="signature" translate="no">send_zones(character, zones)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L44" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -444,7 +459,7 @@ counter so they never collide with entities.</p>
       <h1 class="signature" translate="no">spawn_trigger_zone(state, trigger_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L100" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L132" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -468,7 +483,7 @@ render the effect (the falling rocks).</p>
       <h1 class="signature" translate="no">tick_cube_zones(state)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L190" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L222" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -481,6 +496,31 @@ render the effect (the falling rocks).</p>
 the zone's damage rule, then its effect as a buff (e.g. the boost lanes'
 movement-speed bonus). Re-applying while inside refreshes the effect
 window; the short effect duration expires it shortly after stepping off.</p>
+  </section>
+</section>
+<section class="detail" id="tick_placed_zone/2">
+
+  <div class="detail-header">
+    <a href="#tick_placed_zone/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">tick_placed_zone(state, source_id)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/region_skill.ex#L74" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Fires a placed region zone on its own interval: applies the zone skill to
+every player standing inside (the tower's HP recovery rides the skill's
+effect buff) and reschedules the next fire. Placed zones are perpetual —
+they live as long as the field does. An interval-less zone fires once.</p>
   </section>
 </section>
 
