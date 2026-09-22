@@ -79,7 +79,8 @@ jobs:
 
       # v2: the first cache entry was saved while the unanchored
       # priv/native/ gitignore pattern excluded the built NIF from the
-      # archive; the suffix abandons that poisoned entry
+      # archive; the suffix abandons that poisoned entry. no broad fallback:
+      # it would restore that entry again
       - name: Cache deps and _build
         uses: actions/cache@v5
         with:
@@ -89,7 +90,6 @@ jobs:
           key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-v2-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-mix-v2-
-            ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-
 
       # Install dependencies
       - name: Install dependencies
@@ -99,10 +99,12 @@ jobs:
       # the cached _build only holds test artifacts and mix test reuses them
       - name: Compile
         run: |
-          # a restored cache can lack the NIF (rustler builds it into the
-          # source priv, which git ignores): stale the module so its compile
-          # reruns the crate build when the library is missing
-          test -f _build/test/lib/ms2ex/priv/native/navigation.so || touch lib/ms2ex/navigation/native.ex
+          # a restored cache can lack the built NIF (rustler writes it into
+          # the source priv, which git ignores): removing the module's beam
+          # forces the compiler to rerun the crate build when the library
+          # is missing
+          test -f _build/test/lib/ms2ex/priv/native/navigation.so || \
+            rm -f _build/test/lib/ms2ex/ebin/Elixir.Ms2ex.Navigation.Native.beam
           mix compile --warnings-as-errors
         env:
           MIX_ENV: test
