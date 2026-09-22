@@ -1047,12 +1047,10 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, state}
   end
 
-  @doc """
-  Arms (or re-stamps) the character's battle-stance deadline. Every
-  in-battle cast re-stamps it, so the stance holds through continuous
-  combat and only drops after a quiet window since the last cast.
-  """
-  def arm_battle_stance(state, %Schema.Character{} = character) do
+  # arms (or re-stamps) the character's battle-stance deadline. Every
+  # in-battle cast re-stamps it, so the stance holds through continuous
+  # combat and only drops after a quiet window since the last cast
+  defp arm_battle_stance(state, %Schema.Character{} = character) do
     stances = Map.get(state, :battle_stances, %{})
 
     entry =
@@ -1068,13 +1066,10 @@ defmodule Ms2ex.Managers.Field do
     schedule_battle_drop(state, character.id)
   end
 
-  @doc """
-  Drops the battle stance once the character's quiet window has passed.
-  Returns `{:stay, state}` with the drop check rescheduled while casts
-  keep the deadline in the future, and `{:leave, state}` — after the
-  stance packets went out — once the window closed.
-  """
-  def battle_stance_drop(state, character_id) do
+  # drops the battle stance once the character's quiet window has passed:
+  # stays scheduled while casts keep the deadline in the future, leaves
+  # (broadcasting the sheathe) once the window closed
+  defp battle_stance_drop(state, character_id) do
     case get_in(state, [:battle_stances, character_id]) do
       nil ->
         {:stay, state}
