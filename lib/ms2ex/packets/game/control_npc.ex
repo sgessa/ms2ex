@@ -85,7 +85,12 @@ defmodule Ms2ex.Packets.ControlNpc do
   # actually covering ground at — otherwise the model glides over its own
   # stride and the feet never plant on the ground. the rate is the model's
   # ani_speed factor times the current movement speed (x100); a standing
-  # npc plays at its bare ani_speed
+  # npc plays at its bare ani_speed, and a scripted emotion always plays
+  # at bare 1.0x regardless of the model's ani_speed
+  defp put_anim_speed(packet, %Types.FieldNpc{emote: emote}) when is_map(emote) do
+    put_short(packet, 100)
+  end
+
   defp put_anim_speed(packet, %Types.FieldNpc{} = npc) do
     # a standing npc (zero velocity) plays at its bare ani_speed
     speed = max(velocity_magnitude(npc), 1.0)

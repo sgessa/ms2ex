@@ -510,17 +510,20 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     state
   end
 
-  # loops an emote sequence on a story npc (the collapsed robe, lying
-  # recruits): the sequence name resolves to a numeric animation id through
-  # the model's animation table and streams in the control packet
+  # loops an emote sequence on a story npc for the scripted duration (the
+  # collapsed robe, lying recruits): the sequence name resolves to a
+  # numeric animation id through the model's animation table and streams
+  # in the control packet; when the duration elapses the npc falls back to
+  # its idle sequence
   defp execute_action("set_npc_emotion_loop", args, _script_name, state) do
-    play_npc_emotion(args, state)
+    play_npc_emotion(args, state, duration_ms: int_arg(args, :duration))
   end
 
-  # a one-shot emote sequence on a story npc — same streaming mechanism as
-  # the loop variant; the client plays the sequence's own repetition rules
+  # a one-shot emote sequence on a story npc: it plays once for the
+  # sequence's natural length from the rig, then the npc falls back to its
+  # idle sequence
   defp execute_action("set_npc_emotion_sequence", args, _script_name, state) do
-    play_npc_emotion(args, state)
+    play_npc_emotion(args, state, once: true)
   end
 
   # walks a story npc along a named patrol path (script move_npc)
@@ -873,7 +876,10 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     _ -> nil
   end
 
-  defp play_npc_emotion(args, state) do
+  # one-shot emotions without a rig-recorded length play for this long
+  @emote_fallback_ms 4_000
+
+  defp play_npc_emotion(args, state, opts) do
     spawn_id = int_arg(args, :spawn_id)
     sequence = to_string(args[:sequence_name] || "")
 
@@ -888,10 +894,37 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
           state
 
         animation_id ->
-          npc = %{npc | animation: animation_id, send_control?: true}
+          ms = emote_duration_ms(model, sequence, opts)
+          idle_id = Map.get(npc, :idle_sequence_id) || animation_id
+
+          npc =
+            npc
+            |> Map.put(:animation, animation_id)
+            |> Map.put(
+              :emote,
+              %{revert_at: Ms2ex.sync_ticks() + ms, idle_sequence_id: idle_id}
+            )
+            |> Map.put(:send_control?, true)
+
           put_in(state, [:npcs, object_id], npc)
       end
     end)
+  end
+
+  defp emote_duration_ms(model, sequence, opts) do
+    cond do
+      (duration = Keyword.get(opts, :duration_ms)) && duration > 0 ->
+        duration
+
+      Keyword.get(opts, :once) ->
+        case Storage.Animations.sequence_time(model, sequence) do
+          time when is_number(time) and time > 0 -> trunc(time * 1000)
+          _ -> @emote_fallback_ms
+        end
+
+      true ->
+        @emote_fallback_ms
+    end
   end
 
   defp npc_object_id(state, spawn_point_id) do

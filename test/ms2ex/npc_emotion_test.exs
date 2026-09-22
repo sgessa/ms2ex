@@ -93,6 +93,27 @@ defmodule Ms2ex.NpcEmotionTest do
     assert state == 1
   end
 
+  # a scripted one-shot emotion carries an expiry: once its playback
+  # window elapses the npc reports the idle sequence again, so emotes like
+  # the lying pose play once instead of looping forever
+  test "an expired one-shot emotion reverts to the idle sequence" do
+    npc = %Ms2ex.Types.FieldNpc{
+      animation: 4,
+      idle_sequence_id: 3,
+      emote: %{revert_at: 1_000, idle_sequence_id: 3}
+    }
+
+    # still inside the playback window: keeps playing
+    playing = Npc.expire_emote(npc, 999)
+    assert playing.animation == 4
+    assert playing.emote
+
+    reverted = Npc.expire_emote(npc, 1_000)
+    assert reverted.animation == 3
+    assert reverted.emote == nil
+    assert reverted.send_control?
+  end
+
   defp walking_npc(object_id, velocity) do
     %Ms2ex.Types.FieldNpc{
       object_id: object_id,

@@ -542,7 +542,27 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
+  @doc """
+  Expires a finished scripted emotion: once the emote's playback window
+  elapses the npc falls back to its idle sequence and flags itself dirty
+  so the next control broadcast carries the revert.
+  """
+  @spec expire_emote(Types.FieldNpc.t(), integer()) :: Types.FieldNpc.t()
+  def expire_emote(%Types.FieldNpc{} = npc, now) do
+    case npc.emote do
+      %{revert_at: revert_at} when now >= revert_at ->
+        %{npc | animation: npc.emote.idle_sequence_id, emote: nil, send_control?: true}
+
+      _ ->
+        npc
+    end
+  end
+
+  def expire_emote(npc, _now), do: npc
+
   defp tick_npc(now, object_id, npc, {live, corpses}) do
+    npc = expire_emote(npc, now)
+
     cond do
       npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
         npc =

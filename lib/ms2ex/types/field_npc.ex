@@ -21,6 +21,13 @@ defmodule Ms2ex.Types.FieldNpc do
     :damage_dealers,
     # TODO per-model sequence ids from anikey data (ingest projection)
     :animation,
+    # the model's resolved idle sequence: what a standing npc reports and
+    # what scripted emotions revert to after playing
+    :idle_sequence_id,
+    # a scripted emotion in progress: %{revert_at, sequence_id,
+    # idle_sequence_id} — one-shot emotions revert to the idle sequence
+    # once their natural playback length elapses
+    :emote,
     :patrol,
     # aggro state (mobs only): %Battle{} while engaged or returning, nil
     # when idle
@@ -50,6 +57,7 @@ defmodule Ms2ex.Types.FieldNpc do
       attrs
       |> Map.put(:rotation, to_coord(attrs.rotation))
       |> Map.put(:type, get_type(attrs.npc))
+      |> Map.put(:idle_sequence_id, idle_sequence_id(attrs.npc))
       |> Map.put(:animation, idle_sequence_id(attrs.npc))
       |> Map.put(:stats, build_stats(attrs.npc.metadata.stat.stats))
       |> Map.put_new(

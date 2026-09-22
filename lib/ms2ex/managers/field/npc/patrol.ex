@@ -101,7 +101,7 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
         case start_leg(npc, patrol) do
           {:ok, patrol} ->
-            %{npc | patrol: patrol, animation: animation, send_control?: true}
+            %{npc | patrol: patrol, animation: animation, emote: nil, send_control?: true}
 
           :error ->
             finish_patrol(npc, patrol)
