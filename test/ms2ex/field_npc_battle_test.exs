@@ -754,10 +754,4 @@ defmodule Ms2ex.FieldNpcBattleTest do
     on_exit(fn -> :persistent_term.erase({:navmesh_native, xblock}) end)
     :ok
   end
-
-  defp mesh_verts(points) do
-    Enum.reduce(points, <<>>, fn {x, y, z}, acc ->
-      acc <> <<x::little-float-32, y::little-float-32, z::little-float-32>>
-    end)
-  end
 end
