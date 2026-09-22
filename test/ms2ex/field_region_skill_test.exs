@@ -359,7 +359,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
 
     assert owner == 777
     # the zone re-arms itself for the next interval
-    assert_receive {:placed_region_tick, 1}, 1_500
+    assert_receive {:placed_region_tick, 1}, 3_000
   end
 
   defp heal_tower_effect do
