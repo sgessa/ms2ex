@@ -15,10 +15,10 @@ the goal poly (stacked floors never connect). Synthetic mesh-set fixtures
 (the crate's `gen_fixtures` binary) drive the behavioral suite. The
 shadow/differential phase and the config flag were dropped at cutover —
 the fixtures, the reference audit on this branch and live replay cover
-the verification instead. Still open: the full ingest `--navmesh` re-run
-so every map carries a binary mesh, and the mesh-era patrol workarounds
+the verification instead. Still open: the mesh-era patrol workarounds
 (the `TODO`s in `patrol.ex` / `npc.ex`) due for removal now that the
-runtime is native.
+runtime is native and the meshes are rebuilt (every ingested map carries
+a binary mesh).
 
 Related: [navmesh feature doc](../features/navmesh.md).
 

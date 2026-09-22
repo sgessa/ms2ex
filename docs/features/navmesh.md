@@ -51,9 +51,9 @@ client happens over a real ingest.
 
 ## Still missing
 
-- only a few xblocks were re-ingested after the ingest's cube index-buffer
-  fix (which also introduced the `navmesh_bin` set) — a full `--navmesh`
-  re-run is needed so every map carries a binary mesh
 - mesh fragmentation on cube-built maps (150 components on 52000101) is
-  ingest-side mesh quality
+  ingest-side mesh quality — routes between disconnected patches fail even
+  though both patches are walkable. Stale ETF mesh documents from earlier
+  ingest generations (meshes whose map is no longer ingested) also linger
+  in Redis; they are dead keys, never read
 - the crowd manager (agent steering for mobs) remains an option for later
