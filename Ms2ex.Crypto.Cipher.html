@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-15607B23.js"></script>
+    <script defer src="dist/sidebar_items-8E454392.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -115,8 +115,8 @@ MS2EX
 
     <section id="moduledoc">
 <p>Core module handling the MapleStory 2 encryption protocol, providing methods for building
-cryptographic sequences and managing initialization vectors (IVs).</p><p>This module coordinates the different crypters (Rearrange, Table, and XOR) and provides
-utility functions for cipher operations.</p>
+cryptographic sequences and managing initialization vectors (IVs).</p><p>The crypter sequence and payload transforms run in the native crypto library
+(<code class="inline">Ms2ex.Crypto.Native</code>); this module keeps the IV handling and header sizing.</p>
     </section>
 
 </div>
@@ -199,16 +199,6 @@ utility functions for cipher operations.</p>
 
     </div>
 
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#mask/2" data-no-tooltip="" translate="no">mask(n, bits \\ 32)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Applies a bit mask to an integer of specified bit width.</p></div>
-
-    </div>
-
 </div>
 
   </section>
@@ -233,7 +223,7 @@ utility functions for cipher operations.</p>
       <h1 class="signature" translate="no">crypt_seq()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L20" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L15" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -244,7 +234,7 @@ utility functions for cipher operations.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> crypt_seq() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>()]</pre>
+          <pre translate="no"><span class="attribute">@type</span> crypt_seq() :: Ms2ex.Crypto.Native.crypt_seq()</pre>
 
       </div>
 
@@ -274,7 +264,7 @@ utility functions for cipher operations.</p>
       <h1 class="signature" translate="no">advance_iv(cipher)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L85" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L57" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -302,7 +292,7 @@ utility functions for cipher operations.</p>
       <h1 class="signature" translate="no">generate_iv()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L96" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L68" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -330,7 +320,7 @@ utility functions for cipher operations.</p>
       <h1 class="signature" translate="no">header_size()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L107" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L79" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -358,7 +348,7 @@ utility functions for cipher operations.</p>
       <h1 class="signature" translate="no">init_crypt_seq(version, block_iv)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L33" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -373,7 +363,7 @@ utility functions for cipher operations.</p>
 
       </div>
 
-<p>Initializes a cryptographic sequence based on version and block IV.</p><h2 id="init_crypt_seq/2-parameters" class="section-heading"><a href="#init_crypt_seq/2-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">version</code> - Protocol version number</li><li><code class="inline">block_iv</code> - Block initialization vector</li></ul><h2 id="init_crypt_seq/2-returns" class="section-heading"><a href="#init_crypt_seq/2-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>A list of crypter modules/structs in the proper sequence</li></ul>
+<p>Initializes a cryptographic sequence based on version and block IV.</p><h2 id="init_crypt_seq/2-parameters" class="section-heading"><a href="#init_crypt_seq/2-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">version</code> - Protocol version number</li><li><code class="inline">block_iv</code> - Block initialization vector</li></ul><h2 id="init_crypt_seq/2-returns" class="section-heading"><a href="#init_crypt_seq/2-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>A crypter sequence in the order defined by the block IV digits</li></ul>
   </section>
 </section>
 <section class="detail" id="iv_to_int/1">
@@ -386,7 +376,7 @@ utility functions for cipher operations.</p>
       <h1 class="signature" translate="no">iv_to_int(iv)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L70" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -401,37 +391,7 @@ utility functions for cipher operations.</p>
 
       </div>
 
-<p>Converts a binary IV to its integer representation.</p><h2 id="iv_to_int/1-parameters" class="section-heading"><a href="#iv_to_int/1-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">iv</code> - Binary initialization vector (4 bytes)</li></ul><h2 id="iv_to_int/1-returns" class="section-heading"><a href="#iv_to_int/1-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>Integer representation of the IV</li></ul>
-  </section>
-</section>
-<section class="detail" id="mask/2">
-
-    <span id="mask/1"></span>
-
-  <div class="detail-header">
-    <a href="#mask/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">mask(n, bits \\ 32)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/cipher.ex#L120" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> mask(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), 32 | 64) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
-
-      </div>
-
-<p>Applies a bit mask to an integer of specified bit width.</p><h2 id="mask/2-parameters" class="section-heading"><a href="#mask/2-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">n</code> - Integer to mask</li><li><code class="inline">bits</code> - Bit width (default: 32)</li></ul><h2 id="mask/2-returns" class="section-heading"><a href="#mask/2-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>Masked integer value</li></ul>
+<p>Converts a binary IV to its integer representation.</p><h2 id="iv_to_int/1-parameters" class="section-heading"><a href="#iv_to_int/1-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">iv</code> - Binary initialization vector (4 bytes)</li></ul><h2 id="iv_to_int/1-returns" class="section-heading"><a href="#iv_to_int/1-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Returns</span></h2><ul><li>Unsigned integer representation of the IV</li></ul>
   </section>
 </section>
 

@@ -4,13 +4,13 @@
 Core module handling the MapleStory 2 encryption protocol, providing methods for building
 cryptographic sequences and managing initialization vectors (IVs).
 
-This module coordinates the different crypters (Rearrange, Table, and XOR) and provides
-utility functions for cipher operations.
+The crypter sequence and payload transforms run in the native crypto library
+(`Ms2ex.Crypto.Native`); this module keeps the IV handling and header sizing.
 
 # `crypt_seq`
 
 ```elixir
-@type crypt_seq() :: [module() | struct()]
+@type crypt_seq() :: Ms2ex.Crypto.Native.crypt_seq()
 ```
 
 A cryptographic sequence used in the encryption process
@@ -64,7 +64,7 @@ Initializes a cryptographic sequence based on version and block IV.
   * `block_iv` - Block initialization vector
 
 ## Returns
-  * A list of crypter modules/structs in the proper sequence
+  * A crypter sequence in the order defined by the block IV digits
 
 # `iv_to_int`
 
@@ -78,22 +78,7 @@ Converts a binary IV to its integer representation.
   * `iv` - Binary initialization vector (4 bytes)
 
 ## Returns
-  * Integer representation of the IV
-
-# `mask`
-
-```elixir
-@spec mask(integer(), 32 | 64) :: non_neg_integer()
-```
-
-Applies a bit mask to an integer of specified bit width.
-
-## Parameters
-  * `n` - Integer to mask
-  * `bits` - Bit width (default: 32)
-
-## Returns
-  * Masked integer value
+  * Unsigned integer representation of the IV
 
 ---
 

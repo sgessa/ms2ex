@@ -48,13 +48,8 @@ Ms2ex.Context.Wallets.html
 Ms2ex.Context.World.html
 Ms2ex.Context.WorldGraph.html
 Ms2ex.Crypto.Cipher.html
-Ms2ex.Crypto.Crypter.html
-Ms2ex.Crypto.Rand32.html
-Ms2ex.Crypto.RearrangeCrypter.html
 Ms2ex.Crypto.RecvCipher.html
 Ms2ex.Crypto.SendCipher.html
-Ms2ex.Crypto.TableCrypter.html
-Ms2ex.Crypto.XorCrypter.html
 Ms2ex.EctoTypes.Term.html
 Ms2ex.EctoTypes.TransferFlags.html
 Ms2ex.Enum.html
@@ -507,8 +502,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-623E4981.js
-dist/sidebar_items-15607B23.js
+dist/search_data-32E47623.js
+dist/sidebar_items-8E454392.js
 index.html
 license.html
 readme.html

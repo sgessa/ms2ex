@@ -650,13 +650,8 @@ of clipping into it.
 - Crypto
   - [Ms2ex.Crypto.Cipher](Ms2ex.Crypto.Cipher.md): Core module handling the MapleStory 2 encryption protocol, providing methods for building
 cryptographic sequences and managing initialization vectors (IVs).
-  - [Ms2ex.Crypto.Crypter](Ms2ex.Crypto.Crypter.md): Base module for crypter implementations providing common functionality.
-  - [Ms2ex.Crypto.Rand32](Ms2ex.Crypto.Rand32.md): Implements a 32-bit random number generator used in the MapleStory 2 encryption protocol.
-  - [Ms2ex.Crypto.RearrangeCrypter](Ms2ex.Crypto.RearrangeCrypter.md): Implements a crypter that rearranges bytes in a packet.
   - [Ms2ex.Crypto.RecvCipher](Ms2ex.Crypto.RecvCipher.md): Handles decryption of incoming packets in the MapleStory 2 encryption protocol.
   - [Ms2ex.Crypto.SendCipher](Ms2ex.Crypto.SendCipher.md): Handles encryption of outgoing packets in the MapleStory 2 protocol.
-  - [Ms2ex.Crypto.TableCrypter](Ms2ex.Crypto.TableCrypter.md): Implements a table-based substitution crypter.
-  - [Ms2ex.Crypto.XorCrypter](Ms2ex.Crypto.XorCrypter.md): Implements a XOR-based crypter.
 
 ## Mix Tasks
 

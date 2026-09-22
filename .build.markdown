@@ -47,13 +47,8 @@ Ms2ex.Context.Wallets.md
 Ms2ex.Context.World.md
 Ms2ex.Context.WorldGraph.md
 Ms2ex.Crypto.Cipher.md
-Ms2ex.Crypto.Crypter.md
-Ms2ex.Crypto.Rand32.md
-Ms2ex.Crypto.RearrangeCrypter.md
 Ms2ex.Crypto.RecvCipher.md
 Ms2ex.Crypto.SendCipher.md
-Ms2ex.Crypto.TableCrypter.md
-Ms2ex.Crypto.XorCrypter.md
 Ms2ex.EctoTypes.Term.md
 Ms2ex.EctoTypes.TransferFlags.md
 Ms2ex.Enum.md

@@ -4,13 +4,14 @@
 Handles decryption of incoming packets in the MapleStory 2 encryption protocol.
 
 This module manages packet header parsing and decryption for data received
-from the client.
+from the client. The payload transform runs in the native crypto library,
+applied in the reverse of the send order.
 
 # `t`
 
 ```elixir
 @type t() :: %Ms2ex.Crypto.RecvCipher{
-  crypt_seq: [module() | struct()],
+  crypt_seq: Ms2ex.Crypto.Cipher.crypt_seq(),
   iv: non_neg_integer(),
   version: non_neg_integer()
 }

@@ -4,13 +4,14 @@
 Handles encryption of outgoing packets in the MapleStory 2 protocol.
 
 This module manages packet encryption and header writing for data being sent
-to the client.
+to the client. The payload transform runs in the native crypto library,
+applied in send order.
 
 # `t`
 
 ```elixir
 @type t() :: %Ms2ex.Crypto.SendCipher{
-  crypt_seq: [module() | struct()],
+  crypt_seq: Ms2ex.Crypto.Cipher.crypt_seq(),
   iv: non_neg_integer(),
   version: non_neg_integer()
 }

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-15607B23.js"></script>
+    <script defer src="dist/sidebar_items-8E454392.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -115,7 +115,8 @@ MS2EX
 
     <section id="moduledoc">
 <p>Handles encryption of outgoing packets in the MapleStory 2 protocol.</p><p>This module manages packet encryption and header writing for data being sent
-to the client.</p>
+to the client. The payload transform runs in the native crypto library,
+applied in send order.</p>
     </section>
 
 </div>
@@ -202,7 +203,7 @@ to the client.</p>
       <h1 class="signature" translate="no">t()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L15" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L17" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -214,7 +215,7 @@ to the client.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Ms2ex.Crypto.SendCipher{
-  crypt_seq: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>()],
+  crypt_seq: <a href="Ms2ex.Crypto.Cipher.html#t:crypt_seq/0">Ms2ex.Crypto.Cipher.crypt_seq</a>(),
   iv: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   version: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
 }</pre>
@@ -247,7 +248,7 @@ to the client.</p>
       <h1 class="signature" translate="no">build(version, iv, block_iv)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L35" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -275,7 +276,7 @@ to the client.</p>
       <h1 class="signature" translate="no">encrypt(cipher, packet)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L79" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L81" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -303,7 +304,7 @@ to the client.</p>
       <h1 class="signature" translate="no">write_header(send_cipher, packet)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/crypto/ciphers/send_cipher.ex#L53" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
