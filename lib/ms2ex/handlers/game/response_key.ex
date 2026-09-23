@@ -4,10 +4,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   alias Ms2ex.LoginHandlers
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.Managers.Character.Fishing
-  alias Ms2ex.Managers.PartyManager
-  alias Ms2ex.Managers.PartyServer
-  alias Ms2ex.Managers.Session
   alias Ms2ex.Storage
 
   import Net.SenderSession, only: [push: 2, run: 2]
@@ -17,10 +13,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} <- Session.lookup(account_id),
+    with {:ok, auth_data} <- Managers.Session.lookup(account_id),
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
-      Session.register(account.id, auth_data)
+      Managers.Session.register(account.id, auth_data)
       run(session, fn -> Context.World.subscribe() end)
 
       character =
@@ -102,7 +98,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.mastery_rewards_claimed(Managers.Mastery.rewards_claimed(character.id)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
-      |> push(Packets.Fishing.load_album(Fishing.album(character)))
+      |> push(Packets.Fishing.load_album(Managers.Character.Fishing.album(character)))
       |> push_key_table(character)
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.InGameRank.load())
@@ -137,10 +133,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   end
 
   defp maybe_set_party(character) do
-    case PartyManager.lookup(character) do
+    case Managers.PartyManager.lookup(character) do
       {:ok, party_id} ->
         character = %{character | party_id: party_id}
-        PartyServer.call(character.party_id, {:update_member, character})
+        Managers.PartyServer.call(character.party_id, {:update_member, character})
         character
 
       _ ->
@@ -174,7 +170,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   defp push_party(session, character) do
     party =
-      case PartyServer.call(character.party_id, :lookup) do
+      case Managers.PartyServer.call(character.party_id, :lookup) do
         {:ok, party} -> party
         _ -> nil
       end
@@ -182,7 +178,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     if party do
       push(session, Packets.Party.create(party, false))
 
-      PartyServer.broadcast_from(
+      Managers.PartyServer.broadcast_from(
         session.sender_pid,
         party.id,
         Packets.Party.update_hitpoints(character)
