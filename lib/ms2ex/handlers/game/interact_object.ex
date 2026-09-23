@@ -63,7 +63,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
   # gathering nodes resolve the harvest before the animation: the client
   # needs to know whether it succeeded
   defp react(character, %{type: :gathering} = object) do
-    case Context.Mastery.gather(character, object) do
+    case Managers.Character.Mastery.gather(character, object) do
       {:ok, _character} ->
         SenderSession.push(character, Packets.InteractObject.interact(object, :success, 1))
 

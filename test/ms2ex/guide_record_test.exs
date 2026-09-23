@@ -1,6 +1,7 @@
 defmodule Ms2ex.GuideRecordTest do
   use Ms2ex.DataCase, async: false
 
+  alias Ms2ex.Context
   alias Ms2ex.GameHandlers
   alias Ms2ex.Managers
   alias Ms2ex.Packets
@@ -49,9 +50,11 @@ defmodule Ms2ex.GuideRecordTest do
           skin_color: {}
         })
 
-      {:ok, pid} = Managers.Character.start(character)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
-      Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
+      :ok = Managers.CharacterConfig.start(character)
+      config_pid = Process.whereis(:"character_configs:#{character.id}")
+
+      on_exit(fn -> if config_pid && Process.alive?(config_pid), do: GenServer.stop(config_pid) end)
+      Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), config_pid)
 
       session = %{character_id: character.id}
       %{character: character, session: session}
@@ -64,15 +67,16 @@ defmodule Ms2ex.GuideRecordTest do
       packet = build_client_packet(%{101 => 2})
       GameHandlers.GuideRecord.handle(packet, session)
 
-      saved = Repo.get(Schema.Character, character.id)
-      assert saved.guide_records == %{101 => 2}
+      assert Managers.CharacterConfig.guide_records(character.id) == %{101 => 2}
 
       # a later report for another guide keeps the first one
       packet = build_client_packet(%{202 => 4})
       GameHandlers.GuideRecord.handle(packet, session)
 
-      saved = Repo.get(Schema.Character, character.id)
-      assert saved.guide_records == %{101 => 2, 202 => 4}
+      assert Managers.CharacterConfig.guide_records(character.id) == %{101 => 2, 202 => 4}
+
+      # the merged progress lands in the config row
+      assert Context.CharacterConfigs.get(character.id).guide_records == %{101 => 2, 202 => 4}
     end
 
     test "a later step overwrites the previous one", %{character: character, session: session} do
@@ -82,8 +86,7 @@ defmodule Ms2ex.GuideRecordTest do
       packet = build_client_packet(%{101 => 6})
       GameHandlers.GuideRecord.handle(packet, session)
 
-      saved = Repo.get(Schema.Character, character.id)
-      assert saved.guide_records == %{101 => 6}
+      assert Managers.CharacterConfig.guide_records(character.id) == %{101 => 6}
     end
 
     test "empty reports keep existing records", %{character: character, session: session} do
@@ -92,8 +95,7 @@ defmodule Ms2ex.GuideRecordTest do
 
       GameHandlers.GuideRecord.handle(build_client_packet(%{}), session)
 
-      saved = Repo.get(Schema.Character, character.id)
-      assert saved.guide_records == %{101 => 2}
+      assert Managers.CharacterConfig.guide_records(character.id) == %{101 => 2}
     end
   end
 

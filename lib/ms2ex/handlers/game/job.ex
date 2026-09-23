@@ -27,7 +27,8 @@ defmodule Ms2ex.GameHandlers.Job do
     character = save_skills(character, skill_tab, skills_length, packet)
     Managers.Character.call(character, {:update, character})
 
-    hot_bars = Context.HotBars.list(character)
+    :ok = Managers.CharacterConfig.update_hotbar_skills(character)
+    hot_bars = Managers.CharacterConfig.list(character.id)
 
     session
     |> push(Packets.Job.save(character))
@@ -37,6 +38,10 @@ defmodule Ms2ex.GameHandlers.Job do
   # Reset Skill Build
   defp handle_mode(0xA, _packet, session) do
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+
+    # TODO reset the active tab's skills and re-sync the hot bars like the
+    # save path does (Managers.CharacterConfig.update_hotbar_skills prunes the
+    # unlearned slots)
     push(session, Packets.Job.save(character))
   end
 
@@ -50,7 +55,8 @@ defmodule Ms2ex.GameHandlers.Job do
     character = save_skills(character, skill_tab, skills_length, packet)
     Managers.Character.call(character, {:update, character})
 
-    hot_bars = Context.HotBars.list(character)
+    :ok = Managers.CharacterConfig.update_hotbar_skills(character)
+    hot_bars = Managers.CharacterConfig.list(character.id)
 
     session
     |> push(Packets.Job.save(character))

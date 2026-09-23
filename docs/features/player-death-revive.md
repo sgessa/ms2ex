@@ -95,15 +95,17 @@ is projected.
 
 ## Persistence
 
-The death penalty (`death_count`, `death_tick`) and the daily instant-revive
-counter (`instant_revive_count`) are persisted on the `characters` row
-(columns added by migration 85). They survive server restarts. The daily
-counter is cleared by `Ms2ex.Workers.DailyReset`, an Oban job fired by a
-crontab entry (`Oban.Plugins.Cron`, `0 0 * * *` UTC). The worker zeroes the
-DB column for every character and casts `:reset_daily_revives` to each
-connected character manager so in-memory state and the client "uses left"
-gauge reset too. The reset matches the client's per-day
-`InstantRevivalCount` display via a midnight server tick.
+The death penalty (`death_count`, `death_tick`) is persisted on the
+`characters` row. The daily instant-revive counter (`instant_revive_count`)
+lives on the `character_configs` row (see `docs/features/key-table.md`) and
+is owned by `Ms2ex.Managers.CharacterConfig`: the revive flow reads and
+bumps it through that manager, which persists it. Both survive server
+restarts. The daily counter is cleared by `Ms2ex.Workers.DailyReset`, an
+Oban job fired by a crontab entry (`Oban.Plugins.Cron`, `0 0 * * *` UTC).
+The worker zeroes the stored columns for every character, drops the config
+manager's cached daily state, and refreshes the client's "uses left" gauge
+and gathering counters for connected players. The reset matches the
+client's per-day `InstantRevivalCount` display via a midnight server tick.
 
 `dead?` stays a virtual (session-only) field: logging in always revives the
 character.

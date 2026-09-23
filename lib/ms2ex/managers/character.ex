@@ -151,11 +151,6 @@ defmodule Ms2ex.Managers.Character do
     end
   end
 
-  def handle_call({:count_gather, recipe_id}, _from, character) do
-    character = Character.Mastery.count_gather(character, recipe_id)
-    {:reply, {:ok, character}, character}
-  end
-
   def handle_call(:flush_mastery, _from, character) do
     character = Character.Mastery.flush(character)
     {:reply, :ok, character}
@@ -396,8 +391,6 @@ defmodule Ms2ex.Managers.Character do
   # the daily-reset worker bulk-zeroes the DB for every character; connected
   # players also need their in-memory state cleared and the client gauge
   # refreshed
-  def handle_cast(:daily_reset, character),
-    do: {:noreply, Context.DailyReset.reset_character(character)}
 
   # triggers death when a stat write brings health to 0; called from
   # Character.Stats.set so every health-mutating path is covered
@@ -456,7 +449,6 @@ defmodule Ms2ex.Managers.Character do
     |> Map.put(:dead?, Map.get(state, :dead?, false))
     |> Map.put(:death_count, Map.get(state, :death_count, 0))
     |> Map.put(:death_tick, Map.get(state, :death_tick, 0))
-    |> Map.put(:instant_revive_count, Map.get(state, :instant_revive_count, 0))
     |> Map.put(:state_skill, Map.get(state, :state_skill))
     |> Map.put(:regen_waits, Map.get(state, :regen_waits, %{}))
     |> Map.put(:regen_health?, Map.get(state, :regen_health?, false))
@@ -467,7 +459,6 @@ defmodule Ms2ex.Managers.Character do
     |> Map.put(:condition_state, Map.get(state, :condition_state))
     |> Map.put(:condition_distances, Map.get(state, :condition_distances, %{}))
     |> Map.put(:masteries, Map.get(state, :masteries, %{}))
-    |> Map.put(:gathering_counts, Map.get(state, :gathering_counts, %{}))
     |> Map.put(:mastery_rewards_claimed, Map.get(state, :mastery_rewards_claimed, %{}))
     |> Map.put(:mastery_dirty?, Map.get(state, :mastery_dirty?, false))
     |> Map.put(:fish_album, Map.get(state, :fish_album, %{}))

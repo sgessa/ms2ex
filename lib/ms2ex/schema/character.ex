@@ -16,9 +16,7 @@ defmodule Ms2ex.Schema.Character do
     :discovered_maps,
     :exp,
     :gender,
-    :guide_records,
     :insignia_id,
-    :instant_revive_count,
     :level,
     :job,
     :map_id,
@@ -37,7 +35,6 @@ defmodule Ms2ex.Schema.Character do
     :delete_time,
     :discovered_objects,
     :fish_album,
-    :gathering_counts,
     :masteries,
     :mastery_rewards_claimed,
     :profile_url,
@@ -74,7 +71,6 @@ defmodule Ms2ex.Schema.Character do
     field :discovered_maps, {:array, :integer}, default: []
     field :discovered_objects, {:array, :integer}, default: []
     field :exp, :integer, default: 0
-    field :guide_records, EctoTypes.Term, default: %{}
     field :insignia_id, :integer, default: 0
     field :level, :integer, default: 1
     field :job, Enums.Job, default: :beginner
@@ -86,7 +82,6 @@ defmodule Ms2ex.Schema.Character do
     # recipe was harvested (the success rate decays with it) and which
     # mastery grade reward boxes were already claimed
     field :masteries, EctoTypes.Term, default: %{}
-    field :gathering_counts, EctoTypes.Term, default: %{}
     field :mastery_rewards_claimed, EctoTypes.Term, default: %{}
     field :fish_album, EctoTypes.Term, default: %{}
     field :mastery_dirty?, :boolean, virtual: true, default: false
@@ -118,7 +113,6 @@ defmodule Ms2ex.Schema.Character do
     field :dead?, :boolean, virtual: true, default: false
     field :death_count, :integer, default: 0
     field :death_tick, :integer, default: 0
-    field :instant_revive_count, :integer, default: 0
     field :field_pid, EctoTypes.Term, virtual: true
     # the field instance the session is bound to; allocated once per
     # transition and never persisted (see Managers.Field.assign_instance/1)

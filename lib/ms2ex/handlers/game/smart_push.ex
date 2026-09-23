@@ -49,7 +49,7 @@ defmodule Ms2ex.GameHandlers.SmartPush do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          :ok <- consume_required_item(session, character, metadata),
-         {:ok, _character, count} <- Context.Mastery.bulk_gather(character, recipe_id, amount) do
+         {:ok, _character, count} <- Managers.Character.Mastery.bulk_gather(character, recipe_id, amount) do
       push(session, Packets.SmartPush.activate_gather(metadata.id, count))
     else
       _ -> session

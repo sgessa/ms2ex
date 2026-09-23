@@ -54,6 +54,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end
 
       :ok = Managers.Achievement.start(character)
+      :ok = Managers.CharacterConfig.start(character)
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
@@ -97,12 +98,12 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.set_titles(titles))
       |> push(Packets.UserEnv.interacted_objects(character.discovered_objects || []))
       |> push(Packets.UserEnv.set_mode(0x5))
-      |> push(Packets.UserEnv.gathering_counts(Mastery.gathering_counts(character)))
+      |> push(Packets.UserEnv.gathering_counts(Managers.CharacterConfig.gathering_counts(character.id)))
       |> push(Packets.UserEnv.mastery_rewards_claimed(Mastery.rewards_claimed(character)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
       |> push(Packets.Fishing.load_album(Fishing.album(character)))
-      |> push(Packets.KeyTable.request())
+      |> push_key_table(character)
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.InGameRank.load())
       |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
@@ -113,6 +114,20 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.World.bytes())
       |> push_party(character)
       |> push_guild(character)
+    end
+  end
+
+  # a character with saved key binds gets the authoritative table (binds +
+  # bars); a brand-new character gets LoadDefault, letting the client apply
+  # its own defaults and sync them back
+  defp push_key_table(session, character) do
+    key_binds = Managers.CharacterConfig.key_binds(character.id)
+
+    if key_binds == %{} do
+      push(session, Packets.KeyTable.request())
+    else
+      bars = Managers.CharacterConfig.list(character.id)
+      push(session, Packets.KeyTable.load(key_binds, bars))
     end
   end
 

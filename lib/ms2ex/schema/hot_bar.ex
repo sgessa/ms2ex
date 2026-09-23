@@ -8,7 +8,10 @@ defmodule Ms2ex.Schema.HotBar do
   alias Ms2ex.Types
 
   @type t :: %__MODULE__{}
+
+  # slots past the assignable range hold the client's page controls
   @max_slots 25
+
   @default_slots Enum.map(1..@max_slots, fn _ -> %Types.QuickSlot{} end)
 
   schema "hot_bars" do
@@ -24,6 +27,4 @@ defmodule Ms2ex.Schema.HotBar do
     |> cast(attrs, [:active, :quick_slots])
     |> validate_required([:active, :quick_slots])
   end
-
-  def max_quick_slots(), do: @max_slots
 end

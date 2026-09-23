@@ -1,15 +1,14 @@
 defmodule Ms2ex.Context.Mastery do
   @moduledoc """
-  Life skills: harvesting gathering nodes and crafting mastery recipes, plus
-  claiming the reward boxes each mastery grade hands out.
+  Life skills: crafting mastery recipes and claiming the reward boxes each
+  mastery grade hands out. Harvesting nodes is orchestrated on the character
+  manager (`Managers.Character.Mastery`).
 
   Mastery values, gathering counts and claimed rewards live on the character
-  process (`Managers.Character.Mastery`); this module drives the gameplay
-  flows around them.
+  process; this module drives the gameplay flows around them.
   """
 
   alias Ms2ex.Context
-  alias Ms2ex.Formulas
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Character.Mastery
   alias Ms2ex.Packets
@@ -17,8 +16,6 @@ defmodule Ms2ex.Context.Mastery do
   alias Ms2ex.Storage
 
   import Ms2ex.Net.SenderSession, only: [push: 2]
-
-  @harvest_types [:farming, :mining, :gathering, :breeding]
 
   @doc "Mastery value of a type."
   def value(character, type), do: Mastery.value(character, type)
@@ -34,52 +31,6 @@ defmodule Ms2ex.Context.Mastery do
     case Managers.Character.call(character.id, {:add_mastery, type, amount, opts}) do
       {:ok, character} -> character
       _ -> character
-    end
-  end
-
-  @doc """
-  Harvests a gathering node. Returns the updated character and whether the
-  harvest succeeded; failures still consume the attempt.
-  """
-  @spec gather(Schema.Character.t(), map()) ::
-          {:ok, Schema.Character.t()} | {:error, atom(), Schema.Character.t()}
-  def gather(%Schema.Character{} = character, object) do
-    with {:ok, recipe} <- Storage.Tables.MasteryRecipes.lookup(object.recipe_id),
-         :ok <- check_mastery(character, recipe) do
-      run_gather(character, recipe, object)
-    else
-      :error -> {:error, :s_mastery_error_unknown, character}
-      {:error, error} -> {:error, error, character}
-    end
-  end
-
-  @doc """
-  Harvests a recipe `amount` times without an interact object (the Smart Push
-  bulk gather). Stops once the node's success rate has decayed to zero and
-  returns how many harvests landed.
-  """
-  @spec bulk_gather(Schema.Character.t(), integer(), non_neg_integer()) ::
-          {:ok, Schema.Character.t(), non_neg_integer()} | :error
-  def bulk_gather(%Schema.Character{} = character, recipe_id, amount) do
-    case Storage.Tables.MasteryRecipes.lookup(recipe_id) do
-      {:ok, recipe} ->
-        {character, count} =
-          Enum.reduce_while(1..max(amount, 0)//1, {character, 0}, &bulk_step(&2, recipe, &1))
-
-        {:ok, character, count}
-
-      :error ->
-        :error
-    end
-  end
-
-  defp bulk_step({character, count}, recipe, _step) do
-    if success_rate(character, recipe) <= 0 do
-      {:halt, {character, count}}
-    else
-      before_gather(character, recipe)
-      character = harvest(character, recipe, %{position: character.position})
-      {:cont, {character, count + 1}}
     end
   end
 
@@ -138,108 +89,6 @@ defmodule Ms2ex.Context.Mastery do
       end
     end
   end
-
-  # ---- gathering ----
-
-  defp run_gather(character, recipe, object) do
-    rate = success_rate(character, recipe)
-
-    before_gather(character, recipe)
-
-    if :rand.uniform() * 100 > rate do
-      {:error, :failed, character}
-    else
-      {:ok, harvest(character, recipe, object)}
-    end
-  end
-
-  defp harvest(character, recipe, object) do
-    character
-    |> drop_rewards(recipe, object)
-    |> after_gather(recipe)
-    |> count_gather(recipe)
-    |> award_gather_exp(recipe)
-    |> award_gather_mastery(recipe)
-  end
-
-  defp success_rate(character, recipe) do
-    current_count = Map.get(Mastery.gathering_counts(character), recipe.id, 0)
-
-    Formulas.Gathering.success_rate(
-      current_count,
-      recipe.high_rate_limit_count,
-      recipe.normal_rate_limit_count
-    )
-  end
-
-  defp drop_rewards(character, recipe, object) do
-    for reward <- recipe.reward_items do
-      case Context.Items.drop_item(reward.item_id, reward.rarity, reward.amount) do
-        %Schema.Item{} = item ->
-          Managers.Field.drop_item(character, item, object.position)
-
-        _ ->
-          :ok
-      end
-    end
-
-    character
-  end
-
-  defp count_gather(character, recipe) do
-    case Managers.Character.call(character.id, {:count_gather, recipe.id}) do
-      {:ok, character} -> character
-      _ -> character
-    end
-  end
-
-  defp award_gather_exp(character, %{no_reward_exp: true}), do: character
-
-  defp award_gather_exp(character, _recipe) do
-    Managers.Character.cast(character, {:earn_exp, typed_exp(character, :gathering)})
-    character
-  end
-
-  # a recipe that sits too far below the player's grade stops awarding
-  # mastery entirely
-  defp award_gather_mastery(character, %{type: type} = recipe) when type in @harvest_types do
-    if Mastery.grade(character, type) - recipe.reward_mastery >=
-         Storage.Tables.MasteryDifferentialFactors.positive_factor_count() do
-      character
-    else
-      add(character, type, recipe.reward_mastery)
-    end
-  end
-
-  defp award_gather_mastery(character, recipe),
-    do: add(character, recipe.type, recipe.reward_mastery)
-
-  defp before_gather(character, %{type: type} = recipe) when type in [:farming, :breeding] do
-    update_conditions(character, :mastery_harvest_try, 1, recipe.id)
-    update_conditions(character, :mastery_farming_try, 1, recipe.id)
-  end
-
-  defp before_gather(character, %{type: type} = recipe) when type in [:gathering, :mining] do
-    update_conditions(character, :mastery_gathering_try, 1, recipe.id)
-  end
-
-  defp before_gather(_character, _recipe), do: :ok
-
-  defp after_gather(character, %{type: type} = recipe) when type in [:farming, :breeding] do
-    if type == :farming do
-      update_conditions(character, :mastery_farming, 1, recipe.id)
-    end
-
-    update_conditions(character, :mastery_harvest, 1, recipe.id)
-    character
-  end
-
-  defp after_gather(character, %{type: type} = recipe) when type in [:gathering, :mining] do
-    update_conditions(character, :mastery_gathering, 1, recipe.id)
-    character
-  end
-
-  defp after_gather(character, _recipe), do: character
 
   # ---- crafting ----
 
