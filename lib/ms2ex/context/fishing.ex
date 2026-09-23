@@ -11,7 +11,7 @@ defmodule Ms2ex.Context.Fishing do
   alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Character.Fishing
-  alias Ms2ex.Managers.Character.Mastery
+  alias Ms2ex.Managers.Mastery
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -190,7 +190,7 @@ defmodule Ms2ex.Context.Fishing do
   end
 
   defp check_rod_mastery(character, rod) do
-    if Mastery.value(character, :fishing) >= rod.min_mastery do
+    if Mastery.value(character.id, :fishing) >= rod.min_mastery do
       :ok
     else
       {:error, :s_fishing_error_fishingrod_mastery}
@@ -198,7 +198,7 @@ defmodule Ms2ex.Context.Fishing do
   end
 
   defp check_spot_mastery(character, spot) do
-    if Mastery.value(character, :fishing) >= spot.min_mastery do
+    if Mastery.value(character.id, :fishing) >= spot.min_mastery do
       :ok
     else
       {:error, :s_fishing_error_lack_mastery}

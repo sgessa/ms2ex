@@ -27,7 +27,7 @@ defmodule Ms2ex.Context.DailyReset do
 
     Managers.Character.online_ids()
     |> Enum.each(fn character_id ->
-      Managers.Character.reset_gathering_counts(character_id)
+      Managers.Mastery.reset_gathering_counts(character_id)
       Managers.CharacterConfig.reset_daily(character_id)
       notify(character_id)
     end)

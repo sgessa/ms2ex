@@ -1,16 +1,14 @@
 defmodule Ms2ex.Context.Mastery do
   @moduledoc """
   Life skills: crafting mastery recipes and claiming the reward boxes each
-  mastery grade hands out. Harvesting nodes is orchestrated on the character
-  manager (`Managers.Character.Mastery`).
-
-  Mastery values, gathering counts and claimed rewards live on the character
-  process; this module drives the gameplay flows around them.
+  mastery grade hands out. Harvesting nodes is orchestrated on the mastery
+  manager (`Managers.Mastery`), which owns mastery values, gathering counts
+  and claimed rewards; this module drives the gameplay flows around them.
   """
 
   alias Ms2ex.Context
   alias Ms2ex.Managers
-  alias Ms2ex.Managers.Character.Mastery
+  alias Ms2ex.Managers.Mastery
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -18,20 +16,18 @@ defmodule Ms2ex.Context.Mastery do
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @doc "Mastery value of a type."
-  def value(character, type), do: Mastery.value(character, type)
+  def value(character, type), do: Mastery.value(character.id, type)
 
   @doc "Mastery grade (level) of a type."
-  def grade(character, type), do: Mastery.grade(character, type)
+  def grade(character, type), do: Mastery.grade(character.id, type)
 
   @doc """
-  Adds mastery through the character process so the authoritative value is
-  the one in memory.
+  Adds mastery through the mastery manager so the authoritative value is the
+  one in memory.
   """
   def add(%Schema.Character{} = character, type, amount, opts \\ []) do
-    case Managers.Character.call(character.id, {:add_mastery, type, amount, opts}) do
-      {:ok, character} -> character
-      _ -> character
-    end
+    Managers.Mastery.add(character.id, type, amount, opts)
+    character
   end
 
   @doc """
@@ -63,7 +59,7 @@ defmodule Ms2ex.Context.Mastery do
     type = Ms2ex.Enums.MasteryType.get_key(div(reward_box_id, 1000))
     grade = rem(reward_box_id, 100)
 
-    if Mastery.claimed?(character, reward_box_id) do
+    if Mastery.claimed?(character.id, reward_box_id) do
       {:error, :s_mastery_error_unknown}
     else
       case Storage.Tables.MasteryRewards.lookup(type, grade) do
@@ -73,14 +69,15 @@ defmodule Ms2ex.Context.Mastery do
     end
   end
 
+  @spec grant_reward(Schema.Character.t(), integer(), atom(), map()) ::
+          {:ok, Schema.Character.t(), map()} | {:error, atom()}
   defp grant_reward(character, reward_box_id, type, entry) do
-    if Mastery.value(character, type) < entry.value do
+    if Mastery.value(character.id, type) < entry.value do
       {:error, :s_mastery_error_invalid_level}
     else
       with %Schema.Item{} = item <-
              Context.Items.drop_item(entry.item_id, entry.item_rarity, entry.item_amount),
-           {:ok, character} <-
-             Managers.Character.call(character.id, {:claim_mastery_reward, reward_box_id}),
+           :ok <- Managers.Mastery.claim_reward(character.id, reward_box_id),
            :ok <- grant_item(character, item) do
         {:ok, character, %{item_id: entry.item_id, rarity: entry.item_rarity}}
       else
@@ -118,7 +115,7 @@ defmodule Ms2ex.Context.Mastery do
   # the reference sends the error but keeps crafting; refusing the craft is
   # the intended behaviour
   defp check_mastery(character, recipe) do
-    if Mastery.value(character, recipe.type) >= recipe.required_mastery do
+    if Mastery.value(character.id, recipe.type) >= recipe.required_mastery do
       :ok
     else
       {:error, :s_mastery_error_lack_mastery}
@@ -168,6 +165,7 @@ defmodule Ms2ex.Context.Mastery do
 
   # ---- shared ----
 
+  @spec grant_item(Schema.Character.t(), Schema.Item.t()) :: :ok
   defp grant_item(character, item) do
     case Managers.Inventory.add_item_or_mail(character, item) do
       {:ok, result} ->

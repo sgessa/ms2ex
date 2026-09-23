@@ -84,7 +84,6 @@ defmodule Ms2ex.Schema.Character do
     field :masteries, EctoTypes.Term, default: %{}
     field :mastery_rewards_claimed, EctoTypes.Term, default: %{}
     field :fish_album, EctoTypes.Term, default: %{}
-    field :mastery_dirty?, :boolean, virtual: true, default: false
     field :fishing, EctoTypes.Term, virtual: true
 
     field :prestige_exp, :integer, default: 0
@@ -110,7 +109,6 @@ defmodule Ms2ex.Schema.Character do
     field :channel_id, :integer, virtual: true
     field :condition_distances, :map, virtual: true, default: %{}
     field :condition_state, :any, virtual: true
-    field :gathering_counts, :map, virtual: true, default: %{}
     field :dead?, :boolean, virtual: true, default: false
     field :death_count, :integer, default: 0
     field :death_tick, :integer, default: 0

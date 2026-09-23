@@ -162,7 +162,6 @@ defmodule Ms2ex.FishingTest do
 
       assert first?
       assert entry == %{fish_id: 101, total_caught: 1, total_prize: 0, largest_size: 40}
-      assert character.mastery_dirty?
     end
 
     test "later catches keep the largest size and count prize fish" do

@@ -14,8 +14,8 @@ defmodule Ms2ex.Managers.CharacterConfig do
   # saves read from here instead of querying the database, and every
   # mutation is applied to memory, then persisted through
   # `Ms2ex.Context.CharacterConfigs` and `Ms2ex.Context.HotBars`. Harvest
-  # counters belong to the character manager (see
-  # `Ms2ex.Managers.Character`).
+  # counters and mastery values belong to the mastery manager (see
+  # `Ms2ex.Managers.Mastery`).
 
   def start(%Schema.Character{id: id} = character) do
     case GenServer.start(__MODULE__, character, name: process_name(id)) do

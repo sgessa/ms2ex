@@ -23,17 +23,17 @@ defmodule Ms2ex.GatheringCountsTest do
         skin_color: {}
       })
 
-    # the character manager's state is the character struct; the counters
-    # are runtime state seeded at login. The config manager keeps its own
-    # state shape (hot bars + config row).
-    character_state = %{character | gathering_counts: %{}}
-    config_state = %{
+    # the mastery manager owns the counters; its state is a plain map
+    state = %{
       character_id: character.id,
-      hot_bars: [],
-      config: Context.CharacterConfigs.get(character.id)
+      row: character,
+      masteries: %{},
+      claimed: %{},
+      gathering_counts: %{},
+      dirty?: false
     }
 
-    %{character: character, state: character_state, config_state: config_state}
+    %{character: character, state: state}
   end
 
   test "harvest bumps accumulate in the manager state and persist", %{
@@ -41,13 +41,13 @@ defmodule Ms2ex.GatheringCountsTest do
     state: state
   } do
     {:reply, :ok, state} =
-      Managers.Character.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
+      Managers.Mastery.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
 
     {:reply, :ok, state} =
-      Managers.Character.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
+      Managers.Mastery.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
 
     {:reply, :ok, state} =
-      Managers.Character.handle_call({:bump_gathering_count, 30_000_005}, :from, state)
+      Managers.Mastery.handle_call({:bump_gathering_count, 30_000_005}, :from, state)
 
     assert state.gathering_counts == %{40_000_015 => 2, 30_000_005 => 1}
     assert Context.CharacterConfigs.get(character.id).gathering_counts == state.gathering_counts
@@ -62,7 +62,7 @@ defmodule Ms2ex.GatheringCountsTest do
     state: state
   } do
     {:reply, :ok, state} =
-      Managers.Character.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
+      Managers.Mastery.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
 
     assert state.gathering_counts == %{40_000_015 => 1}
 
@@ -72,14 +72,20 @@ defmodule Ms2ex.GatheringCountsTest do
     assert Context.CharacterConfigs.get(character.id).gathering_counts == %{}
 
     # the cached counts drop too, so the next harvest starts from zero
-    {:noreply, state} = Managers.Character.handle_cast(:reset_gathering_counts, state)
+    {:noreply, state} = Managers.Mastery.handle_cast(:reset_gathering_counts, state)
     assert state.gathering_counts == %{}
   end
 
   test "instant revives accumulate, persist, and the daily reset clears them", %{
-    character: character,
-    config_state: state
+    character: character
   } do
+    # the config manager owns the revive counter; its state carries the row
+    state = %{
+      character_id: character.id,
+      hot_bars: [],
+      config: Context.CharacterConfigs.get(character.id)
+    }
+
     {:reply, :ok, state} =
       Managers.CharacterConfig.handle_call({:bump_instant_revive_count}, :from, state)
 

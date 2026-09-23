@@ -4,7 +4,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   alias Ms2ex.LoginHandlers
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.Managers.Character.Mastery
+  alias Ms2ex.Managers.Mastery
   alias Ms2ex.Managers.Character.Fishing
   alias Ms2ex.Managers.PartyManager
   alias Ms2ex.Managers.PartyServer
@@ -55,13 +55,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       :ok = Managers.Achievement.start(character)
       :ok = Managers.CharacterConfig.start(character)
-
-      # the harvest counters ride on the character manager's state; they live
-      # on the character-config row and are seeded once here at login
-      character = %{
-        character
-        | gathering_counts: Context.CharacterConfigs.get(character.id).gathering_counts
-      }
+      :ok = Managers.Mastery.start(character)
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
@@ -105,8 +99,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.set_titles(titles))
       |> push(Packets.UserEnv.interacted_objects(character.discovered_objects || []))
       |> push(Packets.UserEnv.set_mode(0x5))
-      |> push(Packets.UserEnv.gathering_counts(Managers.Character.gathering_counts(character.id)))
-      |> push(Packets.UserEnv.mastery_rewards_claimed(Mastery.rewards_claimed(character)))
+      |> push(Packets.UserEnv.gathering_counts(Managers.Mastery.gathering_counts(character.id)))
+      |> push(Packets.UserEnv.mastery_rewards_claimed(Mastery.rewards_claimed(character.id)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
       |> push(Packets.Fishing.load_album(Fishing.album(character)))

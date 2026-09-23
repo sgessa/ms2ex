@@ -23,7 +23,7 @@ converge at login and on explicit sync requests.
   written through `Ms2ex.Context.CharacterConfigs`; deliberately kept off
   the hot `characters` row. The row is written by two owners: the
   character-config manager persists the client config fields, and the
-  character manager persists the harvest counters (upserting in one
+  mastery manager persists the harvest counters (upserting in one
   statement, so neither depends on the other's state).
 
 ## Config manager
@@ -56,10 +56,11 @@ free slot. Changed bars only are persisted. It runs when a fresh character
 (no saved layout) first enters a field and after a skill-build save/preset.
 
 Guide reports merge into the saved progress immediately. Harvest counters
-belong to the character manager — the one GenServer for the mastery domain
-(values, exp, counters): the harvest flow reads and bumps them there, and
-each bump upserts the counter column. The instant-revive flow reads and
-bumps `instant_revive_count` through the config manager. The daily reset
+belong to the mastery manager (`Ms2ex.Managers.Mastery`), the dedicated
+GenServer for the life-skill domain (mastery values, claimed rewards,
+harvest counters): the harvest flow reads and bumps them there, and each
+bump upserts the counter column. The instant-revive flow reads and bumps
+`instant_revive_count` through the config manager. The daily reset
 bulk-clears both columns and drops each manager's cached daily state.
 
 ## Packet flow

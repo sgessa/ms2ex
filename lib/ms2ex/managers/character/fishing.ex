@@ -3,7 +3,7 @@ defmodule Ms2ex.Managers.Character.Fishing do
   Fishing state owned by the character process: the active rod, the water
   tiles it reaches, the fish currently biting and the fish album.
 
-  The album is persisted alongside the mastery state on the periodic flush.
+  The album is persisted when a catch is recorded.
   """
 
   @doc "Fish album, keyed by fish id."
@@ -71,6 +71,8 @@ defmodule Ms2ex.Managers.Character.Fishing do
   Records a catch in the album. Returns the updated character, the album
   entry and whether this was the first catch of that kind.
   """
+  @spec record_catch(Schema.Character.t(), integer(), integer(), boolean()) ::
+          {Schema.Character.t(), map(), boolean()}
   def record_catch(character, fish_id, size, prize?) do
     album = album(character)
     existing = Map.get(album, fish_id)
@@ -94,10 +96,7 @@ defmodule Ms2ex.Managers.Character.Fishing do
           }
       end
 
-    character =
-      character
-      |> Map.put(:fish_album, Map.put(album, fish_id, entry))
-      |> Map.put(:mastery_dirty?, true)
+    character = Map.put(character, :fish_album, Map.put(album, fish_id, entry))
 
     {character, entry, is_nil(existing)}
   end
