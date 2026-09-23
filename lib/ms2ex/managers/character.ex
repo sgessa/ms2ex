@@ -4,11 +4,13 @@ defmodule Ms2ex.Managers.Character do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
+  alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Types
   alias Ms2ex.Types.AttributePointSource
 
   import Ms2ex.GameHandlers.Helper.Session, only: [cleanup: 1]
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @spec lookup(integer()) :: {:ok, Schema.Character.t()} | :error
   def lookup(character_id), do: call(character_id, :lookup)
@@ -365,6 +367,15 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_cast({:revive, :instant, use_voucher}, character),
     do: {:noreply, Character.Revival.instant_revive(character, use_voucher)}
+
+  # the daily-reset worker bulk-zeroes the database for every character;
+  # connected players get their "revives left" gauge and gathering counters
+  # refreshed here (the counters themselves live on the mastery manager)
+  def handle_cast(:daily_reset, character) do
+    push(character, Packets.RevivalCount.bytes(0))
+    push(character, Packets.UserEnv.gathering_counts(%{}))
+    {:noreply, character}
+  end
 
 
   # triggers death when a stat write brings health to 0; called from

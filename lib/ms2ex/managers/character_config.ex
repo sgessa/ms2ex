@@ -14,8 +14,8 @@ defmodule Ms2ex.Managers.CharacterConfig do
   # saves read from here instead of querying the database, and every
   # mutation is applied to memory, then persisted through
   # `Ms2ex.Context.CharacterConfigs` and `Ms2ex.Context.HotBars`. Harvest
-  # counters and mastery values belong to the mastery manager (see
-  # `Ms2ex.Managers.Mastery`).
+  # counters, mastery values and claimed grade rewards belong to the mastery
+  # manager (see `Ms2ex.Managers.Mastery`).
 
   def start(%Schema.Character{id: id} = character) do
     case GenServer.start(__MODULE__, character, name: process_name(id)) do
@@ -245,7 +245,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
   def handle_call({:merge_key_binds, binds}, _from, state) do
     key_binds = Map.merge(state.config.key_binds, binds)
 
-    case Context.CharacterConfigs.update_field(state.config, :key_binds, key_binds) do
+    case Context.CharacterConfigs.update(state.config, %{key_binds: key_binds}) do
       {:ok, config} -> {:reply, :ok, %{state | config: config}}
       _ -> {:reply, :error, state}
     end
@@ -258,7 +258,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
   def handle_call({:merge_guide_records, records}, _from, state) do
     guide_records = Map.merge(state.config.guide_records, records)
 
-    case Context.CharacterConfigs.update_field(state.config, :guide_records, guide_records) do
+    case Context.CharacterConfigs.update(state.config, %{guide_records: guide_records}) do
       {:ok, config} -> {:reply, :ok, %{state | config: config}}
       _ -> {:reply, :error, state}
     end
@@ -272,7 +272,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
   def handle_call({:bump_instant_revive_count}, _from, state) do
     count = state.config.instant_revive_count + 1
 
-    case Context.CharacterConfigs.update_field(state.config, :instant_revive_count, count) do
+    case Context.CharacterConfigs.update(state.config, %{instant_revive_count: count}) do
       {:ok, config} -> {:reply, :ok, %{state | config: config}}
       _ -> {:reply, :error, state}
     end

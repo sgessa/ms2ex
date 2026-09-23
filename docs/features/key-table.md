@@ -34,7 +34,7 @@ loads the character's config once — the hot bar rows and the
 -bar switches, key-bind syncs and guide reports from memory.
 Every mutation is applied to memory, then persisted from the row's
 previous state through `Ms2ex.Context.HotBars` (`update_quick_slots/2`,
-`set_active/2`) and `Ms2ex.Context.CharacterConfigs` (`update_field/3`,
+`set_active/2`) and `Ms2ex.Context.CharacterConfigs` (`update/2`,
 inserting the row on first write); the persisted rows returned by the
 contexts replace the manager's cached ones, so memory always matches the
 database.

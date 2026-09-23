@@ -23,10 +23,12 @@ defmodule Ms2ex.GatheringCountsTest do
         skin_color: {}
       })
 
-    # the mastery manager owns the counters; its state is a plain map
+    # the mastery manager owns the counters; its state is a plain map and
+    # caches the config row its bumps are persisted through
     state = %{
       character_id: character.id,
       row: character,
+      config: Context.CharacterConfigs.get(character.id),
       masteries: %{},
       claimed: %{},
       gathering_counts: %{},

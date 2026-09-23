@@ -36,7 +36,6 @@ defmodule Ms2ex.Schema.Character do
     :discovered_objects,
     :fish_album,
     :masteries,
-    :mastery_rewards_claimed,
     :profile_url,
     :stat_point_sources,
     :stat_point_allocation
@@ -82,7 +81,6 @@ defmodule Ms2ex.Schema.Character do
     # recipe was harvested (the success rate decays with it) and which
     # mastery grade reward boxes were already claimed
     field :masteries, EctoTypes.Term, default: %{}
-    field :mastery_rewards_claimed, EctoTypes.Term, default: %{}
     field :fish_album, EctoTypes.Term, default: %{}
     field :fishing, EctoTypes.Term, virtual: true
 

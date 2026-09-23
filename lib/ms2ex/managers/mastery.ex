@@ -55,15 +55,6 @@ defmodule Ms2ex.Managers.Mastery do
   @spec rewards_claimed(integer()) :: map() | :error
   def rewards_claimed(character_id), do: call(character_id, :rewards_claimed)
 
-  @doc "True when the grade reward box was already claimed."
-  @spec claimed?(integer(), integer()) :: boolean() | :error
-  def claimed?(character_id, reward_box_id), do: call(character_id, {:claimed?, reward_box_id})
-
-  @doc "Marks a grade reward box claimed."
-  @spec claim_reward(integer(), integer()) :: :ok | :error
-  def claim_reward(character_id, reward_box_id),
-    do: call(character_id, {:claim_reward, reward_box_id})
-
   @doc """
   Adds mastery. The value never decreases and is capped at the type's
   maximum; the client is told the new value and grade changes feed the
@@ -80,6 +71,45 @@ defmodule Ms2ex.Managers.Mastery do
   @spec bump_gathering_count(integer(), integer()) :: :ok | :error
   def bump_gathering_count(character_id, recipe_id),
     do: call(character_id, {:bump_gathering_count, recipe_id})
+
+  @doc """
+  Crafts a mastery recipe: consumes its ingredients and meso cost, awards
+  the mastery and hands out the crafted items. Runs in the caller's process.
+  """
+  @spec craft(Schema.Character.t(), integer()) ::
+          {:ok, Schema.Character.t()} | {:error, atom()}
+  def craft(%Schema.Character{} = character, recipe_id) do
+    with {:ok, recipe} <- Storage.Tables.MasteryRecipes.lookup(recipe_id),
+         :ok <- check_quests(character, recipe),
+         :ok <- check_mastery(character, recipe),
+         :ok <- check_meso(character, recipe),
+         :ok <- consume_ingredients(character, recipe) do
+      {:ok, run_craft(character, recipe)}
+    else
+      :error -> {:error, :s_mastery_error_unknown}
+      {:error, error} -> {:error, error}
+    end
+  end
+
+  @doc """
+  Claims the reward box of a mastery grade. The client addresses the box by
+  `mastery_type * 1000 + grade`. Runs in the caller's process.
+  """
+  @spec claim_reward_box(Schema.Character.t(), integer()) ::
+          {:ok, Schema.Character.t(), map()} | {:error, atom()}
+  def claim_reward_box(%Schema.Character{} = character, reward_box_id) do
+    type = Enums.MasteryType.get_key(div(reward_box_id, 1000))
+    grade = rem(reward_box_id, 100)
+
+    if call(character.id, {:claimed?, reward_box_id}) == true do
+      {:error, :s_mastery_error_unknown}
+    else
+      case Storage.Tables.MasteryRewards.lookup(type, grade) do
+        {:ok, entry} -> grant_reward(character, reward_box_id, type, entry)
+        :error -> {:error, :s_mastery_error_unknown}
+      end
+    end
+  end
 
   @doc "Drops the cached harvest counters after the daily reset cleared them."
   @spec reset_gathering_counts(integer()) :: :ok
@@ -138,8 +168,10 @@ defmodule Ms2ex.Managers.Mastery do
        character_id: character.id,
        # the loaded characters row, kept for the periodic persistence
        row: character,
+       # the character-config row, kept so field updates can insert-or-update
+       config: config,
        masteries: Map.get(character, :masteries) || %{},
-       claimed: Map.get(character, :mastery_rewards_claimed) || %{},
+       claimed: config.mastery_rewards_claimed,
        gathering_counts: config.gathering_counts,
        dirty?: false
      }}
@@ -204,8 +236,11 @@ defmodule Ms2ex.Managers.Mastery do
   @impl true
   def handle_call({:bump_gathering_count, recipe_id}, _from, state) do
     counts = Map.update(state.gathering_counts, recipe_id, 1, &(&1 + 1))
-    :ok = Context.CharacterConfigs.update_gathering_counts(state.character_id, counts)
-    {:reply, :ok, %{state | gathering_counts: counts}}
+
+    case Context.CharacterConfigs.update(state.config, %{gathering_counts: counts}) do
+      {:ok, config} -> {:reply, :ok, %{state | config: config, gathering_counts: counts}}
+      _ -> {:reply, :error, state}
+    end
   end
 
   @impl true
@@ -254,15 +289,19 @@ defmodule Ms2ex.Managers.Mastery do
     Managers.Quest.update_conditions(state.character_id, type, counter, "", 0, "", code_long)
   end
 
-  # mastery values and claimed rewards are persisted on the characters row on
-  # the periodic flush and on disconnect
+  # mastery values are persisted on the characters row on the periodic
+  # flush and on disconnect; claimed grade rewards live on the config row
   defp flush(%{dirty?: false} = state), do: state
 
   defp flush(state) do
-    attrs = %{masteries: state.masteries, mastery_rewards_claimed: state.claimed}
-
-    case Context.Characters.persist(state.row, attrs) do
-      {:ok, row} -> %{state | row: row, dirty?: false}
+    with {:ok, row} <-
+           Context.Characters.persist(state.row, %{masteries: state.masteries}),
+         {:ok, config} <-
+           Context.CharacterConfigs.update(state.config, %{
+             mastery_rewards_claimed: state.claimed
+           }) do
+      %{state | row: row, config: config, dirty?: false}
+    else
       _ -> state
     end
   end
@@ -389,5 +428,110 @@ defmodule Ms2ex.Managers.Mastery do
     else
       {:error, :s_mastery_error_lack_mastery}
     end
+  end
+
+  # ---- crafting internals ----
+
+  defp run_craft(character, recipe) do
+    Context.Wallets.update(character, :mesos, -recipe.required_meso)
+
+    character =
+      if recipe.no_reward_exp do
+        character
+      else
+        add(character.id, recipe.type, recipe.reward_mastery)
+        character
+      end
+
+    for reward <- recipe.reward_items do
+      case Context.Items.drop_item(reward.item_id, reward.rarity, reward.amount) do
+        %Schema.Item{} = item -> grant_item(character, item)
+        _ -> :ok
+      end
+    end
+
+    unless recipe.no_reward_exp do
+      Managers.Character.cast(character, {:earn_exp, typed_exp(character, :manufacturing)})
+    end
+
+    update_conditions(%{character_id: character.id}, :mastery_manufacturing, 1, recipe.id)
+
+    character
+  end
+
+  defp grant_reward(character, reward_box_id, type, entry) do
+    if value(character.id, type) < entry.value do
+      {:error, :s_mastery_error_invalid_level}
+    else
+      with %Schema.Item{} = item <-
+             Context.Items.drop_item(entry.item_id, entry.item_rarity, entry.item_amount),
+           :ok <- call(character.id, {:claim_reward, reward_box_id}),
+           :ok <- grant_item(character, item) do
+        {:ok, character, %{item_id: entry.item_id, rarity: entry.item_rarity}}
+      else
+        {:error, error} when is_atom(error) -> {:error, error}
+        _ -> {:error, :s_mastery_error_unknown}
+      end
+    end
+  end
+
+  defp grant_item(character, item) do
+    case Managers.Inventory.add_item_or_mail(character, item) do
+      {:ok, result} ->
+        {_status, inventory_item} = result
+        push(character, Packets.InventoryItem.add_item(result, character))
+        push(character, Packets.InventoryItem.mark_item_new(inventory_item))
+        Managers.Quest.notify_item_acquired(character, inventory_item)
+        :ok
+
+      {:mailed, _mail} ->
+        :ok
+
+      _ ->
+        :ok
+    end
+  end
+
+  # the reference sends the error but keeps crafting; refusing the craft is
+  # the intended behaviour
+  defp check_quests(character, recipe) do
+    missing? =
+      Enum.any?(recipe.required_quests, fn quest_id ->
+        Managers.Quest.get_quest(character.id, quest_id) == nil
+      end)
+
+    if missing?, do: {:error, :s_mastery_error_lack_quest}, else: :ok
+  end
+
+  defp check_meso(_character, %{required_meso: meso}) when meso <= 0, do: :ok
+
+  defp check_meso(character, %{required_meso: meso}) do
+    case Context.Wallets.find(character) do
+      %Schema.Wallet{mesos: mesos} when mesos >= meso -> :ok
+      _ -> {:error, :s_mastery_error_lack_meso}
+    end
+  end
+
+  defp consume_ingredients(_character, %{required_items: []}), do: :ok
+
+  defp consume_ingredients(character, %{required_items: required}) do
+    consumables = Enum.map(required, &%{item_id: &1.item_id, amount: &1.amount})
+    carried = Managers.Inventory.list_items(character)
+
+    if Enum.all?(consumables, &owns?(carried, &1)) do
+      {:ok, results} = Managers.Inventory.consume_item_amounts(character, consumables)
+      Enum.each(results, &push(character, Packets.InventoryItem.consume(&1)))
+      :ok
+    else
+      {:error, :s_mastery_error_lack_item}
+    end
+  end
+
+  defp owns?(carried, %{item_id: item_id, amount: amount}) do
+    carried
+    |> Enum.filter(&(&1.item_id == item_id))
+    |> Enum.map(& &1.amount)
+    |> Enum.sum()
+    |> Kernel.>=(amount)
   end
 end

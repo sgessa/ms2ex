@@ -34,36 +34,38 @@ defmodule Ms2ex.CharacterConfigsTest do
     assert config.gathering_counts == %{}
   end
 
-  test "update_field inserts when no row exists yet", %{character: character} do
+  test "update inserts when no row exists yet", %{character: character} do
     config = Context.CharacterConfigs.get(character.id)
 
     {:ok, inserted} =
-      Context.CharacterConfigs.update_field(config, :key_binds, %{
-        18 => %Types.KeyBind{key_code: 18, option_type: 1, option_guid: 500_009}
+      Context.CharacterConfigs.update(config, %{
+        key_binds: %{18 => %Types.KeyBind{key_code: 18, option_type: 1, option_guid: 500_009}}
       })
 
     assert inserted.id != nil
     assert Context.CharacterConfigs.get(character.id).key_binds |> map_size() == 1
   end
 
-  test "update_gathering_counts upserts in one statement", %{character: character} do
-    :ok = Context.CharacterConfigs.update_gathering_counts(character.id, %{40_000_015 => 3})
-    assert Context.CharacterConfigs.get(character.id).gathering_counts == %{40_000_015 => 3}
+  test "update ignores fields outside the config changeset", %{character: character} do
+    {:ok, config} =
+      Context.CharacterConfigs.update(Context.CharacterConfigs.get(character.id), %{
+        name: "nope",
+        key_binds: %{18 => :bind}
+      })
 
-    :ok = Context.CharacterConfigs.update_gathering_counts(character.id, %{40_000_015 => 4})
-    assert Context.CharacterConfigs.get(character.id).gathering_counts == %{40_000_015 => 4}
+    # only the cast fields land; the rest of the attrs is dropped
+    assert config.key_binds == %{18 => :bind}
+    assert Context.CharacterConfigs.get(character.id).gathering_counts == %{}
   end
 
-  test "update_field replaces the field and returns the updated row", %{character: character} do
+  test "update replaces the field and returns the updated row", %{character: character} do
     {:ok, first} =
-      Context.CharacterConfigs.update_field(
-        Context.CharacterConfigs.get(character.id),
-        :guide_records,
-        %{101 => 2}
-      )
+      Context.CharacterConfigs.update(Context.CharacterConfigs.get(character.id), %{
+        guide_records: %{101 => 2}
+      })
 
     {:ok, updated} =
-      Context.CharacterConfigs.update_field(first, :guide_records, %{101 => 6, 202 => 4})
+      Context.CharacterConfigs.update(first, %{guide_records: %{101 => 6, 202 => 4}})
 
     assert updated.id == first.id
     assert Context.CharacterConfigs.get(character.id).guide_records == %{101 => 6, 202 => 4}
@@ -75,15 +77,13 @@ defmodule Ms2ex.CharacterConfigsTest do
     counts = %{101 => 2}
 
     {:ok, first} =
-      Context.CharacterConfigs.update_field(
-        Context.CharacterConfigs.get(character.id),
-        :guide_records,
-        counts
-      )
+      Context.CharacterConfigs.update(Context.CharacterConfigs.get(character.id), %{
+        guide_records: counts
+      })
 
     # the manager only calls this after an actual change, but an unchanged
     # value is safely skipped instead of written
-    {:ok, same} = Context.CharacterConfigs.update_field(first, :guide_records, counts)
+    {:ok, same} = Context.CharacterConfigs.update(first, %{guide_records: counts})
 
     assert same.id == first.id
     assert Context.CharacterConfigs.get(character.id).guide_records == counts

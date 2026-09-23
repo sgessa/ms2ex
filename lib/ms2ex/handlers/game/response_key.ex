@@ -4,7 +4,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   alias Ms2ex.LoginHandlers
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.Managers.Mastery
   alias Ms2ex.Managers.Character.Fishing
   alias Ms2ex.Managers.PartyManager
   alias Ms2ex.Managers.PartyServer
@@ -100,7 +99,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.interacted_objects(character.discovered_objects || []))
       |> push(Packets.UserEnv.set_mode(0x5))
       |> push(Packets.UserEnv.gathering_counts(Managers.Mastery.gathering_counts(character.id)))
-      |> push(Packets.UserEnv.mastery_rewards_claimed(Mastery.rewards_claimed(character.id)))
+      |> push(Packets.UserEnv.mastery_rewards_claimed(Managers.Mastery.rewards_claimed(character.id)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
       |> push(Packets.Fishing.load_album(Fishing.album(character)))

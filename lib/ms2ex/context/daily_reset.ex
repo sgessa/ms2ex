@@ -10,11 +10,8 @@ defmodule Ms2ex.Context.DailyReset do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers
-  alias Ms2ex.Packets
   alias Ms2ex.Repo
   alias Ms2ex.Schema
-
-  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   # zeroes the harvest counters (which drive the harvest success rate) and the
   # daily instant-revive allowance for every character, then clears in-memory
@@ -27,23 +24,9 @@ defmodule Ms2ex.Context.DailyReset do
 
     Managers.Character.online_ids()
     |> Enum.each(fn character_id ->
+      Managers.Character.cast(character_id, :daily_reset)
       Managers.Mastery.reset_gathering_counts(character_id)
       Managers.CharacterConfig.reset_daily(character_id)
-      notify(character_id)
     end)
-  end
-
-  # the reset sweeps every live character, including ones whose session
-  # already went away
-  defp notify(character_id) do
-    case Managers.Character.call(character_id, :lookup) do
-      {:ok, %{sender_session_pid: nil}} -> :ok
-      {:ok, character} ->
-        push(character, Packets.RevivalCount.bytes(0))
-        push(character, Packets.UserEnv.gathering_counts(%{}))
-
-      _ ->
-        :ok
-    end
   end
 end
