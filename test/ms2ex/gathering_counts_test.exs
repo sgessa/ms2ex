@@ -23,30 +23,34 @@ defmodule Ms2ex.GatheringCountsTest do
         skin_color: {}
       })
 
-    state = %{
+    # the character manager's state is the character struct; the counters
+    # are runtime state seeded at login. The config manager keeps its own
+    # state shape (hot bars + config row).
+    character_state = %{character | gathering_counts: %{}}
+    config_state = %{
       character_id: character.id,
       hot_bars: [],
       config: Context.CharacterConfigs.get(character.id)
     }
 
-    %{character: character, state: state}
+    %{character: character, state: character_state, config_state: config_state}
   end
 
-  test "harvest bumps accumulate in the config state and persist", %{
+  test "harvest bumps accumulate in the manager state and persist", %{
     character: character,
     state: state
   } do
     {:reply, :ok, state} =
-      Managers.CharacterConfig.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
+      Managers.Character.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
 
     {:reply, :ok, state} =
-      Managers.CharacterConfig.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
+      Managers.Character.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
 
     {:reply, :ok, state} =
-      Managers.CharacterConfig.handle_call({:bump_gathering_count, 30_000_005}, :from, state)
+      Managers.Character.handle_call({:bump_gathering_count, 30_000_005}, :from, state)
 
-    assert state.config.gathering_counts == %{40_000_015 => 2, 30_000_005 => 1}
-    assert Context.CharacterConfigs.get(character.id).gathering_counts == state.config.gathering_counts
+    assert state.gathering_counts == %{40_000_015 => 2, 30_000_005 => 1}
+    assert Context.CharacterConfigs.get(character.id).gathering_counts == state.gathering_counts
   end
 
   test "a character that never gathered reads empty counts", %{character: character} do
@@ -58,23 +62,23 @@ defmodule Ms2ex.GatheringCountsTest do
     state: state
   } do
     {:reply, :ok, state} =
-      Managers.CharacterConfig.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
+      Managers.Character.handle_call({:bump_gathering_count, 40_000_015}, :from, state)
 
-    assert state.config.gathering_counts == %{40_000_015 => 1}
+    assert state.gathering_counts == %{40_000_015 => 1}
 
     Context.DailyReset.reset()
 
-    # the persisted column is nil'd out and reads back empty
+    # the persisted column is cleared and reads back empty
     assert Context.CharacterConfigs.get(character.id).gathering_counts == %{}
 
     # the cached counts drop too, so the next harvest starts from zero
-    {:noreply, state} = Managers.CharacterConfig.handle_cast(:reset_daily, state)
-    assert state.config.gathering_counts == %{}
+    {:noreply, state} = Managers.Character.handle_cast(:reset_gathering_counts, state)
+    assert state.gathering_counts == %{}
   end
 
   test "instant revives accumulate, persist, and the daily reset clears them", %{
     character: character,
-    state: state
+    config_state: state
   } do
     {:reply, :ok, state} =
       Managers.CharacterConfig.handle_call({:bump_instant_revive_count}, :from, state)
@@ -85,13 +89,13 @@ defmodule Ms2ex.GatheringCountsTest do
     assert state.config.instant_revive_count == 2
     assert Context.CharacterConfigs.get(character.id).instant_revive_count == 2
 
-    {:reply, 2, state} = Managers.CharacterConfig.handle_call(:instant_revive_count, :from, state)
+    {:reply, 2, ^state} =
+      Managers.CharacterConfig.handle_call(:instant_revive_count, :from, state)
 
     # the daily reset cast clears only the cache; the bulk column clear is
     # what persists, so the row still holds the pre-reset value here
     {:noreply, state} = Managers.CharacterConfig.handle_cast(:reset_daily, state)
     assert state.config.instant_revive_count == 0
     assert Context.CharacterConfigs.get(character.id).instant_revive_count == 2
-    assert state.config.gathering_counts == %{}
   end
 end

@@ -215,7 +215,7 @@ defmodule Ms2ex.Managers.Character.Mastery do
   end
 
   defp success_rate(character, recipe) do
-    current_count = Map.get(Managers.CharacterConfig.gathering_counts(character.id), recipe.id, 0)
+    current_count = Map.get(Managers.Character.gathering_counts(character.id), recipe.id, 0)
 
     Formulas.Gathering.success_rate(
       current_count,
@@ -239,7 +239,7 @@ defmodule Ms2ex.Managers.Character.Mastery do
   end
 
   defp count_gather(character, recipe) do
-    Managers.CharacterConfig.bump_gathering_count(character.id, recipe.id)
+    Managers.Character.bump_gathering_count(character.id, recipe.id)
     character
   end
 

@@ -28,6 +28,21 @@ defmodule Ms2ex.Managers.Character do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
 
+  @doc "Returns the character's harvest counters, keyed by recipe id."
+  @spec gathering_counts(integer() | Schema.Character.t()) :: map() | :error
+  def gathering_counts(id), do: call(id, :gathering_counts)
+
+  @doc "Bumps the harvest counter of a gathering recipe and persists it."
+  @spec bump_gathering_count(integer() | Schema.Character.t(), integer()) :: :ok | :error
+  def bump_gathering_count(id, recipe_id), do: call(id, {:bump_gathering_count, recipe_id})
+
+  @doc """
+  Drops the cached harvest counters after the daily reset cleared them in
+  the database.
+  """
+  @spec reset_gathering_counts(integer() | Schema.Character.t()) :: :ok
+  def reset_gathering_counts(id), do: cast(id, :reset_gathering_counts)
+
   # ids of every online character, from the registered character processes
   # TODO: maybe move this outside? out-of-scope
   @spec online_ids() :: [integer()]
@@ -304,6 +319,17 @@ defmodule Ms2ex.Managers.Character do
     {:reply, {:ok, cooldown}, character}
   end
 
+  # harvest counters drive the gathering success rate; the counter persists
+  # on the character-config row so a restart mid-day keeps the decay
+  def handle_call(:gathering_counts, _from, character),
+    do: {:reply, character.gathering_counts, character}
+
+  def handle_call({:bump_gathering_count, recipe_id}, _from, character) do
+    counts = Map.update(character.gathering_counts, recipe_id, 1, &(&1 + 1))
+    :ok = Context.CharacterConfigs.update_gathering_counts(character.id, counts)
+    {:reply, :ok, Map.put(character, :gathering_counts, counts)}
+  end
+
   def handle_call({:get_skill_cooldowns, now}, _from, character) do
     {character, active} = Character.SkillCooldown.get_active(character, now)
     {:reply, {:ok, active}, character}
@@ -388,9 +414,11 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:revive, :instant, use_voucher}, character),
     do: {:noreply, Character.Revival.instant_revive(character, use_voucher)}
 
-  # the daily-reset worker bulk-zeroes the DB for every character; connected
-  # players also need their in-memory state cleared and the client gauge
-  # refreshed
+  # the daily-reset worker bulk-zeroes the database for every character;
+  # connected players get their cached harvest counters dropped too
+  def handle_cast(:reset_gathering_counts, character) do
+    {:noreply, Map.put(character, :gathering_counts, %{})}
+  end
 
   # triggers death when a stat write brings health to 0; called from
   # Character.Stats.set so every health-mutating path is covered

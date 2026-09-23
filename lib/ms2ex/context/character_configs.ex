@@ -11,7 +11,7 @@ defmodule Ms2ex.Context.CharacterConfigs do
   alias Ms2ex.Repo
   alias Ms2ex.Schema
 
-  @config_fields [:key_binds, :guide_records, :gathering_counts, :instant_revive_count]
+  @config_fields [:key_binds, :guide_records, :instant_revive_count]
 
   @doc """
   Returns the character's config row; a character without a row yet reads
@@ -21,6 +21,20 @@ defmodule Ms2ex.Context.CharacterConfigs do
   def get(character_id) do
     Repo.get_by(Schema.CharacterConfig, character_id: character_id) ||
       %Schema.CharacterConfig{character_id: character_id}
+  end
+
+  @doc """
+  Upserts the character's harvest counters in a single statement; the row
+  need not exist yet.
+  """
+  @spec update_gathering_counts(integer(), map()) :: :ok
+  def update_gathering_counts(character_id, counts) do
+    %Schema.CharacterConfig{character_id: character_id, gathering_counts: counts}
+    |> Repo.insert(
+      on_conflict: {:replace, [:gathering_counts, :updated_at]},
+      conflict_target: :character_id
+    )
+    |> then(fn {:ok, _} -> :ok end)
   end
 
   @doc """

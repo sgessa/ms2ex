@@ -9,12 +9,13 @@ defmodule Ms2ex.Managers.CharacterConfig do
 
   # The character-config manager keeps a character's client config in
   # memory: the hot bar rows (with their quick-slot layout logic), the saved
-  # key binds, guide-popup progress, harvest counters and the daily
-  # instant-revive allowance. Field enter, quick-slot moves, key-bind syncs,
-  # gathering, revivals and skill-build saves read from here instead of
-  # querying the database, and every mutation is applied to memory, then
-  # persisted through `Ms2ex.Context.CharacterConfigs` and
-  # `Ms2ex.Context.HotBars`.
+  # key binds, guide-popup progress and the daily instant-revive allowance.
+  # Field enter, quick-slot moves, key-bind syncs, revivals and skill-build
+  # saves read from here instead of querying the database, and every
+  # mutation is applied to memory, then persisted through
+  # `Ms2ex.Context.CharacterConfigs` and `Ms2ex.Context.HotBars`. Harvest
+  # counters belong to the character manager (see
+  # `Ms2ex.Managers.Character`).
 
   def start(%Schema.Character{id: id} = character) do
     case GenServer.start(__MODULE__, character, name: process_name(id)) do
@@ -104,15 +105,6 @@ defmodule Ms2ex.Managers.CharacterConfig do
   def merge_guide_records(character_id, records),
     do: call(character_id, {:merge_guide_records, records})
 
-  @doc "Returns the character's harvest counts, keyed by recipe id."
-  @spec gathering_counts(integer()) :: map() | :error
-  def gathering_counts(character_id), do: call(character_id, :gathering_counts)
-
-  @doc "Bumps the harvest counter of a gathering recipe and persists it."
-  @spec bump_gathering_count(integer(), integer()) :: :ok | :error
-  def bump_gathering_count(character_id, recipe_id),
-    do: call(character_id, {:bump_gathering_count, recipe_id})
-
   @doc "Returns how many daily instant revives were used."
   @spec instant_revive_count(integer()) :: integer()
   def instant_revive_count(character_id) do
@@ -131,8 +123,8 @@ defmodule Ms2ex.Managers.CharacterConfig do
   def bump_instant_revive_count(character_id), do: call(character_id, {:bump_instant_revive_count})
 
   @doc """
-  Drops the cached daily state (harvest counts, instant-revive allowance)
-  after the daily reset bulk-cleared it in the database.
+  Drops the cached daily instant-revive allowance after the daily reset
+  bulk-cleared it in the database.
   """
   @spec reset_daily(integer()) :: :ok
   def reset_daily(character_id), do: cast(character_id, :reset_daily)
@@ -273,20 +265,6 @@ defmodule Ms2ex.Managers.CharacterConfig do
   end
 
   @impl true
-  def handle_call(:gathering_counts, _from, state),
-    do: {:reply, state.config.gathering_counts, state}
-
-  @impl true
-  def handle_call({:bump_gathering_count, recipe_id}, _from, state) do
-    counts = Map.update(state.config.gathering_counts, recipe_id, 1, &(&1 + 1))
-
-    case Context.CharacterConfigs.update_field(state.config, :gathering_counts, counts) do
-      {:ok, config} -> {:reply, :ok, %{state | config: config}}
-      _ -> {:reply, :error, state}
-    end
-  end
-
-  @impl true
   def handle_call(:instant_revive_count, _from, state),
     do: {:reply, state.config.instant_revive_count, state}
 
@@ -302,8 +280,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
 
   @impl true
   def handle_cast(:reset_daily, state) do
-    config = %{state.config | gathering_counts: %{}, instant_revive_count: 0}
-    {:noreply, %{state | config: config}}
+    {:noreply, %{state | config: %{state.config | instant_revive_count: 0}}}
   end
 
   defp replace_bar(hot_bars, updated_bar) do

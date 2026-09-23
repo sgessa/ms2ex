@@ -46,6 +46,14 @@ defmodule Ms2ex.CharacterConfigsTest do
     assert Context.CharacterConfigs.get(character.id).key_binds |> map_size() == 1
   end
 
+  test "update_gathering_counts upserts in one statement", %{character: character} do
+    :ok = Context.CharacterConfigs.update_gathering_counts(character.id, %{40_000_015 => 3})
+    assert Context.CharacterConfigs.get(character.id).gathering_counts == %{40_000_015 => 3}
+
+    :ok = Context.CharacterConfigs.update_gathering_counts(character.id, %{40_000_015 => 4})
+    assert Context.CharacterConfigs.get(character.id).gathering_counts == %{40_000_015 => 4}
+  end
+
   test "update_field replaces the field and returns the updated row", %{character: character} do
     {:ok, first} =
       Context.CharacterConfigs.update_field(
@@ -64,21 +72,20 @@ defmodule Ms2ex.CharacterConfigsTest do
   test "updating with an unchanged value emits no write and keeps the row", %{
     character: character
   } do
-    counts = %{40_000_015 => 2}
+    counts = %{101 => 2}
 
     {:ok, first} =
       Context.CharacterConfigs.update_field(
         Context.CharacterConfigs.get(character.id),
-        :gathering_counts,
+        :guide_records,
         counts
       )
 
     # the manager only calls this after an actual change, but an unchanged
     # value is safely skipped instead of written
-    {:ok, same} =
-      Context.CharacterConfigs.update_field(first, :gathering_counts, counts)
+    {:ok, same} = Context.CharacterConfigs.update_field(first, :guide_records, counts)
 
     assert same.id == first.id
-    assert Context.CharacterConfigs.get(character.id).gathering_counts == counts
+    assert Context.CharacterConfigs.get(character.id).guide_records == counts
   end
 end

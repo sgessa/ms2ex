@@ -21,14 +21,17 @@ converge at login and on explicit sync requests.
   progress), `gathering_counts` (harvest counters driving the success rate)
   and `instant_revive_count` (the daily instant-revive allowance). Read and
   written through `Ms2ex.Context.CharacterConfigs`; deliberately kept off
-  the hot `characters` row.
+  the hot `characters` row. The row is written by two owners: the
+  character-config manager persists the client config fields, and the
+  character manager persists the harvest counters (upserting in one
+  statement, so neither depends on the other's state).
 
 ## Config manager
 
 `Ms2ex.Managers.CharacterConfig` (started at login, stopped on disconnect)
 loads the character's config once — the hot bar rows and the
 `character_configs` row — and serves field enter, quick-slot moves, active
--bar switches, key-bind syncs, guide reports and gathering from memory.
+-bar switches, key-bind syncs and guide reports from memory.
 Every mutation is applied to memory, then persisted from the row's
 previous state through `Ms2ex.Context.HotBars` (`update_quick_slots/2`,
 `set_active/2`) and `Ms2ex.Context.CharacterConfigs` (`update_field/3`,
@@ -52,11 +55,12 @@ learned in-battle actives missing from the active bar are placed in the next
 free slot. Changed bars only are persisted. It runs when a fresh character
 (no saved layout) first enters a field and after a skill-build save/preset.
 
-Guide reports merge into the saved progress immediately; each gathering
-harvest bumps its recipe counter and persists it (the harvest flow lives on
-`Ms2ex.Managers.Character.Mastery`). The instant-revive flow reads and
-bumps `instant_revive_count` the same way. The daily reset bulk-clears the
-stored columns and drops the manager's cached daily state.
+Guide reports merge into the saved progress immediately. Harvest counters
+belong to the character manager — the one GenServer for the mastery domain
+(values, exp, counters): the harvest flow reads and bumps them there, and
+each bump upserts the counter column. The instant-revive flow reads and
+bumps `instant_revive_count` through the config manager. The daily reset
+bulk-clears both columns and drops each manager's cached daily state.
 
 ## Packet flow
 
