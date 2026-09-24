@@ -240,8 +240,9 @@ defmodule Ms2ex.Context.Fishing do
     end
   end
 
+  # a fish marked for all habitats bites in any liquid
   defp catchable?(fish, spot, liquid_type) do
-    fish.fluid_habitat == liquid_type and
+    fish.fluid_habitat in [liquid_type, :all] and
       (fish.ignore_spot_mastery or
          (spot.min_mastery <= fish.mastery and spot.max_mastery >= fish.mastery))
   end
