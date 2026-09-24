@@ -19,9 +19,12 @@ defmodule Ms2ex.Managers.Fishing do
   The album persists on the characters row when a catch is recorded, so the
   manager holds no state worth keeping between sessions: it is started when
   a player begins fishing (the first rod cast) and stops when the session
-  ends. The flows run inside this process and send every fishing packet; the
-  behaviour logic they draw on (tile reachability, fish selection, timers,
-  rolls, session transitions) lives in `Ms2ex.Context.Fishing`.
+  ends. The manager owns only the session and the album; every flow receives
+  the character row as an argument, so attempts always act on the character's
+  current map and position. The flows run inside this process and send every
+  fishing packet; the behaviour logic they draw on (tile reachability, fish
+  selection, timers, rolls, session transitions) lives in
+  `Ms2ex.Context.Fishing`.
   """
 
   def start(%Schema.Character{} = character) do
@@ -55,14 +58,14 @@ defmodule Ms2ex.Managers.Fishing do
   @spec prepare(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
   def prepare(character, rod_uid) do
     :ok = start(character)
-    call(character.id, {:prepare, rod_uid})
+    call(character.id, {:prepare, character, rod_uid})
   end
 
   @doc "Consumes a bait item and applies its timed lure effect."
   @spec select_bait(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
   def select_bait(character, bait_uid) do
     :ok = start(character)
-    call(character.id, {:select_bait, bait_uid})
+    call(character.id, {:select_bait, character, bait_uid})
   end
 
   @doc """
@@ -72,27 +75,27 @@ defmodule Ms2ex.Managers.Fishing do
   @spec select_bait_item(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
   def select_bait_item(character, item_id) do
     :ok = start(character)
-    call(character.id, {:select_bait_item, item_id})
+    call(character.id, {:select_bait_item, character, item_id})
   end
 
   @doc "Applies a lure by inventory item."
   @spec use_bait_item(Schema.Character.t(), Schema.Item.t()) :: :ok | {:error, atom()}
   def use_bait_item(character, item) do
     :ok = start(character)
-    call(character.id, {:use_bait_item, item})
+    call(character.id, {:use_bait_item, character, item})
   end
 
   @doc "Drops the line on a tile and arms the bite timer."
   @spec start(Schema.Character.t(), map()) :: :ok | {:error, atom()}
-  def start(character, position), do: call(character.id, {:start, position})
+  def start(character, position), do: call(character.id, {:start, character, position})
 
   @doc "Resolves the bite: a success lands the fish and the spot's loot."
   @spec catch_fish(Schema.Character.t(), boolean()) :: :ok | {:error, atom()}
-  def catch_fish(character, success?), do: call(character.id, {:catch_fish, success?})
+  def catch_fish(character, success?), do: call(character.id, {:catch_fish, character, success?})
 
   @doc "Reels in: removes the bobber and clears the session."
   @spec reel_in(Schema.Character.t()) :: :ok
-  def reel_in(character), do: call(character.id, :reel_in)
+  def reel_in(character), do: call(character.id, {:reel_in, character})
 
   @doc "The client lost the fight minigame; the bite stays but the game ends."
   @spec fail_minigame(Schema.Character.t()) :: :ok
@@ -100,8 +103,11 @@ defmodule Ms2ex.Managers.Fishing do
 
   @doc "Tracks where the player dragged the bobber; nothing waits on it."
   @spec move_guide(Schema.Character.t() | integer(), map(), Coord.t()) :: :ok
-  def move_guide(character, position, rotation) do
-    cast(character, {:move_guide, position, rotation})
+  def move_guide(%Schema.Character{id: character_id}, position, rotation),
+    do: move_guide(character_id, position, rotation)
+
+  def move_guide(character_id, position, rotation) when is_integer(character_id) do
+    cast(character_id, {:move_guide, position, rotation})
   end
 
   # ---- server callbacks ----
@@ -111,8 +117,6 @@ defmodule Ms2ex.Managers.Fishing do
     {:ok,
      %{
        character_id: character.id,
-       # the loaded characters row: pushes, field calls and album persistence
-       row: character,
        album: Map.get(character, :fish_album) || %{},
        session: nil
      }}
@@ -125,9 +129,7 @@ defmodule Ms2ex.Managers.Fishing do
   def handle_call(:session, _from, state), do: {:reply, state.session, state}
 
   @impl true
-  def handle_call({:prepare, rod_uid}, _from, state) do
-    character = state.row
-
+  def handle_call({:prepare, character, rod_uid}, _from, state) do
     with nil <- state.session,
          {:ok, rod} <- rod_metadata(character, rod_uid),
          :ok <- check_rod_mastery(character, rod),
@@ -172,14 +174,12 @@ defmodule Ms2ex.Managers.Fishing do
   end
 
   @impl true
-  def handle_call({:select_bait, 0}, _from, state) do
+  def handle_call({:select_bait, _character, 0}, _from, state) do
     {:reply, :ok, %{state | session: Context.Fishing.select_bait(state.session, nil)}}
   end
 
   @impl true
-  def handle_call({:select_bait, bait_uid}, _from, state) do
-    character = state.row
-
+  def handle_call({:select_bait, character, bait_uid}, _from, state) do
     with %Schema.Item{} = item <- Managers.Inventory.get(character, bait_uid),
          {:ok, state} <- use_bait_item(state, character, item) do
       {:reply, :ok, state}
@@ -189,14 +189,12 @@ defmodule Ms2ex.Managers.Fishing do
   end
 
   @impl true
-  def handle_call({:select_bait_item, 0}, _from, state) do
-    handle_call({:select_bait, 0}, :from, state)
+  def handle_call({:select_bait_item, character, 0}, from, state) do
+    handle_call({:select_bait, character, 0}, from, state)
   end
 
   @impl true
-  def handle_call({:select_bait_item, item_id}, _from, state) do
-    character = state.row
-
+  def handle_call({:select_bait_item, character, item_id}, _from, state) do
     with %Schema.Item{} = item <- find_lure_item(character, item_id),
          {:ok, state} <- use_bait_item(state, character, item) do
       {:reply, :ok, state}
@@ -206,9 +204,7 @@ defmodule Ms2ex.Managers.Fishing do
   end
 
   @impl true
-  def handle_call({:use_bait_item, item}, _from, state) do
-    character = state.row
-
+  def handle_call({:use_bait_item, character, item}, _from, state) do
     case use_bait_item(state, character, item) do
       {:ok, state} -> {:reply, :ok, state}
       {:error, error} -> {:reply, {:error, error}, state}
@@ -216,9 +212,7 @@ defmodule Ms2ex.Managers.Fishing do
   end
 
   @impl true
-  def handle_call({:start, position}, _from, state) do
-    character = state.row
-
+  def handle_call({:start, character, position}, _from, state) do
     with %{} = fishing <- state.session,
          %{} = tile <- Context.Fishing.tile_at(fishing.tiles, position),
          {bait_used?, cast_bait, next_bait} <- consume_bait(character, fishing.bait),
@@ -241,9 +235,7 @@ defmodule Ms2ex.Managers.Fishing do
   end
 
   @impl true
-  def handle_call({:catch_fish, success?}, _from, state) do
-    character = state.row
-
+  def handle_call({:catch_fish, character, success?}, _from, state) do
     with %{fish_id: fish_id} = fishing when not is_nil(fish_id) <- state.session,
          {:ok, fish} <- Storage.Tables.Fish.fish(fish_id) do
       size = Context.Fishing.roll_size(fish)
@@ -268,13 +260,12 @@ defmodule Ms2ex.Managers.Fishing do
   end
 
   @impl true
-  def handle_call(:reel_in, _from, state) do
+  def handle_call({:reel_in, character}, _from, state) do
     case state.session do
       nil ->
         {:reply, :ok, state}
 
       %{guide: guide} ->
-        character = state.row
         push(character, Packets.Fishing.stop())
         Managers.Field.broadcast(character, Packets.GuideObject.remove(guide))
 
@@ -393,8 +384,8 @@ defmodule Ms2ex.Managers.Fishing do
     # the album persists with the catch so a crash cannot duplicate the
     # "first catch" rewards
     {album, entry, first?} = Context.Fishing.record_catch(state.album, fish.id, size, prize?)
-    {:ok, row} = Context.Characters.persist(state.row, %{fish_album: album})
-    state = %{state | album: album, row: row}
+    {:ok, _row} = Context.Characters.persist(character, %{fish_album: album})
+    state = %{state | album: album}
 
     push(character, Packets.Fishing.catch_fish(fish.id, size, auto?, entry))
 
@@ -423,6 +414,8 @@ defmodule Ms2ex.Managers.Fishing do
     )
 
     award_mastery(character, fish, entry, first?, prize?)
+
+    state
   end
 
   # mastery is only awarded every `point_count` catches, doubled for a first
@@ -436,9 +429,7 @@ defmodule Ms2ex.Managers.Fishing do
         true -> 0
       end
 
-    if exp == 0 do
-      character
-    else
+    if exp != 0 do
       Managers.Mastery.add(character.id, :fishing, exp)
       grade = Managers.Mastery.grade(character.id, :fishing)
 
@@ -446,8 +437,6 @@ defmodule Ms2ex.Managers.Fishing do
         character,
         Packets.Fishing.increase_mastery(fish.id, grade, exp, caught_type(first?, prize?))
       )
-
-      character
     end
   end
 
