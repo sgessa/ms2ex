@@ -61,7 +61,9 @@ GenServer for the life-skill domain (mastery values, claimed rewards,
 harvest counters): the harvest flow reads and bumps them there, and each
 bump upserts the counter column. The instant-revive flow reads and bumps
 `instant_revive_count` through the config manager. The daily reset
-bulk-clears both columns and drops each manager's cached daily state.
+bulk-clears both columns, then each owning manager drops its cached daily
+state and pushes the matching client gauge itself (the config manager holds
+the sender session pid for this).
 
 ## Packet flow
 

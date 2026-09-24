@@ -3,9 +3,12 @@ defmodule Ms2ex.Managers.CharacterConfig do
   use Ms2ex.Managers.Managed, prefix: "character_configs", key: :character_id
 
   alias Ms2ex.Context
+  alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
+
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   # The character-config manager keeps a character's client config in
   # memory: the hot bar rows (with their quick-slot layout logic), the saved
@@ -178,6 +181,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
     {:ok,
      %{
        character_id: character.id,
+       sender_session_pid: character.sender_session_pid,
        hot_bars: Context.HotBars.list(character),
        config: config
      }}
@@ -280,6 +284,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
 
   @impl true
   def handle_cast(:reset_daily, state) do
+    push(state.sender_session_pid, Packets.RevivalCount.bytes(0))
     {:noreply, %{state | config: %{state.config | instant_revive_count: 0}}}
   end
 

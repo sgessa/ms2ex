@@ -82,8 +82,10 @@ defmodule Ms2ex.GatheringCountsTest do
     character: character
   } do
     # the config manager owns the revive counter; its state carries the row
+    # and the sender session the gauge refresh is pushed to
     state = %{
       character_id: character.id,
+      sender_session_pid: nil,
       hot_bars: [],
       config: Context.CharacterConfigs.get(character.id)
     }

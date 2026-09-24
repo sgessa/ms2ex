@@ -245,6 +245,7 @@ defmodule Ms2ex.Managers.Mastery do
 
   @impl true
   def handle_cast(:reset_gathering_counts, state) do
+    push(state.row, Packets.UserEnv.gathering_counts(%{}))
     {:noreply, %{state | gathering_counts: %{}}}
   end
 
