@@ -114,65 +114,61 @@ defmodule Ms2ex.FishingTest do
     end
   end
 
-  describe "fish album" do
-    alias Ms2ex.Managers.Character.Fishing
+  describe "session transitions" do
+    alias Ms2ex.Context
+    alias Ms2ex.Types.Coord
 
     test "the bobber follows the last synced state" do
       guide = %{object_id: 7, character_id: 42, type: :fishing, position: nil, rotation: nil}
       session = %{guide: guide, tile: nil, fish_id: nil, fight_game?: false}
-      character = Map.put(%Ms2ex.Schema.Character{}, :fishing, session)
 
-      position = %Ms2ex.Types.Coord{x: 2550, y: -1050, z: 1350}
-      rotation = %Ms2ex.Types.Coord{x: 0, y: 0, z: 90}
+      position = %Coord{x: 2550, y: -1050, z: 1350}
+      rotation = %Coord{x: 0, y: 0, z: 90}
 
-      character = Fishing.move_guide(character, position, rotation)
+      session = Context.Fishing.move_guide(session, position, rotation)
 
-      assert Fishing.session(character).guide.position == position
-      assert Fishing.session(character).guide.rotation == rotation
+      assert session.guide.position == position
+      assert session.guide.rotation == rotation
     end
 
     test "moving the bobber without a session is a no-op" do
-      character = %Ms2ex.Schema.Character{}
-
-      assert Fishing.move_guide(character, %{x: 1, y: 2, z: 3}, nil) == character
+      assert Context.Fishing.move_guide(nil, %{x: 1, y: 2, z: 3}, nil) == nil
     end
 
     test "bite stores bait state for the active cast" do
       bait = %{item_uid: 10, item_id: 20, lure_id: 90_000_020, lure: %{}}
-      character = Map.put(%Ms2ex.Schema.Character{}, :fishing, %{bait: bait})
+      session = Context.Fishing.bite(%{bait: bait}, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil)
 
-      character = Fishing.bite(character, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil)
+      assert session.bait_used?
+      assert session.bait == nil
+    end
 
-      assert Fishing.session(character).bait_used?
-      assert Fishing.session(character).bait == nil
+    test "a bite without a session is a no-op" do
+      assert Context.Fishing.bite(nil, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil) == nil
     end
 
     test "selected bait is kept in the fishing session" do
       bait = %{item_uid: 10, item_id: 20, lure_id: 90_000_020, lure: %{}}
-      character = Map.put(%Ms2ex.Schema.Character{}, :fishing, %{bait: nil})
 
-      character = Fishing.select_bait(character, bait)
+      session = Context.Fishing.select_bait(%{bait: nil}, bait)
 
-      assert Fishing.session(character).bait == bait
+      assert session.bait == bait
     end
 
     test "the first catch of a kind seeds the entry" do
-      {character, entry, first?} =
-        Fishing.record_catch(%Ms2ex.Schema.Character{}, 101, 40, false)
+      {_album, entry, first?} = Context.Fishing.record_catch(%{}, 101, 40, false)
 
       assert first?
       assert entry == %{fish_id: 101, total_caught: 1, total_prize: 0, largest_size: 40}
-      assert character.mastery_dirty?
     end
 
     test "later catches keep the largest size and count prize fish" do
-      character = %Ms2ex.Schema.Character{}
-      {character, _entry, _first?} = Fishing.record_catch(character, 101, 40, false)
-      {character, entry, first?} = Fishing.record_catch(character, 101, 90, true)
+      {album, _entry, _first?} = Context.Fishing.record_catch(%{}, 101, 40, false)
+      {album, entry, first?} = Context.Fishing.record_catch(album, 101, 90, true)
 
       refute first?
       assert entry == %{fish_id: 101, total_caught: 2, total_prize: 1, largest_size: 90}
-      assert Fishing.album(character) == %{101 => entry}
+      assert album == %{101 => entry}
     end
   end
 end

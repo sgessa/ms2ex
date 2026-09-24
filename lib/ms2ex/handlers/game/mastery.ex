@@ -4,7 +4,6 @@ defmodule Ms2ex.GameHandlers.Mastery do
   crafting a mastery recipe at a workbench.
   """
 
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
   alias Ms2ex.Storage
@@ -24,7 +23,7 @@ defmodule Ms2ex.GameHandlers.Mastery do
     {reward_box_id, _packet} = get_int(packet)
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
-         {:ok, _character, item} <- Context.Mastery.claim_reward(character, reward_box_id) do
+         {:ok, _character, item} <- Managers.Mastery.claim_reward_box(character, reward_box_id) do
       push(session, Packets.Mastery.claim_reward(reward_box_id, [item]))
     else
       {:error, error} -> push(session, Packets.Mastery.error(error))
@@ -37,7 +36,7 @@ defmodule Ms2ex.GameHandlers.Mastery do
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
          {:ok, recipe} <- Storage.Tables.MasteryRecipes.lookup(recipe_id),
-         {:ok, _character} <- Context.Mastery.craft(character, recipe_id) do
+         {:ok, _character} <- Managers.Mastery.craft(character, recipe_id) do
       push(session, Packets.Mastery.get_crafted_item(recipe.type, crafted(recipe)))
     else
       {:error, error} -> push(session, Packets.Mastery.error(error))

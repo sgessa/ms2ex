@@ -76,7 +76,7 @@ defmodule Ms2ex.Managers.Character.Revival do
 
     Managers.Field.add_tombstone(character)
 
-    push(character, Packets.RevivalCount.bytes(Map.get(character, :instant_revive_count, 0)))
+    push(character, Packets.RevivalCount.bytes(Managers.CharacterConfig.instant_revive_count(character.id)))
     push(character, Packets.RevivalConfirm.bytes(character.object_id, end_tick, death_count))
 
     # the corpse no longer carries its buffs
@@ -146,17 +146,16 @@ defmodule Ms2ex.Managers.Character.Revival do
     max_hp = Map.get(character.stats, :health_max)
     character = Character.Stats.set(character, :health, max_hp)
 
+    :ok = Managers.CharacterConfig.bump_instant_revive_count(character.id)
+
     character =
-      persist_revival_state(character, %{
-        death_count: character.death_count,
-        instant_revive_count: character.instant_revive_count + 1
-      })
+      persist_revival_state(character, %{death_count: character.death_count})
       |> Map.put(:dead?, false)
       |> extend_death_penalty()
 
     broadcast_revive(character)
 
-    push(character, Packets.RevivalCount.bytes(character.instant_revive_count))
+    push(character, Packets.RevivalCount.bytes(Managers.CharacterConfig.instant_revive_count(character.id)))
 
     character
   end
@@ -177,7 +176,7 @@ defmodule Ms2ex.Managers.Character.Revival do
       # TODO consume a FreeReviveCoupon item from the inventory
       false
     else
-      used = Map.get(character, :instant_revive_count, 0)
+      used = Managers.CharacterConfig.instant_revive_count(character.id)
 
       if used < @meso_revival_daily_max do
         cost = revival_meso_cost(character.level, used)

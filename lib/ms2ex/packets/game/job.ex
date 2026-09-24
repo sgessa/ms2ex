@@ -21,13 +21,17 @@ defmodule Ms2ex.Packets.Job do
     game_master: 0
   }
 
-  def save(character) do
+  def save(character), do: job(character, 0x9)
+
+  def reset(character), do: job(character, 0xA)
+
+  defp job(character, mode) do
     real_job_id = Enums.Job.get_value(character.job)
 
     __MODULE__
     |> build()
     |> put_int(character.object_id)
-    |> put_byte(0x9)
+    |> put_byte(mode)
     |> put_int(Schema.Character.job_id(character))
     |> put_byte(0x1)
     |> put_int(real_job_id)

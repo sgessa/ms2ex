@@ -27,7 +27,8 @@ defmodule Ms2ex.GameHandlers.Job do
     character = save_skills(character, skill_tab, skills_length, packet)
     Managers.Character.call(character, {:update, character})
 
-    hot_bars = Context.HotBars.list(character)
+    :ok = Managers.CharacterConfig.update_hotbar_skills(character)
+    hot_bars = Managers.CharacterConfig.list(character.id)
 
     session
     |> push(Packets.Job.save(character))
@@ -35,9 +36,21 @@ defmodule Ms2ex.GameHandlers.Job do
   end
 
   # Reset Skill Build
-  defp handle_mode(0xA, _packet, session) do
+  defp handle_mode(0xA, packet, session) do
+    {_rank, _packet} = get_int(packet)
+
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
-    push(session, Packets.Job.save(character))
+
+    skill_tab = Context.Skills.get_active_tab(character)
+    character = reset_skills(character, skill_tab)
+    Managers.Character.call(character, {:update, character})
+
+    :ok = Managers.CharacterConfig.update_hotbar_skills(character)
+    hot_bars = Managers.CharacterConfig.list(character.id)
+
+    session
+    |> push(Packets.Job.reset(character))
+    |> push(Packets.KeyTable.send_hot_bars(hot_bars))
   end
 
   # Preset Skill Build
@@ -50,7 +63,8 @@ defmodule Ms2ex.GameHandlers.Job do
     character = save_skills(character, skill_tab, skills_length, packet)
     Managers.Character.call(character, {:update, character})
 
-    hot_bars = Context.HotBars.list(character)
+    :ok = Managers.CharacterConfig.update_hotbar_skills(character)
+    hot_bars = Managers.CharacterConfig.list(character.id)
 
     session
     |> push(Packets.Job.save(character))
@@ -58,6 +72,11 @@ defmodule Ms2ex.GameHandlers.Job do
   end
 
   defp handle_mode(_mode, _character, _session), do: :ok
+
+  defp reset_skills(character, tab) do
+    Enum.each(tab.skills, &Context.Skills.find_and_update(tab, &1.skill_id, %{level: 0}))
+    Context.Characters.load_skills(character, force: true)
+  end
 
   defp save_skills(character, _tab, len, _packet) when len < 1 do
     Context.Characters.load_skills(character, force: true)

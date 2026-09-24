@@ -74,10 +74,11 @@ marks the discovered map, and pushes `RequestFieldEnter` to the client.
 
 ## Layering debt (follow-ups)
 
-- `Context.Fishing`, `Context.Insignias`, `Context.Mastery` and
-  `Context.Mobs` still call `Managers.Field` process API and broadcast
-  packets. Contexts should only persist — those calls belong in handlers
-  or managers when those features get reworked.
+- `Context.Insignias` and `Context.Mobs` still call `Managers.Field`
+  process API and broadcast packets. Contexts should only persist — those
+  calls belong in handlers or managers when those features get reworked
+  (gathering and fishing already moved to `Ms2ex.Managers.Mastery` and
+  `Ms2ex.Managers.Fishing`; `Context.Mastery` is gone).
 - The field state is a plain map; the full key set is documented only by
   `init/1` plus the submodule `init_*` functions. A `%Types.Field{}`
   struct would make the shape explicit (the codebase's manager-state

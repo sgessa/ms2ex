@@ -160,7 +160,7 @@ defmodule Ms2ex.Packets.CharacterList do
 
   # leading unknown int, then one int per life skill in mastery type order
   defp put_masteries(packet, character) do
-    masteries = Managers.Character.Mastery.all(character)
+    masteries = Map.get(character, :masteries) || %{}
 
     packet
     |> put_int()

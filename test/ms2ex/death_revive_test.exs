@@ -22,6 +22,12 @@ defmodule Ms2ex.DeathReviveTest do
       {:ok, %Ms2ex.Schema.Wallet{}}
     end)
 
+    Mimic.stub(Ms2ex.Managers.CharacterConfig, :instant_revive_count, fn _character_id -> 0 end)
+
+    Mimic.stub(Ms2ex.Managers.CharacterConfig, :bump_instant_revive_count, fn _character_id ->
+      :ok
+    end)
+
     :ok
   end
 
@@ -148,22 +154,25 @@ defmodule Ms2ex.DeathReviveTest do
     end
   end
 
-  test "instant revive count persists and the daily reset zeroes it" do
+  test "instant revives count through the config manager" do
+    stub_map(%{revival_return_id: 0, no_revival_here: false, only_dark_tomb: false})
+
+    Mimic.stub(Ms2ex.Managers.CharacterConfig, :bump_instant_revive_count, fn _character_id ->
+      send(self(), :revive_counted)
+      :ok
+    end)
+
     die = &cast(&1, {:decrease_stats, [health: 1000]})
     revive = &cast(&1, {:revive, :instant, false})
 
-    char =
-      character(50_006)
-      |> die.()
-      |> revive.()
-      |> die.()
-      |> revive.()
+    character(50_006)
+    |> die.()
+    |> revive.()
+    |> die.()
+    |> revive.()
 
-    assert char.instant_revive_count == 2
-
-    # the daily-reset worker cast clears the in-memory counter
-    reset = cast(char, :daily_reset)
-    assert reset.instant_revive_count == 0
+    assert_received :revive_counted
+    assert_received :revive_counted
   end
 
   describe "packet serialization" do

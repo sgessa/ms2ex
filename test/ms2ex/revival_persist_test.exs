@@ -1,10 +1,11 @@
 defmodule Ms2ex.RevivalPersistTest do
-  use Ms2ex.DataCase, async: true
+  use Ms2ex.DataCase, async: false
   use Mimic
 
   import Ms2ex.TestHelpers
 
   alias Ms2ex.Context
+  alias Ms2ex.Managers
   alias Ms2ex.Repo
   alias Ms2ex.Schema
 
@@ -45,6 +46,15 @@ defmodule Ms2ex.RevivalPersistTest do
 
     Repo.insert!(%Schema.Wallet{character_id: character.id, mesos: 100_000})
 
+    :ok = Managers.CharacterConfig.start(character)
+    config_pid = Process.whereis(:"character_configs:#{character.id}")
+
+    on_exit(fn ->
+      if config_pid && Process.alive?(config_pid), do: GenServer.stop(config_pid)
+    end)
+
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), config_pid)
+
     character
     |> Context.Characters.preload([:stats])
     |> Map.put(:sender_session_pid, self())
@@ -67,6 +77,8 @@ defmodule Ms2ex.RevivalPersistTest do
 
     reloaded = Repo.get!(Schema.Character, character.id)
     assert reloaded.death_count == 1
-    assert reloaded.instant_revive_count == 1
+
+    # the daily revive counter persists on the character-config row
+    assert Context.CharacterConfigs.get(character.id).instant_revive_count == 1
   end
 end

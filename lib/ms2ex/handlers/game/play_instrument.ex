@@ -228,10 +228,10 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
     mastery = min(div(elapsed * score.mastery_value, 1000), score.mastery_value_max)
     category = Map.get(instrument.metadata || %{}, :category, 0)
 
-    character = Context.Mastery.add(character, :music, mastery, instrument_category: category)
+    Managers.Mastery.add(character.id, :music, mastery, instrument_category: category)
 
     exp_type =
-      case Context.Mastery.grade(character, :music) do
+      case Managers.Mastery.grade(character.id, :music) do
         2 -> :music_mastery2
         3 -> :music_mastery3
         4 -> :music_mastery4

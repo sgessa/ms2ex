@@ -372,7 +372,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp maybe_use_bait(session, character, %{metadata: %{property: %{tag: :fishing_lure}}} = item) do
-    case Context.Fishing.use_bait_item(character, item) do
+    case Managers.Fishing.use_bait_item(character, item) do
       :ok -> session
       _ -> session
     end

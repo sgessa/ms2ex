@@ -88,14 +88,13 @@ host runs):
   shared `stub_metadata/1` helper from `test/support/test_helpers.ex` instead
   of `:ets.insert(:metadata, ...)` so tests go through the same storage stub
   path consistently.
-- **Never start GenServers in tests.** Test the functions directly: build a
-  state map/struct, call the public state-transition function the manager's
-  `handle_call`/`handle_info` delegates to, and assert on the returned state.
-  Make those internal state functions public (state in → state out) rather
-  than driving managers through `GenServer.call`/casts or polling with
-  `wait_until` loops. Process-lifetime concerns (named registration,
-  teardown, sandbox sharing) are integration concerns, not unit-test
-  concerns.
+- **Test managers by calling their `handle_call`/`handle_cast` callbacks
+  directly.** Build the manager state as `init` would (a plain map/struct
+  plus DB rows inserted through the sandbox), invoke the callback with the
+  message the client API sends, and assert on the reply, the returned state,
+  and the persisted rows. Keep the internal state-transition functions
+  private — don't make them public just for tests. Don't start the manager
+  GenServer in tests, and keep polling with `wait_until` loops out.
 
 ## Architecture notes
 

@@ -7,7 +7,6 @@ defmodule Ms2ex.GameHandlers.GuideObjectSync do
 
   alias Ms2ex.Enums
   alias Ms2ex.Managers
-  alias Ms2ex.Managers.Character.Fishing
   alias Ms2ex.Packets
   alias Ms2ex.Types
 
@@ -19,7 +18,7 @@ defmodule Ms2ex.GameHandlers.GuideObjectSync do
 
     with true <- segments > 0,
          {:ok, character} <- Managers.Character.lookup(session.character_id),
-         %{guide: guide} <- Fishing.session(character),
+         %{guide: guide} <- Managers.Fishing.session(character.id),
          ^type <- Enums.GuideObjectType.get_value(guide.type) do
       {sync_states, _packet} = read_states(segments, packet)
 
@@ -46,12 +45,17 @@ defmodule Ms2ex.GameHandlers.GuideObjectSync do
   end
 
   # the bobber only ever rotates around Z
-  defp follow(character, %{position: position, rotation: rotation}) do
-    Managers.Character.cast(
-      character,
-      {:fishing_guide_moved, position, %Types.Coord{x: 0, y: 0, z: rotation}}
-    )
-  end
+  defp follow(character, state) do
+    case state do
+      %Types.SyncState{position: position, rotation: rotation} ->
+        Managers.Fishing.move_guide(
+          character,
+          position,
+          %Types.Coord{x: 0, y: 0, z: rotation}
+        )
 
-  defp follow(_character, _state), do: :ok
+      _ ->
+        :ok
+    end
+  end
 end

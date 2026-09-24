@@ -4,11 +4,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   alias Ms2ex.LoginHandlers
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.Managers.Character.Mastery
-  alias Ms2ex.Managers.Character.Fishing
-  alias Ms2ex.Managers.PartyManager
-  alias Ms2ex.Managers.PartyServer
-  alias Ms2ex.Managers.Session
   alias Ms2ex.Storage
 
   import Net.SenderSession, only: [push: 2, run: 2]
@@ -18,10 +13,10 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
   def handle(packet, session) do
     {account_id, packet} = get_long(packet)
 
-    with {:ok, auth_data} <- Session.lookup(account_id),
+    with {:ok, auth_data} <- Managers.Session.lookup(account_id),
          {:ok, %{account: account} = session} <-
            LoginHandlers.ResponseKey.verify_auth_data(auth_data, packet, session) do
-      Session.register(account.id, auth_data)
+      Managers.Session.register(account.id, auth_data)
       run(session, fn -> Context.World.subscribe() end)
 
       character =
@@ -54,6 +49,8 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
         end
 
       :ok = Managers.Achievement.start(character)
+      :ok = Managers.CharacterConfig.start(character)
+      :ok = Managers.Mastery.start(character)
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)
@@ -97,12 +94,12 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.set_titles(titles))
       |> push(Packets.UserEnv.interacted_objects(character.discovered_objects || []))
       |> push(Packets.UserEnv.set_mode(0x5))
-      |> push(Packets.UserEnv.gathering_counts(Mastery.gathering_counts(character)))
-      |> push(Packets.UserEnv.mastery_rewards_claimed(Mastery.rewards_claimed(character)))
+      |> push(Packets.UserEnv.gathering_counts(Managers.Mastery.gathering_counts(character.id)))
+      |> push(Packets.UserEnv.mastery_rewards_claimed(Managers.Mastery.rewards_claimed(character.id)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
-      |> push(Packets.Fishing.load_album(Fishing.album(character)))
-      |> push(Packets.KeyTable.request())
+      |> push(Packets.Fishing.load_album(character.fish_album || %{}))
+      |> push_key_table(character)
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.InGameRank.load())
       |> push(Packets.RequestFieldEnter.bytes(map_id, position, rotation))
@@ -116,16 +113,30 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     end
   end
 
+  # a character with saved key binds gets the authoritative table (binds +
+  # bars); a brand-new character gets LoadDefault, letting the client apply
+  # its own defaults and sync them back
+  defp push_key_table(session, character) do
+    key_binds = Managers.CharacterConfig.key_binds(character.id)
+
+    if key_binds == %{} do
+      push(session, Packets.KeyTable.request())
+    else
+      bars = Managers.CharacterConfig.list(character.id)
+      push(session, Packets.KeyTable.load(key_binds, bars))
+    end
+  end
+
   defp push_achievements(session, character) do
     Managers.Achievement.load(character)
     session
   end
 
   defp maybe_set_party(character) do
-    case PartyManager.lookup(character) do
+    case Managers.PartyManager.lookup(character) do
       {:ok, party_id} ->
         character = %{character | party_id: party_id}
-        PartyServer.call(character.party_id, {:update_member, character})
+        Managers.PartyServer.call(character.party_id, {:update_member, character})
         character
 
       _ ->
@@ -159,7 +170,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
   defp push_party(session, character) do
     party =
-      case PartyServer.call(character.party_id, :lookup) do
+      case Managers.PartyServer.call(character.party_id, :lookup) do
         {:ok, party} -> party
         _ -> nil
       end
@@ -167,7 +178,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
     if party do
       push(session, Packets.Party.create(party, false))
 
-      PartyServer.broadcast_from(
+      Managers.PartyServer.broadcast_from(
         session.sender_pid,
         party.id,
         Packets.Party.update_hitpoints(character)
