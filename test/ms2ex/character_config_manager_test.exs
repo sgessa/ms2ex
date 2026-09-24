@@ -24,6 +24,8 @@ defmodule Ms2ex.CharacterConfigManagerTest do
         skin_color: {}
       })
 
+    Repo.insert!(%Schema.CharacterConfig{character_id: character.id})
+
     empty = List.duplicate(%Types.QuickSlot{}, 25)
 
     hot_bars = [

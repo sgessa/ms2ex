@@ -23,27 +23,42 @@ defmodule Ms2ex.CharacterConfigsTest do
         skin_color: {}
       })
 
-    %{character: character}
+    Repo.insert!(%Schema.CharacterConfig{character_id: character.id})
+
+    %{account: account, character: character}
   end
 
-  test "a character without a config row reads an all-empty config", %{character: character} do
+  test "character creation seeds the config row", %{account: account} do
+    {:ok, character} =
+      Context.Characters.create(account, %{
+        name: "CfgNew#{System.unique_integer([:positive])}",
+        job: :knight,
+        map_id: 1,
+        skin_color: {}
+      })
+
     config = Context.CharacterConfigs.get(character.id)
 
     assert config.key_binds == %{}
     assert config.guide_records == %{}
     assert config.gathering_counts == %{}
+    assert config.instant_revive_count == 0
   end
 
-  test "update inserts when no row exists yet", %{character: character} do
-    config = Context.CharacterConfigs.get(character.id)
-
-    {:ok, inserted} =
-      Context.CharacterConfigs.update(config, %{
-        key_binds: %{18 => %Types.KeyBind{key_code: 18, option_type: 1, option_guid: 500_009}}
+  test "reading a missing config row raises", %{account: account} do
+    character =
+      Repo.insert!(%Schema.Character{
+        account_id: account.id,
+        name: "CfgOrphan#{System.unique_integer([:positive])}",
+        job: :knight,
+        level: 1,
+        map_id: 1,
+        skin_color: {}
       })
 
-    assert inserted.id != nil
-    assert Context.CharacterConfigs.get(character.id).key_binds |> map_size() == 1
+    assert_raise Ecto.NoResultsError, fn ->
+      Context.CharacterConfigs.get(character.id)
+    end
   end
 
   test "update ignores fields outside the config changeset", %{character: character} do

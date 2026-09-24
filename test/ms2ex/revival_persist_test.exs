@@ -46,6 +46,8 @@ defmodule Ms2ex.RevivalPersistTest do
 
     Repo.insert!(%Schema.Wallet{character_id: character.id, mesos: 100_000})
 
+    Repo.insert!(%Schema.CharacterConfig{character_id: character.id})
+
     :ok = Managers.CharacterConfig.start(character)
     config_pid = Process.whereis(:"character_configs:#{character.id}")
 

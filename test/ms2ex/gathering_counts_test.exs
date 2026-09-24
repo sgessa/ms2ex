@@ -23,6 +23,8 @@ defmodule Ms2ex.GatheringCountsTest do
         skin_color: {}
       })
 
+    Repo.insert!(%Schema.CharacterConfig{character_id: character.id})
+
     # the mastery manager owns the counters; its state is a plain map and
     # caches the config row its bumps are persisted through
     state = %{

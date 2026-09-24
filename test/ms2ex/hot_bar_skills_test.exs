@@ -52,6 +52,8 @@ defmodule Ms2ex.HotBarSkillsTest do
         skin_color: {}
       })
 
+    Repo.insert!(%Schema.CharacterConfig{character_id: character.id})
+
     tab = Context.Skills.add_tab(character, %{name: "Build 1"}) |> then(fn {:ok, t} -> t end)
 
     character = %{character | skill_tabs: [tab], active_skill_tab_id: tab.id}
