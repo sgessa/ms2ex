@@ -50,7 +50,6 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       :ok = Managers.Achievement.start(character)
       :ok = Managers.CharacterConfig.start(character)
-      :ok = Managers.Fishing.start(character)
       :ok = Managers.Mastery.start(character)
 
       Managers.Character.start(character)
@@ -99,7 +98,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.mastery_rewards_claimed(Managers.Mastery.rewards_claimed(character.id)))
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
-      |> push(Packets.Fishing.load_album(Managers.Fishing.album(character.id)))
+      |> push(Packets.Fishing.load_album(character.fish_album || %{}))
       |> push_key_table(character)
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.InGameRank.load())

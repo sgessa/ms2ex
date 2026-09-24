@@ -16,10 +16,12 @@ defmodule Ms2ex.Managers.Fishing do
   the water tiles it reaches, the fish currently biting — and the fish
   album.
 
-  The album persists on the characters row when a catch is recorded. The
-  flows run inside this process and send every fishing packet; the behaviour
-  logic they draw on (tile reachability, fish selection, timers, rolls,
-  session transitions) lives in `Ms2ex.Context.Fishing`.
+  The album persists on the characters row when a catch is recorded, so the
+  manager holds no state worth keeping between sessions: it is started when
+  a player begins fishing (the first rod cast) and stops when the session
+  ends. The flows run inside this process and send every fishing packet; the
+  behaviour logic they draw on (tile reachability, fish selection, timers,
+  rolls, session transitions) lives in `Ms2ex.Context.Fishing`.
   """
 
   def start(%Schema.Character{} = character) do
@@ -51,22 +53,34 @@ defmodule Ms2ex.Managers.Fishing do
 
   @doc "Casts the rod: validates it, finds reachable water and spawns the bobber."
   @spec prepare(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
-  def prepare(character, rod_uid), do: call(character.id, {:prepare, rod_uid})
+  def prepare(character, rod_uid) do
+    :ok = start(character)
+    call(character.id, {:prepare, rod_uid})
+  end
 
   @doc "Consumes a bait item and applies its timed lure effect."
   @spec select_bait(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
-  def select_bait(character, bait_uid), do: call(character.id, {:select_bait, bait_uid})
+  def select_bait(character, bait_uid) do
+    :ok = start(character)
+    call(character.id, {:select_bait, bait_uid})
+  end
 
   @doc """
   Applies a lure by item id — the client picks the lure from the item book,
   not from the inventory.
   """
   @spec select_bait_item(Schema.Character.t(), integer()) :: :ok | {:error, atom()}
-  def select_bait_item(character, item_id), do: call(character.id, {:select_bait_item, item_id})
+  def select_bait_item(character, item_id) do
+    :ok = start(character)
+    call(character.id, {:select_bait_item, item_id})
+  end
 
   @doc "Applies a lure by inventory item."
   @spec use_bait_item(Schema.Character.t(), Schema.Item.t()) :: :ok | {:error, atom()}
-  def use_bait_item(character, item), do: call(character.id, {:use_bait_item, item})
+  def use_bait_item(character, item) do
+    :ok = start(character)
+    call(character.id, {:use_bait_item, item})
+  end
 
   @doc "Drops the line on a tile and arms the bite timer."
   @spec start(Schema.Character.t(), map()) :: :ok | {:error, atom()}
@@ -263,7 +277,10 @@ defmodule Ms2ex.Managers.Fishing do
         character = state.row
         push(character, Packets.Fishing.stop())
         Managers.Field.broadcast(character, Packets.GuideObject.remove(guide))
-        {:reply, :ok, %{state | session: nil}}
+
+        # the session is over and nothing here is worth keeping: the manager
+        # starts again on the next rod cast
+        {:stop, :normal, :ok, %{state | session: nil}}
     end
   end
 
