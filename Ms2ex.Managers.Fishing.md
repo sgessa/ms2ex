@@ -8,9 +8,12 @@ album.
 The album persists on the characters row when a catch is recorded, so the
 manager holds no state worth keeping between sessions: it is started when
 a player begins fishing (the first rod cast) and stops when the session
-ends. The flows run inside this process and send every fishing packet; the
-behaviour logic they draw on (tile reachability, fish selection, timers,
-rolls, session transitions) lives in `Ms2ex.Context.Fishing`.
+ends. The manager owns only the session and the album; every flow receives
+the character row as an argument, so attempts always act on the character's
+current map and position. The flows run inside this process and send every
+fishing packet; the behaviour logic they draw on (tile reachability, fish
+selection, timers, rolls, session transitions) lives in
+`Ms2ex.Context.Fishing`.
 
 # `album`
 

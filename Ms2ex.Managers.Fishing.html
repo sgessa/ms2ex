@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-8EBC6E74.js"></script>
+    <script defer src="dist/sidebar_items-6D95DC38.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -119,9 +119,12 @@ the water tiles it reaches, the fish currently biting — and the fish
 album.</p><p>The album persists on the characters row when a catch is recorded, so the
 manager holds no state worth keeping between sessions: it is started when
 a player begins fishing (the first rod cast) and stops when the session
-ends. The flows run inside this process and send every fishing packet; the
-behaviour logic they draw on (tile reachability, fish selection, timers,
-rolls, session transitions) lives in <a href="Ms2ex.Context.Fishing.html"><code class="inline">Ms2ex.Context.Fishing</code></a>.</p>
+ends. The manager owns only the session and the album; every flow receives
+the character row as an argument, so attempts always act on the character's
+current map and position. The flows run inside this process and send every
+fishing packet; the behaviour logic they draw on (tile reachability, fish
+selection, timers, rolls, session transitions) lives in
+<a href="Ms2ex.Context.Fishing.html"><code class="inline">Ms2ex.Context.Fishing</code></a>.</p>
     </section>
 
 </div>
@@ -196,7 +199,7 @@ rolls, session transitions) lives in <a href="Ms2ex.Context.Fishing.html"><code 
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#move_guide/3" data-no-tooltip="" translate="no">move_guide(character, position, rotation)</a>
+        <a href="#move_guide/3" data-no-tooltip="" translate="no">move_guide(character_id, position, rotation)</a>
 
       </div>
 
@@ -315,7 +318,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">album(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L48" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -387,7 +390,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">catch_fish(character, success?)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L91" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L94" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -437,7 +440,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">fail_minigame(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L99" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L102" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -462,10 +465,10 @@ not from the inventory.</p></div>
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">move_guide(character, position, rotation)</h1>
+      <h1 class="signature" translate="no">move_guide(character_id, position, rotation)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L103" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L106" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -494,7 +497,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">prepare(character, rod_uid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L56" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L59" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -522,7 +525,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">reel_in(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L95" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L98" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -550,7 +553,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">select_bait(character, bait_uid)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L63" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L66" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -578,7 +581,7 @@ not from the inventory.</p></div>
       <h1 class="signature" translate="no">select_bait_item(character, item_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L73" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L76" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -608,7 +611,7 @@ not from the inventory.</p>
       <h1 class="signature" translate="no">session(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L52" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L55" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -636,7 +639,7 @@ not from the inventory.</p>
       <h1 class="signature" translate="no">start(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L27" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L30" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -658,7 +661,7 @@ not from the inventory.</p>
       <h1 class="signature" translate="no">start(character, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L87" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L90" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -686,7 +689,7 @@ not from the inventory.</p>
       <h1 class="signature" translate="no">stop(id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L35" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L38" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -708,7 +711,7 @@ not from the inventory.</p>
       <h1 class="signature" translate="no">use_bait_item(character, item)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L80" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/fishing.ex#L83" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
