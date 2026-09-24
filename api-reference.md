@@ -127,16 +127,12 @@ runtime works with.
 - [Ms2ex.Managers.Character.Equips](Ms2ex.Managers.Character.Equips.md): Equip transitions owned by the character process.
 - [Ms2ex.Managers.Character.Experience](Ms2ex.Managers.Character.Experience.md)
 - [Ms2ex.Managers.Character.FallDamage](Ms2ex.Managers.Character.FallDamage.md)
-- [Ms2ex.Managers.Character.Fishing](Ms2ex.Managers.Character.Fishing.md): Fishing state owned by the character process: the active rod, the water
-tiles it reaches, the fish currently biting and the fish album.
-- [Ms2ex.Managers.Character.Mastery](Ms2ex.Managers.Character.Mastery.md): Life skill (mastery) state owned by the character process: the mastery
-value per type, how often each gathering recipe was harvested and which
-grade reward boxes were claimed.
 - [Ms2ex.Managers.Character.Revival](Ms2ex.Managers.Character.Revival.md): Death and revival logic for a character.
 - [Ms2ex.Managers.Character.Skill](Ms2ex.Managers.Character.Skill.md)
 - [Ms2ex.Managers.Character.SkillCooldown](Ms2ex.Managers.Character.SkillCooldown.md)
 - [Ms2ex.Managers.Character.StatPoints](Ms2ex.Managers.Character.StatPoints.md)
 - [Ms2ex.Managers.Character.Stats](Ms2ex.Managers.Character.Stats.md)
+- [Ms2ex.Managers.CharacterConfig](Ms2ex.Managers.CharacterConfig.md)
 - [Ms2ex.Managers.Field](Ms2ex.Managers.Field.md): One field process owns the live state of a single map instance (map +
 channel): the players on it, npcs, items, buffs, trigger-script machines
 and every other field-object system.
@@ -189,6 +185,9 @@ Unimplemented actions warn in the log so coverage gaps surface per map.
 machine's state and the field state; the runtime runs the first
 condition that returns true.
 
+- [Ms2ex.Managers.Fishing](Ms2ex.Managers.Fishing.md): The fishing manager owns a character's fishing session — the active rod,
+the water tiles it reaches, the fish currently biting — and the fish
+album.
 - [Ms2ex.Managers.GlobalCounter](Ms2ex.Managers.GlobalCounter.md)
 - [Ms2ex.Managers.GroupChat](Ms2ex.Managers.GroupChat.md)
 - [Ms2ex.Managers.GuildManager](Ms2ex.Managers.GuildManager.md): Global registry and coordinator for Guild servers and member routing.
@@ -197,6 +196,7 @@ condition that returns true.
 
 - [Ms2ex.Managers.Inventory](Ms2ex.Managers.Inventory.md)
 - [Ms2ex.Managers.Managed](Ms2ex.Managers.Managed.md)
+- [Ms2ex.Managers.Mastery](Ms2ex.Managers.Mastery.md)
 - [Ms2ex.Managers.PartyManager](Ms2ex.Managers.PartyManager.md)
 - [Ms2ex.Managers.PartySearchServer](Ms2ex.Managers.PartySearchServer.md)
 - [Ms2ex.Managers.PartyServer](Ms2ex.Managers.PartyServer.md)
@@ -308,6 +308,7 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Schema.BannerSlot](Ms2ex.Schema.BannerSlot.md)
   - [Ms2ex.Schema.Character](Ms2ex.Schema.Character.md)
   - [Ms2ex.Schema.CharacterBuff](Ms2ex.Schema.CharacterBuff.md)
+  - [Ms2ex.Schema.CharacterConfig](Ms2ex.Schema.CharacterConfig.md)
   - [Ms2ex.Schema.CharacterQuest](Ms2ex.Schema.CharacterQuest.md): Schema for character quests.
   - [Ms2ex.Schema.CharacterStats](Ms2ex.Schema.CharacterStats.md)
   - [Ms2ex.Schema.CharacterTitle](Ms2ex.Schema.CharacterTitle.md)
@@ -397,6 +398,7 @@ mastery block written into the character packet.
   - [Ms2ex.Types.ItemColor](Ms2ex.Types.ItemColor.md)
   - [Ms2ex.Types.ItemStat](Ms2ex.Types.ItemStat.md)
   - [Ms2ex.Types.ItemStats](Ms2ex.Types.ItemStats.md)
+  - [Ms2ex.Types.KeyBind](Ms2ex.Types.KeyBind.md)
   - [Ms2ex.Types.Npc](Ms2ex.Types.Npc.md)
   - [Ms2ex.Types.Party](Ms2ex.Types.Party.md)
   - [Ms2ex.Types.PartySearch](Ms2ex.Types.PartySearch.md)
@@ -435,6 +437,7 @@ Provides functionality to serialize and deserialize sync state to and from packe
   - [Ms2ex.Context.Achievements](Ms2ex.Context.Achievements.md)
   - [Ms2ex.Context.BannerSlots](Ms2ex.Context.BannerSlots.md)
   - [Ms2ex.Context.Buffs](Ms2ex.Context.Buffs.md): Buffs that outlive the field they were cast in.
+  - [Ms2ex.Context.CharacterConfigs](Ms2ex.Context.CharacterConfigs.md): Context module for the per-character client-config row.
   - [Ms2ex.Context.CharacterStats](Ms2ex.Context.CharacterStats.md)
   - [Ms2ex.Context.Characters](Ms2ex.Context.Characters.md)
   - [Ms2ex.Context.ChatStickers](Ms2ex.Context.ChatStickers.md): Context module for managing chat stickers.
@@ -446,11 +449,12 @@ Provides functionality to serialize and deserialize sync state to and from packe
 drop boxes), shared by mob loot and item boxes.
   - [Ms2ex.Context.Emotes](Ms2ex.Context.Emotes.md): Context module for character emote-related operations.
   - [Ms2ex.Context.Experience](Ms2ex.Context.Experience.md): Context module for character experience-related operations.
-  - [Ms2ex.Context.Fishing](Ms2ex.Context.Fishing.md): Fishing, ported from the reference FishingManager.
+  - [Ms2ex.Context.Fishing](Ms2ex.Context.Fishing.md): Pure fishing behaviour: water-tile reachability, fish selection, bite
+timers and catch rolls, plus the session-map transitions.
   - [Ms2ex.Context.Friends](Ms2ex.Context.Friends.md): Context module for friend-related operations.
   - [Ms2ex.Context.Guilds](Ms2ex.Context.Guilds.md): Database context for the Guild System.
 
-  - [Ms2ex.Context.HotBars](Ms2ex.Context.HotBars.md): Context module for hot bar-related operations.
+  - [Ms2ex.Context.HotBars](Ms2ex.Context.HotBars.md): Context module for hot bar persistence.
   - [Ms2ex.Context.Insignias](Ms2ex.Context.Insignias.md): Name tag symbols. Each insignia is gated on a condition the wearer has to
 keep meeting, so the symbol is only drawn while the condition holds.
 
@@ -469,8 +473,6 @@ skills, then applies them to a character's stats.
 Manages player-to-player mail, system mail, attachments, and collection.
 
   - [Ms2ex.Context.MapBlock](Ms2ex.Context.MapBlock.md)
-  - [Ms2ex.Context.Mastery](Ms2ex.Context.Mastery.md): Life skills: harvesting gathering nodes and crafting mastery recipes, plus
-claiming the reward boxes each mastery grade hands out.
   - [Ms2ex.Context.Mobs](Ms2ex.Context.Mobs.md)
   - [Ms2ex.Context.PremiumMemberships](Ms2ex.Context.PremiumMemberships.md)
   - [Ms2ex.Context.Quests](Ms2ex.Context.Quests.md): Quest persistence helpers.

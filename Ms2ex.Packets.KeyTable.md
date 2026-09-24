@@ -1,7 +1,11 @@
 # `Ms2ex.Packets.KeyTable`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/packets/game/key_table.ex#L1)
 
+# `load`
+
 # `put_hot_bars`
+
+# `put_key_binds`
 
 # `request`
 

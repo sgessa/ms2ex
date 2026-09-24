@@ -1,70 +1,78 @@
 # `Ms2ex.Context.Fishing`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L1)
 
-Fishing, ported from the reference FishingManager.
+Pure fishing behaviour: water-tile reachability, fish selection, bite
+timers and catch rolls, plus the session-map transitions.
 
-Preparing a rod finds the water tiles in front of the player, spawns the
-bobber guide object and hands the tiles to the client. Casting picks a fish
-from the map's fish boxes and arms a bite timer; catching rolls the size,
-updates the album and awards fishing mastery.
+Stateless by design — the session and album state live in
+`Ms2ex.Managers.Fishing`, which turns these results into packets and
+persistence.
 
-# `catch_fish`
+# `available_fishes`
 
-```elixir
-@spec catch_fish(Ms2ex.Schema.Character.t(), boolean()) :: :ok | {:error, atom()}
-```
+The fish that can bite on the given tile, given the active lure.
 
-Resolves the bite: a success lands the fish and the spot's loot.
+# `bite`
 
-# `fail_minigame`
+Drops the line: stores the tile, fish and bait state for the cast.
+
+# `bite_timer`
+
+The bite delay and whether the catch turns into a fight minigame: a bite
+lands inside the bore window, a miss runs past it so the client times out.
+
+# `clear_minigame`
 
 The client lost the fight minigame; the bite stays but the game ends.
 
-# `prepare`
+# `fishing_lure?`
+
+True when the item's metadata marks a fishing lure.
+
+# `guide_position`
+
+The bobber position: one block above the water surface, on the reachable
+tile closest to the player.
+
+# `move_guide`
+
+Tracks where the player dragged the bobber.
+
+# `pick_weighted`
+
+Picks the fish that bites, weighted by the box weights.
+
+# `reachable_tiles`
+
+The water tiles the player can fish into: the client only lets a player
+fish into the quadrant they face, so the box in front of them is scanned
+for surface water.
+
+# `record_catch`
 
 ```elixir
-@spec prepare(Ms2ex.Schema.Character.t(), integer()) :: :ok | {:error, atom()}
+@spec record_catch(map(), integer(), integer(), boolean()) ::
+  {map(), map(), boolean()}
 ```
 
-Casts the rod: validates it, finds reachable water and spawns the bobber.
+Records a catch in the album. Returns the updated album, the entry and
+whether this was the first catch of that kind.
+
+# `roll_size`
+
+The caught fish's size.
 
 # `select_bait`
 
-```elixir
-@spec select_bait(Ms2ex.Schema.Character.t(), integer()) :: :ok | {:error, atom()}
-```
+Keeps the selected bait for the active session.
 
-Consumes a bait item and applies its timed lure effect.
+# `session_tiles`
 
-# `select_bait_item`
+Indexes the reachable tiles by their block cell.
 
-```elixir
-@spec select_bait_item(Ms2ex.Schema.Character.t(), integer()) ::
-  :ok | {:error, atom()}
-```
+# `tile_at`
 
-# `start`
-
-```elixir
-@spec start(Ms2ex.Schema.Character.t(), map()) :: :ok | {:error, atom()}
-```
-
-Drops the line on a tile and arms the bite timer.
-
-# `stop`
-
-```elixir
-@spec stop(Ms2ex.Schema.Character.t()) :: :ok
-```
-
-Reels in: removes the bobber and clears the session.
-
-# `use_bait_item`
-
-```elixir
-@spec use_bait_item(Ms2ex.Schema.Character.t(), Ms2ex.Schema.Item.t()) ::
-  :ok | {:error, atom()}
-```
+The indexed tile at the given position's block cell, if any.
 
 ---
 

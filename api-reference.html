@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-77EDA77E.js"></script>
+    <script defer src="dist/sidebar_items-8EBC6E74.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -164,6 +164,15 @@ MS2EX
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Context.CharacterConfigs.html" translate="no">Ms2ex.<wbr />Context.<wbr />CharacterConfigs</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Context module for the per-character client-config row.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Context.CharacterStats.html" translate="no">Ms2ex.<wbr />Context.<wbr />CharacterStats</a>
 
   </div>
@@ -246,7 +255,8 @@ drop boxes), shared by mob loot and item boxes.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Fishing, ported from the reference FishingManager.</p></div>
+    <div class="summary-synopsis"><p>Pure fishing behaviour: water-tile reachability, fish selection, bite
+timers and catch rolls, plus the session-map transitions.</p></div>
 
 </div>
 <div class="summary-row">
@@ -273,7 +283,7 @@ drop boxes), shared by mob loot and item boxes.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Context module for hot bar-related operations.</p></div>
+    <div class="summary-synopsis"><p>Context module for hot bar persistence.</p></div>
 
 </div>
 <div class="summary-row">
@@ -378,16 +388,6 @@ Manages player-to-player mail, system mail, attachments, and collection.</p></di
     <a href="Ms2ex.Context.MapBlock.html" translate="no">Ms2ex.<wbr />Context.<wbr />MapBlock</a>
 
   </div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Ms2ex.Context.Mastery.html" translate="no">Ms2ex.<wbr />Context.<wbr />Mastery</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Life skills: harvesting gathering nodes and crafting mastery recipes, plus
-claiming the reward boxes each mastery grade hands out.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1548,27 +1548,6 @@ runtime works with.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Ms2ex.Managers.Character.Fishing.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Fishing</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Fishing state owned by the character process: the active rod, the water
-tiles it reaches, the fish currently biting and the fish album.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Ms2ex.Managers.Character.Mastery.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Mastery</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Life skill (mastery) state owned by the character process: the mastery
-value per type, how often each gathering recipe was harvested and which
-grade reward boxes were claimed.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Ms2ex.Managers.Character.Revival.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Revival</a>
 
   </div>
@@ -1600,6 +1579,13 @@ grade reward boxes were claimed.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Managers.Character.Stats.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Character.<wbr />Stats</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.CharacterConfig.html" translate="no">Ms2ex.<wbr />Managers.<wbr />CharacterConfig</a>
 
   </div>
 
@@ -1788,6 +1774,17 @@ condition that returns true.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Managers.Fishing.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Fishing</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The fishing manager owns a character's fishing session — the active rod,
+the water tiles it reaches, the fish currently biting — and the fish
+album.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Managers.GlobalCounter.html" translate="no">Ms2ex.<wbr />Managers.<wbr />GlobalCounter</a>
 
   </div>
@@ -1828,6 +1825,13 @@ condition that returns true.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Managers.Managed.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Managed</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Mastery.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Mastery</a>
 
   </div>
 
@@ -3010,6 +3014,13 @@ of clipping into it.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Schema.CharacterConfig.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterConfig</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Schema.CharacterQuest.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterQuest</a>
 
   </div>
@@ -3560,6 +3571,13 @@ plus ordered conditions carrying their transition target.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Types.ItemStats.html" translate="no">Ms2ex.<wbr />Types.<wbr />ItemStats</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Types.KeyBind.html" translate="no">Ms2ex.<wbr />Types.<wbr />KeyBind</a>
 
   </div>
 

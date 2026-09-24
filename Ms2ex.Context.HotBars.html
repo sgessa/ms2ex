@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-77EDA77E.js"></script>
+    <script defer src="dist/sidebar_items-8EBC6E74.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,8 +114,9 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Context module for hot bar-related operations.</p><p>This module provides functions for managing
-character hot bars and quick slots.</p>
+<p>Context module for hot bar persistence.</p><p>Hot bar rows live in the character-config manager's memory while a
+character is online; this module loads them once and persists updates,
+returning the updated rows for the manager's state.</p>
     </section>
 
 </div>
@@ -134,49 +135,32 @@ character hot bars and quick slots.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_by/1" data-no-tooltip="" translate="no">get_by(attrs)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Gets a hot bar by the given attributes.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#list/1" data-no-tooltip="" translate="no">list(character)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Lists all hot bars for a given character.</p></div>
+        <div class="summary-synopsis"><p>Lists all hot bars for a given character, ordered by ID.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#move_quick_slot/3" data-no-tooltip="" translate="no">move_quick_slot(hot_bar, quick_slot, target)</a>
+        <a href="#set_active/2" data-no-tooltip="" translate="no">set_active(hot_bar, active)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Moves a quick slot to a new target position in a hot bar.</p></div>
+        <div class="summary-synopsis"><p>Persists a bar's active flag and returns the updated row.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_quick_slot/3" data-no-tooltip="" translate="no">remove_quick_slot(hot_bar, skill_id, item_uid)</a>
+        <a href="#update_quick_slots/2" data-no-tooltip="" translate="no">update_quick_slots(hot_bar, slots)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Removes a quick slot from a hot bar.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#update_hotbar_skills/2" data-no-tooltip="" translate="no">update_hotbar_skills(character, hot_bars)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Persists a bar's quick slots and returns the updated row: the manager's
+state always carries what the database has.</p></div>
 
     </div>
 
@@ -194,38 +178,6 @@ character hot bars and quick slots.</p>
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="get_by/1">
-
-  <div class="detail-header">
-    <a href="#get_by/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_by(attrs)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_by(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>() | nil</pre>
-
-      </div>
-
-<p>Gets a hot bar by the given attributes.</p><h2 id="get_by/1-examples" class="section-heading"><a href="#get_by/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="9264016747-1">(</span><span class="p" data-group-id="9264016747-2">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="9264016747-2">}</span><span class="p" data-group-id="9264016747-1">)</span><span class="w">
-</span><span class="p" data-group-id="9264016747-3">%</span><span class="nc" data-group-id="9264016747-3">Schema.HotBar</span><span class="p" data-group-id="9264016747-3">{</span><span class="p" data-group-id="9264016747-3">}</span><span class="w">
-
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get_by</span><span class="p" data-group-id="9264016747-4">(</span><span class="p" data-group-id="9264016747-5">%{</span><span class="ss">character_id</span><span class="p">:</span><span class="w"> </span><span class="mi">999</span><span class="p" data-group-id="9264016747-5">}</span><span class="p" data-group-id="9264016747-4">)</span><span class="w">
-</span><span class="no">nil</span></code></pre>
-  </section>
-</section>
 <section class="detail" id="list/1">
 
   <div class="detail-header">
@@ -236,7 +188,7 @@ character hot bars and quick slots.</p>
       <h1 class="signature" translate="no">list(character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L41" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L25" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -251,21 +203,21 @@ character hot bars and quick slots.</p>
 
       </div>
 
-<p>Lists all hot bars for a given character.</p><p>Returns hot bars ordered by ID.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="3686615029-1">(</span><span class="n">character</span><span class="p" data-group-id="3686615029-1">)</span><span class="w">
-</span><span class="p" data-group-id="3686615029-2">[</span><span class="p" data-group-id="3686615029-3">%</span><span class="nc" data-group-id="3686615029-3">Schema.HotBar</span><span class="p" data-group-id="3686615029-3">{</span><span class="p" data-group-id="3686615029-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3686615029-4">%</span><span class="nc" data-group-id="3686615029-4">Schema.HotBar</span><span class="p" data-group-id="3686615029-4">{</span><span class="p" data-group-id="3686615029-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="3686615029-2">]</span></code></pre>
+<p>Lists all hot bars for a given character, ordered by ID.</p><h2 id="list/1-examples" class="section-heading"><a href="#list/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list</span><span class="p" data-group-id="5474537258-1">(</span><span class="n">character</span><span class="p" data-group-id="5474537258-1">)</span><span class="w">
+</span><span class="p" data-group-id="5474537258-2">[</span><span class="p" data-group-id="5474537258-3">%</span><span class="nc" data-group-id="5474537258-3">Schema.HotBar</span><span class="p" data-group-id="5474537258-3">{</span><span class="p" data-group-id="5474537258-3">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5474537258-4">%</span><span class="nc" data-group-id="5474537258-4">Schema.HotBar</span><span class="p" data-group-id="5474537258-4">{</span><span class="p" data-group-id="5474537258-4">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="5474537258-2">]</span></code></pre>
   </section>
 </section>
-<section class="detail" id="move_quick_slot/3">
+<section class="detail" id="set_active/2">
 
   <div class="detail-header">
-    <a href="#move_quick_slot/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#set_active/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">move_quick_slot(hot_bar, quick_slot, target)</h1>
+      <h1 class="signature" translate="no">set_active(hot_bar, active)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L64" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L49" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -276,30 +228,25 @@ character hot bars and quick slots.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> move_quick_slot(<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>(), <a href="Ms2ex.Types.QuickSlot.html#t:t/0">Ms2ex.Types.QuickSlot.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()} | :error</pre>
+          <pre translate="no"><span class="attribute">@spec</span> set_active(<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Moves a quick slot to a new target position in a hot bar.</p><p>If there's already a quick slot at the target position, the slots are swapped.
-If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/3-examples" class="section-heading"><a href="#move_quick_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">move_quick_slot</span><span class="p" data-group-id="0788241826-1">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="n">quick_slot</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="0788241826-1">)</span><span class="w">
-</span><span class="p" data-group-id="0788241826-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0788241826-3">%</span><span class="nc" data-group-id="0788241826-3">Schema.HotBar</span><span class="p" data-group-id="0788241826-3">{</span><span class="p" data-group-id="0788241826-3">}</span><span class="p" data-group-id="0788241826-2">}</span><span class="w">
-
-</span><span class="gp unselectable">iex&gt; </span><span class="n">move_quick_slot</span><span class="p" data-group-id="0788241826-4">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="n">quick_slot</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p" data-group-id="0788241826-4">)</span><span class="w">
-</span><span class="ss">:error</span></code></pre>
+<p>Persists a bar's active flag and returns the updated row.</p>
   </section>
 </section>
-<section class="detail" id="remove_quick_slot/3">
+<section class="detail" id="update_quick_slots/2">
 
   <div class="detail-header">
-    <a href="#remove_quick_slot/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#update_quick_slots/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">remove_quick_slot(hot_bar, skill_id, item_uid)</h1>
+      <h1 class="signature" translate="no">update_quick_slots(hot_bar, slots)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L93" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L38" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -310,46 +257,13 @@ If the target position is invalid, returns an error.</p><h2 id="move_quick_slot/
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> remove_quick_slot(<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) ::
-  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()} | :error</pre>
+          <pre translate="no"><span class="attribute">@spec</span> update_quick_slots(<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>(), [<a href="Ms2ex.Types.QuickSlot.html#t:t/0">Ms2ex.Types.QuickSlot.t</a>()]) ::
+  {:ok, <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Removes a quick slot from a hot bar.</p><p>Finds the quick slot by skill ID and item UID and replaces it with an empty slot.</p><h2 id="remove_quick_slot/3-parameters" class="section-heading"><a href="#remove_quick_slot/3-parameters" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Parameters</span></h2><ul><li><code class="inline">hot_bar</code> - The hot bar to modify</li><li><code class="inline">skill_id</code> - The skill ID to find</li><li><code class="inline">item_uid</code> - The item UID to find</li></ul><h2 id="remove_quick_slot/3-examples" class="section-heading"><a href="#remove_quick_slot/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">remove_quick_slot</span><span class="p" data-group-id="1553534755-1">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="mi">10500</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;item123&quot;</span><span class="p" data-group-id="1553534755-1">)</span><span class="w">
-</span><span class="p" data-group-id="1553534755-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1553534755-3">%</span><span class="nc" data-group-id="1553534755-3">Schema.HotBar</span><span class="p" data-group-id="1553534755-3">{</span><span class="p" data-group-id="1553534755-3">}</span><span class="p" data-group-id="1553534755-2">}</span><span class="w">
-
-</span><span class="gp unselectable">iex&gt; </span><span class="n">remove_quick_slot</span><span class="p" data-group-id="1553534755-4">(</span><span class="n">hot_bar</span><span class="p">,</span><span class="w"> </span><span class="mi">99999</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;nonexistent&quot;</span><span class="p" data-group-id="1553534755-4">)</span><span class="w">
-</span><span class="ss">:error</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="update_hotbar_skills/2">
-
-  <div class="detail-header">
-    <a href="#update_hotbar_skills/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">update_hotbar_skills(character, hot_bars)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L137" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> update_hotbar_skills(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), [<a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()]) :: [
-  <a href="Ms2ex.Schema.HotBar.html#t:t/0">Ms2ex.Schema.HotBar.t</a>()
-]</pre>
-
-      </div>
-
-
+<p>Persists a bar's quick slots and returns the updated row: the manager's
+state always carries what the database has.</p>
   </section>
 </section>
 

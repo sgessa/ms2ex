@@ -8,6 +8,7 @@ Ms2ex.Context.Accounts.html
 Ms2ex.Context.Achievements.html
 Ms2ex.Context.BannerSlots.html
 Ms2ex.Context.Buffs.html
+Ms2ex.Context.CharacterConfigs.html
 Ms2ex.Context.CharacterStats.html
 Ms2ex.Context.Characters.html
 Ms2ex.Context.ChatStickers.html
@@ -34,7 +35,6 @@ Ms2ex.Context.ItemTypes.html
 Ms2ex.Context.Items.html
 Ms2ex.Context.Mails.html
 Ms2ex.Context.MapBlock.html
-Ms2ex.Context.Mastery.html
 Ms2ex.Context.Mobs.html
 Ms2ex.Context.PremiumMemberships.html
 Ms2ex.Context.Quests.html
@@ -188,14 +188,13 @@ Ms2ex.Managers.Buff.html
 Ms2ex.Managers.Character.Equips.html
 Ms2ex.Managers.Character.Experience.html
 Ms2ex.Managers.Character.FallDamage.html
-Ms2ex.Managers.Character.Fishing.html
-Ms2ex.Managers.Character.Mastery.html
 Ms2ex.Managers.Character.Revival.html
 Ms2ex.Managers.Character.Skill.html
 Ms2ex.Managers.Character.SkillCooldown.html
 Ms2ex.Managers.Character.StatPoints.html
 Ms2ex.Managers.Character.Stats.html
 Ms2ex.Managers.Character.html
+Ms2ex.Managers.CharacterConfig.html
 Ms2ex.Managers.Field.Banner.html
 Ms2ex.Managers.Field.BattleStance.html
 Ms2ex.Managers.Field.Buff.html
@@ -215,12 +214,14 @@ Ms2ex.Managers.Field.Trigger.Actions.html
 Ms2ex.Managers.Field.Trigger.Conditions.html
 Ms2ex.Managers.Field.Trigger.html
 Ms2ex.Managers.Field.html
+Ms2ex.Managers.Fishing.html
 Ms2ex.Managers.GlobalCounter.html
 Ms2ex.Managers.GroupChat.html
 Ms2ex.Managers.GuildManager.html
 Ms2ex.Managers.GuildServer.html
 Ms2ex.Managers.Inventory.html
 Ms2ex.Managers.Managed.html
+Ms2ex.Managers.Mastery.html
 Ms2ex.Managers.PartyManager.html
 Ms2ex.Managers.PartySearchServer.html
 Ms2ex.Managers.PartyServer.html
@@ -383,6 +384,7 @@ Ms2ex.Schema.Achievement.html
 Ms2ex.Schema.BannerSlot.html
 Ms2ex.Schema.Character.html
 Ms2ex.Schema.CharacterBuff.html
+Ms2ex.Schema.CharacterConfig.html
 Ms2ex.Schema.CharacterQuest.html
 Ms2ex.Schema.CharacterStats.html
 Ms2ex.Schema.CharacterTitle.html
@@ -457,6 +459,7 @@ Ms2ex.Types.Item.html
 Ms2ex.Types.ItemColor.html
 Ms2ex.Types.ItemStat.html
 Ms2ex.Types.ItemStats.html
+Ms2ex.Types.KeyBind.html
 Ms2ex.Types.Npc.html
 Ms2ex.Types.Party.html
 Ms2ex.Types.PartySearch.html
@@ -503,8 +506,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-64A2B013.js
-dist/sidebar_items-77EDA77E.js
+dist/search_data-C2E22E09.js
+dist/sidebar_items-8EBC6E74.js
 index.html
 license.html
 readme.html

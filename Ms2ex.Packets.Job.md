@@ -7,6 +7,8 @@
 
 # `put_skills`
 
+# `reset`
+
 # `save`
 
 ---

@@ -1,26 +1,11 @@
 # `Ms2ex.Context.HotBars`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/hot_bars.ex#L1)
 
-Context module for hot bar-related operations.
+Context module for hot bar persistence.
 
-This module provides functions for managing
-character hot bars and quick slots.
-
-# `get_by`
-
-```elixir
-@spec get_by(map()) :: Ms2ex.Schema.HotBar.t() | nil
-```
-
-Gets a hot bar by the given attributes.
-
-## Examples
-
-    iex> get_by(%{character_id: 1, id: 1})
-    %Schema.HotBar{}
-
-    iex> get_by(%{character_id: 999})
-    nil
+Hot bar rows live in the character-config manager's memory while a
+character is online; this module loads them once and persists updates,
+returning the updated rows for the manager's state.
 
 # `list`
 
@@ -28,67 +13,31 @@ Gets a hot bar by the given attributes.
 @spec list(Ms2ex.Schema.Character.t()) :: [Ms2ex.Schema.HotBar.t()]
 ```
 
-Lists all hot bars for a given character.
-
-Returns hot bars ordered by ID.
+Lists all hot bars for a given character, ordered by ID.
 
 ## Examples
 
     iex> list(character)
     [%Schema.HotBar{}, %Schema.HotBar{}, ...]
 
-# `move_quick_slot`
+# `set_active`
 
 ```elixir
-@spec move_quick_slot(Ms2ex.Schema.HotBar.t(), Ms2ex.Types.QuickSlot.t(), integer()) ::
-  {:ok, Ms2ex.Schema.HotBar.t()} | {:error, Ecto.Changeset.t()} | :error
+@spec set_active(Ms2ex.Schema.HotBar.t(), boolean()) ::
+  {:ok, Ms2ex.Schema.HotBar.t()} | {:error, Ecto.Changeset.t()}
 ```
 
-Moves a quick slot to a new target position in a hot bar.
+Persists a bar's active flag and returns the updated row.
 
-If there's already a quick slot at the target position, the slots are swapped.
-If the target position is invalid, returns an error.
-
-## Examples
-
-    iex> move_quick_slot(hot_bar, quick_slot, 3)
-    {:ok, %Schema.HotBar{}}
-
-    iex> move_quick_slot(hot_bar, quick_slot, -1)
-    :error
-
-# `remove_quick_slot`
+# `update_quick_slots`
 
 ```elixir
-@spec remove_quick_slot(Ms2ex.Schema.HotBar.t(), integer(), String.t() | nil) ::
-  {:ok, Ms2ex.Schema.HotBar.t()} | {:error, Ecto.Changeset.t()} | :error
+@spec update_quick_slots(Ms2ex.Schema.HotBar.t(), [Ms2ex.Types.QuickSlot.t()]) ::
+  {:ok, Ms2ex.Schema.HotBar.t()} | {:error, Ecto.Changeset.t()}
 ```
 
-Removes a quick slot from a hot bar.
-
-Finds the quick slot by skill ID and item UID and replaces it with an empty slot.
-
-## Parameters
-
-  * `hot_bar` - The hot bar to modify
-  * `skill_id` - The skill ID to find
-  * `item_uid` - The item UID to find
-
-## Examples
-
-    iex> remove_quick_slot(hot_bar, 10500, "item123")
-    {:ok, %Schema.HotBar{}}
-
-    iex> remove_quick_slot(hot_bar, 99999, "nonexistent")
-    :error
-
-# `update_hotbar_skills`
-
-```elixir
-@spec update_hotbar_skills(Ms2ex.Schema.Character.t(), [Ms2ex.Schema.HotBar.t()]) :: [
-  Ms2ex.Schema.HotBar.t()
-]
-```
+Persists a bar's quick slots and returns the updated row: the manager's
+state always carries what the database has.
 
 ---
 

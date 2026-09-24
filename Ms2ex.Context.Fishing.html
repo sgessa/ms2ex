@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-77EDA77E.js"></script>
+    <script defer src="dist/sidebar_items-8EBC6E74.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,10 +114,10 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Fishing, ported from the reference FishingManager.</p><p>Preparing a rod finds the water tiles in front of the player, spawns the
-bobber guide object and hands the tiles to the client. Casting picks a fish
-from the map's fish boxes and arms a bite timer; catching rolls the size,
-updates the album and awards fishing mastery.</p>
+<p>Pure fishing behaviour: water-tile reachability, fish selection, bite
+timers and catch rolls, plus the session-map transitions.</p><p>Stateless by design — the session and album state live in
+<a href="Ms2ex.Managers.Fishing.html"><code class="inline">Ms2ex.Managers.Fishing</code></a>, which turns these results into packets and
+persistence.</p>
     </section>
 
 </div>
@@ -136,17 +136,38 @@ updates the album and awards fishing mastery.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#catch_fish/2" data-no-tooltip="" translate="no">catch_fish(character, success?)</a>
+        <a href="#available_fishes/3" data-no-tooltip="" translate="no">available_fishes(spot, liquid_type, bait)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Resolves the bite: a success lands the fish and the spot's loot.</p></div>
+        <div class="summary-synopsis"><p>The fish that can bite on the given tile, given the active lure.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fail_minigame/1" data-no-tooltip="" translate="no">fail_minigame(character)</a>
+        <a href="#bite/6" data-no-tooltip="" translate="no">bite(fishing, tile, fish_id, fight_game?, bait_used?, bait)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Drops the line: stores the tile, fish and bait state for the cast.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#bite_timer/4" data-no-tooltip="" translate="no">bite_timer(rod, fish, auto_fishing?, bait)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The bite delay and whether the catch turns into a fight minigame: a bite
+lands inside the bore window, a miss runs past it so the client times out.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#clear_minigame/1" data-no-tooltip="" translate="no">clear_minigame(fishing)</a>
 
       </div>
 
@@ -156,57 +177,105 @@ updates the album and awards fishing mastery.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#prepare/2" data-no-tooltip="" translate="no">prepare(character, rod_uid)</a>
+        <a href="#fishing_lure?/1" data-no-tooltip="" translate="no">fishing_lure?(arg1)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Casts the rod: validates it, finds reachable water and spawns the bobber.</p></div>
+        <div class="summary-synopsis"><p>True when the item's metadata marks a fishing lure.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#select_bait/2" data-no-tooltip="" translate="no">select_bait(character, bait_uid)</a>
+        <a href="#guide_position/2" data-no-tooltip="" translate="no">guide_position(tiles, character_position)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Consumes a bait item and applies its timed lure effect.</p></div>
+        <div class="summary-synopsis"><p>The bobber position: one block above the water surface, on the reachable
+tile closest to the player.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#select_bait_item/2" data-no-tooltip="" translate="no">select_bait_item(character, item_id)</a>
+        <a href="#move_guide/3" data-no-tooltip="" translate="no">move_guide(fishing, position, rotation)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Tracks where the player dragged the bobber.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start/2" data-no-tooltip="" translate="no">start(character, position)</a>
+        <a href="#pick_weighted/1" data-no-tooltip="" translate="no">pick_weighted(fishes)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Drops the line on a tile and arms the bite timer.</p></div>
+        <div class="summary-synopsis"><p>Picks the fish that bites, weighted by the box weights.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stop/1" data-no-tooltip="" translate="no">stop(character)</a>
+        <a href="#reachable_tiles/1" data-no-tooltip="" translate="no">reachable_tiles(character)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Reels in: removes the bobber and clears the session.</p></div>
+        <div class="summary-synopsis"><p>The water tiles the player can fish into: the client only lets a player
+fish into the quadrant they face, so the box in front of them is scanned
+for surface water.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#use_bait_item/2" data-no-tooltip="" translate="no">use_bait_item(character, item)</a>
+        <a href="#record_catch/4" data-no-tooltip="" translate="no">record_catch(album, fish_id, size, prize?)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Records a catch in the album. Returns the updated album, the entry and
+whether this was the first catch of that kind.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#roll_size/1" data-no-tooltip="" translate="no">roll_size(fish)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The caught fish's size.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#select_bait/2" data-no-tooltip="" translate="no">select_bait(fishing, bait)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Keeps the selected bait for the active session.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#session_tiles/1" data-no-tooltip="" translate="no">session_tiles(tiles)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Indexes the reachable tiles by their block cell.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#tile_at/2" data-no-tooltip="" translate="no">tile_at(tiles, position)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The indexed tile at the given position's block cell, if any.</p></div>
 
     </div>
 
@@ -224,42 +293,14 @@ updates the album and awards fishing mastery.</p>
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="catch_fish/2">
+<section class="detail" id="available_fishes/3">
 
   <div class="detail-header">
-    <a href="#catch_fish/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#available_fishes/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">catch_fish(character, success?)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L136" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> catch_fish(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Resolves the bite: a success lands the fish and the spot's loot.</p>
-  </section>
-</section>
-<section class="detail" id="fail_minigame/1">
-
-  <div class="detail-header">
-    <a href="#fail_minigame/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">fail_minigame(character)</h1>
+      <h1 class="signature" translate="no">available_fishes(spot, liquid_type, bait)</h1>
 
 
         <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L174" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -271,20 +312,87 @@ updates the album and awards fishing mastery.</p>
 
   <section class="docstring">
 
+<p>The fish that can bite on the given tile, given the active lure.</p>
+  </section>
+</section>
+<section class="detail" id="bite/6">
+
+  <div class="detail-header">
+    <a href="#bite/6" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">bite(fishing, tile, fish_id, fight_game?, bait_used?, bait)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Drops the line: stores the tile, fish and bait state for the cast.</p>
+  </section>
+</section>
+<section class="detail" id="bite_timer/4">
+
+  <div class="detail-header">
+    <a href="#bite_timer/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">bite_timer(rod, fish, auto_fishing?, bait)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L269" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>The bite delay and whether the catch turns into a fight minigame: a bite
+lands inside the bore window, a miss runs past it so the client times out.</p>
+  </section>
+</section>
+<section class="detail" id="clear_minigame/1">
+
+  <div class="detail-header">
+    <a href="#clear_minigame/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">clear_minigame(fishing)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L38" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
 <p>The client lost the fight minigame; the bite stays but the game ends.</p>
   </section>
 </section>
-<section class="detail" id="prepare/2">
+<section class="detail" id="fishing_lure?/1">
 
   <div class="detail-header">
-    <a href="#prepare/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#fishing_lure?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">prepare(character, rod_uid)</h1>
+      <h1 class="signature" translate="no">fishing_lure?(arg1)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L28" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L317" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -293,80 +401,17 @@ updates the album and awards fishing mastery.</p>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> prepare(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Casts the rod: validates it, finds reachable water and spawns the bobber.</p>
+<p>True when the item's metadata marks a fishing lure.</p>
   </section>
 </section>
-<section class="detail" id="select_bait/2">
+<section class="detail" id="guide_position/2">
 
   <div class="detail-header">
-    <a href="#select_bait/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#guide_position/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">select_bait(character, bait_uid)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L65" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> select_bait(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Consumes a bait item and applies its timed lure effect.</p>
-  </section>
-</section>
-<section class="detail" id="select_bait_item/2">
-
-  <div class="detail-header">
-    <a href="#select_bait_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">select_bait_item(character, item_id)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L80" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> select_bait_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
-  :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="start/2">
-
-  <div class="detail-header">
-    <a href="#start/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">start(character, position)</h1>
+      <h1 class="signature" translate="no">guide_position(tiles, character_position)</h1>
 
 
         <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L112" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -378,26 +423,89 @@ updates the album and awards fishing mastery.</p>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Drops the line on a tile and arms the bite timer.</p>
+<p>The bobber position: one block above the water surface, on the reachable
+tile closest to the player.</p>
   </section>
 </section>
-<section class="detail" id="stop/1">
+<section class="detail" id="move_guide/3">
 
   <div class="detail-header">
-    <a href="#stop/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#move_guide/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">stop(character)</h1>
+      <h1 class="signature" translate="no">move_guide(fishing, position, rotation)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L160" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L42" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Tracks where the player dragged the bobber.</p>
+  </section>
+</section>
+<section class="detail" id="pick_weighted/1">
+
+  <div class="detail-header">
+    <a href="#pick_weighted/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">pick_weighted(fishes)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L250" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Picks the fish that bites, weighted by the box weights.</p>
+  </section>
+</section>
+<section class="detail" id="reachable_tiles/1">
+
+  <div class="detail-header">
+    <a href="#reachable_tiles/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">reachable_tiles(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L86" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>The water tiles the player can fish into: the client only lets a player
+fish into the quadrant they face, so the box in front of them is scanned
+for surface water.</p>
+  </section>
+</section>
+<section class="detail" id="record_catch/4">
+
+  <div class="detail-header">
+    <a href="#record_catch/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">record_catch(album, fish_id, size, prize?)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L54" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -408,24 +516,26 @@ updates the album and awards fishing mastery.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> stop(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> record_catch(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) ::
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()}</pre>
 
       </div>
 
-<p>Reels in: removes the bobber and clears the session.</p>
+<p>Records a catch in the album. Returns the updated album, the entry and
+whether this was the first catch of that kind.</p>
   </section>
 </section>
-<section class="detail" id="use_bait_item/2">
+<section class="detail" id="roll_size/1">
 
   <div class="detail-header">
-    <a href="#use_bait_item/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#roll_size/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">use_bait_item(character, item)</h1>
+      <h1 class="signature" translate="no">roll_size(fish)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L90" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L304" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -434,14 +544,73 @@ updates the album and awards fishing mastery.</p>
 
   <section class="docstring">
 
-      <div class="specs">
+<p>The caught fish's size.</p>
+  </section>
+</section>
+<section class="detail" id="select_bait/2">
 
-          <pre translate="no"><span class="attribute">@spec</span> use_bait_item(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="Ms2ex.Schema.Item.html#t:t/0">Ms2ex.Schema.Item.t</a>()) ::
-  :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+  <div class="detail-header">
+    <a href="#select_bait/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">select_bait(fishing, bait)</h1>
 
-      </div>
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L34" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Keeps the selected bait for the active session.</p>
+  </section>
+</section>
+<section class="detail" id="session_tiles/1">
+
+  <div class="detail-header">
+    <a href="#session_tiles/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">session_tiles(tiles)</h1>
 
 
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L101" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Indexes the reachable tiles by their block cell.</p>
+  </section>
+</section>
+<section class="detail" id="tile_at/2">
+
+  <div class="detail-header">
+    <a href="#tile_at/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">tile_at(tiles, position)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/fishing.ex#L106" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>The indexed tile at the given position's block cell, if any.</p>
   </section>
 </section>
 

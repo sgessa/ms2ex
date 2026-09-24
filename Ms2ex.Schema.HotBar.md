@@ -14,8 +14,6 @@
 }
 ```
 
-# `max_quick_slots`
-
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

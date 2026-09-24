@@ -7,6 +7,7 @@ Ms2ex.Context.Accounts.md
 Ms2ex.Context.Achievements.md
 Ms2ex.Context.BannerSlots.md
 Ms2ex.Context.Buffs.md
+Ms2ex.Context.CharacterConfigs.md
 Ms2ex.Context.CharacterStats.md
 Ms2ex.Context.Characters.md
 Ms2ex.Context.ChatStickers.md
@@ -33,7 +34,6 @@ Ms2ex.Context.ItemTypes.md
 Ms2ex.Context.Items.md
 Ms2ex.Context.Mails.md
 Ms2ex.Context.MapBlock.md
-Ms2ex.Context.Mastery.md
 Ms2ex.Context.Mobs.md
 Ms2ex.Context.PremiumMemberships.md
 Ms2ex.Context.Quests.md
@@ -187,14 +187,13 @@ Ms2ex.Managers.Buff.md
 Ms2ex.Managers.Character.Equips.md
 Ms2ex.Managers.Character.Experience.md
 Ms2ex.Managers.Character.FallDamage.md
-Ms2ex.Managers.Character.Fishing.md
-Ms2ex.Managers.Character.Mastery.md
 Ms2ex.Managers.Character.Revival.md
 Ms2ex.Managers.Character.Skill.md
 Ms2ex.Managers.Character.SkillCooldown.md
 Ms2ex.Managers.Character.StatPoints.md
 Ms2ex.Managers.Character.Stats.md
 Ms2ex.Managers.Character.md
+Ms2ex.Managers.CharacterConfig.md
 Ms2ex.Managers.Field.Banner.md
 Ms2ex.Managers.Field.BattleStance.md
 Ms2ex.Managers.Field.Buff.md
@@ -214,12 +213,14 @@ Ms2ex.Managers.Field.Trigger.Actions.md
 Ms2ex.Managers.Field.Trigger.Conditions.md
 Ms2ex.Managers.Field.Trigger.md
 Ms2ex.Managers.Field.md
+Ms2ex.Managers.Fishing.md
 Ms2ex.Managers.GlobalCounter.md
 Ms2ex.Managers.GroupChat.md
 Ms2ex.Managers.GuildManager.md
 Ms2ex.Managers.GuildServer.md
 Ms2ex.Managers.Inventory.md
 Ms2ex.Managers.Managed.md
+Ms2ex.Managers.Mastery.md
 Ms2ex.Managers.PartyManager.md
 Ms2ex.Managers.PartySearchServer.md
 Ms2ex.Managers.PartyServer.md
@@ -382,6 +383,7 @@ Ms2ex.Schema.Achievement.md
 Ms2ex.Schema.BannerSlot.md
 Ms2ex.Schema.Character.md
 Ms2ex.Schema.CharacterBuff.md
+Ms2ex.Schema.CharacterConfig.md
 Ms2ex.Schema.CharacterQuest.md
 Ms2ex.Schema.CharacterStats.md
 Ms2ex.Schema.CharacterTitle.md
@@ -456,6 +458,7 @@ Ms2ex.Types.Item.md
 Ms2ex.Types.ItemColor.md
 Ms2ex.Types.ItemStat.md
 Ms2ex.Types.ItemStats.md
+Ms2ex.Types.KeyBind.md
 Ms2ex.Types.Npc.md
 Ms2ex.Types.Party.md
 Ms2ex.Types.PartySearch.md

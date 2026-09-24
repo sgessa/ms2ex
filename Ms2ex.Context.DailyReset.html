@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-77EDA77E.js"></script>
+    <script defer src="dist/sidebar_items-8EBC6E74.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -116,9 +116,8 @@ MS2EX
     <section id="moduledoc">
 <p>Resets per-character daily state when the midnight worker fires.</p><p>The single <a href="#reset/0"><code class="inline">reset/0</code></a> entry point bulk-zeroes the persisted daily columns for
 every character, then clears the in-memory state and refreshes the client
-gauge for each connected player. <a href="#reset_character/1"><code class="inline">reset_character/1</code></a> is the per-player step,
-invoked by the character manager's cast so the in-memory character stays in
-sync. Add new daily fields and their refresh packets here as they appear.</p>
+gauge for each connected player. Add new daily fields and their refresh
+packets here as they appear.</p>
     </section>
 
 </div>
@@ -138,14 +137,6 @@ sync. Add new daily fields and their refresh packets here as they appear.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#reset/0" data-no-tooltip="" translate="no">reset()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#reset_character/1" data-no-tooltip="" translate="no">reset_character(character)</a>
 
       </div>
 
@@ -175,29 +166,7 @@ sync. Add new daily fields and their refresh packets here as they appear.</p>
       <h1 class="signature" translate="no">reset()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/daily_reset.ex#L23" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="reset_character/1">
-
-  <div class="detail-header">
-    <a href="#reset_character/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">reset_character(character)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/daily_reset.ex#L35" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/daily_reset.ex#L19" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
