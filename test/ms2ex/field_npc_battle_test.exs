@@ -547,17 +547,83 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 700)
     assert npc.battle.cast == nil
 
-    # between swings the mob settles into its combat idle
+    # through the swing's tail the mob keeps the swing animation; the
+    # fallback swing plays for 1s from its start (200) — until 1_200
     {npc, _} = Battle.tick(npc, state, 750)
+    assert npc.animation == 7
+
+    # between swings the mob settles into its combat idle
+    {npc, _} = Battle.tick(npc, state, 1_250)
     assert npc.animation == 8
 
     # the player breaks away: the first chase tick advances exactly the run
-    # speed × real elapsed time (50ms since the last stand at 750), not a
+    # speed × real elapsed time (50ms since the last stand at 1_250), not a
     # clamped multi-tick lurch
     state = field_with_player_at(1400, 0)
-    {npc, _} = Battle.tick(npc, state, 800)
+    {npc, _} = Battle.tick(npc, state, 1_300)
     assert npc.velocity != {0, 0, 0}
     assert_in_delta(npc.position.x, 15.0, 0.5)
+  end
+
+  test "the swing plays for the attack sequence's playback length" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A", sequence_speed: 1.0},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        # the swing plays for 2.0s; the hit lands 40% in
+        sequences: %{Attack_001_A: %{id: 7, time: 2.0}, Attack_Idle_A: %{id: 8}}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+    assert %{hit_at: 1_000, end_at: 2_200} = npc.battle.cast
+
+    # before the hit point the swing is still winding up
+    {npc, _} = Battle.tick(npc, state, 900)
+    assert npc.battle.cast
+    assert npc.battle.hit_event == nil
+
+    # the hit lands at the 40% mark of the 2s swing
+    {npc, _} = Battle.tick(npc, state, 1_050)
+    assert %{character_id: 1, attack: 500} = npc.battle.hit_event
+    assert npc.battle.cast == nil
+
+    # through the swing's tail the mob stays occupied (the cooldown floor
+    # from the resolve ran out at 1_800, but the animation gates until 2_200)
+    {npc, _} = Battle.tick(npc, state, 2_100)
+    assert npc.battle.cast == nil
+    assert npc.animation == 7
+    refute npc.battle.cast
+
+    # and the next swing only starts once the previous one ended
+    {npc, _} = Battle.tick(npc, state, 2_250)
+    assert npc.battle.cast
+    assert npc.battle.cast.hit_at == 3_050
   end
 
   test "a mob in stop range swings at its target on cooldown" do

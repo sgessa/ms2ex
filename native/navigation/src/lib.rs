@@ -81,6 +81,15 @@ extern "C" {
         point_count: *mut i32,
         max_points: i32,
     ) -> dtStatus;
+    fn ms2_find_random_point_around_circle(
+        query: *mut dtNavMeshQuery,
+        start_ref: dtPolyRef,
+        center: *const f32,
+        max_radius: f32,
+        filter: *mut dtQueryFilter,
+        out_ref: *mut dtPolyRef,
+        out_point: *mut f32,
+    ) -> dtStatus;
 }
 
 fn failed(status: dtStatus) -> bool {
@@ -192,6 +201,40 @@ fn valid_position(nav: ResourceArc<Nav>, at: (f64, f64, f64)) -> bool {
         Ok(query) => nearest_poly(&query, &to_pos(at)).is_some(),
         Err(_) => false,
     }
+}
+
+/// A random walkable point within `radius` of `center`, or an error when
+/// nothing walkable sits inside the circle (or under the center itself).
+#[rustler::nif]
+fn random_point_around(
+    nav: ResourceArc<Nav>,
+    center: (f64, f64, f64),
+    radius: f64,
+) -> Result<(f64, f64, f64), String> {
+    let query = nav.query()?;
+
+    let (start_ref, _) =
+        nearest_poly(&query, &to_pos(center)).ok_or("no walkable ground under the center")?;
+
+    let mut out_ref: dtPolyRef = 0;
+    let mut out_point = [0f32; 3];
+    let center = to_pos(center);
+    let status = unsafe {
+        ms2_find_random_point_around_circle(
+            query.0,
+            start_ref,
+            center.as_ptr(),
+            radius as f32,
+            query.1,
+            &mut out_ref,
+            out_point.as_mut_ptr(),
+        )
+    };
+    if failed(status) || out_ref == 0 {
+        return Err("no walkable point inside the radius".into());
+    }
+
+    Ok((out_point[0] as f64, out_point[1] as f64, out_point[2] as f64))
 }
 
 /// Diagnostics for a loaded mesh: how many tiles landed and how many

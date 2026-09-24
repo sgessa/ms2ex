@@ -18,7 +18,8 @@ defmodule Ms2ex.Context.Damage do
   @doc """
   Resolves a mob's swing against a character: the mob's physical attack
   drives the hit, scaled by the attack's damage rate and cut down by the
-  character's defense and physical resistance.
+  character's defense and physical resistance. Mobs carry no piercing
+  stat, so the defense divisor doubles before the hit divides by it.
   """
   @spec calculate_mob_hit(Schema.Character.t(), %{attack: number(), rate: number()}) :: %{
           dmg: integer(),
@@ -29,7 +30,7 @@ defmodule Ms2ex.Context.Damage do
     defense = max(stats.defense_cur, 1)
     resistance = (@resistance_base - max(stats.physical_res_cur, 0)) / @resistance_base
 
-    dmg = trunc(rate * attack * resistance / defense * @attack_damage_factor)
+    dmg = trunc(rate * attack * resistance / defense * (@attack_damage_factor / 2))
 
     %{dmg: max(dmg, 1), crit?: false}
   end
@@ -103,10 +104,11 @@ defmodule Ms2ex.Context.Damage do
     damage_bonus = 1 + stats.damage_cur / 1000
     damage_multiplier = damage_bonus * crit_mult * rate
 
-    # target defense reduces damage; piercing ignores a capped share of it
+    # target defense divides the hit; piercing raises the divisor's share of
+    # defense it ignores (capped) — at zero piercing the divisor carries the
+    # doubling the client's formula applies
     defense_pierce = 1 - min(0.3, stats.piercing_cur / 1000 - 1)
     damage_multiplier = damage_multiplier / max(target.defense.total, 1) / defense_pierce
-
     # the attack stat drives the hit; the target's resistance cuts it down
     attack_stat = if physical?, do: stats.physical_atk_cur, else: stats.magical_atk_cur
     target_res = if physical?, do: target.physical_res.total, else: target.magical_res.total

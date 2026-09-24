@@ -77,6 +77,27 @@ defmodule Ms2ex.Navigation do
 
   def snap_to_floor(_, _position), do: nil
 
+  @doc """
+  A random walkable point within `radius` of `center`, or nil when the map
+  has no navmesh or nothing walkable sits inside the circle. This is how
+  idle mobs pick their wander destinations around the spawn point.
+  """
+  @spec random_point_around(integer(), Coord.t(), number()) :: Coord.t() | nil
+  def random_point_around(map_id, %Coord{} = center, radius) when is_integer(map_id) do
+    case native_mesh(map_id) do
+      nil ->
+        nil
+
+      mesh ->
+        case Native.random_point_around(mesh, to_nav(center), radius / 100) do
+          {:ok, point} -> to_coord(point)
+          {:error, _reason} -> nil
+        end
+    end
+  end
+
+  def random_point_around(_, _, _), do: nil
+
   @doc "Whether the map has walkable navmesh tiles."
   def has_navmesh?(map_id) when is_integer(map_id), do: native_mesh(map_id) != nil
   def has_navmesh?(_), do: false
