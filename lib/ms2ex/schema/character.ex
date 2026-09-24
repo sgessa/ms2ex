@@ -82,7 +82,6 @@ defmodule Ms2ex.Schema.Character do
     # mastery grade reward boxes were already claimed
     field :masteries, EctoTypes.Term, default: %{}
     field :fish_album, EctoTypes.Term, default: %{}
-    field :fishing, EctoTypes.Term, virtual: true
 
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1

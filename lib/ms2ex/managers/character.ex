@@ -137,42 +137,6 @@ defmodule Ms2ex.Managers.Character do
   # Fishing
   # --------------------------------
 
-  def handle_call({:start_fishing, fishing}, _from, character) do
-    character = Character.Fishing.start_session(character, fishing)
-    {:reply, {:ok, character}, character}
-  end
-
-  def handle_call(:stop_fishing, _from, character) do
-    character = Character.Fishing.stop_session(character)
-    {:reply, {:ok, character}, character}
-  end
-
-  def handle_call({:fishing_bite, tile, fish_id, fight_game?}, _from, character) do
-    character = Character.Fishing.bite(character, tile, fish_id, fight_game?)
-    {:reply, {:ok, character}, character}
-  end
-
-  def handle_call({:fishing_bite, tile, fish_id, fight_game?, bait_used?, bait}, _from, character) do
-    character = Character.Fishing.bite(character, tile, fish_id, fight_game?, bait_used?, bait)
-    {:reply, {:ok, character}, character}
-  end
-
-  def handle_call({:select_fishing_bait, bait}, _from, character) do
-    character = Character.Fishing.select_bait(character, bait)
-    {:reply, {:ok, character}, character}
-  end
-
-  def handle_call(:fishing_fail_minigame, _from, character) do
-    character = Character.Fishing.clear_minigame(character)
-    {:reply, {:ok, character}, character}
-  end
-
-  def handle_call({:record_catch, fish_id, size, prize?}, _from, character) do
-    {character, entry, first?} = Character.Fishing.record_catch(character, fish_id, size, prize?)
-    {:ok, character} = Context.Characters.persist(character, %{fish_album: character.fish_album})
-    {:reply, {:ok, character, entry, first?}, character}
-  end
-
   def handle_call(:monitor, {pid, _}, character) do
     Process.monitor(pid)
     {:reply, :ok, character}
@@ -290,10 +254,6 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
   # Stats
   # --------------------------------
-
-  # the bobber moves constantly; nothing waits on the new position
-  def handle_cast({:fishing_guide_moved, position, rotation}, character),
-    do: {:noreply, Character.Fishing.move_guide(character, position, rotation)}
 
   def handle_cast({:consume_stat, stat_id, amount}, character) do
     {:noreply, Character.Stats.decrease(character, stat_id, amount, [])}
@@ -427,7 +387,5 @@ defmodule Ms2ex.Managers.Character do
     |> Map.put(:ensemble, Map.get(state, :ensemble))
     |> Map.put(:condition_state, Map.get(state, :condition_state))
     |> Map.put(:condition_distances, Map.get(state, :condition_distances, %{}))
-    |> Map.put(:fish_album, Map.get(state, :fish_album, %{}))
-    |> Map.put(:fishing, Map.get(state, :fishing))
   end
 end

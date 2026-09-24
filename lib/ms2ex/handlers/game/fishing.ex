@@ -4,7 +4,6 @@ defmodule Ms2ex.GameHandlers.Fishing do
   resolving the bite and reeling in.
   """
 
-  alias Ms2ex.Context
   alias Ms2ex.Managers
   alias Ms2ex.Packets
 
@@ -35,22 +34,22 @@ defmodule Ms2ex.GameHandlers.Fishing do
 
   defp handle_command(@prepare, packet, character) do
     {rod_uid, _packet} = get_long(packet)
-    Context.Fishing.prepare(character, rod_uid)
+    Managers.Fishing.prepare(character, rod_uid)
   end
 
   defp handle_command(@select_bait, packet, character) when byte_size(packet) >= 8 do
     {bait_uid, packet} = get_long(packet)
     {bait_item_id, _packet} = get_int(packet)
 
-    case Context.Fishing.select_bait(character, bait_uid) do
-      {:error, _error} -> Context.Fishing.select_bait_item(character, bait_item_id)
+    case Managers.Fishing.select_bait(character, bait_uid) do
+      {:error, _error} -> Managers.Fishing.select_bait_item(character, bait_item_id)
       result -> result
     end
   end
 
   defp handle_command(@select_bait, packet, character) when byte_size(packet) >= 4 do
     {bait_item_id, _packet} = get_int(packet)
-    Context.Fishing.select_bait_item(character, bait_item_id)
+    Managers.Fishing.select_bait_item(character, bait_item_id)
   end
 
   defp handle_command(@select_bait, packet, _character) do
@@ -58,20 +57,20 @@ defmodule Ms2ex.GameHandlers.Fishing do
     :ok
   end
 
-  defp handle_command(@stop, _packet, character), do: Context.Fishing.stop(character)
+  defp handle_command(@stop, _packet, character), do: Managers.Fishing.reel_in(character)
 
   defp handle_command(@catch_fish, packet, character) do
     {success?, _packet} = get_bool(packet)
-    Context.Fishing.catch_fish(character, success?)
+    Managers.Fishing.catch_fish(character, success?)
   end
 
   defp handle_command(@start, packet, character) do
     {position, _packet} = get_sbyte_coord(packet)
-    Context.Fishing.start(character, position)
+    Managers.Fishing.start(character, position)
   end
 
   defp handle_command(@fail_minigame, _packet, character),
-    do: Context.Fishing.fail_minigame(character)
+    do: Managers.Fishing.fail_minigame(character)
 
   defp handle_command(command, _packet, _character) do
     Logger.warning("Unhandled fishing command 0x#{Integer.to_string(command, 16)}")
