@@ -94,28 +94,30 @@ target's live position and walks it:
 ### Cast cycle
 
 A mob standing inside `stop_range` swings on cooldown: it pins itself in
-place facing the target and plays the skill's motion sequences (state
-PcSkill, 16) for their combined playback length — each motion's
-animation time divided by its `sequence_speed` (fixed 1s stand-in when
-the model carries no animation timing). A swing whose motions cannot all
-play on the model's rig is cancelled before it starts, rather than
-landing damage with no animation. The firing attack is the first
-projectile-carrying attack of the motion set (later motions often fire
-the actual shot while earlier ones are pure windups), falling back to
-the first attack; the hit lands 40% into that motion's playback — where
-attack keyframes sit — and damage only applies when the target is still
-within that attack's range plus 60 slack, otherwise the swing whiffs
-(the gate still runs). The swing owns the mob until its playback ends:
-the next swing starts only after both the playback and the 750ms
-cooldown floor elapse, and the swing animation is held through the
-resolve until the playback ends, then settles into Attack_Idle_A
-(fallback Idle_A).
+place facing the target and streams the skill's motion sequences (state
+PcSkill, 16) — each motion's animation plays in order (time divided by
+its `sequence_speed`; fixed 1s stand-in without animation timing), the
+windup visibly handing over to the firing swing. A swing whose motions
+cannot all play on the model's rig is cancelled before it starts,
+rather than landing damage with no animation. The firing attack is the
+first projectile-carrying attack of the motion set (later motions often
+fire the actual shot while earlier ones are pure windups), falling back
+to the first attack; the hit lands at that attack's animation keyframe
+(resolved from the attack's `point` name against the sequence's keyframe
+times, 40% of the motion's playback as the stand-in) and damage only
+applies when the target is still within that attack's range plus 60
+slack, otherwise the swing whiffs (the gate still runs). The swing owns
+the mob until its playback ends: the next swing starts only after both
+the playback and the 750ms cooldown floor elapse, and the firing
+motion's animation is held through the resolve until the playback ends,
+then settles into Attack_Idle_A (fallback Idle_A).
 
 When the firing attack carries a magic path, the hit reaches clients as
 a SkillDamage target record first (one packet per magic-path segment,
 before the damage numbers): that is what spawns the projectile visual,
-homing to the victim when the attack's arrow overlaps, so ranged mobs
-read as the shooter they are.
+homing to the victim when the attack's arrow overlaps (most mob
+projectiles are straight shots — the arrow overlap flag decides), so
+ranged mobs read as the shooter they are.
 
 - the active cast owns the mob's presentation: stand ticks during the
   windup never touch the animation, so the client plays the full swing
@@ -228,8 +230,10 @@ the npc) and a `distance` block (`sight`, `sight_height_up`,
 `last_sight_height_down`, `avoid`). The `action` block projects the patrol
 speeds (`walk_speed`, `run_speed`), the idle wander radius (`move_area`)
 and the weighted idle routines (`actions`, name + probability pairs).
-All are projected by the ingest; `ai_path` is unused until the AI-tree
-runtime lands.
+Skill docs project each attack's `magic_path_id`, `arrow.overlap` and
+animation `point` (keyframe name); animation docs project each sequence's
+keyframe times. All are projected by the ingest; `ai_path` is unused
+until the AI-tree runtime lands.
 
 ## Deliberate divergences
 

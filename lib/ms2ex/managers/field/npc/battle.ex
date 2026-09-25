@@ -440,7 +440,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     motions = swing_motions(npc, level_doc)
     {attack_motion_index, attack} = swing_attack(level_doc) || {0, nil}
-    {hit_offset_ms, duration_ms} = cast_timing(motions, attack_motion_index)
+
+    {hit_offset_ms, duration_ms} =
+      cast_timing(npc, level_doc, motions, attack_motion_index, attack)
 
     rotation = face_toward(npc.position, target_position, npc.rotation)
 
@@ -453,6 +455,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       rate: attack_rate(attack),
       magic_path_id: attack_magic_path_id(attack),
       arrow_overlap?: attack_arrow_overlap?(attack),
+      started_at: now,
+      # each later motion's sequence takes over when its playback starts
+      motion_switches: motion_switches(motions),
       hit_at: now + hit_offset_ms,
       end_at: now + duration_ms,
       hit_done?: false
@@ -474,6 +479,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # facing the target through the windup, land the hit if the target is still
   # in reach, then hand the hit to the field for application
   defp cast_tick(npc, battle, field_state, target_position, now) do
+    {npc, battle} = advance_cast_motion(npc, battle, now)
     cast = battle.cast
 
     if now < cast.hit_at do
@@ -526,6 +532,35 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       else
         {%{npc | battle: battle}, []}
       end
+    end
+  end
+
+  # streams the swing's motions: when one motion's playback ends, the next
+  # motion's sequence takes over the model (the windup visibly hands over
+  # to the firing swing instead of the cast looping its first motion)
+  defp advance_cast_motion(npc, battle, now) do
+    cast = battle.cast
+    elapsed = now - cast.started_at
+
+    {due, rest} =
+      Enum.split_while(cast.motion_switches, fn {at, _sequence_id} -> elapsed >= at end)
+
+    case due do
+      [] ->
+        {npc, battle}
+
+      _ ->
+        {_at, sequence_id} = List.last(due)
+        battle = %{battle | cast: %{cast | motion_switches: rest}}
+
+        npc =
+          if sequence_id && npc.animation != sequence_id do
+            %{npc | animation: sequence_id, send_control?: true}
+          else
+            npc
+          end
+
+        {npc, battle}
     end
   end
 
@@ -851,6 +886,13 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       Enum.at(attacks, 0)
   end
 
+  defp attack_point_name(attack) do
+    case get_in(attack || %{}, [:point]) do
+      name when is_binary(name) -> name
+      _ -> nil
+    end
+  end
+
   # the projectile the client renders for the swing (0 when none)
   defp attack_magic_path_id(attack) do
     case get_in(attack || %{}, [:magic_path_id]) do
@@ -882,9 +924,10 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   # the swing's cast timing from the motion timeline: the cast spans every
-  # motion's playback and the hit lands 40% into the firing motion. Without
-  # animation timing the fixed stand-ins drive the swing
-  defp cast_timing(motions, attack_motion_index) do
+  # motion's playback and the hit lands at the firing attack's animation
+  # keyframe — the moment the swing actually releases — falling back to 40%
+  # into the firing motion when the model carries no keyframe timing
+  defp cast_timing(npc, level_doc, motions, attack_motion_index, attack) do
     if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
       total = motions |> Enum.map(& &1.ms) |> Enum.sum()
 
@@ -895,11 +938,54 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         |> Enum.sum()
 
       firing = Enum.at(motions, attack_motion_index) || List.last(motions)
-      hit_offset = before + trunc(firing.ms * @hit_point_fraction)
+
+      key_offset = key_offset_ms(npc, level_doc, attack_motion_index, attack)
+
+      hit_offset =
+        case key_offset do
+          ms when is_number(ms) -> before + ms
+          _ -> before + trunc(firing.ms * @hit_point_fraction)
+        end
 
       {hit_offset, total}
     else
       {trunc(@fallback_duration_ms * @hit_point_fraction), @fallback_duration_ms}
+    end
+  end
+
+  # when each later motion's sequence takes over the model: its start
+  # offset within the swing (the first motion plays from the cast start)
+  defp motion_switches(motions) do
+    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
+      {switches, _total} =
+        Enum.map_reduce(motions, 0, fn motion, elapsed ->
+          {{elapsed, motion.sequence_id}, elapsed + motion.ms}
+        end)
+
+      Enum.drop(switches, 1)
+    else
+      []
+    end
+  end
+
+  # the firing attack's keyframe time within its motion's sequence, in ms
+  defp key_offset_ms(npc, level_doc, attack_motion_index, attack) do
+    model = get_in(npc.npc.metadata, [:model, :name])
+    point_name = attack_point_name(attack)
+
+    seq_name =
+      level_doc
+      |> get_in([:motions])
+      |> List.wrap()
+      |> Enum.at(attack_motion_index)
+      |> case do
+        motion when is_map(motion) -> get_in(motion, [:motion_property, :sequence_name])
+        _ -> nil
+      end
+
+    case Storage.Animations.key_time(model, seq_name, point_name) do
+      seconds when is_number(seconds) -> trunc(seconds * 1000)
+      _ -> nil
     end
   end
 

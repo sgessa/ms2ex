@@ -694,8 +694,65 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # the cast opens on the windup motion's sequence
     assert npc.animation == 21
 
+    # past the windup's playback the firing motion's sequence takes over
+    {npc, _} = Battle.tick(npc, state, 750)
+    assert npc.animation == 22
+
     {npc, hits} = Battle.tick(npc, state, 1_050)
     assert [%{magic_path_id: 5065, arrow_overlap?: true, server_tick: 1_050}] = hits
+  end
+
+  test "the hit lands at the firing attack's animation keyframe" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_A", sequence_speed: 1.0},
+                attacks: [
+                  %{
+                    range: %{distance: 300.0},
+                    point: "Atk01",
+                    damage: %{rate: 2.0, value: 0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      # the release keyframe sits 80% into the 1s swing
+      "animation:testmob" => %{
+        sequences: %{
+          Attack_01_A: %{id: 7, time: 1.0, keys: %{Atk01: 0.8}},
+          Attack_Idle_A: %{id: 8}
+        }
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+
+    # the swing releases at the keyframe, not at the 40% guess
+    assert %{hit_at: 1_000, end_at: 1_200} = npc.battle.cast
+
+    {npc, hits} = Battle.tick(npc, state, 1_050)
+    assert [%{character_id: 1}] = hits
   end
 
   test "a mob in stop range swings at its target on cooldown" do
@@ -757,7 +814,25 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
   test "the swing whiffs when the target leaves range before the hit lands" do
     {map_id, xblock} = unique_map()
-    stub_navmesh(xblock, map_id)
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A"},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{sequences: %{Attack_001_A: %{id: 7, time: 1.0}}}
+    })
 
     metadata = mob_metadata(skill: [%{id: 4001, level: 1}])
     npc = mob_with_metadata(metadata, map_id: map_id)
