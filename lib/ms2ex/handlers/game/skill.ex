@@ -69,8 +69,10 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
 
+    cast_item = cast_item(character, item_uid)
+
     consumable_cast_item? =
-      fishing_lure_item?(character, item_uid) or state_effect_item?(character, item_uid)
+      fishing_lure_item?(cast_item) or consumable_state_item?(cast_item)
 
     if Types.SkillCast.use_item?(skill_cast) do
       consume_used_item(session, character, item_uid)
@@ -295,30 +297,30 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  defp fishing_lure_item?(character, item_uid) do
+  # the cast item, with its metadata loaded; nil when the cast references no
+  # inventory item
+  defp cast_item(_character, 0), do: nil
+
+  defp cast_item(character, item_uid) do
     case Managers.Inventory.get(character, item_uid) do
       %Ms2ex.Schema.Item{} = item ->
-        item = Context.Items.load_metadata(item)
-        get_in(item.metadata, [:property, :tag]) == :fishing_lure
+        Context.Items.load_metadata(item)
 
       _ ->
-        false
+        nil
     end
   end
+
+  defp fishing_lure_item?(%Ms2ex.Schema.Item{metadata: %{property: %{tag: :fishing_lure}}}),
+    do: true
+
+  defp fishing_lure_item?(_item), do: false
 
   # a skill item whose cast toggles a client convenience state (the
   # auto-fishing and auto-performance vouchers) is consumed by its own cast
-  defp state_effect_item?(character, item_uid) do
-    case Managers.Inventory.get(character, item_uid) do
-      %Ms2ex.Schema.Item{} = item ->
-        item
-        |> Context.Items.load_metadata()
-        |> Map.get(:metadata, %{})
-        |> Context.Items.state_effects()
-        |> Enum.any?()
-
-      _ ->
-        false
-    end
+  defp consumable_state_item?(%Ms2ex.Schema.Item{} = item) do
+    Context.Items.state_effects(item.metadata) != []
   end
+
+  defp consumable_state_item?(nil), do: false
 end
