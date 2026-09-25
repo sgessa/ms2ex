@@ -94,16 +94,28 @@ target's live position and walks it:
 ### Cast cycle
 
 A mob standing inside `stop_range` swings on cooldown: it pins itself in
-place facing the target and plays the skill motion's sequence (state
-PcSkill, 16) for the sequence's playback length — the model's animation
-time divided by the motion's `sequence_speed` (fixed 1s stand-in when the
-model carries no animation timing). The hit lands 40% into the playback —
-where attack keyframes sit — and damage only applies when the target is
-still within the attack range plus 60 slack, otherwise the swing whiffs
-(the gate still runs). The swing owns the mob until its playback ends: the
-next swing starts only after both the playback and the 750ms cooldown
-floor elapse, and the swing animation is held through the resolve until
-the playback ends, then settles into Attack_Idle_A (fallback Idle_A).
+place facing the target and plays the skill's motion sequences (state
+PcSkill, 16) for their combined playback length — each motion's
+animation time divided by its `sequence_speed` (fixed 1s stand-in when
+the model carries no animation timing). A swing whose motions cannot all
+play on the model's rig is cancelled before it starts, rather than
+landing damage with no animation. The firing attack is the first
+projectile-carrying attack of the motion set (later motions often fire
+the actual shot while earlier ones are pure windups), falling back to
+the first attack; the hit lands 40% into that motion's playback — where
+attack keyframes sit — and damage only applies when the target is still
+within that attack's range plus 60 slack, otherwise the swing whiffs
+(the gate still runs). The swing owns the mob until its playback ends:
+the next swing starts only after both the playback and the 750ms
+cooldown floor elapse, and the swing animation is held through the
+resolve until the playback ends, then settles into Attack_Idle_A
+(fallback Idle_A).
+
+When the firing attack carries a magic path, the hit reaches clients as
+a SkillDamage target record first (one packet per magic-path segment,
+before the damage numbers): that is what spawns the projectile visual,
+homing to the victim when the attack's arrow overlaps, so ranged mobs
+read as the shooter they are.
 
 - the active cast owns the mob's presentation: stand ticks during the
   windup never touch the animation, so the client plays the full swing

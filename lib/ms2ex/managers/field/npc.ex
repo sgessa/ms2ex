@@ -260,10 +260,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     for hit <- hits do
       case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
         {:ok, applied} ->
-          Managers.Field.broadcast(
-            state.topic,
-            Packets.SkillDamage.mob_hit(Map.merge(hit, applied))
-          )
+          broadcast_hit(state, Map.merge(hit, applied))
 
         :error ->
           :ok
@@ -614,6 +611,28 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   def expire_emote(npc, _now), do: npc
+
+  # a mob's landed swing reaches clients as the attack record first (the
+  # client's projectile visuals: one packet per magic-path segment, homing
+  # to the victim when the attack's arrow overlaps) and the damage numbers
+  # right after
+  defp broadcast_hit(state, hit) do
+    broadcast_magic_paths(state, hit)
+    Managers.Field.broadcast(state.topic, Packets.SkillDamage.mob_hit(hit))
+  end
+
+  defp broadcast_magic_paths(state, hit) do
+    with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
+         segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
+      target_id = if hit[:arrow_overlap?], do: hit.target_object_id, else: 0
+
+      segments
+      |> Enum.with_index()
+      |> Enum.each(fn {_segment, index} ->
+        Managers.Field.broadcast(state.topic, Packets.SkillDamage.target(hit, index, target_id))
+      end)
+    end
+  end
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)

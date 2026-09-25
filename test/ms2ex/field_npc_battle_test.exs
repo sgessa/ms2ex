@@ -340,7 +340,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
             ]
           }
         }
-      }
+      },
+      "animation:testmob" => %{sequences: %{Attack_001_A: %{id: 7, time: 1.0}}}
     })
 
     # zero movement speeds: the mob is rooted (e.g. a Nepenthus plant)
@@ -522,7 +523,12 @@ defmodule Ms2ex.FieldNpcBattleTest do
       # anikey docs key on the lowercased model name; declaring the keys
       # here also makes the atoms exist for Storage.Animations' to_existing_atom
       "animation:testmob" => %{
-        sequences: %{Attack_001_A: 7, Attack_Idle_A: 8, Run_A: 9, Idle_A: 10}
+        sequences: %{
+          Attack_001_A: %{id: 7, time: 1.0},
+          Attack_Idle_A: 8,
+          Run_A: 9,
+          Idle_A: 10
+        }
       }
     })
 
@@ -626,6 +632,72 @@ defmodule Ms2ex.FieldNpcBattleTest do
     assert npc.battle.cast.hit_at == 3_050
   end
 
+  test "a multi-motion swing fires the projectile motion's magic path" do
+    {map_id, xblock} = unique_map()
+
+    # a windup motion followed by the firing motion that carries the
+    # projectile (the shape of the broccoli-shooter's skill)
+    stub_metadata(%{
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_B", sequence_speed: 1.0},
+                attacks: [%{range: %{distance: 1200.0}, damage: %{rate: 0.0, value: 0}}]
+              },
+              %{
+                motion_property: %{sequence_name: "Attack_02_B", sequence_speed: 1.0},
+                attacks: [
+                  %{
+                    range: %{distance: 2400.0},
+                    magic_path_id: 5065,
+                    arrow: %{overlap: true},
+                    damage: %{rate: 1.0, value: 0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        sequences: %{
+          Attack_01_B: %{id: 21, time: 0.5},
+          Attack_02_B: %{id: 22, time: 1.0},
+          Attack_Idle_A: %{id: 8}
+        }
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    # the player stands beyond the windup attack's 1200 reach but inside
+    # the firing attack's 2400: the range re-check must use the firing
+    # attack's reach or the swing would whiff
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+    state = field_with_player_at(1300, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+
+    # the cast spans both motions (1.5s) and the hit lands inside the
+    # firing motion: 500ms windup + 40% of the 1s firing motion
+    assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065, arrow_overlap?: true} =
+             npc.battle.cast
+
+    # the cast opens on the windup motion's sequence
+    assert npc.animation == 21
+
+    {npc, hits} = Battle.tick(npc, state, 1_050)
+    assert [%{magic_path_id: 5065, arrow_overlap?: true, server_tick: 1_050}] = hits
+  end
+
   test "a mob in stop range swings at its target on cooldown" do
     {map_id, xblock} = unique_map()
     stub_navmesh(xblock, map_id)
@@ -644,7 +716,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
             ]
           }
         }
-      }
+      },
+      "animation:testmob" => %{sequences: %{Attack_001_A: %{id: 7, time: 1.0}}}
     })
 
     metadata =

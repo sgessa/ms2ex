@@ -363,12 +363,28 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # inside attack range: swing when the cooldown allows, otherwise hold
   # position facing the target
   defp attack_or_stand(npc, battle, field_state, target_position, now) do
-    if now >= battle.next_attack_at and has_skill?(npc) do
+    if now >= battle.next_attack_at and has_skill?(npc) and castable?(npc) do
       npc = start_cast(npc, battle, target_position, now)
       # the swing starts immediately: resolve its hit when due
       cast_tick(npc, npc.battle, field_state, target_position, now)
     else
       {stand(npc, battle, target_position, now), []}
+    end
+  end
+
+  # a cast whose motion sequences the model's rig cannot play is cancelled
+  # before it starts: a mob never attacks with an animation it does not
+  # have (the swing would land as invisible damage)
+  defp castable?(npc) do
+    [entry | _] = get_in(npc.npc.metadata, [:skill])
+
+    case skill_level_doc(entry.id, entry.level) do
+      %{} = level_doc ->
+        motions = swing_motions(npc, level_doc)
+        motions != [] and Enum.all?(motions, & &1)
+
+      _ ->
+        false
     end
   end
 
@@ -422,16 +438,22 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     skill_level = entry.level
     level_doc = skill_level_doc(skill_id, skill_level)
 
+    motions = swing_motions(npc, level_doc)
+    {attack_motion_index, attack} = swing_attack(level_doc) || {0, nil}
+    {hit_offset_ms, duration_ms} = cast_timing(motions, attack_motion_index)
+
     rotation = face_toward(npc.position, target_position, npc.rotation)
-    duration_ms = cast_duration_ms(npc, level_doc)
 
     cast = %{
       skill_id: skill_id,
       skill_level: skill_level,
-      sequence_id: attack_sequence_id(npc, level_doc),
-      range: attack_range_from_doc(level_doc, npc),
-      rate: attack_rate_from_doc(level_doc),
-      hit_at: now + trunc(duration_ms * @hit_point_fraction),
+      # the cast opens on the first motion's sequence
+      sequence_id: motions && Enum.find_value(motions, fn m -> m && m.sequence_id end),
+      range: attack_range(attack, npc),
+      rate: attack_rate(attack),
+      magic_path_id: attack_magic_path_id(attack),
+      arrow_overlap?: attack_arrow_overlap?(attack),
+      hit_at: now + hit_offset_ms,
       end_at: now + duration_ms,
       hit_done?: false
     }
@@ -493,6 +515,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           direction: aim_direction(npc.position, target_position),
           attack: get_in(npc.npc.metadata, [:stat, :stats, :physical_atk]) || 0,
           rate: cast.rate,
+          magic_path_id: cast.magic_path_id,
+          arrow_overlap?: cast.arrow_overlap?,
+          server_tick: now,
           attack_counter: battle.attack_counter + 1
         }
 
@@ -777,70 +802,104 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
-  # the attack motion's sequence id for the mob's model; nil keeps the
-  # current animation (the swing still lands)
-  defp attack_sequence_id(npc, level_doc) do
+  # the swing's motion timeline: one entry per skill motion with the
+  # sequence resolved against the model's rig and its playback length at
+  # the motion's sequence speed. A motion whose sequence the rig cannot
+  # play leaves a nil entry and marks the swing uncastable — the game
+  # cancels such casts rather than landing damage with no animation
+  defp swing_motions(npc, level_doc) do
+    model = get_in(npc.npc.metadata, [:model, :name])
+
     level_doc
     |> get_in([:motions])
     |> List.wrap()
-    |> Enum.find_value(fn motion ->
-      get_in(motion || %{}, [:motion_property, :sequence_name])
+    |> Enum.map(fn motion ->
+      name = get_in(motion || %{}, [:motion_property, :sequence_name])
+
+      speed = get_in(motion || %{}, [:motion_property, :sequence_speed]) || 1.0
+      speed = if is_number(speed) and speed > 0, do: speed * 1.0, else: 1.0
+
+      case Storage.Animations.sequence_time(model, name) do
+        seconds when is_number(seconds) and seconds > 0 ->
+          %{sequence_id: sequence_id(npc, name), ms: trunc(seconds * 1000 / speed)}
+
+        _ ->
+          nil
+      end
     end)
-    |> case do
-      nil -> nil
-      name -> sequence_id(npc, name)
+  end
+
+  # the attack the swing lands with: the first projectile-carrying attack
+  # (later motions often fire the actual shot while earlier ones are pure
+  # windups), falling back to the very first attack of the set. Each attack
+  # pairs with its motion index so the hit lands inside that motion's
+  # playback
+  defp swing_attack(level_doc) do
+    attacks =
+      level_doc
+      |> get_in([:motions])
+      |> List.wrap()
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {motion, index} ->
+        motion
+        |> Map.get(:attacks, [])
+        |> List.wrap()
+        |> Enum.map(&{index, &1})
+      end)
+
+    Enum.find(attacks, fn {_index, attack} -> attack_magic_path_id(attack) > 0 end) ||
+      Enum.at(attacks, 0)
+  end
+
+  # the projectile the client renders for the swing (0 when none)
+  defp attack_magic_path_id(attack) do
+    case get_in(attack || %{}, [:magic_path_id]) do
+      id when is_integer(id) and id > 0 -> id
+      _ -> 0
     end
   end
 
-  # the attack range of the first attack of the motion set; falls back to
-  # the mob's stop range so the hit re-check stays meaningful
-  defp attack_range_from_doc(level_doc, npc) do
-    level_doc
-    |> get_in([:motions])
-    |> List.wrap()
-    |> Enum.flat_map(&List.wrap(Map.get(&1 || %{}, :attacks)))
-    |> Enum.map(&get_in(&1 || %{}, [:range, :distance]))
-    |> Enum.find(&is_number/1)
-    |> case do
+  # whether the projectile homes to its target (the attack's arrow overlap)
+  defp attack_arrow_overlap?(attack) do
+    get_in(attack || %{}, [:arrow, :overlap]) == true
+  end
+
+  # the hit's reach: the firing attack's range, falling back to the mob's
+  # stop range so the re-check stays meaningful
+  defp attack_range(attack, npc) do
+    case get_in(attack || %{}, [:range, :distance]) do
       range when is_number(range) and range > 0 -> range * 1.0
       _ -> stop_range(npc)
     end
   end
 
-  # the swing's playback length: the attack sequence's natural time played at
-  # the motion's sequence speed. Models without animation timing swing on the
-  # fixed stand-ins
-  defp cast_duration_ms(npc, level_doc) do
-    sequence_name =
-      level_doc
-      |> get_in([:motions])
-      |> List.wrap()
-      |> Enum.find_value(fn motion ->
-        get_in(motion || %{}, [:motion_property, :sequence_name])
-      end)
-
-    speed = get_in(level_doc, [:motions, Access.at(0), :motion_property, :sequence_speed]) || 1.0
-    speed = if is_number(speed) and speed > 0, do: speed * 1.0, else: 1.0
-
-    model = get_in(npc.npc.metadata, [:model, :name])
-
-    case Storage.Animations.sequence_time(model, sequence_name) do
-      seconds when is_number(seconds) and seconds > 0 -> trunc(seconds * 1000 / speed)
-      _ -> @fallback_duration_ms
+  # the attack's damage rate (scales the mob's attack stat)
+  defp attack_rate(attack) do
+    case get_in(attack || %{}, [:damage, :rate]) do
+      rate when is_number(rate) -> rate * 1.0
+      _ -> 1.0
     end
   end
 
-  # the attack's damage rate (scales the mob's attack stat)
-  defp attack_rate_from_doc(level_doc) do
-    level_doc
-    |> get_in([:motions])
-    |> List.wrap()
-    |> Enum.flat_map(&List.wrap(Map.get(&1 || %{}, :attacks)))
-    |> Enum.map(&get_in(&1 || %{}, [:damage, :rate]))
-    |> Enum.find(&is_number/1)
-    |> case do
-      rate when is_number(rate) -> rate * 1.0
-      _ -> 1.0
+  # the swing's cast timing from the motion timeline: the cast spans every
+  # motion's playback and the hit lands 40% into the firing motion. Without
+  # animation timing the fixed stand-ins drive the swing
+  defp cast_timing(motions, attack_motion_index) do
+    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
+      total = motions |> Enum.map(& &1.ms) |> Enum.sum()
+
+      before =
+        motions
+        |> Enum.take(attack_motion_index)
+        |> Enum.map(& &1.ms)
+        |> Enum.sum()
+
+      firing = Enum.at(motions, attack_motion_index) || List.last(motions)
+      hit_offset = before + trunc(firing.ms * @hit_point_fraction)
+
+      {hit_offset, total}
+    else
+      {trunc(@fallback_duration_ms * @hit_point_fraction), @fallback_duration_ms}
     end
   end
 
@@ -933,17 +992,14 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
+  # the range the mob closes to before swinging: the firing attack's reach
   defp attack_range(npc) do
     case get_in(npc.npc.metadata, [:skill]) do
       [%{id: skill_id, level: level} | _] ->
         with %{levels: levels} <- Storage.Skills.get_meta(skill_id),
-             level_doc when is_map(level_doc) <- levels[to_string(level)] do
-          level_doc
-          |> get_in([:motions])
-          |> List.wrap()
-          |> Enum.flat_map(&List.wrap(Map.get(&1 || %{}, :attacks)))
-          |> Enum.map(&get_in(&1 || %{}, [:range, :distance]))
-          |> Enum.find(&is_number/1)
+             level_doc when is_map(level_doc) <- levels[to_string(level)],
+             {_index, attack} when is_map(attack) <- swing_attack(level_doc) do
+          get_in(attack, [:range, :distance])
         else
           _ -> nil
         end
