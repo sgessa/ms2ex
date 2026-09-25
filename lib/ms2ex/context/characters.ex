@@ -28,7 +28,8 @@ defmodule Ms2ex.Context.Characters do
 
     Repo.transaction(fn ->
       with {:ok, %{skill_tabs: [tab]} = character} <- Repo.insert(changeset),
-           {:ok, character} <- update(character, %{active_skill_tab_id: tab.id}) do
+           {:ok, character} <- update(character, %{active_skill_tab_id: tab.id}),
+           {:ok, _config} <- Context.CharacterConfigs.create(character) do
         character
       else
         {:error, reason} -> Repo.rollback(reason)

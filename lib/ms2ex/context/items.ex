@@ -129,4 +129,35 @@ defmodule Ms2ex.Context.Items do
       do: play_count
 
   def remaining_uses(%Schema.Item{}), do: 0
+
+  @state_effect_events [:auto_fish, :auto_perform]
+
+  @doc """
+  The convenience-state effects an item's use casts — the auto-fishing and
+  auto-performance vouchers. Their item skill chains into an additional
+  effect whose buff event toggles the matching client state; every other
+  skill item resolves to an empty list.
+  """
+  @spec state_effects(map()) :: [{integer(), integer()}]
+  def state_effects(metadata) do
+    with %{skill_id: skill_id, skill_level: skill_level} when is_integer(skill_id) <- metadata,
+         %{} = skill <- Storage.Skills.get_meta(skill_id) do
+      level = Map.get(skill.levels, Integer.to_string(skill_level || 1), %{})
+
+      level
+      |> Map.get(:skills, [])
+      |> Enum.flat_map(& &1.skills)
+      |> Enum.map(fn %{id: id, level: level} -> {id, level || 1} end)
+      |> Enum.filter(&state_effect?/1)
+    else
+      _ -> []
+    end
+  end
+
+  defp state_effect?({effect_id, effect_level}) do
+    case Storage.Skills.get_effect(effect_id, effect_level) do
+      %{property: %{event_type: event_type}} -> event_type in @state_effect_events
+      _ -> false
+    end
+  end
 end
