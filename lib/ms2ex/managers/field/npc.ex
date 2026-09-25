@@ -241,6 +241,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   def tick(state) do
     now = Ms2ex.sync_ticks()
+    state = advance_projectiles(state, now)
 
     {npcs, {live_dirty, corpse_dirty, hits}} =
       Enum.flat_map_reduce(state.npcs, {[], [], []}, fn {object_id, npc},
@@ -255,18 +256,45 @@ defmodule Ms2ex.Managers.Field.Npc do
     live = Enum.reverse(live_dirty)
 
     # mob skill hits land here: the attack record (projectile launch)
-    # goes out at the release keyframe; the damage follows when the
-    # projectile arrives — instantly for melee swings and ground
-    # indicators, after the flight time for shots
-    for hit <- hits do
-      if hit.travel_ms > 0 do
+    # goes out at the release keyframe. Overlap shots home to their victim
+    # (the client chases the projectile) and their damage applies when the
+    # flight timer elapses; straight shots are fire-and-forget — the field
+    # simulates the flight and only lands a hit when the projectile's
+    # flight actually reaches the victim, so sidestepping or outrunning
+    # one dodges it. Melee swings and ground indicators stay instant.
+    state =
+      Enum.reduce(hits, state, fn hit, state ->
         shooter = Map.get(state.npcs, hit.caster_object_id)
-        broadcast_launch(state, shooter, hit)
-        Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
-      else
-        apply_hit(state, hit)
-      end
-    end
+        key = {hit.caster_object_id, hit.attack_counter}
+
+        cond do
+          hit.travel_ms > 0 and hit.arrow_overlap? ->
+            state = broadcast_launch(state, shooter, hit, hit.target_object_id)
+            Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
+            state
+
+          hit.travel_ms > 0 ->
+            state = broadcast_launch(state, shooter, hit, 0)
+
+            projectile = %{
+              hit: hit,
+              origin: hit.position,
+              direction: hit.direction,
+              velocity: hit.velocity,
+              max_distance: hit.flight,
+              traveled: 0.0,
+              victim_id: hit.character_id,
+              launched_at: now
+            }
+
+            projectiles = Map.put(Map.get(state, :projectiles, %{}), key, projectile)
+            Map.put(state, :projectiles, projectiles)
+
+          true ->
+            apply_hit(state, hit)
+            state
+        end
+      end)
 
     # mobs that arrived home this tick healed: announce the new health
     # before their idle control lands
@@ -637,7 +665,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   # every launch record homes to the victim: the client chases the
   # projectile onto the player, so the shot visibly reads as coming from
   # the mob that fired it (its damage still applies on the flight timer)
-  defp broadcast_launch(state, shooter, hit) do
+  defp broadcast_launch(state, shooter, hit, target_id) do
     with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
          segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
       segments
@@ -648,7 +676,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
         Managers.Field.broadcast(
           state.topic,
-          Packets.SkillDamage.target(launch, index, hit.target_object_id)
+          Packets.SkillDamage.target(launch, index, target_id)
         )
       end)
     end
@@ -669,44 +697,74 @@ defmodule Ms2ex.Managers.Field.Npc do
   def launch_direction(_shooter_rotation, world_direction, false), do: world_direction
 
   @doc """
-  Applies a projectile's damage when its flight time elapses. Homing
-  shots (arrow overlap) land while their victim is still on the field,
-  live-synced, and inside the firing attack's reach of the launch point.
-  Straight shots land only when the victim stands within the impact
-  radius of the flight's end point — sidestepping the shot dodges it.
+  Applies a homing projectile's damage when its flight time elapses. The
+  shot lands while its victim is still on the field, live-synced, and
+  inside the firing attack's reach of the launch point. (Straight shots
+  are simulated per tick instead — see advance_projectiles/2.)
   """
-  @impact_radius 150
-
   def apply_projectile_impact(state, hit) do
+    reach = hit.range + 60
+    launch = hit.position
+    victim_position = get_in(state, [:player_positions, hit.character_id, :position])
+
     lands? =
       Map.has_key?(state.players, hit.character_id) and
-        match?(%{position: %Types.Coord{}}, state.player_positions[hit.character_id]) and
-        impact_hits?(state.player_positions[hit.character_id].position, hit)
+        match?(%Types.Coord{}, victim_position) and
+        distance_sq(launch, victim_position) <= reach * reach
 
     if lands?, do: apply_hit(state, hit)
 
     state
   end
 
-  defp impact_hits?(player_position, hit) do
-    launch = hit.position
+  @projectile_radius 150
+  @max_flight_step_ms 200
 
-    if hit.arrow_overlap? do
-      reach = hit.range + 60
-      distance_sq(launch, player_position) <= reach * reach
-    else
-      # the flight's end point: launch + direction x flight distance
-      d = hit.direction
-      flight = hit.flight || 0.0
+  # straight-shot projectiles fly their fixed line: each tick advances the
+  # shot along its launch direction and lands it only when the flight
+  # reaches the victim's live position — sidestepping or outrunning one
+  # dodges it. Shots that cover their max distance without colliding
+  # despawn harmlessly
+  def advance_projectiles(state, now) do
+    projectiles = Map.get(state, :projectiles, %{})
 
-      end_point = %Types.Coord{
-        x: launch.x + d.x * flight,
-        y: launch.y + d.y * flight,
-        z: launch.z + d.z * flight
-      }
+    {kept, impacts} =
+      Enum.flat_map_reduce(projectiles, [], fn {key, p}, impacts ->
+        dt = (now - p.launched_at) |> max(0) |> min(@max_flight_step_ms)
+        p = %{p | traveled: p.traveled + p.velocity * dt / 1000, launched_at: now}
 
-      distance_sq(end_point, player_position) <= @impact_radius * @impact_radius
-    end
+        position = projectile_position(p)
+        victim_position = get_in(state, [:player_positions, p.victim_id, :position])
+
+        cond do
+          not Map.has_key?(state.players, p.victim_id) ->
+            # the victim left the field mid-flight: despawn without landing
+            {[], impacts}
+
+          match?(%Types.Coord{}, victim_position) and
+              distance_sq(position, victim_position) <= @projectile_radius * @projectile_radius ->
+            # collision: the hit applies and the projectile despawns
+            {[], [p.hit | impacts]}
+
+          p.traveled >= p.max_distance ->
+            {[], impacts}
+
+          true ->
+            {[{key, p}], impacts}
+        end
+      end)
+
+    state = Map.put(state, :projectiles, Map.new(kept))
+    Enum.each(impacts, fn hit -> apply_hit(state, hit) end)
+    state
+  end
+
+  defp projectile_position(%{origin: origin, direction: direction, traveled: traveled}) do
+    %Types.Coord{
+      x: origin.x + direction.x * traveled,
+      y: origin.y + direction.y * traveled,
+      z: origin.z + direction.z * traveled
+    }
   end
 
   defp distance_sq(%Types.Coord{} = a, %Types.Coord{} = b) do

@@ -511,7 +511,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       }
 
       if in_range? do
-        {travel_ms, flight} =
+        {travel_ms, flight, velocity} =
           projectile_flight(cast.magic_path_id, npc.position, target_position)
 
         hit = %{
@@ -531,6 +531,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           arrow_overlap?: cast.arrow_overlap?,
           travel_ms: travel_ms,
           flight: flight,
+          velocity: velocity,
           server_tick: now,
           attack_counter: battle.attack_counter + 1
         }
@@ -977,10 +978,10 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   # the projectile's flight to the target: {travel time in ms, flight
-  # distance} from the first magic-path segment's velocity over the launch
-  # distance. {0, 0} when the attack fires no projectile (melee swings,
-  # ground indicators) or the path carries no velocity — the hit then
-  # lands at the keyframe itself
+  # distance, velocity} from the first magic-path segment's velocity over
+  # the launch distance. {0, 0, 0} when the attack fires no projectile
+  # (melee swings, ground indicators) or the path carries no velocity —
+  # the hit then lands at the keyframe itself
   defp projectile_flight(magic_path_id, from, to) do
     segments =
       if magic_path_id > 0 do
@@ -996,13 +997,13 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         if is_number(velocity) and velocity > 0 do
           distance = :math.sqrt(square_distance(from, to))
           flight = min(distance, segment[:distance] || distance)
-          {trunc(flight / velocity * 1000), flight}
+          {trunc(flight / velocity * 1000), flight, velocity * 1.0}
         else
-          {0, 0}
+          {0, 0, 0.0}
         end
 
       _ ->
-        {0, 0}
+        {0, 0, 0.0}
     end
   end
 

@@ -114,10 +114,24 @@ then settles into Attack_Idle_A (fallback Idle_A).
 
 When the firing attack carries a magic path, the hit reaches clients as
 a SkillDamage target record first (one packet per magic-path segment,
-before the damage numbers): that is what spawns the projectile visual,
-homing to the victim when the attack's arrow overlaps (most mob
-projectiles are straight shots — the arrow overlap flag decides), so
-ranged mobs read as the shooter they are.
+before the damage numbers): that is what spawns the projectile visual.
+The record's direction is the world shot direction — rotate? segments
+carry it in the shooter's local frame (+y forward), which the client
+turns by the shooter's yaw.
+
+The projectile's damage depends on its arrow overlap:
+
+- overlap shots (a minority) home: the record carries the victim's
+  object id, the client chases the projectile onto them, and the damage
+  applies when the flight time (segment velocity over the launch
+  distance) elapses — whiffed only if the victim left the field or the
+  attack's reach
+- straight shots (the vast majority) are fire-and-forget: the record's
+  target id stays zero and the field simulates the flight per tick along
+  the fixed launch line. The damage lands only when the flight actually
+  reaches the victim's live position (impact radius 150), so
+  sidestepping the line dodges the shot; a flight that covers its max
+  distance without colliding despawns harmlessly
 
 - the active cast owns the mob's presentation: stand ticks during the
   windup never touch the animation, so the client plays the full swing
