@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-6D95DC38.js"></script>
+    <script defer src="dist/sidebar_items-AA2DAB4E.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -116,8 +116,8 @@ MS2EX
     <section id="moduledoc">
 <p>Context module for the per-character client-config row.</p><p>Holds serialized client state — key binds, guide records, gathering
 counts — that the character-config manager keeps in memory; this module
-loads the row once per login and persists field updates, returning the
-updated row for the manager's state.</p>
+creates the row together with the character, loads it once per login and
+persists field updates, returning the updated row for the manager's state.</p>
     </section>
 
 </div>
@@ -136,12 +136,23 @@ updated row for the manager's state.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#create/1" data-no-tooltip="" translate="no">create(character)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Creates the config row of a character. Runs inside character creation so
+every character carries exactly one row for its whole life.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get/1" data-no-tooltip="" translate="no">get(character_id)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the character's config row; a character without a row yet reads
-as an all-default config.</p></div>
+        <div class="summary-synopsis"><p>Returns the character's config row. The row is created together with the
+character, so a missing row is a data bug and raises.</p></div>
 
     </div>
 
@@ -151,8 +162,7 @@ as an all-default config.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Persists the given config values and returns the updated row. The row is
-inserted when the manager's cached config has not been written yet; the
+        <div class="summary-synopsis"><p>Persists the given config values and returns the updated row; the
 writable fields are the ones the schema changeset casts.</p></div>
 
     </div>
@@ -171,6 +181,36 @@ writable fields are the ones the schema changeset casts.</p></div>
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="create/1">
+
+  <div class="detail-header">
+    <a href="#create/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create(character)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/character_configs.ex#L20" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) ::
+  {:ok, <a href="Ms2ex.Schema.CharacterConfig.html#t:t/0">Ms2ex.Schema.CharacterConfig.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+
+      </div>
+
+<p>Creates the config row of a character. Runs inside character creation so
+every character carries exactly one row for its whole life.</p>
+  </section>
+</section>
 <section class="detail" id="get/1">
 
   <div class="detail-header">
@@ -181,7 +221,7 @@ writable fields are the ones the schema changeset casts.</p></div>
       <h1 class="signature" translate="no">get(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/character_configs.ex#L19" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/character_configs.ex#L29" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -196,8 +236,8 @@ writable fields are the ones the schema changeset casts.</p></div>
 
       </div>
 
-<p>Returns the character's config row; a character without a row yet reads
-as an all-default config.</p>
+<p>Returns the character's config row. The row is created together with the
+character, so a missing row is a data bug and raises.</p>
   </section>
 </section>
 <section class="detail" id="update/2">
@@ -210,7 +250,7 @@ as an all-default config.</p>
       <h1 class="signature" translate="no">update(config, attrs)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/character_configs.ex#L31" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/character_configs.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -226,8 +266,7 @@ as an all-default config.</p>
 
       </div>
 
-<p>Persists the given config values and returns the updated row. The row is
-inserted when the manager's cached config has not been written yet; the
+<p>Persists the given config values and returns the updated row; the
 writable fields are the ones the schema changeset casts.</p>
   </section>
 </section>

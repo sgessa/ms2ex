@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-6D95DC38.js"></script>
+    <script defer src="dist/sidebar_items-AA2DAB4E.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -303,6 +303,19 @@ the remainder is persisted on the item so it survives relogs.</p></div>
         <a href="#stamina?/1" data-no-tooltip="" translate="no">stamina?(item)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#state_effects/1" data-no-tooltip="" translate="no">state_effects(metadata)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The convenience-state effects an item's use casts — the auto-fishing and
+auto-performance vouchers. Their item skill chains into an additional
+effect whose buff event toggles the matching client state; every other
+skill item resolves to an empty list.</p></div>
 
     </div>
 
@@ -855,6 +868,37 @@ the remainder is persisted on the item so it survives relogs.</p>
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="state_effects/1">
+
+  <div class="detail-header">
+    <a href="#state_effects/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">state_effects(metadata)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/items.ex#L142" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> state_effects(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: [{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()}]</pre>
+
+      </div>
+
+<p>The convenience-state effects an item's use casts — the auto-fishing and
+auto-performance vouchers. Their item skill chains into an additional
+effect whose buff event toggles the matching client state; every other
+skill item resolves to an empty list.</p>
   </section>
 </section>
 <section class="detail" id="valor_token/1">

@@ -82,6 +82,17 @@ the remainder is persisted on the item so it survives relogs.
 
 # `stamina?`
 
+# `state_effects`
+
+```elixir
+@spec state_effects(map()) :: [{integer(), integer()}]
+```
+
+The convenience-state effects an item's use casts — the auto-fishing and
+auto-performance vouchers. Their item skill chains into an additional
+effect whose buff event toggles the matching client state; every other
+skill item resolves to an empty list.
+
 # `valor_token`
 
 # `valor_token?`

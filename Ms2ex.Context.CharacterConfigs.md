@@ -5,8 +5,18 @@ Context module for the per-character client-config row.
 
 Holds serialized client state — key binds, guide records, gathering
 counts — that the character-config manager keeps in memory; this module
-loads the row once per login and persists field updates, returning the
-updated row for the manager's state.
+creates the row together with the character, loads it once per login and
+persists field updates, returning the updated row for the manager's state.
+
+# `create`
+
+```elixir
+@spec create(Ms2ex.Schema.Character.t()) ::
+  {:ok, Ms2ex.Schema.CharacterConfig.t()} | {:error, Ecto.Changeset.t()}
+```
+
+Creates the config row of a character. Runs inside character creation so
+every character carries exactly one row for its whole life.
 
 # `get`
 
@@ -14,8 +24,8 @@ updated row for the manager's state.
 @spec get(integer()) :: Ms2ex.Schema.CharacterConfig.t()
 ```
 
-Returns the character's config row; a character without a row yet reads
-as an all-default config.
+Returns the character's config row. The row is created together with the
+character, so a missing row is a data bug and raises.
 
 # `update`
 
@@ -24,8 +34,7 @@ as an all-default config.
   {:ok, Ms2ex.Schema.CharacterConfig.t()} | {:error, Ecto.Changeset.t()}
 ```
 
-Persists the given config values and returns the updated row. The row is
-inserted when the manager's cached config has not been written yet; the
+Persists the given config values and returns the updated row; the
 writable fields are the ones the schema changeset casts.
 
 ---
