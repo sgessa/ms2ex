@@ -680,6 +680,8 @@ defmodule Ms2ex.Managers.Field.Npc do
         )
       end)
     end
+
+    state
   end
 
   @doc """
