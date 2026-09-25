@@ -4,7 +4,6 @@ defmodule Ms2ex.CharacterConfigsTest do
   alias Ms2ex.Context
   alias Ms2ex.Repo
   alias Ms2ex.Schema
-  alias Ms2ex.Types
 
   setup do
     account =

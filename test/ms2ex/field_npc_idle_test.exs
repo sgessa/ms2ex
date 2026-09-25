@@ -9,7 +9,7 @@ defmodule Ms2ex.FieldNpcIdleTest do
   alias Ms2ex.Navigation
   alias Ms2ex.Types
 
-  defp mob_metadata(overrides \\ []) do
+  defp mob_metadata(overrides) do
     Map.merge(
       %{
         basic: %{friendly: 0, class: 0, level: 10},

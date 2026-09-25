@@ -47,7 +47,7 @@ defmodule Ms2ex.SkillDamagePacketTest do
     assert motion_point == 0
     assert attack_point == 0
     assert %Coord{x: 100, y: 200, z: 300} = position
-    assert %Coord{x: 0.0, y: 1.0, z: 0.0} = direction
+    assert %Coord{x: +0.0, y: 1.0, z: +0.0} = direction
     assert animate
     assert server_tick == 123_456
     assert target_count == 1

@@ -633,7 +633,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
   end
 
   test "a multi-motion swing fires the projectile motion's magic path" do
-    {map_id, xblock} = unique_map()
+    {map_id, _xblock} = unique_map()
 
     # a windup motion followed by the firing motion that carries the
     # projectile (the shape of the broccoli-shooter's skill)
@@ -698,7 +698,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 750)
     assert npc.animation == 22
 
-    {npc, hits} = Battle.tick(npc, state, 1_050)
+    {_npc, hits} = Battle.tick(npc, state, 1_050)
     assert [%{magic_path_id: 5065, arrow_overlap?: true, server_tick: 1_050}] = hits
   end
 
@@ -751,7 +751,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # the swing releases at the keyframe, not at the 40% guess
     assert %{hit_at: 1_000, end_at: 1_200} = npc.battle.cast
 
-    {npc, hits} = Battle.tick(npc, state, 1_050)
+    {_npc, hits} = Battle.tick(npc, state, 1_050)
     assert [%{character_id: 1}] = hits
   end
 
