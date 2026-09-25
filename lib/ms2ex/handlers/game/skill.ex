@@ -68,7 +68,9 @@ defmodule Ms2ex.GameHandlers.Skill do
       })
 
     {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
-    fishing_lure_item? = fishing_lure_item?(character, item_uid)
+
+    consumable_cast_item? =
+      fishing_lure_item?(character, item_uid) or state_effect_item?(character, item_uid)
 
     if Types.SkillCast.use_item?(skill_cast) do
       consume_used_item(session, character, item_uid)
@@ -97,7 +99,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     Managers.Field.broadcast_stats(character)
     Managers.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
 
-    if fishing_lure_item? do
+    if consumable_cast_item? do
       consume_used_item(session, character, item_uid)
     end
 
@@ -298,6 +300,22 @@ defmodule Ms2ex.GameHandlers.Skill do
       %Ms2ex.Schema.Item{} = item ->
         item = Context.Items.load_metadata(item)
         get_in(item.metadata, [:property, :tag]) == :fishing_lure
+
+      _ ->
+        false
+    end
+  end
+
+  # a skill item whose cast toggles a client convenience state (the
+  # auto-fishing and auto-performance vouchers) is consumed by its own cast
+  defp state_effect_item?(character, item_uid) do
+    case Managers.Inventory.get(character, item_uid) do
+      %Ms2ex.Schema.Item{} = item ->
+        item
+        |> Context.Items.load_metadata()
+        |> Map.get(:metadata, %{})
+        |> Context.Items.state_effects()
+        |> Enum.any?()
 
       _ ->
         false
