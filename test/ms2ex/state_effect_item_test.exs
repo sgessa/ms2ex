@@ -45,7 +45,7 @@ defmodule Ms2ex.StateEffectItemTest do
 
     stub_metadata(%{
       "skill:90000001" => %{
-        levels: %{"1" => %{skills: [%{skills: [%{id: 900_000_02, level: 1}]}]}}
+        levels: %{"1" => %{skills: [%{skills: [%{id: 90_000_002, level: 1}]}]}}
       },
       "additional-effect:90000002_1" => %{property: %{event_type: :none}}
     })

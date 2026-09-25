@@ -148,14 +148,16 @@ defmodule Ms2ex.Context.Items do
       |> Map.get(:skills, [])
       |> Enum.flat_map(& &1.skills)
       |> Enum.map(fn %{id: id, level: level} -> {id, level || 1} end)
-      |> Enum.filter(fn {effect_id, effect_level} ->
-        case Storage.Skills.get_effect(effect_id, effect_level) do
-          %{property: %{event_type: event_type}} -> event_type in @state_effect_events
-          _ -> false
-        end
-      end)
+      |> Enum.filter(&state_effect?/1)
     else
       _ -> []
+    end
+  end
+
+  defp state_effect?({effect_id, effect_level}) do
+    case Storage.Skills.get_effect(effect_id, effect_level) do
+      %{property: %{event_type: event_type}} -> event_type in @state_effect_events
+      _ -> false
     end
   end
 end
