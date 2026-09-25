@@ -6,6 +6,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
+  alias Ms2ex.Types.Coord
 
   alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Managers.Field.Npc.Patrol
@@ -259,7 +260,8 @@ defmodule Ms2ex.Managers.Field.Npc do
     # indicators, after the flight time for shots
     for hit <- hits do
       if hit.travel_ms > 0 do
-        broadcast_launch(state, hit)
+        shooter = Map.get(state.npcs, hit.caster_object_id)
+        broadcast_launch(state, shooter, hit)
         Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
       else
         apply_hit(state, hit)
@@ -631,38 +633,79 @@ defmodule Ms2ex.Managers.Field.Npc do
   # a mob's landed swing reaches clients as the attack record first (the
   # client's projectile visuals: one packet per magic-path segment, homing
   # to the victim when the attack's arrow overlaps) and the damage numbers
-  # right after
-  defp broadcast_launch(state, hit) do
+  # when the projectile lands
+  defp broadcast_launch(state, shooter, hit) do
     with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
          segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
       target_id = if hit[:arrow_overlap?], do: hit.target_object_id, else: 0
 
       segments
       |> Enum.with_index()
-      |> Enum.each(fn {_segment, index} ->
-        Managers.Field.broadcast(state.topic, Packets.SkillDamage.target(hit, index, target_id))
+      |> Enum.each(fn {segment, index} ->
+        direction = launch_direction(shooter.rotation, hit.direction, segment[:rotate?] == true)
+        launch = Map.merge(hit, %{direction: direction})
+
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.SkillDamage.target(launch, index, target_id)
+        )
       end)
     end
   end
 
   @doc """
-  Applies a projectile's damage when its flight time elapses. The shot
-  lands only while its victim is still on the field, live-synced, and
-  inside the firing attack's reach of the launch point — a player who ran
-  out of the shot's reach makes it whiff.
+  The shot direction a launch record carries for a magic-path segment:
+  `rotate?` segments fly where the shooter faces, so the packet carries
+  the world shot direction in the shooter's local frame (+y forward) and
+  the client turns it by the shooter's current yaw; fixed segments take
+  the world direction as-is.
   """
-  def apply_projectile_impact(state, hit) do
-    launch = hit.position
-    reach = hit.range + 60
+  def launch_direction(shooter_rotation, world_direction, rotate?)
 
+  def launch_direction(shooter_rotation, world_direction, true),
+    do: Coord.rotate(world_direction, shooter_rotation)
+
+  def launch_direction(_shooter_rotation, world_direction, false), do: world_direction
+
+  @doc """
+  Applies a projectile's damage when its flight time elapses. Homing
+  shots (arrow overlap) land while their victim is still on the field,
+  live-synced, and inside the firing attack's reach of the launch point.
+  Straight shots land only when the victim stands within the impact
+  radius of the flight's end point — sidestepping the shot dodges it.
+  """
+  @impact_radius 150
+
+  def apply_projectile_impact(state, hit) do
     lands? =
       Map.has_key?(state.players, hit.character_id) and
         match?(%{position: %Types.Coord{}}, state.player_positions[hit.character_id]) and
-        distance_sq(launch, state.player_positions[hit.character_id].position) <= reach * reach
+        impact_hits?(state.player_positions[hit.character_id].position, hit)
 
     if lands?, do: apply_hit(state, hit)
 
     state
+  end
+
+  defp impact_hits?(player_position, hit) do
+    launch = hit.position
+
+    if hit.arrow_overlap? do
+      reach = hit.range + 60
+      distance_sq(launch, player_position) <= reach * reach
+    else
+      # the flight's end point: launch + direction x flight distance
+      d = hit.direction
+      flight = hit.flight || 0.0
+
+      end_point = %Types.Coord{
+        x: launch.x + d.x * flight,
+        y: launch.y + d.y * flight,
+        z: launch.z + d.z * flight
+      }
+
+      distance_sq(end_point, player_position) <= @impact_radius * @impact_radius
+    end
   end
 
   defp distance_sq(%Types.Coord{} = a, %Types.Coord{} = b) do

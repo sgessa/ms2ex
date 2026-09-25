@@ -663,7 +663,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
       },
       # velocity 300 units/s: the 300-unit flight to the player takes 10ms
       "table:magicpath.xml" => %{
-        table: %{entries: %{"5065" => [%{velocity: 30000.0, distance: 600.0}]}}
+        table: %{entries: %{"5065" => [%{velocity: 30_000.0, distance: 600.0}]}}
       }
     })
 

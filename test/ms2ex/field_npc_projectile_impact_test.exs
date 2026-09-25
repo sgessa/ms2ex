@@ -1,7 +1,6 @@
 defmodule Ms2ex.FieldNpcProjectileImpactTest do
-  # the impact application runs inside the field process on the flight
-  # timer, so the tests drive the field state and the character manager
-  # directly
+  # impact application is a pure state transition over the field state and
+  # the character manager: the flight data arrives pre-resolved on the hit
   use Ms2ex.DataCase, async: false
 
   alias Ms2ex.Managers
@@ -14,8 +13,6 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
   @mob_object_id 50_000_004
 
   setup do
-    stub_metadata(stub_data())
-
     character = %Schema.Character{
       id: @character_id,
       name: "Target",
@@ -37,28 +34,57 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     :ok
   end
 
-  test "a landed projectile applies its damage on the flight timer" do
+  test "a straight shot lands on a victim standing at its end point" do
+    # launch at the origin firing +x: the 250-unit flight ends on the player
     state =
-      field_state(
-        launch: %Types.Coord{x: 0, y: 0, z: 0},
-        player_at: %Types.Coord{x: 250, y: 0, z: 0}
-      )
+      field_state(player_at: %Types.Coord{x: 250, y: 0, z: 0})
 
-    hit = hit(launch: %Types.Coord{x: 0, y: 0, z: 0}, travel_ms: 8)
+    hit = hit(flight: 250.0)
     Npc.apply_projectile_impact(state, hit)
 
     {:ok, character} = Managers.Character.call(@character_id, :lookup)
     assert character.stats.health_cur < 1000
   end
 
-  test "a projectile whiffs once its victim left the shot's reach" do
+  test "a straight shot dodges when the victim sidesteps off its line" do
+    # the flight ends at (250, 0); the victim moved 250 units off that line
     state =
-      field_state(
-        launch: %Types.Coord{x: 0, y: 0, z: 0},
-        player_at: %Types.Coord{x: 5_000, y: 0, z: 0}
-      )
+      field_state(player_at: %Types.Coord{x: 250, y: 250, z: 0})
 
-    hit = hit(launch: %Types.Coord{x: 0, y: 0, z: 0}, travel_ms: 8)
+    hit = hit(flight: 250.0)
+    Npc.apply_projectile_impact(state, hit)
+
+    {:ok, character} = Managers.Character.call(@character_id, :lookup)
+    assert character.stats.health_cur == 1000
+  end
+
+  test "a straight shot whiffs when the victim outruns its flight" do
+    state =
+      field_state(player_at: %Types.Coord{x: 5_000, y: 0, z: 0})
+
+    hit = hit()
+    Npc.apply_projectile_impact(state, hit)
+
+    {:ok, character} = Managers.Character.call(@character_id, :lookup)
+    assert character.stats.health_cur == 1000
+  end
+
+  test "a homing shot lands while its victim stays inside the attack's reach" do
+    state =
+      field_state(player_at: %Types.Coord{x: 250, y: 250, z: 0})
+
+    hit = hit(arrow_overlap?: true)
+    Npc.apply_projectile_impact(state, hit)
+
+    {:ok, character} = Managers.Character.call(@character_id, :lookup)
+    assert character.stats.health_cur < 1000
+  end
+
+  test "a homing shot whiffs once its victim left the attack's reach" do
+    state =
+      field_state(player_at: %Types.Coord{x: 5_000, y: 0, z: 0})
+
+    hit = hit(arrow_overlap?: true)
     Npc.apply_projectile_impact(state, hit)
 
     {:ok, character} = Managers.Character.call(@character_id, :lookup)
@@ -67,92 +93,47 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
 
   test "a projectile whiffs when its victim left the field" do
     state = %{
-      field_state(
-        launch: %Types.Coord{x: 0, y: 0, z: 0},
-        player_at: %Types.Coord{x: 250, y: 0, z: 0}
-      )
+      field_state(player_at: %Types.Coord{x: 250, y: 0, z: 0})
       | players: %{}
     }
 
-    hit = hit(launch: %Types.Coord{x: 0, y: 0, z: 0}, travel_ms: 8)
+    hit = hit()
     Npc.apply_projectile_impact(state, hit)
 
     {:ok, character} = Managers.Character.call(@character_id, :lookup)
     assert character.stats.health_cur == 1000
   end
 
-  test "the field schedules the impact when the swing releases" do
-    npc = mob()
+  test "the launch record direction is the shot in the shooter's local frame" do
+    alias Ms2ex.Managers.Field.Npc
 
-    _npc =
-      Ms2ex.Managers.Field.Npc.Battle.aggro(
-        npc,
-        %Schema.Character{id: @character_id, object_id: @object_id},
-        0
-      )
+    world = %Types.Coord{x: 1.0, y: 0.0, z: 0.0}
 
-    state =
-      field_state(
-        launch: %Types.Coord{x: 0, y: 0, z: 0},
-        player_at: %Types.Coord{x: 250, y: 0, z: 0}
-      )
+    # the mob faces +x (yaw 90): rotate? paths carry the local-frame
+    # direction (+y forward) the client turns by that yaw, landing back on
+    # the world shot direction
+    facing_east = %Types.Coord{x: 0.0, y: 0.0, z: 90.0}
+    local = Npc.launch_direction(facing_east, world, true)
 
-    state = put_in(state, [:npcs, npc.object_id], npc)
+    assert_in_delta local.x, 0.0, 1.0e-6
+    assert_in_delta local.y, 1.0, 1.0e-6
+    assert_in_delta local.z, 0.0, 1.0e-6
 
-    # engage, start the cast, then let the swing release past its 500ms
-    # keyframe on the live clock. Mimic stubs are global, so they are
-    # re-pinned right before every tick that reads storage — a concurrent
-    # async test re-stubbing storage between our ticks must not swap our
-    # data out from under the run
-    state = tick_field(state)
-    state = tick_field(state)
-
-    Process.sleep(600)
-
-    tick_field(state)
-
-    # the impact delivery rides the 8ms flight timer
-    assert_receive {:npc_projectile_impact, hit}, 200
-    assert hit.travel_ms == 8
-  end
-
-  defp tick_field(state) do
-    stub_metadata(stub_data())
-    Managers.Field.Npc.tick(state)
-  end
-
-  defp stub_data do
-    %{
-      "skill:4001" => %{
-        levels: %{
-          "1" => %{
-            cooldown_time: 0.0,
-            motions: [
-              %{
-                motion_property: %{sequence_name: "Attack_01_A", sequence_speed: 1.0},
-                attacks: [
-                  %{
-                    range: %{distance: 300.0},
-                    point: "Atk01",
-                    magic_path_id: 5065,
-                    damage: %{rate: 1.0, value: 0}
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      },
-      "animation:testmob" => %{
-        sequences: %{Attack_01_A: %{id: 7, time: 1.0, keys: %{Atk01: 0.5}}}
-      },
-      "table:magicpath.xml" => %{
-        table: %{entries: %{"5065" => [%{velocity: 30000.0, distance: 600.0}]}}
-      }
+    # and the client's rotation of it lands back on the world direction
+    rendered = %Types.Coord{
+      x: local.x * :math.cos(:math.pi() / 2) + local.y * :math.sin(:math.pi() / 2),
+      y: local.x * :math.sin(:math.pi() / 2) - local.y * :math.cos(:math.pi() / 2),
+      z: local.z
     }
+
+    assert_in_delta rendered.x, 1.0, 1.0e-6
+    assert_in_delta rendered.y, 0.0, 1.0e-6
+
+    # fixed segments take the world direction as-is
+    assert Npc.launch_direction(facing_east, world, false) == world
   end
 
-  defp field_state(launch: launch, player_at: player_at) do
+  defp field_state(player_at: player_at) do
     %{
       npcs: %{},
       players: %{@character_id => @object_id},
@@ -162,58 +143,29 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
       topic: "projectile-impact-test",
       map_id: 0
     }
-    |> then(fn state -> {state, launch} end)
-    |> elem(0)
   end
 
-  defp mob do
-    metadata = %{
-      basic: %{friendly: 0, class: 0, level: 10},
-      stat: %{stats: %{health: 1000, physical_atk: 500}},
-      model: %{name: "TestMob"},
-      capsule: %{radius: 50, height: 150},
-      action: %{walk_speed: 100, run_speed: 300},
-      distance: %{
-        sight: 500,
-        sight_height_up: 300,
-        sight_height_down: 100,
-        last_sight_radius: 2000,
-        last_sight_height_up: 400,
-        last_sight_height_down: 200
+  defp hit(overrides \\ []) do
+    Map.merge(
+      %{
+        character_id: @character_id,
+        caster_object_id: @mob_object_id,
+        target_object_id: @object_id,
+        skill_id: 4001,
+        skill_level: 1,
+        position: %Types.Coord{x: 0, y: 0, z: 0},
+        range: 300.0,
+        direction: %Types.Coord{x: 1.0, y: 0.0, z: 0.0},
+        attack: 500,
+        rate: 1.0,
+        magic_path_id: 5065,
+        arrow_overlap?: false,
+        travel_ms: 8,
+        flight: 250.0,
+        server_tick: 0,
+        attack_counter: 1
       },
-      skill: [%{id: 4001, level: 1}]
-    }
-
-    Types.FieldNpc.new(%{
-      object_id: @mob_object_id,
-      spawn_point_id: 1,
-      map_id: 0,
-      npc: Types.Npc.new(%{id: 22_000_000, metadata: metadata}),
-      position: %Types.Coord{x: 0, y: 0, z: 0},
-      rotation: %Types.Coord{x: 0, y: 0, z: 0},
-      field: self(),
-      spawn_radius: 0,
-      next_target_scan_at: 0
-    })
-  end
-
-  defp hit(launch: launch, travel_ms: travel_ms) do
-    %{
-      character_id: @character_id,
-      caster_object_id: @mob_object_id,
-      target_object_id: @object_id,
-      skill_id: 4001,
-      skill_level: 1,
-      position: launch,
-      range: 300.0,
-      direction: %Types.Coord{x: 1.0, y: 0.0, z: 0.0},
-      attack: 500,
-      rate: 1.0,
-      magic_path_id: 5065,
-      arrow_overlap?: false,
-      travel_ms: travel_ms,
-      server_tick: 0,
-      attack_counter: 1
-    }
+      Map.new(overrides)
+    )
   end
 end

@@ -511,6 +511,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       }
 
       if in_range? do
+        {travel_ms, flight} =
+          projectile_flight(cast.magic_path_id, npc.position, target_position)
+
         hit = %{
           character_id: battle.target_id,
           caster_object_id: npc.object_id,
@@ -526,7 +529,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           rate: cast.rate,
           magic_path_id: cast.magic_path_id,
           arrow_overlap?: cast.arrow_overlap?,
-          travel_ms: projectile_travel_ms(cast.magic_path_id, npc.position, target_position),
+          travel_ms: travel_ms,
+          flight: flight,
           server_tick: now,
           attack_counter: battle.attack_counter + 1
         }
@@ -972,11 +976,12 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
-  # the projectile's flight time to the target: the first magic-path
-  # segment's velocity over the launch distance. Zero when the attack
-  # fires no projectile (melee swings, ground indicators) or the path
-  # carries no velocity — the hit then lands at the keyframe itself
-  defp projectile_travel_ms(magic_path_id, from, to) do
+  # the projectile's flight to the target: {travel time in ms, flight
+  # distance} from the first magic-path segment's velocity over the launch
+  # distance. {0, 0} when the attack fires no projectile (melee swings,
+  # ground indicators) or the path carries no velocity — the hit then
+  # lands at the keyframe itself
+  defp projectile_flight(magic_path_id, from, to) do
     segments =
       if magic_path_id > 0 do
         Storage.Table.MagicPaths.get(magic_path_id) || []
@@ -991,13 +996,13 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         if is_number(velocity) and velocity > 0 do
           distance = :math.sqrt(square_distance(from, to))
           flight = min(distance, segment[:distance] || distance)
-          trunc(flight / velocity * 1000)
+          {trunc(flight / velocity * 1000), flight}
         else
-          0
+          {0, 0}
         end
 
       _ ->
-        0
+        {0, 0}
     end
   end
 
