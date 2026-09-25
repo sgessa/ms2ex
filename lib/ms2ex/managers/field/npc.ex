@@ -253,17 +253,16 @@ defmodule Ms2ex.Managers.Field.Npc do
     boss_target = state.players |> Map.values() |> List.first()
     live = Enum.reverse(live_dirty)
 
-    # mob skill hits land here: the character manager resolves the damage
-    # against its own defenses (funneling death and the stat broadcast
-    # through the normal paths), and the field broadcasts the hit so every
-    # client sees the numbers
+    # mob skill hits land here: the attack record (projectile launch)
+    # goes out at the release keyframe; the damage follows when the
+    # projectile arrives — instantly for melee swings and ground
+    # indicators, after the flight time for shots
     for hit <- hits do
-      case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
-        {:ok, applied} ->
-          broadcast_hit(state, Map.merge(hit, applied))
-
-        :error ->
-          :ok
+      if hit.travel_ms > 0 do
+        broadcast_launch(state, hit)
+        Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
+      else
+        apply_hit(state, hit)
       end
     end
 
@@ -612,16 +611,28 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   def expire_emote(npc, _now), do: npc
 
+  # the damage application shared by the instant path and the projectile
+  # impact: the character manager resolves the damage against its own
+  # defenses (funneling death and the stat broadcast through the normal
+  # paths) and the field broadcasts the hit so every client sees the numbers
+  defp apply_hit(state, hit) do
+    case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
+      {:ok, applied} ->
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.SkillDamage.mob_hit(Map.merge(hit, applied))
+        )
+
+      :error ->
+        :ok
+    end
+  end
+
   # a mob's landed swing reaches clients as the attack record first (the
   # client's projectile visuals: one packet per magic-path segment, homing
   # to the victim when the attack's arrow overlaps) and the damage numbers
   # right after
-  defp broadcast_hit(state, hit) do
-    broadcast_magic_paths(state, hit)
-    Managers.Field.broadcast(state.topic, Packets.SkillDamage.mob_hit(hit))
-  end
-
-  defp broadcast_magic_paths(state, hit) do
+  defp broadcast_launch(state, hit) do
     with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
          segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
       target_id = if hit[:arrow_overlap?], do: hit.target_object_id, else: 0
@@ -632,6 +643,33 @@ defmodule Ms2ex.Managers.Field.Npc do
         Managers.Field.broadcast(state.topic, Packets.SkillDamage.target(hit, index, target_id))
       end)
     end
+  end
+
+  @doc """
+  Applies a projectile's damage when its flight time elapses. The shot
+  lands only while its victim is still on the field, live-synced, and
+  inside the firing attack's reach of the launch point — a player who ran
+  out of the shot's reach makes it whiff.
+  """
+  def apply_projectile_impact(state, hit) do
+    launch = hit.position
+    reach = hit.range + 60
+
+    lands? =
+      Map.has_key?(state.players, hit.character_id) and
+        match?(%{position: %Types.Coord{}}, state.player_positions[hit.character_id]) and
+        distance_sq(launch, state.player_positions[hit.character_id].position) <= reach * reach
+
+    if lands?, do: apply_hit(state, hit)
+
+    state
+  end
+
+  defp distance_sq(%Types.Coord{} = a, %Types.Coord{} = b) do
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = a.z - b.z
+    dx * dx + dy * dy + dz * dz
   end
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do

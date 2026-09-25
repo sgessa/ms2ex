@@ -632,6 +632,60 @@ defmodule Ms2ex.FieldNpcBattleTest do
     assert npc.battle.cast.hit_at == 3_050
   end
 
+  test "a projectile hit defers its damage until the flight ends" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_A", sequence_speed: 1.0},
+                attacks: [
+                  %{
+                    range: %{distance: 300.0},
+                    point: "Atk01",
+                    magic_path_id: 5065,
+                    damage: %{rate: 2.0, value: 0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        sequences: %{Attack_01_A: %{id: 7, time: 1.0, keys: %{Atk01: 0.5}}}
+      },
+      # velocity 300 units/s: the 300-unit flight to the player takes 10ms
+      "table:magicpath.xml" => %{
+        table: %{entries: %{"5065" => [%{velocity: 30000.0, distance: 600.0}]}}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+
+    state = field_with_player_at(250, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+
+    # the release keyframe resolves the hit carrying its flight time (250
+    # units at velocity 300); the field defers the damage by it
+    {_npc, hits} = Battle.tick(npc, state, 750)
+    assert [%{character_id: 1, magic_path_id: 5065, travel_ms: 8}] = hits
+  end
+
   test "a multi-motion swing fires the projectile motion's magic path" do
     {map_id, _xblock} = unique_map()
 

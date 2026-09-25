@@ -517,12 +517,16 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           target_object_id: battle.target_object_id,
           skill_id: cast.skill_id,
           skill_level: cast.skill_level,
+          # the launch point and reach: the impact re-check runs against
+          # them when the projectile lands
           position: npc.position,
+          range: cast.range,
           direction: aim_direction(npc.position, target_position),
           attack: get_in(npc.npc.metadata, [:stat, :stats, :physical_atk]) || 0,
           rate: cast.rate,
           magic_path_id: cast.magic_path_id,
           arrow_overlap?: cast.arrow_overlap?,
+          travel_ms: projectile_travel_ms(cast.magic_path_id, npc.position, target_position),
           server_tick: now,
           attack_counter: battle.attack_counter + 1
         }
@@ -965,6 +969,35 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       Enum.drop(switches, 1)
     else
       []
+    end
+  end
+
+  # the projectile's flight time to the target: the first magic-path
+  # segment's velocity over the launch distance. Zero when the attack
+  # fires no projectile (melee swings, ground indicators) or the path
+  # carries no velocity — the hit then lands at the keyframe itself
+  defp projectile_travel_ms(magic_path_id, from, to) do
+    segments =
+      if magic_path_id > 0 do
+        Storage.Table.MagicPaths.get(magic_path_id) || []
+      else
+        []
+      end
+
+    case segments do
+      [segment | _] when is_map(segment) ->
+        velocity = segment[:velocity]
+
+        if is_number(velocity) and velocity > 0 do
+          distance = :math.sqrt(square_distance(from, to))
+          flight = min(distance, segment[:distance] || distance)
+          trunc(flight / velocity * 1000)
+        else
+          0
+        end
+
+      _ ->
+        0
     end
   end
 
