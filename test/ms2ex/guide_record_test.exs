@@ -50,6 +50,8 @@ defmodule Ms2ex.GuideRecordTest do
           skin_color: {}
         })
 
+      Repo.insert!(%Schema.CharacterConfig{character_id: character.id})
+
       :ok = Managers.CharacterConfig.start(character)
       config_pid = Process.whereis(:"character_configs:#{character.id}")
 

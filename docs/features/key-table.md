@@ -19,12 +19,12 @@ converge at login and on explicit sync requests.
   read once per login and rewritten in bulk: `key_binds` (a map keyed by
   key code of `Ms2ex.Types.KeyBind` entries), `guide_records` (guide-popup
   progress), `gathering_counts` (harvest counters driving the success rate)
-  and `instant_revive_count` (the daily instant-revive allowance). Read and
-  written through `Ms2ex.Context.CharacterConfigs`; deliberately kept off
-  the hot `characters` row. The row is written by two owners: the
-  character-config manager persists the client config fields, and the
-  mastery manager persists the harvest counters (upserting in one
-  statement, so neither depends on the other's state).
+  and `instant_revive_count` (the daily instant-revive allowance). The row is
+  created together with the character, so `Ms2ex.Context.CharacterConfigs.get/1`
+  can read it fail-fast; the row is written by two owners, each through plain
+  updates of its own columns: the character-config manager persists the client
+  config fields, the mastery manager persists the harvest counters and the
+  claimed grade rewards. Neither depends on the other's cached row.
 
 ## Config manager
 
@@ -34,8 +34,8 @@ loads the character's config once — the hot bar rows and the
 -bar switches, key-bind syncs and guide reports from memory.
 Every mutation is applied to memory, then persisted from the row's
 previous state through `Ms2ex.Context.HotBars` (`update_quick_slots/2`,
-`set_active/2`) and `Ms2ex.Context.CharacterConfigs` (`update/2`,
-inserting the row on first write); the persisted rows returned by the
+`set_active/2`) and `Ms2ex.Context.CharacterConfigs` (`update/2`); the
+persisted rows returned by the
 contexts replace the manager's cached ones, so memory always matches the
 database.
 
@@ -83,8 +83,8 @@ Server → client (`Ms2ex.Packets.KeyTable`):
 
 - login sends the full **Load** (saved binds + active bar + bars) when key
   binds exist; a brand-new character gets **LoadDefault** instead, letting
-  the client apply its own defaults and sync them back (which seeds
-  `character_configs`)
+  the client apply its own defaults and sync them back (which fills the
+  saved key binds)
 - field enter re-sends the bars so the client initializes its UI before the
   field-enter stream
 
