@@ -634,11 +634,12 @@ defmodule Ms2ex.Managers.Field.Npc do
   # client's projectile visuals: one packet per magic-path segment, homing
   # to the victim when the attack's arrow overlaps) and the damage numbers
   # when the projectile lands
+  # every launch record homes to the victim: the client chases the
+  # projectile onto the player, so the shot visibly reads as coming from
+  # the mob that fired it (its damage still applies on the flight timer)
   defp broadcast_launch(state, shooter, hit) do
     with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
          segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
-      target_id = if hit[:arrow_overlap?], do: hit.target_object_id, else: 0
-
       segments
       |> Enum.with_index()
       |> Enum.each(fn {segment, index} ->
@@ -647,7 +648,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
         Managers.Field.broadcast(
           state.topic,
-          Packets.SkillDamage.target(launch, index, target_id)
+          Packets.SkillDamage.target(launch, index, hit.target_object_id)
         )
       end)
     end
