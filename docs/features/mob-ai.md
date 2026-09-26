@@ -334,6 +334,8 @@ until the AI-tree runtime lands.
 - Melee swings land only on the aggro target; retail resolves every
   player standing in the firing attack's range cube (the attack's target
   count caps it).
-- Motions with a move distance never lunge the mob forward mid-swing.
+- Multi-motion casts show the first motion's sequence for the whole
+  playback instead of handing off at each motion boundary, and motions
+  with a move distance never lunge the mob forward mid-swing.
 - On-hit effects without a splash (stuns, slows, knockbacks riding the
   attack's effect list) are dropped; only splash detonations fire.

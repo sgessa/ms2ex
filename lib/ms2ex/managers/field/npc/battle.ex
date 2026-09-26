@@ -465,20 +465,28 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       rate: attack_rate(attack),
       magic_path_id: attack_magic_path_id(attack),
       started_at: now,
+      # when each later motion starts: the client plays motion 0 from the
+      # cast's skill-use record and the swing announces each later motion
+      # with its own record (same cast uid, next motion point)
+      motion_switches: motion_switches(motions),
       hit_at: now + hit_offset_ms,
       end_at: now + duration_ms,
       hit_done?: false
     }
 
-    # the cast is announced the way player casts render: a skill-use
-    # record initiates the skill and the client's skill system owns the
-    # whole playback (every motion, the recovery), pairing the later
-    # damage by the cast uid. The cast-start CONTROL only stops the mob —
-    # zeroed velocity, faced rotation — and carries the npc's idle
-    # sequence: attack sequences never ride the control channel, or the
-    # two animation channels fight and the model freezes mid-swing. The
-    # control stream stays silent through the playback
+    # the cast is announced on both channels, the way player casts render:
+    # a skill-use record initiates the skill (the client's skill system
+    # owns the playback — motion hand-offs, the recovery — and pairs the
+    # later damage by the cast uid), while the control pins the first
+    # motion's sequence, state and zeroed velocity in ONE broadcast. The
+    # control stream then stays silent for the whole playback — the client
+    # re-applies the sequence on every control it receives, so a periodic
+    # broadcast mid-swing restarts a one-shot on its first frame
     #
+    # TODO: multi-motion casts should hand off to each later motion's
+    # sequence exactly at the previous motion's end (one control per
+    # hand-off, still silent between); today the first motion's sequence
+    # stands in for the whole playback
     # TODO: motions with a move distance lunge the mob forward between
     # their move keyframes during the swing; casts never move the mob
     use_record = %{
@@ -504,14 +512,20 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       | battle: %{battle | cast: cast, last_move_at: now},
         velocity: {0, 0, 0},
         rotation: rotation,
+        animation: swing_sequence_id(motions) || npc.animation,
         send_control?: true
     }
+  end
+
+  defp swing_sequence_id(motions) do
+    motions && Enum.find_value(motions, fn motion -> motion && motion.sequence_id end)
   end
 
   # resolves the swing: the hit lands when the windup is over; hold position
   # facing the target through the windup, land the hit if the target is still
   # in reach, then hand the hit to the field for application
   defp cast_tick(npc, battle, field_state, _target_position, now) do
+    {npc, battle} = announce_cast_motions(npc, battle, field_state, now)
     cast = battle.cast
 
     if now < cast.hit_at do
@@ -864,6 +878,56 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # the motion's sequence speed. A motion whose sequence the rig cannot
   # play leaves a nil entry and marks the swing uncastable — the game
   # cancels such casts rather than landing damage with no animation
+  # announces the swing's later motions through the skill channel: one
+  # skill-use record per boundary, same cast uid, the motion it starts
+  # (the control channel stays silent — attack sequences never ride it)
+  defp announce_cast_motions(npc, battle, field_state, now) do
+    cast = battle.cast
+    elapsed = now - cast.started_at
+
+    {due, rest} =
+      Enum.split_while(cast.motion_switches, fn {at, _motion} -> elapsed >= at end)
+
+    battle = %{battle | cast: %{cast | motion_switches: rest}}
+
+    Enum.each(due, fn {_at, motion} ->
+      use_record = %{
+        id: cast.cast_uid,
+        server_tick: now,
+        caster: %{object_id: npc.object_id},
+        skill_id: cast.skill_id,
+        skill_level: cast.skill_level,
+        motion_point: motion,
+        position: npc.position,
+        direction: aim_direction(npc.position, npc.position),
+        rotation: npc.rotation,
+        rotate2z: 0.0
+      }
+
+      Managers.Field.broadcast(
+        Map.get(field_state, :topic),
+        Packets.SkillUse.bytes(use_record, {false, false, 0, ""})
+      )
+    end)
+
+    {npc, battle}
+  end
+
+  # when each later motion starts: {offset ms, motion index}
+  defp motion_switches(motions) do
+    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
+      {switches, _total} =
+        Enum.with_index(motions)
+        |> Enum.map_reduce(0, fn {motion, index}, elapsed ->
+          {{elapsed, index}, elapsed + motion.ms}
+        end)
+
+      tl(switches)
+    else
+      []
+    end
+  end
+
   defp swing_motions(npc, level_doc) do
     model = get_in(npc.npc.metadata, [:model, :name])
 

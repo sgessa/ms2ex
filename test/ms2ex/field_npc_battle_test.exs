@@ -546,16 +546,16 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 200)
     assert npc.battle.cast
 
-    # the control channel carries no swing sequence: the mob stays on its
-    # idle through the cast while the client plays the skill
+    # the swing pins its sequence in one control and holds it through the
+    # playback (no re-facing churn mid-swing)
     {npc, _} = Battle.tick(npc, state, 300)
-    assert npc.animation != 7
+    assert npc.animation == 7
 
     {npc, _} = Battle.tick(npc, state, 700)
     assert npc.battle.cast == nil
 
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation != 7
+    assert npc.animation == 7
 
     # between swings the mob settles into its combat idle
     {npc, _} = Battle.tick(npc, state, 1_250)
@@ -622,7 +622,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # from the resolve ran out at 1_800, but the animation gates until 2_200)
     {npc, _} = Battle.tick(npc, state, 2_100)
     assert npc.battle.cast == nil
-    assert npc.animation != 7
+    assert npc.animation == 7
     refute npc.battle.cast
 
     # and the next swing only starts once the previous one ended
@@ -765,7 +765,9 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # the firing attack's 2400: the range re-check must use the firing
     # attack's reach or the swing would whiff
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
-    state = field_with_player_at(1300, 0)
+    topic = "battle-motion-announce-test"
+    :ok = Phoenix.PubSub.subscribe(Ms2ex.PubSub, topic)
+    state = field_with_player_at(1300, 0) |> Map.put(:topic, topic)
 
     {npc, _} = Battle.tick(npc, state, 100)
 
@@ -773,14 +775,18 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # firing motion: 500ms windup + 40% of the 1s firing motion
     assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
 
-    # the control channel never carries the swing's sequences: the model
-    # stays on its idle while the client plays the skill from the cast's
-    # skill-use record
-    assert npc.animation != 21
-    assert npc.animation != 22
+    # the cast pins the first motion's sequence in a single control; no
+    # further CONTROL touches it while the swing plays
+    assert npc.animation == 21
 
+    # the cast's skill-use record announced the swing
+    assert_receive {:push, <<0x3D::little-16, _::binary>>}, 200
+
+    # past the windup's playback the firing motion is announced through
+    # the skill channel (same cast, motion 1) — the control stays silent
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation != 22
+    assert_receive {:push, <<0x3D::little-16, _::binary>>}, 200
+    assert npc.animation == 21
 
     {_npc, hits} = Battle.tick(npc, state, 1_050)
 
