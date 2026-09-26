@@ -643,7 +643,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   # impact: the character manager resolves the damage against its own
   # defenses (funneling death and the stat broadcast through the normal
   # paths) and the field broadcasts the hit so every client sees the numbers
-  defp apply_hit(state, hit) do
+  defp apply_hit(state, hit, landed_at \\ nil) do
     case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
       {:ok, applied} ->
         Managers.Field.broadcast(
@@ -651,9 +651,78 @@ defmodule Ms2ex.Managers.Field.Npc do
           Packets.SkillDamage.mob_hit(Map.merge(hit, applied))
         )
 
+        schedule_hit_skills(state, hit, landed_at)
+
       :error ->
         :ok
     end
+  end
+
+  # a landed swing fires its on-hit effect skills where it landed: each
+  # detonates after its splash delay (a thrown bomb's explosion cube goes
+  # off a beat after impact). The landing point defaults to the victim's
+  # live position — splash effects center on their targets
+  defp schedule_hit_skills(state, hit, landed_at) do
+    skills = Map.get(hit, :hit_skills, [])
+
+    if skills != [] do
+      center =
+        landed_at || get_in(state, [:player_positions, hit.character_id, :position]) ||
+          hit.position
+
+      Enum.each(skills, fn entry ->
+        payload = %{hit: hit, center: center, skill_id: entry.skill_id, level: entry.level}
+
+        Process.send_after(self(), {:npc_skill_explosion, payload}, max(entry.delay_ms, 0))
+      end)
+    end
+  end
+
+  # resolves an on-hit effect skill's detonation: every player standing in
+  # the skill's attack cube around the landing point takes its hit
+  def apply_skill_explosion(%{hit: hit, center: center, skill_id: skill_id, level: level}, state) do
+    with %{} = level_doc <- Storage.Skills.get_meta(skill_id)[:levels][to_string(level)],
+         attack when is_map(attack) <- first_attack(level_doc),
+         rate when is_number(rate) and rate > 0 <- get_in(attack, [:damage, :rate]) do
+      radius = get_in(attack, [:range, :distance]) || 0
+      height = get_in(attack, [:range, :height]) || 0
+
+      victims =
+        for {character_id, object_id} <- state.players,
+            position = get_in(state, [:player_positions, character_id, :position]),
+            match?(%Types.Coord{}, position),
+            horizontal_distance_sq(center, position) <= radius * radius,
+            abs(position.z - center.z) <= height do
+          Map.merge(hit, %{
+            character_id: character_id,
+            target_object_id: object_id,
+            skill_id: skill_id,
+            skill_level: level,
+            rate: rate,
+            position: center,
+            hit_skills: [],
+            server_tick: Ms2ex.sync_ticks()
+          })
+        end
+
+      Enum.each(victims, &apply_hit(state, &1))
+    end
+
+    state
+  end
+
+  defp first_attack(level_doc) do
+    level_doc
+    |> Map.get(:motions, [])
+    |> List.wrap()
+    |> Enum.flat_map(&List.wrap(Map.get(&1, :attacks)))
+    |> Enum.find(&is_map(&1))
+  end
+
+  defp horizontal_distance_sq(%Types.Coord{} = a, %Types.Coord{} = b) do
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dx * dx + dy * dy
   end
 
   # a mob's landed swing reaches clients as the attack record first (the
@@ -705,7 +774,9 @@ defmodule Ms2ex.Managers.Field.Npc do
         match?(%Types.Coord{}, victim_position) and
         distance_sq(launch, victim_position) <= reach * reach
 
-    if lands?, do: apply_hit(state, hit)
+    if lands? do
+      apply_hit(state, hit, victim_position)
+    end
 
     state
   end
@@ -737,10 +808,12 @@ defmodule Ms2ex.Managers.Field.Npc do
           match?(%Types.Coord{}, victim_position) and
               distance_sq(position, victim_position) <= @projectile_radius * @projectile_radius ->
             # collision: the hit applies and the projectile despawns
-            {[], [p.hit | impacts]}
+            {[], [{p.hit, position} | impacts]}
 
           p.traveled >= p.max_distance ->
-            {[], impacts}
+            # the flight ran out: no direct hit, but an explosive round
+            # still detonates where it lands
+            {[], [{p.hit, position, :no_direct_hit} | impacts]}
 
           true ->
             {[{key, p}], impacts}
@@ -748,7 +821,15 @@ defmodule Ms2ex.Managers.Field.Npc do
       end)
 
     state = Map.put(state, :projectiles, Map.new(kept))
-    Enum.each(impacts, fn hit -> apply_hit(state, hit) end)
+
+    Enum.each(impacts, fn
+      {hit, position} ->
+        apply_hit(state, hit, position)
+
+      {hit, position, :no_direct_hit} ->
+        schedule_hit_skills(state, hit, position)
+    end)
+
     state
   end
 

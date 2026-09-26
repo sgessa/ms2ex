@@ -528,6 +528,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           rate: cast.rate,
           magic_path_id: cast.magic_path_id,
           look_at_type: look_at_type,
+          hit_skills:
+            attack_hit_skills(skill_level_doc(cast.skill_id, cast.skill_level) |> swing_attack()),
           travel_ms: travel_ms,
           flight: flight,
           velocity: velocity,
@@ -902,6 +904,21 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   # the projectile the client renders for the swing (0 when none)
+  # on-hit effect skills the swing fires where it lands (a thrown bomb's
+  # explosion cube detonates a beat after impact): each entry carries the
+  # effect skill and its splash delay
+  defp attack_hit_skills({_, attack}) when is_map(attack), do: attack_hit_skills(attack)
+
+  defp attack_hit_skills(attack) do
+    (get_in(attack || %{}, [:skills]) || [])
+    |> List.wrap()
+    |> Enum.filter(&(is_map(&1) and is_integer(&1[:id]) and &1[:id] > 0))
+    |> Enum.map(fn entry ->
+      splash = entry[:splash] || %{}
+      %{skill_id: entry[:id], level: entry[:level] || 1, delay_ms: splash[:delay] || 0}
+    end)
+  end
+
   defp attack_magic_path_id(attack) do
     case get_in(attack || %{}, [:magic_path_id]) do
       id when is_integer(id) and id > 0 -> id

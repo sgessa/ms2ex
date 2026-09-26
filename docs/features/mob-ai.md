@@ -133,7 +133,20 @@ resolves:
   per tick along the fixed launch line. The damage lands only when the
   flight actually reaches the victim's live position (impact radius
   150), so sidestepping the line dodges the shot; a flight that covers
-  its max distance without colliding despawns harmlessly
+  its max distance without colliding despawns harmlessly — but still
+  detonates its on-hit effects where it lands.
+
+Some attacks carry no direct damage at all (rate 0) and deliver it
+through on-hit effect skills instead: the goblin's thrown bomb flies as
+a fixed-line projectile dealing nothing, and the real damage is its
+explosion skill (rate 0.8, a cube at the landing point). When a hit
+lands — instant, aimed timer, or straight-line collision — the field
+schedules each on-hit effect skill after its splash delay (the bomb's
+telegraph beat, 1500ms) and then resolves the effect skill's attack
+against every player standing in its cube at the landing point, each
+victim's damage broadcast carrying the effect skill's id (that is what
+puts the damage number on screen). A dodged bomb still detonates where
+it lands; only players inside the cube take the hit.
 
 - the active cast owns the mob's presentation: stand ticks during the
   windup never touch the animation, so the client plays the full swing

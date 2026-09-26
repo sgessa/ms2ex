@@ -34,6 +34,78 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     :ok
   end
 
+  test "an on-hit explosion cube damages every player standing in it" do
+    # the bomb's effect skill: 0.8 rate, a 150-radius cube
+    stub_metadata(%{
+      "skill:40214002" => %{
+        levels: %{
+          "1" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    damage: %{rate: 0.8, value: 0},
+                    range: %{distance: 150.0, height: 200.0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    })
+
+    # the bomb landed at the origin: the player stands inside the cube
+    state = field_state(player_at: %Types.Coord{x: 100, y: 0, z: 0})
+
+    payload = %{
+      hit: hit(),
+      center: %Types.Coord{x: 0, y: 0, z: 0},
+      skill_id: 40_214_002,
+      level: 1
+    }
+
+    Npc.apply_skill_explosion(payload, state)
+
+    {:ok, character} = Managers.Character.call(@character_id, :lookup)
+    assert character.stats.health_cur < 1000
+  end
+
+  test "an on-hit explosion misses players outside its cube" do
+    stub_metadata(%{
+      "skill:40214002" => %{
+        levels: %{
+          "1" => %{
+            motions: [
+              %{
+                attacks: [
+                  %{
+                    damage: %{rate: 0.8, value: 0},
+                    range: %{distance: 150.0, height: 200.0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    })
+
+    state = field_state(player_at: %Types.Coord{x: 5_000, y: 0, z: 0})
+
+    payload = %{
+      hit: hit(),
+      center: %Types.Coord{x: 0, y: 0, z: 0},
+      skill_id: 40_214_002,
+      level: 1
+    }
+
+    Npc.apply_skill_explosion(payload, state)
+
+    {:ok, character} = Managers.Character.call(@character_id, :lookup)
+    assert character.stats.health_cur == 1000
+  end
+
   test "a straight shot lands when its flight reaches the victim" do
     # launch at the origin firing +x at 300 units/s: the victim stands in
     # the line 130 units out, inside the impact radius

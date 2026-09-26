@@ -938,6 +938,12 @@ defmodule Ms2ex.Managers.Field do
     {:noreply, Managers.Field.Npc.apply_projectile_impact(state, hit)}
   end
 
+  # an on-hit effect skill detonates where a swing landed: the explosion
+  # cube damages every player standing inside it
+  def handle_info({:npc_skill_explosion, payload}, state) do
+    {:noreply, Managers.Field.Npc.apply_skill_explosion(payload, state)}
+  end
+
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
 
