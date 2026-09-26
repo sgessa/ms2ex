@@ -546,16 +546,16 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 200)
     assert npc.battle.cast
 
-    # the swing pins its sequence in one control and holds it through the
-    # playback (no re-facing churn mid-swing)
+    # the control channel carries no swing sequence: the mob stays on its
+    # idle through the cast while the client plays the skill
     {npc, _} = Battle.tick(npc, state, 300)
-    assert npc.animation == 7
+    assert npc.animation != 7
 
     {npc, _} = Battle.tick(npc, state, 700)
     assert npc.battle.cast == nil
 
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation == 7
+    assert npc.animation != 7
 
     # between swings the mob settles into its combat idle
     {npc, _} = Battle.tick(npc, state, 1_250)
@@ -622,7 +622,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # from the resolve ran out at 1_800, but the animation gates until 2_200)
     {npc, _} = Battle.tick(npc, state, 2_100)
     assert npc.battle.cast == nil
-    assert npc.animation == 7
+    assert npc.animation != 7
     refute npc.battle.cast
 
     # and the next swing only starts once the previous one ended
@@ -773,14 +773,14 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # firing motion: 500ms windup + 40% of the 1s firing motion
     assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
 
-    # the cast pins the first motion's sequence in a single control
-    assert npc.animation == 21
+    # the control channel never carries the swing's sequences: the model
+    # stays on its idle while the client plays the skill from the cast's
+    # skill-use record
+    assert npc.animation != 21
+    assert npc.animation != 22
 
-    # at the windup's end the firing motion's sequence takes over: one
-    # hand-off control, still silence otherwise
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation == 22
-    assert npc.send_control? == true
+    assert npc.animation != 22
 
     {_npc, hits} = Battle.tick(npc, state, 1_050)
 

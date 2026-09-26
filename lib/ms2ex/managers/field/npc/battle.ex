@@ -465,23 +465,19 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       rate: attack_rate(attack),
       magic_path_id: attack_magic_path_id(attack),
       started_at: now,
-      # each later motion's sequence takes over the model at the previous
-      # motion's end (the client plays motion 0 from the skill-use record
-      # and waits for the hand-off)
-      motion_switches: motion_switches(motions),
       hit_at: now + hit_offset_ms,
       end_at: now + duration_ms,
       hit_done?: false
     }
 
-    # the cast is announced on both channels, the way player casts render:
-    # a skill-use record initiates the skill (the client's skill system
-    # owns the playback — motion hand-offs, the recovery — and pairs the
-    # later damage by the cast uid), while the control pins the first
-    # motion's sequence, state and zeroed velocity in ONE broadcast. The
-    # control stream then stays silent for the whole playback — the client
-    # re-applies the sequence on every control it receives, so a periodic
-    # broadcast mid-swing restarts a one-shot on its first frame
+    # the cast is announced the way player casts render: a skill-use
+    # record initiates the skill and the client's skill system owns the
+    # whole playback (every motion, the recovery), pairing the later
+    # damage by the cast uid. The cast-start CONTROL only stops the mob —
+    # zeroed velocity, faced rotation — and carries the npc's idle
+    # sequence: attack sequences never ride the control channel, or the
+    # two animation channels fight and the model freezes mid-swing. The
+    # control stream stays silent through the playback
     #
     # TODO: motions with a move distance lunge the mob forward between
     # their move keyframes during the swing; casts never move the mob
@@ -508,20 +504,14 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       | battle: %{battle | cast: cast, last_move_at: now},
         velocity: {0, 0, 0},
         rotation: rotation,
-        animation: swing_sequence_id(motions) || npc.animation,
         send_control?: true
     }
-  end
-
-  defp swing_sequence_id(motions) do
-    motions && Enum.find_value(motions, fn motion -> motion && motion.sequence_id end)
   end
 
   # resolves the swing: the hit lands when the windup is over; hold position
   # facing the target through the windup, land the hit if the target is still
   # in reach, then hand the hit to the field for application
   defp cast_tick(npc, battle, field_state, _target_position, now) do
-    {npc, battle} = advance_cast_motion(npc, battle, now)
     cast = battle.cast
 
     if now < cast.hit_at do
@@ -874,49 +864,6 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # the motion's sequence speed. A motion whose sequence the rig cannot
   # play leaves a nil entry and marks the swing uncastable — the game
   # cancels such casts rather than landing damage with no animation
-  # hands the swing's later motions to the model exactly at their start
-  # offsets: one control per hand-off (a state-change broadcast — it goes
-  # out even though the periodic stream stays silent mid-swing)
-  defp advance_cast_motion(npc, battle, now) do
-    cast = battle.cast
-    elapsed = now - cast.started_at
-
-    {due, rest} =
-      Enum.split_while(cast.motion_switches, fn {at, _sequence_id} -> elapsed >= at end)
-
-    case due do
-      [] ->
-        {npc, battle}
-
-      _ ->
-        {_at, sequence_id} = List.last(due)
-        battle = %{battle | cast: %{cast | motion_switches: rest}}
-
-        npc =
-          if sequence_id && npc.animation != sequence_id do
-            %{npc | animation: sequence_id, send_control?: true}
-          else
-            npc
-          end
-
-        {npc, battle}
-    end
-  end
-
-  # when each later motion starts: its offset within the swing
-  defp motion_switches(motions) do
-    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
-      {switches, _total} =
-        Enum.map_reduce(motions, 0, fn motion, elapsed ->
-          {{elapsed, motion.sequence_id}, elapsed + motion.ms}
-        end)
-
-      Enum.drop(switches, 1)
-    else
-      []
-    end
-  end
-
   defp swing_motions(npc, level_doc) do
     model = get_in(npc.npc.metadata, [:model, :name])
 
