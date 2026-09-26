@@ -26,6 +26,30 @@ defmodule Ms2ex.Storage.Animations do
 
   def sequence_time(_, _), do: nil
 
+  # a named keyframe's time within a sequence, in seconds: skill attacks
+  # fire at the keyframe their point name resolves to
+  @spec key_time(String.t() | nil, String.t() | nil, String.t() | nil) :: float() | nil
+  def key_time(model, seq_name, key_name)
+      when is_binary(model) and is_binary(seq_name) and is_binary(key_name) and key_name != "" do
+    case fetch_sequence(model, seq_name) do
+      %{keys: keys} when is_map(keys) -> key_time_in(keys, key_name)
+      _ -> nil
+    end
+  end
+
+  def key_time(_, _, _), do: nil
+
+  defp key_time_in(keys, key_name) do
+    try do
+      case Map.get(keys, String.to_existing_atom(key_name)) do
+        seconds when is_number(seconds) and seconds > 0 -> seconds * 1.0
+        _ -> nil
+      end
+    rescue
+      ArgumentError -> nil
+    end
+  end
+
   defp fetch_sequence(model, name) do
     # anikey keys are lowercase; npc metadata model names keep their case
     case Storage.get("animation", String.downcase(model)) do

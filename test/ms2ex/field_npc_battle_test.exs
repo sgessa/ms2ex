@@ -340,7 +340,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
             ]
           }
         }
-      }
+      },
+      "animation:testmob" => %{sequences: %{Attack_001_A: %{id: 7, time: 1.0}}}
     })
 
     # zero movement speeds: the mob is rooted (e.g. a Nepenthus plant)
@@ -522,7 +523,12 @@ defmodule Ms2ex.FieldNpcBattleTest do
       # anikey docs key on the lowercased model name; declaring the keys
       # here also makes the atoms exist for Storage.Animations' to_existing_atom
       "animation:testmob" => %{
-        sequences: %{Attack_001_A: 7, Attack_Idle_A: 8, Run_A: 9, Idle_A: 10}
+        sequences: %{
+          Attack_001_A: %{id: 7, time: 1.0},
+          Attack_Idle_A: 8,
+          Run_A: 9,
+          Idle_A: 10
+        }
       }
     })
 
@@ -547,17 +553,261 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 700)
     assert npc.battle.cast == nil
 
-    # between swings the mob settles into its combat idle
+    # through the swing's tail the mob keeps the swing animation; the
+    # fallback swing plays for 1s from its start (200) — until 1_200
     {npc, _} = Battle.tick(npc, state, 750)
+    assert npc.animation == 7
+
+    # between swings the mob settles into its combat idle
+    {npc, _} = Battle.tick(npc, state, 1_250)
     assert npc.animation == 8
 
     # the player breaks away: the first chase tick advances exactly the run
-    # speed × real elapsed time (50ms since the last stand at 750), not a
+    # speed × real elapsed time (50ms since the last stand at 1_250), not a
     # clamped multi-tick lurch
     state = field_with_player_at(1400, 0)
-    {npc, _} = Battle.tick(npc, state, 800)
+    {npc, _} = Battle.tick(npc, state, 1_300)
     assert npc.velocity != {0, 0, 0}
     assert_in_delta(npc.position.x, 15.0, 0.5)
+  end
+
+  test "the swing plays for the attack sequence's playback length" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A", sequence_speed: 1.0},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        # the swing plays for 2.0s; the hit lands 40% in
+        sequences: %{Attack_001_A: %{id: 7, time: 2.0}, Attack_Idle_A: %{id: 8}}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+    assert %{hit_at: 1_000, end_at: 2_200} = npc.battle.cast
+
+    # before the hit point the swing is still winding up
+    {npc, _} = Battle.tick(npc, state, 900)
+    assert npc.battle.cast
+    assert npc.battle.hit_event == nil
+
+    # the hit lands at the 40% mark of the 2s swing
+    {npc, _} = Battle.tick(npc, state, 1_050)
+    assert %{character_id: 1, attack: 500} = npc.battle.hit_event
+    assert npc.battle.cast == nil
+
+    # through the swing's tail the mob stays occupied (the cooldown floor
+    # from the resolve ran out at 1_800, but the animation gates until 2_200)
+    {npc, _} = Battle.tick(npc, state, 2_100)
+    assert npc.battle.cast == nil
+    assert npc.animation == 7
+    refute npc.battle.cast
+
+    # and the next swing only starts once the previous one ended
+    {npc, _} = Battle.tick(npc, state, 2_250)
+    assert npc.battle.cast
+    assert npc.battle.cast.hit_at == 3_050
+  end
+
+  test "a projectile hit defers its damage until the flight ends" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_A", sequence_speed: 1.0},
+                attacks: [
+                  %{
+                    range: %{distance: 300.0},
+                    point: "Atk01",
+                    magic_path_id: 5065,
+                    damage: %{rate: 2.0, value: 0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        sequences: %{Attack_01_A: %{id: 7, time: 1.0, keys: %{Atk01: 0.5}}}
+      },
+      # velocity 300 units/s: the 300-unit flight to the player takes 10ms
+      "table:magicpath.xml" => %{
+        table: %{entries: %{"5065" => [%{velocity: 30_000.0, distance: 600.0, look_at_type: 0}]}}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+
+    state = field_with_player_at(250, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+
+    # the release keyframe resolves the hit carrying its flight time (250
+    # units at velocity 300); the field defers the damage by it
+    {_npc, hits} = Battle.tick(npc, state, 750)
+    assert [%{character_id: 1, magic_path_id: 5065, travel_ms: 8}] = hits
+  end
+
+  test "a multi-motion swing fires the projectile motion's magic path" do
+    {map_id, _xblock} = unique_map()
+
+    # a windup motion followed by the firing motion that carries the
+    # projectile (the shape of the broccoli-shooter's skill)
+    stub_metadata(%{
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_B", sequence_speed: 1.0},
+                attacks: [%{range: %{distance: 1200.0}, damage: %{rate: 0.0, value: 0}}]
+              },
+              %{
+                motion_property: %{sequence_name: "Attack_02_B", sequence_speed: 1.0},
+                attacks: [
+                  %{
+                    range: %{distance: 2400.0},
+                    magic_path_id: 5065,
+                    damage: %{rate: 1.0, value: 0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        sequences: %{
+          Attack_01_B: %{id: 21, time: 0.5},
+          Attack_02_B: %{id: 22, time: 1.0},
+          Attack_Idle_A: %{id: 8}
+        }
+      },
+      "table:magicpath.xml" => %{
+        table: %{entries: %{"5065" => [%{velocity: 30_000.0, distance: 600.0, look_at_type: 1}]}}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    # the player stands beyond the windup attack's 1200 reach but inside
+    # the firing attack's 2400: the range re-check must use the firing
+    # attack's reach or the swing would whiff
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+    state = field_with_player_at(1300, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+
+    # the cast spans both motions (1.5s) and the hit lands inside the
+    # firing motion: 500ms windup + 40% of the 1s firing motion
+    assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
+
+    # the cast opens on the windup motion's sequence
+    assert npc.animation == 21
+
+    # past the windup's playback the firing motion's sequence takes over
+    {npc, _} = Battle.tick(npc, state, 750)
+    assert npc.animation == 22
+
+    {_npc, hits} = Battle.tick(npc, state, 1_050)
+    assert [%{magic_path_id: 5065, look_at_type: 1, server_tick: 1_050}] = hits
+  end
+
+  test "the hit lands at the firing attack's animation keyframe" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_A", sequence_speed: 1.0},
+                attacks: [
+                  %{
+                    range: %{distance: 300.0},
+                    point: "Atk01",
+                    damage: %{rate: 2.0, value: 0}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      # the release keyframe sits 80% into the 1s swing
+      "animation:testmob" => %{
+        sequences: %{
+          Attack_01_A: %{id: 7, time: 1.0, keys: %{Atk01: 0.8}},
+          Attack_Idle_A: %{id: 8}
+        }
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+
+    state = field_with_player_at(100, 0)
+    {npc, _} = Battle.tick(npc, state, 100)
+    {npc, _} = Battle.tick(npc, state, 200)
+
+    # the swing releases at the keyframe, not at the 40% guess
+    assert %{hit_at: 1_000, end_at: 1_200} = npc.battle.cast
+
+    {_npc, hits} = Battle.tick(npc, state, 1_050)
+    assert [%{character_id: 1}] = hits
   end
 
   test "a mob in stop range swings at its target on cooldown" do
@@ -578,7 +828,8 @@ defmodule Ms2ex.FieldNpcBattleTest do
             ]
           }
         }
-      }
+      },
+      "animation:testmob" => %{sequences: %{Attack_001_A: %{id: 7, time: 1.0}}}
     })
 
     metadata =
@@ -618,7 +869,25 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
   test "the swing whiffs when the target leaves range before the hit lands" do
     {map_id, xblock} = unique_map()
-    stub_navmesh(xblock, map_id)
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_001_A"},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{sequences: %{Attack_001_A: %{id: 7, time: 1.0}}}
+    })
 
     metadata = mob_metadata(skill: [%{id: 4001, level: 1}])
     npc = mob_with_metadata(metadata, map_id: map_id)

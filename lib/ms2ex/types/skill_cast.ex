@@ -97,16 +97,40 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
-  def damage_rate(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case meta.levels["#{lvl}"] do
-      %{motions: [%{attacks: [%{damage: %{rate: rate}}]}]} -> rate
-      _ -> 0.1
+  # the damage record of the relayed hit: the motion point the cast played and
+  # the attack point that connected each pick their entry from the level doc
+  # (a multi-attack skill — e.g. two projectiles — relays one hit per attack
+  # point, each with its own rate/value). Client-sent indices never crash the
+  # resolution: out-of-range points fall back to the motion's first attack
+  defp damage_doc(%__MODULE__{} = skill_cast) do
+    case resolved_attack(skill_cast) do
+      nil -> %{}
+      attack -> Map.get(attack, :damage) || %{}
     end
   end
 
-  def damage_value(%__MODULE__{skill_level: lvl, meta: meta}) do
-    case meta.levels["#{lvl}"] do
-      %{motions: [%{attacks: [%{damage: %{value: value}}]}]} -> value
+  defp motion_point(%__MODULE__{motion_point: point}) when is_integer(point) and point >= 0,
+    do: point
+
+  defp motion_point(_), do: 0
+
+  # 0xFF from the client marks "every attack at once"; there is no single
+  # damage record for that, so the first attack stands in
+  defp attack_point_index(%__MODULE__{attack_point: point})
+       when is_integer(point) and point in 0..254, do: point
+
+  defp attack_point_index(_), do: 0
+
+  def damage_rate(%__MODULE__{} = skill_cast) do
+    case damage_doc(skill_cast) do
+      %{rate: rate} when is_number(rate) -> rate * 1.0
+      _ -> 0.0
+    end
+  end
+
+  def damage_value(%__MODULE__{} = skill_cast) do
+    case damage_doc(skill_cast) do
+      %{value: value} when is_number(value) -> value
       _ -> 0
     end
   end
@@ -132,15 +156,38 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
-  # on-hit effects applied to targets: the attack's condition skills, both the
-  # plain ones and the dependOnDamageCount ones (skills_on_damage)
+  # on-hit effects applied to targets: the relayed attack's condition skills,
+  # both the plain ones and the dependOnDamageCount ones (skills_on_damage)
   def attack_skills(%__MODULE__{} = skill_cast) do
-    case skill_level(skill_cast) do
-      %{motions: [%{attacks: [attack]}]} ->
-        Map.get(attack, :skills, []) ++ Map.get(attack, :skills_on_damage, [])
-
-      _ ->
+    case resolved_attack(skill_cast) do
+      nil ->
         []
+
+      attack ->
+        Map.get(attack, :skills, []) ++ Map.get(attack, :skills_on_damage, [])
+    end
+  end
+
+  # the relayed hit's attack document: the motion point's attack at the
+  # relayed attack point, falling back to the motion's first attack
+  defp resolved_attack(%__MODULE__{} = skill_cast) do
+    case damage_attacks(skill_cast) do
+      [] ->
+        nil
+
+      attacks ->
+        Enum.at(attacks, attack_point_index(skill_cast)) || Enum.at(attacks, 0)
+    end
+  end
+
+  # the relayed motion's attack list (empty when the doc has none)
+  defp damage_attacks(%__MODULE__{} = skill_cast) do
+    with %{motions: motions} when is_list(motions) <- skill_level(skill_cast),
+         motion when is_map(motion) <-
+           Enum.at(motions, motion_point(skill_cast)) || Enum.at(motions, 0) do
+      List.wrap(Map.get(motion, :attacks) || [])
+    else
+      _ -> []
     end
   end
 
@@ -168,10 +215,10 @@ defmodule Ms2ex.Types.SkillCast do
     end
   end
 
-  def attack_point(%__MODULE__{motion_point: motion, attack_point: attack} = skill_cast) do
-    level = skill_cast.meta[:levels]["#{skill_cast.skill_level}"]
-    motion = level[:motions] |> Enum.at(motion)
-    motion[:attacks] |> Enum.at(attack)
+  # the relayed hit's attack document, or nil when the cast carries no
+  # attacks (buff casts)
+  def attack_point(%__MODULE__{} = skill_cast) do
+    resolved_attack(skill_cast)
   end
 
   def splash(%__MODULE__{} = skill_cast) do

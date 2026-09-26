@@ -932,6 +932,12 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:carry_finished, dummy}, state),
     do: {:noreply, __MODULE__.Npc.finish_carry(state, dummy)}
 
+  # a projectile's flight time elapsed: the shot lands on its victim if
+  # they are still inside its reach of the launch point
+  def handle_info({:npc_projectile_impact, hit}, state) do
+    {:noreply, Managers.Field.Npc.apply_projectile_impact(state, hit)}
+  end
+
   def handle_info(:tick_npcs, state) do
     Process.send_after(self(), :tick_npcs, @npc_tick_intval)
 

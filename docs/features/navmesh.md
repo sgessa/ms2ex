@@ -31,6 +31,10 @@ lineage that builds the meshes.
 - `snap_to_floor/2` — the closest walkable surface point with the height
   sampled from the containing detail triangle
 - `valid_position?/2` — whether a position stands on walkable ground
+- `random_point_around/3` — a random walkable point within a radius of a
+  center (the mesh library's circle sampler: area-weights the polygons
+  touching the circle, so the point can sit on a polygon slightly beyond
+  the circle's edge); idle mobs pick their wander destinations with it
 
 Consumers: npc patrols route every authored waypoint over the mesh (air
 waypoints fly straight; each route already ends exactly on the authored

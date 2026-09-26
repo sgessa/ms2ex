@@ -1,7 +1,13 @@
 defmodule Ms2ex.NpcPatrolTest do
   # advance_patrol is a pure state transition (npc in, npc out), so the
-  # patrol ticks are driven directly without a field process
+  # patrol ticks are driven directly without a field process. The tests
+  # drive the waypoint failure paths on purpose, so their expected
+  # warnings stay captured
   use Ms2ex.DataCase, async: false
+
+  # the tests drive the waypoint failure paths on purpose, so their
+  # expected warnings stay captured
+  @moduletag capture_log: true
 
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Types
