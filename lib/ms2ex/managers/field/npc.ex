@@ -646,10 +646,15 @@ defmodule Ms2ex.Managers.Field.Npc do
   defp apply_hit(state, hit, landed_at \\ nil) do
     case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
       {:ok, applied} ->
-        Managers.Field.broadcast(
-          state.topic,
-          Packets.SkillDamage.mob_hit(Map.merge(hit, applied))
-        )
+        # the record's position anchors the client's impact visuals (a
+        # projectile's explosion renders at the landing point, not the
+        # shooter)
+        record =
+          hit
+          |> Map.merge(applied)
+          |> stamp_position(landed_at)
+
+        Managers.Field.broadcast(state.topic, Packets.SkillDamage.mob_hit(record))
 
         schedule_hit_skills(state, hit, landed_at)
 
@@ -657,6 +662,11 @@ defmodule Ms2ex.Managers.Field.Npc do
         :ok
     end
   end
+
+  defp stamp_position(record, %Types.Coord{} = landed_at),
+    do: %{record | position: landed_at}
+
+  defp stamp_position(record, _), do: record
 
   # a landed swing fires its on-hit effect skills where it landed: each
   # detonates after its splash delay (a thrown bomb's explosion cube goes

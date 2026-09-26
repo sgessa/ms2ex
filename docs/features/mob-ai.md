@@ -112,6 +112,11 @@ the playback and the 750ms cooldown floor elapse, and the firing
 motion's animation is held through the resolve until the playback ends,
 then settles into Attack_Idle_A (fallback Idle_A).
 
+Damage records carry the position the hit landed at (a projectile's
+record anchors its explosion visual at the landing point, not the
+shooter), and target records carry the firing motion and attack point
+indices alongside the skill id.
+
 When the firing attack carries a magic path, the hit reaches clients as
 a SkillDamage target record first (one packet per magic-path segment,
 before the damage numbers): that is what spawns the projectile visual.
@@ -148,8 +153,13 @@ victim's damage broadcast carrying the effect skill's id (that is what
 puts the damage number on screen). A dodged bomb still detonates where
 it lands; only players inside the cube take the hit.
 
-- the active cast owns the mob's presentation: stand ticks during the
-  windup never touch the animation, so the client plays the full swing
+- swing animations are never carried by the control stream: a cast
+  starts by broadcasting a SkillUse record for the mob (the same packet
+  that renders player casts on other clients) and the client plays the
+  whole skill from it — every motion, the recovery included. The control
+  sequence stays on the mob's idle throughout the cast; puppeting the
+  swing through control sequences restarts the client's skill animation
+  on every sequence change and freezes the model mid-swing
 - the control's sequence counter only moves when the broadcast sequence
   changes: the client re-applies the sequence on every counter change, so
   bumping it on each periodic (30ms) control restarts the model's

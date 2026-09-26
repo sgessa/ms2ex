@@ -22,9 +22,11 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   and the tree runtime is a later step (see docs/features/mob-ai.md).
   """
 
+  alias Ms2ex.Managers
   alias Ms2ex.Managers.Field.Npc.Idle
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Navigation
+  alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -364,7 +366,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # position facing the target
   defp attack_or_stand(npc, battle, field_state, target_position, now) do
     if now >= battle.next_attack_at and has_skill?(npc) and castable?(npc) do
-      npc = start_cast(npc, battle, target_position, now)
+      npc = start_cast(npc, battle, field_state, target_position, now)
       # the swing starts immediately: resolve its hit when due
       cast_tick(npc, npc.battle, field_state, target_position, now)
     else
@@ -432,14 +434,14 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # begins a swing: pins the mob in PcSkill with the motion's sequence, the
   # hit lands mid-swing and the cast occupies the mob for the swing's
   # playback length
-  defp start_cast(npc, battle, target_position, now) do
+  defp start_cast(npc, battle, field_state, target_position, now) do
     [entry | _] = get_in(npc.npc.metadata, [:skill])
     skill_id = entry.id
     skill_level = entry.level
     level_doc = skill_level_doc(skill_id, skill_level)
 
     motions = swing_motions(npc, level_doc)
-    {attack_motion_index, attack} = swing_attack(level_doc) || {0, nil}
+    {attack_motion_index, _attack_index, attack} = swing_attack(level_doc) || {0, 0, nil}
 
     {hit_offset_ms, duration_ms} =
       cast_timing(npc, level_doc, motions, attack_motion_index, attack)
@@ -449,36 +451,51 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     cast = %{
       skill_id: skill_id,
       skill_level: skill_level,
-      # the cast opens on the first motion's sequence
-      sequence_id: motions && Enum.find_value(motions, fn m -> m && m.sequence_id end),
       range: attack_range(attack, npc),
       rate: attack_rate(attack),
       magic_path_id: attack_magic_path_id(attack),
       started_at: now,
-      # each later motion's sequence takes over when its playback starts
-      motion_switches: motion_switches(motions),
       hit_at: now + hit_offset_ms,
       end_at: now + duration_ms,
       hit_done?: false
     }
 
-    npc = %{
+    # the swing's animation comes from the skill-use record: the client
+    # plays the whole skill (every motion, recovery included) from it, the
+    # same way player casts render on other clients. The control stream
+    # never carries attack sequences — puppeting the swing through it
+    # restarts the client's skill animation on every sequence change
+    use_record = %{
+      id: npc.object_id * 0x1_0000_0000 + battle.attack_counter + 1,
+      server_tick: now,
+      caster: %{object_id: npc.object_id},
+      skill_id: skill_id,
+      skill_level: skill_level,
+      motion_point: 0,
+      position: npc.position,
+      direction: aim_direction(npc.position, target_position),
+      rotation: rotation,
+      rotate2z: 0.0
+    }
+
+    Managers.Field.broadcast(
+      Map.get(field_state, :topic),
+      Packets.SkillUse.bytes(use_record, {false, false, 0, ""})
+    )
+
+    %{
       npc
       | battle: %{battle | cast: cast, last_move_at: now},
         velocity: {0, 0, 0},
         rotation: rotation,
-        animation: cast.sequence_id || npc.animation,
         send_control?: true
     }
-
-    npc
   end
 
   # resolves the swing: the hit lands when the windup is over; hold position
   # facing the target through the windup, land the hit if the target is still
   # in reach, then hand the hit to the field for application
   defp cast_tick(npc, battle, field_state, target_position, now) do
-    {npc, battle} = advance_cast_motion(npc, battle, now)
     cast = battle.cast
 
     if now < cast.hit_at do
@@ -513,6 +530,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         {travel_ms, flight, velocity, look_at_type} =
           projectile_flight(cast.magic_path_id, npc.position, target_position)
 
+        {motion_point, attack_point, firing_attack} =
+          skill_level_doc(cast.skill_id, cast.skill_level) |> swing_attack() || {0, 0, nil}
+
         hit = %{
           character_id: battle.target_id,
           caster_object_id: npc.object_id,
@@ -528,8 +548,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           rate: cast.rate,
           magic_path_id: cast.magic_path_id,
           look_at_type: look_at_type,
-          hit_skills:
-            attack_hit_skills(skill_level_doc(cast.skill_id, cast.skill_level) |> swing_attack()),
+          motion_point: motion_point,
+          attack_point: attack_point,
+          hit_skills: attack_hit_skills(firing_attack),
           travel_ms: travel_ms,
           flight: flight,
           velocity: velocity,
@@ -542,35 +563,6 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       else
         {%{npc | battle: battle}, []}
       end
-    end
-  end
-
-  # streams the swing's motions: when one motion's playback ends, the next
-  # motion's sequence takes over the model (the windup visibly hands over
-  # to the firing swing instead of the cast looping its first motion)
-  defp advance_cast_motion(npc, battle, now) do
-    cast = battle.cast
-    elapsed = now - cast.started_at
-
-    {due, rest} =
-      Enum.split_while(cast.motion_switches, fn {at, _sequence_id} -> elapsed >= at end)
-
-    case due do
-      [] ->
-        {npc, battle}
-
-      _ ->
-        {_at, sequence_id} = List.last(due)
-        battle = %{battle | cast: %{cast | motion_switches: rest}}
-
-        npc =
-          if sequence_id && npc.animation != sequence_id do
-            %{npc | animation: sequence_id, send_control?: true}
-          else
-            npc
-          end
-
-        {npc, battle}
     end
   end
 
@@ -889,10 +881,11 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         motion
         |> Map.get(:attacks, [])
         |> List.wrap()
-        |> Enum.map(&{index, &1})
+        |> Enum.with_index()
+        |> Enum.map(fn {attack, attack_index} -> {index, attack_index, attack} end)
       end)
 
-    Enum.find(attacks, fn {_index, attack} -> attack_magic_path_id(attack) > 0 end) ||
+    Enum.find(attacks, fn {_index, _attack_index, attack} -> attack_magic_path_id(attack) > 0 end) ||
       Enum.at(attacks, 0)
   end
 
@@ -909,7 +902,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # the effect skill and its splash delay. Entries without a splash are
   # condition effects (buffs, overlap counters) and never detonate a cube —
   # some even reference the firing skill itself
-  defp attack_hit_skills({_, attack}) when is_map(attack), do: attack_hit_skills(attack)
+  defp attack_hit_skills({_, _, attack}) when is_map(attack), do: attack_hit_skills(attack)
 
   defp attack_hit_skills(attack) do
     (get_in(attack || %{}, [:skills]) || [])
@@ -974,21 +967,6 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       {hit_offset, total}
     else
       {trunc(@fallback_duration_ms * @hit_point_fraction), @fallback_duration_ms}
-    end
-  end
-
-  # when each later motion's sequence takes over the model: its start
-  # offset within the swing (the first motion plays from the cast start)
-  defp motion_switches(motions) do
-    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
-      {switches, _total} =
-        Enum.map_reduce(motions, 0, fn motion, elapsed ->
-          {{elapsed, motion.sequence_id}, elapsed + motion.ms}
-        end)
-
-      Enum.drop(switches, 1)
-    else
-      []
     end
   end
 
@@ -1140,7 +1118,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       [%{id: skill_id, level: level} | _] ->
         with %{levels: levels} <- Storage.Skills.get_meta(skill_id),
              level_doc when is_map(level_doc) <- levels[to_string(level)],
-             {_index, attack} when is_map(attack) <- swing_attack(level_doc) do
+             {_index, _attack_index, attack} when is_map(attack) <- swing_attack(level_doc) do
           get_in(attack, [:range, :distance])
         else
           _ -> nil

@@ -546,19 +546,19 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 200)
     assert npc.battle.cast
 
-    # the windup holds the swing animation — the cast owns the presentation
+    # the control stream never carries the swing's sequence: the client
+    # plays the skill from the cast's skill-use record, so the mob's
+    # animation stays on its spawn idle through the whole cast
     {npc, _} = Battle.tick(npc, state, 300)
-    assert npc.animation == 7
+    assert npc.animation == 10
 
     {npc, _} = Battle.tick(npc, state, 700)
     assert npc.battle.cast == nil
 
-    # through the swing's tail the mob keeps the swing animation; the
-    # fallback swing plays for 1s from its start (200) — until 1_200
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation == 7
+    assert npc.animation == 10
 
-    # between swings the mob settles into its combat idle
+    # between swings the mob is on its combat idle
     {npc, _} = Battle.tick(npc, state, 1_250)
     assert npc.animation == 8
 
@@ -623,7 +623,6 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # from the resolve ran out at 1_800, but the animation gates until 2_200)
     {npc, _} = Battle.tick(npc, state, 2_100)
     assert npc.battle.cast == nil
-    assert npc.animation == 7
     refute npc.battle.cast
 
     # and the next swing only starts once the previous one ended
@@ -766,22 +765,28 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # the firing attack's 2400: the range re-check must use the firing
     # attack's reach or the swing would whiff
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
-    state = field_with_player_at(1300, 0)
+    topic = "battle-skill-use-test"
+    :ok = Phoenix.PubSub.subscribe(Ms2ex.PubSub, topic)
+    state = field_with_player_at(1300, 0) |> Map.put(:topic, topic)
+
     {npc, _} = Battle.tick(npc, state, 100)
 
     # the cast spans both motions (1.5s) and the hit lands inside the
     # firing motion: 500ms windup + 40% of the 1s firing motion
     assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
 
-    # the cast opens on the windup motion's sequence
-    assert npc.animation == 21
+    # the swing's animation rides the skill-use record (the client plays
+    # every motion from it); the control stream keeps the mob's idle
+    # sequence through the whole cast
+    assert_receive {:push, <<0x3D::little-16, _::binary>>}, 200
+    assert npc.animation != 21 and npc.animation != 22
 
-    # past the windup's playback the firing motion's sequence takes over
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation == 22
+    assert npc.animation != 22
 
     {_npc, hits} = Battle.tick(npc, state, 1_050)
-    assert [%{magic_path_id: 5065, look_at_type: 1, server_tick: 1_050}] = hits
+
+    assert [%{magic_path_id: 5065, look_at_type: 1, server_tick: 1_050, motion_point: 1}] = hits
   end
 
   test "the hit lands at the firing attack's animation keyframe" do
