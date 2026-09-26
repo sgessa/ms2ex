@@ -773,12 +773,14 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # firing motion: 500ms windup + 40% of the 1s firing motion
     assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
 
-    # the cast pins the first motion's sequence in a single control; no
-    # further broadcasts touch it while the swing plays
+    # the cast pins the first motion's sequence in a single control
     assert npc.animation == 21
 
+    # at the windup's end the firing motion's sequence takes over: one
+    # hand-off control, still silence otherwise
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation == 21
+    assert npc.animation == 22
+    assert npc.send_control? == true
 
     {_npc, hits} = Battle.tick(npc, state, 1_050)
 

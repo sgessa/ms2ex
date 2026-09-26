@@ -119,7 +119,15 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
 
     npc = %{
       npc
-      | battle: %{npc.battle | cast: %{hit_at: 9_999_999_999_999, end_at: 9_999_999_999_999}},
+      | battle: %{
+          npc.battle
+          | cast: %{
+              started_at: 0,
+              hit_at: 9_999_999_999_999,
+              end_at: 9_999_999_999_999,
+              motion_switches: []
+            }
+        },
         send_control?: true,
         velocity: {0, 0, 0}
     }
