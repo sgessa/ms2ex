@@ -8,6 +8,16 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
   alias Ms2ex.Schema
   alias Ms2ex.Types
 
+  @counter_mob_metadata %{
+    basic: %{friendly: 0, class: 0, level: 10},
+    stat: %{stats: %{health: 1000, movement_speed: 100}},
+    model: %{name: "TestMob"},
+    capsule: %{radius: 50, height: 150},
+    action: %{walk_speed: 100, run_speed: 300},
+    distance: %{sight: 500, sight_height_up: 300, sight_height_down: 100},
+    skill: []
+  }
+
   @character_id 918_274
   @object_id 4242
   @mob_object_id 50_000_004
@@ -32,6 +42,57 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     on_exit(fn -> if Process.alive?(char_pid), do: GenServer.stop(char_pid) end)
 
     :ok
+  end
+
+  test "the control sequence counter only moves when the sequence changes" do
+    # an idle mob with no battle and no idle routines: its control
+    # broadcasts must hold the counter steady across periodic ticks and
+    # only bump it when the animation itself changes
+    npc =
+      Types.FieldNpc.new(%{
+        object_id: @mob_object_id,
+        spawn_point_id: 1,
+        map_id: 0,
+        npc: Types.Npc.new(%{id: 22_000_000, metadata: @counter_mob_metadata}),
+        position: %Types.Coord{x: 0, y: 0, z: 0},
+        rotation: %Types.Coord{x: 0, y: 0, z: 0},
+        field: self(),
+        spawn_radius: 0,
+        next_target_scan_at: 9_999_999_999_999,
+        animation: 7,
+        idle: %{task: :stand, until: 9_999_999_999_999}
+      })
+
+    state = %{
+      field_state(player_at: %Types.Coord{x: 5_000, y: 0, z: 0})
+      | npcs: %{npc.object_id => npc}
+    }
+
+    state = Npc.tick(state)
+    npc = state.npcs[@mob_object_id]
+    counter = npc.seq_counter
+    assert npc.sent_animation == npc.animation
+
+    # pin the sequence across a periodic broadcast (the last control aged
+    # past the interval): the counter holds
+    state =
+      put_in(state, [:npcs, @mob_object_id, Access.key!(:animation)], 7)
+      |> put_in([:npcs, @mob_object_id, Access.key!(:idle_sequence_id)], 7)
+      |> put_in([:npcs, @mob_object_id, Access.key!(:sent_animation)], 7)
+      |> put_in([:npcs, @mob_object_id, Access.key!(:last_control_at)], -1_000_000)
+
+    state = Npc.tick(state)
+    assert state.npcs[@mob_object_id].seq_counter == counter
+
+    # a sequence change bumps it
+    state =
+      state
+      |> put_in([:npcs, @mob_object_id, Access.key!(:animation)], 9)
+      |> put_in([:npcs, @mob_object_id, Access.key!(:idle_sequence_id)], 9)
+      |> put_in([:npcs, @mob_object_id, Access.key!(:last_control_at)], -1_000_000)
+
+    state = Npc.tick(state)
+    assert state.npcs[@mob_object_id].seq_counter == counter + 1
   end
 
   test "an on-hit explosion cube damages every player standing in it" do

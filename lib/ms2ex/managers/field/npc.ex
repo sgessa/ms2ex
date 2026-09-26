@@ -861,9 +861,20 @@ defmodule Ms2ex.Managers.Field.Npc do
         {[{object_id, npc}], {live, [npc | corpses]}}
 
       not npc.dead? and (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
+        # the sequence counter gates the client's sequence (re)play: it only
+        # moves when the sequence itself changes. Bumping it on every
+        # periodic control restarts the model's animation each broadcast —
+        # one-shot swings freeze on their first frame while the fight goes
+        # on around the statue
+        seq_counter =
+          if npc.animation == npc.sent_animation,
+            do: npc.seq_counter,
+            else: npc.seq_counter + 1
+
         npc =
           npc
-          |> Map.update!(:seq_counter, &(&1 + 1))
+          |> Map.put(:seq_counter, seq_counter)
+          |> Map.put(:sent_animation, npc.animation)
           |> Map.put(:last_control_at, now)
           |> Map.put(:send_control?, false)
 

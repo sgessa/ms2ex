@@ -150,6 +150,11 @@ it lands; only players inside the cube take the hit.
 
 - the active cast owns the mob's presentation: stand ticks during the
   windup never touch the animation, so the client plays the full swing
+- the control's sequence counter only moves when the broadcast sequence
+  changes: the client re-applies the sequence on every counter change, so
+  bumping it on each periodic (30ms) control restarts the model's
+  animation over and over — one-shot swings freeze on their first frame
+  while the fight continues around the statue (looping walks hide it)
 - every non-moving branch (stand, cast start, windup, resolve) touches
   the battle's `last_move_at`, so the first chase step after a cast
   integrates exactly the real elapsed time — without this, the step
