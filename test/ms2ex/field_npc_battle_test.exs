@@ -650,7 +650,24 @@ defmodule Ms2ex.FieldNpcBattleTest do
                     range: %{distance: 300.0},
                     point: "Atk01",
                     magic_path_id: 5065,
-                    damage: %{rate: 2.0, value: 0}
+                    damage: %{rate: 2.0, value: 0},
+                    skills: [
+                      # the bomb's explosion cube: fires where the shot lands
+                      %{
+                        id: 40_214_002,
+                        level: 1,
+                        has_splash: true,
+                        splash: %{delay: 1500}
+                      },
+                      # a condition effect referencing the skill itself:
+                      # never detonates a cube
+                      %{
+                        id: 40_300_011,
+                        level: 1,
+                        has_splash: false,
+                        splash: %{delay: 0}
+                      }
+                    ]
                   }
                 ]
               }
@@ -683,7 +700,17 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # the release keyframe resolves the hit carrying its flight time (250
     # units at velocity 300); the field defers the damage by it
     {_npc, hits} = Battle.tick(npc, state, 750)
-    assert [%{character_id: 1, magic_path_id: 5065, travel_ms: 8}] = hits
+
+    # the hit carries only its splash effect skills (the explosion cube),
+    # not condition effects, each with its splash delay
+    assert [
+             %{
+               character_id: 1,
+               magic_path_id: 5065,
+               travel_ms: 8,
+               hit_skills: [%{skill_id: 40_214_002, level: 1, delay_ms: 1500}]
+             }
+           ] = hits
   end
 
   test "a multi-motion swing fires the projectile motion's magic path" do
