@@ -448,9 +448,16 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     rotation = face_toward(npc.position, target_position, npc.rotation)
 
+    cast_uid = npc.object_id * 0x1_0000_0000 + battle.attack_counter + 1
+
     cast = %{
       skill_id: skill_id,
       skill_level: skill_level,
+      # one uid identifies the cast across its records: the skill-use that
+      # starts it, the launch records, and the damage that resolves it (the
+      # client pairs them by this id — a skill whose damage never carries
+      # its uid never closes and the actor stays locked in the skill)
+      cast_uid: cast_uid,
       range: attack_range(attack, npc),
       rate: attack_rate(attack),
       magic_path_id: attack_magic_path_id(attack),
@@ -466,7 +473,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     # never carries attack sequences — puppeting the swing through it
     # restarts the client's skill animation on every sequence change
     use_record = %{
-      id: npc.object_id * 0x1_0000_0000 + battle.attack_counter + 1,
+      id: cast_uid,
       server_tick: now,
       caster: %{object_id: npc.object_id},
       skill_id: skill_id,
@@ -548,6 +555,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           rate: cast.rate,
           magic_path_id: cast.magic_path_id,
           look_at_type: look_at_type,
+          cast_uid: cast.cast_uid,
           motion_point: motion_point,
           attack_point: attack_point,
           hit_skills: attack_hit_skills(firing_attack),

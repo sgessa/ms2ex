@@ -115,7 +115,11 @@ then settles into Attack_Idle_A (fallback Idle_A).
 Damage records carry the position the hit landed at (a projectile's
 record anchors its explosion visual at the landing point, not the
 shooter), and target records carry the firing motion and attack point
-indices alongside the skill id.
+indices alongside the skill id. One cast uid threads through the whole
+swing — the skill-use that starts it, the launch records, and the
+damage that resolves it — because the client pairs them by that id: a
+skill whose damage never carries its uid never closes and the actor
+stays locked in the skill (its idle and walk stop playing).
 
 When the firing attack carries a magic path, the hit reaches clients as
 a SkillDamage target record first (one packet per magic-path segment,

@@ -42,7 +42,7 @@ defmodule Ms2ex.Packets.SkillDamage do
     __MODULE__
     |> build()
     |> put_byte(@modes.target)
-    |> put_long(0)
+    |> put_long(hit[:cast_uid] || 0)
     |> put_int(hit.caster_object_id)
     |> put_int(hit.skill_id)
     |> put_short(hit.skill_level)
@@ -66,8 +66,8 @@ defmodule Ms2ex.Packets.SkillDamage do
     __MODULE__
     |> build()
     |> put_byte(@modes.damage)
+    |> put_long(hit[:cast_uid] || hit.caster_object_id * 0x1_0000_0000 + hit.attack_counter)
     |> put_long(0)
-    |> put_long(hit.caster_object_id * 0x1_0000_0000 + hit.attack_counter)
     |> put_int(hit.caster_object_id)
     |> put_int(hit.skill_id)
     |> put_short(hit.skill_level)
