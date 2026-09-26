@@ -663,7 +663,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
       },
       # velocity 300 units/s: the 300-unit flight to the player takes 10ms
       "table:magicpath.xml" => %{
-        table: %{entries: %{"5065" => [%{velocity: 30_000.0, distance: 600.0}]}}
+        table: %{entries: %{"5065" => [%{velocity: 30_000.0, distance: 600.0, look_at_type: 0}]}}
       }
     })
 
@@ -707,7 +707,6 @@ defmodule Ms2ex.FieldNpcBattleTest do
                   %{
                     range: %{distance: 2400.0},
                     magic_path_id: 5065,
-                    arrow: %{overlap: true},
                     damage: %{rate: 1.0, value: 0}
                   }
                 ]
@@ -722,6 +721,9 @@ defmodule Ms2ex.FieldNpcBattleTest do
           Attack_02_B: %{id: 22, time: 1.0},
           Attack_Idle_A: %{id: 8}
         }
+      },
+      "table:magicpath.xml" => %{
+        table: %{entries: %{"5065" => [%{velocity: 30_000.0, distance: 600.0, look_at_type: 1}]}}
       }
     })
 
@@ -742,8 +744,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
 
     # the cast spans both motions (1.5s) and the hit lands inside the
     # firing motion: 500ms windup + 40% of the 1s firing motion
-    assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065, arrow_overlap?: true} =
-             npc.battle.cast
+    assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
 
     # the cast opens on the windup motion's sequence
     assert npc.animation == 21
@@ -753,7 +754,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     assert npc.animation == 22
 
     {_npc, hits} = Battle.tick(npc, state, 1_050)
-    assert [%{magic_path_id: 5065, arrow_overlap?: true, server_tick: 1_050}] = hits
+    assert [%{magic_path_id: 5065, look_at_type: 1, server_tick: 1_050}] = hits
   end
 
   test "the hit lands at the firing attack's animation keyframe" do

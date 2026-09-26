@@ -454,7 +454,6 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       range: attack_range(attack, npc),
       rate: attack_rate(attack),
       magic_path_id: attack_magic_path_id(attack),
-      arrow_overlap?: attack_arrow_overlap?(attack),
       started_at: now,
       # each later motion's sequence takes over when its playback starts
       motion_switches: motion_switches(motions),
@@ -511,7 +510,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       }
 
       if in_range? do
-        {travel_ms, flight, velocity} =
+        {travel_ms, flight, velocity, look_at_type} =
           projectile_flight(cast.magic_path_id, npc.position, target_position)
 
         hit = %{
@@ -528,7 +527,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           attack: get_in(npc.npc.metadata, [:stat, :stats, :physical_atk]) || 0,
           rate: cast.rate,
           magic_path_id: cast.magic_path_id,
-          arrow_overlap?: cast.arrow_overlap?,
+          look_at_type: look_at_type,
           travel_ms: travel_ms,
           flight: flight,
           velocity: velocity,
@@ -910,11 +909,6 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
-  # whether the projectile homes to its target (the attack's arrow overlap)
-  defp attack_arrow_overlap?(attack) do
-    get_in(attack || %{}, [:arrow, :overlap]) == true
-  end
-
   # the hit's reach: the firing attack's range, falling back to the mob's
   # stop range so the re-check stays meaningful
   defp attack_range(attack, npc) do
@@ -997,13 +991,15 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         if is_number(velocity) and velocity > 0 do
           distance = :math.sqrt(square_distance(from, to))
           flight = min(distance, segment[:distance] || distance)
-          {trunc(flight / velocity * 1000), flight, velocity * 1.0}
+
+          {trunc(flight / velocity * 1000), flight, velocity * 1.0,
+           Map.fetch!(segment, :look_at_type)}
         else
-          {0, 0, 0.0}
+          {0, 0, 0.0, 0}
         end
 
       _ ->
-        {0, 0, 0.0}
+        {0, 0, 0.0, 0}
     end
   end
 

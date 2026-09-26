@@ -116,21 +116,24 @@ When the firing attack carries a magic path, the hit reaches clients as
 a SkillDamage target record first (one packet per magic-path segment,
 before the damage numbers): that is what spawns the projectile visual.
 The record's direction is the world unit shot direction toward the
-victim at release; the client flies the projectile along it.
+victim at release.
 
-The projectile's damage depends on its arrow overlap:
+How the client flies (and aims) the projectile comes from the magic
+path's lookAtType, which decides the record's target id and how damage
+resolves:
 
-- overlap shots (a minority) home: the record carries the victim's
-  object id, the client chases the projectile onto them, and the damage
-  applies when the flight time (segment velocity over the launch
-  distance) elapses — whiffed only if the victim left the field or the
-  attack's reach
-- straight shots (the vast majority) are fire-and-forget: the record's
-  target id stays zero and the field simulates the flight per tick along
-  the fixed launch line. The damage lands only when the flight actually
-  reaches the victim's live position (impact radius 150), so
-  sidestepping the line dodges the shot; a flight that covers its max
-  distance without colliding despawns harmlessly
+- lookAtType 1 (aimed shots, ~17% of segments) fly at — and chase — the
+  actor named in the record's target id: the record carries the victim,
+  and the damage applies when the flight time (segment velocity over the
+  launch distance) elapses — whiffed only if the victim left the field
+  or the attack's reach. Without the victim id these paths have no aim
+  source at all and fly a fixed off-target line.
+- lookAtType 0/2 (fixed-line shots, the majority) are fire-and-forget:
+  the record's target id stays zero and the field simulates the flight
+  per tick along the fixed launch line. The damage lands only when the
+  flight actually reaches the victim's live position (impact radius
+  150), so sidestepping the line dodges the shot; a flight that covers
+  its max distance without colliding despawns harmlessly
 
 - the active cast owns the mob's presentation: stand ticks during the
   windup never touch the animation, so the client plays the full swing

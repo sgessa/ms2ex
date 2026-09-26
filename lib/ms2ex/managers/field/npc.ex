@@ -266,7 +266,7 @@ defmodule Ms2ex.Managers.Field.Npc do
         key = {hit.caster_object_id, hit.attack_counter}
 
         cond do
-          hit.travel_ms > 0 and hit.arrow_overlap? ->
+          hit.travel_ms > 0 and hit.look_at_type == 1 ->
             state = broadcast_launch(state, hit, hit.target_object_id)
             Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
             state
@@ -657,12 +657,12 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   # a mob's landed swing reaches clients as the attack record first (the
-  # client's projectile visuals: one packet per magic-path segment, homing
-  # to the victim when the attack's arrow overlaps) and the damage numbers
-  # when the projectile lands
-  # every launch record homes to the victim: the client chases the
-  # projectile onto the player, so the shot visibly reads as coming from
-  # the mob that fired it (its damage still applies on the flight timer)
+  # client's projectile visuals: one packet per magic-path segment) and
+  # the damage numbers when the projectile lands
+  # the record's target id is the client's aim source: lookAtType 1 paths
+  # fly the projectile at (and chasing) that actor, so aimed shots carry
+  # the victim; fixed-line paths (lookAtType 0/2) carry zero and fly their
+  # own line, dodgeable by stepping off it
   defp broadcast_launch(state, hit, target_id) do
     with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
          segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
@@ -682,17 +682,18 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   # the shot direction a launch record carries: the world unit vector from
-  # the shooter toward the victim at release. The client flies the
-  # projectile along it as-is (rotate? magic paths additionally orient the
-  # projectile's model by the shooter's yaw, but the flight line is the
-  # packet's direction)
+  # the shooter toward the victim at release. Fixed-line paths (lookAtType
+  # 0/2) fly their line from it; aimed paths (lookAtType 1) key off the
+  # record's target id instead
   def launch_direction(world_direction), do: world_direction
 
   @doc """
-  Applies a homing projectile's damage when its flight time elapses. The
-  shot lands while its victim is still on the field, live-synced, and
-  inside the firing attack's reach of the launch point. (Straight shots
-  are simulated per tick instead — see advance_projectiles/2.)
+  Applies an aimed (lookAtType 1) projectile's damage when its flight
+  time elapses: the client chases the shot onto its victim, so the damage
+  follows the timer. The shot lands while its victim is still on the
+  field, live-synced, and inside the firing attack's reach of the launch
+  point. (Fixed-line shots are simulated per tick instead — see
+  advance_projectiles/2.)
   """
   def apply_projectile_impact(state, hit) do
     reach = hit.range + 60

@@ -90,7 +90,7 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     state =
       field_state(player_at: %Types.Coord{x: 250, y: 250, z: 0})
 
-    hit = hit(arrow_overlap?: true)
+    hit = hit(look_at_type: 1)
     Npc.apply_projectile_impact(state, hit)
 
     {:ok, character} = Managers.Character.call(@character_id, :lookup)
@@ -101,7 +101,7 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     state =
       field_state(player_at: %Types.Coord{x: 5_000, y: 0, z: 0})
 
-    hit = hit(arrow_overlap?: true)
+    hit = hit(look_at_type: 1)
     Npc.apply_projectile_impact(state, hit)
 
     {:ok, character} = Managers.Character.call(@character_id, :lookup)
@@ -169,7 +169,7 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
         attack: 500,
         rate: 1.0,
         magic_path_id: 5065,
-        arrow_overlap?: false,
+        look_at_type: 0,
         travel_ms: 8,
         flight: 250.0,
         server_tick: 0,
