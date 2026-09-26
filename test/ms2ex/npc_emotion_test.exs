@@ -58,7 +58,6 @@ defmodule Ms2ex.NpcEmotionTest do
       |> tick()
 
     [{object_id, npc}] = Map.to_list(state.npcs)
-
     # the npc carries the script's spawn point id, so the emote found it
     assert npc.spawn_point_id == 109
     assert npc.animation == 4

@@ -880,33 +880,43 @@ defmodule Ms2ex.Managers.Field.Npc do
 
         {[{object_id, npc}], {live, [npc | corpses]}}
 
+      not npc.dead? and npc.send_control? ->
+        # state changes always broadcast — the cast start's control is the
+        # one that pins the swing's sequence AND zeroes the mob's velocity
+        # (suppressing it leaves the client extrapolating the last chase
+        # velocity straight off the map)
+        npc = broadcast_control(npc, now)
+        {[{object_id, npc}], {[npc | live], corpses}}
+
       not npc.dead? and swinging?(npc, now) ->
-        # mid-swing: the cast's control already pinned the sequence; any
-        # further broadcast restarts it
+        # mid-swing periodic anchor: the cast's control already pinned the
+        # sequence; any further broadcast restarts it
         {[{object_id, npc}], {live, corpses}}
 
-      not npc.dead? and (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
-        # the sequence counter gates the client's sequence (re)play: it only
-        # moves when the sequence itself changes. Bumping it on every
-        # periodic control restarts the model's animation each broadcast —
-        # one-shot swings freeze on their first frame while the fight goes
-        # on around the statue
-        seq_counter =
-          if npc.animation == npc.sent_animation,
-            do: npc.seq_counter,
-            else: npc.seq_counter + 1
-
-        npc =
-          npc
-          |> Map.put(:seq_counter, seq_counter)
-          |> Map.put(:sent_animation, npc.animation)
-          |> Map.put(:last_control_at, now)
-          |> Map.put(:send_control?, false)
-
+      not npc.dead? and now - npc.last_control_at >= @idle_control_ms ->
+        npc = broadcast_control(npc, now)
         {[{object_id, npc}], {[npc | live], corpses}}
 
       true ->
         {[{object_id, npc}], {live, corpses}}
     end
+  end
+
+  # the sequence counter gates the client's sequence (re)play: it only
+  # moves when the sequence itself changes. Bumping it on every periodic
+  # control restarts the model's animation each broadcast — one-shot
+  # swings freeze on their first frame while the fight goes on around
+  # the statue
+  defp broadcast_control(npc, now) do
+    seq_counter =
+      if npc.animation == npc.sent_animation,
+        do: npc.seq_counter,
+        else: npc.seq_counter + 1
+
+    npc
+    |> Map.put(:seq_counter, seq_counter)
+    |> Map.put(:sent_animation, npc.animation)
+    |> Map.put(:last_control_at, now)
+    |> Map.put(:send_control?, false)
   end
 end

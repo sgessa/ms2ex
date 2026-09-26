@@ -5,6 +5,7 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
 
   alias Ms2ex.Managers
   alias Ms2ex.Managers.Field.Npc
+  alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Schema
   alias Ms2ex.Types
 
@@ -93,6 +94,48 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
 
     state = Npc.tick(state)
     assert state.npcs[@mob_object_id].seq_counter == counter + 1
+  end
+
+  test "a casting mob's state-change control still broadcasts mid-swing" do
+    # the cast start sets send_control?: the swing-pinning control must go
+    # out even while the periodic stream is suppressed, or the client keeps
+    # extrapolating the mob's last chase velocity off the map
+    npc =
+      Types.FieldNpc.new(%{
+        object_id: @mob_object_id,
+        spawn_point_id: 1,
+        map_id: 0,
+        npc: Types.Npc.new(%{id: 22_000_000, metadata: @counter_mob_metadata}),
+        position: %Types.Coord{x: 0, y: 0, z: 0},
+        rotation: %Types.Coord{x: 0, y: 0, z: 0},
+        field: self(),
+        spawn_radius: 0,
+        next_target_scan_at: 9_999_999_999_999,
+        animation: 7,
+        idle: %{task: :stand, until: 9_999_999_999_999}
+      })
+
+    npc = Battle.aggro(npc, %Schema.Character{id: @character_id, object_id: @object_id}, 0)
+
+    npc = %{
+      npc
+      | battle: %{npc.battle | cast: %{hit_at: 9_999_999_999_999, end_at: 9_999_999_999_999}},
+        send_control?: true,
+        velocity: {0, 0, 0}
+    }
+
+    state = %{
+      field_state(player_at: %Types.Coord{x: 5_000, y: 0, z: 0})
+      | npcs: %{npc.object_id => npc}
+    }
+
+    state = Npc.tick(state)
+
+    # the control went out: the counter moved and the broadcast aged
+    broadcast = state.npcs[@mob_object_id]
+    assert broadcast.seq_counter == 1
+    assert broadcast.last_control_at > 0
+    assert broadcast.send_control? == false
   end
 
   test "an on-hit explosion cube damages every player standing in it" do
