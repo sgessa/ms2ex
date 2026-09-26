@@ -322,3 +322,20 @@ until the AI-tree runtime lands.
   fight hostile mobs), pet taming behavior, summon/slave relationships.
 - combat time tracking (battle-time conditions), jump/knockback handling,
   fly movement for airborne mobs.
+
+## Known gaps
+
+- Mobs always swing their first skill; retail mobs rotate through their
+  skill list per their AI script (with per-node cooldowns and approach
+  distances).
+- A firing motion's later attack points never fire: multi-hit flails
+  (several attack points, each with its own rate) resolve only their
+  first hit.
+- Melee swings land only on the aggro target; retail resolves every
+  player standing in the firing attack's range cube (the attack's target
+  count caps it).
+- Multi-motion casts show the first motion's sequence for the whole
+  playback instead of handing off at each motion boundary, and motions
+  with a move distance never lunge the mob forward mid-swing.
+- On-hit effects without a splash (stuns, slows, knockbacks riding the
+  attack's effect list) are dropped; only splash detonations fire.

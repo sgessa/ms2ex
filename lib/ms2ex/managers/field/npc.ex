@@ -672,6 +672,10 @@ defmodule Ms2ex.Managers.Field.Npc do
   # detonates after its splash delay (a thrown bomb's explosion cube goes
   # off a beat after impact). The landing point defaults to the victim's
   # live position — splash effects center on their targets
+  #
+  # TODO: only splash effect skills fire; on-hit entries without a splash
+  # (stuns, slows, knockbacks riding the attack's effect list) are
+  # dropped, as are effects keyed to the damage landing
   defp schedule_hit_skills(state, hit, landed_at) do
     skills = Map.get(hit, :hit_skills, [])
 

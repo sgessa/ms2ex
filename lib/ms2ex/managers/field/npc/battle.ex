@@ -362,6 +362,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
   # inside attack range: swing when the cooldown allows, otherwise hold
   # position facing the target
+  # TODO: mobs always swing their first skill; retail mobs rotate through
+  # their skill list per their AI script (with per-node cooldowns and
+  # move-distance approach steps) — pick among the npc's skills instead
   defp attack_or_stand(npc, battle, field_state, target_position, now) do
     if now >= battle.next_attack_at and has_skill?(npc) and castable?(npc) do
       npc = start_cast(npc, battle, target_position, now)
@@ -471,6 +474,13 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     # client re-applies the sequence on every control it receives, so a
     # periodic broadcast mid-swing restarts a one-shot on its first frame
     # (looping walks hide the restarts, swings freeze)
+    #
+    # TODO: multi-motion casts should hand off to each later motion's
+    # sequence exactly at the previous motion's end (one control per
+    # hand-off, still silent between); today the first motion's sequence
+    # stands in for the whole playback
+    # TODO: motions with a move distance lunge the mob forward between
+    # their move keyframes during the swing; casts never move the mob
     %{
       npc
       | battle: %{battle | cast: cast, last_move_at: now},
@@ -515,6 +525,10 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           last_move_at: now
       }
 
+      # TODO: melee swings land only on the aggro target; retail resolves
+      # every player standing in the firing attack's range cube (the
+      # attack's target count caps it, e.g. wide flails hit up to 10)
+
       if in_range? do
         {travel_ms, flight, velocity, look_at_type} =
           projectile_flight(cast.magic_path_id, npc.position, target_position)
@@ -522,6 +536,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         {motion_point, attack_point, firing_attack} =
           skill_level_doc(cast.skill_id, cast.skill_level) |> swing_attack() || {0, 0, nil}
 
+        # TODO: a motion can carry several attack points (multi-hit flails
+        # hit once per point, each with its own rate); this resolves only
+        # the first — fire one hit per attack point at its own keyframe
         hit = %{
           character_id: battle.target_id,
           caster_object_id: npc.object_id,
