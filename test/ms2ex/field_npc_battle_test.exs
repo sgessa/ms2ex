@@ -546,19 +546,18 @@ defmodule Ms2ex.FieldNpcBattleTest do
     {npc, _} = Battle.tick(npc, state, 200)
     assert npc.battle.cast
 
-    # the control stream never carries the swing's sequence: the client
-    # plays the skill from the cast's skill-use record, so the mob's
-    # animation stays on its spawn idle through the whole cast
+    # the swing pins its sequence in one control and holds it through the
+    # playback (no re-facing churn mid-swing)
     {npc, _} = Battle.tick(npc, state, 300)
-    assert npc.animation == 10
+    assert npc.animation == 7
 
     {npc, _} = Battle.tick(npc, state, 700)
     assert npc.battle.cast == nil
 
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation == 10
+    assert npc.animation == 7
 
-    # between swings the mob is on its combat idle
+    # between swings the mob settles into its combat idle
     {npc, _} = Battle.tick(npc, state, 1_250)
     assert npc.animation == 8
 
@@ -623,6 +622,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # from the resolve ran out at 1_800, but the animation gates until 2_200)
     {npc, _} = Battle.tick(npc, state, 2_100)
     assert npc.battle.cast == nil
+    assert npc.animation == 7
     refute npc.battle.cast
 
     # and the next swing only starts once the previous one ended
@@ -765,9 +765,7 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # the firing attack's 2400: the range re-check must use the firing
     # attack's reach or the swing would whiff
     npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
-    topic = "battle-skill-use-test"
-    :ok = Phoenix.PubSub.subscribe(Ms2ex.PubSub, topic)
-    state = field_with_player_at(1300, 0) |> Map.put(:topic, topic)
+    state = field_with_player_at(1300, 0)
 
     {npc, _} = Battle.tick(npc, state, 100)
 
@@ -775,14 +773,12 @@ defmodule Ms2ex.FieldNpcBattleTest do
     # firing motion: 500ms windup + 40% of the 1s firing motion
     assert %{hit_at: 1_000, end_at: 1_600, magic_path_id: 5065} = npc.battle.cast
 
-    # the swing's animation rides the skill-use record (the client plays
-    # every motion from it); the control stream keeps the mob's idle
-    # sequence through the whole cast
-    assert_receive {:push, <<0x3D::little-16, _::binary>>}, 200
-    assert npc.animation != 21 and npc.animation != 22
+    # the cast pins the first motion's sequence in a single control; no
+    # further broadcasts touch it while the swing plays
+    assert npc.animation == 21
 
     {npc, _} = Battle.tick(npc, state, 750)
-    assert npc.animation != 22
+    assert npc.animation == 21
 
     {_npc, hits} = Battle.tick(npc, state, 1_050)
 

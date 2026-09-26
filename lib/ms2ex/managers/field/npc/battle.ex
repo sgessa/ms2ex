@@ -22,11 +22,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   and the tree runtime is a later step (see docs/features/mob-ai.md).
   """
 
-  alias Ms2ex.Managers
   alias Ms2ex.Managers.Field.Npc.Idle
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Navigation
-  alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -366,7 +364,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # position facing the target
   defp attack_or_stand(npc, battle, field_state, target_position, now) do
     if now >= battle.next_attack_at and has_skill?(npc) and castable?(npc) do
-      npc = start_cast(npc, battle, field_state, target_position, now)
+      npc = start_cast(npc, battle, target_position, now)
       # the swing starts immediately: resolve its hit when due
       cast_tick(npc, npc.battle, field_state, target_position, now)
     else
@@ -434,7 +432,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # begins a swing: pins the mob in PcSkill with the motion's sequence, the
   # hit lands mid-swing and the cast occupies the mob for the swing's
   # playback length
-  defp start_cast(npc, battle, field_state, target_position, now) do
+  defp start_cast(npc, battle, target_position, now) do
     [entry | _] = get_in(npc.npc.metadata, [:skill])
     skill_id = entry.id
     skill_level = entry.level
@@ -467,47 +465,36 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       hit_done?: false
     }
 
-    # the swing's animation comes from the skill-use record: the client
-    # plays the whole skill (every motion, recovery included) from it, the
-    # same way player casts render on other clients. The control stream
-    # never carries attack sequences — puppeting the swing through it
-    # restarts the client's skill animation on every sequence change
-    use_record = %{
-      id: cast_uid,
-      server_tick: now,
-      caster: %{object_id: npc.object_id},
-      skill_id: skill_id,
-      skill_level: skill_level,
-      motion_point: 0,
-      position: npc.position,
-      direction: aim_direction(npc.position, target_position),
-      rotation: rotation,
-      rotate2z: 0.0
-    }
-
-    Managers.Field.broadcast(
-      Map.get(field_state, :topic),
-      Packets.SkillUse.bytes(use_record, {false, false, 0, ""})
-    )
-
+    # the swing's animation rides the control stream: the cast pins the
+    # first motion's sequence in ONE control at cast start, and the
+    # control stream then stays silent for the whole playback — the
+    # client re-applies the sequence on every control it receives, so a
+    # periodic broadcast mid-swing restarts a one-shot on its first frame
+    # (looping walks hide the restarts, swings freeze)
     %{
       npc
       | battle: %{battle | cast: cast, last_move_at: now},
         velocity: {0, 0, 0},
         rotation: rotation,
+        animation: swing_sequence_id(motions) || npc.animation,
         send_control?: true
     }
+  end
+
+  defp swing_sequence_id(motions) do
+    motions && Enum.find_value(motions, fn motion -> motion && motion.sequence_id end)
   end
 
   # resolves the swing: the hit lands when the windup is over; hold position
   # facing the target through the windup, land the hit if the target is still
   # in reach, then hand the hit to the field for application
-  defp cast_tick(npc, battle, field_state, target_position, now) do
+  defp cast_tick(npc, battle, field_state, _target_position, now) do
     cast = battle.cast
 
     if now < cast.hit_at do
-      # windup: hold position facing the target
-      {stand(npc, battle, target_position, now), []}
+      # windup: the mob is committed to the swing — no re-facing and no
+      # control churn, or the broadcast restarts the swing's sequence
+      {npc, []}
     else
       target_position = get_in(field_state, [:player_positions, battle.target_id, :position])
 
@@ -516,12 +503,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           square_distance(npc.position, target_position) <
             square(cast.range + @cast_range_slack)
 
-      npc = %{
-        npc
-        | velocity: {0, 0, 0},
-          rotation: face_toward(npc.position, target_position, npc.rotation),
-          send_control?: true
-      }
+      npc = %{npc | velocity: {0, 0, 0}}
 
       # the cooldown floor and the swing's playback both gate the next
       # swing: the mob never re-attacks while its attack animation plays

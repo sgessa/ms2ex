@@ -858,6 +858,12 @@ defmodule Ms2ex.Managers.Field.Npc do
     dx * dx + dy * dy + dz * dz
   end
 
+  # a swing occupies the mob from its cast start until the playback's
+  # end: controls stay silent through it
+  defp swinging?(%{battle: %{cast: %{} = cast}}, now), do: now < cast.end_at
+  defp swinging?(%{battle: %{swing_until: until}}, now) when is_integer(until), do: now < until
+  defp swinging?(_npc, _now), do: false
+
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)
 
@@ -869,6 +875,11 @@ defmodule Ms2ex.Managers.Field.Npc do
           |> Map.put(:last_control_at, now)
 
         {[{object_id, npc}], {live, [npc | corpses]}}
+
+      not npc.dead? and swinging?(npc, now) ->
+        # mid-swing: the cast's control already pinned the sequence; any
+        # further broadcast restarts it
+        {[{object_id, npc}], {live, corpses}}
 
       not npc.dead? and (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
         # the sequence counter gates the client's sequence (re)play: it only

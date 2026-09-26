@@ -157,13 +157,15 @@ victim's damage broadcast carrying the effect skill's id (that is what
 puts the damage number on screen). A dodged bomb still detonates where
 it lands; only players inside the cube take the hit.
 
-- swing animations are never carried by the control stream: a cast
-  starts by broadcasting a SkillUse record for the mob (the same packet
-  that renders player casts on other clients) and the client plays the
-  whole skill from it — every motion, the recovery included. The control
-  sequence stays on the mob's idle throughout the cast; puppeting the
-  swing through control sequences restarts the client's skill animation
-  on every sequence change and freezes the model mid-swing
+- swing animations ride the control stream, but the control goes out
+  exactly once per swing: the cast start pins the first motion's
+  sequence in a single control, and the stream stays SILENT for the
+  whole playback (windup, hit, recovery). The client re-applies the
+  sequence on every control it receives, so any mid-swing broadcast —
+  periodic anchor, re-facing, motion hand-off — restarts a one-shot
+  sequence on its first frame (looping walks hide the restarts; swings
+  freeze mid-pose). The settle into the combat idle is the next control
+  after the playback ends
 - the control's sequence counter only moves when the broadcast sequence
   changes: the client re-applies the sequence on every counter change, so
   bumping it on each periodic (30ms) control restarts the model's
