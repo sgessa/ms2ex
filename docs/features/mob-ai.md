@@ -115,9 +115,8 @@ then settles into Attack_Idle_A (fallback Idle_A).
 When the firing attack carries a magic path, the hit reaches clients as
 a SkillDamage target record first (one packet per magic-path segment,
 before the damage numbers): that is what spawns the projectile visual.
-The record's direction is the world shot direction — rotate? segments
-carry it in the shooter's local frame (+y forward), which the client
-turns by the shooter's yaw.
+The record's direction is the world unit shot direction toward the
+victim at release; the client flies the projectile along it.
 
 The projectile's damage depends on its arrow overlap:
 

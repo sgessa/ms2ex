@@ -6,7 +6,6 @@ defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
-  alias Ms2ex.Types.Coord
 
   alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Managers.Field.Npc.Patrol
@@ -264,17 +263,16 @@ defmodule Ms2ex.Managers.Field.Npc do
     # one dodges it. Melee swings and ground indicators stay instant.
     state =
       Enum.reduce(hits, state, fn hit, state ->
-        shooter = Map.get(state.npcs, hit.caster_object_id)
         key = {hit.caster_object_id, hit.attack_counter}
 
         cond do
           hit.travel_ms > 0 and hit.arrow_overlap? ->
-            state = broadcast_launch(state, shooter, hit, hit.target_object_id)
+            state = broadcast_launch(state, hit, hit.target_object_id)
             Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
             state
 
           hit.travel_ms > 0 ->
-            state = broadcast_launch(state, shooter, hit, 0)
+            state = broadcast_launch(state, hit, 0)
 
             projectile = %{
               hit: hit,
@@ -665,14 +663,13 @@ defmodule Ms2ex.Managers.Field.Npc do
   # every launch record homes to the victim: the client chases the
   # projectile onto the player, so the shot visibly reads as coming from
   # the mob that fired it (its damage still applies on the flight timer)
-  defp broadcast_launch(state, shooter, hit, target_id) do
+  defp broadcast_launch(state, hit, target_id) do
     with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
          segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
       segments
       |> Enum.with_index()
-      |> Enum.each(fn {segment, index} ->
-        direction = launch_direction(shooter.rotation, hit.direction, segment[:rotate?] == true)
-        launch = Map.merge(hit, %{direction: direction})
+      |> Enum.each(fn {_segment, index} ->
+        launch = Map.merge(hit, %{direction: launch_direction(hit.direction)})
 
         Managers.Field.broadcast(
           state.topic,
@@ -684,19 +681,12 @@ defmodule Ms2ex.Managers.Field.Npc do
     state
   end
 
-  @doc """
-  The shot direction a launch record carries for a magic-path segment:
-  `rotate?` segments fly where the shooter faces, so the packet carries
-  the world shot direction in the shooter's local frame (+y forward) and
-  the client turns it by the shooter's current yaw; fixed segments take
-  the world direction as-is.
-  """
-  def launch_direction(shooter_rotation, world_direction, rotate?)
-
-  def launch_direction(shooter_rotation, world_direction, true),
-    do: Coord.rotate(world_direction, shooter_rotation)
-
-  def launch_direction(_shooter_rotation, world_direction, false), do: world_direction
+  # the shot direction a launch record carries: the world unit vector from
+  # the shooter toward the victim at release. The client flies the
+  # projectile along it as-is (rotate? magic paths additionally orient the
+  # projectile's model by the shooter's yaw, but the flight line is the
+  # packet's direction)
+  def launch_direction(world_direction), do: world_direction
 
   @doc """
   Applies a homing projectile's damage when its flight time elapses. The

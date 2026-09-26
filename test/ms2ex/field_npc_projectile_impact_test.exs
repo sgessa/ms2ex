@@ -121,33 +121,13 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     assert character.stats.health_cur == 1000
   end
 
-  test "the launch record direction is the shot in the shooter's local frame" do
+  test "the launch record direction is the world shot direction" do
     alias Ms2ex.Managers.Field.Npc
 
-    world = %Types.Coord{x: 1.0, y: 0.0, z: 0.0}
-
-    # the mob faces +x (yaw 90): rotate? paths carry the local-frame
-    # direction (+y forward) the client turns by that yaw, landing back on
-    # the world shot direction
-    facing_east = %Types.Coord{x: 0.0, y: 0.0, z: 90.0}
-    local = Npc.launch_direction(facing_east, world, true)
-
-    assert_in_delta local.x, 0.0, 1.0e-6
-    assert_in_delta local.y, 1.0, 1.0e-6
-    assert_in_delta local.z, 0.0, 1.0e-6
-
-    # and the client's rotation of it lands back on the world direction
-    rendered = %Types.Coord{
-      x: local.x * :math.cos(:math.pi() / 2) + local.y * :math.sin(:math.pi() / 2),
-      y: local.x * :math.sin(:math.pi() / 2) - local.y * :math.cos(:math.pi() / 2),
-      z: local.z
-    }
-
-    assert_in_delta rendered.x, 1.0, 1.0e-6
-    assert_in_delta rendered.y, 0.0, 1.0e-6
-
-    # fixed segments take the world direction as-is
-    assert Npc.launch_direction(facing_east, world, false) == world
+    # the client flies the projectile along the packet's world direction:
+    # the launch record carries it through unchanged
+    world = %Types.Coord{x: 0.6, y: -0.8, z: 0.0}
+    assert Npc.launch_direction(world) == world
   end
 
   defp field_state(player_at: player_at) do
