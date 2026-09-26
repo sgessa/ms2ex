@@ -22,9 +22,11 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   and the tree runtime is a later step (see docs/features/mob-ai.md).
   """
 
+  alias Ms2ex.Managers
   alias Ms2ex.Managers.Field.Npc.Idle
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Navigation
+  alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -367,7 +369,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # move-distance approach steps) — pick among the npc's skills instead
   defp attack_or_stand(npc, battle, field_state, target_position, now) do
     if now >= battle.next_attack_at and has_skill?(npc) and castable?(npc) do
-      npc = start_cast(npc, battle, target_position, now)
+      npc = start_cast(npc, battle, field_state, target_position, now)
       # the swing starts immediately: resolve its hit when due
       cast_tick(npc, npc.battle, field_state, target_position, now)
     else
@@ -435,7 +437,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # begins a swing: pins the mob in PcSkill with the motion's sequence, the
   # hit lands mid-swing and the cast occupies the mob for the swing's
   # playback length
-  defp start_cast(npc, battle, target_position, now) do
+  defp start_cast(npc, battle, field_state, target_position, now) do
     [entry | _] = get_in(npc.npc.metadata, [:skill])
     skill_id = entry.id
     skill_level = entry.level
@@ -468,12 +470,14 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       hit_done?: false
     }
 
-    # the swing's animation rides the control stream: the cast pins the
-    # first motion's sequence in ONE control at cast start, and the
-    # control stream then stays silent for the whole playback — the
-    # client re-applies the sequence on every control it receives, so a
-    # periodic broadcast mid-swing restarts a one-shot on its first frame
-    # (looping walks hide the restarts, swings freeze)
+    # the cast is announced on both channels, the way player casts render:
+    # a skill-use record initiates the skill (the client's skill system
+    # owns the playback — motion hand-offs, the recovery — and pairs the
+    # later damage by the cast uid), while the control pins the first
+    # motion's sequence, state and zeroed velocity in ONE broadcast. The
+    # control stream then stays silent for the whole playback — the client
+    # re-applies the sequence on every control it receives, so a periodic
+    # broadcast mid-swing restarts a one-shot on its first frame
     #
     # TODO: multi-motion casts should hand off to each later motion's
     # sequence exactly at the previous motion's end (one control per
@@ -481,6 +485,24 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     # stands in for the whole playback
     # TODO: motions with a move distance lunge the mob forward between
     # their move keyframes during the swing; casts never move the mob
+    use_record = %{
+      id: cast_uid,
+      server_tick: now,
+      caster: %{object_id: npc.object_id},
+      skill_id: skill_id,
+      skill_level: skill_level,
+      motion_point: 0,
+      position: npc.position,
+      direction: aim_direction(npc.position, target_position),
+      rotation: rotation,
+      rotate2z: 0.0
+    }
+
+    Managers.Field.broadcast(
+      Map.get(field_state, :topic),
+      Packets.SkillUse.bytes(use_record, {false, false, 0, ""})
+    )
+
     %{
       npc
       | battle: %{battle | cast: cast, last_move_at: now},
