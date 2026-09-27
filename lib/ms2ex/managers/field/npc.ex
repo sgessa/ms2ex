@@ -871,34 +871,46 @@ defmodule Ms2ex.Managers.Field.Npc do
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)
 
-    cond do
-      npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
-        npc =
-          npc
-          |> Map.update!(:seq_counter, &(&1 + 1))
-          |> Map.put(:last_control_at, now)
+    {npc, broadcast} = control_plan(npc, now)
 
+    case broadcast do
+      :skip ->
+        {[{object_id, npc}], {live, corpses}}
+
+      :broadcast ->
+        {[{object_id, npc}], {[npc | live], corpses}}
+
+      :corpse ->
         {[{object_id, npc}], {live, [npc | corpses]}}
+    end
+  end
 
-      not npc.dead? and npc.send_control? ->
-        # state changes always broadcast — the cast start's control is the
-        # one that pins the swing's sequence AND zeroes the mob's velocity
-        # (suppressing it leaves the client extrapolating the last chase
-        # velocity straight off the map)
-        npc = broadcast_control(npc, now)
-        {[{object_id, npc}], {[npc | live], corpses}}
+  # decides what this npc's control broadcast does this tick: a corpse
+  # re-announces on its slow cadence, a state change (the cast start's
+  # control pins the swing's sequence AND zeroes the mob's velocity)
+  # always goes out, a mid-swing periodic anchor stays silent (any
+  # further broadcast restarts the swing's sequence), and everything
+  # else re-anchors on the idle cadence
+  defp control_plan(%{dead?: true, corpse?: true} = npc, now)
+       when now - npc.last_control_at >= @corpse_broadcast_ms do
+    npc =
+      npc
+      |> Map.update!(:seq_counter, &(&1 + 1))
+      |> Map.put(:last_control_at, now)
 
-      not npc.dead? and swinging?(npc, now) ->
-        # mid-swing periodic anchor: the cast's control already pinned the
-        # sequence; any further broadcast restarts it
-        {[{object_id, npc}], {live, corpses}}
+    {npc, :corpse}
+  end
 
-      not npc.dead? and now - npc.last_control_at >= @idle_control_ms ->
-        npc = broadcast_control(npc, now)
-        {[{object_id, npc}], {[npc | live], corpses}}
+  defp control_plan(%{dead?: true} = npc, _now), do: {npc, :skip}
 
-      true ->
-        {[{object_id, npc}], {live, corpses}}
+  defp control_plan(%{send_control?: true} = npc, now),
+    do: {broadcast_control(npc, now), :broadcast}
+
+  defp control_plan(%{dead?: false} = npc, now) do
+    cond do
+      swinging?(npc, now) -> {npc, :skip}
+      now - npc.last_control_at >= @idle_control_ms -> {broadcast_control(npc, now), :broadcast}
+      true -> {npc, :skip}
     end
   end
 
