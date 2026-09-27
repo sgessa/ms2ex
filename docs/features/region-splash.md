@@ -55,9 +55,9 @@ random source id, then fires the splash (`interval` between fires,
 `fire_count` total, `remove_delay` the lifetime) applying the splash
 skill's attack to hostile mobs in a fixed 800 radius (up to 8).
 
-Each fire that lands hits broadcasts TWO records — the client's mob HP
-update keys on the pair, and a plain damage record alone leaves the mob's
-HP bar stale until the next unrelated hit:
+Each landed hit broadcasts the mob's health stat record (the client's
+HP-bar update rides that — damage records only render numbers), plus the
+two damage-flow records the client pairs by the region's source id:
 
 - a **target record** (mode 0): the caster's object id, the splash skill,
 the ground point, and one entry per mob with a uid chained from the

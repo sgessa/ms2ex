@@ -503,6 +503,14 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     Context.Mobs.drop_hit_rewards(field_npc, state.map_id)
 
+    # the client's HP-bar update rides this stat record — the damage
+    # records only render numbers; on death it must land before the dead
+    # control entry or the client ignores the state change
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.Stats.update_mob_stat(%{field_npc | stats: stats}, :health)
+    )
+
     {field_npc, state} =
       if hp == 0 do
         announce_death(%{field_npc | stats: stats}, state)
@@ -514,9 +522,9 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   # Death is announced with ControlNpc.dead/1; the client plays the death
-  # animation on its own before the corpse is removed. The hp=0 sync must
-  # reach the client BEFORE the dead control entry, otherwise it ignores
-  # the state change.
+  # animation on its own before the corpse is removed. The hp=0 stat record
+  # has already landed (apply_live_damage broadcasts it before calling in),
+  # otherwise the client ignores the dead control entry.
   defp announce_death(field_npc, state) do
     corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
 
@@ -530,7 +538,6 @@ defmodule Ms2ex.Managers.Field.Npc do
           last_control_at: Ms2ex.sync_ticks()
       }
 
-    Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
     Managers.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
 
     # bodies stay for their dead window (corpse-hittable ones keep it in
