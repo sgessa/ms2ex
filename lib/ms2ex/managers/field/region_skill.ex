@@ -483,7 +483,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     state
   end
 
-  def apply_splash(splash_cast, source_id, state) do
+  def apply_splash(splash_cast, _source_id, state) do
     targets =
       state.npcs
       |> Enum.filter(fn {_id, npc} ->
@@ -493,10 +493,10 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       end)
       |> Enum.take(@splash_targets)
 
-    hit_mobs(splash_cast, source_id, targets, state)
+    hit_mobs(splash_cast, targets, state)
   end
 
-  defp hit_mobs(splash_cast, source_id, targets, state) do
+  defp hit_mobs(splash_cast, targets, state) do
     {mobs, state} =
       Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
         dmg = Context.Damage.calculate(splash_cast, mob, false)
