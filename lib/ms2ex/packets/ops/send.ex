@@ -8,6 +8,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xD => "MOVE_RESULT",
     0xE => "LOGIN_TO_GAME",
     0xF => "GAME_TO_LOGIN",
+    0x100 => "CHANGE_BACKGROUND",
     0x10 => "GAME_TO_GAME",
     0x11 => "RESPONSE_TIME_SYNC",
     0x13 => "REQUEST_CLIENT_SYNC_TICK",

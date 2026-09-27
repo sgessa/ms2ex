@@ -427,6 +427,21 @@ defmodule Ms2ex.TriggerRuntimeTest do
     assert %{next: "done"} = state.trigger_machines["tutorial"]
   end
 
+  test "a cinematic backdrop swap broadcasts and persists on the field" do
+    swap = [%{name: "change_background", args: %{dds: "SW_BG_Iceage_C.dds"}}]
+
+    state = Actions.execute_actions(swap, "tutorial", base_state())
+
+    # the field carries the backdrop for players entering later
+    assert state.background == "SW_BG_Iceage_C.dds"
+
+    # and the field's current players get the swap packet: opcode 0x100
+    # followed by the length-prefixed texture name
+    assert {:push, packet} = receive_push()
+    <<0x100::little-16, len::little-16, dds::binary-size(len)-unit(16), _::binary>> = packet
+    assert :unicode.characters_to_binary(dds, {:utf16, :little}, :utf8) == "SW_BG_Iceage_C.dds"
+  end
+
   test "showing a hidden breakable stamps the moving-platform base tick" do
     # the chase carts are client-side moving platforms: the show packet must
     # carry the (elapsed, base) tick pair so the client restarts the shuttle
