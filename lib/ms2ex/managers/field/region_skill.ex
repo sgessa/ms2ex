@@ -460,7 +460,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         state
 
       region ->
-        if region.fires_left <= 0 or Ms2ex.sync_ticks() >= region.end_tick do
+        # fires still queued means the region is alive even past its
+        # end_tick — a zero-interval one-shot's end_tick equals its spawn
+        # tick, and expiring it there would kill the zone before its only
+        # fire lands. The removal timer cleans the region up.
+        if region.fires_left <= 0 do
           %{state | regions: Map.delete(state.regions, source_id)}
         else
           tick(region, source_id, state)

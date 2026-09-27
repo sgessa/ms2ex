@@ -16,6 +16,41 @@ defmodule Ms2ex.FieldRegionSkillTest do
     stat: %{stats: %{health: 1000, attack_speed: 100}}
   }
 
+  test "a zero-interval one-shot region still fires past its spawn tick" do
+    npc = Types.Npc.new(%{id: @mob_id, metadata: @npc_metadata})
+
+    mob =
+      Types.FieldNpc.new(%{
+        object_id: @oid,
+        spawn_point_id: nil,
+        npc: npc,
+        position: %Types.Coord{x: 0, y: 0, z: 0},
+        rotation: %Types.Coord{x: 0, y: 0, z: 0},
+        field: self()
+      })
+
+    state = %{npcs: %{@oid => mob}, players: %{}, regions: %{}, topic: "test-topic", map_id: nil}
+
+    # the region the field stores for an Arcane-style one-shot: zero
+    # interval, a single fire, and an end_tick that equals a long-past
+    # spawn tick — the queued fire must still land
+    region = %{
+      splash_cast: splash_cast(mob.position),
+      interval: 0,
+      fires_left: 1,
+      end_tick: 0
+    }
+
+    state = put_in(state, [:regions, 1], region)
+
+    new_state = RegionSkill.maybe_tick(1, state)
+    assert new_state.npcs[@oid].stats.health.current < mob.stats.health.current
+    # the queued fire is spent; the removal timer cleans the entry up and
+    # any later tick finds nothing left to fire
+    assert get_in(new_state, [:regions, 1]).fires_left == 0
+    assert get_in(RegionSkill.maybe_tick(1, new_state), [:regions, 1]) == nil
+  end
+
   test "region splash damage updates the mob without crashing" do
     npc = Types.Npc.new(%{id: @mob_id, metadata: @npc_metadata})
 
