@@ -17,7 +17,7 @@ defmodule Ms2ex.CarryFinishTest do
     :ok
   end
 
-  test "a finished carry repositions the player at the last waypoint facing the final leg" do
+  test "a finished carry repositions the player at the last waypoint facing the nearest npc" do
     character = %Ms2ex.Schema.Character{
       id: 77,
       object_id: 5,
@@ -69,7 +69,7 @@ defmodule Ms2ex.CarryFinishTest do
     # the server-side character takes the endpoint and the new facing
     assert_receive {:character_updated, updated}
     assert updated.position == %{x: 1000, y: 0, z: 0}
-    # the final leg runs due east (500 -> 1000 on x): yaw 90 degrees
+    # the npc at x +100 sits due east of the endpoint: yaw 90 degrees
     assert updated.rotation.z == 90.0
 
     # the client is snapped with a portal-style move
@@ -77,7 +77,7 @@ defmodule Ms2ex.CarryFinishTest do
     assert is_binary(packet)
   end
 
-  test "a single-waypoint carry leaves the player alone" do
+  test "a carry with no npc near the endpoint leaves the player alone" do
     dummy = %Types.FieldNpc{
       object_id: 99,
       follow_character_id: 77,
