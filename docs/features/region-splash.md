@@ -45,3 +45,23 @@ their position whose height spans feet to feet + 100. The zone hits
 when that body overlaps the volume — so a player wading with their feet
 below the band still connects (their body reaches into it), and the
 small circle gives a 10-unit forgiveness at every horizontal edge.
+
+## Player-cast region skills (Arcane Blast)
+
+A cast whose skill carries a splash effect registers a region through
+`Field.add_region_skill`: the client's @splash damage subcommand carries
+the ground point, and the field broadcasts `RegionSkill.add` keyed on a
+random source id, then fires the splash (`interval` between fires,
+`fire_count` total, `remove_delay` the lifetime) applying the splash
+skill's attack to hostile mobs in a fixed 800 radius (up to 8).
+
+Each fire that lands hits broadcasts TWO records — the client's mob HP
+update keys on the pair, and a plain damage record alone leaves the mob's
+HP bar stale until the next unrelated hit:
+
+- a **target record** (mode 0): the caster's object id, the splash skill,
+the ground point, and one entry per mob with a uid chained from the
+region's source id (`source_id << 32 | index`) and the mob's object id;
+- a **region damage record** (mode 5): caster and owner both set to the
+region's source id, one damage entry per mob (the mob's position, the
+push direction away from the region center, the amount).

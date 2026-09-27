@@ -3,7 +3,7 @@ defmodule Ms2ex.Packets.SkillDamage do
 
   import Packets.PacketWriter
 
-  @modes %{target: 0x0, damage: 0x1}
+  @modes %{target: 0x0, damage: 0x1, region: 0x5}
 
   def damage(skill_cast, mobs) do
     caster = skill_cast.caster
@@ -59,6 +59,59 @@ defmodule Ms2ex.Packets.SkillDamage do
     |> put_byte(0)
     |> put_byte(0)
   end
+
+  # a region skill's hit: the client's HP update keys on the TARGET record's
+  # uid chain (source id in the high dword, target index in the low), with
+  # the region damage record carrying the numbers. Both are broadcast once
+  # per region fire; a damage record alone leaves the mob's HP bar stale
+  def region_target(skill_cast, source_id, mobs, server_tick) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.target)
+    |> put_long(0)
+    |> put_int(skill_cast.caster.object_id)
+    |> put_int(skill_cast.skill_id)
+    |> put_short(skill_cast.skill_level)
+    |> put_byte(0)
+    |> put_byte(0)
+    |> put_short_coord(skill_cast.position)
+    |> put_coord(skill_cast.direction || zero())
+    |> put_bool(true)
+    |> put_int(server_tick)
+    |> put_byte(length(mobs))
+    |> reduce(Enum.with_index(mobs), fn {{mob, _effect}, index}, packet ->
+      packet
+      |> put_long(0)
+      |> put_long(source_id * 0x1_0000_0000 + index)
+      |> put_int(mob.object_id)
+      |> put_byte(0)
+      |> put_byte(index)
+    end)
+  end
+
+  def region(skill_cast, source_id, mobs) do
+    attack_point = Map.get(skill_cast, :attack_point) || 0
+
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.region)
+    |> put_long(0)
+    |> put_int(source_id)
+    |> put_int(source_id)
+    |> put_byte(attack_point)
+    |> put_byte(length(mobs))
+    |> reduce(mobs, fn {mob, effect}, packet ->
+      packet
+      |> put_int(mob.object_id)
+      |> put_byte(0x1)
+      |> put_short_coord(mob.position)
+      |> put_coord(effect[:direction] || zero())
+      |> put_byte(if(effect.crit?, do: 0x1, else: 0x0))
+      |> put_long(effect.dmg)
+    end)
+  end
+
+  defp zero, do: %{x: 0.0, y: 0.0, z: 0.0}
 
   # mob → player hit: identical damage layout with the mob as caster; the
   # fields arrive pre-resolved from the field's battle tick

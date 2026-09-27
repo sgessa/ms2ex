@@ -416,7 +416,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
         state =
           if interval > 0 and fires > 1 do
-            state = apply_splash(splash_cast, state)
+            state = apply_splash(splash_cast, source_id, state)
 
             region = %{
               splash_cast: splash_cast,
@@ -428,7 +428,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
             Process.send_after(self(), {:region_tick, source_id}, interval)
             put_in(state, [:regions, source_id], region)
           else
-            apply_splash(splash_cast, state)
+            apply_splash(splash_cast, source_id, state)
           end
 
         delay = max(end_tick - Ms2ex.sync_ticks(), 1)
@@ -461,13 +461,13 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   end
 
   defp tick(region, source_id, state) do
-    state = apply_splash(region.splash_cast, state)
+    state = apply_splash(region.splash_cast, source_id, state)
     state = update_in(state, [:regions, source_id], &%{&1 | fires_left: &1.fires_left - 1})
     Process.send_after(self(), {:region_tick, source_id}, region.interval)
     state
   end
 
-  def apply_splash(splash_cast, state) do
+  def apply_splash(splash_cast, source_id, state) do
     targets =
       state.npcs
       |> Enum.filter(fn {_id, npc} ->
@@ -477,10 +477,10 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       end)
       |> Enum.take(@splash_targets)
 
-    hit_mobs(splash_cast, targets, state)
+    hit_mobs(splash_cast, source_id, targets, state)
   end
 
-  defp hit_mobs(splash_cast, targets, state) do
+  defp hit_mobs(splash_cast, source_id, targets, state) do
     {mobs, state} =
       Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
         dmg = Context.Damage.calculate(splash_cast, mob, false)
@@ -489,7 +489,9 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
           {:ok, damaged_mob, state} ->
             Managers.PartyServer.record_damage(splash_cast.caster, dmg.dmg)
             state = Managers.Field.Npc.apply_skill_effects(state, splash_cast, object_id)
-            {[{damaged_mob, dmg} | mobs], state}
+
+            hit = Map.put(dmg, :direction, push_direction(mob.position, splash_cast.position))
+            {[{damaged_mob, hit} | mobs], state}
 
           {:error, state} ->
             {mobs, state}
@@ -497,9 +499,17 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       end)
 
     if mobs != [] do
+      mobs = Enum.reverse(mobs)
+      tick = Ms2ex.sync_ticks()
+
       Managers.Field.broadcast(
         state.topic,
-        Packets.SkillDamage.damage(splash_cast, Enum.reverse(mobs))
+        Packets.SkillDamage.region_target(splash_cast, source_id, mobs, tick)
+      )
+
+      Managers.Field.broadcast(
+        state.topic,
+        Packets.SkillDamage.region(splash_cast, source_id, mobs)
       )
     end
 

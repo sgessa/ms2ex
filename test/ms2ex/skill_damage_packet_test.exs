@@ -59,6 +59,97 @@ defmodule Ms2ex.SkillDamagePacketTest do
     assert index == 0
   end
 
+  test "a region hit's target record chains uids from the region source id" do
+    splash_cast = %{
+      caster: %{object_id: 9001},
+      skill_id: 10_100_101,
+      skill_level: 4,
+      position: %{x: 100, y: -50, z: 200},
+      direction: nil
+    }
+
+    mobs = [
+      {%{object_id: 51, position: %{x: 110, y: -40, z: 200}}, %{crit?: false, dmg: 42}},
+      {%{object_id: 52, position: %{x: 90, y: -60, z: 200}}, %{crit?: true, dmg: 60}}
+    ]
+
+    bytes = Packets.SkillDamage.region_target(splash_cast, 7_000, mobs, 1234)
+
+    {_opcode, packet} = get_short(bytes)
+    {mode, packet} = get_byte(packet)
+    {cast_uid, packet} = get_long(packet)
+    {caster_id, packet} = get_int(packet)
+    {skill_id, packet} = get_int(packet)
+    {_level, packet} = get_short(packet)
+    {_motion, packet} = get_byte(packet)
+    {_attack, packet} = get_byte(packet)
+    {_position, packet} = get_short_coord(packet)
+    {_direction, packet} = get_coord(packet)
+    {_animate, packet} = get_bool(packet)
+    {_tick, packet} = get_int(packet)
+    {count, packet} = get_byte(packet)
+
+    {uid1, packet} = parse_target(packet)
+    {uid2, _packet} = parse_target(packet)
+
+    assert mode == 0x0
+    assert cast_uid == 0
+    assert caster_id == 9001
+    assert skill_id == 10_100_101
+    assert count == 2
+    assert uid1 == 7_000 * 0x1_0000_0000 + 0
+    assert uid2 == 7_000 * 0x1_0000_0000 + 1
+  end
+
+  test "a region damage record keys the caster and owner on the source id" do
+    splash_cast = %{
+      caster: %{object_id: 9001},
+      skill_id: 10_100_101,
+      skill_level: 4,
+      position: %{x: 100, y: -50, z: 200}
+    }
+
+    mobs = [
+      {%{object_id: 51, position: %{x: 110, y: -40, z: 200}},
+       %{crit?: false, dmg: 42, direction: %{x: 1.0, y: 0.0, z: 0.0}}}
+    ]
+
+    bytes = Packets.SkillDamage.region(splash_cast, 7_000, mobs)
+
+    {_opcode, packet} = get_short(bytes)
+    {mode, packet} = get_byte(packet)
+    {skill_uid, packet} = get_long(packet)
+    {caster_id, packet} = get_int(packet)
+    {owner_id, packet} = get_int(packet)
+    {_attack_point, packet} = get_byte(packet)
+    {count, packet} = get_byte(packet)
+    {target_id, packet} = get_int(packet)
+    {damage_count, packet} = get_byte(packet)
+    {_position, packet} = get_short_coord(packet)
+    {_direction, packet} = get_coord(packet)
+    {type, packet} = get_byte(packet)
+    {amount, _packet} = get_long(packet)
+
+    assert mode == 0x5
+    assert skill_uid == 0
+    assert caster_id == 7_000
+    assert owner_id == 7_000
+    assert count == 1
+    assert target_id == 51
+    assert damage_count == 1
+    assert type == 0
+    assert amount == 42
+  end
+
+  defp parse_target(packet) do
+    {_prev_uid, packet} = get_long(packet)
+    {uid, packet} = get_long(packet)
+    {_target_id, packet} = get_int(packet)
+    {_unknown, packet} = get_byte(packet)
+    {_index, packet} = get_byte(packet)
+    {uid, packet}
+  end
+
   test "a non-homing projectile carries a zero target id and indexes segments" do
     bytes = Packets.SkillDamage.target(@hit, 2, 0)
 

@@ -32,7 +32,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
     state = %{npcs: %{@oid => mob}, players: %{}, topic: "test-topic", map_id: nil}
     skill_cast = splash_cast(mob.position)
 
-    new_state = RegionSkill.apply_splash(skill_cast, state)
+    new_state = RegionSkill.apply_splash(skill_cast, 7_000, state)
 
     assert new_state.npcs[@oid].stats.health.current < mob.stats.health.current
   end
@@ -443,7 +443,7 @@ defmodule Ms2ex.FieldRegionSkillTest do
       map_id: nil
     }
 
-    new_state = RegionSkill.apply_splash(splash_cast(mob.position), state)
+    new_state = RegionSkill.apply_splash(splash_cast(mob.position), 7_000, state)
 
     assert new_state.npcs[@oid].stats.health.current < mob.stats.health.current
     assert new_state.npcs[friendly_oid].stats.health.current == friendly.stats.health.current
