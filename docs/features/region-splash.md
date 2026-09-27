@@ -63,12 +63,8 @@ lives through its last fire plus `remove_delay` (minimum 100ms so the
 client always sees the zone before the removal frame).
 
 Each landed hit broadcasts the mob's health stat record (the client's
-HP-bar update rides that — damage records only render numbers), plus the
-two damage-flow records the client pairs by the region's source id:
-
-- a **target record** (mode 0): the caster's object id, the splash skill,
-the ground point, and one entry per mob with a uid chained from the
-region's source id (`source_id << 32 | index`) and the mob's object id;
-- a **region damage record** (mode 5): caster and owner both set to the
-region's source id, one damage entry per mob (the mob's position, the
-push direction away from the region center, the amount).
+HP-bar update rides that — damage records only render numbers) plus one
+**damage record** (mode 1) built from the splash cast — the same channel
+normal skills use, which the client displays immediately. Target/region
+record pairs (modes 0/5) keyed on the region's source id render on the
+client's own zone timeline and lag seconds behind on this client build.

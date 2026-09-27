@@ -515,17 +515,9 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       end)
 
     if mobs != [] do
-      mobs = Enum.reverse(mobs)
-      tick = Ms2ex.sync_ticks()
-
       Managers.Field.broadcast(
         state.topic,
-        Packets.SkillDamage.region_target(splash_cast, source_id, mobs, tick)
-      )
-
-      Managers.Field.broadcast(
-        state.topic,
-        Packets.SkillDamage.region(splash_cast, source_id, mobs)
+        Packets.SkillDamage.damage(splash_cast, Enum.reverse(mobs))
       )
     end
 
