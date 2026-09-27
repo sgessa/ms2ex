@@ -45,10 +45,8 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
     :ok
   end
 
-  test "the control sequence counter only moves when the sequence changes" do
-    # an idle mob with no battle and no idle routines: its control
-    # broadcasts must hold the counter steady across periodic ticks and
-    # only bump it when the animation itself changes
+  test "every control broadcast bumps the sequence counter" do
+    # an idle mob with no battle and no idle routines
     npc =
       Types.FieldNpc.new(%{
         object_id: @mob_object_id,
@@ -60,7 +58,6 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
         field: self(),
         spawn_radius: 0,
         next_target_scan_at: 9_999_999_999_999,
-        animation: 7,
         idle: %{task: :stand, until: 9_999_999_999_999}
       })
 
@@ -69,29 +66,13 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
       | npcs: %{npc.object_id => npc}
     }
 
+    # each periodic broadcast moves the counter — a client that just
+    # played a hit flinch re-applies the sequence and recovers
     state = Npc.tick(state)
-    npc = state.npcs[@mob_object_id]
-    counter = npc.seq_counter
-    assert npc.sent_animation == npc.animation
+    counter = state.npcs[@mob_object_id].seq_counter
+    assert counter >= 1
 
-    # pin the sequence across a periodic broadcast (the last control aged
-    # past the interval): the counter holds
-    state =
-      put_in(state, [:npcs, @mob_object_id, Access.key!(:animation)], 7)
-      |> put_in([:npcs, @mob_object_id, Access.key!(:idle_sequence_id)], 7)
-      |> put_in([:npcs, @mob_object_id, Access.key!(:sent_animation)], 7)
-      |> put_in([:npcs, @mob_object_id, Access.key!(:last_control_at)], -1_000_000)
-
-    state = Npc.tick(state)
-    assert state.npcs[@mob_object_id].seq_counter == counter
-
-    # a sequence change bumps it
-    state =
-      state
-      |> put_in([:npcs, @mob_object_id, Access.key!(:animation)], 9)
-      |> put_in([:npcs, @mob_object_id, Access.key!(:idle_sequence_id)], 9)
-      |> put_in([:npcs, @mob_object_id, Access.key!(:last_control_at)], -1_000_000)
-
+    state = put_in(state, [:npcs, @mob_object_id, Access.key!(:last_control_at)], -1_000_000)
     state = Npc.tick(state)
     assert state.npcs[@mob_object_id].seq_counter == counter + 1
   end

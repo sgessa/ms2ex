@@ -892,20 +892,16 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
-  # the sequence counter gates the client's sequence (re)play: it only
-  # moves when the sequence itself changes. Bumping it on every periodic
-  # control restarts the model's animation each broadcast — one-shot
-  # swings freeze on their first frame while the fight goes on around
-  # the statue
+  # every broadcast bumps the sequence counter: the client re-applies a
+  # control's sequence when its counter changes, and that re-apply is what
+  # recovers a model after a client-side interruption — a hit flinch
+  # displaces the current sequence instance, and a stream of unchanged
+  # (sequence, counter) pairs would leave the model statuesqued in its
+  # flinch-end pose. Looping walk/idle sequences hide the re-apply, and
+  # one-shot swings are protected by the mid-swing control silence
   defp broadcast_control(npc, now) do
-    seq_counter =
-      if npc.animation == npc.sent_animation,
-        do: npc.seq_counter,
-        else: npc.seq_counter + 1
-
     npc
-    |> Map.put(:seq_counter, seq_counter)
-    |> Map.put(:sent_animation, npc.animation)
+    |> Map.update!(:seq_counter, &(&1 + 1))
     |> Map.put(:last_control_at, now)
     |> Map.put(:send_control?, false)
   end

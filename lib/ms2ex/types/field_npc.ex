@@ -50,9 +50,6 @@ defmodule Ms2ex.Types.FieldNpc do
     # stat update so clients drop the pre-heal HP
     stat_dirty?: false,
     seq_counter: 0,
-    # the sequence id the last control broadcast carried: the counter only
-    # moves when this changes
-    sent_animation: nil,
     last_control_at: 0,
     velocity: {0, 0, 0}
   ]
