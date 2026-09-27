@@ -496,6 +496,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     hit_mobs(splash_cast, targets, state)
   end
 
+  # region hits ride the standard damage record (the channel every direct
+  # skill uses, which the client displays immediately) plus the health
+  # stat record for the HP bar. A target/region record pair keyed on the
+  # region's source id is the alternative flow, but this client build
+  # renders it on its own zone timeline — seconds behind the explosion
   defp hit_mobs(splash_cast, targets, state) do
     {mobs, state} =
       Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
