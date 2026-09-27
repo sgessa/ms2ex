@@ -391,11 +391,11 @@ defmodule Ms2ex.Managers.Field.Npc do
          true <- Map.has_key?(state.players, character_id),
          {:ok, character} <- Managers.Character.call(character_id, :lookup) do
       last_position = List.last(dummy.patrol.waypoints)[:position]
-      npc = nearest_npc(state, dummy, last_position)
+      # the player lands facing the carry's final leg — the direction the
+      # client-side follow left them walking — not toward a guessed npc
+      rotation = final_leg_facing(dummy.patrol.waypoints)
 
-      if npc && Navigation.valid_position?(state.map_id, last_position) do
-        rotation = face_toward(last_position, npc.position)
-
+      if rotation && Navigation.valid_position?(state.map_id, last_position) do
         character = %{character | position: last_position, rotation: rotation}
         Managers.Character.call(character, {:update, character})
 
@@ -415,36 +415,14 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
-  # squared distance to candidates is full 3D, like every other range check;
-  # the talkable radius comes from the server constants table
-  defp nearest_npc(state, dummy, position) do
-    talkable = Storage.Tables.Constants.get(:talkable_distance) || 0
-
-    state.npcs
-    |> Map.delete(dummy.object_id)
-    |> Enum.reduce(nil, fn
-      {_object_id, %Types.FieldNpc{dead?: true}}, closest ->
-        closest
-
-      {_object_id, npc}, closest ->
-        dist = distance_squared(npc.position, position)
-
-        if dist < talkable * talkable and
-             (closest == nil or dist < distance_squared(closest.position, position)) do
-          npc
-        else
-          closest
-        end
-    end)
+  # the facing a scripted carry leaves its passenger with: the direction
+  # of the route's last leg. Single-waypoint routes have no leg to face
+  # along — the follow already left the player facing somewhere sane
+  defp final_leg_facing(waypoints) when length(waypoints) >= 2 do
+    face_toward(Enum.at(waypoints, -2)[:position], List.last(waypoints)[:position])
   end
 
-  defp distance_squared(a, b) do
-    dx = a.x - b.x
-    dy = a.y - b.y
-    dz = a.z - b.z
-
-    dx * dx + dy * dy + dz * dz
-  end
+  defp final_leg_facing(_waypoints), do: nil
 
   # actors face along their front axis: yaw = atan2(dx, -dy) degrees, the
   # same convention the npc control packets encode
