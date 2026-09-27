@@ -279,11 +279,14 @@ fn find_path_impl(
         return Err("no corridor connects the endpoints".into());
     }
 
-    // a partial corridor never reached the goal poly (stacked floors, mesh
-    // gaps): walking it would draw a straight line through the air
-    if *corridor.last().unwrap() != end_ref {
-        return Err("no corridor connects the endpoints".into());
-    }
+    // A partial corridor never reached the goal poly (stacked floors,
+    // mesh islands): string-pull it anyway — the pull follows the
+    // corridor's own polys. The pull still appends the raw goal point,
+    // which for a partial corridor floats off the walkable ground, so it
+    // is dropped: the route ends at the closest reachable point. Callers
+    // use this to pursue a target across a mesh gap as far as the ground
+    // allows.
+    let partial = *corridor.last().unwrap() != end_ref;
 
     let mut points = vec![0f32; MAX_PATH * 3];
     let mut flags = vec![0u8; MAX_PATH];
@@ -310,6 +313,10 @@ fn find_path_impl(
         ));
     }
     point_count = point_count.clamp(0, MAX_PATH as i32);
+    if partial {
+        // keep the corridor's own points only
+        point_count = (point_count - 1).max(1);
+    }
 
     Ok((0..point_count as usize)
         .map(|i| {
