@@ -438,8 +438,8 @@ defmodule Ms2ex.TriggerRuntimeTest do
     # and the field's current players get the swap packet: opcode 0x100
     # followed by the length-prefixed texture name
     assert {:push, packet} = receive_push()
-    <<0x100::little-16, len::little-16, dds::binary-size(len)-unit(16), _::binary>> = packet
-    assert :unicode.characters_to_binary(dds, {:utf16, :little}, :utf8) == "SW_BG_Iceage_C.dds"
+    <<0x100::little-16, len::little-16, dds::binary-size(len), _::binary>> = packet
+    assert dds == "SW_BG_Iceage_C.dds"
   end
 
   test "showing a hidden breakable stamps the moving-platform base tick" do

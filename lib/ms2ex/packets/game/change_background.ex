@@ -8,6 +8,8 @@ defmodule Ms2ex.Packets.ChangeBackground do
   def bytes(dds) do
     __MODULE__
     |> build()
-    |> put_ustring(dds)
+    # a single-byte (DecodeStrA) string: the client reads this packet's
+    # texture name as length-prefixed ascii, not utf-16
+    |> put_string(dds)
   end
 end
