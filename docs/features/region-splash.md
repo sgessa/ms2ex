@@ -51,9 +51,16 @@ small circle gives a 10-unit forgiveness at every horizontal edge.
 A cast whose skill carries a splash effect registers a region through
 `Field.add_region_skill`: the client's @splash damage subcommand carries
 the ground point, and the field broadcasts `RegionSkill.add` keyed on a
-random source id, then fires the splash (`interval` between fires,
-`fire_count` total, `remove_delay` the lifetime) applying the splash
-skill's attack to hostile mobs in a fixed 800 radius (up to 8).
+random source id, then applies the splash skill's attack to hostile mobs
+in a fixed 800 radius (up to 8).
+
+The region's timeline must match the client's or hit visuals desync: the
+add frame carries `next_tick` = now + interval (never 0 — a past tick
+throws the client's zone timeline off), the first fire lands one
+interval in (immediately for one-shots whose interval is 0, after the
+splash `delay` when one is set), later fires each interval, and the zone
+lives through its last fire plus `remove_delay` (minimum 100ms so the
+client always sees the zone before the removal frame).
 
 Each landed hit broadcasts the mob's health stat record (the client's
 HP-bar update rides that — damage records only render numbers), plus the
