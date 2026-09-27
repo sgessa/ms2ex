@@ -69,6 +69,26 @@ defmodule Ms2ex.NpcEmotionTest do
                       _counter::little-signed-16>>}
   end
 
+  test "the actor state reflects the mob's real activity, not just battle" do
+    # an aggro'd mob standing between swings is idle — announcing the
+    # skill state freezes some models client-side
+    standing = %{walking_npc(9003, {0.0, 0.0, 0.0}) | battle: %{mode: :chase}}
+
+    <<_op::16, _c::16, _l::16, _id::32, _f, _pos::6-bytes, _rot::16, _vel::6-bytes, _spd::16,
+      state::8, _rest::binary>> = Packets.ControlNpc.bytes([standing])
+
+    assert state == 1
+
+    # mid-cast the mob is in its skill
+    casting = %{standing | battle: %{mode: :chase, cast: %{hit_at: 1}}}
+
+    <<_op2::16, _c2::16, _l2::16, _id2::32, _f2, _pos2::6-bytes, _rot2::16, _vel2::6-bytes,
+      _spd2::16, state2::8, _rest2::binary>> =
+      Packets.ControlNpc.bytes([casting])
+
+    assert state2 == 16
+  end
+
   # a patrol in motion reports the Walk actor state, which is what plays
   # the model's locomotion animation client-side; an idle npc stays Idle
   test "patrolling npcs stream the walk state in the control packet" do
