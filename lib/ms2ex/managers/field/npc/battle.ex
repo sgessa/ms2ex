@@ -101,18 +101,28 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   def aggro(%Types.FieldNpc{type: :mob, dead?: false} = npc, character, now) do
     # the attacker's player object id feeds the boss bar target slot; the
     # character id is the identity aggro actually tracks
-    battle = new_battle(npc, character.id, Map.get(character, :object_id), now)
-    battle = %{battle | keep_until: now + @aggro_hold_ms}
-    # engaging cancels the idle routine and any bore emote it was playing:
-    # the battle owns the presentation from here
-    %{
+    npc = %{
       npc
-      | battle: battle,
-        next_target_scan_at: now + @scan_interval_ms,
+      | next_target_scan_at: now + @scan_interval_ms,
         idle: nil,
         emote: nil,
         send_control?: true
     }
+
+    case npc.battle do
+      # already fighting this attacker: refresh the engagement hold and
+      # leave the fight alone — tearing the battle down on every hit
+      # cancels the running cast and resets the chase path, so a mob under
+      # continuous attack never moves or swings until the hits stop
+      %{target_id: target_id} = battle when target_id == character.id ->
+        keep_until = max(battle.keep_until, now + @aggro_hold_ms)
+        %{npc | battle: %{battle | keep_until: keep_until}}
+
+      _ ->
+        battle = new_battle(npc, character.id, Map.get(character, :object_id), now)
+        battle = %{battle | keep_until: now + @aggro_hold_ms}
+        %{npc | battle: battle}
+    end
   end
 
   def aggro(npc, _character, _now), do: npc

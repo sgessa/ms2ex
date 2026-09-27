@@ -460,6 +460,60 @@ defmodule Ms2ex.FieldNpcBattleTest do
     end
   end
 
+  test "a hit from the current target does not tear down the running cast" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open,
+      "skill:4001" => %{
+        levels: %{
+          "1" => %{
+            cooldown_time: 0.0,
+            motions: [
+              %{
+                motion_property: %{sequence_name: "Attack_01_A", sequence_speed: 1.0},
+                attacks: [%{range: %{distance: 300.0}, damage: %{rate: 2.0, value: 0}}]
+              }
+            ]
+          }
+        }
+      },
+      "animation:testmob" => %{
+        sequences: %{Attack_01_A: %{id: 7, time: 2.0}, Attack_Idle_A: %{id: 8}}
+      }
+    })
+
+    metadata =
+      mob_metadata(
+        skill: [%{id: 4001, level: 1}],
+        stat: %{stats: %{health: 1000, physical_atk: 500}}
+      )
+
+    npc = mob_with_metadata(metadata, map_id: map_id)
+    attacker = %Ms2ex.Schema.Character{id: 1, object_id: 900}
+
+    npc = Battle.aggro(npc, attacker, 0)
+    state = field_with_player_at(100, 0)
+
+    # the swing starts (a 2s cast)
+    {npc, _} = Battle.tick(npc, state, 100)
+    assert npc.battle.cast
+
+    # the player keeps attacking mid-swing: the cast must survive and the
+    # chase state (stop range, path) must stay intact
+    npc = Battle.aggro(npc, attacker, 600)
+    assert npc.battle.cast, "a repeated hit must not cancel the running cast"
+
+    {npc, hits} = Battle.tick(npc, state, 1_100)
+    assert [%{character_id: 1}] = hits
+
+    # a different attacker takes over the battle
+    other = %Ms2ex.Schema.Character{id: 2, object_id: 901}
+    npc = Battle.aggro(npc, other, 1_200)
+    assert npc.battle.target_id == 2
+  end
+
   test "a mob gives up on an unreachable target and walks home" do
     {map_id, xblock} = unique_map()
 
