@@ -456,6 +456,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     cast = %{
       skill_id: skill_id,
       skill_level: skill_level,
+      aim: aim_direction(npc.position, target_position),
       # one uid identifies the cast across its records: the skill-use that
       # starts it, the launch records, and the damage that resolves it (the
       # client pairs them by this id — a skill whose damage never carries
@@ -892,14 +893,16 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     Enum.each(due, fn {_at, motion} ->
       use_record = %{
-        id: cast.cast_uid,
+        # its own uid per motion record: the client may drop a record
+        # re-using a cast uid it has already seen
+        id: cast.cast_uid + motion,
         server_tick: now,
         caster: %{object_id: npc.object_id},
         skill_id: cast.skill_id,
         skill_level: cast.skill_level,
         motion_point: motion,
         position: npc.position,
-        direction: aim_direction(npc.position, npc.position),
+        direction: cast.aim,
         rotation: npc.rotation,
         rotate2z: 0.0
       }
