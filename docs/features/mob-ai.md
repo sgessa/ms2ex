@@ -94,12 +94,12 @@ target's live position and walks it:
 ### Cast cycle
 
 A mob standing inside `stop_range` swings on cooldown: it pins itself in
-place facing the target and streams the skill's motion sequences (state
-PcSkill, 16) — each motion's animation plays in order (time divided by
-its `sequence_speed`; fixed 1s stand-in without animation timing), the
-windup visibly handing over to the firing swing. A swing whose motions
-cannot all play on the model's rig is cancelled before it starts,
-rather than landing damage with no animation. The firing attack is the
+place facing the target. A swing whose motions cannot all play on the
+model's rig is cancelled before it starts, rather than landing damage
+with no animation. Each motion's playback length (time divided by its
+`sequence_speed`; fixed 1s stand-in without animation timing) drives the
+swing's timing: the hit lands at the firing motion's keyframe and the
+mob stays occupied until the whole playback ends. The firing attack is the
 first projectile-carrying attack of the motion set (later motions often
 fire the actual shot while earlier ones are pure windups), falling back
 to the first attack; the hit lands at that attack's animation keyframe
@@ -111,6 +111,26 @@ the mob until its playback ends: the next swing starts only after both
 the playback and the 750ms cooldown floor elapse, and the firing
 motion's animation is held through the resolve until the playback ends,
 then settles into Attack_Idle_A (fallback Idle_A).
+
+A swing is presented on two channels: a skill-use record initiates the
+cast (the client's skill system owns the playback — later motions are
+announced with their own skill-use records at each motion boundary, and
+the client pairs the resolving damage by the cast uid), while exactly
+ONE control broadcast carries the cast start — the first motion's
+sequence, the skill actor state (PcSkill, 16), the faced rotation and a
+zeroed velocity. The control stream then stays SILENT for the whole
+playback (the client re-applies the sequence on every control it
+receives, so any mid-swing broadcast restarts a one-shot animation on
+its first frame); the settle into Attack_Idle_A is the next control
+after the swing completes. Between swings the control announces the
+mob's real activity — walk while moving, idle otherwise — and every
+broadcast bumps the sequence counter: a hit flinch displaces the
+client's running sequence instance, and only a fresh counter recovers
+the model.
+
+A hit from the mob's current target does not disturb the running swing
+or chase (it only extends the engagement hold); a hit from a different
+attacker takes the battle over.
 
 Damage records carry the position the hit landed at (a projectile's
 record anchors its explosion visual at the landing point, not the
@@ -334,8 +354,6 @@ until the AI-tree runtime lands.
 - Melee swings land only on the aggro target; retail resolves every
   player standing in the firing attack's range cube (the attack's target
   count caps it).
-- Multi-motion casts show the first motion's sequence for the whole
-  playback instead of handing off at each motion boundary, and motions
-  with a move distance never lunge the mob forward mid-swing.
+- Motions with a move distance never lunge the mob forward mid-swing.
 - On-hit effects without a splash (stuns, slows, knockbacks riding the
   attack's effect list) are dropped; only splash detonations fire.

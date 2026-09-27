@@ -29,7 +29,8 @@ defmodule Ms2ex.GameHandlers.KeyTable do
     {target_slot, _packet} = get_int(packet)
     character_id = session.character_id
 
-    result = Managers.CharacterConfig.move_quick_slot(character_id, bar_index, quick_slot, target_slot)
+    result =
+      Managers.CharacterConfig.move_quick_slot(character_id, bar_index, quick_slot, target_slot)
 
     with :ok <- result do
       push(session, Packets.KeyTable.send_hot_bars(Managers.CharacterConfig.list(character_id)))
@@ -43,7 +44,8 @@ defmodule Ms2ex.GameHandlers.KeyTable do
     {item_uid, _packet} = get_long(packet)
     character_id = session.character_id
 
-    result = Managers.CharacterConfig.remove_quick_slot(character_id, bar_index, skill_id, item_uid)
+    result =
+      Managers.CharacterConfig.remove_quick_slot(character_id, bar_index, skill_id, item_uid)
 
     with :ok <- result do
       push(session, Packets.KeyTable.send_hot_bars(Managers.CharacterConfig.list(character_id)))

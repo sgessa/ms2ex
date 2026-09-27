@@ -76,7 +76,11 @@ defmodule Ms2ex.Managers.Character.Revival do
 
     Managers.Field.add_tombstone(character)
 
-    push(character, Packets.RevivalCount.bytes(Managers.CharacterConfig.instant_revive_count(character.id)))
+    push(
+      character,
+      Packets.RevivalCount.bytes(Managers.CharacterConfig.instant_revive_count(character.id))
+    )
+
     push(character, Packets.RevivalConfirm.bytes(character.object_id, end_tick, death_count))
 
     # the corpse no longer carries its buffs
@@ -155,7 +159,10 @@ defmodule Ms2ex.Managers.Character.Revival do
 
     broadcast_revive(character)
 
-    push(character, Packets.RevivalCount.bytes(Managers.CharacterConfig.instant_revive_count(character.id)))
+    push(
+      character,
+      Packets.RevivalCount.bytes(Managers.CharacterConfig.instant_revive_count(character.id))
+    )
 
     character
   end

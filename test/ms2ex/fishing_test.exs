@@ -137,14 +137,24 @@ defmodule Ms2ex.FishingTest do
 
     test "bite stores bait state for the active cast" do
       bait = %{item_uid: 10, item_id: 20, lure_id: 90_000_020, lure: %{}}
-      session = Context.Fishing.bite(%{bait: bait}, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil)
+
+      session =
+        Context.Fishing.bite(
+          %{bait: bait},
+          %{position: %{x: 1, y: 2, z: 3}},
+          101,
+          false,
+          true,
+          nil
+        )
 
       assert session.bait_used?
       assert session.bait == nil
     end
 
     test "a bite without a session is a no-op" do
-      assert Context.Fishing.bite(nil, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil) == nil
+      assert Context.Fishing.bite(nil, %{position: %{x: 1, y: 2, z: 3}}, 101, false, true, nil) ==
+               nil
     end
 
     test "selected bait is kept in the fishing session" do

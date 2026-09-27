@@ -115,7 +115,8 @@ defmodule Ms2ex.HotBarSkillsTest do
 
     stale_bar = %{
       active_bar
-      | quick_slots: List.replace_at(active_bar.quick_slots, 2, %Types.QuickSlot{skill_id: 99_999_999})
+      | quick_slots:
+          List.replace_at(active_bar.quick_slots, 2, %Types.QuickSlot{skill_id: 99_999_999})
     }
 
     state = %{state | hot_bars: [stale_bar | rest]}

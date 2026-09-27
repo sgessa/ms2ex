@@ -55,7 +55,10 @@ defmodule Ms2ex.GuideRecordTest do
       :ok = Managers.CharacterConfig.start(character)
       config_pid = Process.whereis(:"character_configs:#{character.id}")
 
-      on_exit(fn -> if config_pid && Process.alive?(config_pid), do: GenServer.stop(config_pid) end)
+      on_exit(fn ->
+        if config_pid && Process.alive?(config_pid), do: GenServer.stop(config_pid)
+      end)
+
       Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), config_pid)
 
       session = %{character_id: character.id}

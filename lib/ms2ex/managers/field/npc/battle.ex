@@ -494,10 +494,6 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     # re-applies the sequence on every control it receives, so a periodic
     # broadcast mid-swing restarts a one-shot on its first frame
     #
-    # TODO: multi-motion casts should hand off to each later motion's
-    # sequence exactly at the previous motion's end (one control per
-    # hand-off, still silent between); today the first motion's sequence
-    # stands in for the whole playback
     # TODO: motions with a move distance lunge the mob forward between
     # their move keyframes during the swing; casts never move the mob
     use_record = %{

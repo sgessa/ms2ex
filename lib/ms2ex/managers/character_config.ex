@@ -123,7 +123,8 @@ defmodule Ms2ex.Managers.CharacterConfig do
 
   @doc "Counts one instant revive against the daily allowance and persists it."
   @spec bump_instant_revive_count(integer()) :: :ok | :error
-  def bump_instant_revive_count(character_id), do: call(character_id, {:bump_instant_revive_count})
+  def bump_instant_revive_count(character_id),
+    do: call(character_id, {:bump_instant_revive_count})
 
   @doc """
   Drops the cached daily instant-revive allowance after the daily reset
