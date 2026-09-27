@@ -10,10 +10,15 @@ defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Managers.Field.Npc.Patrol
 
-  # animation transitions keep dirtying npcs on live servers, so even idle
-  # ones re-announce themselves every few seconds; this also covers the
-  # client dropping controls sent while it asynchronously loads the entity
-  @idle_control_ms 30
+  # a slow keepalive re-announcing each npc (counter refresh, position
+  # re-anchor): the client interpolates walking from the control's
+  # position + velocity, and state changes (movement legs, aggro, hits,
+  # animation transitions) broadcast immediately through the send_control
+  # flag. A fast keepalive floods the client — every field npc re-sent
+  # every few tens of ms is thousands of packets per second once a map
+  # has a few dozen mobs, and the client queues everything else (damage,
+  # stat records) behind the flood
+  @idle_control_ms 500
   @corpse_broadcast_ms 1000
   @spawn_rate_ms 1000
   @force_spawn_multiplier 2
