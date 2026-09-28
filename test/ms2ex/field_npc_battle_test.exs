@@ -552,6 +552,44 @@ defmodule Ms2ex.FieldNpcBattleTest do
     assert npc.position.x < 400
   end
 
+  test "a mob leashes while following a partial route to another mesh island" do
+    {map_id, xblock} = unique_map()
+
+    stub_metadata(%{
+      "map:#{map_id}" => %{x_block: xblock},
+      "navmesh_bin:#{xblock}" => @open
+    })
+
+    on_exit(fn -> :persistent_term.erase({:navmesh_native, xblock}) end)
+
+    npc =
+      mob(
+        map_id: map_id,
+        position: %Types.Coord{x: 500, y: 0, z: 0},
+        origin: %Types.Coord{x: 0, y: 0, z: 0}
+      )
+
+    npc = Battle.aggro(npc, %Ms2ex.Schema.Character{id: 1, object_id: 900}, 0)
+
+    # the player stands on a stacked floor above: every search returns a
+    # truncated corridor that ends before the target
+    Mimic.stub(Ms2ex.Navigation, :find_path, fn _map_id, _from, _to ->
+      {:partial, [%Types.Coord{x: 900, y: 0, z: 0}]}
+    end)
+
+    unreachable = field_with_player_at(900, 400)
+
+    # during the grace period the mob pursues the partial route
+    {npc, _} = Battle.tick(npc, unreachable, 500)
+    assert npc.battle
+
+    # grace over: the leash fires even though every search yielded a route
+    {npc, _} = Battle.tick(npc, unreachable, 4_500)
+
+    assert npc.battle == nil or npc.battle.mode == :return,
+           "mob must leash off a partial route, not chase forever"
+  end
+
   test "a mob that stood through a cast resumes the chase at per-tick speed" do
     {map_id, xblock} = unique_map()
     stub_navmesh(xblock, map_id)

@@ -238,6 +238,20 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
         {:ok, path} ->
           {:ok, path}
 
+        # a partial route never reaches the waypoint: treat it as unrouted
+        # (scripted carries still walk their authored line)
+        {:partial, _path} when carry? ->
+          Logger.warning(
+            "no navmesh route for the scripted carry of npc " <>
+              to_string(npc.npc.id) <>
+              " on " <> to_string(npc.map_id) <> "; walking the authored straight line"
+          )
+
+          {:ok, [target]}
+
+        {:partial, _path} ->
+          :error
+
         :error when carry? ->
           Logger.warning(
             "no navmesh route for the scripted carry of npc " <>

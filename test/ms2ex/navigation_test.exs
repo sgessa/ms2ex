@@ -113,9 +113,10 @@ defmodule Ms2ex.NavigationTest do
     assert length(path) == 2
     # a route to the floor above has no connection: the search returns the
     # partial corridor to the closest reachable point on the starting
-    # floor (pursuit across a gap), never one that climbs
+    # floor (pursuit across a gap), flagged partial so a follower knows it
+    # never reaches the goal, never one that climbs
     above = %Coord{x: 300, y: -300, z: 300}
-    assert {:ok, partial} = Navigation.find_path(map_id, coord(1, 1), above)
+    assert {:partial, partial} = Navigation.find_path(map_id, coord(1, 1), above)
     assert [%Coord{} | _] = partial
     assert Enum.all?(partial, &(&1.z < 150.0))
     # snaps land on the floor the position is at

@@ -646,6 +646,18 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   defp walk_chase(npc, battle, target_position, now) do
+    # the leash gates the whole chase walk, not just the routeless hold: a
+    # target on another mesh island keeps yielding partial routes (walk,
+    # consume, re-path, repeat), so the give-up check must fire even while
+    # a partial route is being followed
+    if give_up?(battle, now) do
+      {disengage(npc, now), []}
+    else
+      walk_chase_route(npc, battle, target_position, now)
+    end
+  end
+
+  defp walk_chase_route(npc, battle, target_position, now) do
     stale? =
       battle.path == nil or
         square_distance(battle.goal, target_position) > square(@repath_target_drift) or
@@ -660,30 +672,33 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     case battle.path do
       nil ->
-        if give_up?(battle, now) do
-          {disengage(npc, now), []}
-        else
-          # no walkable route right now (e.g. the player is on another
-          # navmesh island): hold until the next re-path window
-          {%{npc | battle: %{battle | last_move_at: now}, velocity: {0, 0, 0}}, []}
-        end
+        # no walkable route right now (e.g. the player is on another
+        # navmesh island): hold until the next re-path window
+        {%{npc | battle: %{battle | last_move_at: now}, velocity: {0, 0, 0}}, []}
 
       path ->
-        npc = start_running(npc)
+        before = npc.position
         {npc, battle} = advance(npc, battle, path, now)
 
         # the path was consumed while still outside stop range: extend it in
         # this same tick so the run does not stutter into a stand (a stand
         # tick makes the client restart the walk animation and drop
         # interpolation, which reads as flicker and micro-teleports)
-        if battle.path == nil do
-          extend_path(npc, battle, target_position, now)
-        else
-          # mid-path: the run continues on the next tick — the updated battle
-          # (last_move_at, path index) must merge back into the npc or the
-          # next tick's step budget balloons to the max-step clamp
-          {%{npc | battle: battle}, []}
-        end
+        {npc, _} =
+          if battle.path == nil do
+            extend_path(npc, battle, target_position, now)
+          else
+            # mid-path: the run continues on the next tick — the updated battle
+            # (last_move_at, path index) must merge back into the npc or the
+            # next tick's step budget balloons to the max-step clamp
+            {%{npc | battle: battle}, []}
+          end
+
+        # presentation follows real movement: a partial route ending under
+        # the mob (or a step with no walkable ground) moves nothing — the
+        # mob presents idle, never running in place — while genuine
+        # progress keeps the run
+        {present_locomotion(npc, before), []}
     end
   end
 
@@ -696,9 +711,27 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         {%{npc | battle: battle, velocity: {0, 0, 0}}, []}
 
       path ->
-        npc = start_running(npc)
         {npc, battle} = advance(npc, battle, path, now)
         {%{npc | battle: battle}, []}
+    end
+  end
+
+  # moved this tick: the run continues; stationary: settle into the idle
+  # pose and announce it so clients drop the run animation
+  defp present_locomotion(npc, before) do
+    dx = npc.position.x - before.x
+    dy = npc.position.y - before.y
+
+    if dx * dx + dy * dy > 1.0 do
+      start_running(npc)
+    else
+      idle = sequence_id(npc, "Idle_A")
+
+      case idle do
+        nil -> npc
+        id when id == npc.animation -> npc
+        id -> %{npc | animation: id, send_control?: true}
+      end
     end
   end
 
@@ -719,6 +752,19 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
             goal: target_position,
             next_repath_at: now + @repath_interval_ms,
             no_route_since: nil
+        }
+
+      {:partial, path} ->
+        # the target sits on another mesh island: pursue the partial route
+        # as far as the ground allows, but the target is unreachable — the
+        # give-up clock runs from the first partial result
+        %{
+          battle
+          | path: path,
+            path_index: 1,
+            goal: target_position,
+            next_repath_at: now + @repath_interval_ms,
+            no_route_since: battle.no_route_since || now
         }
 
       :error ->

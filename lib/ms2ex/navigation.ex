@@ -16,12 +16,16 @@ defmodule Ms2ex.Navigation do
   alias Ms2ex.Types.Coord
 
   @doc """
-  A corridor of walkable points from `from` to `to`, or `:error` when
-  either endpoint has no walkable ground or no connection exists between
-  them. Intermediate points are the string-pulled bends of the polygon
-  corridor, carrying the mesh surface heights at each bend.
+  Returns the string-pulled route between two points.
+
+  `{:ok, path}` - a full route reaches the goal. `{:partial, path}` -
+  the goal sits on another mesh island (stacked floors, gaps): the route
+  ends at the closest reachable point, so a follower will never close
+  the remaining distance. `:error` - no walkable ground under an
+  endpoint.
   """
-  @spec find_path(integer(), Coord.t(), Coord.t()) :: {:ok, [Coord.t()]} | :error
+  @spec find_path(integer(), Coord.t(), Coord.t()) ::
+          {:ok, [Coord.t()]} | {:partial, [Coord.t()]} | :error
   def find_path(map_id, %Coord{} = from, %Coord{} = to) when is_integer(map_id) do
     case native_mesh(map_id) do
       nil ->
@@ -29,7 +33,8 @@ defmodule Ms2ex.Navigation do
 
       mesh ->
         case Native.find_path(mesh, to_nav(from), to_nav(to)) do
-          {:ok, path} -> {:ok, Enum.map(path, &to_coord/1)}
+          {:ok, {path, true}} -> {:partial, Enum.map(path, &to_coord/1)}
+          {:ok, {path, false}} -> {:ok, Enum.map(path, &to_coord/1)}
           {:error, _reason} -> :error
         end
     end

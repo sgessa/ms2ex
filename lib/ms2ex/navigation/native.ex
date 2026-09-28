@@ -15,7 +15,7 @@ defmodule Ms2ex.Navigation.Native do
   def load_mesh(_binary), do: nif_error()
 
   @spec find_path(mesh(), position(), position()) ::
-          {:ok, [position()]} | {:error, String.t()}
+          {:ok, [position()], boolean()} | {:error, String.t()}
   def find_path(_mesh, _from, _to), do: nif_error()
 
   @spec snap(mesh(), position()) :: {:ok, position()} | {:error, String.t()}

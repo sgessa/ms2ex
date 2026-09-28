@@ -183,7 +183,7 @@ fn find_path(
     nav: ResourceArc<Nav>,
     from: (f64, f64, f64),
     to: (f64, f64, f64),
-) -> Result<Vec<(f64, f64, f64)>, String> {
+) -> Result<(Vec<(f64, f64, f64)>, bool), String> {
     find_path_impl(&nav, to_pos(from), to_pos(to))
 }
 
@@ -248,7 +248,7 @@ fn find_path_impl(
     nav: &Nav,
     from: [f32; 3],
     to: [f32; 3],
-) -> Result<Vec<(f64, f64, f64)>, String> {
+) -> Result<(Vec<(f64, f64, f64)>, bool), String> {
     let query = nav.query()?;
 
     let (start_ref, _) =
@@ -318,7 +318,7 @@ fn find_path_impl(
         point_count = (point_count - 1).max(1);
     }
 
-    Ok((0..point_count as usize)
+    let route = (0..point_count as usize)
         .map(|i| {
             (
                 points[i * 3] as f64,
@@ -326,7 +326,12 @@ fn find_path_impl(
                 points[i * 3 + 2] as f64,
             )
         })
-        .collect())
+        .collect();
+
+    // the partial flag tells callers the corridor never reached the goal
+    // poly — the route ends at the closest reachable point, so a chase
+    // following it will never close the remaining distance
+    Ok((route, partial))
 }
 
 fn snap_impl(nav: &Nav, at: [f32; 3]) -> Result<(f64, f64, f64), String> {
