@@ -14,6 +14,7 @@
   field: term(),
   first_attacker: term(),
   follow_character_id: term(),
+  idle: term(),
   idle_sequence_id: term(),
   last_attacker: term(),
   last_control_at: term(),

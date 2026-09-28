@@ -163,6 +163,10 @@ quest's item_move condition.
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
 - [Ms2ex.Managers.Field.Npc.Battle](Ms2ex.Managers.Field.Npc.Battle.md): Mob aggro and chase: target acquisition, target retention and pathed
 movement toward the engaged target.
+- [Ms2ex.Managers.Field.Npc.Idle](Ms2ex.Managers.Field.Npc.Idle.md): Mob idle behavior between fights: while out of battle a mob follows its
+weighted idle routines — standing, playing a bore emote, or walking to a
+random walkable point inside its `move_area` around the spawn point. A
+mob without a move area (or without locomotion) stays at its post.
 - [Ms2ex.Managers.Field.Npc.Patrol](Ms2ex.Managers.Field.Npc.Patrol.md): Npc movement along patrol paths: story npcs walk named patrol paths
 (script move_npc) and stay at the last waypoint; the movement math also
 seeds the scripted-carry follow-dummy that `Managers.Field.Npc` spawns.
@@ -510,6 +514,7 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.Breakable](Ms2ex.Packets.Breakable.md)
   - [Ms2ex.Packets.Buff](Ms2ex.Packets.Buff.md)
   - [Ms2ex.Packets.CameraInterpolation](Ms2ex.Packets.CameraInterpolation.md)
+  - [Ms2ex.Packets.ChangeBackground](Ms2ex.Packets.ChangeBackground.md)
   - [Ms2ex.Packets.CharacterCreate](Ms2ex.Packets.CharacterCreate.md)
   - [Ms2ex.Packets.CharacterInfo](Ms2ex.Packets.CharacterInfo.md)
   - [Ms2ex.Packets.CharacterList](Ms2ex.Packets.CharacterList.md)

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-AA2DAB4E.js"></script>
+    <script defer src="dist/sidebar_items-F91E7EE5.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -124,10 +124,12 @@ inside its attack range; the chase streams continuously so the client
 never sees a stand mid-run. When the target escapes (or leaves the
 field), a displaced mob walks back to the point where it spawned —
 healing to full and clearing its attacker tags on arrival — while still
-scanning, so it can re-engage a player on the way home. Where the
-reference drives combat from per-mob XML decision trees, this basic AI
-applies one fixed battle routine; the tree runtime is a later step (see
-docs/features/mob-ai.md).</p>
+scanning, so it can re-engage a player on the way home. Out of battle,
+the mob's weighted idle routines roll (<code class="inline">Npc.Idle</code>): standing, bore
+emotes, or a wander leg toward a random point inside its move area
+(battle mode <code class="inline">:wander</code>). The game's per-mob XML decision trees drive
+finer combat behavior; this basic AI applies one fixed battle routine
+and the tree runtime is a later step (see docs/features/mob-ai.md).</p>
     </section>
 
 </div>
@@ -183,6 +185,18 @@ the field must apply. The field state is read-only input.</p></div>
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#wander_battle/2" data-no-tooltip="" translate="no">wander_battle(goal, now)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>An idle wander leg toward a static goal: the same pathed-walk machinery
+the chase and the trip home ride, minus a target to fight. Arrival hands
+the mob back to <code class="inline">Npc.Idle</code>.</p></div>
+
+    </div>
+
 </div>
 
   </section>
@@ -207,7 +221,7 @@ the field must apply. The field state is read-only input.</p></div>
       <h1 class="signature" translate="no">t()</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L62" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L73" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -219,7 +233,7 @@ the field must apply. The field state is read-only input.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %{
-  mode: :chase | :return,
+  mode: :chase | :return | :wander,
   target_id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil,
   target_object_id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil,
   stop_range: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>(),
@@ -231,6 +245,7 @@ the field must apply. The field state is read-only input.</p></div>
   keep_until: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
   no_route_since: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil,
   cast: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil,
+  swing_until: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | nil,
   next_attack_at: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
   attack_counter: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   hit_event: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | nil
@@ -264,7 +279,7 @@ the field must apply. The field state is read-only input.</p></div>
       <h1 class="signature" translate="no">aggro(npc, character, now)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L87" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L101" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -288,7 +303,7 @@ proximity scan to notice them.</p>
       <h1 class="signature" translate="no">tick(npc, field_state, now)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L103" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L136" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -301,6 +316,30 @@ proximity scan to notice them.</p>
 validates and chases the target while engaged, or walks home while
 returning. Returns <code class="inline">{npc, hits}</code> — the updated npc plus any skill hits
 the field must apply. The field state is read-only input.</p>
+  </section>
+</section>
+<section class="detail" id="wander_battle/2">
+
+  <div class="detail-header">
+    <a href="#wander_battle/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">wander_battle(goal, now)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/managers/field/npc/battle.ex#L901" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>An idle wander leg toward a static goal: the same pathed-walk machinery
+the chase and the trip home ride, minus a target to fight. Arrival hands
+the mob back to <code class="inline">Npc.Idle</code>.</p>
   </section>
 </section>
 

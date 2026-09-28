@@ -60,7 +60,8 @@ Calculates damage a character takes from falling.
 
 Resolves a mob's swing against a character: the mob's physical attack
 drives the hit, scaled by the attack's damage rate and cut down by the
-character's defense and physical resistance.
+character's defense and physical resistance. Mobs carry no piercing
+stat, so the defense divisor doubles before the hit divides by it.
 
 # `calculate_rate`
 

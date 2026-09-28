@@ -25,8 +25,8 @@ forever, and a non-loop patrol leaves the npc at the last waypoint.
 
 Attempts (or restarts) the leg toward the patrol's current waypoint.
 
-A leg that cannot start — no connected navmesh route, or no approach
-animation the model can play — does not end the patrol: that would freeze
+A leg that cannot start — no connected navmesh route — does not end the
+patrol: that would freeze
 story npcs mid-script on maps whose mesh has coverage gaps. Instead the
 npc stands in its idle pose for a beat while the patrol advances past the
 waypoint, and the next leg is attempted once the beat elapses (loop

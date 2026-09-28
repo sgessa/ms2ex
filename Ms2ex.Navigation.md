@@ -15,17 +15,31 @@ ground.
 
 ```elixir
 @spec find_path(integer(), Ms2ex.Types.Coord.t(), Ms2ex.Types.Coord.t()) ::
-  {:ok, [Ms2ex.Types.Coord.t()]} | :error
+  {:ok, [Ms2ex.Types.Coord.t()]} | {:partial, [Ms2ex.Types.Coord.t()]} | :error
 ```
 
-A corridor of walkable points from `from` to `to`, or `:error` when
-either endpoint has no walkable ground or no connection exists between
-them. Intermediate points are the string-pulled bends of the polygon
-corridor, carrying the mesh surface heights at each bend.
+Returns the string-pulled route between two points.
+
+`{:ok, path}` - a full route reaches the goal. `{:partial, path}` -
+the goal sits on another mesh island (stacked floors, gaps): the route
+ends at the closest reachable point, so a follower will never close
+the remaining distance. `:error` - no walkable ground under an
+endpoint.
 
 # `has_navmesh?`
 
 Whether the map has walkable navmesh tiles.
+
+# `random_point_around`
+
+```elixir
+@spec random_point_around(integer(), Ms2ex.Types.Coord.t(), number()) ::
+  Ms2ex.Types.Coord.t() | nil
+```
+
+A random walkable point within `radius` of `center`, or nil when the map
+has no navmesh or nothing walkable sits inside the circle. This is how
+idle mobs pick their wander destinations around the spawn point.
 
 # `snap_to_floor`
 

@@ -203,6 +203,7 @@ Ms2ex.Managers.Field.InteractObject.md
 Ms2ex.Managers.Field.Item.md
 Ms2ex.Managers.Field.Liftable.md
 Ms2ex.Managers.Field.Npc.Battle.md
+Ms2ex.Managers.Field.Npc.Idle.md
 Ms2ex.Managers.Field.Npc.Patrol.md
 Ms2ex.Managers.Field.Npc.md
 Ms2ex.Managers.Field.PerformanceStage.md
@@ -245,6 +246,7 @@ Ms2ex.Packets.BannerList.md
 Ms2ex.Packets.Breakable.md
 Ms2ex.Packets.Buff.md
 Ms2ex.Packets.CameraInterpolation.md
+Ms2ex.Packets.ChangeBackground.md
 Ms2ex.Packets.CharacterCreate.md
 Ms2ex.Packets.CharacterInfo.md
 Ms2ex.Packets.CharacterList.md

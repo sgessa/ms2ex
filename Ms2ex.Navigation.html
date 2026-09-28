@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-AA2DAB4E.js"></script>
+    <script defer src="dist/sidebar_items-F91E7EE5.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -143,10 +143,7 @@ ground.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>A corridor of walkable points from <code class="inline">from</code> to <code class="inline">to</code>, or <code class="inline">:error</code> when
-either endpoint has no walkable ground or no connection exists between
-them. Intermediate points are the string-pulled bends of the polygon
-corridor, carrying the mesh surface heights at each bend.</p></div>
+        <div class="summary-synopsis"><p>Returns the string-pulled route between two points.</p></div>
 
     </div>
 
@@ -157,6 +154,18 @@ corridor, carrying the mesh surface heights at each bend.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>Whether the map has walkable navmesh tiles.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#random_point_around/3" data-no-tooltip="" translate="no">random_point_around(map_id, center, radius)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A random walkable point within <code class="inline">radius</code> of <code class="inline">center</code>, or nil when the map
+has no navmesh or nothing walkable sits inside the circle. This is how
+idle mobs pick their wander destinations around the spawn point.</p></div>
 
     </div>
 
@@ -209,7 +218,7 @@ accept every position.</p></div>
       <h1 class="signature" translate="no">find_path(map_id, from, to)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L25" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L29" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -221,14 +230,15 @@ accept every position.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> find_path(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), Ms2ex.Types.Coord.t(), Ms2ex.Types.Coord.t()) ::
-  {:ok, [Ms2ex.Types.Coord.t()]} | :error</pre>
+  {:ok, [Ms2ex.Types.Coord.t()]} | {:partial, [Ms2ex.Types.Coord.t()]} | :error</pre>
 
       </div>
 
-<p>A corridor of walkable points from <code class="inline">from</code> to <code class="inline">to</code>, or <code class="inline">:error</code> when
-either endpoint has no walkable ground or no connection exists between
-them. Intermediate points are the string-pulled bends of the polygon
-corridor, carrying the mesh surface heights at each bend.</p>
+<p>Returns the string-pulled route between two points.</p><p><code class="inline">{:ok, path}</code> - a full route reaches the goal. <code class="inline">{:partial, path}</code> -
+the goal sits on another mesh island (stacked floors, gaps): the route
+ends at the closest reachable point, so a follower will never close
+the remaining distance. <code class="inline">:error</code> - no walkable ground under an
+endpoint.</p>
   </section>
 </section>
 <section class="detail" id="has_navmesh?/1">
@@ -241,7 +251,7 @@ corridor, carrying the mesh surface heights at each bend.</p>
       <h1 class="signature" translate="no">has_navmesh?(map_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L81" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L107" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -251,6 +261,37 @@ corridor, carrying the mesh surface heights at each bend.</p>
   <section class="docstring">
 
 <p>Whether the map has walkable navmesh tiles.</p>
+  </section>
+</section>
+<section class="detail" id="random_point_around/3">
+
+  <div class="detail-header">
+    <a href="#random_point_around/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">random_point_around(map_id, center, radius)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L91" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> random_point_around(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), Ms2ex.Types.Coord.t(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">number</a>()) ::
+  Ms2ex.Types.Coord.t() | nil</pre>
+
+      </div>
+
+<p>A random walkable point within <code class="inline">radius</code> of <code class="inline">center</code>, or nil when the map
+has no navmesh or nothing walkable sits inside the circle. This is how
+idle mobs pick their wander destinations around the spawn point.</p>
   </section>
 </section>
 <section class="detail" id="snap_to_floor/2">
@@ -263,7 +304,7 @@ corridor, carrying the mesh surface heights at each bend.</p>
       <h1 class="signature" translate="no">snap_to_floor(map_id, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L60" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L65" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -289,7 +330,7 @@ it on slopes and stairs.</p>
       <h1 class="signature" translate="no">valid_position?(map_id, position)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L44" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/navigation.ex#L49" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
