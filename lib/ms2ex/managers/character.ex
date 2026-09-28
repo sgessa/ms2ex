@@ -326,7 +326,6 @@ defmodule Ms2ex.Managers.Character do
   def handle_cast({:revive, :instant, use_voucher}, character),
     do: {:noreply, Character.Revival.instant_revive(character, use_voucher)}
 
-
   # triggers death when a stat write brings health to 0; called from
   # Character.Stats.set so every health-mutating path is covered
   @spec check_death(Schema.Character.t()) :: Schema.Character.t()

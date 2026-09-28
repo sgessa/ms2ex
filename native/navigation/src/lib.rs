@@ -81,6 +81,15 @@ extern "C" {
         point_count: *mut i32,
         max_points: i32,
     ) -> dtStatus;
+    fn ms2_find_random_point_around_circle(
+        query: *mut dtNavMeshQuery,
+        start_ref: dtPolyRef,
+        center: *const f32,
+        max_radius: f32,
+        filter: *mut dtQueryFilter,
+        out_ref: *mut dtPolyRef,
+        out_point: *mut f32,
+    ) -> dtStatus;
 }
 
 fn failed(status: dtStatus) -> bool {
@@ -174,7 +183,7 @@ fn find_path(
     nav: ResourceArc<Nav>,
     from: (f64, f64, f64),
     to: (f64, f64, f64),
-) -> Result<Vec<(f64, f64, f64)>, String> {
+) -> Result<(Vec<(f64, f64, f64)>, bool), String> {
     find_path_impl(&nav, to_pos(from), to_pos(to))
 }
 
@@ -194,6 +203,40 @@ fn valid_position(nav: ResourceArc<Nav>, at: (f64, f64, f64)) -> bool {
     }
 }
 
+/// A random walkable point within `radius` of `center`, or an error when
+/// nothing walkable sits inside the circle (or under the center itself).
+#[rustler::nif]
+fn random_point_around(
+    nav: ResourceArc<Nav>,
+    center: (f64, f64, f64),
+    radius: f64,
+) -> Result<(f64, f64, f64), String> {
+    let query = nav.query()?;
+
+    let (start_ref, _) =
+        nearest_poly(&query, &to_pos(center)).ok_or("no walkable ground under the center")?;
+
+    let mut out_ref: dtPolyRef = 0;
+    let mut out_point = [0f32; 3];
+    let center = to_pos(center);
+    let status = unsafe {
+        ms2_find_random_point_around_circle(
+            query.0,
+            start_ref,
+            center.as_ptr(),
+            radius as f32,
+            query.1,
+            &mut out_ref,
+            out_point.as_mut_ptr(),
+        )
+    };
+    if failed(status) || out_ref == 0 {
+        return Err("no walkable point inside the radius".into());
+    }
+
+    Ok((out_point[0] as f64, out_point[1] as f64, out_point[2] as f64))
+}
+
 /// Diagnostics for a loaded mesh: how many tiles landed and how many
 /// polygons the first tile carries.
 #[rustler::nif]
@@ -205,7 +248,7 @@ fn find_path_impl(
     nav: &Nav,
     from: [f32; 3],
     to: [f32; 3],
-) -> Result<Vec<(f64, f64, f64)>, String> {
+) -> Result<(Vec<(f64, f64, f64)>, bool), String> {
     let query = nav.query()?;
 
     let (start_ref, _) =
@@ -236,11 +279,14 @@ fn find_path_impl(
         return Err("no corridor connects the endpoints".into());
     }
 
-    // a partial corridor never reached the goal poly (stacked floors, mesh
-    // gaps): walking it would draw a straight line through the air
-    if *corridor.last().unwrap() != end_ref {
-        return Err("no corridor connects the endpoints".into());
-    }
+    // A partial corridor never reached the goal poly (stacked floors,
+    // mesh islands): string-pull it anyway — the pull follows the
+    // corridor's own polys. The pull still appends the raw goal point,
+    // which for a partial corridor floats off the walkable ground, so it
+    // is dropped: the route ends at the closest reachable point. Callers
+    // use this to pursue a target across a mesh gap as far as the ground
+    // allows.
+    let partial = *corridor.last().unwrap() != end_ref;
 
     let mut points = vec![0f32; MAX_PATH * 3];
     let mut flags = vec![0u8; MAX_PATH];
@@ -267,8 +313,12 @@ fn find_path_impl(
         ));
     }
     point_count = point_count.clamp(0, MAX_PATH as i32);
+    if partial {
+        // keep the corridor's own points only
+        point_count = (point_count - 1).max(1);
+    }
 
-    Ok((0..point_count as usize)
+    let route = (0..point_count as usize)
         .map(|i| {
             (
                 points[i * 3] as f64,
@@ -276,7 +326,12 @@ fn find_path_impl(
                 points[i * 3 + 2] as f64,
             )
         })
-        .collect())
+        .collect();
+
+    // the partial flag tells callers the corridor never reached the goal
+    // poly — the route ends at the closest reachable point, so a chase
+    // following it will never close the remaining distance
+    Ok((route, partial))
 }
 
 fn snap_impl(nav: &Nav, at: [f32; 3]) -> Result<(f64, f64, f64), String> {

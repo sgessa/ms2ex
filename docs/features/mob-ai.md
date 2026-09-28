@@ -2,9 +2,11 @@
 
 Status: partial. Mobs acquire targets by proximity and on being hit, chase
 the engaged player over the navmesh, stop inside attack range, and cast
-their first skill entry against the target (with real damage). Not yet
-implemented: multiple skill entries / rotation, attack-prism target
-resolution, on-hit effects, and the client's AI scripts.
+their first skill entry against the target (with real damage). Out of
+battle they follow their weighted idle routines — standing, bore emotes,
+and wander legs around the spawn point. Not yet implemented: multiple
+skill entries / rotation, attack-prism target resolution, on-hit effects,
+and the client's AI scripts.
 
 ## How it works
 
@@ -92,15 +94,103 @@ target's live position and walks it:
 ### Cast cycle
 
 A mob standing inside `stop_range` swings on cooldown: it pins itself in
-place facing the target, plays the skill motion's sequence (state PcSkill,
-16) through a 400ms windup, then the swing resolves at the hit moment —
-damage only applies when the target is still within the attack range plus
-60 slack, otherwise the swing whiffs (cooldown still runs). The cast
-occupies the mob until the resolve; between swings it settles into
-Attack_Idle_A (fallback Idle_A) while the cooldown runs.
+place facing the target. A swing whose motions cannot all play on the
+model's rig is cancelled before it starts, rather than landing damage
+with no animation. Each motion's playback length (time divided by its
+`sequence_speed`; fixed 1s stand-in without animation timing) drives the
+swing's timing: the hit lands at the firing motion's keyframe and the
+mob stays occupied until the whole playback ends. The firing attack is the
+first projectile-carrying attack of the motion set (later motions often
+fire the actual shot while earlier ones are pure windups), falling back
+to the first attack; the hit lands at that attack's animation keyframe
+(resolved from the attack's `point` name against the sequence's keyframe
+times, 40% of the motion's playback as the stand-in) and damage only
+applies when the target is still within that attack's range plus 60
+slack, otherwise the swing whiffs (the gate still runs). The swing owns
+the mob until its playback ends: the next swing starts only after both
+the playback and the 750ms cooldown floor elapse, and the firing
+motion's animation is held through the resolve until the playback ends,
+then settles into Attack_Idle_A (fallback Idle_A).
 
-- the active cast owns the mob's presentation: stand ticks during the
-  windup never touch the animation, so the client plays the full swing
+A swing is presented on two channels: a skill-use record initiates the
+cast (the client's skill system owns the playback — later motions are
+announced with their own skill-use records at each motion boundary, and
+the client pairs the resolving damage by the cast uid), while exactly
+ONE control broadcast carries the cast start — the first motion's
+sequence, the skill actor state (PcSkill, 16), the faced rotation and a
+zeroed velocity. The control stream then stays SILENT for the whole
+playback (the client re-applies the sequence on every control it
+receives, so any mid-swing broadcast restarts a one-shot animation on
+its first frame); the settle into Attack_Idle_A is the next control
+after the swing completes. Between swings the control announces the
+mob's real activity — walk while moving, idle otherwise — and every
+broadcast bumps the sequence counter: a hit flinch displaces the
+client's running sequence instance, and only a fresh counter recovers
+the model.
+
+A hit from the mob's current target does not disturb the running swing
+or chase (it only extends the engagement hold); a hit from a different
+attacker takes the battle over.
+
+Damage records carry the position the hit landed at (a projectile's
+record anchors its explosion visual at the landing point, not the
+shooter), and target records carry the firing motion and attack point
+indices alongside the skill id. One cast uid threads through the whole
+swing — the skill-use that starts it, the launch records, and the
+damage that resolves it — because the client pairs them by that id: a
+skill whose damage never carries its uid never closes and the actor
+stays locked in the skill (its idle and walk stop playing).
+
+When the firing attack carries a magic path, the hit reaches clients as
+a SkillDamage target record first (one packet per magic-path segment,
+before the damage numbers): that is what spawns the projectile visual.
+The record's direction is the world unit shot direction toward the
+victim at release.
+
+How the client flies (and aims) the projectile comes from the magic
+path's lookAtType, which decides the record's target id and how damage
+resolves:
+
+- lookAtType 1 (aimed shots, ~17% of segments) fly at — and chase — the
+  actor named in the record's target id: the record carries the victim,
+  and the damage applies when the flight time (segment velocity over the
+  launch distance) elapses — whiffed only if the victim left the field
+  or the attack's reach. Without the victim id these paths have no aim
+  source at all and fly a fixed off-target line.
+- lookAtType 0/2 (fixed-line shots, the majority) are fire-and-forget:
+  the record's target id stays zero and the field simulates the flight
+  per tick along the fixed launch line. The damage lands only when the
+  flight actually reaches the victim's live position (impact radius
+  150), so sidestepping the line dodges the shot; a flight that covers
+  its max distance without colliding despawns harmlessly — but still
+  detonates its on-hit effects where it lands.
+
+Some attacks carry no direct damage at all (rate 0) and deliver it
+through on-hit effect skills instead: the goblin's thrown bomb flies as
+a fixed-line projectile dealing nothing, and the real damage is its
+explosion skill (rate 0.8, a cube at the landing point). When a hit
+lands — instant, aimed timer, or straight-line collision — the field
+schedules each on-hit effect skill after its splash delay (the bomb's
+telegraph beat, 1500ms) and then resolves the effect skill's attack
+against every player standing in its cube at the landing point, each
+victim's damage broadcast carrying the effect skill's id (that is what
+puts the damage number on screen). A dodged bomb still detonates where
+it lands; only players inside the cube take the hit.
+
+- swing animations ride the control stream, but the control goes out
+  exactly once per swing: the cast start pins the first motion's
+  sequence in a single control, and the stream stays SILENT for the
+  whole playback (windup, hit, recovery). The client re-applies the
+  sequence on every control it receives, so any mid-swing broadcast —
+  periodic anchor, re-facing, motion hand-off — restarts a one-shot
+  sequence on its first frame (looping walks hide the restarts; swings
+  freeze mid-pose). The settle into the combat idle is the next control
+  after the playback ends
+- the control's sequence counter only moves when the broadcast sequence
+  changes: the client re-applies the sequence on every counter change, so
+  bumping it on each periodic (30ms) control restarts the model's
+  animation over and over — one-shot swings freeze on their first frame
+  while the fight continues around the statue (looping walks hide it)
 - every non-moving branch (stand, cast start, windup, resolve) touches
   the battle's `last_move_at`, so the first chase step after a cast
   integrates exactly the real elapsed time — without this, the step
@@ -118,6 +208,30 @@ Attack_Idle_A (fallback Idle_A) while the cooldown runs.
   packet so every client sees the numbers
 - cooldowns: `cooldown_time` from the skill level doc, floor of 750ms
   between swings
+
+### Idle routines (wander)
+
+Out of battle — no `battle`, no scripted patrol — a mob rolls its weighted
+idle actions (`action.actions`, each entry an animation name + probability):
+
+- `Idle_*` (and unknown names): stand in the idle pose for ~1s, then re-roll
+- `Bore_*`: play the named sequence once as an emote (its animation time,
+  4s fallback), then stand
+- `Walk_*` / `Run_*`: a wander leg — a random walkable point inside the
+  mob's `move_area` around its spawn point (`Navigation.random_point_around/3`),
+  walked at the routine's gait (the other gait stands in when the named one
+  is zero; a mob with no locomotion at all never starts a leg)
+
+The leg rides the battle walk machinery as battle mode `:wander` (same
+pathing, step snapping and control streaming as the chase, minus a target);
+arrival within 30 units hands the mob back to its routines — without the
+trip-home heal or attacker-tag clear (only returning home heals). A mob
+without a move area stays at its post. Engaging cancels the routine and any
+bore emote; losing the target returns the mob to the roll.
+
+The random-point query is the mesh library's circle sampler: it
+area-weights the polygons touching the circle and returns a point on the
+chosen polygon, which can sit slightly beyond the circle's edge.
 
 ### Clock caveat
 
@@ -183,8 +297,13 @@ islands return :error.
 The npc document carries an `ai_path` string (the client's AI script for
 the npc) and a `distance` block (`sight`, `sight_height_up`,
 `sight_height_down`, `last_sight_radius`, `last_sight_height_up`,
-`last_sight_height_down`, `avoid`). Both are projected by the ingest;
-`ai_path` is unused until the AI-tree runtime lands.
+`last_sight_height_down`, `avoid`). The `action` block projects the patrol
+speeds (`walk_speed`, `run_speed`), the idle wander radius (`move_area`)
+and the weighted idle routines (`actions`, name + probability pairs).
+Skill docs project each attack's `magic_path_id`, `arrow.overlap` and
+animation `point` (keyframe name); animation docs project each sequence's
+keyframe times. All are projected by the ingest; `ai_path` is unused
+until the AI-tree runtime lands.
 
 ## Deliberate divergences
 
@@ -195,6 +314,11 @@ the npc) and a `distance` block (`sight`, `sight_height_up`,
   instead of driving the mob from its AI XML battle tree. `stop_range`
   derives from the first skill's attack range rather than the tree's
   trace-node detect distance.
+- idle wander approximates the reference's weighted default routines with
+  a fixed ~1s stand beat between rolls (the reference re-rolls a standby
+  task after 1s), and the swing timing is the motion sequence's playback
+  with the hit at a fixed 40% mark instead of the animation's attack
+  keyframes.
 - engagement state byte: ms2ex holds PcSkill reaction (16) while engaged
   and standing (it arms the field HP bar); the reference reports Idle and
   sends PcSkill only during actual casts.
@@ -218,3 +342,18 @@ the npc) and a `distance` block (`sight`, `sight_height_up`,
   fight hostile mobs), pet taming behavior, summon/slave relationships.
 - combat time tracking (battle-time conditions), jump/knockback handling,
   fly movement for airborne mobs.
+
+## Known gaps
+
+- Mobs always swing their first skill; retail mobs rotate through their
+  skill list per their AI script (with per-node cooldowns and approach
+  distances).
+- A firing motion's later attack points never fire: multi-hit flails
+  (several attack points, each with its own rate) resolve only their
+  first hit.
+- Melee swings land only on the aggro target; retail resolves every
+  player standing in the firing attack's range cube (the attack's target
+  count caps it).
+- Motions with a move distance never lunge the mob forward mid-swing.
+- On-hit effects without a splash (stuns, slows, knockbacks riding the
+  attack's effect list) are dropped; only splash detonations fire.

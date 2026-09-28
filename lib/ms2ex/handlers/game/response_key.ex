@@ -95,7 +95,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.interacted_objects(character.discovered_objects || []))
       |> push(Packets.UserEnv.set_mode(0x5))
       |> push(Packets.UserEnv.gathering_counts(Managers.Mastery.gathering_counts(character.id)))
-      |> push(Packets.UserEnv.mastery_rewards_claimed(Managers.Mastery.rewards_claimed(character.id)))
+      |> push(
+        Packets.UserEnv.mastery_rewards_claimed(Managers.Mastery.rewards_claimed(character.id))
+      )
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
       |> push(Packets.Fishing.load_album(character.fish_album || %{}))

@@ -399,40 +399,48 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     dx * dx + dy * dy <= radius * radius
   end
 
+  # The region's timeline must line up with the client's: the add frame
+  # carries the region's next fire tick (now + interval — never 0, a past
+  # tick puts the client's zone timeline out of sync), the first fire lands
+  # one interval in (immediately for one-shots whose interval is 0), later
+  # fires each interval after that, and the zone lives until its last fire
+  # plus the splash's remove delay. A zone removed before its client-side
+  # animation ends cuts the hit visuals short.
   def add(skill_cast, state) do
     source_id = Ms2ex.generate_int()
     points = Types.SkillCast.magic_path(skill_cast)
 
     case Types.SkillCast.splash_skill_cast(skill_cast) do
       {splash_cast, splash} ->
+        now = Ms2ex.sync_ticks()
+        interval = Map.get(splash, :interval, 0) || 0
+        delay = Map.get(splash, :delay, 0) || 0
+        fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
+
+        splash_cast = %{
+          splash_cast
+          | next_tick: now + interval,
+            position: hd(points)
+        }
+
         reg_skill = Packets.RegionSkill.add(source_id, splash_cast, points)
         Managers.Field.broadcast(state.topic, reg_skill)
 
-        interval = Map.get(splash, :interval, 0) || 0
-        fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
+        end_tick = now + delay + (Map.get(splash, :remove_delay, 0) || 0) + fires * interval
 
-        end_tick =
-          Ms2ex.sync_ticks() + (Map.get(splash, :remove_delay, 0) || 0) + (fires - 1) * interval
+        region = %{
+          splash_cast: splash_cast,
+          interval: interval,
+          fires_left: fires,
+          end_tick: end_tick
+        }
 
-        state =
-          if interval > 0 and fires > 1 do
-            state = apply_splash(splash_cast, state)
+        state = put_in(state, [:regions, source_id], region)
 
-            region = %{
-              splash_cast: splash_cast,
-              interval: interval,
-              fires_left: fires - 1,
-              end_tick: end_tick
-            }
+        Process.send_after(self(), {:region_tick, source_id}, interval + delay)
 
-            Process.send_after(self(), {:region_tick, source_id}, interval)
-            put_in(state, [:regions, source_id], region)
-          else
-            apply_splash(splash_cast, state)
-          end
-
-        delay = max(end_tick - Ms2ex.sync_ticks(), 1)
-        Process.send_after(self(), {:remove_region_skill, source_id}, delay)
+        removal_delay = max(end_tick - now, 100)
+        Process.send_after(self(), {:remove_region_skill, source_id}, removal_delay)
 
         state
 
@@ -452,7 +460,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         state
 
       region ->
-        if region.fires_left <= 0 or Ms2ex.sync_ticks() >= region.end_tick do
+        # fires still queued means the region is alive even past its
+        # end_tick — a zero-interval one-shot's end_tick equals its spawn
+        # tick, and expiring it there would kill the zone before its only
+        # fire lands. The removal timer cleans the region up.
+        if region.fires_left <= 0 do
           %{state | regions: Map.delete(state.regions, source_id)}
         else
           tick(region, source_id, state)
@@ -461,13 +473,17 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   end
 
   defp tick(region, source_id, state) do
-    state = apply_splash(region.splash_cast, state)
+    state = apply_splash(region.splash_cast, source_id, state)
     state = update_in(state, [:regions, source_id], &%{&1 | fires_left: &1.fires_left - 1})
-    Process.send_after(self(), {:region_tick, source_id}, region.interval)
+
+    if region.fires_left > 1 do
+      Process.send_after(self(), {:region_tick, source_id}, region.interval)
+    end
+
     state
   end
 
-  def apply_splash(splash_cast, state) do
+  def apply_splash(splash_cast, _source_id, state) do
     targets =
       state.npcs
       |> Enum.filter(fn {_id, npc} ->
@@ -480,6 +496,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     hit_mobs(splash_cast, targets, state)
   end
 
+  # region hits ride the standard damage record (the channel every direct
+  # skill uses, which the client displays immediately) plus the health
+  # stat record for the HP bar. A target/region record pair keyed on the
+  # region's source id is the alternative flow, but this client build
+  # renders it on its own zone timeline — seconds behind the explosion
   defp hit_mobs(splash_cast, targets, state) do
     {mobs, state} =
       Enum.reduce(targets, {[], state}, fn {object_id, mob}, {mobs, state} ->
@@ -489,7 +510,9 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
           {:ok, damaged_mob, state} ->
             Managers.PartyServer.record_damage(splash_cast.caster, dmg.dmg)
             state = Managers.Field.Npc.apply_skill_effects(state, splash_cast, object_id)
-            {[{damaged_mob, dmg} | mobs], state}
+
+            hit = Map.put(dmg, :direction, push_direction(mob.position, splash_cast.position))
+            {[{damaged_mob, hit} | mobs], state}
 
           {:error, state} ->
             {mobs, state}

@@ -183,7 +183,9 @@ defmodule Ms2ex.Managers.Mastery do
 
   @impl true
   def handle_call({:grade, type}, _from, state),
-    do: {:reply, Storage.Tables.MasteryRewards.grade(type, Map.get(state.masteries, type, 0)), state}
+    do:
+      {:reply, Storage.Tables.MasteryRewards.grade(type, Map.get(state.masteries, type, 0)),
+       state}
 
   @impl true
   def handle_call(:rewards_claimed, _from, state), do: {:reply, state.claimed, state}

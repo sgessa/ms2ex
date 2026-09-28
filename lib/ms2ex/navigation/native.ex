@@ -15,7 +15,7 @@ defmodule Ms2ex.Navigation.Native do
   def load_mesh(_binary), do: nif_error()
 
   @spec find_path(mesh(), position(), position()) ::
-          {:ok, [position()]} | {:error, String.t()}
+          {:ok, [position()], boolean()} | {:error, String.t()}
   def find_path(_mesh, _from, _to), do: nif_error()
 
   @spec snap(mesh(), position()) :: {:ok, position()} | {:error, String.t()}
@@ -23,6 +23,10 @@ defmodule Ms2ex.Navigation.Native do
 
   @spec valid_position(mesh(), position()) :: boolean()
   def valid_position(_mesh, _at), do: nif_error()
+
+  @spec random_point_around(mesh(), position(), number()) ::
+          {:ok, position()} | {:error, String.t()}
+  def random_point_around(_mesh, _center, _radius), do: nif_error()
 
   @spec mesh_stats(mesh()) :: {integer(), integer()}
   def mesh_stats(_mesh), do: nif_error()

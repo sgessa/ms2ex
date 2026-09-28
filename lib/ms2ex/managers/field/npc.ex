@@ -10,10 +10,15 @@ defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Managers.Field.Npc.Battle
   alias Ms2ex.Managers.Field.Npc.Patrol
 
-  # animation transitions keep dirtying npcs on live servers, so even idle
-  # ones re-announce themselves every few seconds; this also covers the
-  # client dropping controls sent while it asynchronously loads the entity
-  @idle_control_ms 30
+  # a slow keepalive re-announcing each npc (counter refresh, position
+  # re-anchor): the client interpolates walking from the control's
+  # position + velocity, and state changes (movement legs, aggro, hits,
+  # animation transitions) broadcast immediately through the send_control
+  # flag. A fast keepalive floods the client — every field npc re-sent
+  # every few tens of ms is thousands of packets per second once a map
+  # has a few dozen mobs, and the client queues everything else (damage,
+  # stat records) behind the flood
+  @idle_control_ms 500
   @corpse_broadcast_ms 1000
   @spawn_rate_ms 1000
   @force_spawn_multiplier 2
@@ -240,6 +245,7 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   def tick(state) do
     now = Ms2ex.sync_ticks()
+    state = advance_projectiles(state, now)
 
     {npcs, {live_dirty, corpse_dirty, hits}} =
       Enum.flat_map_reduce(state.npcs, {[], [], []}, fn {object_id, npc},
@@ -253,22 +259,45 @@ defmodule Ms2ex.Managers.Field.Npc do
     boss_target = state.players |> Map.values() |> List.first()
     live = Enum.reverse(live_dirty)
 
-    # mob skill hits land here: the character manager resolves the damage
-    # against its own defenses (funneling death and the stat broadcast
-    # through the normal paths), and the field broadcasts the hit so every
-    # client sees the numbers
-    for hit <- hits do
-      case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
-        {:ok, applied} ->
-          Managers.Field.broadcast(
-            state.topic,
-            Packets.SkillDamage.mob_hit(Map.merge(hit, applied))
-          )
+    # mob skill hits land here: the attack record (projectile launch)
+    # goes out at the release keyframe. Overlap shots home to their victim
+    # (the client chases the projectile) and their damage applies when the
+    # flight timer elapses; straight shots are fire-and-forget — the field
+    # simulates the flight and only lands a hit when the projectile's
+    # flight actually reaches the victim, so sidestepping or outrunning
+    # one dodges it. Melee swings and ground indicators stay instant.
+    state =
+      Enum.reduce(hits, state, fn hit, state ->
+        key = {hit.caster_object_id, hit.attack_counter}
 
-        :error ->
-          :ok
-      end
-    end
+        cond do
+          hit.travel_ms > 0 and hit.look_at_type == 1 ->
+            state = broadcast_launch(state, hit, hit.target_object_id)
+            Process.send_after(self(), {:npc_projectile_impact, hit}, hit.travel_ms)
+            state
+
+          hit.travel_ms > 0 ->
+            state = broadcast_launch(state, hit, 0)
+
+            projectile = %{
+              hit: hit,
+              origin: hit.position,
+              direction: hit.direction,
+              velocity: hit.velocity,
+              max_distance: hit.flight,
+              traveled: 0.0,
+              victim_id: hit.character_id,
+              launched_at: now
+            }
+
+            projectiles = Map.put(Map.get(state, :projectiles, %{}), key, projectile)
+            Map.put(state, :projectiles, projectiles)
+
+          true ->
+            apply_hit(state, hit)
+            state
+        end
+      end)
 
     # mobs that arrived home this tick healed: announce the new health
     # before their idle control lands
@@ -367,11 +396,11 @@ defmodule Ms2ex.Managers.Field.Npc do
          true <- Map.has_key?(state.players, character_id),
          {:ok, character} <- Managers.Character.call(character_id, :lookup) do
       last_position = List.last(dummy.patrol.waypoints)[:position]
-      npc = nearest_npc(state, dummy, last_position)
+      # the player lands facing the carry's final leg — the direction the
+      # client-side follow left them walking — not toward a guessed npc
+      rotation = final_leg_facing(dummy.patrol.waypoints)
 
-      if npc && Navigation.valid_position?(state.map_id, last_position) do
-        rotation = face_toward(last_position, npc.position)
-
+      if rotation && Navigation.valid_position?(state.map_id, last_position) do
         character = %{character | position: last_position, rotation: rotation}
         Managers.Character.call(character, {:update, character})
 
@@ -391,36 +420,14 @@ defmodule Ms2ex.Managers.Field.Npc do
     end
   end
 
-  # squared distance to candidates is full 3D, like every other range check;
-  # the talkable radius comes from the server constants table
-  defp nearest_npc(state, dummy, position) do
-    talkable = Storage.Tables.Constants.get(:talkable_distance) || 0
-
-    state.npcs
-    |> Map.delete(dummy.object_id)
-    |> Enum.reduce(nil, fn
-      {_object_id, %Types.FieldNpc{dead?: true}}, closest ->
-        closest
-
-      {_object_id, npc}, closest ->
-        dist = distance_squared(npc.position, position)
-
-        if dist < talkable * talkable and
-             (closest == nil or dist < distance_squared(closest.position, position)) do
-          npc
-        else
-          closest
-        end
-    end)
+  # the facing a scripted carry leaves its passenger with: the direction
+  # of the route's last leg. Single-waypoint routes have no leg to face
+  # along — the follow already left the player facing somewhere sane
+  defp final_leg_facing(waypoints) when length(waypoints) >= 2 do
+    face_toward(Enum.at(waypoints, -2)[:position], List.last(waypoints)[:position])
   end
 
-  defp distance_squared(a, b) do
-    dx = a.x - b.x
-    dy = a.y - b.y
-    dz = a.z - b.z
-
-    dx * dx + dy * dy + dz * dz
-  end
+  defp final_leg_facing(_waypoints), do: nil
 
   # actors face along their front axis: yaw = atan2(dx, -dy) degrees, the
   # same convention the npc control packets encode
@@ -501,6 +508,14 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     Context.Mobs.drop_hit_rewards(field_npc, state.map_id)
 
+    # the client's HP-bar update rides this stat record — the damage
+    # records only render numbers; on death it must land before the dead
+    # control entry or the client ignores the state change
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.Stats.update_mob_stat(%{field_npc | stats: stats}, :health)
+    )
+
     {field_npc, state} =
       if hp == 0 do
         announce_death(%{field_npc | stats: stats}, state)
@@ -512,9 +527,9 @@ defmodule Ms2ex.Managers.Field.Npc do
   end
 
   # Death is announced with ControlNpc.dead/1; the client plays the death
-  # animation on its own before the corpse is removed. The hp=0 sync must
-  # reach the client BEFORE the dead control entry, otherwise it ignores
-  # the state change.
+  # animation on its own before the corpse is removed. The hp=0 stat record
+  # has already landed (apply_live_damage broadcasts it before calling in),
+  # otherwise the client ignores the dead control entry.
   defp announce_death(field_npc, state) do
     corpse? = get_in(field_npc.npc.metadata, [:corpse, :hit_able]) || false
 
@@ -528,7 +543,6 @@ defmodule Ms2ex.Managers.Field.Npc do
           last_control_at: Ms2ex.sync_ticks()
       }
 
-    Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(field_npc, :health))
     Managers.Field.broadcast(state.topic, Packets.ControlNpc.dead(field_npc))
 
     # bodies stay for their dead window (corpse-hittable ones keep it in
@@ -615,29 +629,292 @@ defmodule Ms2ex.Managers.Field.Npc do
 
   def expire_emote(npc, _now), do: npc
 
+  # the damage application shared by the instant path and the projectile
+  # impact: the character manager resolves the damage against its own
+  # defenses (funneling death and the stat broadcast through the normal
+  # paths) and the field broadcasts the hit so every client sees the numbers
+  defp apply_hit(state, hit, landed_at \\ nil) do
+    case Managers.Character.call(hit.character_id, {:mob_hit, hit}) do
+      {:ok, applied} ->
+        # the record's position anchors the client's impact visuals (a
+        # projectile's explosion renders at the landing point, not the
+        # shooter)
+        record =
+          hit
+          |> Map.merge(applied)
+          |> stamp_position(landed_at)
+
+        Managers.Field.broadcast(state.topic, Packets.SkillDamage.mob_hit(record))
+
+        schedule_hit_skills(state, hit, landed_at)
+
+      :error ->
+        :ok
+    end
+  end
+
+  defp stamp_position(record, %Types.Coord{} = landed_at),
+    do: %{record | position: landed_at}
+
+  defp stamp_position(record, _), do: record
+
+  # a landed swing fires its on-hit effect skills where it landed: each
+  # detonates after its splash delay (a thrown bomb's explosion cube goes
+  # off a beat after impact). The landing point defaults to the victim's
+  # live position — splash effects center on their targets
+  #
+  # TODO: only splash effect skills fire; on-hit entries without a splash
+  # (stuns, slows, knockbacks riding the attack's effect list) are
+  # dropped, as are effects keyed to the damage landing
+  defp schedule_hit_skills(state, hit, landed_at) do
+    skills = Map.get(hit, :hit_skills, [])
+
+    if skills != [] do
+      center =
+        landed_at || get_in(state, [:player_positions, hit.character_id, :position]) ||
+          hit.position
+
+      Enum.each(skills, fn entry ->
+        payload = %{hit: hit, center: center, skill_id: entry.skill_id, level: entry.level}
+
+        Process.send_after(self(), {:npc_skill_explosion, payload}, max(entry.delay_ms, 0))
+      end)
+    end
+  end
+
+  # resolves an on-hit effect skill's detonation: every player standing in
+  # the skill's attack cube around the landing point takes its hit
+  def apply_skill_explosion(%{hit: hit, center: center, skill_id: skill_id, level: level}, state) do
+    with %{} = level_doc <- Storage.Skills.get_meta(skill_id)[:levels][to_string(level)],
+         attack when is_map(attack) <- first_attack(level_doc),
+         rate when is_number(rate) and rate > 0 <- get_in(attack, [:damage, :rate]) do
+      radius = get_in(attack, [:range, :distance]) || 0
+      height = get_in(attack, [:range, :height]) || 0
+
+      victims =
+        for {character_id, object_id} <- state.players,
+            position = get_in(state, [:player_positions, character_id, :position]),
+            match?(%Types.Coord{}, position),
+            horizontal_distance_sq(center, position) <= radius * radius,
+            abs(position.z - center.z) <= height do
+          Map.merge(hit, %{
+            character_id: character_id,
+            target_object_id: object_id,
+            skill_id: skill_id,
+            skill_level: level,
+            rate: rate,
+            position: center,
+            hit_skills: [],
+            server_tick: Ms2ex.sync_ticks()
+          })
+        end
+
+      Enum.each(victims, &apply_hit(state, &1))
+    end
+
+    state
+  end
+
+  defp first_attack(level_doc) do
+    level_doc
+    |> Map.get(:motions, [])
+    |> List.wrap()
+    |> Enum.flat_map(&List.wrap(Map.get(&1, :attacks)))
+    |> Enum.find(&is_map(&1))
+  end
+
+  defp horizontal_distance_sq(%Types.Coord{} = a, %Types.Coord{} = b) do
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dx * dx + dy * dy
+  end
+
+  # a mob's landed swing reaches clients as the attack record first (the
+  # client's projectile visuals: one packet per magic-path segment) and
+  # the damage numbers when the projectile lands
+  # the record's target id is the client's aim source: lookAtType 1 paths
+  # fly the projectile at (and chasing) that actor, so aimed shots carry
+  # the victim; fixed-line paths (lookAtType 0/2) carry zero and fly their
+  # own line, dodgeable by stepping off it
+  defp broadcast_launch(state, hit, target_id) do
+    with id when is_integer(id) and id > 0 <- hit[:magic_path_id],
+         segments when is_list(segments) <- Storage.Table.MagicPaths.get(id) || [] do
+      segments
+      |> Enum.with_index()
+      |> Enum.each(fn {_segment, index} ->
+        launch = Map.merge(hit, %{direction: launch_direction(hit.direction)})
+
+        Managers.Field.broadcast(
+          state.topic,
+          Packets.SkillDamage.target(launch, index, target_id)
+        )
+      end)
+    end
+
+    state
+  end
+
+  # the shot direction a launch record carries: the world unit vector from
+  # the shooter toward the victim at release. Fixed-line paths (lookAtType
+  # 0/2) fly their line from it; aimed paths (lookAtType 1) key off the
+  # record's target id instead
+  def launch_direction(world_direction), do: world_direction
+
+  @doc """
+  Applies an aimed (lookAtType 1) projectile's damage when its flight
+  time elapses: the client chases the shot onto its victim, so the damage
+  follows the timer. The shot lands while its victim is still on the
+  field, live-synced, and inside the firing attack's reach of the launch
+  point. (Fixed-line shots are simulated per tick instead — see
+  advance_projectiles/2.)
+  """
+  def apply_projectile_impact(state, hit) do
+    reach = hit.range + 60
+    launch = hit.position
+    victim_position = get_in(state, [:player_positions, hit.character_id, :position])
+
+    lands? =
+      Map.has_key?(state.players, hit.character_id) and
+        match?(%Types.Coord{}, victim_position) and
+        distance_sq(launch, victim_position) <= reach * reach
+
+    if lands? do
+      apply_hit(state, hit, victim_position)
+    end
+
+    state
+  end
+
+  @projectile_radius 150
+  @max_flight_step_ms 200
+
+  # straight-shot projectiles fly their fixed line: each tick advances the
+  # shot along its launch direction and lands it only when the flight
+  # reaches the victim's live position — sidestepping or outrunning one
+  # dodges it. Shots that cover their max distance without colliding
+  # despawn harmlessly
+  def advance_projectiles(state, now) do
+    projectiles = Map.get(state, :projectiles, %{})
+
+    {kept, impacts} =
+      Enum.flat_map_reduce(projectiles, [], fn {key, p}, impacts ->
+        dt = (now - p.launched_at) |> max(0) |> min(@max_flight_step_ms)
+        p = %{p | traveled: p.traveled + p.velocity * dt / 1000, launched_at: now}
+
+        position = projectile_position(p)
+        victim_position = get_in(state, [:player_positions, p.victim_id, :position])
+
+        cond do
+          not Map.has_key?(state.players, p.victim_id) ->
+            # the victim left the field mid-flight: despawn without landing
+            {[], impacts}
+
+          match?(%Types.Coord{}, victim_position) and
+              distance_sq(position, victim_position) <= @projectile_radius * @projectile_radius ->
+            # collision: the hit applies and the projectile despawns
+            {[], [{p.hit, position} | impacts]}
+
+          p.traveled >= p.max_distance ->
+            # the flight ran out: no direct hit, but an explosive round
+            # still detonates where it lands
+            {[], [{p.hit, position, :no_direct_hit} | impacts]}
+
+          true ->
+            {[{key, p}], impacts}
+        end
+      end)
+
+    state = Map.put(state, :projectiles, Map.new(kept))
+
+    Enum.each(impacts, fn
+      {hit, position} ->
+        apply_hit(state, hit, position)
+
+      {hit, position, :no_direct_hit} ->
+        schedule_hit_skills(state, hit, position)
+    end)
+
+    state
+  end
+
+  defp projectile_position(%{origin: origin, direction: direction, traveled: traveled}) do
+    %Types.Coord{
+      x: origin.x + direction.x * traveled,
+      y: origin.y + direction.y * traveled,
+      z: origin.z + direction.z * traveled
+    }
+  end
+
+  defp distance_sq(%Types.Coord{} = a, %Types.Coord{} = b) do
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = a.z - b.z
+    dx * dx + dy * dy + dz * dz
+  end
+
+  # a swing occupies the mob from its cast start until the playback's
+  # end: controls stay silent through it
+  defp swinging?(%{battle: %{cast: %{} = cast}}, now), do: now < cast.end_at
+  defp swinging?(%{battle: %{swing_until: until}}, now) when is_integer(until), do: now < until
+  defp swinging?(_npc, _now), do: false
+
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)
 
-    cond do
-      npc.dead? and npc.corpse? and now - npc.last_control_at >= @corpse_broadcast_ms ->
-        npc =
-          npc
-          |> Map.update!(:seq_counter, &(&1 + 1))
-          |> Map.put(:last_control_at, now)
+    {npc, broadcast} = control_plan(npc, now)
 
-        {[{object_id, npc}], {live, [npc | corpses]}}
+    case broadcast do
+      :skip ->
+        {[{object_id, npc}], {live, corpses}}
 
-      not npc.dead? and (npc.send_control? or now - npc.last_control_at >= @idle_control_ms) ->
-        npc =
-          npc
-          |> Map.update!(:seq_counter, &(&1 + 1))
-          |> Map.put(:last_control_at, now)
-          |> Map.put(:send_control?, false)
-
+      :broadcast ->
         {[{object_id, npc}], {[npc | live], corpses}}
 
-      true ->
-        {[{object_id, npc}], {live, corpses}}
+      :corpse ->
+        {[{object_id, npc}], {live, [npc | corpses]}}
     end
+  end
+
+  # decides what this npc's control broadcast does this tick: a corpse
+  # re-announces on its slow cadence, a state change (the cast start's
+  # control pins the swing's sequence AND zeroes the mob's velocity)
+  # always goes out, a mid-swing periodic anchor stays silent (any
+  # further broadcast restarts the swing's sequence), and everything
+  # else re-anchors on the idle cadence
+  defp control_plan(%{dead?: true, corpse?: true} = npc, now)
+       when now - npc.last_control_at >= @corpse_broadcast_ms do
+    npc =
+      npc
+      |> Map.update!(:seq_counter, &(&1 + 1))
+      |> Map.put(:last_control_at, now)
+
+    {npc, :corpse}
+  end
+
+  defp control_plan(%{dead?: true} = npc, _now), do: {npc, :skip}
+
+  defp control_plan(%{send_control?: true} = npc, now),
+    do: {broadcast_control(npc, now), :broadcast}
+
+  defp control_plan(%{dead?: false} = npc, now) do
+    cond do
+      swinging?(npc, now) -> {npc, :skip}
+      now - npc.last_control_at >= @idle_control_ms -> {broadcast_control(npc, now), :broadcast}
+      true -> {npc, :skip}
+    end
+  end
+
+  # every broadcast bumps the sequence counter: the client re-applies a
+  # control's sequence when its counter changes, and that re-apply is what
+  # recovers a model after a client-side interruption — a hit flinch
+  # displaces the current sequence instance, and a stream of unchanged
+  # (sequence, counter) pairs would leave the model statuesqued in its
+  # flinch-end pose. Looping walk/idle sequences hide the re-apply, and
+  # one-shot swings are protected by the mid-swing control silence
+  defp broadcast_control(npc, now) do
+    npc
+    |> Map.update!(:seq_counter, &(&1 + 1))
+    |> Map.put(:last_control_at, now)
+    |> Map.put(:send_control?, false)
   end
 end

@@ -84,7 +84,9 @@ defmodule Ms2ex.CharacterConfigManagerTest do
     assert Enum.at(active.quick_slots, 4).skill_id == 10_300_041
     assert Enum.at(active.quick_slots, 5).skill_id == 10_300_001
 
-    persisted = Context.HotBars.list(%Schema.Character{id: character.id}) |> Enum.find(& &1.active)
+    persisted =
+      Context.HotBars.list(%Schema.Character{id: character.id}) |> Enum.find(& &1.active)
+
     assert Enum.at(persisted.quick_slots, 5).skill_id == 10_300_001
   end
 
@@ -109,7 +111,8 @@ defmodule Ms2ex.CharacterConfigManagerTest do
   test "removing a quick slot clears it and persists", %{character: character, state: state} do
     {:reply, :ok, state} =
       Managers.CharacterConfig.handle_call(
-        {:move_quick_slot, 0, %Types.QuickSlot{skill_id: 90_000_038, item_id: 20_000_028, item_uid: 7}, 6},
+        {:move_quick_slot, 0,
+         %Types.QuickSlot{skill_id: 90_000_038, item_id: 20_000_028, item_uid: 7}, 6},
         :from,
         state
       )
@@ -120,7 +123,9 @@ defmodule Ms2ex.CharacterConfigManagerTest do
     active = Enum.find(state.hot_bars, & &1.active)
     assert %Types.QuickSlot{} = Enum.at(active.quick_slots, 6)
 
-    persisted = Context.HotBars.list(%Schema.Character{id: character.id}) |> Enum.find(& &1.active)
+    persisted =
+      Context.HotBars.list(%Schema.Character{id: character.id}) |> Enum.find(& &1.active)
+
     assert %Types.QuickSlot{} = Enum.at(persisted.quick_slots, 6)
   end
 
@@ -165,7 +170,8 @@ defmodule Ms2ex.CharacterConfigManagerTest do
   end
 
   test "the active hot bar switch persists", %{character: character, state: state} do
-    {:reply, :ok, state} = Managers.CharacterConfig.handle_call({:set_active_bar, 1}, :from, state)
+    {:reply, :ok, state} =
+      Managers.CharacterConfig.handle_call({:set_active_bar, 1}, :from, state)
 
     bars = state.hot_bars
     refute Enum.at(bars, 0).active
@@ -178,7 +184,8 @@ defmodule Ms2ex.CharacterConfigManagerTest do
   test "key binds merge by key code and persist", %{character: character, state: state} do
     {:reply, :ok, state} =
       Managers.CharacterConfig.handle_call(
-        {:merge_key_binds, %{18 => %Types.KeyBind{key_code: 18, option_type: 1, option_guid: 500_009}}},
+        {:merge_key_binds,
+         %{18 => %Types.KeyBind{key_code: 18, option_type: 1, option_guid: 500_009}}},
         :from,
         state
       )

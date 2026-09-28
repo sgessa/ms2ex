@@ -67,6 +67,11 @@ defmodule Ms2ex.Managers.Field.Character do
     # map-placed skill zones (boost lanes and the like) are client-executed
     Managers.Field.RegionSkill.send_zones(character, Map.get(state, :region_skill_zones, []))
 
+    # a cinematic's backdrop swap persists for the field session
+    if dds = Map.get(state, :background) do
+      push(character, Packets.ChangeBackground.bytes(dds))
+    end
+
     # Tell other characters in the map to load the new player
     Managers.Field.broadcast(character, Packets.FieldAddUser.bytes(character))
     Managers.Field.broadcast(character, Packets.ProxyGameObj.load_player(character))

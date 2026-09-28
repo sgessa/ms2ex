@@ -112,12 +112,18 @@ defmodule Ms2ex.Packets.ControlNpc do
   # interpolates the steps; a mob that is engaged but standing holds the
   # PcSkill reaction (16), which is what arms the field HP bar; otherwise
   # idle (1).
+  # the actor state the client's animation state machine keys on: walking
+  # mobs are walking (2), a mid-cast mob is in its skill (16), everything
+  # else — standing, aggro'd, idling — is idle (1). A battling-but-not-
+  # casting mob must NOT announce the skill state: the client treats a
+  # skill-state actor playing a walk/idle sequence as contradictory and
+  # some models freeze on it
   defp put_state(packet, %Types.FieldNpc{velocity: {vx, vy, _vz}})
        when vx != 0 or vy != 0 do
     put_byte(packet, 2)
   end
 
-  defp put_state(packet, %Types.FieldNpc{battle: battle}) when is_map(battle) do
+  defp put_state(packet, %Types.FieldNpc{battle: %{cast: %{} = _cast}}) do
     put_byte(packet, 16)
   end
 

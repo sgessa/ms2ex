@@ -32,6 +32,10 @@ defmodule Ms2ex.Types.FieldNpc do
     # aggro state (mobs only): %Battle{} while engaged or returning, nil
     # when idle
     :battle,
+    # the idle routine (mobs only): %{task: :stand | :emote, until} while out
+    # of battle; nil while engaged or mid-wander-leg (the leg rides the
+    # battle map instead)
+    :idle,
     :next_target_scan_at,
     # where the mob actually appeared (post spawn scatter); the return-home
     # walk targets this
@@ -70,6 +74,7 @@ defmodule Ms2ex.Types.FieldNpc do
       )
       |> Map.put_new(:damage_dealers, %{})
       |> Map.put_new(:battle, nil)
+      |> Map.put_new(:idle, nil)
       # deadlines must seed from the live tick base: a constant 0 sits in
       # the future forever against the raw BEAM monotonic base
       |> Map.put_new(:next_target_scan_at, Ms2ex.sync_ticks())

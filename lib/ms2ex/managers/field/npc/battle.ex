@@ -14,14 +14,19 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   never sees a stand mid-run. When the target escapes (or leaves the
   field), a displaced mob walks back to the point where it spawned —
   healing to full and clearing its attacker tags on arrival — while still
-  scanning, so it can re-engage a player on the way home. Where the
-  reference drives combat from per-mob XML decision trees, this basic AI
-  applies one fixed battle routine; the tree runtime is a later step (see
-  docs/features/mob-ai.md).
+  scanning, so it can re-engage a player on the way home. Out of battle,
+  the mob's weighted idle routines roll (`Npc.Idle`): standing, bore
+  emotes, or a wander leg toward a random point inside its move area
+  (battle mode `:wander`). The game's per-mob XML decision trees drive
+  finer combat behavior; this basic AI applies one fixed battle routine
+  and the tree runtime is a later step (see docs/features/mob-ai.md).
   """
 
+  alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field.Npc.Idle
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Navigation
+  alias Ms2ex.Packets
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -37,6 +42,8 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   @resume_margin 60
   # a mob counts as home once it is this close to its spawn point
   @home_range 60
+  # a wander leg completes once the mob is this close to its goal
+  @wander_arrive_range 30
   # a disengaged mob only walks home when it is at least this far from its
   # spawn point; otherwise losing aggro where it stands is enough
   @home_threshold 150
@@ -46,10 +53,14 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   # a hit-aggroed mob keeps its attacker for at least this long before the
   # last-sight drop applies, so ranged pulls (attacker outside sight) work
   @aggro_hold_ms 5_000
-  # skill cast timing: the hit lands mid-swing, the whole cast occupies the
-  # mob (state PcSkill + attack animation) until the sequence finishes
-  @cast_windup_ms 400
-  @cast_duration_ms 1_000
+  # skill cast timing: the hit lands mid-swing and the whole cast occupies the
+  # mob (state PcSkill + attack animation) for the attack sequence's playback
+  # length. When the model carries no animation timing the fixed stand-ins
+  # below drive the swing
+  @fallback_duration_ms 1_000
+  # share of the swing playback after which the hit lands (attack keyframes
+  # sit around this mark)
+  @hit_point_fraction 0.4
   # a landed hit still requires the target to be within the attack range
   # (plus slack for movement between cast start and hit)
   @cast_range_slack 60
@@ -60,7 +71,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   @max_step_ms 200
 
   @type t :: %{
-          mode: :chase | :return,
+          mode: :chase | :return | :wander,
           target_id: integer() | nil,
           target_object_id: integer() | nil,
           stop_range: float(),
@@ -72,6 +83,9 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           keep_until: integer(),
           no_route_since: integer() | nil,
           cast: map() | nil,
+          # playback end of the swing that just resolved: the mob keeps the
+          # swing animation (and stays un-attacking) until it elapses
+          swing_until: integer() | nil,
           next_attack_at: integer(),
           attack_counter: non_neg_integer(),
           hit_event: map() | nil
@@ -87,9 +101,28 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   def aggro(%Types.FieldNpc{type: :mob, dead?: false} = npc, character, now) do
     # the attacker's player object id feeds the boss bar target slot; the
     # character id is the identity aggro actually tracks
-    battle = new_battle(npc, character.id, Map.get(character, :object_id), now)
-    battle = %{battle | keep_until: now + @aggro_hold_ms}
-    %{npc | battle: battle, next_target_scan_at: now + @scan_interval_ms, send_control?: true}
+    npc = %{
+      npc
+      | next_target_scan_at: now + @scan_interval_ms,
+        idle: nil,
+        emote: nil,
+        send_control?: true
+    }
+
+    case npc.battle do
+      # already fighting this attacker: refresh the engagement hold and
+      # leave the fight alone — tearing the battle down on every hit
+      # cancels the running cast and resets the chase path, so a mob under
+      # continuous attack never moves or swings until the hits stop
+      %{target_id: target_id} = battle when target_id == character.id ->
+        keep_until = max(battle.keep_until, now + @aggro_hold_ms)
+        %{npc | battle: %{battle | keep_until: keep_until}}
+
+      _ ->
+        battle = new_battle(npc, character.id, Map.get(character, :object_id), now)
+        battle = %{battle | keep_until: now + @aggro_hold_ms}
+        %{npc | battle: battle}
+    end
   end
 
   def aggro(npc, _character, _now), do: npc
@@ -113,10 +146,17 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
       now >= npc.next_target_scan_at ->
         npc = scan(npc, field_state, now)
-        {%{npc | next_target_scan_at: now + @scan_interval_ms}, []}
+        npc = %{npc | next_target_scan_at: now + @scan_interval_ms}
+
+        # an idle scan keeps the mob on its idle routines; a fresh engagement
+        # starts chasing on the next tick, as before
+        case npc.battle do
+          nil -> {Idle.tick(npc, now), []}
+          _battle -> {npc, []}
+        end
 
       true ->
-        {npc, []}
+        {Idle.tick(npc, now), []}
     end
   end
 
@@ -139,6 +179,15 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         # would oscillate at the leash boundary re-chasing the player it is
         # walking away from. Attacking it re-engages (aggro/2)
         return_tick(npc, npc.battle, now)
+
+      :wander ->
+        # an idle wander leg walks its static goal; the arrival hands the mob
+        # back to its idle routines (attacking it re-engages through aggro/2)
+        if square_distance(npc.position, npc.battle.goal) < square(@wander_arrive_range) do
+          {Idle.arrive(npc), []}
+        else
+          walk(npc, npc.battle, npc.battle.goal, now)
+        end
     end
   end
 
@@ -325,9 +374,12 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
   # inside attack range: swing when the cooldown allows, otherwise hold
   # position facing the target
+  # TODO: mobs always swing their first skill; retail mobs rotate through
+  # their skill list per their AI script (with per-node cooldowns and
+  # move-distance approach steps) — pick among the npc's skills instead
   defp attack_or_stand(npc, battle, field_state, target_position, now) do
-    if now >= battle.next_attack_at and has_skill?(npc) do
-      npc = start_cast(npc, battle, target_position, now)
+    if now >= battle.next_attack_at and has_skill?(npc) and castable?(npc) do
+      npc = start_cast(npc, battle, field_state, target_position, now)
       # the swing starts immediately: resolve its hit when due
       cast_tick(npc, npc.battle, field_state, target_position, now)
     else
@@ -335,20 +387,27 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
+  # a cast whose motion sequences the model's rig cannot play is cancelled
+  # before it starts: a mob never attacks with an animation it does not
+  # have (the swing would land as invisible damage)
+  defp castable?(npc) do
+    [entry | _] = get_in(npc.npc.metadata, [:skill])
+
+    case skill_level_doc(entry.id, entry.level) do
+      %{} = level_doc ->
+        motions = swing_motions(npc, level_doc)
+        motions != [] and Enum.all?(motions, & &1)
+
+      _ ->
+        false
+    end
+  end
+
   # inside attack range: hold position facing the target
   defp stand(npc, battle, target_position, now) do
     was_moving = npc.velocity != {0, 0, 0}
     rotation = face_toward(npc.position, target_position, npc.rotation)
-
-    # an active cast owns the presentation until it resolves; outside one
-    # the mob settles into its combat idle
-    animation =
-      if battle.cast do
-        npc.animation
-      else
-        sequence_id(npc, "Attack_Idle_A") || sequence_id(npc, "Idle_A") || npc.animation
-      end
-
+    animation = stand_animation(npc, battle, now)
     anim_changed? = animation != npc.animation
 
     npc = %{
@@ -365,52 +424,121 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
+  # an active cast owns the presentation until it resolves, and the swing
+  # keeps its animation through the resolve until the playback ends; outside
+  # a swing the mob settles into its combat idle
+  defp stand_animation(npc, battle, now) do
+    cond do
+      battle.cast -> npc.animation
+      swing_tailing?(battle, now) -> npc.animation
+      true -> combat_idle_id(npc)
+    end
+  end
+
+  defp swing_tailing?(battle, now),
+    do: is_integer(battle.swing_until) and now < battle.swing_until
+
+  defp combat_idle_id(npc) do
+    sequence_id(npc, "Attack_Idle_A") || sequence_id(npc, "Idle_A") || npc.animation
+  end
+
   defp has_skill?(npc), do: get_in(npc.npc.metadata, [:skill]) != []
 
   # begins a swing: pins the mob in PcSkill with the motion's sequence, the
-  # hit lands mid-swing and the cast occupies the mob until the sequence ends
-  defp start_cast(npc, battle, target_position, now) do
+  # hit lands mid-swing and the cast occupies the mob for the swing's
+  # playback length
+  defp start_cast(npc, battle, field_state, target_position, now) do
     [entry | _] = get_in(npc.npc.metadata, [:skill])
     skill_id = entry.id
     skill_level = entry.level
     level_doc = skill_level_doc(skill_id, skill_level)
 
+    motions = swing_motions(npc, level_doc)
+    {attack_motion_index, _attack_index, attack} = swing_attack(level_doc) || {0, 0, nil}
+
+    {hit_offset_ms, duration_ms} =
+      cast_timing(npc, level_doc, motions, attack_motion_index, attack)
+
     rotation = face_toward(npc.position, target_position, npc.rotation)
+
+    cast_uid = npc.object_id * 0x1_0000_0000 + battle.attack_counter + 1
 
     cast = %{
       skill_id: skill_id,
       skill_level: skill_level,
-      sequence_id: attack_sequence_id(npc, level_doc),
-      range: attack_range_from_doc(level_doc, npc),
-      rate: attack_rate_from_doc(level_doc),
-      hit_at: now + @cast_windup_ms,
-      end_at: now + @cast_duration_ms,
+      aim: aim_direction(npc.position, target_position),
+      # one uid identifies the cast across its records: the skill-use that
+      # starts it, the launch records, and the damage that resolves it (the
+      # client pairs them by this id — a skill whose damage never carries
+      # its uid never closes and the actor stays locked in the skill)
+      cast_uid: cast_uid,
+      range: attack_range(attack, npc),
+      rate: attack_rate(attack),
+      magic_path_id: attack_magic_path_id(attack),
+      started_at: now,
+      # when each later motion starts: the client plays motion 0 from the
+      # cast's skill-use record and the swing announces each later motion
+      # with its own record (same cast uid, next motion point)
+      motion_switches: motion_switches(motions),
+      hit_at: now + hit_offset_ms,
+      end_at: now + duration_ms,
       hit_done?: false
     }
 
-    npc = %{
+    # the cast is announced on both channels, the way player casts render:
+    # a skill-use record initiates the skill (the client's skill system
+    # owns the playback — motion hand-offs, the recovery — and pairs the
+    # later damage by the cast uid), while the control pins the first
+    # motion's sequence, state and zeroed velocity in ONE broadcast. The
+    # control stream then stays silent for the whole playback — the client
+    # re-applies the sequence on every control it receives, so a periodic
+    # broadcast mid-swing restarts a one-shot on its first frame
+    #
+    # TODO: motions with a move distance lunge the mob forward between
+    # their move keyframes during the swing; casts never move the mob
+    use_record = %{
+      id: cast_uid,
+      server_tick: now,
+      caster: %{object_id: npc.object_id},
+      skill_id: skill_id,
+      skill_level: skill_level,
+      motion_point: 0,
+      position: npc.position,
+      direction: aim_direction(npc.position, target_position),
+      rotation: rotation,
+      rotate2z: 0.0
+    }
+
+    Managers.Field.broadcast(
+      Map.get(field_state, :topic),
+      Packets.SkillUse.bytes(use_record, {false, false, 0, ""})
+    )
+
+    %{
       npc
       | battle: %{battle | cast: cast, last_move_at: now},
         velocity: {0, 0, 0},
         rotation: rotation,
-        animation: cast.sequence_id || npc.animation,
+        animation: swing_sequence_id(motions) || npc.animation,
         send_control?: true
     }
-
-    npc
   end
 
-  # resolves the swing: damage applies when the target is still in range at
-  # the hit moment; the event flows out to the field for application
-  # the swing resolves the moment its windup is over: hold position facing
-  # the target through the windup, land the hit if the target is still in
-  # reach, then hand the hit to the field for application
-  defp cast_tick(npc, battle, field_state, target_position, now) do
+  defp swing_sequence_id(motions) do
+    motions && Enum.find_value(motions, fn motion -> motion && motion.sequence_id end)
+  end
+
+  # resolves the swing: the hit lands when the windup is over; hold position
+  # facing the target through the windup, land the hit if the target is still
+  # in reach, then hand the hit to the field for application
+  defp cast_tick(npc, battle, field_state, _target_position, now) do
+    {npc, battle} = announce_cast_motions(npc, battle, field_state, now)
     cast = battle.cast
 
     if now < cast.hit_at do
-      # windup: hold position facing the target
-      {stand(npc, battle, target_position, now), []}
+      # windup: the mob is committed to the swing — no re-facing and no
+      # control churn, or the broadcast restarts the swing's sequence
+      {npc, []}
     else
       target_position = get_in(field_state, [:player_positions, battle.target_id, :position])
 
@@ -419,31 +547,55 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
           square_distance(npc.position, target_position) <
             square(cast.range + @cast_range_slack)
 
-      npc = %{
-        npc
-        | velocity: {0, 0, 0},
-          rotation: face_toward(npc.position, target_position, npc.rotation),
-          send_control?: true
-      }
+      npc = %{npc | velocity: {0, 0, 0}}
 
+      # the cooldown floor and the swing's playback both gate the next
+      # swing: the mob never re-attacks while its attack animation plays
       battle = %{
         battle
         | cast: nil,
-          next_attack_at: now + @min_attack_interval_ms,
+          swing_until: cast.end_at,
+          next_attack_at: max(now + @min_attack_interval_ms, cast.end_at),
           last_move_at: now
       }
 
+      # TODO: melee swings land only on the aggro target; retail resolves
+      # every player standing in the firing attack's range cube (the
+      # attack's target count caps it, e.g. wide flails hit up to 10)
+
       if in_range? do
+        {travel_ms, flight, velocity, look_at_type} =
+          projectile_flight(cast.magic_path_id, npc.position, target_position)
+
+        {motion_point, attack_point, firing_attack} =
+          skill_level_doc(cast.skill_id, cast.skill_level) |> swing_attack() || {0, 0, nil}
+
+        # TODO: a motion can carry several attack points (multi-hit flails
+        # hit once per point, each with its own rate); this resolves only
+        # the first — fire one hit per attack point at its own keyframe
         hit = %{
           character_id: battle.target_id,
           caster_object_id: npc.object_id,
           target_object_id: battle.target_object_id,
           skill_id: cast.skill_id,
           skill_level: cast.skill_level,
+          # the launch point and reach: the impact re-check runs against
+          # them when the projectile lands
           position: npc.position,
+          range: cast.range,
           direction: aim_direction(npc.position, target_position),
           attack: get_in(npc.npc.metadata, [:stat, :stats, :physical_atk]) || 0,
           rate: cast.rate,
+          magic_path_id: cast.magic_path_id,
+          look_at_type: look_at_type,
+          cast_uid: cast.cast_uid,
+          motion_point: motion_point,
+          attack_point: attack_point,
+          hit_skills: attack_hit_skills(firing_attack),
+          travel_ms: travel_ms,
+          flight: flight,
+          velocity: velocity,
+          server_tick: now,
           attack_counter: battle.attack_counter + 1
         }
 
@@ -494,6 +646,18 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   defp walk_chase(npc, battle, target_position, now) do
+    # the leash gates the whole chase walk, not just the routeless hold: a
+    # target on another mesh island keeps yielding partial routes (walk,
+    # consume, re-path, repeat), so the give-up check must fire even while
+    # a partial route is being followed
+    if give_up?(battle, now) do
+      {disengage(npc, now), []}
+    else
+      walk_chase_route(npc, battle, target_position, now)
+    end
+  end
+
+  defp walk_chase_route(npc, battle, target_position, now) do
     stale? =
       battle.path == nil or
         square_distance(battle.goal, target_position) > square(@repath_target_drift) or
@@ -508,30 +672,33 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
 
     case battle.path do
       nil ->
-        if give_up?(battle, now) do
-          {disengage(npc, now), []}
-        else
-          # no walkable route right now (e.g. the player is on another
-          # navmesh island): hold until the next re-path window
-          {%{npc | battle: %{battle | last_move_at: now}, velocity: {0, 0, 0}}, []}
-        end
+        # no walkable route right now (e.g. the player is on another
+        # navmesh island): hold until the next re-path window
+        {%{npc | battle: %{battle | last_move_at: now}, velocity: {0, 0, 0}}, []}
 
       path ->
-        npc = start_running(npc)
+        before = npc.position
         {npc, battle} = advance(npc, battle, path, now)
 
         # the path was consumed while still outside stop range: extend it in
         # this same tick so the run does not stutter into a stand (a stand
         # tick makes the client restart the walk animation and drop
         # interpolation, which reads as flicker and micro-teleports)
-        if battle.path == nil do
-          extend_path(npc, battle, target_position, now)
-        else
-          # mid-path: the run continues on the next tick — the updated battle
-          # (last_move_at, path index) must merge back into the npc or the
-          # next tick's step budget balloons to the max-step clamp
-          {%{npc | battle: battle}, []}
-        end
+        {npc, _} =
+          if battle.path == nil do
+            extend_path(npc, battle, target_position, now)
+          else
+            # mid-path: the run continues on the next tick — the updated battle
+            # (last_move_at, path index) must merge back into the npc or the
+            # next tick's step budget balloons to the max-step clamp
+            {%{npc | battle: battle}, []}
+          end
+
+        # presentation follows real movement: a partial route ending under
+        # the mob (or a step with no walkable ground) moves nothing — the
+        # mob presents idle, never running in place — while genuine
+        # progress keeps the run
+        {present_locomotion(npc, before), []}
     end
   end
 
@@ -544,9 +711,27 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
         {%{npc | battle: battle, velocity: {0, 0, 0}}, []}
 
       path ->
-        npc = start_running(npc)
         {npc, battle} = advance(npc, battle, path, now)
         {%{npc | battle: battle}, []}
+    end
+  end
+
+  # moved this tick: the run continues; stationary: settle into the idle
+  # pose and announce it so clients drop the run animation
+  defp present_locomotion(npc, before) do
+    dx = npc.position.x - before.x
+    dy = npc.position.y - before.y
+
+    if dx * dx + dy * dy > 1.0 do
+      start_running(npc)
+    else
+      idle = sequence_id(npc, "Idle_A")
+
+      case idle do
+        nil -> npc
+        id when id == npc.animation -> npc
+        id -> %{npc | animation: id, send_control?: true}
+      end
     end
   end
 
@@ -567,6 +752,19 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
             goal: target_position,
             next_repath_at: now + @repath_interval_ms,
             no_route_since: nil
+        }
+
+      {:partial, path} ->
+        # the target sits on another mesh island: pursue the partial route
+        # as far as the ground allows, but the target is unreachable — the
+        # give-up clock runs from the first partial result
+        %{
+          battle
+          | path: path,
+            path_index: 1,
+            goal: target_position,
+            next_repath_at: now + @repath_interval_ms,
+            no_route_since: battle.no_route_since || now
         }
 
       :error ->
@@ -688,7 +886,34 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       keep_until: now,
       no_route_since: nil,
       cast: nil,
+      swing_until: nil,
       next_attack_at: now,
+      attack_counter: 0,
+      hit_event: nil
+    }
+  end
+
+  @doc """
+  An idle wander leg toward a static goal: the same pathed-walk machinery
+  the chase and the trip home ride, minus a target to fight. Arrival hands
+  the mob back to `Npc.Idle`.
+  """
+  def wander_battle(%Types.Coord{} = goal, now) do
+    %{
+      mode: :wander,
+      target_id: nil,
+      target_object_id: nil,
+      stop_range: 0.0,
+      path: nil,
+      path_index: 1,
+      goal: goal,
+      next_repath_at: now,
+      last_move_at: now,
+      keep_until: 0,
+      no_route_since: nil,
+      cast: nil,
+      swing_until: nil,
+      next_attack_at: 0,
       attack_counter: 0,
       hit_event: nil
     }
@@ -701,47 +926,239 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
-  # the attack motion's sequence id for the mob's model; nil keeps the
-  # current animation (the swing still lands)
-  defp attack_sequence_id(npc, level_doc) do
-    level_doc
-    |> get_in([:motions])
-    |> List.wrap()
-    |> Enum.find_value(fn motion ->
-      get_in(motion || %{}, [:motion_property, :sequence_name])
+  # the swing's motion timeline: one entry per skill motion with the
+  # sequence resolved against the model's rig and its playback length at
+  # the motion's sequence speed. A motion whose sequence the rig cannot
+  # play leaves a nil entry and marks the swing uncastable — the game
+  # cancels such casts rather than landing damage with no animation
+  # announces the swing's later motions through the skill channel: one
+  # skill-use record per boundary, same cast uid, the motion it starts
+  # (the control channel stays silent — attack sequences never ride it)
+  defp announce_cast_motions(npc, battle, field_state, now) do
+    cast = battle.cast
+    elapsed = now - cast.started_at
+
+    {due, rest} =
+      Enum.split_while(cast.motion_switches, fn {at, _motion} -> elapsed >= at end)
+
+    battle = %{battle | cast: %{cast | motion_switches: rest}}
+
+    Enum.each(due, fn {_at, motion} ->
+      use_record = %{
+        # its own uid per motion record: the client may drop a record
+        # re-using a cast uid it has already seen
+        id: cast.cast_uid + motion,
+        server_tick: now,
+        caster: %{object_id: npc.object_id},
+        skill_id: cast.skill_id,
+        skill_level: cast.skill_level,
+        motion_point: motion,
+        position: npc.position,
+        direction: cast.aim,
+        rotation: npc.rotation,
+        rotate2z: 0.0
+      }
+
+      Managers.Field.broadcast(
+        Map.get(field_state, :topic),
+        Packets.SkillUse.bytes(use_record, {false, false, 0, ""})
+      )
     end)
-    |> case do
-      nil -> nil
-      name -> sequence_id(npc, name)
+
+    {npc, battle}
+  end
+
+  # when each later motion starts: {offset ms, motion index}
+  defp motion_switches(motions) do
+    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
+      {switches, _total} =
+        Enum.with_index(motions)
+        |> Enum.map_reduce(0, fn {motion, index}, elapsed ->
+          {{elapsed, index}, elapsed + motion.ms}
+        end)
+
+      tl(switches)
+    else
+      []
     end
   end
 
-  # the attack range of the first attack of the motion set; falls back to
-  # the mob's stop range so the hit re-check stays meaningful
-  defp attack_range_from_doc(level_doc, npc) do
+  defp swing_motions(npc, level_doc) do
+    model = get_in(npc.npc.metadata, [:model, :name])
+
     level_doc
     |> get_in([:motions])
     |> List.wrap()
-    |> Enum.flat_map(&List.wrap(Map.get(&1 || %{}, :attacks)))
-    |> Enum.map(&get_in(&1 || %{}, [:range, :distance]))
-    |> Enum.find(&is_number/1)
-    |> case do
+    |> Enum.map(fn motion ->
+      name = get_in(motion || %{}, [:motion_property, :sequence_name])
+
+      speed = get_in(motion || %{}, [:motion_property, :sequence_speed]) || 1.0
+      speed = if is_number(speed) and speed > 0, do: speed * 1.0, else: 1.0
+
+      case Storage.Animations.sequence_time(model, name) do
+        seconds when is_number(seconds) and seconds > 0 ->
+          %{sequence_id: sequence_id(npc, name), ms: trunc(seconds * 1000 / speed)}
+
+        _ ->
+          nil
+      end
+    end)
+  end
+
+  # the attack the swing lands with: the first projectile-carrying attack
+  # (later motions often fire the actual shot while earlier ones are pure
+  # windups), falling back to the very first attack of the set. Each attack
+  # pairs with its motion index so the hit lands inside that motion's
+  # playback
+  defp swing_attack(level_doc) do
+    attacks =
+      level_doc
+      |> get_in([:motions])
+      |> List.wrap()
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {motion, index} ->
+        motion
+        |> Map.get(:attacks, [])
+        |> List.wrap()
+        |> Enum.with_index()
+        |> Enum.map(fn {attack, attack_index} -> {index, attack_index, attack} end)
+      end)
+
+    Enum.find(attacks, fn {_index, _attack_index, attack} -> attack_magic_path_id(attack) > 0 end) ||
+      Enum.at(attacks, 0)
+  end
+
+  defp attack_point_name(attack) do
+    case get_in(attack || %{}, [:point]) do
+      name when is_binary(name) -> name
+      _ -> nil
+    end
+  end
+
+  # the projectile the client renders for the swing (0 when none)
+  # on-hit SPLASH effect skills the swing fires where it lands (a thrown
+  # bomb's explosion cube detonates a beat after impact): each entry carries
+  # the effect skill and its splash delay. Entries without a splash are
+  # condition effects (buffs, overlap counters) and never detonate a cube —
+  # some even reference the firing skill itself
+  defp attack_hit_skills({_, _, attack}) when is_map(attack), do: attack_hit_skills(attack)
+
+  defp attack_hit_skills(attack) do
+    (get_in(attack || %{}, [:skills]) || [])
+    |> List.wrap()
+    |> Enum.filter(
+      &(is_map(&1) and &1[:has_splash] == true and is_integer(&1[:id]) and &1[:id] > 0)
+    )
+    |> Enum.map(fn entry ->
+      splash = entry[:splash] || %{}
+      %{skill_id: entry[:id], level: entry[:level] || 1, delay_ms: splash[:delay] || 0}
+    end)
+  end
+
+  defp attack_magic_path_id(attack) do
+    case get_in(attack || %{}, [:magic_path_id]) do
+      id when is_integer(id) and id > 0 -> id
+      _ -> 0
+    end
+  end
+
+  # the hit's reach: the firing attack's range, falling back to the mob's
+  # stop range so the re-check stays meaningful
+  defp attack_range(attack, npc) do
+    case get_in(attack || %{}, [:range, :distance]) do
       range when is_number(range) and range > 0 -> range * 1.0
       _ -> stop_range(npc)
     end
   end
 
   # the attack's damage rate (scales the mob's attack stat)
-  defp attack_rate_from_doc(level_doc) do
-    level_doc
-    |> get_in([:motions])
-    |> List.wrap()
-    |> Enum.flat_map(&List.wrap(Map.get(&1 || %{}, :attacks)))
-    |> Enum.map(&get_in(&1 || %{}, [:damage, :rate]))
-    |> Enum.find(&is_number/1)
-    |> case do
+  defp attack_rate(attack) do
+    case get_in(attack || %{}, [:damage, :rate]) do
       rate when is_number(rate) -> rate * 1.0
       _ -> 1.0
+    end
+  end
+
+  # the swing's cast timing from the motion timeline: the cast spans every
+  # motion's playback and the hit lands at the firing attack's animation
+  # keyframe — the moment the swing actually releases — falling back to 40%
+  # into the firing motion when the model carries no keyframe timing
+  defp cast_timing(npc, level_doc, motions, attack_motion_index, attack) do
+    if is_list(motions) and motions != [] and Enum.all?(motions, & &1) do
+      total = motions |> Enum.map(& &1.ms) |> Enum.sum()
+
+      before =
+        motions
+        |> Enum.take(attack_motion_index)
+        |> Enum.map(& &1.ms)
+        |> Enum.sum()
+
+      firing = Enum.at(motions, attack_motion_index) || List.last(motions)
+
+      key_offset = key_offset_ms(npc, level_doc, attack_motion_index, attack)
+
+      hit_offset =
+        case key_offset do
+          ms when is_number(ms) -> before + ms
+          _ -> before + trunc(firing.ms * @hit_point_fraction)
+        end
+
+      {hit_offset, total}
+    else
+      {trunc(@fallback_duration_ms * @hit_point_fraction), @fallback_duration_ms}
+    end
+  end
+
+  # the projectile's flight to the target: {travel time in ms, flight
+  # distance, velocity} from the first magic-path segment's velocity over
+  # the launch distance. {0, 0, 0} when the attack fires no projectile
+  # (melee swings, ground indicators) or the path carries no velocity —
+  # the hit then lands at the keyframe itself
+  defp projectile_flight(magic_path_id, from, to) do
+    segments =
+      if magic_path_id > 0 do
+        Storage.Table.MagicPaths.get(magic_path_id) || []
+      else
+        []
+      end
+
+    case segments do
+      [segment | _] when is_map(segment) ->
+        velocity = segment[:velocity]
+
+        if is_number(velocity) and velocity > 0 do
+          distance = :math.sqrt(square_distance(from, to))
+          flight = min(distance, segment[:distance] || distance)
+
+          {trunc(flight / velocity * 1000), flight, velocity * 1.0,
+           Map.fetch!(segment, :look_at_type)}
+        else
+          {0, 0, 0.0, 0}
+        end
+
+      _ ->
+        {0, 0, 0.0, 0}
+    end
+  end
+
+  # the firing attack's keyframe time within its motion's sequence, in ms
+  defp key_offset_ms(npc, level_doc, attack_motion_index, attack) do
+    model = get_in(npc.npc.metadata, [:model, :name])
+    point_name = attack_point_name(attack)
+
+    seq_name =
+      level_doc
+      |> get_in([:motions])
+      |> List.wrap()
+      |> Enum.at(attack_motion_index)
+      |> case do
+        motion when is_map(motion) -> get_in(motion, [:motion_property, :sequence_name])
+        _ -> nil
+      end
+
+    case Storage.Animations.key_time(model, seq_name, point_name) do
+      seconds when is_number(seconds) -> trunc(seconds * 1000)
+      _ -> nil
     end
   end
 
@@ -834,17 +1251,14 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
+  # the range the mob closes to before swinging: the firing attack's reach
   defp attack_range(npc) do
     case get_in(npc.npc.metadata, [:skill]) do
       [%{id: skill_id, level: level} | _] ->
         with %{levels: levels} <- Storage.Skills.get_meta(skill_id),
-             level_doc when is_map(level_doc) <- levels[to_string(level)] do
-          level_doc
-          |> get_in([:motions])
-          |> List.wrap()
-          |> Enum.flat_map(&List.wrap(Map.get(&1 || %{}, :attacks)))
-          |> Enum.map(&get_in(&1 || %{}, [:range, :distance]))
-          |> Enum.find(&is_number/1)
+             level_doc when is_map(level_doc) <- levels[to_string(level)],
+             {_index, _attack_index, attack} when is_map(attack) <- swing_attack(level_doc) do
+          get_in(attack, [:range, :distance])
         else
           _ -> nil
         end

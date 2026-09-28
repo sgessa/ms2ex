@@ -11,6 +11,15 @@ defmodule Ms2ex.DamageTest do
     assert damage.dmg == 20_000
   end
 
+  test "mob hits divide by the doubled defense divisor" do
+    hit = Damage.calculate_mob_hit(character(), %{attack: 500, rate: 2.0})
+
+    # rate 2.0 × atk 500 × resistance 1.0 ÷ defense 10, halved by the
+    # doubled divisor (mobs carry no piercing stat)
+    assert hit.dmg == 200
+    refute hit.crit?
+  end
+
   test "uses critical damage scaling" do
     normal = Damage.calculate_rate(1.0, caster(), mob(), true)
     critical = Damage.calculate_rate(1.0, caster(), mob(), true, true)
@@ -19,8 +28,14 @@ defmodule Ms2ex.DamageTest do
   end
 
   defp caster do
+    character()
+  end
+
+  defp character do
     %Character{
       stats: %{
+        defense_cur: 10,
+        physical_res_cur: 0,
         min_weapon_atk_cur: 100,
         max_weapon_atk_cur: 100,
         bonus_atk_cur: 0,

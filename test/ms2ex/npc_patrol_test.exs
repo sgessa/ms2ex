@@ -1,7 +1,13 @@
 defmodule Ms2ex.NpcPatrolTest do
   # advance_patrol is a pure state transition (npc in, npc out), so the
-  # patrol ticks are driven directly without a field process
+  # patrol ticks are driven directly without a field process. The tests
+  # drive the waypoint failure paths on purpose, so their expected
+  # warnings stay captured
   use Ms2ex.DataCase, async: false
+
+  # the tests drive the waypoint failure paths on purpose, so their
+  # expected warnings stay captured
+  @moduletag capture_log: true
 
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Types
@@ -276,7 +282,7 @@ defmodule Ms2ex.NpcPatrolTest do
       assert npc.send_control? == true
     end
 
-    test "a waypoint whose approach animation the model cannot play is skipped" do
+    test "a waypoint whose approach animation the model cannot play still walks" do
       first = way_point(air: true, approach_animation: "No_Such_Anim")
       second = way_point(air: true, x: 900)
 
@@ -289,19 +295,17 @@ defmodule Ms2ex.NpcPatrolTest do
 
       npc = Map.update!(npc, :patrol, &%{&1 | animations: animations})
 
-      # the leg has no resolvable sequence: the npc holds in its idle pose
-      # while the patrol advances past the waypoint
+      # the leg runs anyway — models without the waypoint's sequence (or
+      # any walk, like stationary story npcs) route with the animation
+      # they already carry; only an unroutable leg skips
       npc = Patrol.start_leg(npc, 5_000)
 
       assert npc.patrol != nil
-      assert npc.patrol.index == 1
-      assert npc.patrol.depart_at == 6_000
-      assert npc.animation == 100
-
-      npc = Patrol.advance_patrol(npc, 6_500)
-
-      assert npc.patrol.path == [second[:position]]
+      assert npc.patrol.index == 0
+      assert npc.patrol.path == [first[:position]]
+      # the npc keeps the animation it already carried
       assert npc.animation == 101
+      assert npc.send_control? == true
     end
   end
 

@@ -176,6 +176,15 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
     end
   end
 
+  defp execute_action("change_background", args, _script_name, state) do
+    dds = to_string(args[:dds] || "")
+
+    Managers.Field.broadcast(state.topic, Packets.ChangeBackground.bytes(dds))
+
+    # the backdrop persists for the field session (entering players load it)
+    Map.put(state, :background, dds)
+  end
+
   defp execute_action("select_camera_path", args, _script_name, state) do
     Managers.Field.broadcast(
       state.topic,

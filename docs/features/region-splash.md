@@ -45,3 +45,26 @@ their position whose height spans feet to feet + 100. The zone hits
 when that body overlaps the volume — so a player wading with their feet
 below the band still connects (their body reaches into it), and the
 small circle gives a 10-unit forgiveness at every horizontal edge.
+
+## Player-cast region skills (Arcane Blast)
+
+A cast whose skill carries a splash effect registers a region through
+`Field.add_region_skill`: the client's @splash damage subcommand carries
+the ground point, and the field broadcasts `RegionSkill.add` keyed on a
+random source id, then applies the splash skill's attack to hostile mobs
+in a fixed 800 radius (up to 8).
+
+The region's timeline must match the client's or hit visuals desync: the
+add frame carries `next_tick` = now + interval (never 0 — a past tick
+throws the client's zone timeline off), the first fire lands one
+interval in (immediately for one-shots whose interval is 0, after the
+splash `delay` when one is set), later fires each interval, and the zone
+lives through its last fire plus `remove_delay` (minimum 100ms so the
+client always sees the zone before the removal frame).
+
+Each landed hit broadcasts the mob's health stat record (the client's
+HP-bar update rides that — damage records only render numbers) plus one
+**damage record** (mode 1) built from the splash cast — the same channel
+normal skills use, which the client displays immediately. Target/region
+record pairs (modes 0/5) keyed on the region's source id render on the
+client's own zone timeline and lag seconds behind on this client build.

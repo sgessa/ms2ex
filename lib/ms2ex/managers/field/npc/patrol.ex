@@ -171,8 +171,8 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
   @doc """
   Attempts (or restarts) the leg toward the patrol's current waypoint.
 
-  A leg that cannot start — no connected navmesh route, or no approach
-  animation the model can play — does not end the patrol: that would freeze
+  A leg that cannot start — no connected navmesh route — does not end the
+  patrol: that would freeze
   story npcs mid-script on maps whose mesh has coverage gaps. Instead the
   npc stands in its idle pose for a beat while the patrol advances past the
   waypoint, and the next leg is attempted once the beat elapses (loop
@@ -186,44 +186,36 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
 
   def start_leg(%Types.FieldNpc{} = npc, now) do
     patrol = npc.patrol
+    # models without a walk sequence (stationary story npcs) still walk
+    # their scripted routes: the leg runs with the npc's current animation
+    # instead of being skipped — only an unroutable leg skips
     animation = Enum.at(patrol.animations, patrol.index)
     carry? = Map.get(patrol, :despawn_on_finish?, false)
 
-    if is_nil(animation) and not carry? do
-      Logger.warning(
-        "npc model " <>
-          to_string(npc.npc.metadata.model.name) <>
-          " has no patrol approach animation for waypoint " <>
-          waypoint_label(patrol) <> "; skipping the waypoint"
-      )
+    case leg_route(npc, patrol, carry?) do
+      {:ok, path} ->
+        # the route starts at the npc's position and its last point is
+        # the authored waypoint itself
+        patrol = patrol |> Map.put(:path, path) |> Map.put(:path_index, 1)
 
-      leg_failed(npc, patrol, now)
-    else
-      case leg_route(npc, patrol, carry?) do
-        {:ok, path} ->
-          # the route starts at the npc's position and its last point is
-          # the authored waypoint itself
-          patrol = patrol |> Map.put(:path, path) |> Map.put(:path_index, 1)
+        %{
+          npc
+          | patrol: patrol,
+            animation: animation || npc.animation,
+            emote: nil,
+            send_control?: true
+        }
 
-          %{
-            npc
-            | patrol: patrol,
-              animation: animation || npc.animation,
-              emote: nil,
-              send_control?: true
-          }
+      :error ->
+        Logger.warning(
+          "no navmesh route to patrol waypoint " <>
+            waypoint_label(patrol) <>
+            " for npc " <>
+            to_string(npc.npc.id) <>
+            " on " <> to_string(npc.map_id) <> "; skipping the waypoint"
+        )
 
-        :error ->
-          Logger.warning(
-            "no navmesh route to patrol waypoint " <>
-              waypoint_label(patrol) <>
-              " for npc " <>
-              to_string(npc.npc.id) <>
-              " on " <> to_string(npc.map_id) <> "; skipping the waypoint"
-          )
-
-          leg_failed(npc, patrol, now)
-      end
+        leg_failed(npc, patrol, now)
     end
   end
 
@@ -245,6 +237,20 @@ defmodule Ms2ex.Managers.Field.Npc.Patrol do
       case Navigation.find_path(npc.map_id, npc.position, target) do
         {:ok, path} ->
           {:ok, path}
+
+        # a partial route never reaches the waypoint: treat it as unrouted
+        # (scripted carries still walk their authored line)
+        {:partial, _path} when carry? ->
+          Logger.warning(
+            "no navmesh route for the scripted carry of npc " <>
+              to_string(npc.npc.id) <>
+              " on " <> to_string(npc.map_id) <> "; walking the authored straight line"
+          )
+
+          {:ok, [target]}
+
+        {:partial, _path} ->
+          :error
 
         :error when carry? ->
           Logger.warning(

@@ -8,8 +8,20 @@
 #include "recastnavigation/Include/DetourStatus.h"
 
 #include <cstring>
+#include <random>
 
 extern "C" {
+
+namespace {
+// the PRNG Detour's random-point queries sample through; seeded from the
+// system entropy so concurrent npcs wander independently
+float ms2_frand() {
+    thread_local std::mt19937 rng{std::random_device{}()};
+    thread_local std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    return dist(rng);
+}
+}  // namespace
+
 
 dtNavMesh* ms2_navmesh_create(const dtNavMeshParams* params) {
     dtNavMesh* mesh = dtAllocNavMesh();
@@ -93,4 +105,13 @@ dtStatus ms2_find_straight_path(dtNavMeshQuery* query, const float* start_pos, c
                                    point_count, max_points);
 }
 
+dtStatus ms2_find_random_point_around_circle(dtNavMeshQuery* query, dtPolyRef start_ref,
+                                             const float* center, float max_radius,
+                                             dtQueryFilter* filter, dtPolyRef* out_ref,
+                                             float* out_point) {
+    return query->findRandomPointAroundCircle(start_ref, center, max_radius, filter, &ms2_frand,
+                                              out_ref, out_point);
 }
+
+}
+

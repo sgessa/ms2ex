@@ -111,9 +111,14 @@ defmodule Ms2ex.NavigationTest do
     # a route staying on one floor works
     assert {:ok, path} = Navigation.find_path(map_id, coord(1, 1), coord(3, 3))
     assert length(path) == 2
-    # a route to the floor above has no connection
+    # a route to the floor above has no connection: the search returns the
+    # partial corridor to the closest reachable point on the starting
+    # floor (pursuit across a gap), flagged partial so a follower knows it
+    # never reaches the goal, never one that climbs
     above = %Coord{x: 300, y: -300, z: 300}
-    assert Navigation.find_path(map_id, coord(1, 1), above) == :error
+    assert {:partial, partial} = Navigation.find_path(map_id, coord(1, 1), above)
+    assert [%Coord{} | _] = partial
+    assert Enum.all?(partial, &(&1.z < 150.0))
     # snaps land on the floor the position is at
     assert %{z: z_low} = Navigation.snap_to_floor(map_id, %Coord{x: 300, y: -300, z: 50})
     assert_in_delta z_low, 0.0, 0.01
