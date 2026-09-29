@@ -885,7 +885,8 @@ defmodule Ms2ex.Managers.Field do
         %Types.FieldNpc{type: :mob, dead?: false} = npc ->
           Collision.contains?(prism, npc.position)
 
-        _npc -> false
+        _npc ->
+          false
       end)
       |> Enum.take(limit)
 
@@ -1005,6 +1006,10 @@ defmodule Ms2ex.Managers.Field do
       _ ->
         {:noreply, state}
     end
+  end
+
+  def handle_info({:despawn_item, object_id}, state) do
+    {:noreply, __MODULE__.Item.despawn(object_id, state)}
   end
 
   def handle_info(:release_guide_hold, state),
