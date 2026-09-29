@@ -161,11 +161,12 @@ defmodule Ms2ex.Managers.Field.Item do
     item =
       item
       |> Map.put(:metadata, nil)
-      |> Map.put(:despawn_at, Ms2ex.sync_ticks() + @despawn_ms)
+      |> Map.put(
+        :despawn_timer,
+        Process.send_after(self(), {:despawn_item, item.object_id}, @despawn_ms)
+      )
 
-    timer = Process.send_after(self(), {:despawn_item, item.object_id}, @despawn_ms)
-
-    items = Map.put(state.items, item.object_id, Map.put(item, :despawn_timer, timer))
+    items = Map.put(state.items, item.object_id, item)
     %{state | items: items}
   end
 

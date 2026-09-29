@@ -407,7 +407,6 @@ defmodule Ms2ex.Managers.CharacterConfig do
   # regular-range actives (basic attacks below 10M, awakening skills above
   # 20M excluded), filtered by the skill's property type — passives (type 1)
   # never go to quick slots, even though they share in_battle with actives
-
   defp learned_active_skill_ids(%Schema.Character{
          skill_tabs: tabs,
          active_skill_tab_id: active_id
@@ -423,8 +422,6 @@ defmodule Ms2ex.Managers.CharacterConfig do
         []
     end
   end
-
-  defp learned_active_skill_ids(_character), do: []
 
   defp learned_active_skill?(skill) do
     skill.level > 0 and skill.skill_id > 10_000_000 and skill.skill_id < 20_000_000 and

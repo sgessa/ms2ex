@@ -96,7 +96,6 @@ count is a flag, not a duration).
 `update.reset_cooldown` clears the listed
 cooldowns and pushes a `SkillCooldown` record.
 
-
 ## Remaining gaps
 
 1. `status.special_values` / `status.special_rates` (special attributes like

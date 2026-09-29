@@ -150,8 +150,8 @@ defmodule Ms2ex.Storage.Maps do
     |> Map.get(:object_weapons, [])
     |> Enum.map(fn weapon ->
       weapon
-      |> Map.put(:position, struct(Coord, Map.get(weapon, :position, %{})))
-      |> Map.put(:rotation, struct(Coord, Map.get(weapon, :rotation, %{})))
+      |> Map.put(:position, struct(Coord, weapon.position))
+      |> Map.put(:rotation, struct(Coord, weapon.rotation))
     end)
   end
 

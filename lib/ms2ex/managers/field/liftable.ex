@@ -10,8 +10,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
   alias Ms2ex.Packets
   alias Ms2ex.Schema
   alias Ms2ex.Storage
-
-  @grid_size 150
+  alias Ms2ex.Types
 
   def init_liftables(state) do
     meta = Storage.Maps.get_meta(state.map_id)
@@ -28,7 +27,7 @@ defmodule Ms2ex.Managers.Field.Liftable do
     targets =
       meta
       |> Map.get(:liftable_target_boxes, [])
-      |> Map.new(fn target -> {grid_key(target[:position]), target} end)
+      |> Map.new(fn target -> {Types.Coord.grid_key(target[:position]), target} end)
 
     state
     |> Map.put(:liftables, liftables)
@@ -201,17 +200,4 @@ defmodule Ms2ex.Managers.Field.Liftable do
     Managers.Field.broadcast(state.topic, Packets.SetCraftMode.stop(character.object_id))
     state
   end
-
-  defp grid_key(nil), do: nil
-
-  defp grid_key(position) do
-    {
-      grid_coord(position[:x]),
-      grid_coord(position[:y]),
-      grid_coord(position[:z])
-    }
-  end
-
-  defp grid_coord(value) when is_number(value), do: round(value / @grid_size)
-  defp grid_coord(_), do: 0
 end

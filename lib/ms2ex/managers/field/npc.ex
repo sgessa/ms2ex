@@ -500,12 +500,9 @@ defmodule Ms2ex.Managers.Field.Npc do
     total = Enum.sum(weights)
     roll = :rand.uniform(total)
 
-    {id, _} =
-      Enum.reduce_while(Enum.zip(ids, weights), 0, fn {id, weight}, acc ->
-        if roll <= acc + weight, do: {:halt, {id, acc}}, else: {:cont, acc + weight}
-      end)
-
-    id
+    Enum.reduce_while(Enum.zip(ids, weights), 0, fn {id, weight}, acc ->
+      if roll <= acc + weight, do: {:halt, id}, else: {:cont, acc + weight}
+    end)
   end
 
   defp pick_mob_id(%{npc_ids: ids}), do: Enum.random(ids)

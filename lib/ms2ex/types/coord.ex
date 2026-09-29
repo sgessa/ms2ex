@@ -25,6 +25,23 @@ defmodule Ms2ex.Types.Coord do
 
   defp to_map(%__MODULE__{} = coord), do: Map.from_struct(coord)
   defp to_map(coord), do: coord
+
+  # placement grid tile containing a position (150-unit world cells); a
+  # missing coordinate falls on tile 0
+  @grid_size 150
+
+  def grid_key(nil), do: nil
+
+  def grid_key(%__MODULE__{} = position) do
+    {grid_coord(position.x), grid_coord(position.y), grid_coord(position.z)}
+  end
+
+  def grid_key(position) when is_map(position) do
+    {grid_coord(position[:x]), grid_coord(position[:y]), grid_coord(position[:z])}
+  end
+
+  defp grid_coord(value) when is_number(value), do: round(value / @grid_size)
+  defp grid_coord(_), do: 0
 end
 
 defmodule Ms2ex.Types.CoordF do

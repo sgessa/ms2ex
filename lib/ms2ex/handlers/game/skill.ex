@@ -281,7 +281,7 @@ defmodule Ms2ex.GameHandlers.Skill do
   defp swing_targets(skill_cast, impact_pos, target_count, crit?, packet) do
     {client_ids, _packet} = read_target_ids(packet, target_count)
 
-    case Types.SkillCast.attack(skill_cast) do
+    case Types.SkillCast.attack_point(skill_cast) do
       %{range: %{type: type} = range} = attack when type in 1..4 ->
         prism = Collision.build_prism(range, impact_pos, skill_cast.rotation.z)
 

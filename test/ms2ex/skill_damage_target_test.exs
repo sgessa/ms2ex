@@ -80,7 +80,7 @@ defmodule Ms2ex.SkillDamageTargetTest do
     assert prev_uid == 7
     {second, packet} = get_long(packet)
     assert second == 8
-    {second_target, packet} = get_int(packet)
+    {_second_target, packet} = get_int(packet)
     {second_unknown, packet} = get_byte(packet)
     assert second_unknown == 1
     {second_index, packet} = get_byte(packet)

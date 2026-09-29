@@ -12,8 +12,6 @@ defmodule Ms2ex.Managers.Field.Liftup do
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
-  @grid_size 150
-
   # ugc-map error codes carried by the response-cube error notice
   def no_cube_to_lift, do: 37
   def not_allowed_item, do: 95
@@ -22,7 +20,7 @@ defmodule Ms2ex.Managers.Field.Liftup do
     weapons =
       state.map_id
       |> Storage.Maps.get_object_weapons()
-      |> Map.new(fn weapon -> {grid_key(weapon.position), weapon} end)
+      |> Map.new(fn weapon -> {Types.Coord.grid_key(weapon.position), weapon} end)
 
     state
     |> Map.put(:object_weapons, weapons)
@@ -57,7 +55,7 @@ defmodule Ms2ex.Managers.Field.Liftup do
       Managers.Field.broadcast(state.topic, Packets.UserBattle.set_stance(character, true))
       state = Managers.Field.BattleStance.arm(state, character)
 
-      maybe_spawn_ambush(state, weapon)
+      state = maybe_spawn_ambush(state, weapon)
       {state, :ok}
     else
       :held -> {state, {:error, not_allowed_item()}}
@@ -121,7 +119,7 @@ defmodule Ms2ex.Managers.Field.Liftup do
            item_id: item_id,
            skill_id: skill_weapon_id,
            skill_level: skill_weapon_level,
-           grid: grid_key(weapon.position)
+           grid: Types.Coord.grid_key(weapon.position)
          }}
 
       _ ->
@@ -143,11 +141,4 @@ defmodule Ms2ex.Managers.Field.Liftup do
       state
     end
   end
-
-  defp grid_key(%Types.Coord{x: x, y: y, z: z}) do
-    {grid_coord(x), grid_coord(y), grid_coord(z)}
-  end
-
-  defp grid_coord(value) when is_number(value), do: round(value / @grid_size)
-  defp grid_coord(_), do: 0
 end
