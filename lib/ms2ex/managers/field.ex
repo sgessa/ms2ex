@@ -16,6 +16,7 @@ defmodule Ms2ex.Managers.Field do
   - `Field.InteractObject` — interact-object lifecycles
   - `Field.Item` — field drops and pickups
   - `Field.Liftable` — quest liftable props
+  - `Field.Liftup` — liftable object weapons (throwable barrels, crates, ...)
   - `Field.Npc` — npc spawns, damage/death and spawn cycles
   - `Field.Npc.Patrol` — npc movement along patrol paths
   - `Field.PerformanceStage` — the concert stage
@@ -540,6 +541,41 @@ defmodule Ms2ex.Managers.Field do
     call(character.field_pid, {:place_liftable, character.id, grid, item_id, rotation})
   end
 
+  # -- liftups -----------------------------------------------------------------
+
+  @doc """
+  The character lifts the object weapon at a grid tile (e.g. a throwable
+  barrel). Returns `:ok` or `{:error, code}` for the response-cube error
+  notice.
+  """
+  @spec liftup_object(Schema.Character.t(), tuple()) :: :ok | {:error, integer()}
+  def liftup_object(%Schema.Character{field_pid: nil}, _grid),
+    do: {:error, __MODULE__.Liftup.not_allowed_item()}
+
+  def liftup_object(%Schema.Character{} = character, grid) do
+    call(character.field_pid, {:liftup_object, character.id, grid})
+  end
+
+  @doc "The character drops the held object weapon without throwing it."
+  @spec drop_liftup(Schema.Character.t()) :: :ok | :error
+  def drop_liftup(%Schema.Character{field_pid: nil}), do: :error
+
+  def drop_liftup(%Schema.Character{} = character) do
+    call(character.field_pid, {:drop_liftup, character.id})
+  end
+
+  @doc """
+  Cast gate while holding an object weapon: only the held object's throw
+  skill casts (consuming the hold). Returns `:error` to refuse the cast.
+  Outside a field no hold can exist, so casts pass through.
+  """
+  @spec use_liftup_skill(Schema.Character.t(), integer(), integer()) :: :ok | :error
+  def use_liftup_skill(%Schema.Character{field_pid: nil}, _skill_id, _skill_level), do: :ok
+
+  def use_liftup_skill(%Schema.Character{} = character, skill_id, skill_level) do
+    call(character.field_pid, {:use_liftup_skill, character.id, skill_id, skill_level})
+  end
+
   # -- interact objects & region skills ---------------------------------------
 
   @doc """
@@ -636,6 +672,7 @@ defmodule Ms2ex.Managers.Field do
         topic: field_name
       }
       |> __MODULE__.Liftable.init_liftables()
+      |> __MODULE__.Liftup.init_liftups()
       |> __MODULE__.Trigger.init_triggers()
 
     send(self(), :load_npc_spawns)
@@ -681,6 +718,21 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_call({:place_liftable, character_id, grid, item_id, rotation}, _from, state) do
     {:reply, :ok, __MODULE__.Liftable.place(state, character_id, grid, item_id, rotation)}
+  end
+
+  def handle_call({:liftup_object, character_id, grid}, _from, state) do
+    {state, reply} = __MODULE__.Liftup.liftup(state, character_id, grid)
+    {:reply, reply, state}
+  end
+
+  def handle_call({:drop_liftup, character_id}, _from, state) do
+    {state, reply} = __MODULE__.Liftup.drop(state, character_id)
+    {:reply, reply, state}
+  end
+
+  def handle_call({:use_liftup_skill, character_id, skill_id, skill_level}, _from, state) do
+    {state, reply} = __MODULE__.Liftup.use_skill(state, character_id, skill_id, skill_level)
+    {:reply, reply, state}
   end
 
   def handle_call({:pickup_item, character, object_id}, _from, state) do

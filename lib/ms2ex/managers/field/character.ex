@@ -180,6 +180,7 @@ defmodule Ms2ex.Managers.Field.Character do
     tombstones = Map.delete(state.tombstones, character.id)
     instruments = Map.delete(state.instruments, character.id)
     state = Managers.Field.Liftable.drop(state, character)
+    state = Managers.Field.Liftup.release(state, character.id)
     state = Managers.Field.Trigger.drop_position(state, character.id)
 
     Managers.Field.broadcast(state.topic, Packets.FieldRemoveObject.bytes(character.object_id))

@@ -142,6 +142,19 @@ defmodule Ms2ex.Storage.Maps do
     end)
   end
 
+  # liftable object weapons (barrels, crates, ...): the player picks one up
+  # with the interact key and throws it as a skill
+  def get_object_weapons(map_id) do
+    map_id
+    |> get_meta()
+    |> Map.get(:object_weapons, [])
+    |> Enum.map(fn weapon ->
+      weapon
+      |> Map.put(:position, struct(Coord, Map.get(weapon, :position, %{})))
+      |> Map.put(:rotation, struct(Coord, Map.get(weapon, :rotation, %{})))
+    end)
+  end
+
   def get_meta(map_id) do
     Storage.get(:map, map_id)
   end

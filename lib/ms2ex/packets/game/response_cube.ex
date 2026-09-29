@@ -6,17 +6,32 @@ defmodule Ms2ex.Packets.ResponseCube do
   @return_map 0x22
   @design_rank_reward 0x27
 
-  def pickup(character, weapon_id, coord) do
+  # the error notice rides the buy-plot command with a ugc-map error code
+  @error 0x02
+
+  def error(code) do
+    __MODULE__
+    |> build()
+    |> put_byte(@error)
+    |> put_byte(code)
+  end
+
+  # the player lifts an object weapon: clients show the held item and start
+  # the container's respawn timer (the tick the weapon returns at)
+  def pickup(character, item_id, {x, y, z}, respawn_at) do
     __MODULE__
     |> build()
     |> put_byte(@mode.pickup)
     |> put_byte()
     |> put_int(character.object_id)
-    |> put_sbyte_coord(coord)
-    |> put_byte()
-    |> put_int(weapon_id)
-    # TODO find object ID?
-    |> put_int(Enum.random(1..2_147_483_647))
+    |> put_sbyte(x)
+    |> put_sbyte(y)
+    |> put_sbyte(z)
+    # the Vector3B struct is 4 bytes wide (one padding byte), matching the
+    # client's serializer
+    |> put_byte(0)
+    |> put_int(item_id)
+    |> put_int(respawn_at)
   end
 
   # the visual of a placed cube (or dropped liftable prop) at a grid tile
