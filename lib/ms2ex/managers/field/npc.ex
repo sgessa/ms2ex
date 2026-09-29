@@ -862,7 +862,6 @@ defmodule Ms2ex.Managers.Field.Npc do
   defp advance_patrol(%{stunned_until: until} = npc, now) when now < until, do: npc
   defp advance_patrol(npc, now), do: Patrol.advance_patrol(npc, now)
 
-
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)
 

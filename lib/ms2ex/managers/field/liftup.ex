@@ -14,7 +14,6 @@ defmodule Ms2ex.Managers.Field.Liftup do
 
   @grid_size 150
 
-
   # ugc-map error codes carried by the response-cube error notice
   def no_cube_to_lift, do: 37
   def not_allowed_item, do: 95

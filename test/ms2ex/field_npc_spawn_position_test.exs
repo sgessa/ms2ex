@@ -43,11 +43,11 @@ defmodule Ms2ex.FieldNpcSpawnPositionTest do
     assert field_npc.position.y == @position.y
   end
 
-  test "an explicit spawn_radius of nil (no radius metadata) keeps the coarse spread" do
+  test "a spawn radius of nil (no radius metadata) spawns the mob exactly too" do
     field_npc = new_field_npc(mob_npc(), spawn_radius: nil)
 
-    assert abs(field_npc.position.x - @position.x) <= 250
-    assert abs(field_npc.position.y - @position.y) <= 250
+    assert field_npc.position.x == @position.x
+    assert field_npc.position.y == @position.y
   end
 
   test "a positive spawn_radius scatters the mob within that circle" do
@@ -64,7 +64,7 @@ defmodule Ms2ex.FieldNpcSpawnPositionTest do
     assert distance <= radius
   end
 
-  test "open-world spawns with no spawn_radius key keep the coarse spread" do
+  test "open-world spawns with no spawn_radius key spawn exactly as authored" do
     field_npc =
       new_field_npc(
         mob_npc(),
@@ -72,10 +72,8 @@ defmodule Ms2ex.FieldNpcSpawnPositionTest do
         map_id: 999_999_999
       )
 
-    # still within the legacy box jitter, but not pinned exactly on top of
-    # the spawn point (statistically all but impossible to land exactly)
-    assert abs(field_npc.position.x - @position.x) <= 250
-    assert abs(field_npc.position.y - @position.y) <= 250
+    assert field_npc.position.x == @position.x
+    assert field_npc.position.y == @position.y
   end
 
   test "a friendly npc with a spawn radius scatters within its circle too" do
