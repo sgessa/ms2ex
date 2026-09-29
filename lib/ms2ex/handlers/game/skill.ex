@@ -1,4 +1,5 @@
 defmodule Ms2ex.GameHandlers.Skill do
+  alias Ms2ex.Collision
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Packets
@@ -137,11 +138,13 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  # point attacks are resolved client-side: the caster reports each hit
-  # (object id 0 when nothing valid was hit) and the server relays the
-  # impact to everyone else, who did not simulate the swing
-  # TODO hits with no reported target need server-side detection of
-  # hittable corpses in the attack range
+  # point attacks are client-authoritative visuals: the caster reports the
+  # swing — with no valid target, since the actual hits arrive on the
+  # target report — and the server relays the impact to everyone else,
+  # who did not simulate it. Reported hits ride the target flow, which
+  # applies the damage and the HP-bar records
+  # TODO target-less swings need server-side detection of hittable
+  # corpses in the attack range
   defp handle_damage(@point, packet, _session) do
     {cast_id, packet} = get_long(packet)
     {attack_point, packet} = get_byte(packet)
@@ -160,7 +163,8 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       Managers.Field.enter_battle_stance(skill_cast.caster)
 
-      relay_point_hits(skill_cast, target_count, packet)
+      {records, _packet} = read_point_records(packet, target_count)
+      relay_point_hit(skill_cast, records)
     end
   end
 
@@ -169,8 +173,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
 
-    {position, packet} = get_coord(packet)
-    {_impact_pos, packet} = get_coord(packet)
+    {impact_pos, packet} = get_coord(packet)
+    {_impact_pos2, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
     {attack_point, packet} = get_byte(packet)
 
@@ -180,7 +184,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       skill_cast =
         Managers.SkillCast.update(skill_cast, %{
-          position: position,
+          position: impact_pos,
           direction: direction,
           attack_counter: attack_counter,
           attack_point: attack_point
@@ -188,10 +192,8 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
 
-      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
+      mobs = swing_targets(skill_cast, impact_pos, target_count, crit?, packet)
       broadcast_damage(skill_cast, mobs)
-
-      # TODO
     end
   end
 
@@ -216,16 +218,17 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  defp relay_point_hits(_skill_cast, 0, _packet), do: :ok
+  # one lead record plus its same-swing chain per swing: each link
+  # carries the previous uid + its index while the client keeps reporting
+  defp read_point_records(packet, count), do: read_point_records(packet, count, [])
 
-  defp relay_point_hits(skill_cast, count, packet) do
-    {records, packet} = read_point_lead(packet)
-    relay_point_hit(skill_cast, records)
-    relay_point_hits(skill_cast, count - 1, packet)
+  defp read_point_records(packet, 0, records), do: {records, packet}
+
+  defp read_point_records(packet, count, records) do
+    {group, packet} = read_point_lead(packet)
+    read_point_records(packet, count - 1, records ++ group)
   end
 
-  # the lead record of one swing; a same-swing chain follows while the
-  # client keeps reporting (each link carries the previous uid + its index)
   defp read_point_lead(packet) do
     {uid, packet} = get_long(packet)
     {target_id, packet} = get_int(packet)
@@ -250,10 +253,13 @@ defmodule Ms2ex.GameHandlers.Skill do
   end
 
   defp relay_point_hit(skill_cast, records) do
+    # the field topic's subscriber is the caster's sender session, not the
+    # handler process — exclude that pid or the caster sees its own swing
+    # relay
     Managers.Field.broadcast_from(
       skill_cast.caster,
       Packets.SkillDamage.target(skill_cast, records),
-      self()
+      skill_cast.caster.sender_session_pid
     )
   end
 
@@ -264,25 +270,60 @@ defmodule Ms2ex.GameHandlers.Skill do
     Managers.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
   end
 
-  defp damage_targets(skill_cast, crit?, target_count, mobs, packet)
-       when target_count > 0 do
-    {obj_id, packet} = get_int(packet)
-    {_, packet} = get_byte(packet)
+  # the attack doc's hit volume decides the targets when it carries one
+  # (box, cylinder, frustum or hole-cylinder): the server recomputes which
+  # alive mobs stand inside the volume anchored at the reported impact,
+  # up to the attack's target count — the client's own report is not
+  # trusted. When the recompute finds nothing (a volume the data renders
+  # empty) the reported live mobs stand in, so a metadata gap cannot
+  # silence a skill. Attacks without any volume have no server-side
+  # shape; their reported targets are the only source
+  defp swing_targets(skill_cast, impact_pos, target_count, crit?, packet) do
+    {client_ids, _packet} = read_target_ids(packet, target_count)
 
-    mobs =
-      case Managers.Field.lookup_npc(skill_cast.caster, obj_id) do
-        {:ok, %{dead?: false, type: :mob} = mob} ->
-          {mob, dmg} = damage_mob(skill_cast, mob, crit?)
-          mobs ++ [{mob, dmg}]
+    case Types.SkillCast.attack(skill_cast) do
+      %{range: %{type: type} = range} = attack when type in 1..4 ->
+        prism = Collision.build_prism(range, impact_pos, skill_cast.rotation.z)
 
-        _ ->
-          mobs
-      end
+        limit =
+          case attack[:target_count] do
+            count when is_integer(count) and count > 0 -> count
+            _ -> target_count
+          end
 
-    damage_targets(skill_cast, crit?, target_count - 1, mobs, packet)
+        case Managers.Field.targets_in_prism(skill_cast.caster, prism, limit) do
+          [] -> damage_reported(skill_cast, client_ids, crit?)
+          mobs -> Enum.map(mobs, &damage_mob(skill_cast, &1, crit?))
+        end
+
+      _ ->
+        damage_reported(skill_cast, client_ids, crit?)
+    end
   end
 
-  defp damage_targets(_skill_cast, _crit?, _target_count, mobs, _packet), do: mobs
+  defp damage_reported(_skill_cast, [], _crit?), do: []
+
+  defp damage_reported(skill_cast, client_ids, crit?) do
+    Enum.flat_map(client_ids, fn obj_id ->
+      case Managers.Field.lookup_npc(skill_cast.caster, obj_id) do
+        {:ok, %{dead?: false, type: :mob} = mob} ->
+          [damage_mob(skill_cast, mob, crit?)]
+
+        _ ->
+          []
+      end
+    end)
+  end
+
+  defp read_target_ids(packet, count), do: read_target_ids(packet, count, [])
+
+  defp read_target_ids(packet, 0, ids), do: {Enum.reverse(ids), packet}
+
+  defp read_target_ids(packet, count, ids) do
+    {obj_id, packet} = get_int(packet)
+    {_unknown, packet} = get_byte(packet)
+    read_target_ids(packet, count - 1, [obj_id | ids])
+  end
 
   defp damage_mob(skill_cast, mob, crit?) do
     dmg = Context.Damage.calculate(skill_cast, mob, crit?)

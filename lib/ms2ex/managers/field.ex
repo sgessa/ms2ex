@@ -36,6 +36,7 @@ defmodule Ms2ex.Managers.Field do
   require Logger
 
   alias Ms2ex.Context
+  alias Ms2ex.Collision
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
@@ -296,6 +297,17 @@ defmodule Ms2ex.Managers.Field do
     call(character.field_pid, {:lookup_npc, object_id})
   end
 
+  @doc """
+  Alive mobs standing inside a hit-volume prism, up to `limit`.
+  """
+  @spec targets_in_prism(Schema.Character.t(), Collision.prism(), pos_integer()) ::
+          [Types.FieldNpc.t()]
+  def targets_in_prism(%Schema.Character{field_pid: nil}, _prism, _limit), do: []
+
+  def targets_in_prism(%Schema.Character{} = character, prism, limit) do
+    call(character.field_pid, {:targets_in_prism, prism, limit})
+  end
+
   @doc "Removes an npc from its field (idempotent)."
   @spec remove_npc(Types.FieldNpc.t()) :: :ok
   def remove_npc(%Types.FieldNpc{} = field_npc) do
@@ -462,6 +474,8 @@ defmodule Ms2ex.Managers.Field do
 
   @doc "Puts a character into battle stance (the field drops it after a beat)."
   @spec enter_battle_stance(Schema.Character.t()) :: :ok | :error
+  def enter_battle_stance(%Schema.Character{field_pid: nil}), do: :ok
+
   def enter_battle_stance(%Schema.Character{} = character) do
     cast(character.field_pid, {:enter_battle_stance, character})
   end
@@ -862,6 +876,20 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_call({:remove_effect_buff, owner_object_id, effect_id}, _from, state),
     do: {:reply, :ok, __MODULE__.Buff.remove_owner_effect(owner_object_id, effect_id, state)}
+
+  def handle_call({:targets_in_prism, prism, limit}, _from, state) do
+    targets =
+      state.npcs
+      |> Map.values()
+      |> Enum.filter(fn
+        %Types.FieldNpc{type: :mob, dead?: false} -> true
+        _npc -> false
+      end)
+      |> Enum.filter(&Collision.contains?(prism, &1.position))
+      |> Enum.take(limit)
+
+    {:reply, targets, state}
+  end
 
   def handle_call({:lookup_npc, object_id}, _from, state) do
     case Map.get(state.npcs, object_id) do

@@ -25,6 +25,26 @@ and the target's physical or magical resistance.
 loop adds `hp_value` + `damage_by_target_max_hp * max_hp` on top and clamps to
 `current hp - 1` when `not_kill`.
 
+## Client damage reports
+
+The client reports landed hits back on the skill-attack packet with one of
+three modes, and the server resolves each differently:
+
+- **Target hits (0x1)** — when the attack doc carries a hit volume (box,
+  cylinder, frustum or hole-cylinder), the server recomputes the targets:
+  the volume is anchored at the reported impact position with the cast's
+  facing, and alive mobs inside it — capped at the attack's target count —
+  take the hit. Volume-less attacks (range type none) fall back to the
+  client's reported live mobs. Either way the hit broadcasts the mode-1
+  damage record plus the health stat record to everyone (the pair that
+  makes clients draw the HP bar).
+- **Point hits (0x0)** — the basic attack's swing. The client reports no
+  valid target here (its actual hits arrive on the target report), so the
+  server only relays the swing to other clients as a mode-0 record and
+  arms the caster's battle stance.
+- **Splash/region hits (0x2)** — region skills; damage rides the mode-1
+  record like every other channel (see `region-splash.md`).
+
 ## Still missing
 
 - miss / block / evade rolls

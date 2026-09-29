@@ -169,7 +169,12 @@ defmodule Ms2ex.Types.SkillCast do
   end
 
   # the relayed hit's attack document: the motion point's attack at the
-  # relayed attack point, falling back to the motion's first attack
+  # relayed attack point, falling back to the motion's first attack.
+  # Carries the hit volume (range) and target count that targeting needs
+  def attack(%__MODULE__{} = skill_cast) do
+    resolved_attack(skill_cast)
+  end
+
   defp resolved_attack(%__MODULE__{} = skill_cast) do
     case damage_attacks(skill_cast) do
       [] ->
