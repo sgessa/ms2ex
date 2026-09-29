@@ -43,6 +43,9 @@ defmodule Ms2ex.Types.FieldNpc do
     # the scripted-carry follow dummy records the player it walks; on the
     # carry's end the player is repositioned to the route's last waypoint
     :follow_character_id,
+    # shared tick until which a stun effect roots the mob: no chase, no
+    # wander, no casts — the client plays the stun from the buff itself
+    stunned_until: 0,
     dead?: false,
     corpse?: false,
     send_control?: true,

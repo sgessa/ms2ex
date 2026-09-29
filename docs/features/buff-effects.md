@@ -87,9 +87,15 @@ frost 10300271, while the chill stacks via its own `overlap_count` up to 6).
 Frost lands via skill 10300271 "Hurricane Warning" (wizard ice combo) whose
 attack skills apply `10300271@N`+`10300276@1`+`10300272@1` on the `@target`
 hit. `property.type`/`category`/`stun` are projected so the client renders the
-debuff/stun (the client derives the frozen animation from the buff; no
-server-side stun state is sent). `update.reset_cooldown` clears the listed
+debuff/stun (the client derives the frozen/stun animation from the buff).
+A stun on a mob is also enforced server-side: a `stunned_until` deadline
+pinned to the buff's end tick withholds chase, wander and casts — an
+in-flight swing is dropped — until the buff expires or is removed (the
+client plays the stun for the buff's whole window; the motion's stun
+count is a flag, not a duration).
+`update.reset_cooldown` clears the listed
 cooldowns and pushes a `SkillCooldown` record.
+
 
 ## Remaining gaps
 

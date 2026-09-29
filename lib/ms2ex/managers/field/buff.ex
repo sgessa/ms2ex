@@ -92,11 +92,67 @@ defmodule Ms2ex.Managers.Field.Buff do
     Managers.Field.broadcast(state.topic, Packets.Buff.send(:remove, buff))
     Managers.Buff.stop(buff_id)
 
+    state = release_stun(buff, state)
+
     case Map.get(state.buffs, buff_key(buff)) do
       ^buff_id -> %{state | buffs: Map.delete(state.buffs, buff_key(buff))}
       _ -> state
     end
   end
+
+  # a stun effect roots its owner for the buff's whole window: the client
+  # plays the stun animation from the buff itself (start to end tick), so
+  # the hold must last just as long — the motion's stun count is a flag,
+  # not the duration. No chase, no wander, and an in-flight swing is lost
+  # (stun interrupts casts). Re-applying a stun extends the hold with the
+  # refreshed buff window
+  defp stun_owner(buff, state) do
+    if Types.Buff.stun(buff) > 0 do
+      case Map.get(state.npcs, owner_object_id(buff)) do
+        %Types.FieldNpc{dead?: false} = npc ->
+          npc =
+            %{npc | stunned_until: max(buff.end_tick, npc.stunned_until)}
+            |> drop_in_flight_cast()
+            |> Map.put(:velocity, {0, 0, 0})
+
+          put_in(state, [:npcs, npc.object_id], npc)
+
+        _ ->
+          state
+      end
+    else
+      state
+    end
+  end
+
+  # a removed stun (natural expiry or dispel) releases the mob immediately
+  defp release_stun(buff, state) do
+    if Types.Buff.stun(buff) > 0 do
+      case Map.get(state.npcs, owner_object_id(buff)) do
+        %Types.FieldNpc{} = npc ->
+          put_in(state, [:npcs, npc.object_id], %{npc | stunned_until: 0})
+
+        _ ->
+          state
+      end
+    else
+      state
+    end
+  end
+
+  defp owner_object_id(buff) do
+    case buff.owner do
+      %Types.FieldNpc{} = mob -> mob.object_id
+      %Schema.Character{} = character -> character.object_id
+      _ -> nil
+    end
+  end
+
+  defp drop_in_flight_cast(%{battle: %{cast: cast}} = npc) when not is_nil(cast) do
+    %{npc | battle: %{npc.battle | cast: nil}}
+  end
+
+  defp drop_in_flight_cast(npc), do: npc
 
   defp apply_buff(buff, state, apply_status?) do
     case Map.get(state.buffs, buff_key(buff)) do
@@ -119,6 +175,7 @@ defmodule Ms2ex.Managers.Field.Buff do
 
     state = modify_overlap(buff, state)
     schedule(buff)
+    state = stun_owner(buff, state)
 
     {buff, state}
   end
@@ -153,6 +210,8 @@ defmodule Ms2ex.Managers.Field.Buff do
         else
           state
         end
+
+      state = stun_owner(existing, state)
 
       {existing, state}
     end

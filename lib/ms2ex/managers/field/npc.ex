@@ -250,7 +250,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     {npcs, {live_dirty, corpse_dirty, hits}} =
       Enum.flat_map_reduce(state.npcs, {[], [], []}, fn {object_id, npc},
                                                         {live, corpses, all_hits} ->
-        npc = Patrol.advance_patrol(npc, now)
+        npc = advance_patrol(npc, now)
         {npc, npc_hits} = Battle.tick(npc, state, now)
         {entry, {live, corpses}} = tick_npc(now, object_id, npc, {live, corpses})
         {entry, {live, corpses, all_hits ++ npc_hits}}
@@ -857,6 +857,11 @@ defmodule Ms2ex.Managers.Field.Npc do
   defp swinging?(%{battle: %{cast: %{} = cast}}, now), do: now < cast.end_at
   defp swinging?(%{battle: %{swing_until: until}}, now) when is_integer(until), do: now < until
   defp swinging?(_npc, _now), do: false
+
+  # a stunned mob holds position: its patrol leg freezes with the battle
+  defp advance_patrol(%{stunned_until: until} = npc, now) when now < until, do: npc
+  defp advance_patrol(npc, now), do: Patrol.advance_patrol(npc, now)
+
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)
