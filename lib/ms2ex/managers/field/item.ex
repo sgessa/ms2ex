@@ -73,9 +73,21 @@ defmodule Ms2ex.Managers.Field.Item do
     Managers.Field.broadcast(state.topic, Packets.FieldPickupItem.bytes(character, item))
     Managers.Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
 
+    cancel_despawn(item)
+
     items = Map.delete(state.items, item.object_id)
     %{state | items: items}
   end
+
+  # the stored field item carries the drop timer; cancelling it keeps a
+  # taken item from waking the field just to discover it is gone. Plain
+  # item maps without a timer (freshly built in tests) have nothing to
+  # cancel
+  defp cancel_despawn(%{despawn_timer: timer}) when is_reference(timer) do
+    Process.cancel_timer(timer)
+  end
+
+  defp cancel_despawn(_item), do: :ok
 
   def drop_item(character, item, state), do: drop_item(character, item, character.position, state)
 
@@ -141,9 +153,34 @@ defmodule Ms2ex.Managers.Field.Item do
     store(state, item)
   end
 
+  # dropped items linger on the field for two minutes before the field
+  # sweeps them (picked up or not)
+  @despawn_ms 120_000
+
   defp store(state, item) do
-    items = Map.put(state.items, item.object_id, %{item | metadata: nil})
+    item =
+      item
+      |> Map.put(:metadata, nil)
+      |> Map.put(
+        :despawn_timer,
+        Process.send_after(self(), {:despawn_item, item.object_id}, @despawn_ms)
+      )
+
+    items = Map.put(state.items, item.object_id, item)
     %{state | items: items}
+  end
+
+  # the drop timer fired: sweep the item (a picked-up item had its timer
+  # cancelled, so this only runs for items nobody took)
+  def despawn(object_id, state) do
+    case Map.get(state.items, object_id) do
+      nil ->
+        state
+
+      item ->
+        Managers.Field.broadcast(state.topic, Packets.FieldRemoveItem.bytes(item.object_id))
+        %{state | items: Map.delete(state.items, object_id)}
+    end
   end
 
   # scatter drops around the corpse

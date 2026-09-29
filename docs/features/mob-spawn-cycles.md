@@ -15,6 +15,12 @@ and open-world spawn placement.
   whatever the map's script situation is; every other point loads per its
   `on_field_create` flag even when the map runs scripts (plain quest npcs on
   scripted maps must not vanish)
+- each spawn point rolls from the pool the ingest projected for it: the
+  mapspawntag rows name a difficulty band, and only mobs whose difficulty
+  falls inside it join the pool — a map's mob list therefore matches what
+  the client advertises for the map. Every pool member carries a spawn
+  weight (tag breadth, rarity, low difficulty nudge it) and each spawned
+  mob is a weighted roll over that pool
 - mob gates are data-driven from the map's trigger script (`mob_gates`): when
   the last mob of a gated point dies, the blocking meshes drop (latched open
   across respawns, late joiners load them hidden) and the gate's guide event

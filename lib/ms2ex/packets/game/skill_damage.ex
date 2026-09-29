@@ -5,6 +5,36 @@ defmodule Ms2ex.Packets.SkillDamage do
 
   @modes %{target: 0x0, damage: 0x1, region: 0x5}
 
+  # point attacks are resolved client-side: the caster reports each hit and
+  # this relay shows everyone else the impact (chained records share one
+  # swing via prev_uid/index; the lead record sends both as zero)
+  def target(skill_cast, records) do
+    caster = skill_cast.caster
+
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.target)
+    |> put_long(skill_cast.id)
+    |> put_int(caster.object_id)
+    |> put_int(skill_cast.skill_id)
+    |> put_short(skill_cast.skill_level)
+    |> put_byte(skill_cast.motion_point)
+    |> put_byte(skill_cast.attack_point)
+    |> put_short_coord(skill_cast.position)
+    |> put_coord(skill_cast.direction)
+    |> put_bool(true)
+    |> put_int(skill_cast.server_tick)
+    |> put_byte(length(records))
+    |> reduce(records, fn record, packet ->
+      packet
+      |> put_long(record.prev_uid)
+      |> put_long(record.uid)
+      |> put_int(record.target_id)
+      |> put_byte(record.unknown)
+      |> put_byte(record.index)
+    end)
+  end
+
   def damage(skill_cast, mobs) do
     caster = skill_cast.caster
 

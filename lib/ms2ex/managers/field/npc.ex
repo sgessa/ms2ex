@@ -250,7 +250,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     {npcs, {live_dirty, corpse_dirty, hits}} =
       Enum.flat_map_reduce(state.npcs, {[], [], []}, fn {object_id, npc},
                                                         {live, corpses, all_hits} ->
-        npc = Patrol.advance_patrol(npc, now)
+        npc = advance_patrol(npc, now)
         {npc, npc_hits} = Battle.tick(npc, state, now)
         {entry, {live, corpses}} = tick_npc(now, object_id, npc, {live, corpses})
         {entry, {live, corpses, all_hits ++ npc_hits}}
@@ -481,7 +481,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     missing = spawn.population - length(spawn.spawned_mobs)
 
     Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
-      case spawn_npc(state, Enum.random(spawn.npc_ids), spawn) do
+      case spawn_npc(state, pick_mob_id(spawn), spawn) do
         {%Types.FieldNpc{} = field_npc, state} ->
           spawned = spawn.spawned_mobs ++ [field_npc.object_id]
           {%{spawn | spawned_mobs: spawned}, state}
@@ -491,6 +491,21 @@ defmodule Ms2ex.Managers.Field.Npc do
       end
     end)
   end
+
+  # a mob spawn document lists candidate npc ids with a parallel weight
+  # list — each mob's share of the spawn roll; documents without weights
+  # (explicit npc lists) roll uniformly
+  defp pick_mob_id(%{npc_ids: ids, weights: weights})
+       when ids != [] and length(weights) == length(ids) do
+    total = Enum.sum(weights)
+    roll = :rand.uniform(total)
+
+    Enum.reduce_while(Enum.zip(ids, weights), 0, fn {id, weight}, acc ->
+      if roll <= acc + weight, do: {:halt, id}, else: {:cont, acc + weight}
+    end)
+  end
+
+  defp pick_mob_id(%{npc_ids: ids}), do: Enum.random(ids)
 
   defp tag_attackers(field_npc, attacker) do
     field_npc
@@ -857,6 +872,10 @@ defmodule Ms2ex.Managers.Field.Npc do
   defp swinging?(%{battle: %{cast: %{} = cast}}, now), do: now < cast.end_at
   defp swinging?(%{battle: %{swing_until: until}}, now) when is_integer(until), do: now < until
   defp swinging?(_npc, _now), do: false
+
+  # a stunned mob holds position: its patrol leg freezes with the battle
+  defp advance_patrol(%{stunned_until: until} = npc, now) when now < until, do: npc
+  defp advance_patrol(npc, now), do: Patrol.advance_patrol(npc, now)
 
   defp tick_npc(now, object_id, npc, {live, corpses}) do
     npc = expire_emote(npc, now)

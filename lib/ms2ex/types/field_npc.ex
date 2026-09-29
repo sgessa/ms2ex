@@ -3,8 +3,6 @@ defmodule Ms2ex.Types.FieldNpc do
   alias Ms2ex.Storage
   alias Ms2ex.Types.Coord
   alias Ms2ex.Enums
-  alias Ms2ex.Context
-
   @type t :: %__MODULE__{}
 
   defstruct [
@@ -43,6 +41,9 @@ defmodule Ms2ex.Types.FieldNpc do
     # the scripted-carry follow dummy records the player it walks; on the
     # carry's end the player is repositioned to the route's last waypoint
     :follow_character_id,
+    # shared tick until which a stun effect roots the mob: no chase, no
+    # wander, no casts — the client plays the stun from the buff itself
+    stunned_until: 0,
     dead?: false,
     corpse?: false,
     send_control?: true,
@@ -105,37 +106,12 @@ defmodule Ms2ex.Types.FieldNpc do
     Storage.Animations.sequence_id(model, "Idle_A") || 0
   end
 
-  @spawn_distance 250
-
-  # spawn scatter mirrors the spawn kinds: hostile population docs spread
-  # mobs in a coarse box around the spawn point keeping its ground height;
-  # an explicit spawn radius scatters a circle whose scattered spot snaps
-  # to the walkable surface (falling back to the authored spawn when the
-  # scattered spot has none); every other spawn stands verbatim at its
-  # authored position
-  defp randomize_pos(%{type: :mob} = attrs) do
-    position = to_coord(attrs.position)
-
-    case Map.get(attrs, :spawn_radius) do
-      radius when is_number(radius) and radius > 0 ->
-        scatter_circle(attrs, position, radius)
-
-      nil ->
-        min_x = position.x - @spawn_distance
-        max_x = position.x + @spawn_distance
-        min_y = position.y - @spawn_distance
-        max_y = position.y + @spawn_distance
-
-        x = Context.Utils.rand_float(min_x, max_x)
-        y = Context.Utils.rand_float(min_y, max_y)
-
-        Map.put(attrs, :position, %{position | x: x, y: y})
-
-      _zero_radius ->
-        Map.put(attrs, :position, position)
-    end
-  end
-
+  # a spawn stands at its authored position; an explicit spawn radius
+  # scatters a circle whose scattered spot snaps to the walkable surface
+  # (falling back to the authored spawn when the scattered spot has none).
+  # No radius (or a zero one) means the spawn point authored an exact
+  # spot — packs pile up there and spread out only through their own
+  # move_area wander, keeping each group around its own spawn point
   defp randomize_pos(attrs) do
     position = to_coord(attrs.position)
 

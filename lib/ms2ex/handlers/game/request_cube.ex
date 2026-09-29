@@ -13,8 +13,8 @@ defmodule Ms2ex.GameHandlers.RequestCube do
   @remove_cube 0x0C
   # @rotate_cube 0x0E
   # @replace_cube 0x0F
-  # @liftup_object 0x11
-  # @liftup_drop 0x12
+  @liftup_object 0x11
+  @liftup_drop 0x12
   # @set_home_name 0x15
   # @set_passcode 0x18
   # @vote_home 0x19
@@ -69,6 +69,36 @@ defmodule Ms2ex.GameHandlers.RequestCube do
       Managers.Field.broadcast(character, Packets.UserBattle.set_stance(character, false))
       push(session, Packets.ResponseCube.drop(character))
     end
+  end
+
+  # lifting an object weapon (throwable barrel, crate, ...): the field
+  # manager rolls the item, grants the throw skill and starts the respawn
+  # timer; failures carry a ugc-map error code back to the requester
+  def handle_mode(@liftup_object, packet, session) do
+    {x, packet} = get_sbyte(packet)
+    {y, packet} = get_sbyte(packet)
+    {z, packet} = get_sbyte(packet)
+    {_padding, _packet} = get_sbyte(packet)
+
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+
+    case Managers.Field.liftup_object(character, {x, y, z}) do
+      :ok ->
+        :ok
+
+      {:error, code} ->
+        push(session, Packets.ResponseCube.error(code))
+    end
+
+    session
+  end
+
+  # the player releases the held object weapon without throwing it
+  def handle_mode(@liftup_drop, _packet, session) do
+    {:ok, character} = Managers.Character.call(session.character_id, :lookup)
+    Managers.Field.drop_liftup(character)
+
+    session
   end
 
   def handle_mode(mode, _packet, _session) do

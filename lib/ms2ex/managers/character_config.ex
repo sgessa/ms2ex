@@ -82,7 +82,7 @@ defmodule Ms2ex.Managers.CharacterConfig do
   """
   @spec update_hotbar_skills(Schema.Character.t()) :: :ok | :error
   def update_hotbar_skills(%Schema.Character{id: id} = character) do
-    call(id, {:update_hotbar_skills, learned_active_skill_ids(character)})
+    call(id, {:update_hotbar_skills, character})
   end
 
   @doc "Returns the character's saved key binds, keyed by key code."
@@ -231,8 +231,11 @@ defmodule Ms2ex.Managers.CharacterConfig do
   end
 
   @impl true
-  def handle_call({:update_hotbar_skills, skill_ids}, _from, state) do
-    {_updated_bars, changed_pairs} = apply_learned_skills(state.hot_bars, skill_ids)
+  # the fill derives its skill list from the character itself, so callers
+  # can't widen it with passives or unlearned skills
+  def handle_call({:update_hotbar_skills, character}, _from, state) do
+    {_updated_bars, changed_pairs} =
+      apply_learned_skills(state.hot_bars, learned_active_skill_ids(character))
 
     state =
       Enum.reduce(changed_pairs, state, fn {hot_bar, updated}, state ->
@@ -400,12 +403,14 @@ defmodule Ms2ex.Managers.CharacterConfig do
   defp empty_slot?(%Types.QuickSlot{skill_id: 0, item_id: 0, item_uid: 0}), do: true
   defp empty_slot?(_slot), do: false
 
-  # learned in-battle skills of the active skill tab, above the 10M id range
+  # learned battle skills of the active skill tab that quick slots can hold:
+  # regular-range actives (basic attacks below 10M, awakening skills above
+  # 20M excluded), filtered by the skill's property type — passives (type 1)
+  # never go to quick slots, even though they share in_battle with actives
   defp learned_active_skill_ids(%Schema.Character{
          skill_tabs: tabs,
          active_skill_tab_id: active_id
-       })
-       when is_list(tabs) do
+       }) do
     case Enum.find(tabs, &(&1.id == active_id)) do
       %Schema.SkillTab{skills: skills} when is_list(skills) ->
         skills
@@ -418,15 +423,15 @@ defmodule Ms2ex.Managers.CharacterConfig do
     end
   end
 
-  defp learned_active_skill_ids(_character), do: []
-
   defp learned_active_skill?(skill) do
-    skill.level > 0 and skill.skill_id > 10_000_000 and skill_in_battle?(skill.skill_id)
+    skill.level > 0 and skill.skill_id > 10_000_000 and skill.skill_id < 20_000_000 and
+      active_skill_type?(skill.skill_id)
   end
 
-  defp skill_in_battle?(skill_id) do
+  # property type: 0 = active, 1 = passive
+  defp active_skill_type?(skill_id) do
     case Storage.Skills.get_meta(skill_id) do
-      %{state: %{in_battle: in_battle}} -> in_battle
+      %{property: %{type: 0}} -> true
       _ -> false
     end
   end

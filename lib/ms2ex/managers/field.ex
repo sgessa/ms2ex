@@ -16,6 +16,7 @@ defmodule Ms2ex.Managers.Field do
   - `Field.InteractObject` — interact-object lifecycles
   - `Field.Item` — field drops and pickups
   - `Field.Liftable` — quest liftable props
+  - `Field.Liftup` — liftable object weapons (throwable barrels, crates, ...)
   - `Field.Npc` — npc spawns, damage/death and spawn cycles
   - `Field.Npc.Patrol` — npc movement along patrol paths
   - `Field.PerformanceStage` — the concert stage
@@ -35,6 +36,7 @@ defmodule Ms2ex.Managers.Field do
   require Logger
 
   alias Ms2ex.Context
+  alias Ms2ex.Collision
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
@@ -295,6 +297,17 @@ defmodule Ms2ex.Managers.Field do
     call(character.field_pid, {:lookup_npc, object_id})
   end
 
+  @doc """
+  Alive mobs standing inside a hit-volume prism, up to `limit`.
+  """
+  @spec targets_in_prism(Schema.Character.t(), Collision.prism(), pos_integer()) ::
+          [Types.FieldNpc.t()]
+  def targets_in_prism(%Schema.Character{field_pid: nil}, _prism, _limit), do: []
+
+  def targets_in_prism(%Schema.Character{} = character, prism, limit) do
+    call(character.field_pid, {:targets_in_prism, prism, limit})
+  end
+
   @doc "Removes an npc from its field (idempotent)."
   @spec remove_npc(Types.FieldNpc.t()) :: :ok
   def remove_npc(%Types.FieldNpc{} = field_npc) do
@@ -461,6 +474,8 @@ defmodule Ms2ex.Managers.Field do
 
   @doc "Puts a character into battle stance (the field drops it after a beat)."
   @spec enter_battle_stance(Schema.Character.t()) :: :ok | :error
+  def enter_battle_stance(%Schema.Character{field_pid: nil}), do: :ok
+
   def enter_battle_stance(%Schema.Character{} = character) do
     cast(character.field_pid, {:enter_battle_stance, character})
   end
@@ -538,6 +553,41 @@ defmodule Ms2ex.Managers.Field do
   @spec place_liftable(Schema.Character.t(), tuple(), integer(), integer()) :: :ok | :error
   def place_liftable(%Schema.Character{} = character, grid, item_id, rotation) do
     call(character.field_pid, {:place_liftable, character.id, grid, item_id, rotation})
+  end
+
+  # -- liftups -----------------------------------------------------------------
+
+  @doc """
+  The character lifts the object weapon at a grid tile (e.g. a throwable
+  barrel). Returns `:ok` or `{:error, code}` for the response-cube error
+  notice.
+  """
+  @spec liftup_object(Schema.Character.t(), tuple()) :: :ok | {:error, integer()}
+  def liftup_object(%Schema.Character{field_pid: nil}, _grid),
+    do: {:error, __MODULE__.Liftup.not_allowed_item()}
+
+  def liftup_object(%Schema.Character{} = character, grid) do
+    call(character.field_pid, {:liftup_object, character.id, grid})
+  end
+
+  @doc "The character drops the held object weapon without throwing it."
+  @spec drop_liftup(Schema.Character.t()) :: :ok | :error
+  def drop_liftup(%Schema.Character{field_pid: nil}), do: :error
+
+  def drop_liftup(%Schema.Character{} = character) do
+    call(character.field_pid, {:drop_liftup, character.id})
+  end
+
+  @doc """
+  Cast gate while holding an object weapon: only the held object's throw
+  skill casts (consuming the hold). Returns `:error` to refuse the cast.
+  Outside a field no hold can exist, so casts pass through.
+  """
+  @spec use_liftup_skill(Schema.Character.t(), integer(), integer()) :: :ok | :error
+  def use_liftup_skill(%Schema.Character{field_pid: nil}, _skill_id, _skill_level), do: :ok
+
+  def use_liftup_skill(%Schema.Character{} = character, skill_id, skill_level) do
+    call(character.field_pid, {:use_liftup_skill, character.id, skill_id, skill_level})
   end
 
   # -- interact objects & region skills ---------------------------------------
@@ -636,6 +686,7 @@ defmodule Ms2ex.Managers.Field do
         topic: field_name
       }
       |> __MODULE__.Liftable.init_liftables()
+      |> __MODULE__.Liftup.init_liftups()
       |> __MODULE__.Trigger.init_triggers()
 
     send(self(), :load_npc_spawns)
@@ -681,6 +732,21 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_call({:place_liftable, character_id, grid, item_id, rotation}, _from, state) do
     {:reply, :ok, __MODULE__.Liftable.place(state, character_id, grid, item_id, rotation)}
+  end
+
+  def handle_call({:liftup_object, character_id, grid}, _from, state) do
+    {state, reply} = __MODULE__.Liftup.liftup(state, character_id, grid)
+    {:reply, reply, state}
+  end
+
+  def handle_call({:drop_liftup, character_id}, _from, state) do
+    {state, reply} = __MODULE__.Liftup.drop(state, character_id)
+    {:reply, reply, state}
+  end
+
+  def handle_call({:use_liftup_skill, character_id, skill_id, skill_level}, _from, state) do
+    {state, reply} = __MODULE__.Liftup.use_skill(state, character_id, skill_id, skill_level)
+    {:reply, reply, state}
   end
 
   def handle_call({:pickup_item, character, object_id}, _from, state) do
@@ -811,6 +877,22 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:remove_effect_buff, owner_object_id, effect_id}, _from, state),
     do: {:reply, :ok, __MODULE__.Buff.remove_owner_effect(owner_object_id, effect_id, state)}
 
+  def handle_call({:targets_in_prism, prism, limit}, _from, state) do
+    targets =
+      state.npcs
+      |> Map.values()
+      |> Enum.filter(fn
+        %Types.FieldNpc{type: :mob, dead?: false} = npc ->
+          Collision.contains?(prism, npc.position)
+
+        _npc ->
+          false
+      end)
+      |> Enum.take(limit)
+
+    {:reply, targets, state}
+  end
+
   def handle_call({:lookup_npc, object_id}, _from, state) do
     case Map.get(state.npcs, object_id) do
       nil -> {:reply, :error, state}
@@ -924,6 +1006,10 @@ defmodule Ms2ex.Managers.Field do
       _ ->
         {:noreply, state}
     end
+  end
+
+  def handle_info({:despawn_item, object_id}, state) do
+    {:noreply, __MODULE__.Item.despawn(object_id, state)}
   end
 
   def handle_info(:release_guide_hold, state),

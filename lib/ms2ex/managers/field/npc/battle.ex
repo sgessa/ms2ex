@@ -135,6 +135,11 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   """
   def tick(%Types.FieldNpc{type: :mob, dead?: false} = npc, field_state, now) do
     cond do
+      # a stunned mob holds its ground: the client plays the stun from the
+      # buff itself, the server just withholds movement, casts and attacks
+      now < npc.stunned_until ->
+        {npc, []}
+
       npc.battle ->
         case tick_battle(npc, field_state, now) do
           {%Types.FieldNpc{} = result, hits} when is_list(hits) ->

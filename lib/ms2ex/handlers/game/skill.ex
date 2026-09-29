@@ -1,4 +1,5 @@
 defmodule Ms2ex.GameHandlers.Skill do
+  alias Ms2ex.Collision
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Packets
@@ -52,69 +53,39 @@ defmodule Ms2ex.GameHandlers.Skill do
 
     {:ok, character} = Managers.Character.call(session.character_id, :lookup)
 
-    skill_cast =
-      Types.SkillCast.build(character, %{
-        id: cast_id,
-        skill_id: skill_id,
-        skill_level: skill_level,
-        position: position,
-        direction: direction,
-        rotation: rotation,
-        rotate2z: rotate2z,
-        motion_point: motion_point,
-        server_tick: server_tick,
-        client_tick: client_tick,
-        item_uid: item_uid
-      })
+    # holding an object weapon locks the skill bar to its throw skill; the
+    # throw consumes the hold, any other cast is refused
+    case Managers.Field.use_liftup_skill(character, skill_id, skill_level) do
+      :ok ->
+        skill_cast =
+          Types.SkillCast.build(character, %{
+            id: cast_id,
+            skill_id: skill_id,
+            skill_level: skill_level,
+            position: position,
+            direction: direction,
+            rotation: rotation,
+            rotate2z: rotate2z,
+            motion_point: motion_point,
+            server_tick: server_tick,
+            client_tick: client_tick,
+            item_uid: item_uid
+          })
 
-    {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
+        use_cast(
+          session,
+          character,
+          skill_cast,
+          {unknown, is_hold, hold_int, hold_string},
+          item_uid
+        )
 
-    cast_item = cast_item(character, item_uid)
-
-    consumable_cast_item? =
-      fishing_lure_item?(cast_item) or consumable_state_item?(cast_item)
-
-    if Types.SkillCast.use_item?(skill_cast) do
-      consume_used_item(session, character, item_uid)
+      # a held object weapon blocks every skill but its throw
+      :error ->
+        :error
     end
 
-    case Types.SkillCast.cooldown(skill_cast, Ms2ex.sync_ticks()) do
-      nil ->
-        :ok
-
-      cooldown ->
-        Managers.Character.call(character, {:save_skill_cooldown, cooldown})
-        push(session, Packets.SkillCooldown.bytes([cooldown]))
-    end
-
-    state = {unknown, is_hold, hold_int, hold_string}
-    use_packet = Packets.SkillUse.bytes(skill_cast, state)
-
-    # battle-start sequence in the order live servers emit it:
-    # skill use, battle flag, full stat refresh, casting actor state
-    Managers.Field.broadcast(character, use_packet)
-
-    if Types.SkillCast.in_battle?(skill_cast) do
-      Managers.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
-    end
-
-    Managers.Field.broadcast_stats(character)
-    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
-
-    if consumable_cast_item? do
-      consume_used_item(session, character, item_uid)
-    end
-
-    # skill-use quest conditions track casts per skill id
-    Managers.Quest.update_conditions(
-      character.id,
-      :skill,
-      1,
-      "",
-      character.map_id,
-      "",
-      skill_cast.skill_id
-    )
+    session
   end
 
   def handle_mode(@attack, packet, session) do
@@ -167,20 +138,33 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
+  # point attacks are client-authoritative visuals: the caster reports the
+  # swing — with no valid target, since the actual hits arrive on the
+  # target report — and the server relays the impact to everyone else,
+  # who did not simulate it. Reported hits ride the target flow, which
+  # applies the damage and the HP-bar records
+  # TODO target-less swings need server-side detection of hittable
+  # corpses in the attack range
   defp handle_damage(@point, packet, _session) do
     {cast_id, packet} = get_long(packet)
     {attack_point, packet} = get_byte(packet)
     {position, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
-    {_target_count, packet} = get_byte(packet)
-    {_iterations, _packet} = get_int(packet)
+    {target_count, packet} = get_byte(packet)
+    {_iterations, packet} = get_int(packet)
 
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
-      Managers.SkillCast.update(skill_cast, %{
-        position: position,
-        direction: direction,
-        attack_point: attack_point
-      })
+      skill_cast =
+        Managers.SkillCast.update(skill_cast, %{
+          position: position,
+          direction: direction,
+          attack_point: attack_point
+        })
+
+      Managers.Field.enter_battle_stance(skill_cast.caster)
+
+      {records, _packet} = read_point_records(packet, target_count)
+      relay_point_hit(skill_cast, records)
     end
   end
 
@@ -189,8 +173,8 @@ defmodule Ms2ex.GameHandlers.Skill do
     {attack_counter, packet} = get_int(packet)
     {_char_obj_id, packet} = get_int(packet)
 
-    {position, packet} = get_coord(packet)
-    {_impact_pos, packet} = get_coord(packet)
+    {impact_pos, packet} = get_coord(packet)
+    {_impact_pos2, packet} = get_coord(packet)
     {direction, packet} = get_coord(packet)
     {attack_point, packet} = get_byte(packet)
 
@@ -200,7 +184,7 @@ defmodule Ms2ex.GameHandlers.Skill do
     with {:ok, skill_cast} <- Managers.SkillCast.get(cast_id) do
       skill_cast =
         Managers.SkillCast.update(skill_cast, %{
-          position: position,
+          position: impact_pos,
           direction: direction,
           attack_counter: attack_counter,
           attack_point: attack_point
@@ -208,10 +192,8 @@ defmodule Ms2ex.GameHandlers.Skill do
 
       crit? = Context.Damage.roll_crit(skill_cast.caster)
 
-      mobs = damage_targets(skill_cast, crit?, target_count, [], packet)
+      mobs = swing_targets(skill_cast, impact_pos, target_count, crit?, packet)
       broadcast_damage(skill_cast, mobs)
-
-      # TODO
     end
   end
 
@@ -236,33 +218,112 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
-  # damage numbers (mode 1); the mode-0 target relay is recorded server-side
-  # only and never broadcast
+  # one lead record plus its same-swing chain per swing: each link
+  # carries the previous uid + its index while the client keeps reporting
+  defp read_point_records(packet, count), do: read_point_records(packet, count, [])
+
+  defp read_point_records(packet, 0, records), do: {records, packet}
+
+  defp read_point_records(packet, count, records) do
+    {group, packet} = read_point_lead(packet)
+    read_point_records(packet, count - 1, records ++ group)
+  end
+
+  defp read_point_lead(packet) do
+    {uid, packet} = get_long(packet)
+    {target_id, packet} = get_int(packet)
+    {unknown, packet} = get_byte(packet)
+    {more, packet} = get_bool(packet)
+
+    record = %{prev_uid: 0, uid: uid, target_id: target_id, unknown: unknown, index: 0}
+    read_point_chain(packet, more, [record], uid)
+  end
+
+  defp read_point_chain(packet, false, records, _prev_uid), do: {records, packet}
+
+  defp read_point_chain(packet, true, records, prev_uid) do
+    {uid, packet} = get_long(packet)
+    {target_id, packet} = get_int(packet)
+    {unknown, packet} = get_byte(packet)
+    {index, packet} = get_byte(packet)
+    {more, packet} = get_bool(packet)
+
+    record = %{prev_uid: prev_uid, uid: uid, target_id: target_id, unknown: unknown, index: index}
+    read_point_chain(packet, more, records ++ [record], uid)
+  end
+
+  defp relay_point_hit(skill_cast, records) do
+    # the field topic's subscriber is the caster's sender session, not the
+    # handler process — exclude that pid or the caster sees its own swing
+    # relay
+    Managers.Field.broadcast_from(
+      skill_cast.caster,
+      Packets.SkillDamage.target(skill_cast, records),
+      skill_cast.caster.sender_session_pid
+    )
+  end
+
+  # damage numbers (mode 1) for server-applied target hits
   defp broadcast_damage(_skill_cast, []), do: :ok
 
   defp broadcast_damage(skill_cast, mobs) do
     Managers.Field.broadcast(skill_cast.caster, Packets.SkillDamage.damage(skill_cast, mobs))
   end
 
-  defp damage_targets(skill_cast, crit?, target_count, mobs, packet)
-       when target_count > 0 do
-    {obj_id, packet} = get_int(packet)
-    {_, packet} = get_byte(packet)
+  # the attack doc's hit volume decides the targets when it carries one
+  # (box, cylinder, frustum or hole-cylinder): the server recomputes which
+  # alive mobs stand inside the volume anchored at the reported impact,
+  # up to the attack's target count — the client's own report is not
+  # trusted. When the recompute finds nothing (a volume the data renders
+  # empty) the reported live mobs stand in, so a metadata gap cannot
+  # silence a skill. Attacks without any volume have no server-side
+  # shape; their reported targets are the only source
+  defp swing_targets(skill_cast, impact_pos, target_count, crit?, packet) do
+    {client_ids, _packet} = read_target_ids(packet, target_count)
 
-    mobs =
-      case Managers.Field.lookup_npc(skill_cast.caster, obj_id) do
-        {:ok, %{dead?: false, type: :mob} = mob} ->
-          {mob, dmg} = damage_mob(skill_cast, mob, crit?)
-          mobs ++ [{mob, dmg}]
+    case Types.SkillCast.attack_point(skill_cast) do
+      %{range: %{type: type} = range} = attack when type in 1..4 ->
+        prism = Collision.build_prism(range, impact_pos, skill_cast.rotation.z)
 
-        _ ->
-          mobs
-      end
+        limit =
+          case attack[:target_count] do
+            count when is_integer(count) and count > 0 -> count
+            _ -> target_count
+          end
 
-    damage_targets(skill_cast, crit?, target_count - 1, mobs, packet)
+        case Managers.Field.targets_in_prism(skill_cast.caster, prism, limit) do
+          [] -> damage_reported(skill_cast, client_ids, crit?)
+          mobs -> Enum.map(mobs, &damage_mob(skill_cast, &1, crit?))
+        end
+
+      _ ->
+        damage_reported(skill_cast, client_ids, crit?)
+    end
   end
 
-  defp damage_targets(_skill_cast, _crit?, _target_count, mobs, _packet), do: mobs
+  defp damage_reported(_skill_cast, [], _crit?), do: []
+
+  defp damage_reported(skill_cast, client_ids, crit?) do
+    Enum.flat_map(client_ids, fn obj_id ->
+      case Managers.Field.lookup_npc(skill_cast.caster, obj_id) do
+        {:ok, %{dead?: false, type: :mob} = mob} ->
+          [damage_mob(skill_cast, mob, crit?)]
+
+        _ ->
+          []
+      end
+    end)
+  end
+
+  defp read_target_ids(packet, count), do: read_target_ids(packet, count, [])
+
+  defp read_target_ids(packet, 0, ids), do: {Enum.reverse(ids), packet}
+
+  defp read_target_ids(packet, count, ids) do
+    {obj_id, packet} = get_int(packet)
+    {_unknown, packet} = get_byte(packet)
+    read_target_ids(packet, count - 1, [obj_id | ids])
+  end
 
   defp damage_mob(skill_cast, mob, crit?) do
     dmg = Context.Damage.calculate(skill_cast, mob, crit?)
@@ -283,6 +344,56 @@ defmodule Ms2ex.GameHandlers.Skill do
     # end
 
     {mob, dmg}
+  end
+
+  defp use_cast(session, character, skill_cast, state, item_uid) do
+    {:ok, character} = Managers.Character.call(character, {:cast_skill, skill_cast})
+
+    cast_item = cast_item(character, item_uid)
+
+    consumable_cast_item? =
+      fishing_lure_item?(cast_item) or consumable_state_item?(cast_item)
+
+    if Types.SkillCast.use_item?(skill_cast) do
+      consume_used_item(session, character, item_uid)
+    end
+
+    case Types.SkillCast.cooldown(skill_cast, Ms2ex.sync_ticks()) do
+      nil ->
+        :ok
+
+      cooldown ->
+        Managers.Character.call(character, {:save_skill_cooldown, cooldown})
+        push(session, Packets.SkillCooldown.bytes([cooldown]))
+    end
+
+    use_packet = Packets.SkillUse.bytes(skill_cast, state)
+
+    # battle-start sequence in the order live servers emit it:
+    # skill use, battle flag, full stat refresh, casting actor state
+    Managers.Field.broadcast(character, use_packet)
+
+    if Types.SkillCast.in_battle?(skill_cast) do
+      Managers.Field.broadcast(character, Packets.UserBattle.set_stance(character, true))
+    end
+
+    Managers.Field.broadcast_stats(character)
+    Managers.Field.broadcast(character, Packets.ProxyGameObj.update_state(character, 16))
+
+    if consumable_cast_item? do
+      consume_used_item(session, character, item_uid)
+    end
+
+    # skill-use quest conditions track casts per skill id
+    Managers.Quest.update_conditions(
+      character.id,
+      :skill,
+      1,
+      "",
+      character.map_id,
+      "",
+      skill_cast.skill_id
+    )
   end
 
   defp consume_used_item(session, character, item_uid) do

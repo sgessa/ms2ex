@@ -5,6 +5,7 @@ defmodule Ms2ex.MobRespawnTest do
   alias Ms2ex.Managers.Field.Npc
 
   @mob_id 23_991_090
+  @alt_mob_id 23_991_091
   @attacker %Ms2ex.Schema.Character{id: 1, name: "Testy"}
   @cooldown_s 10
   @lethal_dmg 2000
@@ -16,7 +17,11 @@ defmodule Ms2ex.MobRespawnTest do
   }
 
   setup do
-    stub_metadata(%{"npc:#{@mob_id}" => @npc_metadata})
+    stub_metadata(%{
+      "npc:#{@mob_id}" => @npc_metadata,
+      "npc:#{@alt_mob_id}" => @npc_metadata
+    })
+
     :ok
   end
 
@@ -174,6 +179,25 @@ defmodule Ms2ex.MobRespawnTest do
 
     state = tick(state)
     assert alive(state) == 0
+  end
+
+  test "the spawn roll is weighted over the pool" do
+    doc = %{
+      npc_ids: [@mob_id, @alt_mob_id],
+      weights: [1, 0],
+      regen_check_time: @cooldown_s,
+      population: 3,
+      position: %{x: 0.0, y: 0.0, z: 0.0},
+      rotation: %{x: 0.0, y: 0.0, z: 0.0},
+      spawn_point_id: 401
+    }
+
+    state = load_spawn(base_state(), doc)
+
+    # the zero-weight candidate never spawns; the population comes from the
+    # weighted candidate alone
+    assert map_size(state.npcs) == 3
+    assert Enum.all?(state.npcs, fn {_oid, npc} -> npc.npc.id == @mob_id end)
   end
 
   test "friendly spawn points load eagerly and never run spawn cycles" do
