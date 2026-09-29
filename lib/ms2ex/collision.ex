@@ -30,42 +30,60 @@ defmodule Ms2ex.Collision do
   """
   @spec build_prism(map(), Coord.t(), number()) :: prism()
   def build_prism(range, %Coord{} = position, angle) when is_map(range) do
-    width = (range[:width] || 0) + (range[:range_add_x] || 0)
-    distance = (range[:distance] || 0) + (range[:range_add_y] || 0)
-    facing = :math.fmod((angle || 0) + (range[:rotate_z_degree] || 0) + 180, 360)
-    origin_x = position.x + (range[:range_offset_x] || 0)
-    origin_y = position.y + (range[:range_offset_y] || 0)
-    base_z = position.z + (range[:range_offset_z] || 0)
-    top_z = base_z + (range[:height] || 0) + (range[:range_add_z] || 0)
+    {origin_x, origin_y, base_z} = anchor(range, position)
 
-    polygon =
-      case range[:type] do
-        # a box projects forward as a trapezoid whose near and far edges
-        # are equally wide
-        1 ->
-          trapezoid(origin_x, origin_y, width, width, distance, facing)
+    %{
+      polygon: footprint(range, {origin_x, origin_y}, facing(range, angle)),
+      base_z: base_z,
+      top_z: base_z + height(range)
+    }
+  end
 
-        2 ->
-          {:circle, {origin_x, origin_y, range[:distance] || 0}}
+  # the volume shapes: a box projects forward as a trapezoid whose near
+  # and far edges are equally wide, a frustum narrows from width to end
+  # width, a cylinder is a circle, a hole-cylinder a ring
+  defp footprint(range, {ox, oy}, facing) do
+    case range[:type] do
+      1 ->
+        trapezoid(ox, oy, width(range), width(range), reach(range), facing)
 
-        3 ->
-          trapezoid(
-            origin_x,
-            origin_y,
-            range[:width] || 0,
-            range[:end_width] || 0,
-            range[:distance] || 0,
-            facing
-          )
+      2 ->
+        {:circle, {ox, oy, raw(range, :distance)}}
 
-        4 ->
-          {:hole_circle, {origin_x, origin_y, range[:width] || 0, range[:end_width] || 0}}
+      3 ->
+        trapezoid(
+          ox,
+          oy,
+          raw(range, :width),
+          raw(range, :end_width),
+          raw(range, :distance),
+          facing
+        )
 
-        _ ->
-          :none
-      end
+      4 ->
+        {:hole_circle, {ox, oy, raw(range, :width), raw(range, :end_width)}}
 
-    %{polygon: polygon, base_z: base_z, top_z: top_z}
+      _ ->
+        :none
+    end
+  end
+
+  defp raw(range, key), do: range[key] || 0
+
+  # a box's reach scales with its range_add; a frustum's shape is raw
+  defp width(range), do: (range[:width] || 0) + (range[:range_add_x] || 0)
+  defp reach(range), do: (range[:distance] || 0) + (range[:range_add_y] || 0)
+  defp height(range), do: (range[:height] || 0) + (range[:range_add_z] || 0)
+
+  defp facing(range, angle),
+    do: :math.fmod((angle || 0) + (range[:rotate_z_degree] || 0) + 180, 360)
+
+  defp anchor(range, position) do
+    {
+      position.x + (range[:range_offset_x] || 0),
+      position.y + (range[:range_offset_y] || 0),
+      position.z + (range[:range_offset_z] || 0)
+    }
   end
 
   @doc "Whether a position falls inside the prism."

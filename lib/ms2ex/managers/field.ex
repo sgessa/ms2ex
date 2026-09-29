@@ -882,10 +882,11 @@ defmodule Ms2ex.Managers.Field do
       state.npcs
       |> Map.values()
       |> Enum.filter(fn
-        %Types.FieldNpc{type: :mob, dead?: false} -> true
+        %Types.FieldNpc{type: :mob, dead?: false} = npc ->
+          Collision.contains?(prism, npc.position)
+
         _npc -> false
       end)
-      |> Enum.filter(&Collision.contains?(prism, &1.position))
       |> Enum.take(limit)
 
     {:reply, targets, state}
