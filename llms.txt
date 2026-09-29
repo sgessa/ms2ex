@@ -12,6 +12,11 @@
 ## Modules
 
 - [Ms2ex](Ms2ex.md)
+- [Ms2ex.Collision](Ms2ex.Collision.md): Attack hit volumes. A skill attack's range doc describes a prism: a
+polygon footprint (box, cylinder, frustum or hole-cylinder) projected
+from an anchor position along a facing angle and raised over a height
+band. A position is inside the prism when its footprint point falls
+within the polygon and its height within the band.
 - [Ms2ex.Commands](Ms2ex.Commands.md)
 - [Ms2ex.Constants](Ms2ex.Constants.md)
 - [Ms2ex.EctoTypes.Term](Ms2ex.EctoTypes.Term.md)
@@ -168,6 +173,12 @@ configured. Normal objects return to Reactable after their reset time.
 from the field-enter batch, picked up with the interact key (recv
 LIFTABLE), and installed at a liftable target box — which fires the
 quest's item_move condition.
+
+- [Ms2ex.Managers.Field.Liftup](Ms2ex.Managers.Field.Liftup.md): Liftable object weapons (barrels, crates, pots): the player picks one up
+with the interact key, the held object replaces the castable skills with
+the throw skill granted by the rolled item, and the throw releases it.
+The weapon sits back on its tile after its respawn delay, and a hostile
+npc may burst out of the container on lift.
 
 - [Ms2ex.Managers.Field.Npc](Ms2ex.Managers.Field.Npc.md)
 - [Ms2ex.Managers.Field.Npc.Battle](Ms2ex.Managers.Field.Npc.Battle.md): Mob aggro and chase: target acquisition, target retention and pathed

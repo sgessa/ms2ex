@@ -30,6 +30,8 @@ of a fluid column that is not shallow.
 
 # `get_npc_spawns`
 
+# `get_object_weapons`
+
 # `get_portal`
 
 # `get_portals`

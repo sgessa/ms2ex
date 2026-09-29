@@ -5,6 +5,8 @@
 
 # `drop`
 
+# `error`
+
 # `pickup`
 
 # `place_liftable`

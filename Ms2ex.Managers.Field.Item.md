@@ -5,6 +5,8 @@
 
 # `create_item`
 
+# `despawn`
+
 # `drop_item`
 
 # `drop_item`

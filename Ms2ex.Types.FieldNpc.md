@@ -31,6 +31,7 @@
   spawn_point_id: term(),
   stat_dirty?: term(),
   stats: term(),
+  stunned_until: term(),
   type: term(),
   velocity: term()
 }

@@ -17,6 +17,7 @@ pattern:
 - `Field.InteractObject` — interact-object lifecycles
 - `Field.Item` — field drops and pickups
 - `Field.Liftable` — quest liftable props
+- `Field.Liftup` — liftable object weapons (throwable barrels, crates, ...)
 - `Field.Npc` — npc spawns, damage/death and spawn cycles
 - `Field.Npc.Patrol` — npc movement along patrol paths
 - `Field.PerformanceStage` — the concert stage
@@ -254,6 +255,14 @@ Drops an item from a character's inventory into the field.
 
 Drops an item at a fixed position instead of at the character's feet.
 
+# `drop_liftup`
+
+```elixir
+@spec drop_liftup(Ms2ex.Schema.Character.t()) :: :ok | :error
+```
+
+The character drops the held object weapon without throwing it.
+
 # `end_performance`
 
 ```elixir
@@ -366,6 +375,16 @@ interact-object quest conditions and run gathering.
 ```
 
 Removes a character from their current field.
+
+# `liftup_object`
+
+```elixir
+@spec liftup_object(Ms2ex.Schema.Character.t(), tuple()) :: :ok | {:error, integer()}
+```
+
+The character lifts the object weapon at a grid tile (e.g. a throwable
+barrel). Returns `:ok` or `{:error, code}` for the response-cube error
+notice.
 
 # `lookup_instrument`
 
@@ -523,6 +542,20 @@ Claims the performance stage, announcing the concert to everyone on the map.
 
 Subscribes the current process to a character's field events.
 
+# `targets_in_prism`
+
+```elixir
+@spec targets_in_prism(
+  Ms2ex.Schema.Character.t(),
+  Ms2ex.Collision.prism(),
+  pos_integer()
+) :: [
+  Ms2ex.Types.FieldNpc.t()
+]
+```
+
+Alive mobs standing inside a hit-volume prism, up to `limit`.
+
 # `toggle_stage`
 
 ```elixir
@@ -546,6 +579,17 @@ Unsubscribes the current process from a character's field events.
 ```
 
 Applies a client widget update (guide events, finished scene movies).
+
+# `use_liftup_skill`
+
+```elixir
+@spec use_liftup_skill(Ms2ex.Schema.Character.t(), integer(), integer()) ::
+  :ok | :error
+```
+
+Cast gate while holding an object weapon: only the held object's throw
+skill casts (consuming the hold). Returns `:error` to refuse the cast.
+Outside a field no hold can exist, so casts pass through.
 
 # `user_position`
 

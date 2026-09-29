@@ -1,6 +1,7 @@
 Mix.Tasks.Maple.Game.md
 Mix.Tasks.Maple.Server.md
 Mix.Tasks.Maple.Ugc.Clear.md
+Ms2ex.Collision.md
 Ms2ex.Commands.md
 Ms2ex.Constants.md
 Ms2ex.Context.Accounts.md
@@ -202,6 +203,7 @@ Ms2ex.Managers.Field.Instrument.md
 Ms2ex.Managers.Field.InteractObject.md
 Ms2ex.Managers.Field.Item.md
 Ms2ex.Managers.Field.Liftable.md
+Ms2ex.Managers.Field.Liftup.md
 Ms2ex.Managers.Field.Npc.Battle.md
 Ms2ex.Managers.Field.Npc.Idle.md
 Ms2ex.Managers.Field.Npc.Patrol.md
