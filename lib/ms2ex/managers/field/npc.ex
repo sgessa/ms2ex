@@ -481,7 +481,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     missing = spawn.population - length(spawn.spawned_mobs)
 
     Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
-      case spawn_npc(state, Enum.random(spawn.npc_ids), spawn) do
+      case spawn_npc(state, pick_mob_id(spawn), spawn) do
         {%Types.FieldNpc{} = field_npc, state} ->
           spawned = spawn.spawned_mobs ++ [field_npc.object_id]
           {%{spawn | spawned_mobs: spawned}, state}
@@ -491,6 +491,24 @@ defmodule Ms2ex.Managers.Field.Npc do
       end
     end)
   end
+
+  # a mob spawn document lists candidate npc ids with a parallel weight
+  # list — each mob's share of the spawn roll; documents without weights
+  # (explicit npc lists) roll uniformly
+  defp pick_mob_id(%{npc_ids: ids, weights: weights})
+       when ids != [] and length(weights) == length(ids) do
+    total = Enum.sum(weights)
+    roll = :rand.uniform(total)
+
+    {id, _} =
+      Enum.reduce_while(Enum.zip(ids, weights), 0, fn {id, weight}, acc ->
+        if roll <= acc + weight, do: {:halt, {id, acc}}, else: {:cont, acc + weight}
+      end)
+
+    id
+  end
+
+  defp pick_mob_id(%{npc_ids: ids}), do: Enum.random(ids)
 
   defp tag_attackers(field_npc, attacker) do
     field_npc
