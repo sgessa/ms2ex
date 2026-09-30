@@ -275,6 +275,7 @@ from the table are ordinary shared fields.
 - [Ms2ex.Storage.Tables.InteractObjects](Ms2ex.Storage.Tables.InteractObjects.md)
 - [Ms2ex.Storage.Tables.ItemOptions](Ms2ex.Storage.Tables.ItemOptions.md)
 - [Ms2ex.Storage.Tables.Jobs](Ms2ex.Storage.Tables.Jobs.md)
+- [Ms2ex.Storage.Tables.LearningQuest](Ms2ex.Storage.Tables.LearningQuest.md)
 - [Ms2ex.Storage.Tables.MasteryDifferentialFactors](Ms2ex.Storage.Tables.MasteryDifferentialFactors.md): `masterydifferentialfactor.xml`: how much mastery a harvest still awards
 when the recipe sits below the player's grade. Only the number of entries
 with a positive factor is used: once the grade difference reaches it, the

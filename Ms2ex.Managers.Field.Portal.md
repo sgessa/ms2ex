@@ -3,6 +3,10 @@
 
 # `load`
 
+# `remove`
+
+Drops a used portal from the field and tells the clients it is gone.
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

@@ -7,6 +7,10 @@
 
 Sends a localised message-box notice (uses a StringCode integer).
 
+# `message_box_text`
+
+Sends a message-box notice with raw text.
+
 ---
 
 *Consult [api-reference.md](api-reference.md) for complete listing*

@@ -69,6 +69,11 @@ Moves the character to a started quest's go-to-npc destination map.
 
 Loads all quests for a character and sends to client.
 
+# `maple_guide`
+
+Moves the character to a Maple Guide's destination map when the guide's
+start requirements are met (the guide book UI's "start" action).
+
 # `notify_item_acquired`
 
 Updates the acquisition-driven conditions (`item_add`, `item_exist`) for

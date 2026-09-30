@@ -3,6 +3,8 @@
 
 # `bytes`
 
+# `remove`
+
 # `update`
 
 ---

@@ -435,6 +435,7 @@ Ms2ex.Storage.Tables.Instruments.html
 Ms2ex.Storage.Tables.InteractObjects.html
 Ms2ex.Storage.Tables.ItemOptions.html
 Ms2ex.Storage.Tables.Jobs.html
+Ms2ex.Storage.Tables.LearningQuest.html
 Ms2ex.Storage.Tables.MasteryDifferentialFactors.html
 Ms2ex.Storage.Tables.MasteryRecipes.html
 Ms2ex.Storage.Tables.MasteryRewards.html
@@ -510,8 +511,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-29B8553D.js
-dist/sidebar_items-3218B2F2.js
+dist/search_data-7D3B8C09.js
+dist/sidebar_items-7FF3C87E.js
 index.html
 license.html
 readme.html

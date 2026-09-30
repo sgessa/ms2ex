@@ -434,6 +434,7 @@ Ms2ex.Storage.Tables.Instruments.md
 Ms2ex.Storage.Tables.InteractObjects.md
 Ms2ex.Storage.Tables.ItemOptions.md
 Ms2ex.Storage.Tables.Jobs.md
+Ms2ex.Storage.Tables.LearningQuest.md
 Ms2ex.Storage.Tables.MasteryDifferentialFactors.md
 Ms2ex.Storage.Tables.MasteryRecipes.md
 Ms2ex.Storage.Tables.MasteryRewards.md

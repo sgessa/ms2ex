@@ -289,6 +289,14 @@ character joined an existing one.
 
 Puts a character into battle stance (the field drops it after a beat).
 
+# `enter_return_id`
+
+```elixir
+@spec enter_return_id(integer()) :: integer()
+```
+
+The enter-return id a map declares (0 when it declares none).
+
 # `field_name`
 
 ```elixir
@@ -492,6 +500,14 @@ Removes an npc from its field (idempotent).
 
 Removes all buffs owned by the character (e.g. on death).
 
+# `remove_portal`
+
+```elixir
+@spec remove_portal(Ms2ex.Schema.Character.t(), integer()) :: :ok | :error
+```
+
+Removes a used portal from the character's field (one-shot quest gates).
+
 # `remove_tombstone`
 
 ```elixir
@@ -509,14 +525,21 @@ Removes a character's tombstone from the field (on field leave).
 
 Reserves banner slots for a character.
 
-# `return_map_id`
+# `return_slot`
 
 ```elixir
-@spec return_map_id(integer()) :: integer()
+@spec return_slot(integer(), integer()) :: integer()
 ```
 
-The map a character who quit on `map_id` should return to: the map's
-`enter_return_id` when it declares one, the map itself otherwise.
+The map entry of `new_map_id` persists: the map's `enter_return_id` when
+it declares one, otherwise the previous slot — so the persisted map is
+always the last map that declared a return (the starting field for a
+fresh character). A relog lands there, and a portal without a target
+leads back to it.
+
+Only ordinary fields record a return (a SaveField instance too); a plain
+solo instance's declared return is skipped, the same gate the reference's
+field-entry push applies.
 
 # `skip_cutscene`
 
@@ -541,6 +564,17 @@ Claims the performance stage, announcing the concert to everyone on the map.
 ```
 
 Subscribes the current process to a character's field events.
+
+# `summon_to_field`
+
+```elixir
+@spec summon_to_field(Ms2ex.Schema.Character.t(), Ms2ex.Schema.Character.t()) ::
+  :ok | {:error, term()}
+```
+
+Pulls a party member onto the summoner's exact field: same map, channel
+and instance, at the summoner's position — a fresh instance allocation
+would strand them in a private copy of the map.
 
 # `targets_in_prism`
 
