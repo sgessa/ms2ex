@@ -274,19 +274,16 @@ defmodule Ms2ex.GameHandlers.Party do
     session
   end
 
-  defp recall_member(member, character) do
+  defp recall_member(member, summoner) do
     with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
-         true <- live_member.id != character.id,
+         true <- live_member.id != summoner.id,
          true <- Map.get(live_member, :online?, false),
          false <- Map.get(live_member, :dead?, false),
          true <- is_pid(Map.get(live_member, :field_pid)),
-         true <- live_member.map_id != character.map_id do
-      Managers.Field.change_field(
-        live_member,
-        character.map_id,
-        character.position,
-        character.rotation
-      )
+         false <- live_member.field_pid == summoner.field_pid do
+      Managers.Field.summon_to_field(summoner, live_member)
+    else
+      _ -> :ok
     end
   end
 

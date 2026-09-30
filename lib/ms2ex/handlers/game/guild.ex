@@ -433,7 +433,7 @@ defmodule Ms2ex.GameHandlers.Guild do
             {:update, %{character | guild_name: guild.name, guild_id: guild.id}}
           )
 
-        Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
+        Managers.Quest.update_conditions(character.id, :guild_join_req, 1, "", 0, "", 0)
 
         Ms2ex.Net.SenderSession.run_async(character, fn ->
           Managers.GuildServer.subscribe(guild.id)
@@ -485,7 +485,7 @@ defmodule Ms2ex.GameHandlers.Guild do
             {:update, %{character | guild_name: guild_state.guild.name, guild_id: guild_state.id}}
           )
 
-        Managers.Quest.update_conditions(character.id, :guild_join, 1, "", 0, "", 0)
+        Managers.Quest.update_conditions(character.id, :guild_join_req, 1, "", 0, "", 0)
 
         Ms2ex.Net.SenderSession.run_async(character, fn ->
           Managers.GuildServer.subscribe(guild_id)

@@ -38,4 +38,12 @@ defmodule Ms2ex.Packets.AddPortal do
     |> put_bool(portal.minimap_visible)
     |> put_short()
   end
+
+  # one-shot portals (quest gates) vanish after use
+  def remove(portal_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(0x1)
+    |> put_int(portal_id)
+  end
 end

@@ -43,6 +43,15 @@ defmodule Ms2ex.Packets.Notice do
       args: []
     }
 
+    message_box_notice(text)
+  end
+
+  @doc "Sends a message-box notice with raw text."
+  def message_box_text(msg) do
+    message_box_notice(%{localized?: false, unknown: 0, message: msg})
+  end
+
+  defp message_box_notice(text) do
     __MODULE__
     |> build()
     |> put_byte(@commands.notice)

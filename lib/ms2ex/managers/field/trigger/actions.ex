@@ -34,7 +34,8 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
       case Map.get(meshes, mesh_id) do
         %{} = mesh ->
           Managers.Field.broadcast(state.topic, Packets.Trigger.update_mesh(visible, mesh))
-          state
+
+          put_in(state, [:trigger_meshes, mesh_id], Map.put(mesh, :visible, visible))
 
         _ ->
           state
@@ -616,6 +617,23 @@ defmodule Ms2ex.Managers.Field.Trigger.Actions do
 
         state
     end
+  end
+
+  # the event/minigame countdown overlay ("3, 2, 1, go!"); stage is the
+  # round indicator shown beside the count, sound_type picks the countdown
+  # sound (0 when the script omits it)
+  defp execute_action("show_count_ui", args, _script_name, state) do
+    text = to_string(args[:text] || "")
+    stage = int_arg(args, :stage)
+    count = int_arg(args, :count)
+    sound_type = int_arg(args, :sound_type)
+
+    Managers.Field.broadcast(
+      state.topic,
+      Packets.MassiveEvent.countdown(text, stage, count, sound_type)
+    )
+
+    state
   end
 
   # toggles a trigger sound object (map ambience/chime anchored to the

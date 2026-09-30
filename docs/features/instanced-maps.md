@@ -27,16 +27,15 @@ absent from the table are ordinary shared fields.
   `character.field_instance`.
 - `Managers.Field.instance_id/1` allocates a fresh unique id for `solo`
   maps and returns 0 (shared) for everything else.
-- Return maps: when a field change enters a map that declares an
-  `enter_return_id`, the hub is persisted instead of the map itself (the
-  reference's logout reset, collapsed from its 3-deep return-map stack —
-  ms2ex deliberately skips that stack's stale-entry quirk). The cube
-  return-map packet advertises the same target.
-- Relog behavior: the current map persists through instanced maps too —
-  the reference's `SpawnPlayer` sets `Character.MapId` on every entry and
-  only maps that push a return-map (`InstanceType.none` with an
-  `EnterReturnId`, or `SaveField` maps) reset it at logout. A relog
-  mid-tutorial therefore lands in a fresh instance of the same stage.
+- Return maps: field entry persists the character's return slot — the
+  map's `enter_return_id` when it declares one and the map is an ordinary
+  field (or a SaveField instance), otherwise the previous slot. Solo
+  instances never record a return. The slot is the persisted `map_id`: a
+  relog lands at the last recorded return (the starting field for a fresh
+  character), a portal without a target leads back there, and the cube
+  return-map packet advertises the same target. This is the reference's
+  logout reset, collapsed from its 3-deep return-map stack — ms2ex
+  deliberately skips that stack's stale-entry quirk.
 
 ## Reference parity notes
 

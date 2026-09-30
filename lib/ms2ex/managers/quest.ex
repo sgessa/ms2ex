@@ -37,6 +37,10 @@ defmodule Ms2ex.Managers.Quest do
     :emotiontime
   ]
 
+  # guides leading to the private residence need home migration, which is
+  # not implemented yet
+  @default_home_map_id 62_000_000
+
   # Client API
 
   @doc """
@@ -126,6 +130,14 @@ defmodule Ms2ex.Managers.Quest do
   """
   def dispatch(character_id, quest_id) do
     GenServer.call(process_name(character_id), {:dispatch, quest_id}, @default_timeout)
+  end
+
+  @doc """
+  Moves the character to a Maple Guide's destination map when the guide's
+  start requirements are met (the guide book UI's "start" action).
+  """
+  def maple_guide(character_id, id) do
+    GenServer.call(process_name(character_id), {:maple_guide, id}, @default_timeout)
   end
 
   @doc """
@@ -360,6 +372,20 @@ defmodule Ms2ex.Managers.Quest do
 
         quest ->
           dispatch_change_field(quest, state)
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:maple_guide, id}, _from, state) do
+    reply =
+      case Storage.Tables.LearningQuest.get(id) do
+        nil ->
+          :ok
+
+        entry ->
+          maple_guide_change_field(entry, state)
       end
 
     {:reply, reply, state}
@@ -837,6 +863,42 @@ defmodule Ms2ex.Managers.Quest do
 
       _metadata ->
         :ok
+    end
+  end
+
+  defp maple_guide_change_field(entry, state) do
+    {:ok, character} = Managers.Character.lookup(state.character_id)
+
+    cond do
+      character.level < entry.required_level ->
+        :ok
+
+      maple_guide_quest_completed?(entry.quest_id, state) ->
+        :ok
+
+      entry.go_to_map_id == @default_home_map_id ->
+        # TODO: migrate to the character's home once residences exist
+        :ok
+
+      true ->
+        maple_guide_enter(character, entry)
+    end
+  end
+
+  defp maple_guide_enter(character, entry) do
+    case Storage.Maps.get_portal(entry.go_to_map_id, entry.go_to_portal_id) do
+      %{position: position, rotation: rotation} ->
+        Managers.Field.change_field(character, entry.go_to_map_id, position, rotation)
+
+      nil ->
+        Managers.Field.change_field(character, entry.go_to_map_id)
+    end
+  end
+
+  defp maple_guide_quest_completed?(quest_id, state) do
+    case Managers.Quest.State.get_quest_from_state(quest_id, state) do
+      %{state: :completed} -> true
+      _quest -> false
     end
   end
 

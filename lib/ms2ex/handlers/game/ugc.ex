@@ -63,7 +63,11 @@ defmodule Ms2ex.GameHandlers.Ugc do
     {url, _packet} = get_ustring(packet)
 
     with {:ok, character} <- Managers.Character.lookup(session.character_id),
-         {:ok, character} <- Context.Characters.update(character, %{profile_url: url}) do
+         {:ok, updated} <- Context.Characters.update(character, %{profile_url: url}) do
+      # Repo.update() drops the virtual runtime object_id; the client matches
+      # this packet by object id, so restore it before broadcasting or the
+      # owner never re-renders the portrait until relog.
+      character = %{updated | object_id: character.object_id}
       Managers.Character.call(character.id, {:update, character})
       Managers.Field.broadcast(character, Packets.Ugc.profile_picture(character))
 

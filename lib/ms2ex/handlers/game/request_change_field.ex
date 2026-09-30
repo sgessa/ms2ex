@@ -21,24 +21,98 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
     {src_portal_id, _packet} = get_int(packet)
 
     case find_portal(portals, src_portal_id) do
-      %{target_map_id: dst_map_id, enable: true} ->
-        maybe_complete_tutorial(character, current_map_id)
+      nil ->
+        :ok
 
-        spawn_point = arrival_point(dst_map_id, current_map_id)
-
-        Managers.Field.change_field(
+      %{enable: false} = portal ->
+        push(
           character,
-          dst_map_id,
-          spawn_point.position,
-          spawn_point.rotation
+          Packets.Notice.message_box_text("Cannot use disabled portal: #{portal.id}")
         )
+
+      portal ->
+        maybe_complete_tutorial(character, current_map_id)
+        maybe_remove_portal(portal, character)
+        leave_through(portal, character, current_map_id)
+    end
+  end
+
+  defp handle_change_field(_mode, _packet, _session), do: :ok
+
+  # TODO: portal passwords are not verified (home portals prompt for one)
+
+  # portal types whose handling needs systems ms2ex does not have yet behave
+  # as plain field portals for now:
+  # TODO: dungeon portals (DungeonReturnToLobby, DungeonEnter, LeaveDungeon)
+  # once dungeons exist
+  # TODO: housing portals (InHome, FieldToHome) once residences exist
+  # TODO: Event portals removed once their capacity is reached
+
+  # the target portal on this map is the destination: the client teleports
+  # in place (the packet drops the player 25 units above the anchor)
+  defp leave_through(%{target_map_id: current_map_id} = portal, character, current_map_id) do
+    case Storage.Maps.get_portal(current_map_id, portal.target_portal_id) do
+      %{position: position, rotation: rotation} ->
+        character = %{character | position: position}
+        Managers.Character.call(character, {:update, character})
+        Managers.Field.user_position(character, position)
+        push(character, Packets.UserMoveByPortal.bytes(character, position, rotation))
 
       _ ->
         :ok
     end
   end
 
-  defp handle_change_field(_mode, _packet, _session), do: :ok
+  # a portal without a target is an exit: it sends the character back to
+  # their return map (guide and dungeon exits work this way — the map's
+  # trigger script only opens the portal, the destination is not its own)
+  defp leave_through(%{target_map_id: 0}, character, _current_map_id) do
+    row = Context.Characters.get(character.id)
+
+    row.map_id
+    |> return_map()
+    |> case do
+      nil -> :ok
+      map_id -> Managers.Field.change_field(character, map_id)
+    end
+  end
+
+  defp leave_through(%{target_map_id: dst_map_id} = portal, character, _current_map_id) do
+    case arrival_point(portal, dst_map_id) do
+      %{position: position, rotation: rotation} ->
+        Managers.Field.change_field(character, dst_map_id, position, rotation)
+
+      nil ->
+        push(character, Packets.RequestFieldEnter.error())
+    end
+  end
+
+  # the destination's arrival anchor is the src portal's designated target
+  # portal; maps without it (or that cannot be entered) fail the move
+  defp arrival_point(portal, dst_map_id) do
+    if Storage.Maps.get_meta(dst_map_id) do
+      Storage.Maps.get_portal(dst_map_id, portal.target_portal_id) ||
+        Storage.Maps.get_field_spawn(dst_map_id)
+    end
+  end
+
+  # one-shot quest portals vanish after use
+  @portal_quest 6
+
+  defp maybe_remove_portal(%{id: id, type: type}, character) when type == @portal_quest,
+    do: Managers.Field.remove_portal(character, id)
+
+  defp maybe_remove_portal(_portal, _character), do: :ok
+
+  # pre-existing characters can carry a slot that predates the return-map
+  # rule; falling back to a busy hub beats being stranded
+  @default_return_map_id 2_000_062
+
+  defp return_map(0), do: @default_return_map_id
+
+  defp return_map(map_id) do
+    if Storage.Maps.get_meta(map_id), do: map_id, else: @default_return_map_id
+  end
 
   # walking out of the job's tutorial start field at level 1 completes the
   # tutorial: the reward items are granted and the tutorial's maps and taxis
@@ -95,16 +169,5 @@ defmodule Ms2ex.GameHandlers.RequestChangeField do
 
   defp find_portal(portals, portal_id) do
     Enum.find(portals, &(&1.id == portal_id))
-  end
-
-  # the destination's portal leading back to the current map is the arrival
-  # point; maps without a return portal use their default spawn point
-  defp arrival_point(dst_map_id, current_map_id) do
-    portal =
-      dst_map_id
-      |> Storage.Maps.get_portals()
-      |> Enum.find(&(&1.target_map_id == current_map_id))
-
-    portal || Storage.Maps.get_field_spawn(dst_map_id)
   end
 end
