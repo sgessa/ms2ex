@@ -7,16 +7,7 @@ defmodule Ms2exWeb.Router do
 
   pipeline :ugc do
     plug :put_secure_browser_headers
-    plug :force_connection_close
   end
-
-  # The game reuses the upload connection for the follow-up avatar GET, and
-  # Bandit wedges on that second request (never dispatches it, closes the
-  # connection after its 15s read timeout), so the client never applies the
-  # new portrait. Telling the client to close after each response makes it
-  # open a fresh connection per request, which Bandit handles immediately.
-  def force_connection_close(conn, _opts),
-    do: Plug.Conn.put_resp_header(conn, "connection", "close")
 
   scope "/api", Ms2exWeb do
     pipe_through :api
