@@ -53,17 +53,17 @@ defmodule Ms2ex.MobGateTest do
     assert <<0x4F::little-16, 0x8, 0x1, 260::little-32>> = Packets.Trigger.guide_event(260)
   end
 
-  test "load lists already-hidden meshes as dropped" do
+  test "load serializes each mesh's current visibility" do
     bytes =
       Packets.Trigger.load([
-        %{id: 1000, minimap_invisible: true, scale: 1.0},
+        %{id: 1000, visible: false, minimap_invisible: true, scale: 1.0},
         %{id: 2000, minimap_invisible: false, scale: 2.0}
       ])
 
     assert <<0x4F::little-16, 0x2, 2::little-32>> <> rest = bytes
 
     assert <<1000::little-32, 0, 1, 0::little-32, 0::little-16, 1.0::little-float-32,
-             2000::little-32, 0, 0, 0::little-32, 0::little-16, 2.0::little-float-32>> = rest
+             2000::little-32, 1, 0, 0::little-32, 0::little-16, 2.0::little-float-32>> = rest
   end
 
   test "load registers cameras without activating them" do
@@ -81,6 +81,10 @@ defmodule Ms2ex.MobGateTest do
     assert [trigger_1000, trigger_2000] = trigger_pushes()
     assert <<0x4F::little-16, 0x3, 1000::little-32, 0, 1>> <> _ = trigger_1000
     assert <<0x4F::little-16, 0x3, 2000::little-32, 0, 0>> <> _ = trigger_2000
+
+    # the dropped meshes are tracked so a late joiner loads them dropped
+    refute state.trigger_meshes[1000].visible
+    refute state.trigger_meshes[2000].visible
 
     # the gate stays latched open
     assert MapSet.member?(state.opened_gates, @gate.spawn_point_id)
@@ -125,7 +129,11 @@ defmodule Ms2ex.MobGateTest do
       players: %{},
       topic: "test-topic",
       map_id: nil,
-      local_id_counter: 50_000_000
+      local_id_counter: 50_000_000,
+      trigger_meshes: %{
+        1000 => %{id: 1000, visible: true, minimap_invisible: true, scale: 1.0},
+        2000 => %{id: 2000, visible: true, minimap_invisible: false, scale: 2.0}
+      }
     }
   end
 

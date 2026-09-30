@@ -16,4 +16,11 @@ defmodule Ms2ex.Packets.RequestFieldEnter do
     # client reject the field state without any visible error
     |> put_int(0x1234)
   end
+
+  # the catch-all move error; the client pops its migration-failure dialog
+  def error do
+    __MODULE__
+    |> build()
+    |> put_byte(0xFF)
+  end
 end

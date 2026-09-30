@@ -88,12 +88,18 @@ defmodule Ms2ex.GameHandlers.ResponseFieldEnter do
     |> Map.put(:rotation, new_map.rotation)
   end
 
-  # the persisted map is the map's enter_return_id when it declares one
-  # (a relog inside a quest instance lands at its hub); the in-memory map
-  # id follows the actual map — the field process is built from it
+  # the persisted map is the return slot: the last map that declared an
+  # enter-return id (a relog inside a quest instance or a guide map lands
+  # at its hub, and a portal without a target leads back there); the
+  # in-memory map id follows the actual map — the field process is built
+  # from it
   defp persist_current_map(character, new_map) do
+    row = Context.Characters.get(character.id)
+
     {:ok, character} =
-      Context.Characters.update(character, %{map_id: Managers.Field.return_map_id(new_map.id)})
+      Context.Characters.update(character, %{
+        map_id: Managers.Field.return_slot(row.map_id, new_map.id)
+      })
 
     Map.put(character, :map_id, new_map.id)
   end

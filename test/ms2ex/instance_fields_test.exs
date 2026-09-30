@@ -17,14 +17,16 @@ defmodule Ms2ex.InstanceFieldsTest do
       type: :channel_scale,
       instance_id: 1_000_068,
       pool_count: 0,
-      max_count: 20
+      max_count: 20,
+      save_field: true
     }
   }
 
   setup do
     stub_metadata(%{
       "table:server.instancefield.xml" => @table_doc,
-      "map:63000015" => %{enter_return_id: 2_000_301}
+      "map:63000015" => %{property: %{enter_return_id: 2_000_301}},
+      "map:52000058" => %{property: %{enter_return_id: 2_000_009}}
     })
 
     :ok
@@ -83,9 +85,20 @@ defmodule Ms2ex.InstanceFieldsTest do
              Managers.Field.assign_instance(%Schema.Character{map_id: @channel_scale_map})
   end
 
-  test "return_map_id falls back to the map itself" do
-    assert Managers.Field.return_map_id(@tutorial_map) == @tutorial_map
-    assert Managers.Field.return_map_id(@quest_instance) == 2_000_301
+  test "enter_return_id reads the map property and is zero when undeclared" do
+    assert Managers.Field.enter_return_id(@tutorial_map) == 0
+    assert Managers.Field.enter_return_id(@quest_instance) == 2_000_301
+  end
+
+  test "the return slot skips solo instances and records save-field maps" do
+    # the solo tutorial map's return is never recorded, declared or not
+    assert Managers.Field.return_slot(2_000_001, @tutorial_map) == 2_000_001
+    # a save-field instance's declared return is recorded
+    assert Managers.Field.return_slot(2_000_001, @channel_scale_map) == 2_000_009
+    # ordinary fields record their declared return
+    assert Managers.Field.return_slot(2_000_001, @quest_instance) == 2_000_301
+    # ordinary fields without a declaration keep the previous slot
+    assert Managers.Field.return_slot(2_000_301, @shared_map) == 2_000_301
   end
 
   test "solo maps allocate a fresh instance id per entry, others share" do

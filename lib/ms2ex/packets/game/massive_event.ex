@@ -19,14 +19,14 @@ defmodule Ms2ex.Packets.MassiveEvent do
     |> put_int(vertical_offset)
   end
 
-  def countdown(text, round, seconds) do
+  def countdown(text, round, seconds, sound_type \\ 1) do
     __MODULE__
     |> build()
     |> put_byte(@countdown)
     |> put_ustring(text)
     |> put_int(round)
     |> put_int(seconds)
-    |> put_int(1)
+    |> put_int(sound_type)
   end
 
   # type follows the client's banner table (0 lose, 1 game over, 2 winner,

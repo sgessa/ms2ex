@@ -15,7 +15,7 @@ config :ms2ex, Ms2exWeb.Endpoint,
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console,
-  format: "[$level] $message\n",
+  format: "$time [$level] $message\n",
   truncate: :infinity
 
 # Set a higher stacktrace during development. Avoid configuring such

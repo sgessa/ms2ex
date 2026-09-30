@@ -612,17 +612,28 @@ defmodule Ms2ex.Managers.Field.Npc do
            get_in(state, [:npc_spawns, field_npc.spawn_point_id]),
          false <- MapSet.member?(opened, spid),
          %{meshes: meshes} = gate <- Map.get(gates, spid) do
-      Enum.each(meshes, &Managers.Field.broadcast(state.topic, Packets.Trigger.hide_mesh(&1)))
+      state = Enum.reduce(meshes, state, fn mesh, acc -> hide_gate_mesh(mesh.id, acc) end)
 
       if guide_event = Map.get(gate, :guide_event) do
         Managers.Field.broadcast(state.topic, Packets.Trigger.guide_event(guide_event))
       end
 
-      state
-      |> Map.put(:opened_gates, MapSet.put(opened, spid))
-      |> Map.put(:hidden_meshes, Map.get(state, :hidden_meshes, []) ++ meshes)
+      Map.put(state, :opened_gates, MapSet.put(opened, spid))
     else
       _ -> state
+    end
+  end
+
+  # drops a gate mesh on the field and records the state so late joiners
+  # load it dropped
+  defp hide_gate_mesh(mesh_id, state) do
+    case Map.get(Map.get(state, :trigger_meshes, %{}), mesh_id) do
+      %{} = mesh ->
+        Managers.Field.broadcast(state.topic, Packets.Trigger.hide_mesh(mesh))
+        put_in(state, [:trigger_meshes, mesh_id], Map.put(mesh, :visible, false))
+
+      _ ->
+        state
     end
   end
 

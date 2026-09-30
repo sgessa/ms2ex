@@ -27,7 +27,7 @@ defmodule Ms2ex.Packets.Trigger do
     |> build()
     |> put_byte(@modes.load)
     |> put_int(length(meshes) + length(cameras) + length(sounds))
-    |> reduce(meshes, fn mesh, packet -> put_mesh(packet, false, mesh) end)
+    |> reduce(meshes, fn mesh, packet -> put_mesh(packet, Map.get(mesh, :visible, true), mesh) end)
     |> reduce(cameras, fn camera, packet -> put_camera(packet, camera) end)
     |> reduce(sounds, fn sound, packet -> put_sound(packet, sound) end)
   end

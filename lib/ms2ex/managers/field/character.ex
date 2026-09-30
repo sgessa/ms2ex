@@ -81,8 +81,10 @@ defmodule Ms2ex.Managers.Field.Character do
       push(character, Packets.FieldAddItem.add_item(item))
     end
 
-    # trigger/ui state finalizes before the player stats load; meshes
-    # already dropped by opened gates join as hidden
+    # trigger/ui state finalizes before the player stats load; meshes carry
+    # their current visibility so a joiner converges on the script's state
+    # even when a transition broadcast raced the map load
+    meshes = state |> Map.get(:trigger_meshes, %{}) |> Map.values()
     cameras = state |> Map.get(:trigger_cameras, %{}) |> Map.values()
     sounds = state |> Map.get(:trigger_sounds, %{}) |> Map.values()
 
@@ -92,7 +94,7 @@ defmodule Ms2ex.Managers.Field.Character do
         do: [:hide_player | Managers.Field.PerformanceStage.properties(state)],
         else: Managers.Field.PerformanceStage.properties(state)
 
-    push(character, Packets.Trigger.load(Map.get(state, :hidden_meshes, []), cameras, sounds))
+    push(character, Packets.Trigger.load(meshes, cameras, sounds))
     push(character, Packets.FieldProperty.load(properties))
 
     # Load Emotes and Player Stats after Player Object is loaded
@@ -109,10 +111,10 @@ defmodule Ms2ex.Managers.Field.Character do
     push(character, Packets.ResponseCube.design_rank_reward(character.account_id))
     push(character, Packets.ResponseCube.update_profile(character))
 
-    push(
-      character,
-      Packets.ResponseCube.return_map(Managers.Field.return_map_id(character.map_id))
-    )
+    # the client's return-map anchor is the character's return slot: the
+    # last map that declared an enter-return id
+    row = Context.Characters.get(character.id)
+    push(character, Packets.ResponseCube.return_map(row.map_id))
 
     push(character, Packets.Lapenshard.load())
 

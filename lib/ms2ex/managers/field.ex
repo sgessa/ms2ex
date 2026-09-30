@@ -63,19 +63,48 @@ defmodule Ms2ex.Managers.Field do
   # -- lifecycle -------------------------------------------------------------
 
   @doc """
-  The map a character who quit on `map_id` should return to: the map's
-  `enter_return_id` when it declares one, the map itself otherwise.
+  The enter-return id a map declares (0 when it declares none).
   """
-  @spec return_map_id(integer()) :: integer()
-  def return_map_id(map_id) do
-    case Storage.Maps.get_meta(map_id) do
-      %{} = meta -> normalize_return(Map.get(meta, :enter_return_id), map_id)
-      _ -> map_id
+  @spec enter_return_id(integer()) :: integer()
+  def enter_return_id(map_id) do
+    map_id
+    |> Storage.Maps.get_property()
+    |> Map.get(:enter_return_id, 0)
+    |> normalize_return(0)
+  end
+
+  @doc """
+  The map entry of `new_map_id` persists: the map's `enter_return_id` when
+  it declares one, otherwise the previous slot — so the persisted map is
+  always the last map that declared a return (the starting field for a
+  fresh character). A relog lands there, and a portal without a target
+  leads back to it.
+
+  Only ordinary fields record a return (a SaveField instance too); a plain
+  solo instance's declared return is skipped, the same gate the reference's
+  field-entry push applies.
+  """
+  @spec return_slot(integer(), integer()) :: integer()
+  def return_slot(prev_slot, new_map_id) do
+    if push_return?(new_map_id) do
+      case enter_return_id(new_map_id) do
+        0 -> prev_slot
+        declared -> declared
+      end
+    else
+      prev_slot
     end
   end
 
-  defp normalize_return(id, _map_id) when is_integer(id) and id > 0, do: id
-  defp normalize_return(_, map_id), do: map_id
+  defp push_return?(map_id) do
+    case Storage.Tables.InstanceFields.get(map_id) do
+      nil -> true
+      doc -> Map.get(doc, :save_field, false)
+    end
+  end
+
+  defp normalize_return(id, _fallback) when is_integer(id) and id > 0, do: id
+  defp normalize_return(_, fallback), do: fallback
 
   @doc """
   Binds the character to a field instance: a pending `change_map` instance
@@ -155,18 +184,41 @@ defmodule Ms2ex.Managers.Field do
   def change_field(character, map_id, position, rotation) do
     instance = instance_id(map_id)
     change_map = %{id: map_id, position: position, rotation: rotation, instance: instance}
+    transition_to(character, change_map)
+  end
 
+  @doc """
+  Pulls a party member onto the summoner's exact field: same map, channel
+  and instance, at the summoner's position — a fresh instance allocation
+  would strand them in a private copy of the map.
+  """
+  @spec summon_to_field(Schema.Character.t(), Schema.Character.t()) :: :ok | {:error, term()}
+  def summon_to_field(%Schema.Character{} = summoner, %Schema.Character{} = member) do
+    instance = summoner.field_instance || instance_id(summoner.map_id)
+
+    change_map = %{
+      id: summoner.map_id,
+      position: summoner.position,
+      rotation: summoner.rotation,
+      instance: instance
+    }
+
+    member = Map.put(member, :channel_id, summoner.channel_id)
+    transition_to(member, change_map)
+  end
+
+  defp transition_to(character, change_map) do
     with :ok <- leave_for_change(character) do
       character =
         character
-        |> Context.Characters.maybe_discover_map(map_id)
+        |> Context.Characters.maybe_discover_map(change_map.id)
         |> Map.put(:change_map, change_map)
 
       Managers.Character.call(character, {:update, character})
 
       Net.SenderSession.push(
         character,
-        Packets.RequestFieldEnter.bytes(map_id, position, rotation)
+        Packets.RequestFieldEnter.bytes(change_map.id, change_map.position, change_map.rotation)
       )
     end
   end
@@ -282,6 +334,12 @@ defmodule Ms2ex.Managers.Field do
   def cast(%Schema.Character{field_pid: field_pid}, args), do: GenServer.cast(field_pid, args)
   def cast(nil, _args), do: :error
   def cast(pid, args), do: GenServer.cast(pid, args)
+
+  @doc "Removes a used portal from the character's field (one-shot quest gates)."
+  @spec remove_portal(Schema.Character.t(), integer()) :: :ok | :error
+  def remove_portal(%Schema.Character{} = character, portal_id) do
+    cast(character, {:remove_portal, portal_id})
+  end
 
   # -- npcs & mobs -----------------------------------------------------------
 
@@ -667,7 +725,6 @@ defmodule Ms2ex.Managers.Field do
         map_id: map_id,
         mob_gates: Storage.Maps.get_mob_gates(map_id),
         opened_gates: MapSet.new(),
-        hidden_meshes: [],
         player_positions: %{},
         mounts: %{},
         npcs: %{},
@@ -919,6 +976,10 @@ defmodule Ms2ex.Managers.Field do
   # trigger conditions detect users by their live position
   def handle_cast({:user_position, character_id, position}, state) do
     {:noreply, __MODULE__.Trigger.track_position(state, character_id, position)}
+  end
+
+  def handle_cast({:remove_portal, portal_id}, state) do
+    {:noreply, __MODULE__.Portal.remove(state, portal_id)}
   end
 
   def handle_cast({:drop_item, source, item, position}, state),

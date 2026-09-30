@@ -672,6 +672,8 @@ defmodule Ms2ex.Managers.GuildServer do
             {:update, %{applicant_char | guild_name: state.guild.name, guild_id: state.id}}
           )
 
+        Managers.Quest.update_conditions(applicant_char.id, :guild_join_req, 1, "", 0, "", 0)
+
         SenderSession.run_async(applicant_char.sender_session_pid, fn ->
           Managers.GuildServer.subscribe(state.id)
         end)

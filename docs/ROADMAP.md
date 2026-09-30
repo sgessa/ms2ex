@@ -25,6 +25,7 @@ started.
 - [Buff & effect system gaps](features/buff-effects.md) — [Partial]
 - [Region & splash attacks](features/region-splash.md) — [Partial]
 - [Quest flow](features/quest-flow.md) — [Partial]
+- [Maple Guide](features/maple-guide.md) — [Partial]
 - [Achievements & trophies](features/achievements.md) — [Partial]
 - [Trigger-script runtime](features/trigger-runtime.md) — [Partial]
 - [Character tutorial](features/character-tutorial.md) — [Partial]

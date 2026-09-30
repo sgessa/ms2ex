@@ -24,7 +24,7 @@ submodule under `lib/ms2ex/managers/field/`:
 | `Field.Npc` | npc spawns, spawn cycles, damage/death, mob gates |
 | `Field.Npc.Patrol` | patrol-path movement math (move_npc, follow-dummies) |
 | `Field.PerformanceStage` | the concert stage |
-| `Field.Portal` | portal loading |
+| `Field.Portal` | portal loading and removal |
 | `Field.RegionSkill` | region skill zones and splash ticks |
 | `Field.Tombstone` | dead players' tombstones |
 | `Field.Trigger` | trigger-script machine runtime |
@@ -90,3 +90,8 @@ marks the discovered map, and pushes `RequestFieldEnter` to the client.
 - see `trigger-runtime.md` for the trigger coverage gaps
 - `Field.Trigger.Actions.set_skill/3` zones render client-side only; the
   server-side tick damage is a TODO in the action
+- portal use: passwords are not verified; dungeon portals
+  (DungeonReturnToLobby/DungeonEnter/LeaveDungeon), housing portals
+  (InHome/FieldToHome) and Event capacity behave as plain field portals
+  until those systems exist; Touch portals teleport to the anchor without
+  the front-axis offset (front-axis data is not projected)

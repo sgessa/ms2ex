@@ -12,6 +12,7 @@ defmodule Ms2ex.GameHandlers.Quest do
   @exploration 0x08
   @tracking 0x09
   @go_to_npc 0x0C
+  @maple_guide 0x10
   @dispatch 0x14
   @remote_complete 0x18
 
@@ -94,6 +95,12 @@ defmodule Ms2ex.GameHandlers.Quest do
     {_unknown, _packet} = get_short(packet)
 
     Managers.Quest.dispatch(session.character_id, quest_id)
+  end
+
+  defp handle_command(@maple_guide, packet, session) do
+    {id, _packet} = get_int(packet)
+
+    Managers.Quest.maple_guide(session.character_id, id)
   end
 
   defp handle_command(_command, _packet, _session), do: :ok

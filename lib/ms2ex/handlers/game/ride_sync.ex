@@ -34,12 +34,24 @@ defmodule Ms2ex.GameHandlers.RideSync do
     sync_packet = Packets.RideSync.bytes(character, sync_states)
     Managers.Field.broadcast_from(character, sync_packet, session.sender_pid)
 
+    track_rider_position(character, sync_states)
+
     unless dismount_in_water(character, sync_states) do
       track_riding_distance(character, sync_states)
     end
   end
 
   defp process_segments(_session, _segment_length, packet), do: packet
+
+  # riders move on the ride-sync channel; the field's trigger conditions
+  # (user_detected, quest_user_detected) still read the rider's live position
+  defp track_rider_position(%{mount: nil}, _sync_states), do: :ok
+
+  defp track_rider_position(character, sync_states) do
+    latest = Enum.find(Enum.reverse(sync_states), & &1.position)
+
+    if latest, do: Managers.Field.user_position(character, latest.position)
+  end
 
   # water throws the rider unless they paid to stay mounted
   defp dismount_in_water(%{mount: nil}, _sync_states), do: false
