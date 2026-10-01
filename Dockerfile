@@ -5,6 +5,13 @@ FROM elixir:1.20-otp-29-alpine AS build
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
+    # the musl target defaults to a static CRT, which cannot produce the
+    # cdylib NIFs; force dynamic linking
+    RUSTFLAGS="-C target-feature=-crt-static" \
+    # cc-rs looks for a musl-cross toolchain otherwise; alpine's own
+    # gcc/g++ already target musl
+    CC=gcc \
+    CXX=g++ \
     MIX_ENV=prod
 
 RUN apk add --no-cache build-base curl git \
