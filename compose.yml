@@ -37,7 +37,7 @@ services:
       DB_HOST: postgres
       REDIS_HOST: redis
     ports:
-      - 4000:4000
+      - ${WEB_PORT:-4000}:${WEB_PORT:-4000}
       - 8531:8531
       - 20101:20101
       - 20102:20102
