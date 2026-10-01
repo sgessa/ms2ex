@@ -35,6 +35,7 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 ### Prerequisites
 
 - [Elixir](https://elixir-lang.org/install.html) 1.20
+- [Rust](https://www.rust-lang.org/tools/install) - Required to compile the native NIFs
 - [PostgreSQL](https://www.postgresql.org/download)
 - [Redis](https://redis.io/download) - Required for game client metadata
 
@@ -46,16 +47,17 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    cd ms2ex
    ```
 
-2. **Install Elixir and Erlang**
+2. **Install Elixir, Erlang and Rust**
+
    Follow the instructions on the [Elixir installation page](https://elixir-lang.org/install.html) to install Elixir and Erlang.
 
-   If you are using `asdf` you can simply do:
+   If you are using [mise](https://mise.jdx.dev) you can simply do:
 
    ```bash
-   asdf plugin add elixir
-   asdf plugin add erlang
-   asdf install
+   mise install
    ```
+
+   `asdf` also works out of the box with the same `.tool-versions` file.
 
 3. **Configure environment variables**
    ```bash
