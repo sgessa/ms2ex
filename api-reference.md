@@ -227,7 +227,9 @@ album.
 pathfinding. Navmesh coordinates are meters with Y up, so map positions
 transform by a -90 degree rotation about X and a 1/100 scale.
 - [Ms2ex.Packets](Ms2ex.Packets.md)
-- [Ms2ex.Release](Ms2ex.Release.md)
+- [Ms2ex.Release](Ms2ex.Release.md): Release-time tasks (database creation and migrations) run through
+`bin/ms2ex eval` before the application starts.
+
 - [Ms2ex.Repo](Ms2ex.Repo.md)
 - [Ms2ex.Storage](Ms2ex.Storage.md): Lazy, Redis-backed metadata cache.
 - [Ms2ex.Storage.Achievements](Ms2ex.Storage.Achievements.md)

@@ -30,11 +30,13 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ## 🚀 Getting Started
 
+> Prefer containers? See the [Docker installation guide](docs/DOCKER.md).
+
 ### Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) 1.20
-- [Docker & Docker Compose](https://docs.docker.com/compose) (optional, but recommended)
-- [PostgreSQL](https://www.postgresql.org/download)
+- [Elixir](https://elixir-lang.org/install.html) 1.20 - Primary language the server is written in
+- [Rust](https://www.rust-lang.org/tools/install) - Required to compile the native NIFs
+- [PostgreSQL](https://www.postgresql.org/download) - Persistent data storage
 - [Redis](https://redis.io/download) - Required for game client metadata
 
 ### Installation
@@ -45,52 +47,45 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
    cd ms2ex
    ```
 
-2. **Install Elixir and Erlang**
+2. **Install Elixir, Erlang and Rust**
+
    Follow the instructions on the [Elixir installation page](https://elixir-lang.org/install.html) to install Elixir and Erlang.
 
-   If you are using `asdf` you can simply do:
+   If you are using [mise](https://mise.jdx.dev) you can simply do:
 
    ```bash
-   asdf plugin add elixir
-   asdf plugin add erlang
-   asdf install
+   mise install
    ```
+
+   `asdf` also works out of the box with the same `.tool-versions` file.
 
 3. **Configure environment variables**
    ```bash
    # Copy the example .env file and modify if needed
    cp .env-example .env
    ```
-   The default values are configured to work with the Docker Compose setup.
 
-4. **Set up PostgreSQL and Redis**
+4. **Download Game Client Metadata**
 
-   **Download Game Client Metadata**
-
-   Download the latest dump.rdb file from [GitHub Releases](https://github.com/sgessa/ms2ex/releases) first.
+   Download the latest dump.rdb file from [GitHub Releases](https://github.com/sgessa/ms2ex/releases).
 
    Place it in the `priv/redis-data/` directory of the project.
 
-   **Option A:** Using Docker (Recommended)
-   ```bash
-   # Start PostgreSQL and Redis
-   docker compose up -d
-   ```
+5. **Set up PostgreSQL and Redis (Linux)**
 
-   **Option B:** Manual Setup (Linux)
-   - Install and configure PostgreSQL and Redis manually
+   - Install and configure PostgreSQL and Redis
    - Stop Redis
    - Copy `dump.rdb` to `/var/lib/redis/dump.rdb`
    - Start Redis
 
-5. **Install Elixir dependencies and set-up the database**
+6. **Install Elixir dependencies and set-up the database**
    ```bash
    mix setup
    ```
 
-6. **Start the server**
+7. **Start the server**
    ```bash
-   mix phx.server
+   mix maple.server
    ```
 
 ## 🏗 Project Structure
