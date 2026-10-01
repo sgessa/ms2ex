@@ -71,6 +71,8 @@ defmodule Ms2ex.ItemBoxTest do
     }
   end
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "item:#{@box_id}" => item_meta("OpenItemBox", "0,0,0,#{@drop_box_id}"),

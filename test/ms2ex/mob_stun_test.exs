@@ -38,6 +38,8 @@ defmodule Ms2ex.MobStunTest do
     })
   end
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     seed_effects()
 

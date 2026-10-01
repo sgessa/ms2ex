@@ -40,6 +40,8 @@ defmodule Ms2ex.QuestManagerTest do
     event_mission_type: 0
   }
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "quest:#{@quest_id}" => @quest_metadata,

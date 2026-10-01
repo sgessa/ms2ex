@@ -11,6 +11,8 @@ defmodule Ms2ex.RevivalPersistTest do
 
   @map_id 2000
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "map:#{@map_id}" => %{
