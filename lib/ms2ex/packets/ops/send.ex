@@ -25,6 +25,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x1D => "USER_CHAT",
     0x1F => "EMOTE",
     0x21 => "INVENTORY_ITEM",
+    0x22 => "STORAGE_INVENTORY",
     0x23 => "MARKET_INVENTORY",
     0x24 => "FURNISHING_INVENTORY",
     0x2B => "FIELD_ADD_ITEM",

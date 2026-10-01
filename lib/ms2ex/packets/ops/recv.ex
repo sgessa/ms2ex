@@ -14,6 +14,7 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x13 => "EMOTE",
     0x16 => "EQUIP_ITEM",
     0x17 => "INVENTORY",
+    0x18 => "REQUEST_ITEM_STORAGE",
     0x19 => "USE_ITEM",
     0x22 => "NPC_TALK",
     0x28 => "SHOP",

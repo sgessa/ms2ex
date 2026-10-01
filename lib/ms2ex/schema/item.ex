@@ -17,6 +17,7 @@ defmodule Ms2ex.Schema.Item do
     :enchant_level,
     :gacha_dismantle_id,
     :equip_slot,
+    :account_id,
     :item_id,
     :inventory_slot,
     :inventory_tab,
@@ -39,6 +40,8 @@ defmodule Ms2ex.Schema.Item do
     belongs_to :character, Schema.Character
     belongs_to :mail, Schema.Mail
 
+    # account-owned rows are bank storage entries (character_id is nil)
+    field :account_id, :integer
     field :item_id, :integer
     field :amount, :integer, default: 1
 

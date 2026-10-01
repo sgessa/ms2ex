@@ -149,7 +149,7 @@ defmodule Ms2ex.ShopManagerTest do
     state = init_shop(character)
     {:reply, :ok, state} = load(state, character)
 
-    {:reply, :ok, state} =
+    {:reply, :ok, _state} =
       Managers.Shop.handle_call({:buy, character, @potion_entry_id, 2}, from(), state)
 
     assert wallet(character).mesos == 10_000 - 2 * 250
@@ -175,7 +175,7 @@ defmodule Ms2ex.ShopManagerTest do
     state = init_shop(character)
     {:reply, :ok, state} = load(state, character)
 
-    {:reply, :ok, state} =
+    {:reply, :ok, _state} =
       Managers.Shop.handle_call({:buy, character, @potion_entry_id, 1}, from(), state)
 
     assert wallet(character).mesos == 100
@@ -195,6 +195,8 @@ defmodule Ms2ex.ShopManagerTest do
     Enum.each(1..4, fn _ ->
       {:reply, :ok, state} =
         Managers.Shop.handle_call({:buy, character, @gear_entry_id, 1}, from(), state)
+
+      assert state.active_shop.items[@gear_entry_id]
     end)
 
     {:reply, :ok, _state} =

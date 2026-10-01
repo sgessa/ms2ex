@@ -76,6 +76,7 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
   defp gather_talk(character, field_npc) do
     npc_id = field_npc.npc.id
     basic = get_in(field_npc.npc.metadata, [:basic]) || %{}
+    kind = Map.get(basic, :kind) || 0
     shop_id = Map.get(basic, :shop_id) || 0
     shop? = shop_id > 0
 
@@ -101,29 +102,51 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
 
     %{
       npc_id: npc_id,
-      kind: Map.get(basic, :kind) || 0,
+      kind: kind,
       shop?: shop?,
       quests: quests,
       quest_talk: quest_talk,
       script_state: script_state,
       select_state: select_state,
       select_menu?: select_menu?,
-      talk_type: talk_type(shop?, quest_talk, script_state, select_menu?)
+      talk_type: talk_type(kind, shop?, quest_talk, script_state, select_menu?)
     }
   end
 
-  defp talk_type(shop?, quest_talk, script_state, select_menu?) do
-    [
-      {shop?, @type_dialog},
-      {quest_talk != nil, @type_quest},
-      {script_state != nil, @type_talk},
-      {select_menu?, @type_select}
-    ]
-    |> Enum.reduce(0, fn
-      {true, flag}, acc -> acc + flag
-      {_false, _flag}, acc -> acc
-    end)
+  # kind-aware flags: service npcs (storage, beauty, black market, birthday,
+  # roulette) answer with the dialog flag on top of whatever they offer;
+  # story hub npcs answer with the dialog flag alone
+  defp talk_type(kind, shop?, quest_talk, script_state, select_menu?) do
+    talk_type =
+      [
+        {shop?, @type_dialog},
+        {quest_talk != nil, @type_quest},
+        {script_state != nil, @type_talk},
+        {select_menu?, @type_select}
+      ]
+      |> Enum.reduce(0, fn
+        {true, flag}, acc -> acc + flag
+        {_false, _flag}, acc -> acc
+      end)
+
+    cond do
+      kind in 100..108 ->
+        @type_dialog
+
+      service_kind?(kind) ->
+        talk_type + @type_dialog
+
+      true ->
+        talk_type
+    end
   end
+
+  defp service_kind?(2), do: true
+  defp service_kind?(kind) when kind in 30..39, do: true
+  defp service_kind?(86), do: true
+  defp service_kind?(88), do: true
+  defp service_kind?(501), do: true
+  defp service_kind?(_kind), do: false
 
   defp route_talk(session, character, npc_object_id, talk) do
     Managers.Character.call(character.id, {:set_npc_talk, nil})
@@ -144,27 +167,29 @@ defmodule Ms2ex.GameHandlers.NpcTalk do
         push(session, Packets.Game.Quest.talk(npc_object_id, talk.quests))
         push(session, Packets.NpcTalk.respond(npc_object_id, @type_quest, state))
 
-      talk.script_state == nil and talk.select_state == nil and talk.shop? ->
-        # plain vendor: the empty dialog closes immediately, revealing the
-        # shop window that was sent with the talk
+      talk.script_state == nil and talk.select_state == nil and
+          (talk.shop? or service_kind?(talk.kind)) ->
+        # plain vendor/service npc: the empty dialog lets the client open its
+        # window (the shop/storage packets went out with the talk)
         push(session, Packets.NpcTalk.respond(npc_object_id, @type_dialog, nil, talk.kind))
 
-      talk.script_state != nil ->
-        push(
-          session,
-          Packets.NpcTalk.respond(npc_object_id, talk.talk_type, talk.script_state, talk.kind)
-        )
-
-      talk.select_state != nil ->
-        # a select page as the npc's only script: a vendor greeting closes
-        # straight into the shop, others offer the selectable talk
-        push(
-          session,
-          Packets.NpcTalk.respond(npc_object_id, talk.talk_type, talk.select_state, talk.kind)
-        )
-
       true ->
+        respond_to_state(session, npc_object_id, talk)
+    end
+  end
+
+  # a select page as the npc's only script: a vendor greeting closes straight
+  # into the shop, others offer the selectable talk
+  defp respond_to_state(session, npc_object_id, talk) do
+    case talk.script_state || talk.select_state do
+      nil ->
         push(session, Packets.NpcTalk.close())
+
+      state ->
+        push(
+          session,
+          Packets.NpcTalk.respond(npc_object_id, talk.talk_type, state, talk.kind)
+        )
     end
   end
 
