@@ -83,7 +83,7 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 7. **Start the server**
    ```bash
-   mix phx.server
+   mix maple.server
    ```
 
 ## 🏗 Project Structure

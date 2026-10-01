@@ -42,7 +42,7 @@ server itself runs on the host with Elixir.
 
 6. **Start the server**
    ```bash
-   mix phx.server
+   mix maple.server
    ```
 
 ## Stopping
