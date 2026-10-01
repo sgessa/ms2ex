@@ -93,7 +93,6 @@ defmodule Ms2ex.Managers.Shop do
   @impl true
   def init(%Schema.Character{} = character) do
     state = %{
-      character: character,
       account_shop_data: shop_data_index(character.account_id),
       character_shop_data: shop_data_index(character.id),
       account_shop_item_data: shop_item_data_index(character.account_id),
