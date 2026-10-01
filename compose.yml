@@ -31,13 +31,11 @@ services:
     depends_on:
       - postgres
       - redis
+    env_file: .env
     environment:
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASS: ${DB_PASS:-postgres}
-      DB_NAME: ${DB_NAME:-ms2ex_dev}
+      # override the hosts so the app reaches the sibling containers
       DB_HOST: postgres
       REDIS_HOST: redis
-      SERVER_ADDRESS: ${SERVER_ADDRESS:-127.0.0.1}
     ports:
       - 4000:4000
       - 8531:8531
