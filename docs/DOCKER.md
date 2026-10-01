@@ -4,6 +4,11 @@ This guide covers running the project with Docker Compose. You can either run
 only PostgreSQL and Redis while the server itself runs on the host with Elixir,
 or run the Elixir app in Docker too.
 
+Running the server on the host is the recommended setup for development: it
+gives you code reloading and the usual `mix` tooling. The full-Docker setup
+builds a production release and is meant for running the server, not for
+working on it.
+
 ## Prerequisites
 
 - [Docker & Docker Compose](https://docs.docker.com/compose)
@@ -46,6 +51,12 @@ or run the Elixir app in Docker too.
    ```
 
 ## Everything in Docker
+
+> **Warning:** the Docker app image is a **production release**. It does not
+> support code reloading or any other development niceties, and the image must
+> be rebuilt every time a project file changes. If you intend to work on the
+> project, run the server on the host instead (the "Services only" setup) to
+> benefit from live code reloading and faster iteration.
 
 The app runs in an opt-in compose profile, so the service-only steps above
 keep working unchanged. Start all three containers with:
