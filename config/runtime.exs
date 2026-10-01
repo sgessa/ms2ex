@@ -16,6 +16,8 @@ config :ms2ex, Ms2ex.Repo,
   database: env!("DB_NAME"),
   hostname: env!("DB_HOST")
 
+config :ms2ex, :redix, host: env!("REDIS_HOST", :string, "localhost")
+
 server_address = env!("SERVER_ADDRESS", :string)
 web_port = env!("WEB_PORT", :integer, 4000)
 

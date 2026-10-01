@@ -12,7 +12,7 @@ defmodule Ms2ex.Application do
         # Start the Ecto repository
         Ms2ex.Repo,
         # Start Redis cache server
-        {Redix, name: Ms2ex.Redix, host: System.get_env("REDIS_HOST", "localhost")},
+        {Redix, [name: Ms2ex.Redix] ++ redix_opts()},
         # Start the Telemetry supervisor
         Ms2exWeb.Telemetry,
         # Start the PubSub system
@@ -31,6 +31,10 @@ defmodule Ms2ex.Application do
 
     opts = [strategy: :one_for_one, name: Ms2ex.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp redix_opts do
+    Application.get_env(:ms2ex, :redix, [])
   end
 
   # Oban powers the scheduled daily reset (crontab entry in config); the
