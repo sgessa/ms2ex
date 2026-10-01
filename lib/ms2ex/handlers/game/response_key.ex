@@ -51,6 +51,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       :ok = Managers.Achievement.start(character)
       :ok = Managers.CharacterConfig.start(character)
       :ok = Managers.Mastery.start(character)
+      :ok = Managers.Shop.start(character)
 
       Managers.Character.start(character)
       Managers.Character.call(character, :monitor)

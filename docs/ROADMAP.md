@@ -35,6 +35,7 @@ started.
 - [Music performances](features/music-performances.md) — [Partial]
 - [Fishing bait & autobait](features/fishing-bait.md) — [Partial]
 - [Item boxes & use-item functions](features/item-boxes.md) — [Partial]
+- [NPC shops (vendors)](features/shops.md) — [Partial]
 - [Item systems: gem sockets, pet items, gacha](features/item-systems.md) — [Open]
 - [Premium Club](features/premium-club.md) — [Partial]
 - [Badge system](features/badge-system.md) — [Partial]

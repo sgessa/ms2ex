@@ -88,6 +88,14 @@ defmodule Ms2ex.Managers.Achievement do
   def toggle_favorite(%Schema.Character{id: id}, achievement_id, favorite),
     do: call(id, {:toggle_favorite, achievement_id, favorite})
 
+  @doc """
+  Whether the character (or its account) has reached an achievement grade.
+  A non-positive grade only requires the achievement to exist with any
+  completed grade.
+  """
+  def has_achievement?(character_id, achievement_id, grade \\ 0),
+    do: call(character_id, {:has_achievement?, achievement_id, grade})
+
   # ---- Server Callbacks ----
 
   @impl true
@@ -132,6 +140,25 @@ defmodule Ms2ex.Managers.Achievement do
 
   @impl true
   def handle_call(:trophy_counts, _from, state), do: {:reply, state.trophies, state}
+
+  def handle_call({:has_achievement?, achievement_id, grade}, _from, state) do
+    has? =
+      case Map.get(state.achievements, achievement_id) do
+        nil ->
+          false
+
+        achievement ->
+          grades = Map.get(achievement, :grades) || %{}
+
+          if grade <= 0 do
+            grades != %{}
+          else
+            Map.has_key?(grades, Integer.to_string(grade))
+          end
+      end
+
+    {:reply, has?, state}
+  end
 
   @impl true
   def handle_call(:flush, _from, state), do: {:reply, :ok, flush_dirty(state)}

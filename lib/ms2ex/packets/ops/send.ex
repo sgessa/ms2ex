@@ -55,6 +55,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0x49 => "ADD_PORTAL",
     0x4A => "JOB",
     0x4C => "NPC_TALK",
+    0x52 => "SHOP",
     0x4D => "REGION_SKILL",
     0x4E => "FUNCTION_CUBE",
     0x4F => "TRIGGER",
