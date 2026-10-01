@@ -436,7 +436,7 @@ defmodule Ms2ex.Managers.Mastery do
   # ---- crafting internals ----
 
   defp run_craft(character, recipe) do
-    Context.Wallets.update(character, :mesos, -recipe.required_meso)
+    {:ok, _wallet} = Context.Wallets.debit(character, :mesos, recipe.required_meso)
 
     character =
       if recipe.no_reward_exp do

@@ -423,30 +423,41 @@ defmodule Ms2ex.GameHandlers.Guild do
   end
 
   defp create_and_load_guild(session, character, guild_name) do
-    case Managers.GuildManager.create(character, guild_name) do
-      {:ok, guild} ->
-        Context.Wallets.update(character, :mesos, -@guild_create_price)
+    if can_afford?(character, @guild_create_price) do
+      case Managers.GuildManager.create(character, guild_name) do
+        {:ok, guild} ->
+          {:ok, _wallet} = Context.Wallets.debit(character, :mesos, @guild_create_price)
 
-        :ok =
-          Managers.Character.call(
-            character.id,
-            {:update, %{character | guild_name: guild.name, guild_id: guild.id}}
-          )
+          :ok =
+            Managers.Character.call(
+              character.id,
+              {:update, %{character | guild_name: guild.name, guild_id: guild.id}}
+            )
 
-        Managers.Quest.update_conditions(character.id, :guild_join_req, 1, "", 0, "", 0)
+          Managers.Quest.update_conditions(character.id, :guild_join_req, 1, "", 0, "", 0)
 
-        Ms2ex.Net.SenderSession.run_async(character, fn ->
-          Managers.GuildServer.subscribe(guild.id)
-        end)
+          Ms2ex.Net.SenderSession.run_async(character, fn ->
+            Managers.GuildServer.subscribe(guild.id)
+          end)
 
-        Managers.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
+          Managers.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
 
-        session
-        |> push(Packets.Guild.created(guild.name))
-        |> push(Packets.Guild.load(guild, [build_leader_member(character)]))
+          session
+          |> push(Packets.Guild.created(guild.name))
+          |> push(Packets.Guild.load(guild, [build_leader_member(character)]))
 
-      {:error, reason} ->
-        push(session, Packets.Guild.error(reason))
+        {:error, reason} ->
+          push(session, Packets.Guild.error(reason))
+      end
+    else
+      push(session, Packets.Guild.error(:s_guild_err_no_money))
+    end
+  end
+
+  defp can_afford?(character, price) do
+    case Context.Wallets.find(character) do
+      %{mesos: mesos} -> mesos >= price
+      nil -> false
     end
   end
 
@@ -552,7 +563,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp execute_donation(session, character, guild_id, count, cost) do
     case Managers.GuildServer.call(guild_id, {:donate, character, count, cost}) do
       {:ok, prop, member} ->
-        Context.Wallets.update(character, :mesos, -cost)
+        {:ok, _wallet} = Context.Wallets.debit(character, :mesos, cost)
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
 
         if prop.donate_coin > 0 do

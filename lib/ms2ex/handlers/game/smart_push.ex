@@ -161,8 +161,10 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   defp debit(_character, _currency, _balance, cost) when cost <= 0, do: :ok
 
   defp debit(character, currency, balance, cost) when is_integer(balance) and balance >= cost do
-    Context.Wallets.update(character, currency, -cost)
-    :ok
+    case Context.Wallets.debit(character, currency, cost) do
+      {:ok, _wallet} -> :ok
+      _error -> {:error, currency}
+    end
   end
 
   defp debit(_character, currency, _balance, _cost), do: {:error, currency}

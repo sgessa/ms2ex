@@ -684,13 +684,9 @@ defmodule Ms2ex.Managers.Shop do
   end
 
   defp pay_mesos(character, price) do
-    wallet = Context.Wallets.find(character)
-
-    if wallet && wallet.mesos >= price do
-      Context.Wallets.update(character, :mesos, -price)
-      :ok
-    else
-      {:error, :lack_meso}
+    case Context.Wallets.debit(character, :mesos, price) do
+      {:ok, _wallet} -> :ok
+      _error -> {:error, :lack_meso}
     end
   end
 
@@ -719,14 +715,9 @@ defmodule Ms2ex.Managers.Shop do
         {:error, :silent}
 
       wallet_currency ->
-        wallet = Context.Wallets.find(character)
-        balance = if wallet, do: Map.get(wallet, wallet_currency, 0), else: 0
-
-        if balance >= price do
-          Context.Wallets.update(character, wallet_currency, -price)
-          :ok
-        else
-          {:error, :silent}
+        case Context.Wallets.debit(character, wallet_currency, price) do
+          {:ok, _wallet} -> :ok
+          _error -> {:error, :silent}
         end
     end
   end

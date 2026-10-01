@@ -75,7 +75,7 @@ defmodule Ms2ex.GameHandlers.Taxi do
     if Context.PremiumMemberships.active?(character.account_id) do
       {:ok, Context.Wallets.find(character)}
     else
-      Context.Wallets.update(character, :mesos, -cost)
+      Context.Wallets.debit(character, :mesos, cost)
     end
   end
 
