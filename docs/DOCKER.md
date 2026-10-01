@@ -1,14 +1,14 @@
 # Docker Installation
 
-This guide covers running PostgreSQL and Redis with Docker Compose while the
-server itself runs on the host with Elixir.
+This guide covers running the project with Docker Compose. You can either run
+only PostgreSQL and Redis while the server itself runs on the host with Elixir,
+or run the Elixir app in Docker too.
 
 ## Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) 1.20
 - [Docker & Docker Compose](https://docs.docker.com/compose)
 
-## Steps
+## Services only (app on the host)
 
 1. **Clone the repository**
    ```bash
@@ -45,10 +45,31 @@ server itself runs on the host with Elixir.
    mix maple.server
    ```
 
+## Everything in Docker
+
+The app runs in an opt-in compose profile, so the service-only steps above
+keep working unchanged. Start all three containers with:
+
+```bash
+docker compose --profile app up -d --build
+```
+
+This builds the release image and runs the app with the web endpoint and all
+game TCP listeners. Database migrations run automatically on startup.
+
+Notes:
+
+- `DB_HOST` and `REDIS_HOST` are set to point at the `postgres` and `redis`
+  containers; other settings come from your `.env` file.
+- `SERVER_ADDRESS` (from `.env`) is the address advertised to game clients.
+  Set it to your machine's LAN IP (e.g. `192.168.1.10`) if clients connect
+  from other devices — `127.0.0.1` only works for a client on the same host.
+
 ## Stopping
 
 ```bash
-docker compose down
+docker compose down              # services only
+docker compose --profile app down
 ```
 
 Add `-v` to also remove the PostgreSQL data volume.

@@ -20,6 +20,31 @@ services:
     volumes:
       - ./priv/redis-data:/data
 
+  # Opt-in: run the Elixir app itself in Docker with
+  # `docker compose --profile app up -d`
+  app:
+    build: .
+    container_name: ms2ex-app
+    restart: unless-stopped
+    profiles:
+      - app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      DB_NAME: ${DB_NAME:-ms2ex_dev}
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      SERVER_ADDRESS: ${SERVER_ADDRESS:-127.0.0.1}
+    ports:
+      - 4000:4000
+      - 8531:8531
+      - 20101:20101
+      - 20102:20102
+      - 20103:20103
+
 volumes:
   postgres:
   redis:

@@ -12,7 +12,7 @@ defmodule Ms2ex.Application do
         # Start the Ecto repository
         Ms2ex.Repo,
         # Start Redis cache server
-        {Redix, name: Ms2ex.Redix},
+        {Redix, name: Ms2ex.Redix, host: System.get_env("REDIS_HOST", "localhost")},
         # Start the Telemetry supervisor
         Ms2exWeb.Telemetry,
         # Start the PubSub system
