@@ -34,9 +34,9 @@ The project aims to recreate the server infrastructure using Elixir, a functiona
 
 ### Prerequisites
 
-- [Elixir](https://elixir-lang.org/install.html) 1.20
+- [Elixir](https://elixir-lang.org/install.html) 1.20 - Primary language the server is written in
 - [Rust](https://www.rust-lang.org/tools/install) - Required to compile the native NIFs
-- [PostgreSQL](https://www.postgresql.org/download)
+- [PostgreSQL](https://www.postgresql.org/download) - Persistent data storage
 - [Redis](https://redis.io/download) - Required for game client metadata
 
 ### Installation
