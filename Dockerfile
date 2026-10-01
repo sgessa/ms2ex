@@ -40,7 +40,7 @@ RUN apk add --no-cache libstdc++ openssl \
     && adduser --system --home /app ms2ex
 
 WORKDIR /app
-COPY --from=build --chown=ms2ex:ms2ex /app/_build/prod/ms2ex .
+COPY --from=build --chown=ms2ex:ms2ex /app/_build/prod/rel/ms2ex .
 
 USER ms2ex
 
