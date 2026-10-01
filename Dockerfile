@@ -44,6 +44,10 @@ COPY --from=build --chown=ms2ex:ms2ex /app/_build/prod/rel/ms2ex .
 
 USER ms2ex
 
+# equivalent to `mix maple.server`: web endpoint + game TCP listeners
+ENV START_GAME_SERVERS=true \
+    SERVE_ENDPOINTS=true
+
 # Create the database if needed, run migrations, then start the app
 # (web + game listeners)
 CMD ["sh", "-c", "bin/ms2ex eval 'Ms2ex.Release.create_db()' && bin/ms2ex eval 'Ms2ex.Release.migrate()' && bin/ms2ex start"]
