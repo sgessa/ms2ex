@@ -305,27 +305,21 @@ animation `point` (keyframe name); animation docs project each sequence's
 keyframe times. All are projected by the ingest; `ai_path` is unused
 until the AI-tree runtime lands.
 
-## Deliberate divergences
+## Behavior notes
 
-- hit-aggro: the reference acquires targets by proximity scan only — a
-  player attacking from outside sight does not pull. Real aggro-on-hit is
-  expected game behavior, so ms2ex engages the attacker directly.
-- fixed battle routine: chase the target and stop inside attack range,
-  instead of driving the mob from its AI XML battle tree. `stop_range`
-  derives from the first skill's attack range rather than the tree's
-  trace-node detect distance.
-- idle wander approximates the reference's weighted default routines with
-  a fixed ~1s stand beat between rolls (the reference re-rolls a standby
-  task after 1s), and the swing timing is the motion sequence's playback
-  with the hit at a fixed 40% mark instead of the animation's attack
-  keyframes.
-- engagement state byte: ms2ex holds PcSkill reaction (16) while engaged
-  and standing (it arms the field HP bar); the reference reports Idle and
-  sends PcSkill only during actual casts.
-- idle boss target slot keeps the nearest-player fallback instead of zero.
+- aggro: mobs acquire targets by proximity scan and also engage a player
+  who attacks them from outside sight distance.
+- battle routine: chase the target and stop inside attack range.
+  `stop_range` derives from the first skill's attack range.
+- idle wander rolls a standby task with a fixed ~1s stand beat between
+  rolls; the swing timing is the motion sequence's playback with the hit
+  at a fixed 40% mark rather than the animation's attack keyframes.
+- engagement state byte: a mob holds PcSkill reaction (16) while engaged
+  and standing (it arms the field HP bar).
+- the idle boss target slot keeps the nearest-player fallback.
 - pathfinding is a self-contained A* + funnel over the shared navmesh
-  documents instead of per-mob crowd agents; there is no crowd steering,
-  no fly-advance, and no jump-link traversal.
+  documents; there is no crowd steering, fly-advance, or jump-link
+  traversal.
 
 ## Still missing
 

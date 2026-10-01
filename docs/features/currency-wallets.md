@@ -15,13 +15,13 @@ wallet packet with the *applied* delta.
 
 | currency | cap source |
 | --- | --- |
-| mesos | unbounded (`MaxMeso` = long max, as the reference) |
+| mesos | unbounded (long max) |
 | merets / event merets / game merets | unbounded (`MaxMeret`) |
 | valor tokens | `HonorTokenMax` (5000) |
 | trevas | `KarmaTokenMax` (75000) |
 | rues | `LuTokenMax` (2000) |
 | havi fruits | `HabiTokenMax` (35000) |
-| meso tokens | 100000 (reference constant; the client table has no key) |
+| meso tokens | 100000 (a server constant; the client table has no key) |
 
 The token caps come from the client's server constants table
 (`Storage.Tables.Constants`) and are mirrored as DB CHECK constraints
@@ -40,8 +40,8 @@ not modeled yet.
   `{:error, :insufficient_funds}` when the balance cannot cover it —
   balances never go negative. Purchase flows use `debit/3`; credit-only
   flows use `update/3`.
-- **`can_add/3`**: the reference's `CanAddMeso` semantics — how much of an
-  amount would actually apply (credits clamp at the cap, debits at zero).
+- **`can_add/3`**: how much of an amount would actually apply (credits
+  clamp at the cap, debits at zero).
 - **`set/3`**: absolute overwrite, clamped into `[0, cap]`.
 
 Debit call sites (guild create/donation, mastery crafting, taxis, smart
@@ -50,7 +50,7 @@ result before proceeding.
 
 ## Gaps
 
-- The reference fires quest conditions on token gains (`get_honor_token`,
-  `get_karma_token`, ...); ms2ex does not model those condition types yet.
+- Token-gain quest conditions (`get_honor_token`, `get_karma_token`, ...)
+  are not modeled yet.
 - Reverse coin, mentor/mentee and star point wallets are unmodeled (see the
   shops doc for how shop entries priced in them behave).

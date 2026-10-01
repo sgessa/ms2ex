@@ -495,8 +495,7 @@ defmodule Ms2ex.Managers.Mastery do
     end
   end
 
-  # the reference sends the error but keeps crafting; refusing the craft is
-  # the intended behaviour
+  # a recipe's required quests gate crafting
   defp check_quests(character, recipe) do
     missing? =
       Enum.any?(recipe.required_quests, fn quest_id ->

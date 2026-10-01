@@ -283,7 +283,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
       in_height_band?(position, target_position, bands.last_height_up, bands.last_height_down)
   end
 
-  # vertical band with the reference's slack on the lower edge
+  # vertical band with slack on the lower edge
   defp in_height_band?(position, target_position, up, down) do
     dz = target_position.z - position.z
     dz <= up and dz >= -(down + 10)

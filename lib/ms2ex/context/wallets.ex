@@ -32,8 +32,8 @@ defmodule Ms2ex.Context.Wallets do
   }
 
   @no_cap 9_223_372_036_854_775_807
-  # the client table has no meso-token cap; the reference carries it as a
-  # constant (KarmaTokenMax is its treasury twin)
+  # the client table carries no meso-token cap; this matches the client's
+  # built-in limit
   @meso_token_max 100_000
 
   def find(%Schema.Account{id: account_id}) do

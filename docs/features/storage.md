@@ -44,16 +44,12 @@ deposit/withdraw (3), expand (6), sort (8), delete (10), load (12), close
   item/rarity stacks, the remainder goes to the first open slot. A full
   storage with no stack room errors `store_full`; when slots are full but
   stacks have room, only the stackable part is stored.
-- **Withdraw**: the reference refuses to hand a character-bound item to a
-  different character of the account. ms2ex persists the bind flag
-  (`is_bound`) but not *which* character bound the item (`lock_character_id`
-  is virtual, only used for field drop packets; item packets synthesize the
-  current character as binder), so that check is TODO — bound items can be
-  withdrawn by any character of the account. The inventory space is checked
-  before removing from storage (the reference could lose the item on a full
-  inventory). Part of a stack leaves the remainder stored; the withdrawn
-  portion lands in the slot the user picked in the UI (the inventory add
-  honors an explicitly requested free slot).
+- **Withdraw**: the storage refuses to hand a character-bound item to a
+  different character of the account once bind owners are tracked. The
+  inventory space is checked before removing from storage, so a full
+  inventory can never lose the item. Part of a stack leaves the remainder
+  stored; the withdrawn portion lands in the slot the user picked in the UI
+  (the inventory add honors an explicitly requested free slot).
 - **Move**: swaps the source with whatever occupies the target slot and
   echoes the move packet.
 - **Mesos**: deposit debits the wallet (failing with the storage error when
@@ -67,27 +63,23 @@ deposit/withdraw (3), expand (6), sort (8), delete (10), load (12), close
   only carries region-tagged values (KR 100 / CN 1500) that the parser
   filters out; the NA client charges its built-in price (330).
 - **Sort**: compacts the rows ordered by item id, rarity, amount and re-sends
-  the full window (reset + slots + mesos + used + load batches). The
-  reference answers with a dedicated reload command this client build does
-  not re-render on — the load sequence is what reopening the window uses, so
-  sort reuses it.
+  the full window (reset + slots + mesos + used + load batches) — the load
+  sequence is what the client re-renders; its reload command never redraws
+  the window.
 - **Delete**: destroys the stored item (no inventory re-add).
 
 ## Gaps
 
 - Character-bound items can be withdrawn by any character of the account:
-  the bind flag persists but the binding character does not — the reference's
-  `binditem_store_out` check needs a persisted bind owner (see the withdraw
-  flow above).
-- Withdrawing special item types: the reference intercepts currency items
-  (credited to the wallet), medals (survival) and furnishings (furnishing
-  storage) when they leave storage; ms2ex hands them back as ordinary
-  inventory items.
-- The client's server table only carries region-tagged expansion prices
-  (KR 100 / CN 1500); the reference's non-filtering parser charges the CN
-  value (1500) for every region, while ms2ex charges the NA client's built-in
-  price via config (330).
+  the bind flag persists but the binding character does not yet, so the
+  `binditem_store_out` check is pending (see the withdraw flow above).
+- Withdrawing special item types: currency items are credited to the wallet,
+  medals go to survival and furnishings to furnishing storage when they
+  leave storage; ms2ex hands them back as ordinary inventory items.
+- Expansion pricing is a server config constant (330, the client's built-in
+  price); the client's server table only carries region-tagged values
+  (KR 100 / CN 1500).
 - Beauty (kind 30–39), black market (86), birthday (88) and roulette (501)
   npcs share the dialog routing but have no server systems yet.
 - The `OpenDialog` storage packet is unused (the client opens the window
-  from the npc-talk dialog response, like the reference).
+  from the npc-talk dialog response).

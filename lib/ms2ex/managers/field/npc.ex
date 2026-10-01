@@ -305,8 +305,7 @@ defmodule Ms2ex.Managers.Field.Npc do
       Managers.Field.broadcast(state.topic, Packets.Stats.update_mob_stat(npc, :health))
     end
 
-    # periodic controls stay single-npc entries: the reference's control
-    # loop sends one npc per packet, and the client demonstrably mishandles
+    # periodic controls stay single-npc entries: the client mishandles
     # multi-entry batches here (frozen mobs, lost HP-bar transitions)
     for npc <- live do
       Managers.Field.broadcast(state.topic, Packets.ControlNpc.bytes([npc], boss_target))

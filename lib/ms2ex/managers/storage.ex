@@ -434,10 +434,9 @@ defmodule Ms2ex.Managers.Storage do
 
   # ---- sort ----
 
-  # compacts the rows ordered by item id, then rarity, then amount
   # compacts the rows ordered by item id, then rarity, then amount; the
-  # window is re-sent with the load sequence (this client build does not
-  # re-render on the reference's reload command)
+  # window is re-sent with the load sequence, which the client re-renders
+  # (its reload command never redraws the window)
   defp sort(character, state) do
     state =
       state.items

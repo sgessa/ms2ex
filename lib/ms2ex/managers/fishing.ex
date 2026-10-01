@@ -406,8 +406,7 @@ defmodule Ms2ex.Managers.Fishing do
       update_conditions(character, :fish_success_bait, fish.id)
     end
 
-    # the reference declares the fishing exp type but never awards it; the
-    # other life skills all grant their activity exp
+    # like the other life skills, catches grant their activity exp
     Managers.Character.cast(
       character,
       {:earn_exp, Storage.Tables.ExpTable.typed_exp(:fishing, character.level)}

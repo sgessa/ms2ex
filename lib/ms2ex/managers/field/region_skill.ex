@@ -299,8 +299,8 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     end
   end
 
-  # the zone's damage rule mirrors the reference priority: a share of the
-  # target's max health, then a constant value
+  # the zone's damage priority: a share of the target's max health, then a
+  # constant value
   # TODO: rate-based zone damage needs a caster stat context the field
   # doesn't have
   defp zone_damage(zone, character) do

@@ -33,17 +33,12 @@ absent from the table are ordinary shared fields.
   instances never record a return. The slot is the persisted `map_id`: a
   relog lands at the last recorded return (the starting field for a fresh
   character), a portal without a target leads back there, and the cube
-  return-map packet advertises the same target. This is the reference's
-  logout reset, collapsed from its 3-deep return-map stack — ms2ex
-  deliberately skips that stack's stale-entry quirk.
-
-## Reference parity notes
+  return-map packet advertises the same target. Return state is a single
+  slot rather than a history of previous returns.
 
 - `InstanceType` values from the game table: solo, channelScale,
   massiveEvent, ugcMap, GameMaker, GuildEvent, DungeonLobby, GuildHouse,
   WeddingHall, FieldWar, ... — the docs' `:type` atom mirrors the table.
-- The reference keys fields `(MapId, RoomId)` with a global id counter
-  and creates a fresh room per entry for the default (solo) case.
 
 - instanced fields stop immediately when they empty out (nothing can
   rejoin them); shared fields linger five minutes for returning players
