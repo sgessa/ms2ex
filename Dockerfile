@@ -44,5 +44,6 @@ COPY --from=build --chown=ms2ex:ms2ex /app/_build/prod/rel/ms2ex .
 
 USER ms2ex
 
-# Run database migrations, then start the app (web + game listeners)
-CMD ["sh", "-c", "bin/ms2ex eval 'Ecto.Migrator.with_repo(Ms2ex.Repo, &Ecto.Migrator.run(&1, :up, all: true))' && bin/ms2ex start"]
+# Create the database if needed, run migrations, then start the app
+# (web + game listeners)
+CMD ["sh", "-c", "bin/ms2ex eval 'Ms2ex.Release.create_db()' && bin/ms2ex eval 'Ms2ex.Release.migrate()' && bin/ms2ex start"]
