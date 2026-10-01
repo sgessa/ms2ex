@@ -14,7 +14,17 @@ config :ms2ex, Ms2ex.Repo,
   username: env!("DB_USER"),
   password: env!("DB_PASS"),
   database: env!("DB_NAME"),
-  hostname: env!("DB_HOST")
+  hostname: env!("DB_HOST"),
+  port: env!("DB_PORT", :integer, 5432)
+
+config :ms2ex, :redix,
+  host: env!("REDIS_HOST", :string, "localhost"),
+  port: env!("REDIS_PORT", :integer, 6379)
+
+# Mirror the `mix maple.server` task for releases: START_GAME_SERVERS boots
+# the TCP listeners, SERVE_ENDPOINTS serves the web endpoint
+config :ms2ex, :start_game_servers, env!("START_GAME_SERVERS", :boolean, false)
+config :phoenix, :serve_endpoints, env!("SERVE_ENDPOINTS", :boolean, false)
 
 server_address = env!("SERVER_ADDRESS", :string)
 web_port = env!("WEB_PORT", :integer, 4000)

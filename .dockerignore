@@ -1,0 +1,7 @@
+.env
+deps/
+_build/
+doc/
+priv/redis-data/
+native/*/target/
+.git/

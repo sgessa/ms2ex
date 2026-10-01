@@ -9,16 +9,42 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - ${DB_PORT:-5432}:5432
 
   redis:
     image: redis:7
     container_name: ms2ex-cache
     restart: unless-stopped
     ports:
-      - 6379:6379
+      - ${REDIS_PORT:-6379}:6379
     volumes:
       - ./priv/redis-data:/data
+
+  # Opt-in: run the Elixir app itself in Docker with
+  # `docker compose --profile app up -d`
+  app:
+    build: .
+    container_name: ms2ex-app
+    restart: unless-stopped
+    profiles:
+      - app
+    depends_on:
+      - postgres
+      - redis
+    env_file: .env
+    environment:
+      # the app reaches the sibling containers on their internal ports,
+      # regardless of the ports published to the host
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - ${WEB_PORT:-4000}:${WEB_PORT:-4000}
+      - 8531:8531
+      - 20101:20101
+      - 20102:20102
+      - 20103:20103
 
 volumes:
   postgres:
