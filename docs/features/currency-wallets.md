@@ -7,9 +7,13 @@ credit, and debits fail wholesale instead of driving balances negative.
 
 Two wallet tables: `wallets` per character (mesos, valor tokens, trevas,
 rues, havi fruits) and `account_wallets` per account (merets, event merets,
-game merets, meso tokens). Every mutation goes through `Ms2ex.Context.Wallets`,
-which clamps and validates against the caps before writing, then pushes the
-wallet packet with the *applied* delta.
+game merets, meso tokens). Balances live in memory while a character is
+online — `Ms2ex.Managers.Wallet` (`wallets:<character_id>`, started at
+login) owns the character wallet and a copy of the account wallet, clamps
+and validates every mutation against the caps, persists through
+`Ms2ex.Context.Wallets` (row writes only), and pushes the wallet packet
+with the *applied* delta. The account wallet copy is per character manager:
+two characters of the same account online at once each hold their own view.
 
 ## Caps
 

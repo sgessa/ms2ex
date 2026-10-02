@@ -121,6 +121,7 @@ defmodule Ms2ex.ShopManagerTest do
     Repo.insert!(%Schema.Wallet{character_id: character.id, mesos: 10_000})
 
     start_inventory(character)
+    start_wallet(character)
 
     %{character: character}
   end
@@ -170,7 +171,7 @@ defmodule Ms2ex.ShopManagerTest do
   end
 
   test "buy without mesos is rejected", %{character: character} do
-    Context.Wallets.set(character, :mesos, 100)
+    Managers.Wallet.set(character, :mesos, 100)
 
     state = init_shop(character)
     {:reply, :ok, state} = load(state, character)
@@ -306,6 +307,7 @@ defmodule Ms2ex.ShopManagerTest do
     })
 
     start_inventory(character)
+    start_wallet(character)
 
     state = init_shop(character)
     {:reply, :ok, state} = load(state, character)
@@ -355,6 +357,12 @@ defmodule Ms2ex.ShopManagerTest do
 
     stats = Repo.insert!(%Schema.CharacterStats{character_id: character.id})
     %{character | stats: stats, sender_session_pid: self()}
+  end
+
+  defp start_wallet(character) do
+    :ok = Managers.Wallet.start(character)
+    on_exit(fn -> Managers.Wallet.stop(character.id) end)
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"wallets:#{character.id}"))
   end
 
   defp start_inventory(character) do

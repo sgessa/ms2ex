@@ -9,7 +9,6 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Packets
-  alias Ms2ex.Schema
   alias Ms2ex.Storage
 
   import Ms2ex.Packets.PacketReader
@@ -149,19 +148,19 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   defp spend(_character, :none, _package), do: :ok
 
   defp spend_merets(character, cost) do
-    wallet = Context.Wallets.find(%Schema.Account{id: character.account_id})
+    wallet = Managers.Wallet.account_wallet(character)
     debit(character, :merets, wallet && wallet.merets, cost)
   end
 
   defp spend_mesos(character, cost) do
-    wallet = Context.Wallets.find(character)
+    wallet = Managers.Wallet.find(character)
     debit(character, :mesos, wallet && wallet.mesos, cost)
   end
 
   defp debit(_character, _currency, _balance, cost) when cost <= 0, do: :ok
 
   defp debit(character, currency, balance, cost) when is_integer(balance) and balance >= cost do
-    case Context.Wallets.debit(character, currency, cost) do
+    case Managers.Wallet.debit(character, currency, cost) do
       {:ok, _wallet} -> :ok
       _error -> {:error, currency}
     end

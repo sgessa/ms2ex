@@ -61,8 +61,9 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
 
       titles = Context.Characters.list_titles(character)
 
-      account_wallet = Context.Wallets.find(account)
-      character_wallet = Context.Wallets.find(character)
+      :ok = Managers.Wallet.start(character)
+      account_wallet = Managers.Wallet.account_wallet(character)
+      character_wallet = Managers.Wallet.find(character)
 
       Context.Mails.bind_account_mails(account.id, character.id)
       unread_mail_count = Context.Mails.count_unread(character.id)

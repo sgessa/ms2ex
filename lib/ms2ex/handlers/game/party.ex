@@ -223,7 +223,7 @@ defmodule Ms2ex.GameHandlers.Party do
     if Context.PremiumMemberships.active?(character.account_id) do
       {:ok, :premium}
     else
-      Context.Wallets.debit(character, :merets, @party_summon_price)
+      Managers.Wallet.debit(character, :merets, @party_summon_price)
     end
   end
 
@@ -293,7 +293,7 @@ defmodule Ms2ex.GameHandlers.Party do
         {:ok, result}
 
       {:error, reason} ->
-        if not premium?, do: Context.Wallets.update(character, :merets, @party_summon_price)
+        if not premium?, do: Managers.Wallet.update(character, :merets, @party_summon_price)
         {:error, reason}
     end
   end

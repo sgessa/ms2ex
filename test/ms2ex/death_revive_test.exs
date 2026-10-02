@@ -14,11 +14,11 @@ defmodule Ms2ex.DeathReviveTest do
       {:ok, Map.merge(character, attrs)}
     end)
 
-    Mimic.stub(Ms2ex.Context.Wallets, :find, fn _character ->
+    Mimic.stub(Ms2ex.Managers.Wallet, :find, fn _character ->
       %Ms2ex.Schema.Wallet{mesos: 100_000}
     end)
 
-    Mimic.stub(Ms2ex.Context.Wallets, :update, fn _character, _currency, _amount ->
+    Mimic.stub(Ms2ex.Managers.Wallet, :update, fn _character, _currency, _amount ->
       {:ok, %Ms2ex.Schema.Wallet{}}
     end)
 

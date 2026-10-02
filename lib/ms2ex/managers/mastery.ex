@@ -436,7 +436,7 @@ defmodule Ms2ex.Managers.Mastery do
   # ---- crafting internals ----
 
   defp run_craft(character, recipe) do
-    {:ok, _wallet} = Context.Wallets.debit(character, :mesos, recipe.required_meso)
+    {:ok, _wallet} = Managers.Wallet.debit(character, :mesos, recipe.required_meso)
 
     character =
       if recipe.no_reward_exp do
@@ -508,7 +508,7 @@ defmodule Ms2ex.Managers.Mastery do
   defp check_meso(_character, %{required_meso: meso}) when meso <= 0, do: :ok
 
   defp check_meso(character, %{required_meso: meso}) do
-    case Context.Wallets.find(character) do
+    case Managers.Wallet.find(character) do
       %Schema.Wallet{mesos: mesos} when mesos >= meso -> :ok
       _ -> {:error, :s_mastery_error_lack_meso}
     end

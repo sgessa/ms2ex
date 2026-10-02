@@ -414,7 +414,7 @@ defmodule Ms2ex.GameHandlers.Guild do
       character.level < @guild_create_min_level ->
         push(session, Packets.Guild.error(:s_guild_err_not_enough_level))
 
-      Context.Wallets.find(character).mesos < @guild_create_price ->
+      Managers.Wallet.find(character).mesos < @guild_create_price ->
         push(session, Packets.Guild.error(:s_guild_err_no_money))
 
       true ->
@@ -426,7 +426,7 @@ defmodule Ms2ex.GameHandlers.Guild do
     if can_afford?(character, @guild_create_price) do
       case Managers.GuildManager.create(character, guild_name) do
         {:ok, guild} ->
-          {:ok, _wallet} = Context.Wallets.debit(character, :mesos, @guild_create_price)
+          {:ok, _wallet} = Managers.Wallet.debit(character, :mesos, @guild_create_price)
 
           :ok =
             Managers.Character.call(
@@ -455,7 +455,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   end
 
   defp can_afford?(character, price) do
-    case Context.Wallets.find(character) do
+    case Managers.Wallet.find(character) do
       %{mesos: mesos} -> mesos >= price
       nil -> false
     end
@@ -553,7 +553,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp process_donate(session, character, guild_id, count) do
     cost = 10_000 * count
 
-    if Context.Wallets.find(character).mesos < cost do
+    if Managers.Wallet.find(character).mesos < cost do
       push(session, Packets.Guild.error(:s_guild_err_no_money))
     else
       execute_donation(session, character, guild_id, count, cost)
@@ -563,7 +563,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   defp execute_donation(session, character, guild_id, count, cost) do
     case Managers.GuildServer.call(guild_id, {:donate, character, count, cost}) do
       {:ok, prop, member} ->
-        {:ok, _wallet} = Context.Wallets.debit(character, :mesos, cost)
+        {:ok, _wallet} = Managers.Wallet.debit(character, :mesos, cost)
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
 
         if prop.donate_coin > 0 do

@@ -58,6 +58,7 @@ defmodule Ms2ex.StorageManagerTest do
     Repo.insert!(%Schema.AccountWallet{account_id: account.id, merets: 1_000})
 
     start_inventory(character)
+    start_wallet(character)
 
     %{account: account, character: character}
   end
@@ -330,6 +331,12 @@ defmodule Ms2ex.StorageManagerTest do
   defp from, do: {self(), make_ref()}
 
   defp wallet(character), do: Repo.get_by!(Schema.Wallet, character_id: character.id)
+
+  defp start_wallet(character) do
+    :ok = Managers.Wallet.start(character)
+    on_exit(fn -> Managers.Wallet.stop(character.id) end)
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"wallets:#{character.id}"))
+  end
 
   defp start_inventory(character) do
     :ok = Managers.Inventory.start(character)

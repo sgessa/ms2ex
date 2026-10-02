@@ -63,7 +63,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
         Context.World.broadcast(Packets.UserChat.bytes(:world, character, msg))
 
       nil ->
-        case Context.Wallets.debit(character, :merets, -@world_chat_cost) do
+        case Managers.Wallet.debit(character, :merets, -@world_chat_cost) do
           {:ok, _wallet} ->
             Context.World.broadcast(Packets.UserChat.bytes(:world, character, msg))
 

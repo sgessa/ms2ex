@@ -37,6 +37,7 @@ defmodule Ms2ex.MailTest do
     Managers.Character.start(sender)
     Managers.Character.start(receiver)
     start_inventory(receiver)
+    start_wallet(receiver)
 
     %{sender: sender, receiver: receiver}
   end
@@ -129,7 +130,7 @@ defmodule Ms2ex.MailTest do
       assert not is_nil(collected_mail.merets_collected_at)
 
       # Check wallet (initial 10,000 + 5,000 = 15,000)
-      wallet = Context.Wallets.find(receiver)
+      wallet = Managers.Wallet.find(receiver)
       assert wallet.mesos == 15_000
 
       # Check account wallet (initial 100 + 100 = 200)
@@ -267,6 +268,12 @@ defmodule Ms2ex.MailTest do
     Repo.insert!(%Schema.Wallet{character_id: character.id})
     stats = Repo.insert!(%Schema.CharacterStats{character_id: character.id})
     %{character | stats: stats, sender_session_pid: self()}
+  end
+
+  defp start_wallet(character) do
+    :ok = Managers.Wallet.start(character)
+    on_exit(fn -> Managers.Wallet.stop(character.id) end)
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"wallets:#{character.id}"))
   end
 
   defp start_inventory(character) do

@@ -36,31 +36,11 @@ defmodule Ms2ex.Context.PremiumMemberships do
     end)
   end
 
-  @doc "Charges Merets and extends membership in one database transaction."
+  @doc "Charges Merets through the wallet manager, then extends membership."
   def purchase(%Schema.Character{account_id: account_id} = character, price, period_hours)
       when is_integer(price) and price > 0 and is_integer(period_hours) and period_hours > 0 do
-    Repo.transaction(fn ->
-      debit_merets(account_id, price)
-      membership = extend_locked(account_id, period_hours)
-
-      wallet = Repo.get_by!(Schema.AccountWallet, account_id: account_id)
-
-      Ms2ex.Net.SenderSession.push(
-        character,
-        Ms2ex.Packets.Wallet.update(wallet, :merets, -price)
-      )
-
-      {wallet, membership}
-    end)
-  end
-
-  defp debit_merets(account_id, price) do
-    Schema.AccountWallet
-    |> where([w], w.account_id == ^account_id and w.merets >= ^price)
-    |> Repo.update_all(inc: [merets: -price])
-    |> case do
-      {1, _} -> :ok
-      _ -> Repo.rollback(:insufficient_funds)
+    with {:ok, _wallet} <- Ms2ex.Managers.Wallet.debit(character, :merets, price) do
+      extend_locked(account_id, period_hours)
     end
   end
 
@@ -72,14 +52,12 @@ defmodule Ms2ex.Context.PremiumMemberships do
     |> case do
       nil ->
         expires_at = DateTime.add(DateTime.utc_now(), period_hours, :hour)
-        {:ok, membership} = create(%{account_id: account_id, expires_at: expires_at})
-        membership
+        create(%{account_id: account_id, expires_at: expires_at})
 
       membership ->
         base = if expired?(membership), do: DateTime.utc_now(), else: membership.expires_at
         expires_at = DateTime.add(base, period_hours, :hour)
-        {:ok, membership} = update(membership, %{expires_at: expires_at})
-        membership
+        update(membership, %{expires_at: expires_at})
     end
   end
 

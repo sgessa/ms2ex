@@ -16,7 +16,7 @@ defmodule Ms2ex.Managers.Quest.Rewards do
   alias Ms2ex.Managers.Inventory
   alias Ms2ex.Context
   alias Ms2ex.Context.Items
-  alias Ms2ex.Context.Wallets
+  alias Ms2ex.Managers.Wallet
   alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Packets
@@ -97,7 +97,7 @@ defmodule Ms2ex.Managers.Quest.Rewards do
   defp maybe_add_currency(_character, _currency, amount) when amount <= 0, do: :ok
 
   defp maybe_add_currency(character, currency, amount),
-    do: Wallets.update(character, currency, amount)
+    do: Wallet.update(character, currency, amount)
 
   defp maybe_push_inventory_result(%{session_pid: nil}, _result), do: :ok
 

@@ -59,6 +59,10 @@ defmodule Ms2ex.RevivalPersistTest do
 
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), config_pid)
 
+    :ok = Managers.Wallet.start(character)
+    on_exit(fn -> Managers.Wallet.stop(character.id) end)
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"wallets:#{character.id}"))
+
     character
     |> Context.Characters.preload([:stats])
     |> Map.put(:sender_session_pid, self())

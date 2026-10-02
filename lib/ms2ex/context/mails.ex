@@ -427,15 +427,15 @@ defmodule Ms2ex.Context.Mails do
 
   defp transfer_mail_currencies(%Schema.Mail{} = mail, %Schema.Character{} = character) do
     if mail.mesos > 0 and is_nil(mail.mesos_collected_at) do
-      Context.Wallets.update(character, :mesos, mail.mesos)
+      Managers.Wallet.update(character, :mesos, mail.mesos)
     end
 
     if mail.merets > 0 and is_nil(mail.merets_collected_at) do
-      Context.Wallets.update(character, :merets, mail.merets)
+      Managers.Wallet.update(character, :merets, mail.merets)
     end
 
     if mail.game_merets > 0 and is_nil(mail.game_merets_collected_at) do
-      Context.Wallets.update(character, :game_merets, mail.game_merets)
+      Managers.Wallet.update(character, :game_merets, mail.game_merets)
     end
   end
 

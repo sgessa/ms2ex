@@ -369,7 +369,7 @@ defmodule Ms2ex.Managers.Storage do
       push(character, Packets.StorageInventory.error(:deposit_invalid_money))
       state
     else
-      case Context.Wallets.debit(character, :mesos, amount) do
+      case Managers.Wallet.debit(character, :mesos, amount) do
         {:ok, _wallet} ->
           state = %{state | mesos: state.mesos + amount}
           persist_info(state)
@@ -393,7 +393,7 @@ defmodule Ms2ex.Managers.Storage do
     else
       state = %{state | mesos: state.mesos - amount}
       persist_info(state)
-      Context.Wallets.update(character, :mesos, amount)
+      Managers.Wallet.update(character, :mesos, amount)
 
       push(character, Packets.StorageInventory.update_mesos(state.mesos))
       state
@@ -429,7 +429,7 @@ defmodule Ms2ex.Managers.Storage do
   defp charge_merets(_character, 0), do: true
 
   defp charge_merets(character, price) do
-    match?({:ok, _wallet}, Context.Wallets.debit(character, :merets, price))
+    match?({:ok, _wallet}, Managers.Wallet.debit(character, :merets, price))
   end
 
   # ---- sort ----

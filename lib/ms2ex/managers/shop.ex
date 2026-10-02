@@ -683,14 +683,14 @@ defmodule Ms2ex.Managers.Shop do
   end
 
   defp pay_mesos(character, price) do
-    case Context.Wallets.debit(character, :mesos, price) do
+    case Managers.Wallet.debit(character, :mesos, price) do
       {:ok, _wallet} -> :ok
       _error -> {:error, :lack_meso}
     end
   end
 
   defp pay_merets(character, currency, price) do
-    case Context.Wallets.debit(character, meret_wallet(currency), price) do
+    case Managers.Wallet.debit(character, meret_wallet(currency), price) do
       {:ok, _wallet} -> :ok
       _error -> {:error, :lack_merat}
     end
@@ -714,7 +714,7 @@ defmodule Ms2ex.Managers.Shop do
         {:error, :silent}
 
       wallet_currency ->
-        case Context.Wallets.debit(character, wallet_currency, price) do
+        case Managers.Wallet.debit(character, wallet_currency, price) do
           {:ok, _wallet} -> :ok
           _error -> {:error, :silent}
         end
@@ -798,7 +798,7 @@ defmodule Ms2ex.Managers.Shop do
     state = put_in(state, [:buy_back_items, entry_id], entry)
 
     push(character, Packets.InventoryItem.consume(consume_result))
-    Context.Wallets.update(character, :mesos, sell_price)
+    Managers.Wallet.update(character, :mesos, sell_price)
 
     if removed_id do
       push(character, Packets.Shop.remove_buy_back(removed_id))

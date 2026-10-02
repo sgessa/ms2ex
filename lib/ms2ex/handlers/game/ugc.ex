@@ -6,7 +6,6 @@ defmodule Ms2ex.GameHandlers.Ugc do
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -277,7 +276,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
     # TODO: answer with the localized lack-of-currency notice on failure
     with currency when not is_nil(currency) <- Map.get(@currencies, currency_type),
          true <- balance(character, currency) >= price,
-         {:ok, _wallet} <- Context.Wallets.update(character, currency, -price) do
+         {:ok, _wallet} <- Managers.Wallet.update(character, currency, -price) do
       :ok
     else
       _ -> :error
@@ -286,7 +285,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
 
   defp charge_banner(character, price) do
     with true <- balance(character, :merets) >= price,
-         {:ok, _wallet} <- Context.Wallets.update(character, :merets, -price) do
+         {:ok, _wallet} <- Managers.Wallet.update(character, :merets, -price) do
       :ok
     else
       _ -> :error
@@ -315,14 +314,14 @@ defmodule Ms2ex.GameHandlers.Ugc do
   end
 
   defp balance(character, currency) when currency in @account_currencies do
-    %Schema.Account{id: character.account_id}
-    |> Context.Wallets.find()
+    character
+    |> Managers.Wallet.account_wallet()
     |> currency_amount(currency)
   end
 
   defp balance(character, currency) do
     character
-    |> Context.Wallets.find()
+    |> Managers.Wallet.find()
     |> currency_amount(currency)
   end
 
