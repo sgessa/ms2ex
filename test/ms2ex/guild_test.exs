@@ -62,6 +62,8 @@ defmodule Ms2ex.GuildTest do
     member = insert_character("GuildMember")
     applicant = insert_character("GuildApplicant")
 
+    Enum.each([leader, member, applicant], &start_wallet/1)
+
     # Start inventory for coin grants
     Repo.insert!(%Schema.InventoryTab{character_id: leader.id, tab: :consumable, slots: 84})
     Repo.insert!(%Schema.InventoryTab{character_id: member.id, tab: :consumable, slots: 84})
@@ -345,6 +347,12 @@ defmodule Ms2ex.GuildTest do
   end
 
   # ---- Helpers ----
+
+  defp start_wallet(character) do
+    :ok = Managers.Wallet.start(character)
+    on_exit(fn -> Managers.Wallet.stop(character.id) end)
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"wallets:#{character.id}"))
+  end
 
   defp insert_character(name) do
     unique = System.unique_integer([:positive])

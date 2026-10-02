@@ -13,19 +13,27 @@ defmodule Ms2ex.Context.DailyReset do
   alias Ms2ex.Repo
   alias Ms2ex.Schema
 
-  # zeroes the harvest counters (which drive the harvest success rate) and the
-  # daily instant-revive allowance for every character, then clears in-memory
-  # state and refreshes the client gauge for connected players
+  # zeroes the harvest counters (which drive the harvest success rate), the
+  # daily instant-revive allowance and the day-interval shop restock counters
+  # for every character, then clears in-memory state and refreshes the client
+  # gauge for connected players
   def reset do
     Schema.CharacterConfig
     |> Repo.update_all(set: [gathering_counts: %{}, instant_revive_count: 0])
 
     Context.PremiumMemberships.reset_claimed()
 
+    weekly? = Date.day_of_week(Date.utc_today()) == 4
+
     Managers.Character.online_ids()
     |> Enum.each(fn character_id ->
       Managers.Mastery.reset_gathering_counts(character_id)
       Managers.CharacterConfig.reset_daily(character_id)
+      Managers.Shop.daily_reset(character_id)
+
+      if weekly? do
+        Managers.Shop.weekly_reset(character_id)
+      end
     end)
   end
 end

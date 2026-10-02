@@ -42,7 +42,7 @@ defmodule Ms2ex.Packets.Breakable do
   defp put_move_ticks(packet, _now, 0), do: packet |> put_int(0) |> put_int(0)
 
   defp put_move_ticks(packet, now, base_tick) do
-    # put_int truncates to the low 32 bits, matching the reference
+    # put_int truncates to the low 32 bits
     packet |> put_int(now - base_tick) |> put_int(base_tick)
   end
 

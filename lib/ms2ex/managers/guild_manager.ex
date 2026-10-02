@@ -9,6 +9,8 @@ defmodule Ms2ex.Managers.GuildManager do
   alias Ms2ex.Managers.GuildServer
   alias Ms2ex.Schema
 
+  @guild_create_price 2_000
+
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
@@ -75,20 +77,29 @@ defmodule Ms2ex.Managers.GuildManager do
   end
 
   def handle_call({:create, leader, name}, _from, state) do
-    case Context.Guilds.create(leader, name) do
-      {:ok, guild} ->
-        {:ok, pid} = GuildServer.start(guild.id)
-        Process.monitor(pid)
+    # payment happens inside the serialized create so concurrent requests
+    # cannot both pass an affordability pre-check
+    case Ms2ex.Managers.Wallet.debit(leader, :mesos, @guild_create_price) do
+      {:ok, _wallet} ->
+        case Context.Guilds.create(leader, name) do
+          {:ok, guild} ->
+            {:ok, pid} = GuildServer.start(guild.id)
+            Process.monitor(pid)
 
-        state =
-          state
-          |> put_in([:guild_pids, guild.id], pid)
-          |> put_in([:character_guilds, leader.id], guild.id)
+            state =
+              state
+              |> put_in([:guild_pids, guild.id], pid)
+              |> put_in([:character_guilds, leader.id], guild.id)
 
-        {:reply, {:ok, guild}, state}
+            {:reply, {:ok, guild}, state}
 
-      {:error, reason} ->
-        {:reply, {:error, reason}, state}
+          {:error, reason} ->
+            Ms2ex.Managers.Wallet.earn(leader, :mesos, @guild_create_price)
+            {:reply, {:error, reason}, state}
+        end
+
+      {:error, :insufficient_funds} ->
+        {:reply, {:error, :s_guild_err_no_money}, state}
     end
   end
 

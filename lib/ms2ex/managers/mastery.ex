@@ -82,9 +82,8 @@ defmodule Ms2ex.Managers.Mastery do
     with {:ok, recipe} <- Storage.Tables.MasteryRecipes.lookup(recipe_id),
          :ok <- check_quests(character, recipe),
          :ok <- check_mastery(character, recipe),
-         :ok <- check_meso(character, recipe),
-         :ok <- consume_ingredients(character, recipe) do
-      {:ok, run_craft(character, recipe)}
+         {:ok, _wallet} <- pay_meso(character, recipe) do
+      craft_effects(character, recipe)
     else
       :error -> {:error, :s_mastery_error_unknown}
       {:error, error} -> {:error, error}
@@ -435,9 +434,21 @@ defmodule Ms2ex.Managers.Mastery do
 
   # ---- crafting internals ----
 
-  defp run_craft(character, recipe) do
-    Context.Wallets.update(character, :mesos, -recipe.required_meso)
+  # the mesos are charged before the ingredients are consumed (the debit is
+  # atomic, so it is the check); a failed ingredient consumption hands the
+  # mesos back
+  defp craft_effects(character, recipe) do
+    case consume_ingredients(character, recipe) do
+      :ok ->
+        {:ok, run_craft(character, recipe)}
 
+      {:error, :s_mastery_error_lack_item} = error ->
+        Managers.Wallet.earn(character, :mesos, recipe.required_meso)
+        error
+    end
+  end
+
+  defp run_craft(character, recipe) do
     character =
       if recipe.no_reward_exp do
         character
@@ -495,8 +506,7 @@ defmodule Ms2ex.Managers.Mastery do
     end
   end
 
-  # the reference sends the error but keeps crafting; refusing the craft is
-  # the intended behaviour
+  # a recipe's required quests gate crafting
   defp check_quests(character, recipe) do
     missing? =
       Enum.any?(recipe.required_quests, fn quest_id ->
@@ -506,14 +516,11 @@ defmodule Ms2ex.Managers.Mastery do
     if missing?, do: {:error, :s_mastery_error_lack_quest}, else: :ok
   end
 
-  defp check_meso(_character, %{required_meso: meso}) when meso <= 0, do: :ok
+  # the atomic debit doubles as the meso check
+  defp pay_meso(_character, %{required_meso: meso}) when meso <= 0, do: {:ok, nil}
 
-  defp check_meso(character, %{required_meso: meso}) do
-    case Context.Wallets.find(character) do
-      %Schema.Wallet{mesos: mesos} when mesos >= meso -> :ok
-      _ -> {:error, :s_mastery_error_lack_meso}
-    end
-  end
+  defp pay_meso(character, %{required_meso: meso}),
+    do: Managers.Wallet.debit(character, :mesos, meso)
 
   defp consume_ingredients(_character, %{required_items: []}), do: :ok
 
@@ -522,9 +529,14 @@ defmodule Ms2ex.Managers.Mastery do
     carried = Managers.Inventory.list_items(character)
 
     if Enum.all?(consumables, &owns?(carried, &1)) do
-      {:ok, results} = Managers.Inventory.consume_item_amounts(character, consumables)
-      Enum.each(results, &push(character, Packets.InventoryItem.consume(&1)))
-      :ok
+      case Managers.Inventory.consume_item_amounts(character, consumables) do
+        {:ok, results} ->
+          Enum.each(results, &push(character, Packets.InventoryItem.consume(&1)))
+          :ok
+
+        _ ->
+          {:error, :s_mastery_error_lack_item}
+      end
     else
       {:error, :s_mastery_error_lack_item}
     end

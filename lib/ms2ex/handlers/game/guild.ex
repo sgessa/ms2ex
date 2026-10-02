@@ -14,7 +14,6 @@ defmodule Ms2ex.GameHandlers.Guild do
 
   require Logger
 
-  @guild_create_price 2_000
   @guild_create_min_level 10
   @guild_coin_id 30_000_861
   @guild_coin_rarity 4
@@ -353,7 +352,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      process_donate(session, character, guild_id, count)
+      process_donate(session, character, guild_id, count, 10_000 * count)
     else
       _ -> push(session, Packets.Guild.error(:s_guild_err_null_guild))
     end
@@ -410,23 +409,18 @@ defmodule Ms2ex.GameHandlers.Guild do
   # ---- Internal Processing Helpers ----
 
   defp process_create_guild(session, character, guild_name) do
-    cond do
-      character.level < @guild_create_min_level ->
-        push(session, Packets.Guild.error(:s_guild_err_not_enough_level))
-
-      Context.Wallets.find(character).mesos < @guild_create_price ->
-        push(session, Packets.Guild.error(:s_guild_err_no_money))
-
-      true ->
-        create_and_load_guild(session, character, guild_name)
+    if character.level < @guild_create_min_level do
+      push(session, Packets.Guild.error(:s_guild_err_not_enough_level))
+    else
+      create_and_load_guild(session, character, guild_name)
     end
   end
 
+  # the guild manager charges the creation price inside its serialized
+  # create, so payment and creation cannot interleave
   defp create_and_load_guild(session, character, guild_name) do
     case Managers.GuildManager.create(character, guild_name) do
       {:ok, guild} ->
-        Context.Wallets.update(character, :mesos, -@guild_create_price)
-
         :ok =
           Managers.Character.call(
             character.id,
@@ -539,20 +533,10 @@ defmodule Ms2ex.GameHandlers.Guild do
     end
   end
 
-  defp process_donate(session, character, guild_id, count) do
-    cost = 10_000 * count
-
-    if Context.Wallets.find(character).mesos < cost do
-      push(session, Packets.Guild.error(:s_guild_err_no_money))
-    else
-      execute_donation(session, character, guild_id, count, cost)
-    end
-  end
-
-  defp execute_donation(session, character, guild_id, count, cost) do
+  # the guild server charges the donation inside its serialized donate
+  defp process_donate(session, character, guild_id, count, cost) do
     case Managers.GuildServer.call(guild_id, {:donate, character, count, cost}) do
       {:ok, prop, member} ->
-        Context.Wallets.update(character, :mesos, -cost)
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
 
         if prop.donate_coin > 0 do

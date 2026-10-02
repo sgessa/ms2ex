@@ -1,124 +1,54 @@
 defmodule Ms2ex.Context.Wallets do
-  alias Ms2ex.Packets
+  @moduledoc """
+  Row persistence for character and account wallets. Balance mutations,
+  caps and packet pushes live in `Ms2ex.Managers.Wallet`, which owns the
+  in-memory balances for an online character.
+  """
+
   alias Ms2ex.Repo
   alias Ms2ex.Schema
 
   import Ecto.Query, except: [update: 2]
-  import Ms2ex.Net.SenderSession, only: [push: 2]
 
-  @account_currencies [:event_merets, :game_merets, :merets, :meso_tokens]
+  def get_character_wallet(character_id) do
+    Repo.get_by!(Schema.Wallet, character_id: character_id)
+  end
 
-  @types %{
-    event_merets: 0x9,
-    game_merets: 0x8,
-    havi_fruits: 0x6,
-    merets: 0x7,
-    mesos: 0x0,
-    meso_tokens: 0x10,
-    rues: 0x5,
-    trevas: 0x4,
-    valor_tokens: 0x3
-  }
+  def get_account_wallet(account_id) do
+    case Repo.get_by(Schema.AccountWallet, account_id: account_id) do
+      nil -> Repo.insert!(%Schema.AccountWallet{account_id: account_id})
+      wallet -> wallet
+    end
+  end
 
-  def find(%Schema.Account{id: account_id}) do
+  def persist_character_wallet(char_id, wallet) do
+    Schema.Wallet
+    |> where([w], w.character_id == ^char_id)
+    |> Repo.update_all(
+      set: [
+        mesos: wallet.mesos,
+        valor_tokens: wallet.valor_tokens,
+        trevas: wallet.trevas,
+        rues: wallet.rues,
+        havi_fruits: wallet.havi_fruits
+      ]
+    )
+
+    :ok
+  end
+
+  def persist_account_wallet(account_id, wallet) do
     Schema.AccountWallet
     |> where([w], w.account_id == ^account_id)
-    |> limit(1)
-    |> Repo.one()
+    |> Repo.update_all(
+      set: [
+        merets: wallet.merets,
+        event_merets: wallet.event_merets,
+        game_merets: wallet.game_merets,
+        meso_tokens: wallet.meso_tokens
+      ]
+    )
+
+    :ok
   end
-
-  def find(%Schema.Character{id: character_id}) do
-    Schema.Wallet
-    |> where([w], w.character_id == ^character_id)
-    |> limit(1)
-    |> Repo.one()
-  end
-
-  def update(%Schema.Character{account_id: account_id} = char, currency, value)
-      when currency in @account_currencies do
-    Repo.transaction(fn ->
-      {_count, [wallet]} =
-        Schema.AccountWallet
-        |> where([w], w.account_id == ^account_id)
-        |> select([w], w)
-        |> Repo.update_all(inc: [{currency, value}])
-
-      push(char, Packets.Wallet.update(wallet, currency, value))
-
-      wallet
-    end)
-  end
-
-  def update(%Schema.Character{id: char_id} = char, currency, value) do
-    Repo.transaction(fn ->
-      {_count, [wallet]} =
-        Schema.Wallet
-        |> where([w], w.character_id == ^char_id)
-        |> select([w], w)
-        |> Repo.update_all(inc: [{currency, value}])
-
-      push(char, Packets.Wallet.update(wallet, currency, value))
-
-      wallet
-    end)
-  end
-
-  def debit(%Schema.Character{account_id: account_id} = char, currency, amount)
-      when currency in @account_currencies and is_integer(amount) and amount > 0 do
-    Repo.transaction(fn ->
-      Schema.AccountWallet
-      |> where([w], w.account_id == ^account_id and field(w, ^currency) >= ^amount)
-      |> Repo.update_all(inc: [{currency, -amount}])
-      |> case do
-        {1, _} ->
-          wallet = Repo.get_by!(Schema.AccountWallet, account_id: account_id)
-          push(char, Packets.Wallet.update(wallet, currency, -amount))
-          wallet
-
-        _ ->
-          Repo.rollback(:insufficient_funds)
-      end
-    end)
-  end
-
-  def set(%Schema.Character{account_id: account_id} = char, currency, value)
-      when currency in @account_currencies do
-    Repo.transaction(fn ->
-      old =
-        Schema.AccountWallet
-        |> Repo.get_by(account_id: account_id)
-        |> Map.get(currency)
-
-      {_count, [wallet]} =
-        Schema.AccountWallet
-        |> where([w], w.account_id == ^account_id)
-        |> select([w], w)
-        |> Repo.update_all(set: [{currency, value}])
-
-      push(char, Packets.Wallet.update(wallet, currency, value - old))
-
-      wallet
-    end)
-  end
-
-  def set(%Schema.Character{id: char_id} = char, currency, value) do
-    Repo.transaction(fn ->
-      old =
-        Schema.Wallet
-        |> Repo.get_by(character_id: char_id)
-        |> Map.get(currency)
-
-      {_count, [wallet]} =
-        Schema.Wallet
-        |> where([w], w.character_id == ^char_id)
-        |> select([w], w)
-        |> Repo.update_all(set: [{currency, value}])
-
-      push(char, Packets.Wallet.update(wallet, currency, value - old))
-
-      wallet
-    end)
-  end
-
-  def currency_type(currency), do: Map.get(@types, currency)
 end

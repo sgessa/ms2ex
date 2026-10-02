@@ -32,7 +32,7 @@ defmodule Ms2ex.Managers.Field.Item do
   end
 
   defp apply_credit(character, {:wallet, currency}, amount),
-    do: Context.Wallets.update(character, currency, amount)
+    do: Managers.Wallet.earn(character, currency, amount)
 
   defp apply_credit(character, {:stat, stat}, amount),
     do: Managers.Character.cast(character, {:increase_stats, [{stat, amount}]})

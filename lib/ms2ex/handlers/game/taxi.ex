@@ -73,12 +73,13 @@ defmodule Ms2ex.GameHandlers.Taxi do
 
   defp charge_taxi(character, :mesos, cost) do
     if Context.PremiumMemberships.active?(character.account_id) do
-      {:ok, Context.Wallets.find(character)}
+      # premium members ride the meso taxi for free
+      {:ok, :free}
     else
-      Context.Wallets.update(character, :mesos, -cost)
+      Managers.Wallet.debit(character, :mesos, cost)
     end
   end
 
   defp charge_taxi(character, currency, cost),
-    do: Context.Wallets.update(character, currency, cost)
+    do: Managers.Wallet.debit(character, currency, cost)
 end

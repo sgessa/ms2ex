@@ -383,7 +383,7 @@ defmodule Ms2ex.Managers.GuildServer do
       |> Map.keys()
       |> Enum.reject(&(&1 == requestor_id))
       |> Enum.each(fn char_id ->
-        Context.Mails.send_system_mail(char_id, title, content,
+        Managers.Mail.send_system_mail(char_id, title, content,
           sender_id: requestor_id,
           sender_name: requestor.name,
           type: :player
@@ -601,7 +601,16 @@ defmodule Ms2ex.Managers.GuildServer do
     {:reply, {:ok, prop}, state}
   end
 
+  # the charge happens inside the serialized donate (after every check that
+  # can fail), so concurrent donations cannot both pass a pre-check
   defp execute_donation(state, character, member, count, cost, prop) do
+    case Ms2ex.Managers.Wallet.debit(character, :mesos, cost) do
+      {:ok, _wallet} -> complete_donation(state, character, member, count, cost, prop)
+      {:error, :insufficient_funds} -> {:reply, {:error, :s_guild_err_no_money}, state}
+    end
+  end
+
+  defp complete_donation(state, character, member, count, cost, prop) do
     now_unix = DateTime.utc_now() |> DateTime.to_unix()
     contribution = 10 * count
     new_exp = state.guild.experience + prop.check_in_exp * count

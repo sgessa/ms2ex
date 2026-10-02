@@ -3,7 +3,6 @@ defmodule Ms2ex.Managers.Inventory do
   use Ms2ex.Managers.Managed, prefix: "inventories", key: :character_id
 
   alias Ms2ex.Context
-  alias Ms2ex.Context.Mails
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -501,7 +500,7 @@ defmodule Ms2ex.Managers.Inventory do
   defp create(state, %{amount: n, metadata: meta} = attrs) when n > 0 do
     inventory_tab = Types.Item.inventory_tab(meta)
 
-    case first_available_slot(state, inventory_tab) do
+    case pick_slot(state, attrs, inventory_tab) do
       {:error, :full_inventory} = error ->
         {error, state}
 
@@ -522,6 +521,20 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   defp create(state, _attrs), do: {:nothing, state}
+
+  # an explicitly requested free slot wins (storage withdrawals hand back the
+  # slot the user picked), otherwise the first free slot is used
+  defp pick_slot(state, attrs, tab) do
+    requested = Map.get(attrs, :inventory_slot)
+    occupied = occupied_slots(state, tab)
+    last_slot = tab_size(state, tab) - 1
+
+    if is_integer(requested) and requested in 0..last_slot and requested not in occupied do
+      requested
+    else
+      first_available_slot(state, tab)
+    end
+  end
 
   # ---- consumption ----
 
@@ -651,10 +664,10 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   defp mail_overflow(character, item) do
-    case Mails.send_system_mail(character.id, "", :inventory_overflow, items: [item]) do
-      {:ok, mail} -> {:mailed, mail}
-      error -> error
-    end
+    {:ok, mail} =
+      Ms2ex.Managers.Mail.send_system_mail(character.id, "", :inventory_overflow, items: [item])
+
+    {:mailed, mail}
   end
 
   # ---- move & slots ----

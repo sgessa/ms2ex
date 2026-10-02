@@ -9,7 +9,6 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   alias Ms2ex.Enums
   alias Ms2ex.Managers
   alias Ms2ex.Packets
-  alias Ms2ex.Schema
   alias Ms2ex.Storage
 
   import Ms2ex.Packets.PacketReader
@@ -134,9 +133,8 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   end
 
   defp charge(session, character, metadata, _package_id) do
-    case spend_merets(character, metadata.meret_cost) do
-      :ok -> {:ok, session, []}
-      error -> error
+    with :ok <- spend(character, :meret, %{meret_cost: metadata.meret_cost}) do
+      {:ok, session, []}
     end
   end
 
@@ -144,26 +142,16 @@ defmodule Ms2ex.GameHandlers.SmartPush do
   defp currency_type(%{meso_cost: cost}) when cost > 0, do: :meso
   defp currency_type(_package), do: :none
 
-  defp spend(character, :meret, %{meret_cost: cost}), do: spend_merets(character, cost)
-  defp spend(character, :meso, %{meso_cost: cost}), do: spend_mesos(character, cost)
+  defp spend(character, :meret, %{meret_cost: cost}), do: debit(character, :merets, cost)
+  defp spend(character, :meso, %{meso_cost: cost}), do: debit(character, :mesos, cost)
   defp spend(_character, :none, _package), do: :ok
 
-  defp spend_merets(character, cost) do
-    wallet = Context.Wallets.find(%Schema.Account{id: character.account_id})
-    debit(character, :merets, wallet && wallet.merets, cost)
+  # the wallet debit maps to the smart-push error shape for the
+  # lack-of-funds message box
+  defp debit(character, currency, cost) do
+    case Managers.Wallet.debit(character, currency, cost) do
+      {:ok, _wallet} -> :ok
+      {:error, :insufficient_funds} -> {:error, currency}
+    end
   end
-
-  defp spend_mesos(character, cost) do
-    wallet = Context.Wallets.find(character)
-    debit(character, :mesos, wallet && wallet.mesos, cost)
-  end
-
-  defp debit(_character, _currency, _balance, cost) when cost <= 0, do: :ok
-
-  defp debit(character, currency, balance, cost) when is_integer(balance) and balance >= cost do
-    Context.Wallets.update(character, currency, -cost)
-    :ok
-  end
-
-  defp debit(_character, currency, _balance, _cost), do: {:error, currency}
 end

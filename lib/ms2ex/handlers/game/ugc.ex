@@ -6,7 +6,6 @@ defmodule Ms2ex.GameHandlers.Ugc do
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Packets
-  alias Ms2ex.Schema
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
@@ -22,8 +21,6 @@ defmodule Ms2ex.GameHandlers.Ugc do
   @design_types [:item, :furniture, :mount]
 
   @currencies %{meso: :mesos, meret: :merets, red_meret: :game_merets}
-  @account_currencies [:merets, :game_merets]
-
   def handle(packet, session) do
     {command, packet} = get_byte(packet)
     handle_command(command, packet, session)
@@ -276,8 +273,7 @@ defmodule Ms2ex.GameHandlers.Ugc do
     # TODO: consume a free design coupon when the client asked to use one
     # TODO: answer with the localized lack-of-currency notice on failure
     with currency when not is_nil(currency) <- Map.get(@currencies, currency_type),
-         true <- balance(character, currency) >= price,
-         {:ok, _wallet} <- Context.Wallets.update(character, currency, -price) do
+         {:ok, _wallet} <- Managers.Wallet.debit(character, currency, price) do
       :ok
     else
       _ -> :error
@@ -285,11 +281,9 @@ defmodule Ms2ex.GameHandlers.Ugc do
   end
 
   defp charge_banner(character, price) do
-    with true <- balance(character, :merets) >= price,
-         {:ok, _wallet} <- Context.Wallets.update(character, :merets, -price) do
-      :ok
-    else
-      _ -> :error
+    case Managers.Wallet.debit(character, :merets, price) do
+      {:ok, _wallet} -> :ok
+      {:error, :insufficient_funds} -> :error
     end
   end
 
@@ -313,21 +307,6 @@ defmodule Ms2ex.GameHandlers.Ugc do
       :error
     end
   end
-
-  defp balance(character, currency) when currency in @account_currencies do
-    %Schema.Account{id: character.account_id}
-    |> Context.Wallets.find()
-    |> currency_amount(currency)
-  end
-
-  defp balance(character, currency) do
-    character
-    |> Context.Wallets.find()
-    |> currency_amount(currency)
-  end
-
-  defp currency_amount(nil, _currency), do: 0
-  defp currency_amount(wallet, currency), do: Map.get(wallet, currency, 0)
 
   defp look(resource, character, name) do
     %{

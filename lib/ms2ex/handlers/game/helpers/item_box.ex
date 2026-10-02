@@ -130,7 +130,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
       :error ->
         {price, ""} = Integer.parse(Map.get(params, "boxPrice", "0"))
 
-        case Context.Wallets.update(character, :mesos, -max(price, 0)) do
+        case Managers.Wallet.debit(character, :mesos, max(price, 0)) do
           {:ok, _wallet} -> :ok
           _ -> :error
         end
@@ -372,7 +372,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
             :ok
 
           _ ->
-            Context.Mails.send_system_mail(
+            Managers.Mail.send_system_mail(
               character.id,
               "",
               :inventory_overflow,
@@ -385,7 +385,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
   end
 
   defp add_currency(_session, character, currency, amount) do
-    case Context.Wallets.update(character, currency, amount) do
+    case Managers.Wallet.earn(character, currency, amount) do
       {:ok, _wallet} -> :ok
       _ -> {:error, @error_inventory_fail}
     end

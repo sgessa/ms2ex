@@ -9,6 +9,8 @@ defmodule Ms2ex.FieldItemPickupTest do
   @object_id 7
   @item_id 4_000_001
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "item:#{@item_id}" => %{

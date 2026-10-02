@@ -51,8 +51,7 @@ defmodule Ms2ex.Managers.Field do
   @banner_tick_intval :timer.seconds(30)
 
   # how long an empty shared field stays up for players who walked out and
-  # may walk (or relog) back in; the reference loops on the same idea
-  # (FieldDisposeEmptyTime). Instanced fields are skipped: a fresh instance
+  # may walk (or relog) back in. Instanced fields are skipped: a fresh instance
   # is allocated per entry, so an emptied one can never be rejoined
   @shared_dispose_delay :timer.minutes(5)
 
@@ -81,8 +80,7 @@ defmodule Ms2ex.Managers.Field do
   leads back to it.
 
   Only ordinary fields record a return (a SaveField instance too); a plain
-  solo instance's declared return is skipped, the same gate the reference's
-  field-entry push applies.
+  solo instance's declared return is skipped.
   """
   @spec return_slot(integer(), integer()) :: integer()
   def return_slot(prev_slot, new_map_id) do
@@ -1152,8 +1150,7 @@ defmodule Ms2ex.Managers.Field do
   # cube-skill zones re-apply their effect every cycle: while a player
   # stands inside, re-adding refreshes the effect window; stepping off lets
   # the short duration expire it naturally. The cycle comes from the
-  # constants table (stored in seconds — 0.1 = 100ms), matching the
-  # reference's cube skill cadence
+  # constants table (stored in seconds — 0.1 = 100ms)
   @default_cube_zone_tick_ms 100
   def handle_info(:tick_cube_zones, state) do
     Process.send_after(self(), :tick_cube_zones, cube_zone_interval())

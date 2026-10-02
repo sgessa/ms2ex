@@ -8,6 +8,8 @@ defmodule Ms2ex.BuffStatusSwapTest do
   @character_id 918_273
   @object_id 4242
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "additional-effect:#{@effect_id}_1" => %{

@@ -107,7 +107,7 @@ defmodule Ms2ex.GameHandlers.InteractObject do
     |> Enum.flat_map(&Context.Drops.global_items(&1, character.level, character.map_id))
   end
 
-  # the reference keeps a single random item per individual box
+  # each individual box yields a single random item
   defp individual_items(character, drop) do
     drop
     |> Map.get(:individual_drop_box_ids, [])

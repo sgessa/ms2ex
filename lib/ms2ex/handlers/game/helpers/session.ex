@@ -29,6 +29,8 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
     Managers.CharacterConfig.stop(character)
     Managers.Quest.stop(character.id)
     Managers.Achievement.stop(character)
+    Managers.Shop.stop(character)
+    Managers.Wallet.stop(character)
     Managers.Field.leave(character)
     notify_party_presence(character)
     notify_guild_presence(character)

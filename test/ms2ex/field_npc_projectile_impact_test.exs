@@ -23,6 +23,8 @@ defmodule Ms2ex.FieldNpcProjectileImpactTest do
   @object_id 4242
   @mob_object_id 50_000_004
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     character = %Schema.Character{
       id: @character_id,

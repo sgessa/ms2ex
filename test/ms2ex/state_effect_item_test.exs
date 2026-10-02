@@ -22,6 +22,8 @@ defmodule Ms2ex.StateEffectItemTest do
 
   @effect_doc %{property: %{event_type: :auto_fish}}
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "item:20000589" => @voucher_metadata,

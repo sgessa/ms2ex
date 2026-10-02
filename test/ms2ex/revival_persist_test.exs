@@ -11,6 +11,8 @@ defmodule Ms2ex.RevivalPersistTest do
 
   @map_id 2000
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "map:#{@map_id}" => %{
@@ -56,6 +58,10 @@ defmodule Ms2ex.RevivalPersistTest do
     end)
 
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), config_pid)
+
+    :ok = Managers.Wallet.start(character)
+    on_exit(fn -> Managers.Wallet.stop(character.id) end)
+    Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), :erlang.whereis(:"wallets:#{character.id}"))
 
     character
     |> Context.Characters.preload([:stats])

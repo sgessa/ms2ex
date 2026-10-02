@@ -7,6 +7,8 @@ defmodule Ms2ex.HotBarSkillsTest do
   alias Ms2ex.Schema
   alias Ms2ex.Types
 
+  setup {Mimic, :set_mimic_global}
+
   setup do
     stub_metadata(%{
       "table:job.xml" => %{

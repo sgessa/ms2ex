@@ -32,9 +32,11 @@ defmodule Ms2ex.Packets.NpcTalk do
     |> put_byte(@close)
   end
 
-  # Respond(npcObjectId, talkType, dialogue): opens the talk UI on an npc
-  def respond(object_id, talk_type, state) do
-    {state_id, index, button} = dialogue(state)
+  # Respond(npcObjectId, talkType, dialogue): opens the talk UI on an npc.
+  # The npc kind resolves dialogue buttons for states that don't carry an
+  # explicit one (vendor/storage npcs close instead of offering a selection)
+  def respond(object_id, talk_type, state, kind \\ nil) do
+    {state_id, index, button} = dialogue(state, talk_type, kind)
 
     __MODULE__
     |> build()
@@ -48,7 +50,7 @@ defmodule Ms2ex.Packets.NpcTalk do
 
   # Continue(talkType, questId, dialogue): re-enters the talk for a quest
   def continue(talk_type, quest_id, state) do
-    {state_id, index, button} = dialogue(state)
+    {state_id, index, button} = dialogue(state, talk_type, nil)
 
     __MODULE__
     |> build()
@@ -74,11 +76,11 @@ defmodule Ms2ex.Packets.NpcTalk do
   def state_talk_type(%{type: :select}), do: @type_select
   def state_talk_type(_state), do: @type_talk
 
-  defp dialogue(%{} = state) do
-    {state[:id] || 0, 0, button(state)}
+  defp dialogue(%{} = state, talk_type, kind) do
+    {state[:id] || 0, 0, button(state, talk_type, kind)}
   end
 
-  defp dialogue(nil), do: {0, 0, @button_none}
+  defp dialogue(nil, _talk_type, _kind), do: {0, 0, @button_none}
 
   # Dialogue buttons: an explicit content button wins, distractor pages
   # normally offer selectable options, and quest states resolve to their
@@ -86,14 +88,13 @@ defmodule Ms2ex.Packets.NpcTalk do
   # scripts frequently carry distractor pages we don't walk yet; offering
   # dialogue choices instead of Accept/Complete would strand the
   # conversation, so the band button always wins for quest states.
-  defp button(state) do
+  defp button(state, talk_type, kind) do
     case state do
-      # the select script is the talk choice menu
-      %{type: :select} ->
-        @button_selectable_talk
-
       %{type: :quest, id: id} when is_integer(id) ->
         quest_band_button(id)
+
+      %{type: :select} ->
+        select_button(talk_type, kind)
 
       %{contents: [content | _]} ->
         cond do
@@ -106,6 +107,24 @@ defmodule Ms2ex.Packets.NpcTalk do
         @button_close
     end
   end
+
+  # select pages double as the talk choice menu when the select flag is set;
+  # on vendor and storage npcs they are a plain greeting (the client closes
+  # the dialogue and reveals the shop/storage window), elsewhere they offer
+  # the selectable talk
+  defp select_button(talk_type, kind) do
+    cond do
+      band(talk_type, @type_select) != 0 -> @button_selectable_talk
+      shop_kind?(kind) or kind == 2 -> @button_none
+      true -> @button_selectable_talk
+    end
+  end
+
+  defp shop_kind?(1), do: true
+  defp shop_kind?(kind) when kind > 10 and kind < 20, do: true
+  defp shop_kind?(_kind), do: false
+
+  defp band(a, b), do: Bitwise.band(a, b)
 
   defp quest_band_button(id) do
     case div(id, 100) do

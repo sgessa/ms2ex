@@ -72,8 +72,7 @@ defmodule Ms2ex.GameHandlers.PremiumClub do
          true <- available?(start_date, end_date),
          {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          was_active <- Context.PremiumMemberships.active?(character.account_id),
-         {:ok, {_wallet, membership}} <-
-           Context.PremiumMemberships.purchase(character, price, period) do
+         {:ok, membership} <- Context.PremiumMemberships.purchase(character, price, period) do
       deliver_bonus_items(character, bonus_items)
 
       apply_premium_buffs(character)
