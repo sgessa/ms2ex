@@ -383,7 +383,7 @@ defmodule Ms2ex.Managers.GuildServer do
       |> Map.keys()
       |> Enum.reject(&(&1 == requestor_id))
       |> Enum.each(fn char_id ->
-        Context.Mails.send_system_mail(char_id, title, content,
+        Managers.Mail.send_system_mail(char_id, title, content,
           sender_id: requestor_id,
           sender_name: requestor.name,
           type: :player

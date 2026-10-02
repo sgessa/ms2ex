@@ -29,7 +29,7 @@ defmodule Ms2ex.GameHandlers.Mail do
     {content, _packet} = get_ustring(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      case Context.Mails.send_player_mail(character, receiver_name, title, content) do
+      case Managers.Mail.send_player_mail(character, receiver_name, title, content) do
         {:ok, mail} ->
           Managers.Quest.update_conditions(character.id, :send_mail, 1, "", 0, "", 0)
           push(session, Packets.Mail.send(mail.id))
@@ -60,7 +60,7 @@ defmodule Ms2ex.GameHandlers.Mail do
     {mail_id, _packet} = get_long(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      case Context.Mails.collect(mail_id, character) do
+      case Managers.Mail.collect(mail_id, character) do
         {:ok, mail} ->
           session
           |> push(Packets.Mail.collect(mail.id))
@@ -121,7 +121,7 @@ defmodule Ms2ex.GameHandlers.Mail do
     mail_ids = read_longs(packet, count)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup) do
-      {:ok, collected_mails} = Context.Mails.bulk_collect(mail_ids, character)
+      {:ok, collected_mails} = Managers.Mail.bulk_collect(mail_ids, character)
 
       Enum.each(collected_mails, fn mail ->
         session

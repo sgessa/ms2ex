@@ -45,7 +45,7 @@ defmodule Ms2ex.MailTest do
   describe "sending mail" do
     test "player sends mail to another player successfully", %{sender: sender, receiver: receiver} do
       assert {:ok, mail} =
-               Context.Mails.send_player_mail(sender, receiver.name, "Hello!", "How are you?")
+               Managers.Mail.send_player_mail(sender, receiver.name, "Hello!", "How are you?")
 
       assert mail.sender_id == sender.id
       assert mail.sender_name == sender.name
@@ -62,19 +62,19 @@ defmodule Ms2ex.MailTest do
 
     test "cannot send mail to non-existent player", %{sender: sender} do
       assert {:error, :s_mail_error_username} =
-               Context.Mails.send_player_mail(sender, "NonExistentUser999", "Hi", "Msg")
+               Managers.Mail.send_player_mail(sender, "NonExistentUser999", "Hi", "Msg")
     end
 
     test "cannot send mail to oneself", %{sender: sender} do
       assert {:error, :s_mail_error_recipient_equal_sender} =
-               Context.Mails.send_player_mail(sender, sender.name, "Self", "Self")
+               Managers.Mail.send_player_mail(sender, sender.name, "Self", "Self")
     end
 
     test "system mail can be sent with currencies and items", %{receiver: receiver} do
       item = Context.Items.init(@potion_id, %{amount: 5})
 
       assert {:ok, mail} =
-               Context.Mails.send_system_mail(receiver.id, "Reward", "Here is your gift",
+               Managers.Mail.send_system_mail(receiver.id, "Reward", "Here is your gift",
                  sender_name: "Admin",
                  mesos: 10_000,
                  merets: 50,
@@ -93,7 +93,7 @@ defmodule Ms2ex.MailTest do
 
   describe "reading mail" do
     test "reading an unread mail marks it as read", %{sender: sender, receiver: receiver} do
-      {:ok, mail} = Context.Mails.send_player_mail(sender, receiver.name, "Test", "Content")
+      {:ok, mail} = Managers.Mail.send_player_mail(sender, receiver.name, "Test", "Content")
 
       assert {:ok, read_mail} = Context.Mails.read(mail.id, receiver)
       assert not is_nil(read_mail.read_at)
@@ -104,8 +104,8 @@ defmodule Ms2ex.MailTest do
     end
 
     test "bulk reading marks multiple mails as read", %{sender: sender, receiver: receiver} do
-      {:ok, m1} = Context.Mails.send_player_mail(sender, receiver.name, "T1", "C1")
-      {:ok, m2} = Context.Mails.send_player_mail(sender, receiver.name, "T2", "C2")
+      {:ok, m1} = Managers.Mail.send_player_mail(sender, receiver.name, "T1", "C1")
+      {:ok, m2} = Managers.Mail.send_player_mail(sender, receiver.name, "T2", "C2")
 
       assert Context.Mails.count_unread(receiver.id) == 2
       assert {:ok, updated} = Context.Mails.bulk_read([m1.id, m2.id], receiver)
@@ -119,13 +119,13 @@ defmodule Ms2ex.MailTest do
       item = Context.Items.init(@potion_id, %{amount: 5})
 
       {:ok, mail} =
-        Context.Mails.send_system_mail(receiver.id, "Loot", "Attachments",
+        Managers.Mail.send_system_mail(receiver.id, "Loot", "Attachments",
           mesos: 5000,
           merets: 100,
           items: [item]
         )
 
-      assert {:ok, collected_mail} = Context.Mails.collect(mail.id, receiver)
+      assert {:ok, collected_mail} = Managers.Mail.collect(mail.id, receiver)
       assert not is_nil(collected_mail.mesos_collected_at)
       assert not is_nil(collected_mail.merets_collected_at)
 
@@ -142,7 +142,7 @@ defmodule Ms2ex.MailTest do
       assert Enum.any?(inventory_items, &(&1.item_id == @potion_id and &1.amount == 5))
 
       # Cannot collect again
-      assert {:error, :s_mail_error_already_receive} = Context.Mails.collect(mail.id, receiver)
+      assert {:error, :s_mail_error_already_receive} = Managers.Mail.collect(mail.id, receiver)
     end
 
     test "cannot collect when inventory is full", %{receiver: receiver} do
@@ -152,23 +152,23 @@ defmodule Ms2ex.MailTest do
       Enum.each(1..10, fn _ -> add_item(receiver, @gear_id, 1) end)
 
       {:ok, mail} =
-        Context.Mails.send_system_mail(receiver.id, "Gear", "Full inven test", items: [gear])
+        Managers.Mail.send_system_mail(receiver.id, "Gear", "Full inven test", items: [gear])
 
       assert {:error, :s_mail_error_receiveitem_to_inven} =
-               Context.Mails.collect(mail.id, receiver)
+               Managers.Mail.collect(mail.id, receiver)
     end
   end
 
   describe "deleting mail" do
     test "cannot delete mail with uncollected attachments", %{receiver: receiver} do
       {:ok, mail} =
-        Context.Mails.send_system_mail(receiver.id, "Money", "Take it", mesos: 1000)
+        Managers.Mail.send_system_mail(receiver.id, "Money", "Take it", mesos: 1000)
 
       assert {:error, :s_mail_error_already_receive} = Context.Mails.delete(mail.id, receiver.id)
     end
 
     test "deletes plain mail or collected mail", %{sender: sender, receiver: receiver} do
-      {:ok, mail} = Context.Mails.send_player_mail(sender, receiver.name, "Chat", "No loot")
+      {:ok, mail} = Managers.Mail.send_player_mail(sender, receiver.name, "Chat", "No loot")
 
       assert {:ok, deleted_id} = Context.Mails.delete(mail.id, receiver.id)
       assert deleted_id == mail.id
@@ -179,7 +179,7 @@ defmodule Ms2ex.MailTest do
   describe "account mail binding" do
     test "binds account level mail to character", %{receiver: receiver} do
       {:ok, mail} =
-        Context.Mails.send_system_mail(receiver.account_id, "Welcome", "Welcome to server",
+        Managers.Mail.send_system_mail(receiver.account_id, "Welcome", "Welcome to server",
           receiver_type: :account
         )
 
@@ -199,7 +199,7 @@ defmodule Ms2ex.MailTest do
 
   describe "packets" do
     test "serializes mail packets properly", %{sender: sender, receiver: receiver} do
-      {:ok, mail} = Context.Mails.send_player_mail(sender, receiver.name, "Title", "Body")
+      {:ok, mail} = Managers.Mail.send_player_mail(sender, receiver.name, "Title", "Body")
 
       assert is_binary(Packets.Mail.start_list())
       assert is_binary(Packets.Mail.end_list())
@@ -221,7 +221,7 @@ defmodule Ms2ex.MailTest do
         sender_pid: self()
       }
 
-      {:ok, mail} = Context.Mails.send_player_mail(sender, receiver.name, "Hi", "Content")
+      {:ok, mail} = Managers.Mail.send_player_mail(sender, receiver.name, "Hi", "Content")
 
       # Load (0x00)
       Ms2ex.GameHandlers.Mail.handle(<<0x00>>, session)

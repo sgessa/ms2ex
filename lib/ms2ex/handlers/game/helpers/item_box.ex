@@ -372,7 +372,7 @@ defmodule Ms2ex.GameHandlers.Helper.ItemBox do
             :ok
 
           _ ->
-            Context.Mails.send_system_mail(
+            Managers.Mail.send_system_mail(
               character.id,
               "",
               :inventory_overflow,

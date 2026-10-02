@@ -1,16 +1,13 @@
 defmodule Ms2ex.Context.Mails do
   @moduledoc """
-  Context module for the Mail System.
-  Manages player-to-player mail, system mail, attachments, and collection.
+  Context module for the Mail System: mail rows, attachments and their
+  read/collected timestamps. Sending and collection flows live in
+  `Ms2ex.Managers.Mail`.
   """
 
   import Ecto.Query
 
   alias Ms2ex.Context
-  alias Ms2ex.Enums
-  alias Ms2ex.Managers
-  alias Ms2ex.Net.SenderSession
-  alias Ms2ex.Packets
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Types
@@ -85,37 +82,11 @@ defmodule Ms2ex.Context.Mails do
   end
 
   @doc """
-  Sends a player-to-player mail.
+  Inserts a player-to-player mail row.
   """
-  @spec send_player_mail(Schema.Character.t(), String.t(), String.t(), String.t()) ::
+  @spec insert_player_mail(Schema.Character.t(), Schema.Character.t(), String.t(), String.t()) ::
           {:ok, Schema.Mail.t()} | {:error, atom()}
-  def send_player_mail(%Schema.Character{} = sender, receiver_name, title, content) do
-    receiver_name = String.trim(receiver_name)
-
-    with :ok <- validate_recipient(sender, receiver_name),
-         %Schema.Character{} = recipient <- get_recipient(receiver_name) do
-      create_player_mail(sender, recipient, title, content)
-    end
-  end
-
-  defp validate_recipient(_sender, ""), do: {:error, :s_mail_error_username}
-
-  defp validate_recipient(sender, receiver_name) do
-    if String.downcase(receiver_name) == String.downcase(sender.name) do
-      {:error, :s_mail_error_recipient_equal_sender}
-    else
-      :ok
-    end
-  end
-
-  defp get_recipient(receiver_name) do
-    case Context.Characters.get_by(name: receiver_name) do
-      nil -> {:error, :s_mail_error_username}
-      %Schema.Character{} = recipient -> recipient
-    end
-  end
-
-  defp create_player_mail(sender, recipient, title, content) do
+  def insert_player_mail(sender, recipient, title, content) do
     attrs = %{
       sender_id: sender.id,
       sender_name: sender.name,
@@ -128,83 +99,25 @@ defmodule Ms2ex.Context.Mails do
     }
 
     case %Schema.Mail{} |> Schema.Mail.changeset(attrs) |> Repo.insert() do
-      {:ok, mail} ->
-        notify_recipient(recipient.id)
-        {:ok, %{mail | items: []}}
-
-      {:error, _changeset} ->
-        {:error, :s_mail_error_createmail}
+      {:ok, mail} -> {:ok, %{mail | items: []}}
+      {:error, _changeset} -> {:error, :s_mail_error_createmail}
     end
   end
 
   @doc """
-  Sends a system mail with optional currency and item attachments.
+  Inserts a system mail row.
   """
-  @spec send_system_mail(integer(), String.t(), atom() | String.t(), keyword()) ::
-          {:ok, Schema.Mail.t()} | {:error, atom()}
-  def send_system_mail(receiver_id, title, content, opts \\ []) do
-    content = system_mail_content(content)
-    mail_attrs = build_system_mail_attrs(receiver_id, title, content, opts)
-    items = Keyword.get(opts, :items, [])
-    receiver_type = Map.get(mail_attrs, :receiver_type, :character)
-
-    Repo.transaction(fn ->
-      do_send_system_mail(receiver_id, receiver_type, mail_attrs, items)
-    end)
-  end
-
-  defp system_mail_content(content) when is_binary(content), do: content
-
-  defp system_mail_content(content) when is_atom(content) do
-    with {:ok, _content} <- Enums.SystemMailContent.cast(content),
-         value when is_integer(value) <- Enums.SystemMailContent.get_value(content) do
-      Integer.to_string(value)
-    else
-      _ -> raise ArgumentError, "unknown system mail content: #{inspect(content)}"
-    end
-  end
-
-  defp do_send_system_mail(receiver_id, receiver_type, mail_attrs, items) do
-    case insert_system_mail(mail_attrs) do
-      {:ok, mail} ->
-        attached = attach_items_to_mail(mail.id, items)
-        if receiver_type == :character, do: notify_recipient(receiver_id)
-        %{mail | items: attached}
-
-      {:error, changeset} ->
-        Repo.rollback(changeset)
-    end
-  end
-
-  defp build_system_mail_attrs(receiver_id, title, content, opts) do
-    expiry_days = Keyword.get(opts, :expires_in_days, @default_expiry_days)
-    expires_at = DateTime.utc_now() |> DateTime.add(expiry_days, :day)
-
-    %{
-      sender_id: Keyword.get(opts, :sender_id, 0),
-      sender_name: Keyword.get(opts, :sender_name, ""),
-      receiver_id: receiver_id,
-      receiver_type: Keyword.get(opts, :receiver_type, :character),
-      type: Keyword.get(opts, :type, :system),
-      title: title,
-      content: content,
-      title_args: Keyword.get(opts, :title_args, []),
-      content_args: Keyword.get(opts, :content_args, []),
-      wedding_invite: Keyword.get(opts, :wedding_invite, ""),
-      mesos: Keyword.get(opts, :mesos, 0),
-      merets: Keyword.get(opts, :merets, 0),
-      game_merets: Keyword.get(opts, :game_merets, 0),
-      expires_at: expires_at
-    }
-  end
-
-  defp insert_system_mail(attrs) do
+  @spec insert_system_mail(map()) :: {:ok, Schema.Mail.t()} | {:error, term()}
+  def insert_system_mail(attrs) do
     %Schema.Mail{}
     |> Schema.Mail.changeset(attrs)
     |> Repo.insert()
   end
 
-  defp attach_items_to_mail(mail_id, items) do
+  @doc """
+  Attaches item rows to a mail (moved out of the character's inventory).
+  """
+  def attach_items_to_mail(mail_id, items) do
     Enum.map(items, &attach_item_to_mail(mail_id, &1))
   end
 
@@ -283,36 +196,23 @@ defmodule Ms2ex.Context.Mails do
   end
 
   @doc """
-  Collects attachments (currencies and items) from a mail.
+  Whether a mail can still be collected (not expired, attachments pending).
+  Returns `:ok` or `{:error, code}`.
   """
-  @spec collect(integer(), Schema.Character.t()) :: {:ok, Schema.Mail.t()} | {:error, atom()}
-  def collect(mail_id, %Schema.Character{} = character) do
-    case get(mail_id, character.id) do
-      nil ->
-        {:error, :mail_not_found}
+  def validate_collectible(%Schema.Mail{} = mail) do
+    now = DateTime.utc_now()
 
-      %Schema.Mail{} = mail ->
-        with :ok <- validate_collectible(mail),
-             :ok <- validate_inventory_space(mail, character) do
-          perform_collect(mail, character)
-        end
+    cond do
+      DateTime.compare(now, mail.expires_at) == :gt ->
+        {:error, :s_mail_error_receive_expired}
+
+      mesos_collected?(mail) and merets_collected?(mail) and game_merets_collected?(mail) and
+          mail.items == [] ->
+        {:error, :s_mail_error_already_receive}
+
+      true ->
+        :ok
     end
-  end
-
-  @doc """
-  Bulk collects attachments from multiple mails.
-  """
-  @spec bulk_collect([integer()], Schema.Character.t()) :: {:ok, [Schema.Mail.t()]}
-  def bulk_collect(mail_ids, %Schema.Character{} = character) do
-    collected =
-      Enum.reduce_while(mail_ids, [], fn mail_id, acc ->
-        case collect(mail_id, character) do
-          {:ok, mail} -> {:cont, [mail | acc]}
-          {:error, _reason} -> {:halt, acc}
-        end
-      end)
-
-    {:ok, Enum.reverse(collected)}
   end
 
   @doc """
@@ -353,22 +253,6 @@ defmodule Ms2ex.Context.Mails do
     {:ok, Enum.reverse(deleted_ids)}
   end
 
-  @doc """
-  Pushes an unread mail notification to an online character.
-  """
-  @spec notify_recipient(integer(), boolean()) :: :ok
-  def notify_recipient(character_id, alert \\ true) do
-    case Managers.Character.lookup(character_id) do
-      {:ok, %Schema.Character{sender_session_pid: pid} = rcpt} when not is_nil(pid) ->
-        count = count_unread(character_id)
-        SenderSession.push(rcpt, Packets.Mail.notify(count, alert))
-        :ok
-
-      _ ->
-        :ok
-    end
-  end
-
   # ---- Helpers ----
 
   defp load_mail_items_metadata(%Schema.Mail{items: items} = mail) do
@@ -380,87 +264,10 @@ defmodule Ms2ex.Context.Mails do
     %{mail | items: loaded_items}
   end
 
-  defp validate_collectible(%Schema.Mail{} = mail) do
-    now = DateTime.utc_now()
-
-    cond do
-      DateTime.compare(now, mail.expires_at) == :gt ->
-        {:error, :s_mail_error_receive_expired}
-
-      mesos_collected?(mail) and merets_collected?(mail) and game_merets_collected?(mail) and
-          mail.items == [] ->
-        {:error, :s_mail_error_already_receive}
-
-      true ->
-        :ok
-    end
-  end
-
-  defp validate_inventory_space(%Schema.Mail{items: []}, _character), do: :ok
-
-  defp validate_inventory_space(%Schema.Mail{items: items}, %Schema.Character{id: char_id}) do
-    items_by_tab =
-      Enum.group_by(items, fn item ->
-        meta = item.metadata || Context.Items.load_metadata(item).metadata
-        Types.Item.inventory_tab(meta)
-      end)
-
-    Enum.reduce_while(items_by_tab, :ok, fn {tab, tab_items}, :ok ->
-      free_slots = Managers.Inventory.free_slot_count(char_id, tab)
-
-      if length(tab_items) > free_slots do
-        {:halt, {:error, :s_mail_error_receiveitem_to_inven}}
-      else
-        {:cont, :ok}
-      end
-    end)
-  end
-
-  defp perform_collect(%Schema.Mail{} = mail, %Schema.Character{} = character) do
-    transfer_mail_currencies(mail, character)
-
-    case transfer_mail_items(mail.items, character) do
-      :ok -> update_mail_collected(mail)
-      {:error, _reason} = error -> error
-    end
-  end
-
-  defp transfer_mail_currencies(%Schema.Mail{} = mail, %Schema.Character{} = character) do
-    if mail.mesos > 0 and is_nil(mail.mesos_collected_at) do
-      Managers.Wallet.update(character, :mesos, mail.mesos)
-    end
-
-    if mail.merets > 0 and is_nil(mail.merets_collected_at) do
-      Managers.Wallet.update(character, :merets, mail.merets)
-    end
-
-    if mail.game_merets > 0 and is_nil(mail.game_merets_collected_at) do
-      Managers.Wallet.update(character, :game_merets, mail.game_merets)
-    end
-  end
-
-  defp transfer_mail_items(items, %Schema.Character{} = character) do
-    Enum.reduce_while(items, :ok, fn item, :ok ->
-      item_to_add = %{item | location: :inventory, mail_id: nil, character_id: character.id}
-
-      case Managers.Inventory.add_item(character, item_to_add) do
-        {:ok, result} ->
-          Managers.Quest.notify_item_acquired(character, item_to_add)
-          SenderSession.push(character, Packets.InventoryItem.add_item(result, character))
-          SenderSession.push(character, Packets.InventoryItem.mark_item_new(item_to_add))
-          Repo.delete(item)
-          {:cont, :ok}
-
-        {:error, :full_inventory} ->
-          {:halt, {:error, :s_mail_error_receiveitem_to_inven}}
-
-        error ->
-          {:halt, error}
-      end
-    end)
-  end
-
-  defp update_mail_collected(%Schema.Mail{} = mail) do
+  @doc """
+  Marks a mail's attachments as collected.
+  """
+  def mark_collected(%Schema.Mail{} = mail) do
     now = DateTime.utc_now()
     changes = build_collect_changes(mail, now)
 
@@ -469,6 +276,11 @@ defmodule Ms2ex.Context.Mails do
       {:error, changeset} -> {:error, changeset}
     end
   end
+
+  @doc """
+  Deletes a detached attachment item row after it moved to the inventory.
+  """
+  def delete_item(%Schema.Item{} = item), do: Repo.delete(item)
 
   defp build_collect_changes(%Schema.Mail{} = mail, now) do
     %{

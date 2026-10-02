@@ -14,7 +14,6 @@ defmodule Ms2ex.Managers.Quest.Rewards do
   """
 
   alias Ms2ex.Managers.Inventory
-  alias Ms2ex.Context
   alias Ms2ex.Context.Items
   alias Ms2ex.Managers.Wallet
   alias Ms2ex.Enums
@@ -58,7 +57,7 @@ defmodule Ms2ex.Managers.Quest.Rewards do
 
           _other ->
             {:ok, mail} =
-              Context.Mails.send_system_mail(
+              Managers.Mail.send_system_mail(
                 character.id,
                 "",
                 :inventory_overflow,

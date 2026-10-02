@@ -429,7 +429,7 @@ defmodule Ms2ex.Managers.Achievement do
         {:ok, %{achievement | reward_grade: achievement.reward_grade + 1}}
 
       _ ->
-        Context.Mails.send_system_mail(
+        Managers.Mail.send_system_mail(
           character.id,
           "",
           :inventory_overflow,

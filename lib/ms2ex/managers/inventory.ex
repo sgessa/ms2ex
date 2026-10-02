@@ -3,7 +3,6 @@ defmodule Ms2ex.Managers.Inventory do
   use Ms2ex.Managers.Managed, prefix: "inventories", key: :character_id
 
   alias Ms2ex.Context
-  alias Ms2ex.Context.Mails
   alias Ms2ex.Repo
   alias Ms2ex.Schema
   alias Ms2ex.Storage
@@ -665,10 +664,10 @@ defmodule Ms2ex.Managers.Inventory do
   end
 
   defp mail_overflow(character, item) do
-    case Mails.send_system_mail(character.id, "", :inventory_overflow, items: [item]) do
-      {:ok, mail} -> {:mailed, mail}
-      error -> error
-    end
+    {:ok, mail} =
+      Ms2ex.Managers.Mail.send_system_mail(character.id, "", :inventory_overflow, items: [item])
+
+    {:mailed, mail}
   end
 
   # ---- move & slots ----
