@@ -90,7 +90,7 @@ defmodule Ms2ex.WalletsTest do
     {:reply, {:error, :insufficient_funds}, state} =
       Managers.Wallet.handle_call({:debit, character, :mesos, -2_000}, from(), state)
 
-    {:reply, {:error, :insufficient_funds}, state} =
+    {:reply, {:error, :insufficient_funds}, _state} =
       Managers.Wallet.handle_call({:debit, character, :mesos, 2_000}, from(), state)
 
     assert Repo.get_by!(Schema.Wallet, character_id: character.id).mesos == 1_000
@@ -104,10 +104,7 @@ defmodule Ms2ex.WalletsTest do
     assert Repo.get_by!(Schema.AccountWallet, account_id: character.account_id).merets == 500
   end
 
-  test "can_add clamps credits at the cap and debits at zero", %{
-    character: character,
-    state: state
-  } do
+  test "can_add clamps credits at the cap and debits at zero", %{state: state} do
     {:reply, clamped, _state} =
       Managers.Wallet.handle_call({:can_add, :valor_tokens, 50}, from(), state)
 
@@ -130,7 +127,7 @@ defmodule Ms2ex.WalletsTest do
     assert wallet.valor_tokens == 100
   end
 
-  test "token caps resolve from the client table", %{character: character} do
+  test "token caps resolve from the client table" do
     assert Managers.Wallet.cap(:valor_tokens) == 100
     assert Managers.Wallet.cap(:trevas) == 75_000
     assert Managers.Wallet.cap(:rues) == 2_000
