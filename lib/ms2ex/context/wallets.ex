@@ -10,18 +10,6 @@ defmodule Ms2ex.Context.Wallets do
 
   import Ecto.Query, except: [update: 2]
 
-  @types %{
-    event_merets: 0x9,
-    game_merets: 0x8,
-    havi_fruits: 0x6,
-    merets: 0x7,
-    mesos: 0x0,
-    meso_tokens: 0x10,
-    rues: 0x5,
-    trevas: 0x4,
-    valor_tokens: 0x3
-  }
-
   def get_character_wallet(character_id) do
     Repo.get_by!(Schema.Wallet, character_id: character_id)
   end
@@ -63,6 +51,4 @@ defmodule Ms2ex.Context.Wallets do
 
     :ok
   end
-
-  def currency_type(currency), do: Map.get(@types, currency)
 end

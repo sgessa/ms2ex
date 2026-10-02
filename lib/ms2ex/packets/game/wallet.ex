@@ -1,5 +1,5 @@
 defmodule Ms2ex.Packets.Wallet do
-  alias Ms2ex.Managers
+  alias Ms2ex.Enums
   alias Ms2ex.Packets
 
   import Packets.PacketWriter
@@ -24,7 +24,7 @@ defmodule Ms2ex.Packets.Wallet do
 
     __MODULE__
     |> build()
-    |> put_byte(Managers.Wallet.currency_type(type))
+    |> put_byte(Enums.CurrencyType.get_value(type))
     |> put_long(amount)
     |> put_long(delta)
     |> put_int()

@@ -28,18 +28,6 @@ defmodule Ms2ex.Managers.Wallet do
   @account_currencies [:event_merets, :game_merets, :merets, :meso_tokens]
   @character_currencies [:mesos, :valor_tokens, :trevas, :rues, :havi_fruits]
 
-  @types %{
-    event_merets: 0x9,
-    game_merets: 0x8,
-    havi_fruits: 0x6,
-    merets: 0x7,
-    mesos: 0x0,
-    meso_tokens: 0x10,
-    rues: 0x5,
-    trevas: 0x4,
-    valor_tokens: 0x3
-  }
-
   @no_cap 9_223_372_036_854_775_807
   # the client table carries no meso-token cap; this matches the client's
   # built-in limit
@@ -81,8 +69,6 @@ defmodule Ms2ex.Managers.Wallet do
       _other -> @no_cap
     end
   end
-
-  def currency_type(currency), do: Map.get(@types, currency)
 
   @doc """
   How much of `amount` can actually be applied to the currency: credits
