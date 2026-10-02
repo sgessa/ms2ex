@@ -440,7 +440,7 @@ defmodule Ms2ex.Managers.Mastery do
   defp craft_effects(character, recipe) do
     case consume_ingredients(character, recipe) do
       :ok ->
-        run_craft(character, recipe)
+        {:ok, run_craft(character, recipe)}
 
       {:error, :s_mastery_error_lack_item} = error ->
         Managers.Wallet.earn(character, :mesos, recipe.required_meso)
