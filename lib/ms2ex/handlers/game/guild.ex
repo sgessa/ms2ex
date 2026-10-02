@@ -352,7 +352,7 @@ defmodule Ms2ex.GameHandlers.Guild do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, guild_id, _pid} <- Managers.GuildManager.lookup_by_character(character.id) do
-      process_donate(session, character, guild_id, count)
+      process_donate(session, character, guild_id, count, 10_000 * count)
     else
       _ -> push(session, Packets.Guild.error(:s_guild_err_null_guild))
     end
@@ -534,11 +534,7 @@ defmodule Ms2ex.GameHandlers.Guild do
   end
 
   # the guild server charges the donation inside its serialized donate
-  defp process_donate(session, character, guild_id, count) do
-    execute_donation(session, character, guild_id, count, 10_000 * count)
-  end
-
-  defp execute_donation(session, character, guild_id, count, cost) do
+  defp process_donate(session, character, guild_id, count, cost) do
     case Managers.GuildServer.call(guild_id, {:donate, character, count, cost}) do
       {:ok, prop, member} ->
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
