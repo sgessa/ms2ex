@@ -533,20 +533,14 @@ defmodule Ms2ex.GameHandlers.Guild do
     end
   end
 
+  # the guild server charges the donation inside its serialized donate
   defp process_donate(session, character, guild_id, count) do
-    cost = 10_000 * count
-
-    if Managers.Wallet.find(character).mesos < cost do
-      push(session, Packets.Guild.error(:s_guild_err_no_money))
-    else
-      execute_donation(session, character, guild_id, count, cost)
-    end
+    execute_donation(session, character, guild_id, count, 10_000 * count)
   end
 
   defp execute_donation(session, character, guild_id, count, cost) do
     case Managers.GuildServer.call(guild_id, {:donate, character, count, cost}) do
       {:ok, prop, member} ->
-        {:ok, _wallet} = Managers.Wallet.debit(character, :mesos, cost)
         Managers.Quest.update_conditions(character.id, :guild_donation, count, "", 0, "", 0)
 
         if prop.donate_coin > 0 do
