@@ -73,7 +73,7 @@ defmodule Ms2ex.GameHandlers.Inventory do
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          true <- Managers.Inventory.can_expand_tab?(character, tab),
-         {:ok, wallet} <- Managers.Wallet.update(character, :merets, -meret_price),
+         {:ok, wallet} <- Managers.Wallet.debit(character, :merets, meret_price),
          %Schema.InventoryTab{tab: tab, slots: slots} <-
            Managers.Inventory.expand_tab(character, tab) do
       session

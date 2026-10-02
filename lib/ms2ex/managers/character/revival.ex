@@ -189,18 +189,10 @@ defmodule Ms2ex.Managers.Character.Revival do
         cost = revival_meso_cost(character.level, used)
 
         # only revive once the mesos were actually deducted
-        enough_mesos?(character, cost) &&
-          match?({:ok, _}, Managers.Wallet.update(character, :mesos, -cost))
+        match?({:ok, _}, Managers.Wallet.debit(character, :mesos, cost))
       else
         false
       end
-    end
-  end
-
-  defp enough_mesos?(character, cost) do
-    case Managers.Wallet.find(character) do
-      %Schema.Wallet{mesos: mesos} -> mesos >= cost
-      _ -> false
     end
   end
 

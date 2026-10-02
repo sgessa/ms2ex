@@ -51,7 +51,7 @@ config :ms2ex, Oban,
 config :ms2ex, :constants,
   party_max_members: 10,
   character_max_level: 99,
-  expand_skill_tab_cost: -990,
+  expand_skill_tab_cost: 990,
   # the client's server table only carries region-tagged values for the
   # storage expansion (KR 100 / CN 1500) which the parser filters; the NA
   # client charges its built-in price

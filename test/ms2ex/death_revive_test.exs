@@ -22,6 +22,10 @@ defmodule Ms2ex.DeathReviveTest do
       {:ok, %Ms2ex.Schema.Wallet{}}
     end)
 
+    Mimic.stub(Ms2ex.Managers.Wallet, :debit, fn _character, _currency, _amount ->
+      {:ok, %Ms2ex.Schema.Wallet{}}
+    end)
+
     Mimic.stub(Ms2ex.Managers.CharacterConfig, :instant_revive_count, fn _character_id -> 0 end)
 
     Mimic.stub(Ms2ex.Managers.CharacterConfig, :bump_instant_revive_count, fn _character_id ->

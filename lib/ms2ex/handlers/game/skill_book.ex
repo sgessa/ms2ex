@@ -73,7 +73,7 @@ defmodule Ms2ex.GameHandlers.SkillBook do
   defp handle_mode(@expand, _packet, character, session) do
     expand_skill_tab_cost = Constants.get(:expand_skill_tab_cost)
 
-    with {:ok, wallet} <- Managers.Wallet.update(character, :merets, expand_skill_tab_cost) do
+    with {:ok, wallet} <- Managers.Wallet.debit(character, :merets, expand_skill_tab_cost) do
       session
       |> push(Packets.Wallet.update(wallet, :merets))
       |> push(Packets.SkillBook.add_tab(character))
