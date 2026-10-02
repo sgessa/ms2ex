@@ -24,6 +24,9 @@ within the polygon and its height within the band.
 - [Ms2ex.Formulas.ItemRates](Ms2ex.Formulas.ItemRates.md)
 - [Ms2ex.Formulas.ItemStaticStats](Ms2ex.Formulas.ItemStaticStats.md)
 - [Ms2ex.Formulas.ItemWeaponAttack](Ms2ex.Formulas.ItemWeaponAttack.md)
+- [Ms2ex.Formulas.Shop](Ms2ex.Formulas.Shop.md): Vendor shop pricing: what an npc pays for a sold item and how instant
+restock prices escalate with repeated restocks.
+
 - [Ms2ex.GameHandlers.Achievement](Ms2ex.GameHandlers.Achievement.md)
 - [Ms2ex.GameHandlers.BadgeEquip](Ms2ex.GameHandlers.BadgeEquip.md)
 - [Ms2ex.GameHandlers.CharacterInfo](Ms2ex.GameHandlers.CharacterInfo.md)
@@ -85,6 +88,10 @@ reading a composed score's notes.
 inventory uid), sends how many copies to open and, for select boxes, the
 picked entry index as a string.
 
+- [Ms2ex.GameHandlers.RequestItemStorage](Ms2ex.GameHandlers.RequestItemStorage.md): Bank storage requests: deposit, withdraw, move, mesos, expansion, sort,
+delete. The load request opens the storage (starting its process), the
+close request stops it.
+
 - [Ms2ex.GameHandlers.RequestQuit](Ms2ex.GameHandlers.RequestQuit.md)
 - [Ms2ex.GameHandlers.RequestTimeSync](Ms2ex.GameHandlers.RequestTimeSync.md)
 - [Ms2ex.GameHandlers.RequestTutorialItem](Ms2ex.GameHandlers.RequestTutorialItem.md)
@@ -96,6 +103,8 @@ picked entry index as a string.
 - [Ms2ex.GameHandlers.Revival](Ms2ex.GameHandlers.Revival.md)
 - [Ms2ex.GameHandlers.Ride](Ms2ex.GameHandlers.Ride.md)
 - [Ms2ex.GameHandlers.RideSync](Ms2ex.GameHandlers.RideSync.md)
+- [Ms2ex.GameHandlers.Shop](Ms2ex.GameHandlers.Shop.md): Vendor shop requests: buy, sell, buy-back and restock on the open shop.
+
 - [Ms2ex.GameHandlers.Skill](Ms2ex.GameHandlers.Skill.md)
 - [Ms2ex.GameHandlers.SkillBook](Ms2ex.GameHandlers.SkillBook.md)
 - [Ms2ex.GameHandlers.SmartPush](Ms2ex.GameHandlers.SmartPush.md): Smart Push: the paid conveniences the client offers mid-activity, such as
@@ -210,6 +219,7 @@ album.
 - [Ms2ex.Managers.GuildServer](Ms2ex.Managers.GuildServer.md): GenServer that owns the runtime state and member broadcasts of an active guild.
 
 - [Ms2ex.Managers.Inventory](Ms2ex.Managers.Inventory.md)
+- [Ms2ex.Managers.Mail](Ms2ex.Managers.Mail.md): Mail flows: sending, collecting attachments and notifications.
 - [Ms2ex.Managers.Managed](Ms2ex.Managers.Managed.md)
 - [Ms2ex.Managers.Mastery](Ms2ex.Managers.Mastery.md)
 - [Ms2ex.Managers.PartyManager](Ms2ex.Managers.PartyManager.md)
@@ -222,7 +232,17 @@ album.
 - [Ms2ex.Managers.Quest.State](Ms2ex.Managers.Quest.State.md): Helper functions for managing quest state.
 - [Ms2ex.Managers.Session](Ms2ex.Managers.Session.md)
 - [Ms2ex.Managers.SessionManager](Ms2ex.Managers.SessionManager.md)
+- [Ms2ex.Managers.Shop](Ms2ex.Managers.Shop.md): Per-character vendor shop state: the open shop window, its instanced stock
+for limited-stock shops, and the session's buy-back list.
 - [Ms2ex.Managers.SkillCast](Ms2ex.Managers.SkillCast.md)
+- [Ms2ex.Managers.Storage](Ms2ex.Managers.Storage.md): Per-account bank storage: the item rows (account-owned `inventory_items`),
+the stored mesos and the purchased slot expansion. The process lives only
+while the storage window is open — the client's load request starts it and
+its close request stops it; every mutation persists immediately.
+
+- [Ms2ex.Managers.Wallet](Ms2ex.Managers.Wallet.md): Per-character wallet state: the character's balances (mesos, valor tokens,
+trevas, rues, havi fruits) and a copy of the account balances (merets,
+event merets, game merets, meso tokens) it spends.
 - [Ms2ex.Navigation](Ms2ex.Navigation.md): Navmesh queries for a map: position validity, floor snapping and
 pathfinding. Navmesh coordinates are meters with Y up, so map positions
 transform by a -90 degree rotation about X and a 1/100 scale.
@@ -281,6 +301,12 @@ by recipe id (the id an interact object's `item.recipe_id` points at).
 the reward box handed out for reaching it.
 
 - [Ms2ex.Storage.Tables.PremiumClub](Ms2ex.Storage.Tables.PremiumClub.md)
+- [Ms2ex.Storage.Tables.Shop](Ms2ex.Storage.Tables.Shop.md): Vendor shop metadata: one entry per shop id, with the restock policy for
+limited-stock shops (`enable_reset`).
+
+- [Ms2ex.Storage.Tables.ShopItems](Ms2ex.Storage.Tables.ShopItems.md): Vendor shop stock entries, grouped by shop id and keyed by the shop item
+id (`sn`) each entry carries in the shop window packets.
+
 - [Ms2ex.Storage.Tables.SmartPush](Ms2ex.Storage.Tables.SmartPush.md)
 - [Ms2ex.Storage.Tables.UgcDesign](Ms2ex.Storage.Tables.UgcDesign.md): Cost and rarity of the design shop templates a player can turn into an item.
 
@@ -321,6 +347,7 @@ to. The type in the envelope decides which resource the payload belongs to.
 
 - Schema
   - [Ms2ex.Schema.Account](Ms2ex.Schema.Account.md)
+  - [Ms2ex.Schema.AccountStorage](Ms2ex.Schema.AccountStorage.md)
   - [Ms2ex.Schema.AccountWallet](Ms2ex.Schema.AccountWallet.md)
   - [Ms2ex.Schema.Achievement](Ms2ex.Schema.Achievement.md)
   - [Ms2ex.Schema.BannerSlot](Ms2ex.Schema.BannerSlot.md)
@@ -328,6 +355,8 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Schema.CharacterBuff](Ms2ex.Schema.CharacterBuff.md)
   - [Ms2ex.Schema.CharacterConfig](Ms2ex.Schema.CharacterConfig.md)
   - [Ms2ex.Schema.CharacterQuest](Ms2ex.Schema.CharacterQuest.md): Schema for character quests.
+  - [Ms2ex.Schema.CharacterShopData](Ms2ex.Schema.CharacterShopData.md)
+  - [Ms2ex.Schema.CharacterShopItemData](Ms2ex.Schema.CharacterShopItemData.md)
   - [Ms2ex.Schema.CharacterStats](Ms2ex.Schema.CharacterStats.md)
   - [Ms2ex.Schema.CharacterTitle](Ms2ex.Schema.CharacterTitle.md)
   - [Ms2ex.Schema.ChatStickerGroup](Ms2ex.Schema.ChatStickerGroup.md)
@@ -375,7 +404,9 @@ to. The type in the envelope decides which resource the payload belongs to.
   - [Ms2ex.Enums.MasteryType](Ms2ex.Enums.MasteryType.md): Life skill (mastery) types. The order doubles as the wire order of the
 mastery block written into the character packet.
 
-  - [Ms2ex.Enums.MeretMarketCurrency](Ms2ex.Enums.MeretMarketCurrency.md)
+  - [Ms2ex.Enums.MeretMarketCurrency](Ms2ex.Enums.MeretMarketCurrency.md): Currency ids of meret-market entries. Not the wallet wire ids — see
+`WalletCurrencyType`.
+
   - [Ms2ex.Enums.MyInfoError](Ms2ex.Enums.MyInfoError.md)
   - [Ms2ex.Enums.PartyNotice](Ms2ex.Enums.PartyNotice.md)
   - [Ms2ex.Enums.PartySearchError](Ms2ex.Enums.PartySearchError.md)
@@ -388,14 +419,33 @@ mastery block written into the character packet.
   - [Ms2ex.Enums.QuestState](Ms2ex.Enums.QuestState.md): Quest progression states as serialized in quest packets and rows.
 
   - [Ms2ex.Enums.RegionType](Ms2ex.Enums.RegionType.md)
+  - [Ms2ex.Enums.ReputationType](Ms2ex.Enums.ReputationType.md)
+  - [Ms2ex.Enums.ResetType](Ms2ex.Enums.ResetType.md)
+  - [Ms2ex.Enums.ShopBuyDay](Ms2ex.Enums.ShopBuyDay.md)
+  - [Ms2ex.Enums.ShopCurrencyType](Ms2ex.Enums.ShopCurrencyType.md): Payment currency ids as they appear in the shop tables (`payment_type`).
+Not the wallet wire ids — see `WalletCurrencyType` for those; the shop
+manager maps these onto wallet currencies.
+
+  - [Ms2ex.Enums.ShopError](Ms2ex.Enums.ShopError.md)
+  - [Ms2ex.Enums.ShopFrameType](Ms2ex.Enums.ShopFrameType.md)
+  - [Ms2ex.Enums.ShopItemLabel](Ms2ex.Enums.ShopItemLabel.md)
   - [Ms2ex.Enums.SkillRank](Ms2ex.Enums.SkillRank.md)
-  - [Ms2ex.Enums.SmartPushCurrencyType](Ms2ex.Enums.SmartPushCurrencyType.md)
+  - [Ms2ex.Enums.SmartPushCurrencyType](Ms2ex.Enums.SmartPushCurrencyType.md): Currency ids of smart-push auto-action packages. Not the wallet wire ids —
+see `WalletCurrencyType`.
+
   - [Ms2ex.Enums.SpecialStatType](Ms2ex.Enums.SpecialStatType.md)
+  - [Ms2ex.Enums.StorageError](Ms2ex.Enums.StorageError.md)
   - [Ms2ex.Enums.StringCode](Ms2ex.Enums.StringCode.md)
   - [Ms2ex.Enums.SystemMailContent](Ms2ex.Enums.SystemMailContent.md)
   - [Ms2ex.Enums.SystemNotice](Ms2ex.Enums.SystemNotice.md)
   - [Ms2ex.Enums.TransferType](Ms2ex.Enums.TransferType.md)
   - [Ms2ex.Enums.UgcType](Ms2ex.Enums.UgcType.md)
+  - [Ms2ex.Enums.WalletCurrencyType](Ms2ex.Enums.WalletCurrencyType.md): Currency ids on the wallet wire: the CurrencyToken packet and the mesos /
+merets packets carry these ids for token currencies. Plural atoms mirror
+the wallet columns. Shop entries, the meret market and smart-push packages
+use their own currency enums (see `ShopCurrencyType`, `MeretMarketCurrency`
+and `SmartPushCurrencyType`) — the same currency has a different id in
+each of them.
 
 - Types
   - [Ms2ex.Types.AttributePointSource](Ms2ex.Types.AttributePointSource.md)
@@ -487,17 +537,27 @@ skills, then applies them to a character's stats.
   - [Ms2ex.Context.ItemTransfer](Ms2ex.Context.ItemTransfer.md): Item trade-state semantics: transfer flags and character binding.
   - [Ms2ex.Context.ItemTypes](Ms2ex.Context.ItemTypes.md)
   - [Ms2ex.Context.Items](Ms2ex.Context.Items.md)
-  - [Ms2ex.Context.Mails](Ms2ex.Context.Mails.md): Context module for the Mail System.
-Manages player-to-player mail, system mail, attachments, and collection.
+  - [Ms2ex.Context.Mails](Ms2ex.Context.Mails.md): Context module for the Mail System: mail rows, attachments and their
+read/collected timestamps. Sending and collection flows live in
+`Ms2ex.Managers.Mail`.
 
   - [Ms2ex.Context.MapBlock](Ms2ex.Context.MapBlock.md)
   - [Ms2ex.Context.Mobs](Ms2ex.Context.Mobs.md)
   - [Ms2ex.Context.PremiumMemberships](Ms2ex.Context.PremiumMemberships.md)
   - [Ms2ex.Context.Quests](Ms2ex.Context.Quests.md): Quest persistence helpers.
 
+  - [Ms2ex.Context.Shops](Ms2ex.Context.Shops.md): Persists per-owner vendor shop state: the restock window of limited-stock
+shops and the stock-purchase counters of their items. `owner_id` is the
+account id or the character id, depending on the shop's restock policy.
+
   - [Ms2ex.Context.SkillTabs](Ms2ex.Context.SkillTabs.md)
   - [Ms2ex.Context.Skills](Ms2ex.Context.Skills.md)
   - [Ms2ex.Context.StatPoints](Ms2ex.Context.StatPoints.md)
+  - [Ms2ex.Context.Storages](Ms2ex.Context.Storages.md): Persists the per-account bank storage: stored mesos and slot expansion
+(`Schema.AccountStorage`) and its item rows. Storage items live in
+`inventory_items` owned by the account (`character_id` nil, `account_id`
+set), so they never collide with character inventory queries.
+
   - [Ms2ex.Context.Taxi](Ms2ex.Context.Taxi.md)
   - [Ms2ex.Context.Ugc](Ms2ex.Context.Ugc.md): Persistence for user generated content resources and the files uploaded for
 them. A resource row is created by the game server when a client announces an
@@ -505,7 +565,10 @@ upload; the web server then stores the file and records the path the client
 should fetch it back from.
 
   - [Ms2ex.Context.Utils](Ms2ex.Context.Utils.md): Utility functions.
-  - [Ms2ex.Context.Wallets](Ms2ex.Context.Wallets.md)
+  - [Ms2ex.Context.Wallets](Ms2ex.Context.Wallets.md): Row persistence for character and account wallets. Balance mutations,
+caps and packet pushes live in `Ms2ex.Managers.Wallet`, which owns the
+in-memory balances for an online character.
+
   - [Ms2ex.Context.World](Ms2ex.Context.World.md)
   - [Ms2ex.Context.WorldGraph](Ms2ex.Context.WorldGraph.md)
 
@@ -636,6 +699,9 @@ crafted item results and the error notices the client renders.
   - [Ms2ex.Packets.ServerEnter](Ms2ex.Packets.ServerEnter.md)
   - [Ms2ex.Packets.ServerList](Ms2ex.Packets.ServerList.md)
   - [Ms2ex.Packets.SetCraftMode](Ms2ex.Packets.SetCraftMode.md)
+  - [Ms2ex.Packets.Shop](Ms2ex.Packets.Shop.md): Vendor shop window packets: opening a shop, its stock, buy results and
+the session's buy-back list.
+
   - [Ms2ex.Packets.SkillBook](Ms2ex.Packets.SkillBook.md)
   - [Ms2ex.Packets.SkillCancel](Ms2ex.Packets.SkillCancel.md)
   - [Ms2ex.Packets.SkillCooldown](Ms2ex.Packets.SkillCooldown.md)
@@ -648,6 +714,9 @@ crafted item results and the error notices the client renders.
   - [Ms2ex.Packets.StatPoints](Ms2ex.Packets.StatPoints.md)
   - [Ms2ex.Packets.StateSkill](Ms2ex.Packets.StateSkill.md)
   - [Ms2ex.Packets.Stats](Ms2ex.Packets.Stats.md)
+  - [Ms2ex.Packets.StorageInventory](Ms2ex.Packets.StorageInventory.md): Bank storage window packets: the item rows of the account storage, its
+stored mesos, slot expansion and errors.
+
   - [Ms2ex.Packets.StoryBook](Ms2ex.Packets.StoryBook.md)
   - [Ms2ex.Packets.SyncNumber](Ms2ex.Packets.SyncNumber.md)
   - [Ms2ex.Packets.Taxi](Ms2ex.Packets.Taxi.md)

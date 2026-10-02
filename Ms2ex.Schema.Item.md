@@ -6,6 +6,7 @@
 ```elixir
 @type t() :: %Ms2ex.Schema.Item{
   __meta__: term(),
+  account_id: term(),
   amount: term(),
   appearance_flag: term(),
   can_repackage: term(),

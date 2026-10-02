@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-2CEA721E.js"></script>
+    <script defer src="dist/sidebar_items-1269B78F.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -113,6 +113,12 @@ MS2EX
   </div>
 
 
+    <section id="moduledoc">
+<p>Row persistence for character and account wallets. Balance mutations,
+caps and packet pushes live in <a href="Ms2ex.Managers.Wallet.html"><code class="inline">Ms2ex.Managers.Wallet</code></a>, which owns the
+in-memory balances for an online character.</p>
+    </section>
+
 </div>
 
   <section id="summary" class="details-list">
@@ -129,7 +135,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#currency_type/1" data-no-tooltip="" translate="no">currency_type(currency)</a>
+        <a href="#get_account_wallet/1" data-no-tooltip="" translate="no">get_account_wallet(account_id)</a>
 
       </div>
 
@@ -137,7 +143,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#debit/3" data-no-tooltip="" translate="no">debit(char, currency, amount)</a>
+        <a href="#get_character_wallet/1" data-no-tooltip="" translate="no">get_character_wallet(character_id)</a>
 
       </div>
 
@@ -145,7 +151,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#find/1" data-no-tooltip="" translate="no">find(arg1)</a>
+        <a href="#persist_account_wallet/2" data-no-tooltip="" translate="no">persist_account_wallet(account_id, wallet)</a>
 
       </div>
 
@@ -153,15 +159,7 @@ MS2EX
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#set/3" data-no-tooltip="" translate="no">set(char, currency, value)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#update/3" data-no-tooltip="" translate="no">update(char, currency, value)</a>
+        <a href="#persist_character_wallet/2" data-no-tooltip="" translate="no">persist_character_wallet(char_id, wallet)</a>
 
       </div>
 
@@ -181,17 +179,17 @@ MS2EX
     </h2>
 
     <div class="functions-list">
-<section class="detail" id="currency_type/1">
+<section class="detail" id="get_account_wallet/1">
 
   <div class="detail-header">
-    <a href="#currency_type/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#get_account_wallet/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">currency_type(currency)</h1>
+      <h1 class="signature" translate="no">get_account_wallet(account_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L123" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L17" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -203,17 +201,17 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="debit/3">
+<section class="detail" id="get_character_wallet/1">
 
   <div class="detail-header">
-    <a href="#debit/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#get_character_wallet/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">debit(char, currency, amount)</h1>
+      <h1 class="signature" translate="no">get_character_wallet(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L66" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L13" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -225,17 +223,17 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="find/1">
+<section class="detail" id="persist_account_wallet/2">
 
   <div class="detail-header">
-    <a href="#find/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#persist_account_wallet/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">find(arg1)</h1>
+      <h1 class="signature" translate="no">persist_account_wallet(account_id, wallet)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L23" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L40" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -247,39 +245,17 @@ MS2EX
 
   </section>
 </section>
-<section class="detail" id="set/3">
+<section class="detail" id="persist_character_wallet/2">
 
   <div class="detail-header">
-    <a href="#set/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#persist_character_wallet/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">set(char, currency, value)</h1>
+      <h1 class="signature" translate="no">persist_character_wallet(char_id, wallet)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L84" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="update/3">
-
-  <div class="detail-header">
-    <a href="#update/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">update(char, currency, value)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L37" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 

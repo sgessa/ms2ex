@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-2CEA721E.js"></script>
+    <script defer src="dist/sidebar_items-1269B78F.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -114,8 +114,9 @@ MS2EX
 
 
     <section id="moduledoc">
-<p>Context module for the Mail System.
-Manages player-to-player mail, system mail, attachments, and collection.</p>
+<p>Context module for the Mail System: mail rows, attachments and their
+read/collected timestamps. Sending and collection flows live in
+<a href="Ms2ex.Managers.Mail.html"><code class="inline">Ms2ex.Managers.Mail</code></a>.</p>
     </section>
 
 </div>
@@ -134,21 +135,21 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bind_account_mails/2" data-no-tooltip="" translate="no">bind_account_mails(account_id, character_id)</a>
+        <a href="#attach_items_to_mail/2" data-no-tooltip="" translate="no">attach_items_to_mail(mail_id, items)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Binds all account-level mails to the given character.</p></div>
+        <div class="summary-synopsis"><p>Attaches item rows to a mail (moved out of the character's inventory).</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bulk_collect/2" data-no-tooltip="" translate="no">bulk_collect(mail_ids, character)</a>
+        <a href="#bind_account_mails/2" data-no-tooltip="" translate="no">bind_account_mails(account_id, character_id)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Bulk collects attachments from multiple mails.</p></div>
+        <div class="summary-synopsis"><p>Binds all account-level mails to the given character.</p></div>
 
     </div>
 
@@ -174,16 +175,6 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#collect/2" data-no-tooltip="" translate="no">collect(mail_id, character)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Collects attachments (currencies and items) from a mail.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#count_unread/1" data-no-tooltip="" translate="no">count_unread(character_id)</a>
 
       </div>
@@ -204,11 +195,41 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#delete_item/1" data-no-tooltip="" translate="no">delete_item(item)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Deletes a detached attachment item row after it moved to the inventory.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get/2" data-no-tooltip="" translate="no">get(mail_id, character_id)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Gets a single mail by ID for a character.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert_player_mail/4" data-no-tooltip="" translate="no">insert_player_mail(sender, recipient, title, content)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Inserts a player-to-player mail row.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert_system_mail/1" data-no-tooltip="" translate="no">insert_system_mail(attrs)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Inserts a system mail row.</p></div>
 
     </div>
 
@@ -224,11 +245,11 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#notify_recipient/2" data-no-tooltip="" translate="no">notify_recipient(character_id, alert \\ true)</a>
+        <a href="#mark_collected/1" data-no-tooltip="" translate="no">mark_collected(mail)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Pushes an unread mail notification to an online character.</p></div>
+        <div class="summary-synopsis"><p>Marks a mail's attachments as collected.</p></div>
 
     </div>
 
@@ -244,21 +265,12 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#send_player_mail/4" data-no-tooltip="" translate="no">send_player_mail(sender, receiver_name, title, content)</a>
+        <a href="#validate_collectible/1" data-no-tooltip="" translate="no">validate_collectible(mail)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Sends a player-to-player mail.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#send_system_mail/4" data-no-tooltip="" translate="no">send_system_mail(receiver_id, title, content, opts \\ [])</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Sends a system mail with optional currency and item attachments.</p></div>
+        <div class="summary-synopsis"><p>Whether a mail can still be collected (not expired, attachments pending).
+Returns <code class="inline">:ok</code> or <code class="inline">{:error, code}</code>.</p></div>
 
     </div>
 
@@ -276,6 +288,28 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
     </h2>
 
     <div class="functions-list">
+<section class="detail" id="attach_items_to_mail/2">
+
+  <div class="detail-header">
+    <a href="#attach_items_to_mail/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">attach_items_to_mail(mail_id, items)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L120" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Attaches item rows to a mail (moved out of the character's inventory).</p>
+  </section>
+</section>
 <section class="detail" id="bind_account_mails/2">
 
   <div class="detail-header">
@@ -286,7 +320,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">bind_account_mails(account_id, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L24" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L21" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -304,35 +338,6 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 <p>Binds all account-level mails to the given character.</p>
   </section>
 </section>
-<section class="detail" id="bulk_collect/2">
-
-  <div class="detail-header">
-    <a href="#bulk_collect/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">bulk_collect(mail_ids, character)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L306" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> bulk_collect([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()], <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) ::
-  {:ok, [<a href="Ms2ex.Schema.Mail.html#t:t/0">Ms2ex.Schema.Mail.t</a>()]}</pre>
-
-      </div>
-
-<p>Bulk collects attachments from multiple mails.</p>
-  </section>
-</section>
 <section class="detail" id="bulk_delete/2">
 
   <div class="detail-header">
@@ -343,7 +348,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">bulk_delete(mail_ids, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L344" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L244" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -371,7 +376,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">bulk_read(mail_ids, character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L266" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L179" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -390,35 +395,6 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 <p>Bulk marks multiple mails as read.</p>
   </section>
 </section>
-<section class="detail" id="collect/2">
-
-  <div class="detail-header">
-    <a href="#collect/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">collect(mail_id, character)</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L289" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> collect(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.Mail.html#t:t/0">Ms2ex.Schema.Mail.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Collects attachments (currencies and items) from a mail.</p>
-  </section>
-</section>
 <section class="detail" id="count_unread/1">
 
   <div class="detail-header">
@@ -429,7 +405,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">count_unread(character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L56" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L53" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -457,7 +433,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">delete(mail_id, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L322" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L222" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -475,6 +451,28 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 <p>Deletes a mail if it has no uncollected attachments.</p>
   </section>
 </section>
+<section class="detail" id="delete_item/1">
+
+  <div class="detail-header">
+    <a href="#delete_item/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete_item(item)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L283" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Deletes a detached attachment item row after it moved to the inventory.</p>
+  </section>
+</section>
 <section class="detail" id="get/2">
 
   <div class="detail-header">
@@ -485,7 +483,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">get(mail_id, character_id)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L73" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L70" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -503,6 +501,68 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 <p>Gets a single mail by ID for a character.</p>
   </section>
 </section>
+<section class="detail" id="insert_player_mail/4">
+
+  <div class="detail-header">
+    <a href="#insert_player_mail/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">insert_player_mail(sender, recipient, title, content)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L89" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> insert_player_mail(
+  <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(),
+  <a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
+) ::
+  {:ok, <a href="Ms2ex.Schema.Mail.html#t:t/0">Ms2ex.Schema.Mail.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+<p>Inserts a player-to-player mail row.</p>
+  </section>
+</section>
+<section class="detail" id="insert_system_mail/1">
+
+  <div class="detail-header">
+    <a href="#insert_system_mail/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">insert_system_mail(attrs)</h1>
+
+
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L111" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> insert_system_mail(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: {:ok, <a href="Ms2ex.Schema.Mail.html#t:t/0">Ms2ex.Schema.Mail.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Inserts a system mail row.</p>
+  </section>
+</section>
 <section class="detail" id="list/2">
 
     <span id="list/1"></span>
@@ -515,7 +575,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">list(character_id, account_id \\ nil)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L34" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L31" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -533,19 +593,17 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 <p>Lists all non-expired mails for a character, preloading their items.</p>
   </section>
 </section>
-<section class="detail" id="notify_recipient/2">
-
-    <span id="notify_recipient/1"></span>
+<section class="detail" id="mark_collected/1">
 
   <div class="detail-header">
-    <a href="#notify_recipient/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#mark_collected/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">notify_recipient(character_id, alert \\ true)</h1>
+      <h1 class="signature" translate="no">mark_collected(mail)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L360" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L270" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -554,13 +612,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> notify_recipient(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) :: :ok</pre>
-
-      </div>
-
-<p>Pushes an unread mail notification to an online character.</p>
+<p>Marks a mail's attachments as collected.</p>
   </section>
 </section>
 <section class="detail" id="read/2">
@@ -573,7 +625,7 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
       <h1 class="signature" translate="no">read(mail_id, character)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L245" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L158" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -592,17 +644,17 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 <p>Marks a mail as read.</p>
   </section>
 </section>
-<section class="detail" id="send_player_mail/4">
+<section class="detail" id="validate_collectible/1">
 
   <div class="detail-header">
-    <a href="#send_player_mail/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#validate_collectible/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">send_player_mail(sender, receiver_name, title, content)</h1>
+      <h1 class="signature" translate="no">validate_collectible(mail)</h1>
 
 
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L92" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L202" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -611,45 +663,8 @@ Manages player-to-player mail, system mail, attachments, and collection.</p>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> send_player_mail(<a href="Ms2ex.Schema.Character.html#t:t/0">Ms2ex.Schema.Character.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.Mail.html#t:t/0">Ms2ex.Schema.Mail.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Sends a player-to-player mail.</p>
-  </section>
-</section>
-<section class="detail" id="send_system_mail/4">
-
-    <span id="send_system_mail/3"></span>
-
-  <div class="detail-header">
-    <a href="#send_system_mail/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">send_system_mail(receiver_id, title, content, opts \\ [])</h1>
-
-
-        <a href="https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L145" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> send_system_mail(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">keyword</a>()) ::
-  {:ok, <a href="Ms2ex.Schema.Mail.html#t:t/0">Ms2ex.Schema.Mail.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Sends a system mail with optional currency and item attachments.</p>
+<p>Whether a mail can still be collected (not expired, attachments pending).
+Returns <code class="inline">:ok</code> or <code class="inline">{:error, code}</code>.</p>
   </section>
 </section>
 

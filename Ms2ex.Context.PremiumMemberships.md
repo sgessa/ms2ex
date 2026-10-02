@@ -23,7 +23,7 @@ Returns the claimed Premium Club benefit ids for an account.
 
 # `purchase`
 
-Charges Merets and extends membership in one database transaction.
+Charges Merets through the wallet manager, then extends membership.
 
 # `reset_claimed`
 

@@ -1,6 +1,9 @@
 # `Ms2ex.Enums.SmartPushCurrencyType`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/smart_push_currency_type.ex#L1)
 
+Currency ids of smart-push auto-action packages. Not the wallet wire ids —
+see `WalletCurrencyType`.
+
 # `all`
 
 # `all_map`

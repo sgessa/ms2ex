@@ -38,9 +38,11 @@ Ms2ex.Context.MapBlock.md
 Ms2ex.Context.Mobs.md
 Ms2ex.Context.PremiumMemberships.md
 Ms2ex.Context.Quests.md
+Ms2ex.Context.Shops.md
 Ms2ex.Context.SkillTabs.md
 Ms2ex.Context.Skills.md
 Ms2ex.Context.StatPoints.md
+Ms2ex.Context.Storages.md
 Ms2ex.Context.Taxi.md
 Ms2ex.Context.Ugc.md
 Ms2ex.Context.Utils.md
@@ -88,14 +90,23 @@ Ms2ex.Enums.QuestError.md
 Ms2ex.Enums.QuestRemoteType.md
 Ms2ex.Enums.QuestState.md
 Ms2ex.Enums.RegionType.md
+Ms2ex.Enums.ReputationType.md
+Ms2ex.Enums.ResetType.md
+Ms2ex.Enums.ShopBuyDay.md
+Ms2ex.Enums.ShopCurrencyType.md
+Ms2ex.Enums.ShopError.md
+Ms2ex.Enums.ShopFrameType.md
+Ms2ex.Enums.ShopItemLabel.md
 Ms2ex.Enums.SkillRank.md
 Ms2ex.Enums.SmartPushCurrencyType.md
 Ms2ex.Enums.SpecialStatType.md
+Ms2ex.Enums.StorageError.md
 Ms2ex.Enums.StringCode.md
 Ms2ex.Enums.SystemMailContent.md
 Ms2ex.Enums.SystemNotice.md
 Ms2ex.Enums.TransferType.md
 Ms2ex.Enums.UgcType.md
+Ms2ex.Enums.WalletCurrencyType.md
 Ms2ex.Formulas.AttackStats.md
 Ms2ex.Formulas.BaseStats.md
 Ms2ex.Formulas.Gathering.md
@@ -106,6 +117,7 @@ Ms2ex.Formulas.ItemEnchant.md
 Ms2ex.Formulas.ItemRates.md
 Ms2ex.Formulas.ItemStaticStats.md
 Ms2ex.Formulas.ItemWeaponAttack.md
+Ms2ex.Formulas.Shop.md
 Ms2ex.GameHandlers.Achievement.md
 Ms2ex.GameHandlers.BadgeEquip.md
 Ms2ex.GameHandlers.CharacterInfo.md
@@ -149,6 +161,7 @@ Ms2ex.GameHandlers.RequestChangeChannel.md
 Ms2ex.GameHandlers.RequestChangeField.md
 Ms2ex.GameHandlers.RequestCube.md
 Ms2ex.GameHandlers.RequestItemBox.md
+Ms2ex.GameHandlers.RequestItemStorage.md
 Ms2ex.GameHandlers.RequestQuit.md
 Ms2ex.GameHandlers.RequestTimeSync.md
 Ms2ex.GameHandlers.RequestTutorialItem.md
@@ -160,6 +173,7 @@ Ms2ex.GameHandlers.ResponseVersion.md
 Ms2ex.GameHandlers.Revival.md
 Ms2ex.GameHandlers.Ride.md
 Ms2ex.GameHandlers.RideSync.md
+Ms2ex.GameHandlers.Shop.md
 Ms2ex.GameHandlers.Skill.md
 Ms2ex.GameHandlers.SkillBook.md
 Ms2ex.GameHandlers.SmartPush.md
@@ -222,6 +236,7 @@ Ms2ex.Managers.GroupChat.md
 Ms2ex.Managers.GuildManager.md
 Ms2ex.Managers.GuildServer.md
 Ms2ex.Managers.Inventory.md
+Ms2ex.Managers.Mail.md
 Ms2ex.Managers.Managed.md
 Ms2ex.Managers.Mastery.md
 Ms2ex.Managers.PartyManager.md
@@ -234,7 +249,10 @@ Ms2ex.Managers.Quest.State.md
 Ms2ex.Managers.Quest.md
 Ms2ex.Managers.Session.md
 Ms2ex.Managers.SessionManager.md
+Ms2ex.Managers.Shop.md
 Ms2ex.Managers.SkillCast.md
+Ms2ex.Managers.Storage.md
+Ms2ex.Managers.Wallet.md
 Ms2ex.Navigation.md
 Ms2ex.Net.Logger.md
 Ms2ex.Net.Router.md
@@ -346,6 +364,7 @@ Ms2ex.Packets.RideSync.md
 Ms2ex.Packets.ServerEnter.md
 Ms2ex.Packets.ServerList.md
 Ms2ex.Packets.SetCraftMode.md
+Ms2ex.Packets.Shop.md
 Ms2ex.Packets.SkillBook.md
 Ms2ex.Packets.SkillCancel.md
 Ms2ex.Packets.SkillCooldown.md
@@ -358,6 +377,7 @@ Ms2ex.Packets.SmartPush.md
 Ms2ex.Packets.StatPoints.md
 Ms2ex.Packets.StateSkill.md
 Ms2ex.Packets.Stats.md
+Ms2ex.Packets.StorageInventory.md
 Ms2ex.Packets.StoryBook.md
 Ms2ex.Packets.SyncNumber.md
 Ms2ex.Packets.Taxi.md
@@ -382,6 +402,7 @@ Ms2ex.Packets.md
 Ms2ex.Release.md
 Ms2ex.Repo.md
 Ms2ex.Schema.Account.md
+Ms2ex.Schema.AccountStorage.md
 Ms2ex.Schema.AccountWallet.md
 Ms2ex.Schema.Achievement.md
 Ms2ex.Schema.BannerSlot.md
@@ -389,6 +410,8 @@ Ms2ex.Schema.Character.md
 Ms2ex.Schema.CharacterBuff.md
 Ms2ex.Schema.CharacterConfig.md
 Ms2ex.Schema.CharacterQuest.md
+Ms2ex.Schema.CharacterShopData.md
+Ms2ex.Schema.CharacterShopItemData.md
 Ms2ex.Schema.CharacterStats.md
 Ms2ex.Schema.CharacterTitle.md
 Ms2ex.Schema.ChatStickerGroup.md
@@ -439,6 +462,8 @@ Ms2ex.Storage.Tables.MasteryDifferentialFactors.md
 Ms2ex.Storage.Tables.MasteryRecipes.md
 Ms2ex.Storage.Tables.MasteryRewards.md
 Ms2ex.Storage.Tables.PremiumClub.md
+Ms2ex.Storage.Tables.Shop.md
+Ms2ex.Storage.Tables.ShopItems.md
 Ms2ex.Storage.Tables.SmartPush.md
 Ms2ex.Storage.Tables.UgcDesign.md
 Ms2ex.Storage.Tables.UserStats.md

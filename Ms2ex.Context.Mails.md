@@ -1,8 +1,13 @@
 # `Ms2ex.Context.Mails`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/mails.ex#L1)
 
-Context module for the Mail System.
-Manages player-to-player mail, system mail, attachments, and collection.
+Context module for the Mail System: mail rows, attachments and their
+read/collected timestamps. Sending and collection flows live in
+`Ms2ex.Managers.Mail`.
+
+# `attach_items_to_mail`
+
+Attaches item rows to a mail (moved out of the character's inventory).
 
 # `bind_account_mails`
 
@@ -11,15 +16,6 @@ Manages player-to-player mail, system mail, attachments, and collection.
 ```
 
 Binds all account-level mails to the given character.
-
-# `bulk_collect`
-
-```elixir
-@spec bulk_collect([integer()], Ms2ex.Schema.Character.t()) ::
-  {:ok, [Ms2ex.Schema.Mail.t()]}
-```
-
-Bulk collects attachments from multiple mails.
 
 # `bulk_delete`
 
@@ -38,15 +34,6 @@ Bulk deletes multiple mails that are eligible for deletion.
 
 Bulk marks multiple mails as read.
 
-# `collect`
-
-```elixir
-@spec collect(integer(), Ms2ex.Schema.Character.t()) ::
-  {:ok, Ms2ex.Schema.Mail.t()} | {:error, atom()}
-```
-
-Collects attachments (currencies and items) from a mail.
-
 # `count_unread`
 
 ```elixir
@@ -63,6 +50,10 @@ Counts unread non-expired mails for a character.
 
 Deletes a mail if it has no uncollected attachments.
 
+# `delete_item`
+
+Deletes a detached attachment item row after it moved to the inventory.
+
 # `get`
 
 ```elixir
@@ -70,6 +61,28 @@ Deletes a mail if it has no uncollected attachments.
 ```
 
 Gets a single mail by ID for a character.
+
+# `insert_player_mail`
+
+```elixir
+@spec insert_player_mail(
+  Ms2ex.Schema.Character.t(),
+  Ms2ex.Schema.Character.t(),
+  String.t(),
+  String.t()
+) ::
+  {:ok, Ms2ex.Schema.Mail.t()} | {:error, atom()}
+```
+
+Inserts a player-to-player mail row.
+
+# `insert_system_mail`
+
+```elixir
+@spec insert_system_mail(map()) :: {:ok, Ms2ex.Schema.Mail.t()} | {:error, term()}
+```
+
+Inserts a system mail row.
 
 # `list`
 
@@ -79,13 +92,9 @@ Gets a single mail by ID for a character.
 
 Lists all non-expired mails for a character, preloading their items.
 
-# `notify_recipient`
+# `mark_collected`
 
-```elixir
-@spec notify_recipient(integer(), boolean()) :: :ok
-```
-
-Pushes an unread mail notification to an online character.
+Marks a mail's attachments as collected.
 
 # `read`
 
@@ -96,23 +105,10 @@ Pushes an unread mail notification to an online character.
 
 Marks a mail as read.
 
-# `send_player_mail`
+# `validate_collectible`
 
-```elixir
-@spec send_player_mail(Ms2ex.Schema.Character.t(), String.t(), String.t(), String.t()) ::
-  {:ok, Ms2ex.Schema.Mail.t()} | {:error, atom()}
-```
-
-Sends a player-to-player mail.
-
-# `send_system_mail`
-
-```elixir
-@spec send_system_mail(integer(), String.t(), atom() | String.t(), keyword()) ::
-  {:ok, Ms2ex.Schema.Mail.t()} | {:error, atom()}
-```
-
-Sends a system mail with optional currency and item attachments.
+Whether a mail can still be collected (not expired, attachments pending).
+Returns `:ok` or `{:error, code}`.
 
 ---
 

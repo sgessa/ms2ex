@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
 
-    <script defer src="dist/sidebar_items-2CEA721E.js"></script>
+    <script defer src="dist/sidebar_items-1269B78F.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 
@@ -392,8 +392,9 @@ skills, then applies them to a character's stats.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Context module for the Mail System.
-Manages player-to-player mail, system mail, attachments, and collection.</p></div>
+    <div class="summary-synopsis"><p>Context module for the Mail System: mail rows, attachments and their
+read/collected timestamps. Sending and collection flows live in
+<a href="Ms2ex.Managers.Mail.html"><code class="inline">Ms2ex.Managers.Mail</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -428,6 +429,17 @@ Manages player-to-player mail, system mail, attachments, and collection.</p></di
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Context.Shops.html" translate="no">Ms2ex.<wbr />Context.<wbr />Shops</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Persists per-owner vendor shop state: the restock window of limited-stock
+shops and the stock-purchase counters of their items. <code class="inline">owner_id</code> is the
+account id or the character id, depending on the shop's restock policy.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Context.SkillTabs.html" translate="no">Ms2ex.<wbr />Context.<wbr />SkillTabs</a>
 
   </div>
@@ -445,6 +457,18 @@ Manages player-to-player mail, system mail, attachments, and collection.</p></di
     <a href="Ms2ex.Context.StatPoints.html" translate="no">Ms2ex.<wbr />Context.<wbr />StatPoints</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Context.Storages.html" translate="no">Ms2ex.<wbr />Context.<wbr />Storages</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Persists the per-account bank storage: stored mesos and slot expansion
+(<code class="inline">Schema.AccountStorage</code>) and its item rows. Storage items live in
+<code class="inline">inventory_items</code> owned by the account (<code class="inline">character_id</code> nil, <code class="inline">account_id</code>
+set), so they never collide with character inventory queries.</p></div>
 
 </div>
 <div class="summary-row">
@@ -480,6 +504,10 @@ should fetch it back from.</p></div>
     <a href="Ms2ex.Context.Wallets.html" translate="no">Ms2ex.<wbr />Context.<wbr />Wallets</a>
 
   </div>
+
+    <div class="summary-synopsis"><p>Row persistence for character and account wallets. Balance mutations,
+caps and packet pushes live in <a href="Ms2ex.Managers.Wallet.html"><code class="inline">Ms2ex.Managers.Wallet</code></a>, which owns the
+in-memory balances for an online character.</p></div>
 
 </div>
 <div class="summary-row">
@@ -737,6 +765,9 @@ mastery block written into the character packet.</p></div>
 
   </div>
 
+    <div class="summary-synopsis"><p>Currency ids of meret-market entries. Not the wallet wire ids — see
+<code class="inline">WalletCurrencyType</code>.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -809,6 +840,59 @@ mastery block written into the character packet.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Enums.ReputationType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ReputationType</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.ResetType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ResetType</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.ShopBuyDay.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ShopBuyDay</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.ShopCurrencyType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ShopCurrencyType</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Payment currency ids as they appear in the shop tables (<code class="inline">payment_type</code>).
+Not the wallet wire ids — see <code class="inline">WalletCurrencyType</code> for those; the shop
+manager maps these onto wallet currencies.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.ShopError.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ShopError</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.ShopFrameType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ShopFrameType</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.ShopItemLabel.html" translate="no">Ms2ex.<wbr />Enums.<wbr />ShopItemLabel</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Enums.SkillRank.html" translate="no">Ms2ex.<wbr />Enums.<wbr />SkillRank</a>
 
   </div>
@@ -820,10 +904,20 @@ mastery block written into the character packet.</p></div>
 
   </div>
 
+    <div class="summary-synopsis"><p>Currency ids of smart-push auto-action packages. Not the wallet wire ids —
+see <code class="inline">WalletCurrencyType</code>.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Ms2ex.Enums.SpecialStatType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />SpecialStatType</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.StorageError.html" translate="no">Ms2ex.<wbr />Enums.<wbr />StorageError</a>
 
   </div>
 
@@ -861,6 +955,20 @@ mastery block written into the character packet.</p></div>
     <a href="Ms2ex.Enums.UgcType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />UgcType</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Enums.WalletCurrencyType.html" translate="no">Ms2ex.<wbr />Enums.<wbr />WalletCurrencyType</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Currency ids on the wallet wire: the CurrencyToken packet and the mesos /
+merets packets carry these ids for token currencies. Plural atoms mirror
+the wallet columns. Shop entries, the meret market and smart-push packages
+use their own currency enums (see <code class="inline">ShopCurrencyType</code>, <code class="inline">MeretMarketCurrency</code>
+and <code class="inline">SmartPushCurrencyType</code>) — the same currency has a different id in
+each of them.</p></div>
 
 </div>
 <div class="summary-row">
@@ -934,6 +1042,16 @@ mastery block written into the character packet.</p></div>
     <a href="Ms2ex.Formulas.ItemWeaponAttack.html" translate="no">Ms2ex.<wbr />Formulas.<wbr />ItemWeaponAttack</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Formulas.Shop.html" translate="no">Ms2ex.<wbr />Formulas.<wbr />Shop</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Vendor shop pricing: what an npc pays for a sold item and how instant
+restock prices escalate with repeated restocks.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1270,6 +1388,17 @@ picked entry index as a string.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.RequestItemStorage.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestItemStorage</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Bank storage requests: deposit, withdraw, move, mesos, expansion, sort,
+delete. The load request opens the storage (starting its process), the
+close request stops it.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.GameHandlers.RequestQuit.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RequestQuit</a>
 
   </div>
@@ -1343,6 +1472,15 @@ picked entry index as a string.</p></div>
     <a href="Ms2ex.GameHandlers.RideSync.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />RideSync</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.GameHandlers.Shop.html" translate="no">Ms2ex.<wbr />GameHandlers.<wbr />Shop</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Vendor shop requests: buy, sell, buy-back and restock on the open shop.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1862,6 +2000,15 @@ album.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Managers.Mail.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Mail</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Mail flows: sending, collecting attachments and notifications.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Managers.Managed.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Managed</a>
 
   </div>
@@ -1956,9 +2103,42 @@ album.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Managers.Shop.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Shop</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Per-character vendor shop state: the open shop window, its instanced stock
+for limited-stock shops, and the session's buy-back list.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Managers.SkillCast.html" translate="no">Ms2ex.<wbr />Managers.<wbr />SkillCast</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Storage.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Storage</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Per-account bank storage: the item rows (account-owned <code class="inline">inventory_items</code>),
+the stored mesos and the purchased slot expansion. The process lives only
+while the storage window is open — the client's load request starts it and
+its close request stops it; every mutation persists immediately.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Managers.Wallet.html" translate="no">Ms2ex.<wbr />Managers.<wbr />Wallet</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Per-character wallet state: the character's balances (mesos, valor tokens,
+trevas, rues, havi fruits) and a copy of the account balances (merets,
+event merets, game merets, meso tokens) it spends.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2775,6 +2955,16 @@ crafted item results and the error notices the client renders.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Packets.Shop.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Shop</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Vendor shop window packets: opening a shop, its stock, buy results and
+the session's buy-back list.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Packets.SkillBook.html" translate="no">Ms2ex.<wbr />Packets.<wbr />SkillBook</a>
 
   </div>
@@ -2855,6 +3045,16 @@ crafted item results and the error notices the client renders.</p></div>
     <a href="Ms2ex.Packets.Stats.html" translate="no">Ms2ex.<wbr />Packets.<wbr />Stats</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Packets.StorageInventory.html" translate="no">Ms2ex.<wbr />Packets.<wbr />StorageInventory</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Bank storage window packets: the item rows of the account storage, its
+stored mesos, slot expansion and errors.</p></div>
 
 </div>
 <div class="summary-row">
@@ -3027,6 +3227,13 @@ of clipping into it.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Ms2ex.Schema.AccountStorage.html" translate="no">Ms2ex.<wbr />Schema.<wbr />AccountStorage</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Ms2ex.Schema.AccountWallet.html" translate="no">Ms2ex.<wbr />Schema.<wbr />AccountWallet</a>
 
   </div>
@@ -3074,6 +3281,20 @@ of clipping into it.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Schema for character quests.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Schema.CharacterShopData.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterShopData</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Schema.CharacterShopItemData.html" translate="no">Ms2ex.<wbr />Schema.<wbr />CharacterShopItemData</a>
+
+  </div>
 
 </div>
 <div class="summary-row">
@@ -3459,6 +3680,26 @@ the reward box handed out for reaching it.</p></div>
     <a href="Ms2ex.Storage.Tables.PremiumClub.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />PremiumClub</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Storage.Tables.Shop.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />Shop</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Vendor shop metadata: one entry per shop id, with the restock policy for
+limited-stock shops (<code class="inline">enable_reset</code>).</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Ms2ex.Storage.Tables.ShopItems.html" translate="no">Ms2ex.<wbr />Storage.<wbr />Tables.<wbr />ShopItems</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Vendor shop stock entries, grouped by shop id and keyed by the shop item
+id (<code class="inline">sn</code>) each entry carries in the shop window packets.</p></div>
 
 </div>
 <div class="summary-row">

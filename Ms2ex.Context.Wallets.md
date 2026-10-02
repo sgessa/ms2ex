@@ -1,15 +1,17 @@
 # `Ms2ex.Context.Wallets`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/context/wallets.ex#L1)
 
-# `currency_type`
+Row persistence for character and account wallets. Balance mutations,
+caps and packet pushes live in `Ms2ex.Managers.Wallet`, which owns the
+in-memory balances for an online character.
 
-# `debit`
+# `get_account_wallet`
 
-# `find`
+# `get_character_wallet`
 
-# `set`
+# `persist_account_wallet`
 
-# `update`
+# `persist_character_wallet`
 
 ---
 

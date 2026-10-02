@@ -1,6 +1,9 @@
 # `Ms2ex.Enums.MeretMarketCurrency`
 [🔗](https://github.com/sgessa/ms2ex/blob/main/lib/ms2ex/enums/meret_market_currency.ex#L1)
 
+Currency ids of meret-market entries. Not the wallet wire ids — see
+`WalletCurrencyType`.
+
 # `all`
 
 # `all_map`

@@ -26,8 +26,8 @@ every axis to compensate for entity size.
 
 # `npc_body_in_box?`
 
-Whether an npc's body capsule overlaps a trigger box: the reference tests
-the box against both the npc's position and its body shape, so a large npc
+Whether an npc's body capsule overlaps a trigger box: the box is tested
+against both the npc's position and its body shape, so a large npc
 (or one riding a mount) registers while its body crosses the box edge even
 when its position point never enters the box.
 

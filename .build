@@ -39,9 +39,11 @@ Ms2ex.Context.MapBlock.html
 Ms2ex.Context.Mobs.html
 Ms2ex.Context.PremiumMemberships.html
 Ms2ex.Context.Quests.html
+Ms2ex.Context.Shops.html
 Ms2ex.Context.SkillTabs.html
 Ms2ex.Context.Skills.html
 Ms2ex.Context.StatPoints.html
+Ms2ex.Context.Storages.html
 Ms2ex.Context.Taxi.html
 Ms2ex.Context.Ugc.html
 Ms2ex.Context.Utils.html
@@ -89,14 +91,23 @@ Ms2ex.Enums.QuestError.html
 Ms2ex.Enums.QuestRemoteType.html
 Ms2ex.Enums.QuestState.html
 Ms2ex.Enums.RegionType.html
+Ms2ex.Enums.ReputationType.html
+Ms2ex.Enums.ResetType.html
+Ms2ex.Enums.ShopBuyDay.html
+Ms2ex.Enums.ShopCurrencyType.html
+Ms2ex.Enums.ShopError.html
+Ms2ex.Enums.ShopFrameType.html
+Ms2ex.Enums.ShopItemLabel.html
 Ms2ex.Enums.SkillRank.html
 Ms2ex.Enums.SmartPushCurrencyType.html
 Ms2ex.Enums.SpecialStatType.html
+Ms2ex.Enums.StorageError.html
 Ms2ex.Enums.StringCode.html
 Ms2ex.Enums.SystemMailContent.html
 Ms2ex.Enums.SystemNotice.html
 Ms2ex.Enums.TransferType.html
 Ms2ex.Enums.UgcType.html
+Ms2ex.Enums.WalletCurrencyType.html
 Ms2ex.Formulas.AttackStats.html
 Ms2ex.Formulas.BaseStats.html
 Ms2ex.Formulas.Gathering.html
@@ -107,6 +118,7 @@ Ms2ex.Formulas.ItemEnchant.html
 Ms2ex.Formulas.ItemRates.html
 Ms2ex.Formulas.ItemStaticStats.html
 Ms2ex.Formulas.ItemWeaponAttack.html
+Ms2ex.Formulas.Shop.html
 Ms2ex.GameHandlers.Achievement.html
 Ms2ex.GameHandlers.BadgeEquip.html
 Ms2ex.GameHandlers.CharacterInfo.html
@@ -150,6 +162,7 @@ Ms2ex.GameHandlers.RequestChangeChannel.html
 Ms2ex.GameHandlers.RequestChangeField.html
 Ms2ex.GameHandlers.RequestCube.html
 Ms2ex.GameHandlers.RequestItemBox.html
+Ms2ex.GameHandlers.RequestItemStorage.html
 Ms2ex.GameHandlers.RequestQuit.html
 Ms2ex.GameHandlers.RequestTimeSync.html
 Ms2ex.GameHandlers.RequestTutorialItem.html
@@ -161,6 +174,7 @@ Ms2ex.GameHandlers.ResponseVersion.html
 Ms2ex.GameHandlers.Revival.html
 Ms2ex.GameHandlers.Ride.html
 Ms2ex.GameHandlers.RideSync.html
+Ms2ex.GameHandlers.Shop.html
 Ms2ex.GameHandlers.Skill.html
 Ms2ex.GameHandlers.SkillBook.html
 Ms2ex.GameHandlers.SmartPush.html
@@ -223,6 +237,7 @@ Ms2ex.Managers.GroupChat.html
 Ms2ex.Managers.GuildManager.html
 Ms2ex.Managers.GuildServer.html
 Ms2ex.Managers.Inventory.html
+Ms2ex.Managers.Mail.html
 Ms2ex.Managers.Managed.html
 Ms2ex.Managers.Mastery.html
 Ms2ex.Managers.PartyManager.html
@@ -235,7 +250,10 @@ Ms2ex.Managers.Quest.State.html
 Ms2ex.Managers.Quest.html
 Ms2ex.Managers.Session.html
 Ms2ex.Managers.SessionManager.html
+Ms2ex.Managers.Shop.html
 Ms2ex.Managers.SkillCast.html
+Ms2ex.Managers.Storage.html
+Ms2ex.Managers.Wallet.html
 Ms2ex.Navigation.html
 Ms2ex.Net.Logger.html
 Ms2ex.Net.Router.html
@@ -347,6 +365,7 @@ Ms2ex.Packets.RideSync.html
 Ms2ex.Packets.ServerEnter.html
 Ms2ex.Packets.ServerList.html
 Ms2ex.Packets.SetCraftMode.html
+Ms2ex.Packets.Shop.html
 Ms2ex.Packets.SkillBook.html
 Ms2ex.Packets.SkillCancel.html
 Ms2ex.Packets.SkillCooldown.html
@@ -359,6 +378,7 @@ Ms2ex.Packets.SmartPush.html
 Ms2ex.Packets.StatPoints.html
 Ms2ex.Packets.StateSkill.html
 Ms2ex.Packets.Stats.html
+Ms2ex.Packets.StorageInventory.html
 Ms2ex.Packets.StoryBook.html
 Ms2ex.Packets.SyncNumber.html
 Ms2ex.Packets.Taxi.html
@@ -383,6 +403,7 @@ Ms2ex.Packets.html
 Ms2ex.Release.html
 Ms2ex.Repo.html
 Ms2ex.Schema.Account.html
+Ms2ex.Schema.AccountStorage.html
 Ms2ex.Schema.AccountWallet.html
 Ms2ex.Schema.Achievement.html
 Ms2ex.Schema.BannerSlot.html
@@ -390,6 +411,8 @@ Ms2ex.Schema.Character.html
 Ms2ex.Schema.CharacterBuff.html
 Ms2ex.Schema.CharacterConfig.html
 Ms2ex.Schema.CharacterQuest.html
+Ms2ex.Schema.CharacterShopData.html
+Ms2ex.Schema.CharacterShopItemData.html
 Ms2ex.Schema.CharacterStats.html
 Ms2ex.Schema.CharacterTitle.html
 Ms2ex.Schema.ChatStickerGroup.html
@@ -440,6 +463,8 @@ Ms2ex.Storage.Tables.MasteryDifferentialFactors.html
 Ms2ex.Storage.Tables.MasteryRecipes.html
 Ms2ex.Storage.Tables.MasteryRewards.html
 Ms2ex.Storage.Tables.PremiumClub.html
+Ms2ex.Storage.Tables.Shop.html
+Ms2ex.Storage.Tables.ShopItems.html
 Ms2ex.Storage.Tables.SmartPush.html
 Ms2ex.Storage.Tables.UgcDesign.html
 Ms2ex.Storage.Tables.UserStats.html
@@ -511,8 +536,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-ZWU5GQ4X.woff2
-dist/search_data-1BC9CC81.js
-dist/sidebar_items-2CEA721E.js
+dist/search_data-1DF4FE3E.js
+dist/sidebar_items-1269B78F.js
 index.html
 license.html
 readme.html

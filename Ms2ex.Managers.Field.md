@@ -538,8 +538,7 @@ fresh character). A relog lands there, and a portal without a target
 leads back to it.
 
 Only ordinary fields record a return (a SaveField instance too); a plain
-solo instance's declared return is skipped, the same gate the reference's
-field-entry push applies.
+solo instance's declared return is skipped.
 
 # `skip_cutscene`
 

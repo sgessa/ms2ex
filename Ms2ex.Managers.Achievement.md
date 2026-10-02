@@ -19,6 +19,12 @@ Claims every pending reward grade up to the current grade.
 
 Persists every pending achievement update.
 
+# `has_achievement?`
+
+Whether the character (or its account) has reached an achievement grade.
+A non-positive grade only requires the achievement to exist with any
+completed grade.
+
 # `load`
 
 Sends the achievement initialize and load packets, batched per
