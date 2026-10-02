@@ -96,7 +96,7 @@ defmodule Ms2ex.Managers.Quest.Rewards do
   defp maybe_add_currency(_character, _currency, amount) when amount <= 0, do: :ok
 
   defp maybe_add_currency(character, currency, amount),
-    do: Wallet.update(character, currency, amount)
+    do: Wallet.earn(character, currency, amount)
 
   defp maybe_push_inventory_result(%{session_pid: nil}, _result), do: :ok
 

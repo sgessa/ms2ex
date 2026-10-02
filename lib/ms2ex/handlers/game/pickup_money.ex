@@ -20,7 +20,7 @@ defmodule Ms2ex.GameHandlers.PickupMoney do
 
     with {:ok, item} <- Managers.Field.pickup_item(character, object_id),
          true <- Context.Items.mesos?(item) do
-      Managers.Wallet.update(character, :mesos, item.amount)
+      Managers.Wallet.earn(character, :mesos, item.amount)
 
       # meso quest conditions track the picked-up amount
       Managers.Quest.update_conditions(character.id, :meso, item.amount)

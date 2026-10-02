@@ -293,7 +293,7 @@ defmodule Ms2ex.GameHandlers.Party do
         {:ok, result}
 
       {:error, reason} ->
-        if not premium?, do: Managers.Wallet.update(character, :merets, @party_summon_price)
+        if not premium?, do: Managers.Wallet.earn(character, :merets, @party_summon_price)
         {:error, reason}
     end
   end

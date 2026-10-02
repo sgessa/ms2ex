@@ -94,7 +94,7 @@ defmodule Ms2ex.Managers.GuildManager do
             {:reply, {:ok, guild}, state}
 
           {:error, reason} ->
-            Ms2ex.Managers.Wallet.update(leader, :mesos, @guild_create_price)
+            Ms2ex.Managers.Wallet.earn(leader, :mesos, @guild_create_price)
             {:reply, {:error, reason}, state}
         end
 

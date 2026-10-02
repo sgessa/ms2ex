@@ -53,7 +53,7 @@ defmodule Ms2ex.WalletsTest do
   } do
     # honor_token_max is stubbed to 100; the wallet holds 90
     {:reply, {:ok, wallet}, state} =
-      Managers.Wallet.handle_call({:update, character, :valor_tokens, 50}, from(), state)
+      Managers.Wallet.handle_call({:earn, character, :valor_tokens, 50}, from(), state)
 
     assert wallet.valor_tokens == 100
     assert Repo.reload!(wallet).valor_tokens == 100
@@ -69,7 +69,7 @@ defmodule Ms2ex.WalletsTest do
 
   test "credits within the cap apply fully", %{character: character, state: state} do
     {:reply, {:ok, wallet}, _state} =
-      Managers.Wallet.handle_call({:update, character, :valor_tokens, 5}, from(), state)
+      Managers.Wallet.handle_call({:earn, character, :valor_tokens, 5}, from(), state)
 
     assert wallet.valor_tokens == 95
     assert_received {:push, _packet}
@@ -77,7 +77,7 @@ defmodule Ms2ex.WalletsTest do
 
   test "mesos are unbounded", %{character: character, state: state} do
     {:reply, {:ok, wallet}, _state} =
-      Managers.Wallet.handle_call({:update, character, :mesos, 2_000_000_000}, from(), state)
+      Managers.Wallet.handle_call({:earn, character, :mesos, 2_000_000_000}, from(), state)
 
     assert wallet.mesos == 2_000_000_000 + 1_000
   end
@@ -86,8 +86,9 @@ defmodule Ms2ex.WalletsTest do
     character: character,
     state: state
   } do
+    # debits convert the amount to its absolute value
     {:reply, {:error, :insufficient_funds}, state} =
-      Managers.Wallet.handle_call({:update, character, :mesos, -2_000}, from(), state)
+      Managers.Wallet.handle_call({:debit, character, :mesos, -2_000}, from(), state)
 
     {:reply, {:error, :insufficient_funds}, state} =
       Managers.Wallet.handle_call({:debit, character, :mesos, 2_000}, from(), state)

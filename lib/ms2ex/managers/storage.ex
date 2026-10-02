@@ -393,7 +393,7 @@ defmodule Ms2ex.Managers.Storage do
     else
       state = %{state | mesos: state.mesos - amount}
       persist_info(state)
-      Managers.Wallet.update(character, :mesos, amount)
+      Managers.Wallet.earn(character, :mesos, amount)
 
       push(character, Packets.StorageInventory.update_mesos(state.mesos))
       state

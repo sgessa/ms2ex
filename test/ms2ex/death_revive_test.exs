@@ -18,10 +18,6 @@ defmodule Ms2ex.DeathReviveTest do
       %Ms2ex.Schema.Wallet{mesos: 100_000}
     end)
 
-    Mimic.stub(Ms2ex.Managers.Wallet, :update, fn _character, _currency, _amount ->
-      {:ok, %Ms2ex.Schema.Wallet{}}
-    end)
-
     Mimic.stub(Ms2ex.Managers.Wallet, :debit, fn _character, _currency, _amount ->
       {:ok, %Ms2ex.Schema.Wallet{}}
     end)

@@ -798,7 +798,7 @@ defmodule Ms2ex.Managers.Shop do
     state = put_in(state, [:buy_back_items, entry_id], entry)
 
     push(character, Packets.InventoryItem.consume(consume_result))
-    Managers.Wallet.update(character, :mesos, sell_price)
+    Managers.Wallet.earn(character, :mesos, sell_price)
 
     if removed_id do
       push(character, Packets.Shop.remove_buy_back(removed_id))

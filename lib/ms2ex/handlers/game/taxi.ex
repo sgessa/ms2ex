@@ -80,5 +80,5 @@ defmodule Ms2ex.GameHandlers.Taxi do
   end
 
   defp charge_taxi(character, currency, cost),
-    do: Managers.Wallet.update(character, currency, cost)
+    do: Managers.Wallet.debit(character, currency, cost)
 end

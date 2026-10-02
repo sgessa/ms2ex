@@ -79,16 +79,15 @@ defmodule Ms2ex.Managers.Wallet do
   end
 
   @doc """
-  Applies a delta to a wallet. Credits clamp at the currency's cap (the
-  packet reports the applied delta and the overflow); debits fail wholesale
-  with `{:error, :insufficient_funds}` when the balance cannot cover them.
+  Credits `abs(amount)` to a wallet, clamped at the currency's cap. The
+  packet reports the applied amount and the overflow a clamp produced.
   """
-  def update(%Schema.Character{} = character, currency, delta) do
-    call(character.id, {:update, character, currency, delta})
+  def earn(%Schema.Character{} = character, currency, amount) do
+    call(character.id, {:earn, character, currency, amount})
   end
 
   @doc """
-  Withdraws `amount` from a wallet, failing with
+  Deducts `abs(amount)` from a wallet, failing with
   `{:error, :insufficient_funds}` when the balance cannot cover it.
   """
   def debit(%Schema.Character{} = character, currency, amount) do
@@ -125,50 +124,46 @@ defmodule Ms2ex.Managers.Wallet do
     {:reply, can_add_balance(balance(wallet, currency), cap(currency), amount), state}
   end
 
-  def handle_call({:update, character, currency, delta}, _from, state) do
-    {reply, state} = apply_delta(character, currency, delta, state)
-    {:reply, reply, state}
+  def handle_call({:earn, character, currency, amount}, _from, state) do
+    wallet = wallet_for(currency, state)
+    current = balance(wallet, currency)
+    new = min(current + abs(amount), cap(currency))
+    applied = new - current
+    overflow = current + abs(amount) - new
+
+    wallet = %{wallet | currency => new}
+    persist(wallet, character)
+    push(character, Packets.Wallet.update(wallet, currency, applied, overflow))
+    {:reply, {:ok, wallet}, put_wallet(state, wallet)}
   end
 
   def handle_call({:debit, character, currency, amount}, _from, state) do
-    {reply, state} = apply_delta(character, currency, -amount, state)
-    {:reply, reply, state}
+    wallet = wallet_for(currency, state)
+    current = balance(wallet, currency)
+    cost = abs(amount)
+
+    if current < cost do
+      {:reply, {:error, :insufficient_funds}, state}
+    else
+      wallet = %{wallet | currency => current - cost}
+      persist(wallet, character)
+      push(character, Packets.Wallet.update(wallet, currency, -cost))
+      {:reply, {:ok, wallet}, put_wallet(state, wallet)}
+    end
   end
 
   def handle_call({:set, character, currency, value}, _from, state) do
     wallet = wallet_for(currency, state)
-    delta = value - balance(wallet, currency)
-    {reply, state} = apply_delta(character, currency, delta, state)
-    {:reply, reply, state}
+    current = balance(wallet, currency)
+    clamped = value |> max(0) |> min(cap(currency))
+
+    wallet = %{wallet | currency => clamped}
+    persist(wallet, character)
+    push(character, Packets.Wallet.update(wallet, currency, clamped - current))
+    {:reply, {:ok, wallet}, put_wallet(state, wallet)}
   end
 
   # ---- balance mutation ----
-
-  defp apply_delta(character, currency, delta, state) do
-    wallet = wallet_for(currency, state)
-    current = balance(wallet, currency)
-    cap = cap(currency)
-    new = current + delta
-
-    cond do
-      delta < 0 and new < 0 ->
-        {{:error, :insufficient_funds}, state}
-
-      new > cap ->
-        applied = cap - current
-        overflow = new - cap
-        wallet = %{wallet | currency => cap}
-        persist(wallet, character)
-        push(character, Packets.Wallet.update(wallet, currency, applied, overflow))
-        {{:ok, wallet}, put_wallet(state, wallet)}
-
-      true ->
-        wallet = %{wallet | currency => new}
-        persist(wallet, character)
-        push(character, Packets.Wallet.update(wallet, currency, delta))
-        {{:ok, wallet}, put_wallet(state, wallet)}
-    end
-  end
 
   defp wallet_for(currency, state) when currency in @account_currencies,
     do: state.account_wallet
