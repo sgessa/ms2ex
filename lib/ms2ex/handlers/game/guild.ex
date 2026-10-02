@@ -14,7 +14,6 @@ defmodule Ms2ex.GameHandlers.Guild do
 
   require Logger
 
-  @guild_create_price 2_000
   @guild_create_min_level 10
   @guild_coin_id 30_000_861
   @guild_coin_rarity 4
@@ -410,54 +409,38 @@ defmodule Ms2ex.GameHandlers.Guild do
   # ---- Internal Processing Helpers ----
 
   defp process_create_guild(session, character, guild_name) do
-    cond do
-      character.level < @guild_create_min_level ->
-        push(session, Packets.Guild.error(:s_guild_err_not_enough_level))
-
-      Managers.Wallet.find(character).mesos < @guild_create_price ->
-        push(session, Packets.Guild.error(:s_guild_err_no_money))
-
-      true ->
-        create_and_load_guild(session, character, guild_name)
-    end
-  end
-
-  defp create_and_load_guild(session, character, guild_name) do
-    if can_afford?(character, @guild_create_price) do
-      case Managers.GuildManager.create(character, guild_name) do
-        {:ok, guild} ->
-          {:ok, _wallet} = Managers.Wallet.debit(character, :mesos, @guild_create_price)
-
-          :ok =
-            Managers.Character.call(
-              character.id,
-              {:update, %{character | guild_name: guild.name, guild_id: guild.id}}
-            )
-
-          Managers.Quest.update_conditions(character.id, :guild_join_req, 1, "", 0, "", 0)
-
-          Ms2ex.Net.SenderSession.run_async(character, fn ->
-            Managers.GuildServer.subscribe(guild.id)
-          end)
-
-          Managers.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
-
-          session
-          |> push(Packets.Guild.created(guild.name))
-          |> push(Packets.Guild.load(guild, [build_leader_member(character)]))
-
-        {:error, reason} ->
-          push(session, Packets.Guild.error(reason))
-      end
+    if character.level < @guild_create_min_level do
+      push(session, Packets.Guild.error(:s_guild_err_not_enough_level))
     else
-      push(session, Packets.Guild.error(:s_guild_err_no_money))
+      create_and_load_guild(session, character, guild_name)
     end
   end
 
-  defp can_afford?(character, price) do
-    case Managers.Wallet.find(character) do
-      %{mesos: mesos} -> mesos >= price
-      nil -> false
+  # the guild manager charges the creation price inside its serialized
+  # create, so payment and creation cannot interleave
+  defp create_and_load_guild(session, character, guild_name) do
+    case Managers.GuildManager.create(character, guild_name) do
+      {:ok, guild} ->
+        :ok =
+          Managers.Character.call(
+            character.id,
+            {:update, %{character | guild_name: guild.name, guild_id: guild.id}}
+          )
+
+        Managers.Quest.update_conditions(character.id, :guild_join_req, 1, "", 0, "", 0)
+
+        Ms2ex.Net.SenderSession.run_async(character, fn ->
+          Managers.GuildServer.subscribe(guild.id)
+        end)
+
+        Managers.Field.broadcast(character, Packets.Guild.add_tag(character.name, guild.name))
+
+        session
+        |> push(Packets.Guild.created(guild.name))
+        |> push(Packets.Guild.load(guild, [build_leader_member(character)]))
+
+      {:error, reason} ->
+        push(session, Packets.Guild.error(reason))
     end
   end
 
