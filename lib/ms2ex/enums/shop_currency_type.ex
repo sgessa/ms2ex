@@ -1,4 +1,10 @@
 defmodule Ms2ex.Enums.ShopCurrencyType do
+  @moduledoc """
+  Payment currency ids as they appear in the shop tables (`payment_type`).
+  Not the wallet wire ids — see `WalletCurrencyType` for those; the shop
+  manager maps these onto wallet currencies.
+  """
+
   use Ms2ex.Enum, %{
     meso: 0,
     item: 1,

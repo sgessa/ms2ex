@@ -24,7 +24,7 @@ defmodule Ms2ex.Packets.Wallet do
 
     __MODULE__
     |> build()
-    |> put_byte(Enums.CurrencyType.get_value(type))
+    |> put_byte(Enums.WalletCurrencyType.get_value(type))
     |> put_long(amount)
     |> put_long(delta)
     |> put_int()
