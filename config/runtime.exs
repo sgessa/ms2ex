@@ -21,13 +21,14 @@ config :ms2ex, :redix,
   host: env!("REDIS_HOST", :string, "localhost"),
   port: env!("REDIS_PORT", :integer, 6379)
 
+# Mirror the `mix maple.server` task for releases: START_GAME_SERVERS boots
+# the TCP listeners, SERVE_ENDPOINTS serves the web endpoint. Dev tasks set
+# the app env before this file evaluates, so an unset env var falls back to
+# the app env instead of a hard false. Temps keep the config lines inside
+# the formatter's line length.
 start_game_servers = Application.get_env(:ms2ex, :start_game_servers, false)
 serve_endpoints = Application.get_env(:phoenix, :serve_endpoints, false)
 
-# Mirror the `mix maple.server` task for releases: START_GAME_SERVERS boots
-# the TCP listeners, SERVE_ENDPOINTS serves the web endpoint. Tasks set the
-# app env before this file evaluates, so fall back to it rather than a hard
-# false to keep dev task behavior intact.
 config :ms2ex, :start_game_servers, env!("START_GAME_SERVERS", :boolean, start_game_servers)
 
 config :phoenix, :serve_endpoints, env!("SERVE_ENDPOINTS", :boolean, serve_endpoints)
