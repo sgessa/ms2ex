@@ -8,6 +8,20 @@ member on the leader's tick. The Queenstown stage tracks one performer at a
 time behind the `music_concert` field property, and Smart Push grants the
 paid additional effects (auto-play extension, mount stability).
 
+## Client audio
+
+Improvisation notes are rendered client-side: the wire carries raw General
+MIDI events (0x90 note-on / 0x80 note-off / CC) plus the instrument category's
+GM program id (`midi_id` from `instrumentcategoryinfo.xml`; 0 is the acoustic
+grand piano, not a missing value). The performer is excluded from the relay —
+each client plays its own notes locally through the OS MIDI synth, so the
+server never needs to echo them. On Linux/Wine there is no system synth: the
+client finds no MIDI out device and stays silent while BGM/FX still work.
+A userspace synth exposed as an ALSA sequencer client (e.g. fluidsynth with
+`-m alsa_seq`, GM soundfont) appears to Wine as a midiOut device and restores
+sound; it must be running before the client starts, since Wine enumerates MIDI
+devices at winmm load.
+
 ## Still missing
 
 - fishing lures: bait tags, `fishlure.xml`, lure catch ranks and lure fish

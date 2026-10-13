@@ -363,7 +363,9 @@ defmodule Ms2ex.GameHandlers.PlayInstrument do
     data = Map.put(score.data || %{}, :remaining_uses, remaining)
 
     case Managers.Inventory.update_item(score, %{data: data}) do
-      {:ok, score} -> {:ok, score, remaining}
+      # the manager answers with its own state copy, which never carries the
+      # virtual metadata; keep the loaded document for the score packet
+      {:ok, updated} -> {:ok, %{updated | metadata: score.metadata}, remaining}
       _ -> :error
     end
   end
