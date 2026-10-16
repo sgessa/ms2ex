@@ -97,6 +97,20 @@ host runs):
   and the persisted rows. Keep the internal state-transition functions
   private — don't make them public just for tests. Don't start the manager
   GenServer in tests, and keep polling with `wait_until` loops out.
+- **Never hand-decode packet hex during debugging or in tests.** Use
+  `Ms2ex.Packets.Decoder.decode/1` (in `dev/support`, compiled for dev and
+  test but excluded from prod): pass it the full built bytes (opcode
+  prefix included) and it returns
+  `%{opcode:, name:, command:, fields:, rest:}`. `rest == <<>>` proves the
+  spec consumed the whole payload. If a packet has no layout yet, add one
+  to its builder module — adopt the `Ms2ex.Packets.Spec` behaviour and
+  implement `spec/1` (field layout per command, `nil` command when the
+  packet carries no command byte) and `commands/0` (atom name → byte, only
+  for multi-command packets). Spec entries are `{name, type}` pairs read
+  with `PacketReader` (`:int`, `:ustring`, `:coord`, ...); `{:bytes, n}`
+  or a `(packet -> {value, rest})` fun handles irregular fields, and names
+  starting with `_` are consumed but omitted from the result. Don't
+  hand-walk `PacketReader.get_*` in tests; assert on the decoded map.
 
 ## Architecture notes
 
