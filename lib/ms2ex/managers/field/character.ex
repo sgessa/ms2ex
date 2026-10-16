@@ -58,7 +58,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # Load portals
     for {_id, portal} <- state.portals do
-      push(character, Packets.AddPortal.bytes(portal))
+      push(character, Packets.AddPortal.add(portal))
     end
 
     # Load Interactable Objects
