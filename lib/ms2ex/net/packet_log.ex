@@ -35,17 +35,21 @@ defmodule Ms2ex.Net.Logger do
   defp append_decoded(text, direction, opcode, packet)
        when is_integer(opcode) and direction in [:send, :recv] do
     if Code.ensure_loaded?(Ms2ex.Packets.Decoder) do
-      case Ms2ex.Packets.Decoder.decode(direction, <<opcode::little-16, packet::binary>>) do
-        %{fields: fields, command: command, rest: rest} when fields != %{} ->
-          leftover = if rest == <<>>, do: "", else: " (#{byte_size(rest)} undecoded bytes)"
-          command = if command, do: " #{command}", else: ""
-          text <> "\n  decoded#{command}: #{inspect(fields)}" <> leftover
-
-        _ ->
-          text
-      end
+      append_decoded_fields(text, direction, opcode, packet)
     else
       text
+    end
+  end
+
+  defp append_decoded_fields(text, direction, opcode, packet) do
+    case Ms2ex.Packets.Decoder.decode(direction, <<opcode::little-16, packet::binary>>) do
+      %{fields: fields, command: command, rest: rest} when fields != %{} ->
+        leftover = if rest == <<>>, do: "", else: " (#{byte_size(rest)} undecoded bytes)"
+        command = if command, do: " #{command}", else: ""
+        text <> "\n  decoded#{command}: #{inspect(fields)}" <> leftover
+
+      _ ->
+        text
     end
   end
 
