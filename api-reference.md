@@ -600,6 +600,8 @@ every packet is written regardless of the console `skip_packet_logs` filter.
   - [Ms2ex.Packets.Cinematic](Ms2ex.Packets.Cinematic.md)
   - [Ms2ex.Packets.ControlNpc](Ms2ex.Packets.ControlNpc.md)
   - [Ms2ex.Packets.DeadUser](Ms2ex.Packets.DeadUser.md)
+  - [Ms2ex.Packets.Decoder](Ms2ex.Packets.Decoder.md): Test/debug helper that decodes a built packet into a plain map of field
+values, instead of hand-walking hex bytes with `PacketReader`.
   - [Ms2ex.Packets.Dismantle](Ms2ex.Packets.Dismantle.md)
   - [Ms2ex.Packets.DpsStat](Ms2ex.Packets.DpsStat.md)
   - [Ms2ex.Packets.DynamicChannel](Ms2ex.Packets.DynamicChannel.md)
@@ -711,6 +713,8 @@ the session's buy-back list.
   - [Ms2ex.Packets.SkillSync](Ms2ex.Packets.SkillSync.md)
   - [Ms2ex.Packets.SkillUse](Ms2ex.Packets.SkillUse.md)
   - [Ms2ex.Packets.SmartPush](Ms2ex.Packets.SmartPush.md)
+  - [Ms2ex.Packets.Spec](Ms2ex.Packets.Spec.md): Field-layout contract for `Ms2ex.Packets.Decoder`, the test/debug packet
+decoder in `dev/support`.
   - [Ms2ex.Packets.StatPoints](Ms2ex.Packets.StatPoints.md)
   - [Ms2ex.Packets.StateSkill](Ms2ex.Packets.StateSkill.md)
   - [Ms2ex.Packets.Stats](Ms2ex.Packets.Stats.md)

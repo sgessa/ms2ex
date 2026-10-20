@@ -275,6 +275,7 @@ Ms2ex.Packets.ChatSticker.md
 Ms2ex.Packets.Cinematic.md
 Ms2ex.Packets.ControlNpc.md
 Ms2ex.Packets.DeadUser.md
+Ms2ex.Packets.Decoder.md
 Ms2ex.Packets.Dismantle.md
 Ms2ex.Packets.DpsStat.md
 Ms2ex.Packets.DynamicChannel.md
@@ -374,6 +375,7 @@ Ms2ex.Packets.SkillPoint.md
 Ms2ex.Packets.SkillSync.md
 Ms2ex.Packets.SkillUse.md
 Ms2ex.Packets.SmartPush.md
+Ms2ex.Packets.Spec.md
 Ms2ex.Packets.StatPoints.md
 Ms2ex.Packets.StateSkill.md
 Ms2ex.Packets.Stats.md
