@@ -97,6 +97,31 @@ host runs):
   and the persisted rows. Keep the internal state-transition functions
   private — don't make them public just for tests. Don't start the manager
   GenServer in tests, and keep polling with `wait_until` loops out.
+- **Never hand-decode packet hex during debugging or in tests.** Use
+  `Ms2ex.Packets.Decoder.decode/2` (in `dev/support`, compiled for dev and
+  test but excluded from prod): pass the direction (`:send` for
+  server-built packets, `:recv` for client-sent ones) first, then the full
+  built bytes (opcode prefix included) — e.g.
+  `Decoder.decode(:recv, bytes)` or `Decoder.decode_hex(:recv, hex)` from a
+  `Net.Logger` line — and it returns
+  `%{opcode:, direction:, name:, command:, fields:, rest:}`. `rest == <<>>`
+  proves the spec consumed the whole payload. When a packet has a layout,
+  `Net.Logger` already appends the decoded fields to its log line
+  (`decoded: %{...}` on its own line), so read the log first and only reach
+  for the decoder to inspect bytes manually. If a packet has no layout
+  yet, add one — adopt the `Ms2ex.Packets.Spec` behaviour and
+  implement `spec/1` (field layout per command, `nil` command when the
+  packet carries no command byte) and `commands/0` (atom name → byte, only
+  for multi-command packets). Send specs live on the builder module
+  (`Ms2ex.Packets.*`); recv specs live on the packet's handler module
+  (`Ms2ex.GameHandlers.*`, `Ms2ex.LoginHandlers.*`, `Ms2ex.Handlers.*`).
+  Spec entries are `{name, type}` pairs read
+  with `PacketReader` (`:int`, `:ustring`, `:coord`, ...); `{:bytes, n}`
+  or a `(packet -> {value, rest})` fun handles irregular fields; a
+  `{type, transform}` pair (e.g. `{:int, &Enums.ChatType.get_key/1}`)
+  maps the read value; and names
+  starting with `_` are consumed but omitted from the result. Don't
+  hand-walk `PacketReader.get_*` in tests; assert on the decoded map.
 
 ## Architecture notes
 

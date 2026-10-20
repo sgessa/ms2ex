@@ -1,8 +1,10 @@
 defmodule Ms2ex.Packets do
   alias Ms2ex.Packets.Ops
 
-  def name_to_opcode(:send, name) do
-    case Enum.find(send_ops(), fn {_k, v} -> name == v end) do
+  def name_to_opcode(type, name) do
+    ops = if type == :send, do: send_ops(), else: recv_ops()
+
+    case Enum.find(ops, fn {_k, v} -> name == v end) do
       {opcode, _name} -> opcode
       _ -> nil
     end
