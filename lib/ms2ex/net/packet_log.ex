@@ -41,6 +41,8 @@ defmodule Ms2ex.Net.Logger do
     end
   end
 
+  defp append_decoded(text, _direction, _opcode, _packet), do: text
+
   defp append_decoded_fields(text, direction, opcode, packet) do
     case Ms2ex.Packets.Decoder.decode(direction, <<opcode::little-16, packet::binary>>) do
       %{fields: fields, command: command, rest: rest} when fields != %{} ->
@@ -52,8 +54,6 @@ defmodule Ms2ex.Net.Logger do
         text
     end
   end
-
-  defp append_decoded(text, _direction, _opcode, _packet), do: text
 
   def client_report(msg) do
     with path when is_binary(path) <- Application.get_env(:ms2ex, :packet_log_file) do
