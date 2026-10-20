@@ -12,8 +12,10 @@ defmodule Ms2ex.Net.Logger do
 
   def log(direction, opcode, packet) do
     name = Packets.opcode_to_name(direction, opcode)
-    opcode = inspect(opcode, base: :hex)
-    text = "#{tag(direction)} #{name} (#{opcode}): #{Net.Utils.stringify_packet(packet)}"
+    opcode_hex = inspect(opcode, base: :hex)
+    text = "#{tag(direction)} #{name} (#{opcode_hex}): #{Net.Utils.stringify_packet(packet)}"
+
+    text = append_decoded(text, direction, opcode, packet)
 
     if name not in Net.Utils.conf()[:skip_packet_logs] do
       to_stdout(direction, text)
@@ -27,6 +29,27 @@ defmodule Ms2ex.Net.Logger do
   rescue
     _ -> :ok
   end
+
+  # The decoder ships for dev/test only; when present, packets with a
+  # layout are logged with their decoded fields appended.
+  defp append_decoded(text, direction, opcode, packet)
+       when is_integer(opcode) and direction in [:send, :recv] do
+    if Code.ensure_loaded?(Ms2ex.Packets.Decoder) do
+      case Ms2ex.Packets.Decoder.decode(direction, <<opcode::little-16, packet::binary>>) do
+        %{fields: fields, command: command, rest: rest} when fields != %{} ->
+          leftover = if rest == <<>>, do: "", else: " (#{byte_size(rest)} undecoded bytes)"
+          command = if command, do: " #{command}", else: ""
+          text <> " | decoded#{command}: #{inspect(fields)}" <> leftover
+
+        _ ->
+          text
+      end
+    else
+      text
+    end
+  end
+
+  defp append_decoded(text, _direction, _opcode, _packet), do: text
 
   def client_report(msg) do
     with path when is_binary(path) <- Application.get_env(:ms2ex, :packet_log_file) do
