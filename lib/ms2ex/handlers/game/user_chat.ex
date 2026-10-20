@@ -1,4 +1,6 @@
 defmodule Ms2ex.GameHandlers.UserChat do
+  @behaviour Ms2ex.Packets.Spec
+
   alias Ms2ex.Managers
   alias Ms2ex.Commands
   alias Ms2ex.Context
@@ -13,6 +15,19 @@ defmodule Ms2ex.GameHandlers.UserChat do
 
   @world_chat_cost 30
   @world_chat_voucher_id 20_300_607
+
+  @impl true
+  def spec(_command) do
+    [
+      chat_type: fn packet ->
+        {type_id, rest} = get_int(packet)
+        {Enums.ChatType.get_key(type_id), rest}
+      end,
+      message: :ustring,
+      recipient: :ustring,
+      _unknown: :long
+    ]
+  end
 
   def handle(packet, session) do
     {type_id, packet} = get_int(packet)

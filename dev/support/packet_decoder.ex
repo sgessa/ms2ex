@@ -3,24 +3,34 @@ defmodule Ms2ex.Packets.Decoder do
   Test/debug helper that decodes a built packet into a plain map of field
   values, instead of hand-walking hex bytes with `PacketReader`.
 
-  The field layout comes from the packet module's `c:Ms2ex.Packets.Spec.spec/1`
-  (see the behaviour for the layout format). Packet modules that carry a
-  command byte also expose `c:Ms2ex.Packets.Spec.commands/0`, which the
-  decoder uses to resolve the command's atom name.
+  Works for both server-built packets (layout from the builder module) and
+  client-sent packets (layout from the handler module). In both cases the
+  module adopts `Ms2ex.Packets.Spec` (see the behaviour for the layout
+  format). Packets that carry a command byte also expose
+  `c:Ms2ex.Packets.Spec.commands/0`, which the decoder uses to resolve the
+  command's atom name.
 
   Usage in tests or iex:
 
       Ms2ex.Packets.Decoder.decode(bytes)
       #=> %{opcode: 38, name: "ADD_PORTAL", command: :add,
       #    fields: %{id: 2, ...}, rest: ""}
+
+      Ms2ex.Packets.Decoder.decode_hex("11 00 00 00 00 00 05 ...")
   """
 
   alias Ms2ex.Packets.PacketReader
 
   def decode(bytes) do
     {opcode, packet} = PacketReader.get_short(bytes)
-    name = Ms2ex.Packets.opcode_to_name(:send, opcode)
-    module = module_for(name)
+
+    {name, module} =
+      opcode
+      |> candidate_names()
+      |> Enum.map(fn name -> {name, spec_module(name)} end)
+      |> Enum.find({Ms2ex.Packets.opcode_to_name(:send, opcode), nil}, fn {_name, module} ->
+        function_exported?(module, :spec, 1)
+      end)
 
     {command, fields, packet} = spec_fields(module, packet)
 
@@ -33,21 +43,51 @@ defmodule Ms2ex.Packets.Decoder do
     }
   end
 
-  defp module_for("HANDSHAKE"), do: nil
-
-  defp module_for(name) do
-    case Ms2ex.Packets.name_to_opcode(:send, name) do
-      nil ->
-        nil
-
-      _ ->
-        module = String.to_atom("Elixir.Ms2ex.Packets." <> Macro.camelize(String.downcase(name)))
-        Code.ensure_loaded(module)
-        module
-    end
+  @doc """
+  Decodes the hex string of a packet payload as logged by `Ms2ex.Net.Logger`
+  (byte separators are ignored). Post-decryption bytes only — the wire
+  format is encrypted and length-framed.
+  """
+  def decode_hex(hex) do
+    hex
+    |> String.replace(~r/[^0-9a-fA-F]/, "")
+    |> Base.decode16!(case: :mixed)
+    |> decode()
   end
 
-  defp spec_fields(nil, _packet), do: {nil, %{}, :no_spec}
+  # An opcode can name different packets on the send and recv tables; when
+  # both sides have a spec the send side wins.
+  defp candidate_names(opcode) do
+    [Ms2ex.Packets.opcode_to_name(:send, opcode), Ms2ex.Packets.opcode_to_name(:recv, opcode)]
+    |> Enum.uniq()
+    |> Enum.reject(&match?("0x" <> _, &1))
+  end
+
+  defp spec_module(name) do
+    handler_prefixes = [
+      "Elixir.Ms2ex.Handlers.",
+      "Elixir.Ms2ex.GameHandlers.",
+      "Elixir.Ms2ex.LoginHandlers."
+    ]
+
+    ([send_module_name(name)] ++ Enum.map(handler_prefixes, &(&1 <> Macro.camelize(String.downcase(name)))))
+    |> Enum.map(&load_module/1)
+    |> Enum.find(&function_exported?(&1, :spec, 1))
+  end
+
+  defp send_module_name(name) do
+    "Elixir.Ms2ex.Packets." <> Macro.camelize(String.downcase(name))
+  end
+
+  defp load_module(nil), do: nil
+
+  defp load_module(name) do
+    module = String.to_atom(name)
+    Code.ensure_loaded(module)
+    module
+  end
+
+  defp spec_fields(nil, packet), do: {nil, %{}, packet}
 
   defp spec_fields(module, packet) do
     cond do
