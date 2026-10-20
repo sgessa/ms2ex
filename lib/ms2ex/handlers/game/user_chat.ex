@@ -19,10 +19,7 @@ defmodule Ms2ex.GameHandlers.UserChat do
   @impl true
   def spec(_command) do
     [
-      chat_type: fn packet ->
-        {type_id, rest} = get_int(packet)
-        {Enums.ChatType.get_key(type_id), rest}
-      end,
+      chat_type: {:int, &Enums.ChatType.get_key/1},
       message: :ustring,
       recipient: :ustring,
       _unknown: :long

@@ -111,7 +111,9 @@ host runs):
   packet carries no command byte) and `commands/0` (atom name → byte, only
   for multi-command packets). Spec entries are `{name, type}` pairs read
   with `PacketReader` (`:int`, `:ustring`, `:coord`, ...); `{:bytes, n}`
-  or a `(packet -> {value, rest})` fun handles irregular fields, and names
+  or a `(packet -> {value, rest})` fun handles irregular fields; a
+  `{type, transform}` pair (e.g. `{:int, &Enums.ChatType.get_key/1}`)
+  maps the read value; and names
   starting with `_` are consumed but omitted from the result. Don't
   hand-walk `PacketReader.get_*` in tests; assert on the decoded map.
 

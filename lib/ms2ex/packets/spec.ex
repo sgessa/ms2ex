@@ -13,7 +13,9 @@ defmodule Ms2ex.Packets.Spec do
       `{name, type}` entries consumed by `Ms2ex.Packets.PacketReader`
       (`:int`, `:ustring`, `:coord`, ...). `nil` is the command for packets
       that carry no command byte. Names starting with `_` are decoded but
-      omitted from the result.
+      omitted from the result. A type can be refined with a value
+      transform, e.g. `{:int, &Enums.ChatType.get_key/1}` reads an int and
+      maps it through the enum.
     * `c:commands/0` — maps each command's atom name to its byte value, in
       the same shape the builder uses for its `@commands` table.
   """

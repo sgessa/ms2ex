@@ -119,6 +119,12 @@ defmodule Ms2ex.Packets.Decoder do
   defp read_value(packet, {:bytes, n}), do: PacketReader.get_bytes(packet, n)
   defp read_value(packet, fun) when is_function(fun, 1), do: fun.(packet)
 
+  # base type + value transform, e.g. {:int, &Enums.ChatType.get_key/1}
+  defp read_value(packet, {type, transform}) when is_atom(type) and is_function(transform, 1) do
+    {value, packet} = read_value(packet, type)
+    {transform.(value), packet}
+  end
+
   defp read_value(packet, type) do
     apply(PacketReader, :"get_#{type}", [packet])
   end
