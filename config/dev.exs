@@ -47,7 +47,7 @@ config :ms2ex, Ms2ex,
     "SEND_LOG",
     "STATS",
     "USER_BATTLE",
-    #    "USER_CHAT",
+    "USER_CHAT",
     "USER_SYNC",
     "VIBRATE",
     "GUIDE_OBJECT_SYNC"
