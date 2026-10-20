@@ -19,7 +19,7 @@ defmodule Ms2ex.AddPortalPacketTest do
   }
 
   test "add carries dimension, action_type and minimap_visible in the right field order" do
-    decoded = Packets.AddPortal.add(@portal) |> Packets.Decoder.decode()
+    decoded = Packets.Decoder.decode(:send, Packets.AddPortal.add(@portal))
 
     assert decoded.name == "ADD_PORTAL"
     assert decoded.command == :add
@@ -42,13 +42,13 @@ defmodule Ms2ex.AddPortalPacketTest do
   end
 
   test "update and remove commands decode by their own layouts" do
-    decoded = Packets.AddPortal.update(@portal) |> Packets.Decoder.decode()
+    decoded = Packets.Decoder.decode(:send, Packets.AddPortal.update(@portal))
 
     assert decoded.command == :update
     assert decoded.fields == %{id: 2, visible: false, enable: true, minimap_visible: true}
     assert decoded.rest == <<>>
 
-    decoded = Packets.AddPortal.remove(9) |> Packets.Decoder.decode()
+    decoded = Packets.Decoder.decode(:send, Packets.AddPortal.remove(9))
 
     assert decoded.command == :remove
     assert decoded.fields == %{id: 9}

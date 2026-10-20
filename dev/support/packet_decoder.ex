@@ -12,30 +12,31 @@ defmodule Ms2ex.Packets.Decoder do
 
   Usage in tests or iex:
 
-      Ms2ex.Packets.Decoder.decode(bytes)
-      #=> %{opcode: 38, name: "ADD_PORTAL", command: :add,
+      Ms2ex.Packets.Decoder.decode(:send, bytes)
+      #=> %{opcode: 38, direction: :send, name: "ADD_PORTAL", command: :add,
       #    fields: %{id: 2, ...}, rest: ""}
 
-      Ms2ex.Packets.Decoder.decode_hex("11 00 00 00 00 00 05 ...")
+      Ms2ex.Packets.Decoder.decode_hex(:recv, "11 00 00 00 00 00 05 ...")
   """
 
   alias Ms2ex.Packets.PacketReader
 
-  def decode(bytes) do
+  @doc """
+  Decodes packet bytes of the given direction (`:send` for server-built
+  packets, `:recv` for client-sent ones). The direction determines which
+  opcode table and which module type provides the layout, so both sides of
+  a shared opcode resolve unambiguously.
+  """
+  def decode(direction, bytes) when direction in [:send, :recv] do
     {opcode, packet} = PacketReader.get_short(bytes)
-
-    {name, module} =
-      opcode
-      |> candidate_names()
-      |> Enum.map(fn name -> {name, spec_module(name)} end)
-      |> Enum.find({Ms2ex.Packets.opcode_to_name(:send, opcode), nil}, fn {_name, module} ->
-        function_exported?(module, :spec, 1)
-      end)
+    name = Ms2ex.Packets.opcode_to_name(direction, opcode)
+    module = spec_module(name, direction)
 
     {command, fields, packet} = spec_fields(module, packet)
 
     %{
       opcode: opcode,
+      direction: direction,
       name: name,
       command: command,
       fields: fields,
@@ -43,40 +44,31 @@ defmodule Ms2ex.Packets.Decoder do
     }
   end
 
-  @doc """
-  Decodes the hex string of a packet payload as logged by `Ms2ex.Net.Logger`
-  (byte separators are ignored). Post-decryption bytes only — the wire
-  format is encrypted and length-framed.
-  """
-  def decode_hex(hex) do
-    hex
-    |> String.replace(~r/[^0-9a-fA-F]/, "")
-    |> Base.decode16!(case: :mixed)
-    |> decode()
+  def decode_hex(direction, hex) do
+    bytes =
+      hex
+      |> String.replace(~r/[^0-9a-fA-F]/, "")
+      |> Base.decode16!(case: :mixed)
+
+    decode(direction, bytes)
   end
 
-  # An opcode can name different packets on the send and recv tables; when
-  # both sides have a spec the send side wins.
-  defp candidate_names(opcode) do
-    [Ms2ex.Packets.opcode_to_name(:send, opcode), Ms2ex.Packets.opcode_to_name(:recv, opcode)]
-    |> Enum.uniq()
-    |> Enum.reject(&match?("0x" <> _, &1))
-  end
+  defp spec_module(name, direction) do
+    prefixes =
+      if direction == :send do
+        ["Elixir.Ms2ex.Packets."]
+      else
+        [
+          "Elixir.Ms2ex.Handlers.",
+          "Elixir.Ms2ex.GameHandlers.",
+          "Elixir.Ms2ex.LoginHandlers."
+        ]
+      end
 
-  defp spec_module(name) do
-    handler_prefixes = [
-      "Elixir.Ms2ex.Handlers.",
-      "Elixir.Ms2ex.GameHandlers.",
-      "Elixir.Ms2ex.LoginHandlers."
-    ]
-
-    ([send_module_name(name)] ++ Enum.map(handler_prefixes, &(&1 <> Macro.camelize(String.downcase(name)))))
+    prefixes
+    |> Enum.map(&(&1 <> Macro.camelize(String.downcase(name))))
     |> Enum.map(&load_module/1)
     |> Enum.find(&function_exported?(&1, :spec, 1))
-  end
-
-  defp send_module_name(name) do
-    "Elixir.Ms2ex.Packets." <> Macro.camelize(String.downcase(name))
   end
 
   defp load_module(nil), do: nil

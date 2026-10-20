@@ -16,7 +16,7 @@ defmodule Ms2ex.UserChatPacketTest do
       |> put_ustring("")
       |> put_long()
 
-    decoded = <<opcode::little-16, payload::binary>> |> Packets.Decoder.decode()
+    decoded = Packets.Decoder.decode(:recv, <<opcode::little-16, payload::binary>>)
 
     assert decoded.name == "USER_CHAT"
     assert decoded.command == nil
@@ -40,7 +40,7 @@ defmodule Ms2ex.UserChatPacketTest do
       |> Enum.chunk_every(2)
       |> Enum.map_join(" ", &List.to_string/1)
 
-    decoded = Packets.Decoder.decode_hex(spaced_hex)
+    decoded = Packets.Decoder.decode_hex(:recv, spaced_hex)
     assert decoded.opcode == 0x1234
   end
 end
