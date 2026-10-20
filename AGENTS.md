@@ -98,9 +98,12 @@ host runs):
   private — don't make them public just for tests. Don't start the manager
   GenServer in tests, and keep polling with `wait_until` loops out.
 - **Never hand-decode packet hex during debugging or in tests.** Use
-  `Ms2ex.Packets.Decoder.decode/1` (in `dev/support`, compiled for dev and
-  test but excluded from prod): pass it the full built bytes (opcode
-  prefix included) and it returns
+  `Ms2ex.Packets.Decoder.decode/2` (in `dev/support`, compiled for dev and
+  test but excluded from prod): pass the direction (`:send` for
+  server-built packets, `:recv` for client-sent ones) first, then the full
+  built bytes (opcode prefix included) — e.g.
+  `Decoder.decode(:recv, bytes)` or `Decoder.decode_hex(:recv, hex)` from a
+  `Net.Logger` line — and it returns
   `%{opcode:, name:, command:, fields:, rest:}`. `rest == <<>>` proves the
   spec consumed the whole payload. If a packet has no layout yet, add one
   to its builder module — adopt the `Ms2ex.Packets.Spec` behaviour and
