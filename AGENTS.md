@@ -104,12 +104,18 @@ host runs):
   built bytes (opcode prefix included) — e.g.
   `Decoder.decode(:recv, bytes)` or `Decoder.decode_hex(:recv, hex)` from a
   `Net.Logger` line — and it returns
-  `%{opcode:, name:, command:, fields:, rest:}`. `rest == <<>>` proves the
-  spec consumed the whole payload. If a packet has no layout yet, add one
-  to its builder module — adopt the `Ms2ex.Packets.Spec` behaviour and
+  `%{opcode:, direction:, name:, command:, fields:, rest:}`. `rest == <<>>`
+  proves the spec consumed the whole payload. When a packet has a layout,
+  `Net.Logger` already appends the decoded fields to its log line
+  (`decoded: %{...}` on its own line), so read the log first and only reach
+  for the decoder to inspect bytes manually. If a packet has no layout
+  yet, add one — adopt the `Ms2ex.Packets.Spec` behaviour and
   implement `spec/1` (field layout per command, `nil` command when the
   packet carries no command byte) and `commands/0` (atom name → byte, only
-  for multi-command packets). Spec entries are `{name, type}` pairs read
+  for multi-command packets). Send specs live on the builder module
+  (`Ms2ex.Packets.*`); recv specs live on the packet's handler module
+  (`Ms2ex.GameHandlers.*`, `Ms2ex.LoginHandlers.*`, `Ms2ex.Handlers.*`).
+  Spec entries are `{name, type}` pairs read
   with `PacketReader` (`:int`, `:ustring`, `:coord`, ...); `{:bytes, n}`
   or a `(packet -> {value, rest})` fun handles irregular fields; a
   `{type, transform}` pair (e.g. `{:int, &Enums.ChatType.get_key/1}`)
