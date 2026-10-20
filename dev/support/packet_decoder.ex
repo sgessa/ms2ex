@@ -73,10 +73,14 @@ defmodule Ms2ex.Packets.Decoder do
 
   defp load_module(nil), do: nil
 
+  # Only resolve atoms that already exist: minting module atoms here would
+  # defeat Net.Router's to_existing_atom guard for unimplemented handlers.
   defp load_module(name) do
-    module = String.to_atom(name)
+    module = String.to_existing_atom(name)
     Code.ensure_loaded(module)
     module
+  rescue
+    ArgumentError -> nil
   end
 
   defp spec_fields(nil, packet), do: {nil, %{}, packet}
