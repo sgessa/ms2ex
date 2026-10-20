@@ -30,6 +30,5 @@ defmodule Ms2ex.PacketLogTest do
     File.rm(path)
 
     assert line =~ "[RECV] USER_CHAT"
-    assert line =~ "decoded: #{inspect(%{chat_type: :all, message: "hi", recipient: ""})}"
-  end
+    assert line =~ "\n  decoded: #{inspect(%{chat_type: :all, message: "hi", recipient: ""})}"  end
 end

@@ -39,7 +39,7 @@ defmodule Ms2ex.Net.Logger do
         %{fields: fields, command: command, rest: rest} when fields != %{} ->
           leftover = if rest == <<>>, do: "", else: " (#{byte_size(rest)} undecoded bytes)"
           command = if command, do: " #{command}", else: ""
-          text <> " | decoded#{command}: #{inspect(fields)}" <> leftover
+          text <> "\n  decoded#{command}: #{inspect(fields)}" <> leftover
 
         _ ->
           text
