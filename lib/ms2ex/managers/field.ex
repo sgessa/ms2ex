@@ -38,6 +38,7 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Context
   alias Ms2ex.Collision
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field.Pet
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -345,6 +346,34 @@ defmodule Ms2ex.Managers.Field do
   @spec add_mob(Schema.Character.t(), Types.Npc.t()) :: :ok
   def add_mob(%Schema.Character{} = character, %Types.Npc{} = npc) do
     send(character.field_pid, {:add_mob, npc, character.position})
+  end
+
+  # -- pets ------------------------------------------------------------------
+
+  @doc """
+  Registers a summoned pet on the character's current field. The field
+  allocates the object id, broadcasts the add to everyone on it, and
+  returns the id to the caller (the pet manager).
+  """
+  @spec spawn_pet(Schema.Character.t(), keyword()) :: {:ok, integer()} | :error
+  def spawn_pet(%Schema.Character{field_pid: nil}, _pet_attrs), do: :error
+
+  def spawn_pet(%Schema.Character{field_pid: field_pid} = character, pet_attrs) do
+    pet_attrs =
+      pet_attrs
+      |> Keyword.put(:owner_character_id, character.id)
+      |> Keyword.put(:owner_object_id, character.object_id)
+      |> Keyword.put(:map_id, character.map_id)
+
+    call(field_pid, {:add_pet, pet_attrs})
+  end
+
+  @doc "Removes the character's summoned pet from their current field."
+  @spec despawn_pet(Schema.Character.t()) :: :ok | :error
+  def despawn_pet(%Schema.Character{field_pid: nil}), do: :error
+
+  def despawn_pet(%Schema.Character{field_pid: field_pid} = character) do
+    call(field_pid, {:remove_pet, character.id})
   end
 
   @doc "Looks up an npc by object id in the character's field."
@@ -725,6 +754,7 @@ defmodule Ms2ex.Managers.Field do
         opened_gates: MapSet.new(),
         player_positions: %{},
         mounts: %{},
+        pets: %{},
         npcs: %{},
         npc_spawns: %{},
         performance: nil,
@@ -771,6 +801,34 @@ defmodule Ms2ex.Managers.Field do
     send(self(), :maybe_stop)
 
     {:reply, :ok, __MODULE__.Character.remove_character(character, state)}
+  end
+
+  def handle_call({:add_pet, pet_attrs}, _from, state) do
+    {object_id, state} = next_local_id(state)
+
+    field_pet = Types.FieldPet.new(Keyword.put(pet_attrs, :object_id, object_id))
+
+    broadcast(state.topic, Packets.FieldAddPet.add_pet(field_pet))
+    broadcast(state.topic, Packets.ProxyGameObj.load_pet(field_pet))
+
+    # the first control spawns the visible model; the keepalive takes over
+    # from here (and re-anchors the pet on its owner as they move)
+    field_pet = %{field_pet | last_control_at: Ms2ex.sync_ticks()}
+    broadcast(state.topic, Packets.ControlNpc.bytes([Pet.control_view(field_pet)]))
+
+    {:reply, {:ok, object_id}, put_in(state, [:pets, object_id], field_pet)}
+  end
+
+  def handle_call({:remove_pet, owner_character_id}, _from, state) do
+    case Enum.find(state.pets, fn {_id, pet} -> pet.owner_character_id == owner_character_id end) do
+      {object_id, _pet} ->
+        broadcast(state.topic, Packets.FieldRemovePet.remove_pet(object_id))
+        broadcast(state.topic, Packets.ProxyGameObj.remove_pet(object_id))
+        {:reply, :ok, %{state | pets: Map.delete(state.pets, object_id)}}
+
+      nil ->
+        {:reply, :error, state}
+    end
   end
 
   def handle_call({:update_widget, widget_key, arg}, _from, state) do
@@ -1098,6 +1156,7 @@ defmodule Ms2ex.Managers.Field do
       state = __MODULE__.InteractObject.tick(state)
       state = __MODULE__.Trigger.tick(state)
       state = __MODULE__.Npc.tick(state)
+      state = Pet.tick(state, Ms2ex.sync_ticks())
       {:noreply, __MODULE__.Liftable.expire_placed(state)}
     end
   end

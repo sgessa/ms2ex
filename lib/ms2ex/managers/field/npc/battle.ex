@@ -42,7 +42,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   @resume_margin 60
   # a mob counts as home once it is this close to its spawn point
   @home_range 60
-  # a wander leg completes once the mob is this close to its goal
+  # an idle wander leg completes once the mob is this close to its goal
   @wander_arrive_range 30
   # a disengaged mob only walks home when it is at least this far from its
   # spawn point; otherwise losing aggro where it stands is enough
@@ -409,7 +409,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
   end
 
   # inside attack range: hold position facing the target
-  defp stand(npc, battle, target_position, now) do
+  def stand(npc, battle, target_position, now) do
     was_moving = npc.velocity != {0, 0, 0}
     rotation = face_toward(npc.position, target_position, npc.rotation)
     animation = stand_animation(npc, battle, now)
@@ -662,7 +662,7 @@ defmodule Ms2ex.Managers.Field.Npc.Battle do
     end
   end
 
-  defp walk_chase_route(npc, battle, target_position, now) do
+  def walk_chase_route(npc, battle, target_position, now) do
     stale? =
       battle.path == nil or
         square_distance(battle.goal, target_position) > square(@repath_target_drift) or

@@ -35,6 +35,7 @@ defmodule Ms2ex.Schema.Character do
     :delete_time,
     :discovered_objects,
     :fish_album,
+    :pet_collection,
     :masteries,
     :profile_url,
     :stat_point_sources,
@@ -82,6 +83,7 @@ defmodule Ms2ex.Schema.Character do
     # mastery grade reward boxes were already claimed
     field :masteries, EctoTypes.Term, default: %{}
     field :fish_album, EctoTypes.Term, default: %{}
+    field :pet_collection, EctoTypes.Term, default: %{}
 
     field :prestige_exp, :integer, default: 0
     field :prestige_level, :integer, default: 1
