@@ -14,7 +14,7 @@ defmodule Ms2ex.Managers.Field.Pet do
   """
 
   alias Ms2ex.Managers.Field
-  alias Ms2ex.Managers.Field.Npc.Battle
+  alias Ms2ex.Managers.Field.Npc.Movement
   alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Navigation
   alias Ms2ex.Packets
@@ -130,7 +130,7 @@ defmodule Ms2ex.Managers.Field.Pet do
         {warp_to_owner(npc, battle, target_position, now), []}
 
       square_distance(npc.position, target_position) > square(@pet_far_distance) ->
-        {Battle.stand(npc, battle, target_position, now), []}
+        {Movement.stand(npc, battle, target_position, now), []}
 
       # an active roam leg: walk it to its goal, but the owner leaving the
       # near band breaks it off — the chase comes first
@@ -139,7 +139,7 @@ defmodule Ms2ex.Managers.Field.Pet do
              square(@pet_near_distance + @pet_resume_margin) do
           battle = %{battle | mode: :chase}
           npc = %{npc | battle: battle, idle: nil}
-          Battle.walk_chase_route(npc, battle, target_position, now)
+          Movement.walk_chase_route(npc, battle, target_position, now)
         else
           roam_tick(npc, battle, now)
         end
@@ -156,7 +156,7 @@ defmodule Ms2ex.Managers.Field.Pet do
         idle_near_owner(npc, battle, target_position, now)
 
       true ->
-        Battle.walk_chase_route(npc, battle, target_position, now)
+        Movement.walk_chase_route(npc, battle, target_position, now)
     end
   end
 
@@ -284,7 +284,7 @@ defmodule Ms2ex.Managers.Field.Pet do
            send_control?: true
        }, []}
     else
-      Battle.walk_chase_route(npc, battle, battle.goal, now)
+      Movement.walk_chase_route(npc, battle, battle.goal, now)
     end
   end
 
@@ -385,7 +385,7 @@ defmodule Ms2ex.Managers.Field.Pet do
 
           npc = %{npc | idle: %{task: :wander, goal: goal}, battle: battle, animation: animation}
 
-          Battle.walk_chase_route(npc, battle, goal, now)
+          Movement.walk_chase_route(npc, battle, goal, now)
       end
     else
       start_pet_stand(npc, now)
