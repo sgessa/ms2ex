@@ -40,10 +40,7 @@ defmodule Ms2ex.Types.FieldPet do
     send_control?: false,
     dead?: false,
     # the follow battle map (Battle.follow): navmesh route, repath timer
-    battle: nil,
-    # near-owner idle state: stand/emote beats and roam legs
-    # (mirrors the npc idle routine the pet's action metadata carries)
-    idle: nil
+    battle: nil
   ]
 
   @spec new(keyword() | map()) :: t()

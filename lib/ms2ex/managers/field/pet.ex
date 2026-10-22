@@ -8,14 +8,12 @@ defmodule Ms2ex.Managers.Field.Pet do
   trace inside the mid band, a stand inside the near band, a stand beyond
   the far band, a warp to the owner beyond the pet's metadata warp
   distance, and a warp once an unreachable owner (platforms, ledges)
-  defeats the pathing for a grace period. Near the owner the pet runs its
-  idle routine — stands, bore emotes and small roam legs around the
-  owner's position — from the action weights its npc metadata carries.
+  defeats the pathing for a grace period. Inside the near band the pet
+  stands at its owner's side.
   """
 
   alias Ms2ex.Managers.Field
   alias Ms2ex.Managers.Field.Npc.Movement
-  alias Ms2ex.Managers.Field.Npc.Patrol
   alias Ms2ex.Navigation
   alias Ms2ex.Packets
   alias Ms2ex.Storage
@@ -38,18 +36,6 @@ defmodule Ms2ex.Managers.Field.Pet do
   @pet_stuck_warp_ms 3000
   # reachability probe cadence (shares the battle map's repath clock)
   @pet_probe_ms 500
-
-  # a roam leg completes once the pet is this close to its goal
-  # (the battle wander arrival range)
-  @pet_roam_arrive_range 30
-  # pets hug the owner: the roam radius is clamped well inside the npc
-  # metadata's move_area (a mob's wander range, far wider than a pet's)
-  @pet_roam_radius 60
-
-  # a stand holds for about this long before the next routine is rolled
-  @pet_stand_ms 1_000
-  # a bore emote without a recorded beat plays for this long
-  @pet_emote_fallback_ms 4_000
 
   # -- control stream ------------------------------------------------------------
 
@@ -158,28 +144,19 @@ defmodule Ms2ex.Managers.Field.Pet do
       square_distance(npc.position, target_position) > square(@pet_far_distance) ->
         {Movement.stand(npc, battle, target_position, now), []}
 
-      # an active roam leg: walk it to its goal, but the owner leaving the
-      # near band breaks it off — the chase comes first
-      battle.mode == :wander ->
-        if square_distance(npc.position, target_position) >
-             square(@pet_near_distance + @pet_resume_margin) do
-          battle = %{battle | mode: :chase}
-          npc = %{npc | battle: battle, idle: nil}
-          Movement.walk_chase_route(npc, battle, target_position, now)
-        else
-          roam_tick(npc, battle, now)
-        end
-
-      # near-band stand with the chase's resume hysteresis: a running pet
-      # closes into the band before stopping, and a standing pet only
-      # resumes once the owner clearly pulls away
+      # TODO near-owner idle roam (stands, bore emotes, small wander legs)
+      # was removed — it needs a reliable roam-goal picker before it reads
+      # as anything but the pet wandering off. The near band is a plain
+      # stand, with the chase's resume hysteresis: a running pet closes
+      # into the band before stopping, and a standing pet only resumes
+      # once the owner clearly pulls away
       square_distance(npc.position, target_position) < square(@pet_near_distance) ->
-        idle_near_owner(npc, battle, target_position, now)
+        {Movement.stand(npc, battle, target_position, now), []}
 
       npc.velocity == {0, 0, 0} and
           square_distance(npc.position, target_position) <
             square(@pet_near_distance + @pet_resume_margin) ->
-        idle_near_owner(npc, battle, target_position, now)
+        {Movement.stand(npc, battle, target_position, now), []}
 
       true ->
         Movement.walk_chase_route(npc, battle, target_position, now)
@@ -250,7 +227,6 @@ defmodule Ms2ex.Managers.Field.Pet do
       | position: position,
         velocity: {0, 0, 0},
         animation: idle,
-        idle: nil,
         battle: %{
           battle
           | path: nil,
@@ -279,144 +255,6 @@ defmodule Ms2ex.Managers.Field.Pet do
       last_move_at: now,
       no_route_since: nil
     }
-  end
-
-  # -- near-owner idle roam ---------------------------------------------------------
-  # the pet's action metadata carries the npc idle routine weights
-  # (Idle_A/Walk_A/Bore_A, move_area): near the owner it stands, plays
-  # bore emotes and roams small legs around the owner's position — the
-  # same beat structure the mob Idle module runs around a spawn point
-
-  defp idle_near_owner(npc, battle, target_position, now) do
-    case npc.idle do
-      %{task: :wander, goal: goal} ->
-        roam_tick(npc, %{battle | mode: :wander, goal: goal}, now)
-
-      %{task: task, until: until} when task in [:stand, :emote] and now < until ->
-        {npc, []}
-
-      _ ->
-        pick_routine(npc, battle, target_position, now)
-    end
-  end
-
-  defp roam_tick(npc, battle, now) do
-    if square_distance(npc.position, battle.goal) < square(@pet_roam_arrive_range) do
-      {%{
-         npc
-         | battle: nil,
-           velocity: {0, 0, 0},
-           idle: %{task: :stand, until: now + @pet_stand_ms},
-           send_control?: true
-       }, []}
-    else
-      Movement.walk_chase_route(npc, battle, battle.goal, now)
-    end
-  end
-
-  defp pick_routine(npc, battle, target_position, now) do
-    case weighted_routine(npc) do
-      routine when is_binary(routine) ->
-        cond do
-          String.contains?(routine, "Bore_") ->
-            start_pet_emote(npc, routine, now)
-
-          String.starts_with?(routine, "Walk_") or String.starts_with?(routine, "Run_") ->
-            start_roam(npc, battle, target_position, routine, now)
-
-          # Idle_* and unknown routines keep the pet at its post
-          true ->
-            start_pet_stand(npc, now)
-        end
-
-      _ ->
-        start_pet_stand(npc, now)
-    end
-  end
-
-  defp weighted_routine(npc) do
-    actions = get_in(npc.npc.metadata, [:action, :actions]) || []
-    total = Enum.reduce(actions, 0, &(&1.probability + &2))
-    if total > 0, do: roll_routine(actions, :rand.uniform(total))
-  end
-
-  defp roll_routine(actions, roll) do
-    Enum.reduce_while(actions, 0, fn action, acc ->
-      if acc + action.probability >= roll do
-        {:halt, action.name}
-      else
-        {:cont, acc + action.probability}
-      end
-    end)
-  end
-
-  defp start_pet_stand(npc, now) do
-    animation = idle_sequence_id(npc) || npc.animation
-
-    if npc.animation == animation and npc.velocity == {0, 0, 0} do
-      {%{npc | idle: %{task: :stand, until: now + @pet_stand_ms}}, []}
-    else
-      {%{
-         npc
-         | idle: %{task: :stand, until: now + @pet_stand_ms},
-           animation: animation,
-           velocity: {0, 0, 0},
-           send_control?: true
-       }, []}
-    end
-  end
-
-  defp start_pet_emote(npc, routine, now) do
-    model = get_in(npc.npc.metadata, [:model, :name])
-
-    with id when is_integer(id) <- Storage.Animations.sequence_id(model, routine),
-         ms when is_integer(ms) and ms > 0 <- pet_emote_ms(model, routine) do
-      {%{npc | animation: id, idle: %{task: :emote, until: now + ms}, send_control?: true}, []}
-    else
-      _ -> start_pet_stand(npc, now)
-    end
-  end
-
-  defp pet_emote_ms(model, routine) do
-    case Storage.Animations.sequence_time(model, routine) do
-      seconds when is_number(seconds) and seconds > 0 -> trunc(seconds * 1000)
-      _ -> @pet_emote_fallback_ms
-    end
-  end
-
-  # a roam leg: a random walkable point inside the move area around the
-  # owner (not a fixed anchor — the owner is the pet's home), walked at
-  # the routine's gait
-  defp start_roam(npc, battle, target_position, routine, now) do
-    move_area = get_in(npc.npc.metadata, [:action, :move_area]) || 0
-    roam_radius = min(move_area, @pet_roam_radius)
-
-    if roam_radius > 0 and Patrol.npc_speed(npc, :walk_speed) > 0.0 do
-      case Navigation.random_point_around(npc.map_id, target_position, roam_radius) do
-        nil ->
-          start_pet_stand(npc, now)
-
-        goal ->
-          model = get_in(npc.npc.metadata, [:model, :name])
-          animation = Storage.Animations.sequence_id(model, routine) || npc.animation
-
-          battle = %{
-            battle
-            | mode: :wander,
-              goal: goal,
-              path: nil,
-              path_index: 1,
-              next_repath_at: 0,
-              last_move_at: now
-          }
-
-          npc = %{npc | idle: %{task: :wander, goal: goal}, battle: battle, animation: animation}
-
-          Movement.walk_chase_route(npc, battle, goal, now)
-      end
-    else
-      start_pet_stand(npc, now)
-    end
   end
 
   # -- shared helpers -----------------------------------------------------------
