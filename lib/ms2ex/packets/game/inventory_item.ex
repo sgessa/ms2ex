@@ -130,7 +130,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(item.charges)
     |> put_item_enchant_stats(item)
     |> put_template(item)
-    # TODO put pets (no pet support yet: pet items would write their info block here)
     # TODO put gem slot (socket unlock and gemstones unimplemented; only the
     #      empty socket block is written)
     |> put_int(TransferFlags.to_int(item.transfer_flags))
@@ -160,6 +159,9 @@ defmodule Ms2ex.Packets.InventoryItem do
         |> Packets.Ugc.put_ugc(item.ugc)
         |> put_blueprint(item)
 
+      item.inventory_tab == :pets ->
+        put_pet(packet, item)
+
       item.inventory_tab == :badge ->
         put_badge(packet, item)
 
@@ -169,6 +171,17 @@ defmodule Ms2ex.Packets.InventoryItem do
       true ->
         packet
     end
+  end
+
+  defp put_pet(packet, item) do
+    pet = Types.ItemPet.get(item)
+
+    packet
+    |> put_ustring(pet.name)
+    |> put_long(pet.exp)
+    |> put_int(pet.evolve_points)
+    |> put_int(pet.level)
+    |> put_bool(pet.has_items)
   end
 
   defp put_badge(packet, item) do

@@ -4,6 +4,7 @@ defmodule Ms2ex.Managers.Character do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers.Character
+  alias Ms2ex.Managers.Character.Pet
   alias Ms2ex.Schema
   alias Ms2ex.Types
   alias Ms2ex.Types.AttributePointSource
@@ -21,6 +22,29 @@ defmodule Ms2ex.Managers.Character do
       %Schema.Character{id: char_id} -> call(char_id, :lookup)
     end
   end
+
+  # -- summoned pet ----------------------------------------------------------------
+
+  @doc "The summoned pet state, or nil when no pet is out."
+  def pet_summoned(character_id), do: call(character_id, :pet_summoned)
+
+  def pet_summon(character_id, item_uid), do: call(character_id, {:pet_summon, item_uid})
+
+  def pet_un_summon(character_id), do: call(character_id, :pet_un_summon)
+
+  def pet_rename(character_id, name), do: call(character_id, {:pet_rename, name})
+
+  def pet_update_potion_config(character_id, potions),
+    do: call(character_id, {:pet_update_potion_config, potions})
+
+  def pet_update_loot_config(character_id, loot),
+    do: call(character_id, {:pet_update_loot_config, loot})
+
+  def pet_unlock_collection(character_id, pet_id, rarity),
+    do: call(character_id, {:pet_unlock_collection, pet_id, rarity})
+
+  def pet_set_has_items(character_id, has_items?),
+    do: call(character_id, {:pet_set_has_items, has_items?})
 
   def start(%Schema.Character{} = character) do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
@@ -136,6 +160,46 @@ defmodule Ms2ex.Managers.Character do
   # --------------------------------
   # Fishing
   # --------------------------------
+
+  def handle_call(:pet_summoned, _from, character),
+    do: {:reply, Pet.summoned(character), character}
+
+  def handle_call({:pet_summon, item_uid}, _from, character) do
+    case Pet.summon(character, item_uid) do
+      {:ok, character} -> {:reply, {:ok, character}, character}
+      error -> {:reply, error, character}
+    end
+  end
+
+  def handle_call(:pet_un_summon, _from, character),
+    do: {:reply, :ok, Pet.un_summon(character)}
+
+  def handle_call({:pet_rename, name}, _from, character) do
+    case Pet.rename(character, name) do
+      {:ok, character, item} -> {:reply, {:ok, item}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:pet_update_potion_config, potions}, _from, character),
+    do: {:reply, :ok, Pet.update_potion_config(character, potions)}
+
+  def handle_call({:pet_update_loot_config, loot}, _from, character),
+    do: {:reply, :ok, Pet.update_loot_config(character, loot)}
+
+  def handle_call({:pet_set_has_items, has_items?}, _from, character) do
+    case Pet.set_has_items(character, has_items?) do
+      {:ok, character, item} -> {:reply, {:ok, item}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
+
+  def handle_call({:pet_unlock_collection, pet_id, rarity}, _from, character) do
+    case Pet.unlock_collection(character, pet_id, rarity) do
+      {:updated, character} -> {:reply, :updated, character}
+      :keep -> {:reply, :keep, character}
+    end
+  end
 
   def handle_call(:monitor, {pid, _}, character) do
     Process.monitor(pid)

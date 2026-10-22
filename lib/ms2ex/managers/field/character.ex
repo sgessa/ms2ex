@@ -1,5 +1,6 @@
 defmodule Ms2ex.Managers.Field.Character do
   alias Ms2ex.Enums
+  alias Ms2ex.Managers.Field.Pet
   alias Ms2ex.Packets
   alias Ms2ex.Context
   alias Ms2ex.Managers
@@ -55,6 +56,10 @@ defmodule Ms2ex.Managers.Field.Character do
       push(character, Packets.FieldAddNpc.add_npc(npc))
       push(character, Packets.ProxyGameObj.load_npc(npc))
     end
+
+    # Load pets (other characters' summoned pets; the joiner's own pet
+    # re-registers through the pet manager after this returns)
+    load_pets(character, state)
 
     # Load portals
     for {_id, portal} <- state.portals do
@@ -168,6 +173,28 @@ defmodule Ms2ex.Managers.Field.Character do
     end
   end
 
+  defp load_pets(character, state) do
+    # other characters' summoned pets serialize like npcs
+    for {_id, pet} <- state.pets do
+      push(character, Packets.FieldAddPet.add_pet(pet))
+      push(character, Packets.ProxyGameObj.load_pet(pet))
+    end
+
+    # the joiner's own summoned pet follows across field transitions:
+    # look it up on the character manager and register it here directly
+    # (the broadcasts reach the joiner, who is already subscribed)
+    case Managers.Character.call(character.id, :pet_summoned) do
+      nil ->
+        state
+
+      pet_state ->
+        {_field_pet, state} =
+          Managers.Field.register_pet(Pet.spawn_attrs(pet_state, character), state)
+
+        state
+    end
+  end
+
   def remove_character(character, state) do
     Logger.info("Field #{state.map_id} @ Channel #{state.channel_id}: #{character.name} left")
 
@@ -181,6 +208,19 @@ defmodule Ms2ex.Managers.Field.Character do
     players = Map.delete(state.players, character.id)
     tombstones = Map.delete(state.tombstones, character.id)
     instruments = Map.delete(state.instruments, character.id)
+
+    # the leaving character's summoned pet goes with them
+    state =
+      case Enum.find(state.pets, fn {_id, pet} -> pet.owner_character_id == character.id end) do
+        {object_id, _pet} ->
+          Managers.Field.broadcast(state.topic, Packets.FieldRemovePet.remove_pet(object_id))
+          Managers.Field.broadcast(state.topic, Packets.ProxyGameObj.remove_pet(object_id))
+          %{state | pets: Map.delete(state.pets, object_id)}
+
+        nil ->
+          state
+      end
+
     state = Managers.Field.Liftable.drop(state, character)
     state = Managers.Field.Liftup.release(state, character.id)
     state = Managers.Field.Trigger.drop_position(state, character.id)
