@@ -43,6 +43,9 @@ defmodule Ms2ex.Managers.Character do
   def pet_unlock_collection(character_id, pet_id, rarity),
     do: call(character_id, {:pet_unlock_collection, pet_id, rarity})
 
+  def pet_set_has_items(character_id, has_items?),
+    do: call(character_id, {:pet_set_has_items, has_items?})
+
   def start(%Schema.Character{} = character) do
     GenServer.start(__MODULE__, character, name: process_name(character.id))
   end
@@ -183,6 +186,13 @@ defmodule Ms2ex.Managers.Character do
 
   def handle_call({:pet_update_loot_config, loot}, _from, character),
     do: {:reply, :ok, Pet.update_loot_config(character, loot)}
+
+  def handle_call({:pet_set_has_items, has_items?}, _from, character) do
+    case Pet.set_has_items(character, has_items?) do
+      {:ok, character, item} -> {:reply, {:ok, item}, character}
+      :error -> {:reply, :error, character}
+    end
+  end
 
   def handle_call({:pet_unlock_collection, pet_id, rarity}, _from, character) do
     case Pet.unlock_collection(character, pet_id, rarity) do

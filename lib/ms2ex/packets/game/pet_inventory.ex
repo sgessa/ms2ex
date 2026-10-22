@@ -68,4 +68,43 @@ defmodule Ms2ex.Packets.PetInventory do
       |> Packets.InventoryItem.put_item(item, character)
     end)
   end
+
+  def add(item, character) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.add)
+    |> put_int(item.item_id)
+    |> put_long(item.id)
+    |> put_short(item.inventory_slot)
+    |> put_int(item.rarity)
+    |> put_ustring()
+    |> Packets.InventoryItem.put_item(item, character)
+  end
+
+  def remove(item_uid) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.remove)
+    |> put_long(item_uid)
+  end
+
+  def update(item) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.update)
+    |> put_long(item.id)
+    |> put_int(item.amount)
+  end
+
+  # the client swaps src into dst_slot and (when occupied) dst back into
+  # src_slot; a zero dst uid marks the destination slot as empty
+  def move(dst_uid, src_slot, src_uid, dst_slot) do
+    __MODULE__
+    |> build()
+    |> put_byte(@commands.move)
+    |> put_long(dst_uid)
+    |> put_short(src_slot)
+    |> put_long(src_uid)
+    |> put_short(dst_slot)
+  end
 end

@@ -82,6 +82,22 @@ defmodule Ms2ex.Managers.Character.Pet do
     end
   end
 
+  @doc "Flags the pet item's bag as holding (or not holding) items; persists."
+  @spec set_has_items(Schema.Character.t(), boolean()) ::
+          {:ok, Schema.Character.t(), Schema.Item.t()} | :error
+  def set_has_items(character, has_items?) do
+    case summoned(character) do
+      nil ->
+        :error
+
+      %{item: item} = pet ->
+        new_pet = Types.ItemPet.get(item) |> struct(has_items: has_items?)
+        item = Types.ItemPet.put(item, new_pet)
+        :ok = Managers.Inventory.update_item(item, %{data: item.data})
+        {:ok, %{character | pet: %{pet | item: item}}, item}
+    end
+  end
+
   @doc """
   Records the pet at its rarity; only a rarity increase updates the entry.
   Persists the character row and refreshes the in-memory copy so later

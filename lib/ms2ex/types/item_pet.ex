@@ -11,7 +11,8 @@ defmodule Ms2ex.Types.ItemPet do
             exp: 0,
             evolve_points: 0,
             level: 1,
-            rename_remaining: 1
+            rename_remaining: 1,
+            has_items: false
 
   @spec new() :: t()
   def new do

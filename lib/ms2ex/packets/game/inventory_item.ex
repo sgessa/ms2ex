@@ -181,11 +181,8 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_long(pet.exp)
     |> put_int(pet.evolve_points)
     |> put_int(pet.level)
-    |> put_bool(pet_has_items?(item))
+    |> put_bool(pet.has_items)
   end
-
-  # the pet's item bag arrives with pet-bag support; no pet carries items yet
-  defp pet_has_items?(_item), do: false
 
   defp put_badge(packet, item) do
     badge_type = Types.Item.badge_type(item.item_id)

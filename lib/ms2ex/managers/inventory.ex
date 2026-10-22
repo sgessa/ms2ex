@@ -84,6 +84,28 @@ defmodule Ms2ex.Managers.Inventory do
     call(character_id, {:add_item, item})
   end
 
+  # ---- pet bag ----
+
+  @doc "The items inside a pet's bag, sorted by slot."
+  def pet_bag_items(character_id, pet_item_id),
+    do: call(character_id, {:pet_bag_items, pet_item_id})
+
+  @doc """
+  Deposits `amount` of the inventory item `uid` into a pet bag at `slot`.
+  Stacks onto an existing bag stack when possible; `bag_size` bounds the
+  bag's slot space.
+  """
+  def pet_bag_add(character_id, pet_item_id, uid, slot, amount, bag_size),
+    do: call(character_id, {:pet_bag_add, pet_item_id, uid, slot, amount, bag_size})
+
+  @doc "Withdraws `amount` of the bag stack `uid` back into the inventory at `slot`."
+  def pet_bag_remove(character_id, pet_item_id, uid, slot, amount),
+    do: call(character_id, {:pet_bag_remove, pet_item_id, uid, slot, amount})
+
+  @doc "Swaps a bag stack into `dst_slot` within the bag."
+  def pet_bag_move(character_id, pet_item_id, uid, dst_slot),
+    do: call(character_id, {:pet_bag_move, pet_item_id, uid, dst_slot})
+
   @doc "Adds an item, mailing it when the relevant inventory tab is full."
   def add_item_or_mail(%Schema.Character{} = character, item) do
     case add_item(character, item) do
@@ -278,6 +300,24 @@ defmodule Ms2ex.Managers.Inventory do
 
   def handle_call({:add_item, attrs}, _from, state) do
     {result, state} = apply_add_item(state, attrs)
+    {:reply, result, state}
+  end
+
+  def handle_call({:pet_bag_items, pet_item_id}, _from, state),
+    do: {:reply, pet_bag_rows(state, pet_item_id) |> sort_by_slot(), state}
+
+  def handle_call({:pet_bag_add, pet_item_id, uid, slot, amount, bag_size}, _from, state) do
+    {result, state} = apply_pet_bag_add(state, pet_item_id, uid, slot, amount, bag_size)
+    {:reply, result, state}
+  end
+
+  def handle_call({:pet_bag_remove, pet_item_id, uid, slot, amount}, _from, state) do
+    {result, state} = apply_pet_bag_remove(state, pet_item_id, uid, slot, amount)
+    {:reply, result, state}
+  end
+
+  def handle_call({:pet_bag_move, pet_item_id, uid, dst_slot}, _from, state) do
+    {result, state} = apply_pet_bag_move(state, pet_item_id, uid, dst_slot)
     {:reply, result, state}
   end
 
@@ -533,6 +573,181 @@ defmodule Ms2ex.Managers.Inventory do
       requested
     else
       first_available_slot(state, tab)
+    end
+  end
+
+  # ---- pet bag -----
+
+  defp pet_bag_rows(state, pet_item_id) do
+    Enum.filter(state.items, &(&1.location == :pet and &1.owner_item_id == pet_item_id))
+  end
+
+  defp apply_pet_bag_add(state, pet_item_id, uid, slot, amount, bag_size)
+       when amount > 0 and slot >= 0 do
+    bag = pet_bag_rows(state, pet_item_id)
+
+    case get_item(state, uid) do
+      %Schema.Item{location: :inventory, inventory_tab: :pets} ->
+        {:error, :pet_item}
+
+      %Schema.Item{location: :inventory, amount: src_amount} = src
+      when src_amount >= amount ->
+        cond do
+          # a stack with room absorbs the deposit regardless of the slot hint
+          stack = find_bag_stack(bag, src) ->
+            {src_result, state} = take_from_inventory(state, src, amount)
+            {{:update, updated}, state} = update_qty(state, stack, amount)
+            {:ok, %{source: src_result, bag: {:update, updated}}, state}
+
+          slot_free?(bag, slot, bag_size) ->
+            {src_result, state} = take_from_inventory(state, src, amount)
+
+            attrs = %Schema.Item{
+              src
+              | amount: amount,
+                location: :pet,
+                owner_item_id: pet_item_id,
+                inventory_slot: slot
+            }
+
+            {bag_result, state} = create_pet_bag_row(state, attrs)
+            {:ok, %{source: src_result, bag: bag_result}, state}
+
+          true ->
+            {:error, :bag_full}
+        end
+
+      %Schema.Item{} ->
+        {:error, :invalid_count}
+
+      nil ->
+        {:error, :invalid_count}
+    end
+  end
+
+  defp apply_pet_bag_add(_state, _pet_item_id, _uid, _slot, _amount, _bag_size),
+    do: {:error, :invalid_count}
+
+  # the source loses its deposit amount (split) or disappears (full removal)
+  defp take_from_inventory(state, src, amount) do
+    if src.amount > amount do
+      update_qty(state, src, -amount)
+    else
+      case Context.Inventory.delete_item(src) do
+        {:ok, deleted} -> {{:delete, deleted}, %{state | items: List.delete(state.items, src)}}
+        error -> {error, state}
+      end
+    end
+  end
+
+  defp find_bag_stack(bag, src) do
+    stack_limit = stack_limit(src)
+
+    if stack_limit > 1 do
+      bag
+      |> Enum.filter(
+        &(&1.item_id == src.item_id and &1.rarity == src.rarity and &1.amount < stack_limit)
+      )
+      |> Enum.max_by(& &1.amount, fn -> nil end)
+    end
+  end
+
+  defp stack_limit(%{metadata: %{stack_limit: n}}) when is_integer(n), do: max(n, 1)
+  defp stack_limit(_), do: 1
+
+  defp slot_free?(bag, slot, bag_size) do
+    slot < bag_size and not Enum.any?(bag, &(&1.inventory_slot == slot))
+  end
+
+  defp create_pet_bag_row(state, attrs) do
+    case Context.Inventory.insert_item(state.character_id, attrs) do
+      {:ok, item} -> {{:create, item}, %{state | items: state.items ++ [item]}}
+      error -> {error, state}
+    end
+  end
+
+  defp apply_pet_bag_remove(state, pet_item_id, uid, slot, amount) when amount > 0 do
+    case Enum.find(pet_bag_rows(state, pet_item_id), &(&1.id == uid)) do
+      %Schema.Item{amount: row_amount} = row when row_amount >= amount ->
+        withdraw(state, row, amount, slot)
+
+      _ ->
+        {:error, :invalid_count}
+    end
+  end
+
+  # the stack leaves the bag and returns to the inventory at the slot the
+  # user picked; when the inventory cannot take it, the bag rolls back
+  defp withdraw(state, row, amount, slot) do
+    {bag_result, state} = take_from_inventory(state, row, amount)
+
+    case bag_result do
+      result when is_tuple(result) and elem(result, 0) in [:delete, :update] ->
+        %Schema.Item{} = row
+
+        attrs = %Schema.Item{
+          row
+          | amount: amount,
+            location: :inventory,
+            inventory_slot: slot,
+            owner_item_id: nil,
+            id: nil
+        }
+
+        {inv_result, state} = apply_add_item(state, attrs)
+
+        case inv_result do
+          {:error, _} = error -> {error, refund_bag_stack(state, attrs, bag_result)}
+          result -> {:ok, %{bag: bag_result, inventory: result}, state}
+        end
+
+      error ->
+        {error, state}
+    end
+  end
+
+  defp refund_bag_stack(state, attrs, {:update, updated_row}) do
+    {_result, state} = update_qty(state, updated_row, attrs.amount)
+    state
+  end
+
+  defp refund_bag_stack(state, attrs, {:delete, _}) do
+    {_result, state} = create_pet_bag_row(state, attrs)
+    state
+  end
+
+  defp apply_pet_bag_move(state, pet_item_id, uid, dst_slot) do
+    bag = pet_bag_rows(state, pet_item_id)
+    src = Enum.find(bag, &(&1.id == uid))
+
+    if src == nil or src.inventory_slot == dst_slot or dst_slot < 0 do
+      {:error, :invalid_slot}
+    else
+      swap_bag_slots(state, src, Enum.find(bag, &(&1.inventory_slot == dst_slot)), dst_slot)
+    end
+  end
+
+  defp swap_bag_slots(state, src, dst_row, dst_slot) do
+    src_slot = src.inventory_slot
+
+    case Context.Inventory.update_item(src, %{inventory_slot: dst_slot}) do
+      {:ok, moved_src} ->
+        state = replace_item(state, moved_src)
+        {moved_dst, state} = move_dst_stack(state, dst_row, src_slot)
+        state = if moved_dst, do: replace_item(state, moved_dst), else: state
+        {{:ok, %{src: moved_src, src_slot: src_slot, dst: moved_dst}}, state}
+
+      error ->
+        {error, state}
+    end
+  end
+
+  defp move_dst_stack(_state, nil, _slot), do: {:ok, nil}
+
+  defp move_dst_stack(state, dst_row, slot) do
+    case Context.Inventory.update_item(dst_row, %{inventory_slot: slot}) do
+      {:ok, moved} -> {moved, state}
+      _error -> {nil, state}
     end
   end
 
