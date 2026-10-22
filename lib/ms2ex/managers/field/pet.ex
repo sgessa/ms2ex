@@ -42,6 +42,9 @@ defmodule Ms2ex.Managers.Field.Pet do
   # a roam leg completes once the pet is this close to its goal
   # (the battle wander arrival range)
   @pet_roam_arrive_range 30
+  # pets hug the owner: the roam radius is clamped well inside the npc
+  # metadata's move_area (a mob's wander range, far wider than a pet's)
+  @pet_roam_radius 60
 
   # a stand holds for about this long before the next routine is rolled
   @pet_stand_ms 1_000
@@ -386,9 +389,10 @@ defmodule Ms2ex.Managers.Field.Pet do
   # the routine's gait
   defp start_roam(npc, battle, target_position, routine, now) do
     move_area = get_in(npc.npc.metadata, [:action, :move_area]) || 0
+    roam_radius = min(move_area, @pet_roam_radius)
 
-    if move_area > 0 and Patrol.npc_speed(npc, :walk_speed) > 0.0 do
-      case Navigation.random_point_around(npc.map_id, target_position, move_area) do
+    if roam_radius > 0 and Patrol.npc_speed(npc, :walk_speed) > 0.0 do
+      case Navigation.random_point_around(npc.map_id, target_position, roam_radius) do
         nil ->
           start_pet_stand(npc, now)
 
