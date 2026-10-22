@@ -68,6 +68,17 @@ defmodule Ms2ex.GameHandlers.RequestPetInventory do
     end
   end
 
+  defp handle_command(@command_load, _packet, character) do
+    pet = Managers.Character.pet_summoned(character.id)
+
+    if pet do
+      bag = Managers.Inventory.pet_bag_items(character.id, pet.item.id)
+      push(character, Packets.PetInventory.load(bag, character))
+    end
+  end
+
+  defp handle_command(_command, _packet, _character), do: :ok
+
   defp move_bag_stack(character, pet, item_uid, dst_slot) do
     case Managers.Inventory.pet_bag_move(character.id, pet.item.id, item_uid, dst_slot) do
       {:ok, %{src: src, src_slot: src_slot, dst: dst}} ->
@@ -81,17 +92,6 @@ defmodule Ms2ex.GameHandlers.RequestPetInventory do
         )
     end
   end
-
-  defp handle_command(@command_load, _packet, character) do
-    pet = Managers.Character.pet_summoned(character.id)
-
-    if pet do
-      bag = Managers.Inventory.pet_bag_items(character.id, pet.item.id)
-      push(character, Packets.PetInventory.load(bag, character))
-    end
-  end
-
-  defp handle_command(_command, _packet, _character), do: :ok
 
   # deposits `amount` of the inventory stack into the bag
   defp apply(@command_add, character, pet, item_uid, slot, amount) do
