@@ -50,7 +50,9 @@ defmodule Ms2ex.Managers.Field.Pet do
 
   # -- control stream ------------------------------------------------------------
 
-  def tick(state, now) do
+  def tick(state) do
+    now = Ms2ex.sync_ticks()
+
     case Map.get(state, :pets, %{}) do
       empty when empty == %{} ->
         state

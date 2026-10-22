@@ -1156,7 +1156,7 @@ defmodule Ms2ex.Managers.Field do
       state = __MODULE__.InteractObject.tick(state)
       state = __MODULE__.Trigger.tick(state)
       state = __MODULE__.Npc.tick(state)
-      state = Pet.tick(state, Ms2ex.sync_ticks())
+      state = Pet.tick(state)
       {:noreply, __MODULE__.Liftable.expire_placed(state)}
     end
   end
