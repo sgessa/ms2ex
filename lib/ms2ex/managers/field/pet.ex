@@ -351,15 +351,15 @@ defmodule Ms2ex.Managers.Field.Pet do
     animation = idle_sequence_id(npc) || npc.animation
 
     if npc.animation == animation and npc.velocity == {0, 0, 0} do
-      %{npc | idle: %{task: :stand, until: now + @pet_stand_ms}}
+      {%{npc | idle: %{task: :stand, until: now + @pet_stand_ms}}, []}
     else
-      %{
-        npc
-        | idle: %{task: :stand, until: now + @pet_stand_ms},
-          animation: animation,
-          velocity: {0, 0, 0},
-          send_control?: true
-      }
+      {%{
+         npc
+         | idle: %{task: :stand, until: now + @pet_stand_ms},
+           animation: animation,
+           velocity: {0, 0, 0},
+           send_control?: true
+       }, []}
     end
   end
 
