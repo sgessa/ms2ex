@@ -2,9 +2,11 @@ defmodule Ms2ex.GameHandlers.RequestPet do
   @behaviour Ms2ex.Packets.Spec
 
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field
   alias Ms2ex.Packets
 
   import Packets.PacketReader
+  import Ms2ex.Net.SenderSession, only: [push: 2]
 
   @command_summon 0x0
   @command_un_summon 0x1
@@ -33,9 +35,6 @@ defmodule Ms2ex.GameHandlers.RequestPet do
     evolve_points: @command_evolve_points
   }
 
-  @impl true
-  def commands, do: @commands
-
   @specs %{
     @command_summon => [item_uid: :long],
     @command_un_summon => [item_uid: :long],
@@ -61,6 +60,9 @@ defmodule Ms2ex.GameHandlers.RequestPet do
   }
 
   @impl true
+  def commands, do: @commands
+
+  @impl true
   def spec(command), do: Map.get(@specs, command, [])
 
   def handle(packet, session) do
@@ -75,36 +77,49 @@ defmodule Ms2ex.GameHandlers.RequestPet do
 
   defp handle_command(@command_summon, packet, character) do
     {item_uid, _packet} = get_long(packet)
-    Managers.Pet.summon(character, item_uid)
+    summon_pet(character, item_uid)
   end
 
   defp handle_command(@command_un_summon, packet, character) do
     {item_uid, _packet} = get_long(packet)
-
-    if Managers.Pet.summoned_uid(character.id) == item_uid do
-      Managers.Pet.un_summon(character)
-    end
+    un_summon_pet(character, item_uid)
   end
 
   defp handle_command(@command_switch, packet, character) do
     {item_uid, _packet} = get_long(packet)
-    Managers.Pet.switch(character, item_uid)
+
+    if Managers.Character.pet_summoned(character.id) do
+      un_summon_pet(character, item_uid)
+      summon_pet(character, item_uid)
+    end
   end
 
   defp handle_command(@command_rename, packet, character) do
     {name, _packet} = get_ustring(packet)
-    Managers.Pet.rename(character, name)
+
+    case Managers.Character.pet_rename(character.id, name) do
+      {:ok, item} -> push(character, Packets.ResponsePet.rename(character.object_id, item))
+      :error -> :ok
+    end
   end
 
   defp handle_command(@command_update_potion_config, packet, character) do
     {count, packet} = get_byte(packet)
     {potions, _packet} = read_potions(packet, count, [])
-    Managers.Pet.update_potion_config(character, potions)
+    Managers.Character.pet_update_potion_config(character.id, potions)
+    push(character, Packets.ResponsePet.potion_config(character.object_id, potions))
   end
 
   defp handle_command(@command_update_loot_config, packet, character) do
     {loot, _packet} = read_loot(packet)
-    Managers.Pet.update_loot_config(character, loot)
+    Managers.Character.pet_update_loot_config(character.id, loot)
+
+    push(
+      character,
+      Packets.ResponsePet.loot_config(character.object_id, %Ms2ex.Types.PetConfig{
+        loot_config: loot
+      })
+    )
   end
 
   # TODO fusion, evolve, evolve-points: the client sends them but the
@@ -130,6 +145,43 @@ defmodule Ms2ex.GameHandlers.RequestPet do
   end
 
   defp handle_command(_command, _packet, _character), do: :ok
+
+  defp summon_pet(character, item_uid) do
+    with {:ok, character} <- Managers.Character.pet_summon(character.id, item_uid),
+         {:ok, field_pet} <- Field.spawn_pet(character) do
+      Field.broadcast(character, Packets.ResponsePet.summon(field_pet, character))
+
+      push(
+        character,
+        Packets.ResponsePet.load(character.object_id, field_pet.item, character.pet.config)
+      )
+
+      case Managers.Character.pet_unlock_collection(
+             character.id,
+             field_pet.item.item_id,
+             field_pet.item.rarity
+           ) do
+        {:updated, _character} ->
+          push(
+            character,
+            Packets.ResponsePet.add_collection(field_pet.item.item_id, field_pet.item.rarity)
+          )
+
+        :keep ->
+          :ok
+      end
+    end
+  end
+
+  defp un_summon_pet(character, item_uid) do
+    pet = Managers.Character.pet_summoned(character.id)
+
+    if pet && pet.item.id == item_uid do
+      Field.broadcast(character, Packets.ResponsePet.un_summon(character.object_id, pet.item.id))
+      :ok = Managers.Field.despawn_pet(character)
+      Managers.Character.pet_un_summon(character.id)
+    end
+  end
 
   defp consume_fodder(packet, count) do
     Enum.reduce(1..count//1, packet, fn _, acc ->

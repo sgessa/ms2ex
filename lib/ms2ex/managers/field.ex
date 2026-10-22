@@ -355,17 +355,11 @@ defmodule Ms2ex.Managers.Field do
   allocates the object id, broadcasts the add to everyone on it, and
   returns the id to the caller (the pet manager).
   """
-  @spec spawn_pet(Schema.Character.t(), keyword()) :: {:ok, integer()} | :error
-  def spawn_pet(%Schema.Character{field_pid: nil}, _pet_attrs), do: :error
+  @spec spawn_pet(Schema.Character.t()) :: {:ok, Types.FieldPet.t()} | :error
+  def spawn_pet(%Schema.Character{field_pid: nil}), do: :error
 
-  def spawn_pet(%Schema.Character{field_pid: field_pid} = character, pet_attrs) do
-    pet_attrs =
-      pet_attrs
-      |> Keyword.put(:owner_character_id, character.id)
-      |> Keyword.put(:owner_object_id, character.object_id)
-      |> Keyword.put(:map_id, character.map_id)
-
-    call(field_pid, {:add_pet, pet_attrs})
+  def spawn_pet(%Schema.Character{field_pid: field_pid} = character) do
+    call(field_pid, {:add_pet, Pet.spawn_attrs(character.pet, character)})
   end
 
   @doc "Removes the character's summoned pet from their current field."
@@ -374,6 +368,28 @@ defmodule Ms2ex.Managers.Field do
 
   def despawn_pet(%Schema.Character{field_pid: field_pid} = character) do
     call(field_pid, {:remove_pet, character.id})
+  end
+
+  @doc """
+  Registers a summoned pet on field state: allocates the object id and
+  broadcasts the add to everyone on the field. Runs in the field process
+  (the add-pet call, and the character-add path for a pet whose owner
+  just entered).
+  """
+  def register_pet(pet_attrs, state) do
+    {object_id, state} = next_local_id(state)
+
+    field_pet = Types.FieldPet.new(Keyword.put(pet_attrs, :object_id, object_id))
+
+    broadcast(state.topic, Packets.FieldAddPet.add_pet(field_pet))
+    broadcast(state.topic, Packets.ProxyGameObj.load_pet(field_pet))
+
+    # the first control spawns the visible model; the follow movement
+    # takes over from here
+    field_pet = %{field_pet | last_control_at: Ms2ex.sync_ticks()}
+    broadcast(state.topic, Packets.ControlNpc.bytes([Pet.control_view(field_pet)]))
+
+    {field_pet, put_in(state, [:pets, object_id], field_pet)}
   end
 
   @doc "Looks up an npc by object id in the character's field."
@@ -804,19 +820,8 @@ defmodule Ms2ex.Managers.Field do
   end
 
   def handle_call({:add_pet, pet_attrs}, _from, state) do
-    {object_id, state} = next_local_id(state)
-
-    field_pet = Types.FieldPet.new(Keyword.put(pet_attrs, :object_id, object_id))
-
-    broadcast(state.topic, Packets.FieldAddPet.add_pet(field_pet))
-    broadcast(state.topic, Packets.ProxyGameObj.load_pet(field_pet))
-
-    # the first control spawns the visible model; the keepalive takes over
-    # from here (and re-anchors the pet on its owner as they move)
-    field_pet = %{field_pet | last_control_at: Ms2ex.sync_ticks()}
-    broadcast(state.topic, Packets.ControlNpc.bytes([Pet.control_view(field_pet)]))
-
-    {:reply, {:ok, object_id}, put_in(state, [:pets, object_id], field_pet)}
+    {field_pet, state} = register_pet(pet_attrs, state)
+    {:reply, {:ok, field_pet}, state}
   end
 
   def handle_call({:remove_pet, owner_character_id}, _from, state) do

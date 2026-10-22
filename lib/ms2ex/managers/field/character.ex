@@ -1,5 +1,6 @@
 defmodule Ms2ex.Managers.Field.Character do
   alias Ms2ex.Enums
+  alias Ms2ex.Managers.Field.Pet
   alias Ms2ex.Packets
   alias Ms2ex.Context
   alias Ms2ex.Managers
@@ -173,13 +174,25 @@ defmodule Ms2ex.Managers.Field.Character do
   end
 
   defp load_pets(character, state) do
+    # other characters' summoned pets serialize like npcs
     for {_id, pet} <- state.pets do
       push(character, Packets.FieldAddPet.add_pet(pet))
       push(character, Packets.ProxyGameObj.load_pet(pet))
     end
 
-    # a summoned pet follows its owner across field transitions
-    Managers.Pet.field_entered(character)
+    # the joiner's own summoned pet follows across field transitions:
+    # look it up on the character manager and register it here directly
+    # (the broadcasts reach the joiner, who is already subscribed)
+    case Managers.Character.call(character.id, :pet_summoned) do
+      nil ->
+        state
+
+      pet_state ->
+        {_field_pet, state} =
+          Managers.Field.register_pet(Pet.spawn_attrs(pet_state, character), state)
+
+        state
+    end
   end
 
   def remove_character(character, state) do

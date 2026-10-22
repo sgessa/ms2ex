@@ -99,6 +99,7 @@ defmodule Ms2ex.Schema.Character do
     field :title_id, :integer, default: 0
 
     # Virtuals
+    field :pet, :map, virtual: true
     field :badges, {:array, :map}, virtual: true, default: []
     field :clubs, {:array, :map}, virtual: true, default: []
     field :trophies, {:array, :integer}, virtual: true, default: [0, 0, 0]

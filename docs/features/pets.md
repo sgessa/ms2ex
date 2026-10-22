@@ -184,12 +184,16 @@ changes push the new skin to the live pet.
 
 ## Server placement (ms2ex)
 
-- `Ms2ex.Managers.Pet` — session-scoped manager owning the summoned pet:
-  bag `ItemCollection`, potion/loot config, collection unlock; persists
-  through a context; started on summon, stopped on despawn.
-- `Ms2ex.Managers.Field` — field-pet actor registration (spawn/despawn/
-  serialization of the field packets), wild spawn roll in the mob spawn
-  cycle (TODO already at `managers/field/npc.ex`).
+- `Ms2ex.Managers.Character.Pet` — the summoned-pet state on the
+  character (volatile virtual field `character.pet`: the item out, its
+  config, its metadata): summon/un_summon/rename/config decisions and
+  collection unlocks. The Character manager never calls the field; the
+  request handlers orchestrate char-mgr state and field registration.
+- `Ms2ex.Managers.Field` + `Ms2ex.Managers.Field.Pet` — the field pet
+  actor: registration (`register_pet`, shared by the add-pet call and the
+  character-add path), serialization to joiners, the control stream and
+  the follow/roam movement. Wild spawn roll in the mob spawn cycle is
+  still open (TODO at `managers/field/npc.ex`).
 - `Ms2ex.GameHandlers.Pet` / `PetInventory` — recv handlers + `Spec`
   layouts for `REQUEST_PET` / `REQUEST_PET_INVENTORY`.
 - `Ms2ex.Schema.Item` — pet struct (name, exp, level, evolve points,
@@ -201,13 +205,13 @@ changes push the new skin to the live pet.
    table, constants~~ — done.
 2. ~~Item schema + inventory serialization of the pet block~~ — done.
 3. ~~Summon/despawn flow: handlers, pet manager, field packets, collection~~ —
-   done. `Ms2ex.Managers.Pet` (named `:pets:<character id>`) owns the
-   summoned pet from `REQUEST_PET` summon/un_summon/switch/rename/config
-   commands; the field registers the actor (`state.pets`), serializes it to
-   joiners, and broadcasts its removal when the owner leaves. The pet
-   re-anchors across map changes through an async cast from the field's
-   character-add path (the field process must never wait on the pet
-   manager, which calls back into it). Collection unlocks persist on
+   done. The summoned pet's state lives on the Character manager
+   (`character.pet`, no dedicated process); `REQUEST_PET` handlers
+   orchestrate char-mgr state and field registration. The field registers
+   the actor (`state.pets`), serializes it to joiners, and broadcasts its
+   removal when the owner leaves; a map change re-registers inline in the
+   character-add path (no async dance — the field asks the character
+   manager and registers directly). Collection unlocks persist on
    `characters.pet_collection` (pet id -> rarity, only rarity increases
    update it) and load at login. Config (potion thresholds, loot filter)
    is held in memory only — no persistence yet.

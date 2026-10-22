@@ -50,6 +50,27 @@ defmodule Ms2ex.Managers.Field.Pet do
 
   # -- control stream ------------------------------------------------------------
 
+  @doc """
+  The field-registration attributes for a character's summoned pet: the
+  npc actor resolved from the pet metadata, anchored on the owner.
+  """
+  def spawn_attrs(%{item: item, pet: metadata}, character) do
+    npc_metadata = Storage.Npcs.get_meta(metadata.npc_id)
+
+    [
+      item: item,
+      npc: Types.Npc.new(%{id: metadata.npc_id, metadata: npc_metadata}),
+      pet: metadata,
+      owner_character_id: character.id,
+      owner_object_id: character.object_id,
+      position: character.position,
+      rotation: character.rotation,
+      map_id: character.map_id,
+      # TODO badge pet-skin override
+      skin_id: metadata.npc_id
+    ]
+  end
+
   def tick(state) do
     now = Ms2ex.sync_ticks()
 

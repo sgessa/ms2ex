@@ -23,7 +23,6 @@ defmodule Ms2ex.GameHandlers.Helper.Session do
 
   def cleanup(character) do
     character = %{character | online?: false}
-    Managers.Pet.stop(character)
     Managers.Inventory.stop(character)
     Managers.Fishing.stop(character)
     Managers.Mastery.stop(character)
