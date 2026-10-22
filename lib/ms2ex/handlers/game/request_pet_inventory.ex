@@ -64,17 +64,21 @@ defmodule Ms2ex.GameHandlers.RequestPetInventory do
     pet = Managers.Character.pet_summoned(character.id)
 
     if pet do
-      case Managers.Inventory.pet_bag_move(character.id, pet.item.id, item_uid, dst_slot) do
-        {:ok, %{src: src, src_slot: src_slot, dst: dst}} ->
-          dst_uid = if dst, do: dst.id, else: 0
-          push(character, Packets.PetInventory.move(dst_uid, src_slot, src.id, dst_slot))
+      move_bag_stack(character, pet, item_uid, dst_slot)
+    end
+  end
 
-        {:error, _reason} ->
-          push(
-            character,
-            Packets.Notice.message_box(Enums.StringCode.get_value(:s_item_err_Invalid_slot))
-          )
-      end
+  defp move_bag_stack(character, pet, item_uid, dst_slot) do
+    case Managers.Inventory.pet_bag_move(character.id, pet.item.id, item_uid, dst_slot) do
+      {:ok, %{src: src, src_slot: src_slot, dst: dst}} ->
+        dst_uid = if dst, do: dst.id, else: 0
+        push(character, Packets.PetInventory.move(dst_uid, src_slot, src.id, dst_slot))
+
+      {:error, _reason} ->
+        push(
+          character,
+          Packets.Notice.message_box(Enums.StringCode.get_value(:s_item_err_Invalid_slot))
+        )
     end
   end
 
