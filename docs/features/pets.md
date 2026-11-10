@@ -205,42 +205,26 @@ changes push the new skin to the live pet.
 - `Ms2ex.Schema.Item` — pet struct (name, exp, level, evolve points,
   rename remaining, config, bag) + persistence.
 
-## Tutorial quest line (chapter 9081)
+## Quest integration
 
-The pet taming tutorial is a six-quest `world_quest` chapter
-(90000790–90000795, `quest_chapter:<chapter id>` docs) that exercises the
-whole taming flow. Verified end to end on the live client.
+The taming flow is exercised by a tutorial quest chapter (`quest_chapter`
+docs). System behaviors the quest layer relies on:
 
-- **90000790** — no conditions; introduces the NPC.
-- **90000791** — `item_exist` 30000882 (pacified slime quest item); its
-  completion grants 100 taming candies (63000000).
-- **90000792** "Taming on an empty stomach" — `pet_taming` condition on
-  npc 61000002 (hungry slime): the objective completes when the taming
-  gauge fills (the wild pet fires the `pet_taming` condition event on the
-  fill, no capture needed). Completion grants the snare-crafting
-  materials.
-- **90000793** — `item_exist` 5× 63100000 (snares): the player crafts 5
-  snares via life skills from the previous quest's materials, then turns
-  them in. The turn-in **consumes** the crafted snares (item_exist
-  conditions double as turn-in consumables, see `quest_consumables/1`)
-  and the completion reward grants 5 fresh snares.
-- **90000794** — `pet_taming` + `item_exist` 61000002: capture the slime
-  with a snare; the capture grants the pet item. Completion rewards the
-  pet itself.
-- **90000795** — `pet_enchant` condition; rewards 5× 63100102 (higher-rank
-  snares). `pet_enchant` is unimplemented.
-
-Delivery-order note (bit us once): quest turn-ins that both consume and
-grant items must push the removal packets **before** the reward add
-packets — the reward stacks usually land in the slots the consumed
-stacks just freed, and a client that receives an add for a
-still-occupied slot drops it (items appear only after the next login).
-`Managers.Quest.handle_completion_result` pushes consumes first for this
-reason. The reward-preview in the accept dialog shows the *completion*
-rewards, which can mislead players into expecting items at accept time.
-
-The maple guide gates on the whole chapter being completed
-(`quest_chapter` docs), not the first quest alone.
+- The wild pet fires the `pet_taming` condition event when the taming
+  gauge fills (not on capture), so pacify-style objectives complete
+  without a snare.
+- `item_exist` conditions double as turn-in consumables
+  (`Managers.Quest.quest_consumables/1`): the stacks the quest asked for
+  are removed at turn-in, and the completion reward can grant fresh ones
+  (the tutorial's snare craft/turn-in cycle works this way).
+- Turn-ins that both consume and grant items must push removal packets
+  **before** the reward add packets — the reward stacks usually land in
+  the slots the consumed stacks just freed, and a client that receives an
+  add for a still-occupied slot drops it (items appear only after the
+  next login). `Managers.Quest.handle_completion_result` orders pushes
+  accordingly.
+- The maple guide gates on the whole chapter being completed, not the
+  first quest alone.
 
 ## Staging
 
