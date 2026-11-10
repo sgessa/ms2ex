@@ -1,4 +1,6 @@
 defmodule Ms2ex.Packets.InventoryItem do
+  @behaviour Ms2ex.Packets.Spec
+
   alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
@@ -19,6 +21,48 @@ defmodule Ms2ex.Packets.InventoryItem do
     load_tab: 0xE,
     reset_tab: 0xD
   }
+
+  @impl true
+  def commands, do: @modes
+
+  # layouts for commands whose payload is plain PacketReader fields
+  @specs %{
+    0x1 => [item_uid: :long],
+    0x2 => [item_uid: :long, amount: :int],
+    0x3 => [dst_uid: :long, src_slot: :short, src_uid: :long, dst_slot: :short],
+    0x8 => [item_uid: :long, amount: :int, _equip_slot: :ustring],
+    0xC => [],
+    0xD => [tab: {:int, &Enums.InventoryTab.get_key/1}],
+    0xE => [tab: {:byte, &Enums.InventoryTab.get_key/1}, extra_slots: :int],
+    0xF => [error: :int]
+  }
+
+  @impl true
+  def spec(command) do
+    case command do
+      0x0 ->
+        [
+          item_id: :int,
+          item_uid: :long,
+          slot: :short,
+          rarity: :int,
+          _equip_slot: :ustring,
+          # the serialized item body follows the login-load layout; consumed
+          # whole so `rest` proves the wrapper fields parsed exactly
+          _item: fn packet -> {byte_size(packet), <<>>} end
+        ]
+
+      0xA ->
+        [
+          tab: {:int, &Enums.InventoryTab.get_key/1},
+          count: :short,
+          _items: fn packet -> {byte_size(packet), <<>>} end
+        ]
+
+      simple ->
+        Map.get(@specs, simple, [])
+    end
+  end
 
   def add_item({:create, item}, character) do
     __MODULE__
