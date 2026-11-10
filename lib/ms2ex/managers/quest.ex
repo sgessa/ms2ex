@@ -134,6 +134,14 @@ defmodule Ms2ex.Managers.Quest do
   end
 
   @doc """
+  Whether any started quest's completion conditions require the item in
+  the character's possession (the pet tutorial's pacified-slime objective).
+  """
+  def needs_item?(character_id, item_id) do
+    GenServer.call(process_name(character_id), {:needs_item, item_id})
+  end
+
+  @doc """
   Moves the character to a Maple Guide's destination map when the guide's
   start requirements are met (the guide book UI's "start" action).
   """
@@ -256,6 +264,15 @@ defmodule Ms2ex.Managers.Quest do
   #
 
   @impl true
+  def handle_call({:needs_item, item_id}, _from, state) do
+    found =
+      Enum.any?(state.character_quests, fn {_quest_id, quest} ->
+        quest.state == :started and started_quest_needs_item?(quest, item_id)
+      end)
+
+    {:reply, found, state}
+  end
+
   def handle_call(:get_all_quests, _from, state) do
     {:reply, {state.account_quests, state.character_quests}, state}
   end
@@ -413,6 +430,19 @@ defmodule Ms2ex.Managers.Quest do
     end)
 
     {:reply, :ok, state}
+  end
+
+  defp started_quest_needs_item?(quest, item_id) do
+    case Storage.Quests.get_meta(quest.quest_id) do
+      %{conditions: conds} when is_list(conds) ->
+        Enum.any?(conds, fn condition ->
+          condition[:type] == :item_exist and
+            item_id in ((condition[:codes] && condition[:codes][:integers]) || [])
+        end)
+
+      _ ->
+        false
+    end
   end
 
   # Helper functions for quest operations
