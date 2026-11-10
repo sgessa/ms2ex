@@ -942,9 +942,12 @@ defmodule Ms2ex.Managers.Field do
       {:ready, became_ready, state} ->
         pet = Map.get(state.pets, object_id)
 
-        # the pet-tutorial objective: a fully-fed "hungry slime" pacifies
-        # into its quest item when the tamer's active quest asks for it
-        if became_ready and Managers.Quest.needs_item?(tamer.id, @pacified_slime_item_id) do
+        needs_item? =
+          became_ready and Managers.Quest.needs_item?(tamer.id, @pacified_slime_item_id)
+
+        Logger.debug("pet pacified: needs_item=#{needs_item?}")
+
+        if needs_item? do
           state = remove_captured_pet(state, pet)
           grant_pacified_item(tamer)
           {:reply, {:pacified, nil}, state}
