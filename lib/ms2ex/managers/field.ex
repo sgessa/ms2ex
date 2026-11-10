@@ -409,9 +409,6 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  # the pet-tutorial "hungry slime" pacifies into this quest item
-  @pacified_slime_item_id 30_000_882
-
   @doc "Removes the character's summoned pet from their current field."
   @spec despawn_pet(Schema.Character.t()) :: :ok | :error
   def despawn_pet(%Schema.Character{field_pid: nil}), do: :error
@@ -919,20 +916,13 @@ defmodule Ms2ex.Managers.Field do
       {:ready, became_ready, state} ->
         pet = Map.get(state.pets, object_id)
 
-        # the pet-tutorial objective: a fully-fed "hungry slime" pacifies
-        # into its quest item when the tamer's active quest asks for it
-        Logger.debug(
-          "tame ready: object=#{object_id} became_ready=#{became_ready} " <>
-            "needs_item=#{Managers.Quest.needs_item?(tamer.id, @pacified_slime_item_id)}"
-        )
-
-        if became_ready and Managers.Quest.needs_item?(tamer.id, @pacified_slime_item_id) do
-          state = remove_captured_pet(state, pet)
-          grant_pacified_item(tamer)
-          {:reply, {:pacified, nil}, state}
-        else
-          {:reply, {:hit, pet.taming_points}, state}
+        # the pet-tutorial objective "pacify a hungry slime" tracks the
+        # pet_taming condition on the pet's npc id
+        if became_ready do
+          Managers.Quest.update_conditions(tamer.id, :pet_taming, 1, "", 0, "", pet.pet.npc_id)
         end
+
+        {:reply, {:hit, pet.taming_points}, state}
 
       {other, state} ->
         {:reply, other, state}
@@ -1406,30 +1396,6 @@ defmodule Ms2ex.Managers.Field do
     else
       if is_reference(state.dispose_timer), do: Process.cancel_timer(state.dispose_timer)
       %{state | dispose_timer: nil}
-    end
-  end
-
-  # the pacified wild pet transforms into the quest item the tutorial
-  # objective tracks; notify_item_acquired completes the objective
-  defp grant_pacified_item(%Schema.Character{} = tamer) do
-    item = Context.Items.init(@pacified_slime_item_id, %{amount: 1, rarity: 1})
-
-    case Managers.Inventory.add_item(tamer, item) do
-      {:ok, {:create, item}} ->
-        broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
-        Managers.Quest.notify_item_acquired(tamer, item)
-
-      {:ok, {:update, item}} ->
-        broadcast(tamer, Packets.InventoryItem.update_item(item.id, item.amount))
-        Managers.Quest.notify_item_acquired(tamer, item)
-
-      {:ok, {:update_and_create, {updated, _amount}, created}} ->
-        broadcast(tamer, Packets.InventoryItem.update_item(updated.id, updated.amount))
-        broadcast(tamer, Packets.InventoryItem.add_item({:create, created}, tamer))
-        Managers.Quest.notify_item_acquired(tamer, created)
-
-      _ ->
-        :ok
     end
   end
 end

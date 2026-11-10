@@ -55,6 +55,7 @@ defmodule Ms2ex.Managers.Quest.Conditions do
     :music_play_instrument_time,
     :music_play_score,
     :npc,
+    :pet_taming,
     :quest,
     :quest_accept,
     :quest_clear,
