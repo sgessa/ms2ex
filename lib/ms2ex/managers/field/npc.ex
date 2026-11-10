@@ -1,5 +1,6 @@
 defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Context
+  require Logger
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Navigation
@@ -482,11 +483,16 @@ defmodule Ms2ex.Managers.Field.Npc do
 
     Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
       npc_id = pick_mob_id(spawn)
+      pet_id = Storage.Pets.pet_id_for_npc(npc_id)
+
+      Logger.debug(
+        "spawn cycle #{spawn.spawn_point_id}: npc=#{npc_id} pet_npc=#{inspect(pet_id)} roll=#{wild_pet_roll?(spawn, npc_id)}"
+      )
 
       cond do
         # pet tutorial maps stage the tameable pet as a plain npc spawn
-        Storage.Pets.pet_id_for_npc(npc_id) != nil ->
-          spawn_wild_pet(spawn, state, Storage.Pets.pet_id_for_npc(npc_id))
+        pet_id != nil ->
+          spawn_wild_pet(spawn, state, pet_id)
 
         wild_pet_roll?(spawn, npc_id) ->
           spawn_wild_pet(spawn, state, pet_id_for(spawn, npc_id))
@@ -497,8 +503,10 @@ defmodule Ms2ex.Managers.Field.Npc do
     end)
   end
 
-  defp spawn_wild_pet(spawn, state, npc_id) do
-    case Pet.spawn_wild(state, pet_id_for(spawn, npc_id), npc_id, spawn.position) do
+  defp spawn_wild_pet(spawn, state, pet_id) do
+    Logger.debug("spawning wild pet #{pet_id} at spawn #{spawn.spawn_point_id}")
+
+    case Pet.spawn_wild(state, pet_id, pet_id, spawn.position) do
       {:ok, field_pet, state} ->
         spawned = spawn.spawned_pets ++ [field_pet.object_id]
         {%{spawn | spawned_pets: spawned}, state}
