@@ -480,9 +480,9 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     state
   end
 
-  def apply_splash(splash_cast, _source_id, state) do
+  def apply_splash(splash_cast, source_id, state) do
     state = hit_mobs_in_range(splash_cast, state)
-    apply_pet_taming(splash_cast, state)
+    apply_pet_taming(splash_cast, source_id, state)
   end
 
   defp hit_mobs_in_range(splash_cast, state) do
@@ -502,32 +502,62 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   # window. Taming-point splashes (the candies) are not applied here: the
   # client reports the pet as a direct hit and the candy path already
   # counts those — a region application would double-count
-  defp apply_pet_taming(splash_cast, state) do
+  defp apply_pet_taming(splash_cast, source_id, state) do
     if trap_splash?(splash_cast) do
-      capture_pets_in_range(splash_cast, state)
+      capture_pets_in_range(splash_cast, source_id, state)
     else
       state
     end
   end
 
-  defp capture_pets_in_range(splash_cast, state) do
+  defp capture_pets_in_range(splash_cast, source_id, state) do
     pet_ids =
       state.pets
       |> Enum.filter(fn {_id, pet} ->
-        pet.owner_character_id == nil and not pet.dead? and in_splash_range?(pet, splash_cast)
+        pet.owner_character_id == nil and not pet.dead? and pet_in_trap_range?(pet, splash_cast)
       end)
       |> Enum.map(fn {_id, pet} -> pet.object_id end)
 
-    Enum.reduce(pet_ids, state, &capture_pet(splash_cast, &2, &1))
+    {state, captured?} =
+      Enum.reduce(pet_ids, {state, false}, fn object_id, {state, captured?} ->
+        case Pet.apply_snare_hit(state, object_id, splash_cast.caster.object_id) do
+          {{:captured, captured_pet}, state} ->
+            state = Managers.Field.complete_capture(state, captured_pet, splash_cast.caster)
+            {state, true}
+
+          {_reply, state} ->
+            {state, captured?}
+        end
+      end)
+
+    # the trap visual despawns with the capture, not at the end of the
+    # armed window
+    if captured?, do: remove_region(source_id, state), else: state
   end
 
-  defp capture_pet(splash_cast, state, object_id) do
-    case Pet.apply_snare_hit(state, object_id, splash_cast.caster.object_id) do
-      {{:captured, captured_pet}, state} ->
-        Managers.Field.complete_capture(state, captured_pet, splash_cast.caster)
+  defp remove_region(source_id, state) do
+    Managers.Field.broadcast(state.topic, Packets.RegionSkill.remove(source_id))
+    %{state | regions: Map.delete(state.regions, source_id)}
+  end
 
-      {_reply, state} ->
-        state
+  # the trap's capture radius comes from the skill's own range (150 units
+  # for the snare), not the blanket splash scan radius
+  defp pet_in_trap_range?(pet, splash_cast) do
+    radius = trap_radius(splash_cast)
+
+    case {pet.position, splash_cast.position} do
+      {%{x: x1, y: y1}, %{x: x2, y: y2}} ->
+        (x1 - x2) ** 2 + (y1 - y2) ** 2 <= radius ** 2
+
+      _ ->
+        false
+    end
+  end
+
+  defp trap_radius(splash_cast) do
+    case Types.SkillCast.attack_point(splash_cast) do
+      %{range: %{distance: distance}} when is_number(distance) and distance > 0 -> distance
+      _ -> @splash_radius
     end
   end
 
