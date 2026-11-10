@@ -911,17 +911,10 @@ defmodule Ms2ex.Managers.Field do
      end, state}
   end
 
-  def handle_call({:tame_pet, object_id, caster_object_id, points, tamer}, _from, state) do
+  def handle_call({:tame_pet, object_id, caster_object_id, points, _tamer}, _from, state) do
     case Pet.apply_taming_hit(state, object_id, caster_object_id, points, Ms2ex.sync_ticks()) do
-      {:ready, became_ready, state} ->
+      {:ready, _became_ready, state} ->
         pet = Map.get(state.pets, object_id)
-
-        # the pet-tutorial objective "pacify a hungry slime" tracks the
-        # pet_taming condition on the pet's npc id
-        if became_ready do
-          Managers.Quest.update_conditions(tamer.id, :pet_taming, 1, "", 0, "", pet.pet.npc_id)
-        end
-
         {:reply, {:hit, pet.taming_points}, state}
 
       {other, state} ->
@@ -932,6 +925,17 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:snare_pet, object_id, caster_object_id, tamer}, _from, state) do
     case Pet.apply_snare_hit(state, object_id, caster_object_id) do
       {{:captured, field_pet}, state} ->
+        # "tame a <pet>" objectives track the capture, not the gauge
+        Managers.Quest.update_conditions(
+          tamer.id,
+          :pet_taming,
+          1,
+          "",
+          0,
+          "",
+          field_pet.pet[:npc_id]
+        )
+
         state = remove_captured_pet(state, field_pet)
         grant_capture_reward(tamer, field_pet)
         {:reply, {:captured, field_pet}, state}
