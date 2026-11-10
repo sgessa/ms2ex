@@ -9,6 +9,22 @@ defmodule Ms2ex.Storage.Quests do
 
   def get_meta(_quest_id), do: nil
 
+  # the quest ids of a quest line (same chapter id), ordered; [] when the
+  # quest has no chapter or the chapter doc is missing
+  @spec line_quest_ids(integer()) :: [integer()]
+  def line_quest_ids(quest_id) do
+    case get_meta(quest_id) do
+      %{basic: %{chapter_id: chapter}} when is_integer(chapter) and chapter > 0 ->
+        case Storage.get(:quest_chapter, chapter) do
+          %{quest_ids: ids} when is_list(ids) -> ids
+          _ -> []
+        end
+
+      _ ->
+        []
+    end
+  end
+
   @spec get_all() :: [map()]
   def get_all() do
     index_ids()
