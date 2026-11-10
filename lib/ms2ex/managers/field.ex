@@ -385,19 +385,15 @@ defmodule Ms2ex.Managers.Field do
     pet_id = field_pet.pet[:id]
     rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
 
-    pet_state = %Types.ItemPet{name: field_pet.pet[:name] || ""}
+    item =
+      Context.Items.init(pet_id, %{
+        rarity: rarity,
+        amount: 1,
+        transfer_flags: [:split, :trade],
+        data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
+      })
 
-    attrs = %Schema.Item{
-      item_id: pet_id,
-      amount: 1,
-      rarity: rarity,
-      inventory_tab: :pets,
-      location: :inventory,
-      metadata: Storage.Items.get_meta(pet_id),
-      data: %{pet: Map.from_struct(pet_state)}
-    }
-
-    case Managers.Inventory.add_item(tamer, attrs) do
+    case Managers.Inventory.add_item(tamer, item) do
       {:ok, {:create, item}} ->
         broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
 
