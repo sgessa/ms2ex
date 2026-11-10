@@ -407,7 +407,9 @@ defmodule Ms2ex.GameHandlers.Skill do
     consumable_cast_item? =
       fishing_lure_item?(cast_item) or consumable_state_item?(cast_item)
 
-    if Types.SkillCast.use_item?(skill_cast) do
+    # pet-taming items (the candies) carry no use_item consume flag on
+    # their cast skill: throwing one consumes the item itself
+    if Types.SkillCast.use_item?(skill_cast) or taming_points_for(skill_cast) > 0 do
       consume_used_item(session, character, item_uid)
     end
 
