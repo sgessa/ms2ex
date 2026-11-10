@@ -17,13 +17,17 @@ defmodule Ms2ex.Packets.FieldAddPet do
     |> put_float(field_pet.scale)
     |> put_int(field_pet.owner_object_id)
     |> put_npc_stats(field_pet)
-    |> put_long(field_pet.item.id)
+    |> put_long(item_uid(field_pet))
     |> put_byte()
     |> put_short(npc.metadata.basic.level)
     |> put_short(field_pet.taming_rank)
     |> put_int()
     |> put_ustring(Types.FieldPet.name(field_pet))
   end
+
+  # summoned pets serialize their item row uid; wild pets carry none (0)
+  defp item_uid(%{item: %{id: id}}) when is_integer(id), do: id
+  defp item_uid(_field_pet), do: 0
 
   def remove_pet(object_id) do
     __MODULE__

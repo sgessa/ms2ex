@@ -19,6 +19,12 @@ defmodule Ms2ex.Managers.Field.Pet do
   alias Ms2ex.Storage
   alias Ms2ex.Types
 
+  # taming: points come from taming-skill hits (pet_taming.taming_point,
+  # e.g. the taming candy's 1000) and decay 100/s after a 1s hold; capture
+  # happens at the taming_pet_max_point constant (10000)
+  @taming_decay_ms 1_000
+  @taming_decay_points 100
+
   # controls go out on change only; a fixed fast cadence makes the client
   # re-apply the sequence and flap between walk and idle
   #
@@ -68,7 +74,7 @@ defmodule Ms2ex.Managers.Field.Pet do
         state
 
       pets ->
-        {pets, views} = tick_pet_controls(pets, state, now)
+        {pets, views} = tick_pet_controls(decay_taming_points(pets, state, now), state, now)
         state = %{state | pets: pets}
 
         # single-entry controls: the client mishandles multi-entry batches
@@ -110,6 +116,42 @@ defmodule Ms2ex.Managers.Field.Pet do
       seq_counter: pet.seq_counter,
       dead?: false
     }
+  end
+
+  # -- wild pets -------------------------------------------------------------------
+
+  @doc """
+  Spawns a wild pet on field state: no owner, a taming rank roll, and no
+  battle AI (wild pets never damage players — they are the taming target).
+  State-in/state-out; broadcasts the add.
+  """
+  def spawn_wild(state, pet_id, npc_id, position) do
+    case Storage.Pets.get_meta(pet_id) do
+      %{} = metadata ->
+        npc_id = metadata.npc_id || npc_id
+
+        case Storage.Npcs.get_meta(npc_id) do
+          %{} = npc_metadata ->
+            pet_attrs = [
+              item: nil,
+              npc: Types.Npc.new(%{id: npc_id, metadata: npc_metadata}),
+              pet: metadata,
+              position: position,
+              rotation: struct(Types.Coord, %{}),
+              skin_id: npc_id,
+              taming_rank: :rand.uniform(100)
+            ]
+
+            {field_pet, state} = Field.register_pet(pet_attrs, state)
+            {:ok, field_pet, state}
+
+          nil ->
+            {:error, state}
+        end
+
+      nil ->
+        {:error, state}
+    end
   end
 
   # -- follow --------------------------------------------------------------------
@@ -255,6 +297,64 @@ defmodule Ms2ex.Managers.Field.Pet do
       last_move_at: now,
       no_route_since: nil
     }
+  end
+
+  # taming points decay 100/s a second after the last taming hit (the
+  # reference's decay cadence); each decay step re-announces the points so
+  # the client's pet window stays honest
+  defp decay_taming_points(pets, state, now) do
+    Map.new(pets, fn {object_id, %Types.FieldPet{} = pet} ->
+      if pet.taming_points > 0 and now - pet.last_tame_at >= @taming_decay_ms do
+        points = max(pet.taming_points - @taming_decay_points, 0)
+        pet = %{pet | taming_points: points, last_tame_at: now}
+
+        Field.broadcast(
+          state.topic,
+          Packets.SyncPetTamingPoint.bytes(pet, 0, points)
+        )
+
+        {object_id, pet}
+      else
+        {object_id, pet}
+      end
+    end)
+  end
+
+  defp taming_max_point do
+    case Storage.Tables.Constants.get(:taming_pet_max_point) do
+      n when is_integer(n) and n > 0 -> n
+      _ -> 10_000
+    end
+  end
+
+  @doc """
+  Applies a taming hit to a wild pet. Returns {result, state} where the
+  result is :hit or {:captured, field_pet} — the caller grants the capture
+  reward and removes the actor.
+  """
+  def apply_taming_hit(state, object_id, caster_object_id, points, now) do
+    case Map.get(state.pets, object_id) do
+      %Types.FieldPet{owner_character_id: nil} = pet ->
+        max_point = taming_max_point()
+        new_points = min(pet.taming_points + points, max_point)
+        pet = %{pet | taming_points: new_points, last_tame_at: now}
+
+        Field.broadcast(
+          state.topic,
+          Packets.SyncPetTamingPoint.bytes(pet, caster_object_id, new_points)
+        )
+
+        state = put_in(state, [:pets, object_id], pet)
+
+        if new_points >= max_point do
+          {{:captured, pet}, state}
+        else
+          {:hit, state}
+        end
+
+      _ ->
+        {:miss, state}
+    end
   end
 
   # -- shared helpers -----------------------------------------------------------

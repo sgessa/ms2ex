@@ -29,6 +29,7 @@ defmodule Ms2ex.Types.FieldPet do
     # wild pets roll 1..100 at spawn (green < 70, yellow < 95, red >= 95)
     taming_rank: 0,
     taming_points: 0,
+    last_tame_at: 0,
     scale: 1.0,
     # npc-control bookkeeping: pets ride the same control keepalive as npcs
     # (the client spawns and animates the model from the control stream),
@@ -56,10 +57,13 @@ defmodule Ms2ex.Types.FieldPet do
     }
   end
 
-  @doc "The pet's display name, falling back to empty until renamed."
-  def name(%__MODULE__{item: item}) do
+  @doc "The pet's display name, falling back to the metadata name for wild pets."
+  def name(%__MODULE__{item: item}) when is_map(item) do
     Types.ItemPet.get(item).name
   end
+
+  def name(%__MODULE__{pet: pet}), do: pet[:name] || ""
+  def name(_field_pet), do: ""
 
   defp to_coord(%Types.Coord{} = coord), do: coord
   defp to_coord(map) when is_map(map), do: struct(Types.Coord, map)

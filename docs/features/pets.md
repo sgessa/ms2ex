@@ -216,7 +216,19 @@ changes push the new skin to the live pet.
    update it) and load at login. Config (potion thresholds, loot filter)
    is held in memory only — no persistence yet.
 4. Pet bag: pet inventory handlers + persistence. (~2–3 h)
-5. Wild pets & taming: spawn rolls, taming damage, capture drop. (~4 h)
+5. ~~Wild pets & taming: spawn rolls, taming hits, capture~~ — mostly done.
+   Mob spawn rolls turn the rolled npc into a wild pet when the spawn's
+   pet_ids has an entry (pet_spawn_rate per-10k roll, pet_population cap);
+   wild pets spawn with a taming rank, never damage players, and their
+   points decay 100/s a second after the last hit. Taming-skill hits
+   (skills carrying the pet_taming attack property, e.g. the taming
+   candies 63000000 -> skill 94000001/2, 1000 points; forced-trap candy
+   94000006, 9000 points + forced) sync SYNC_PET_TAMING_POINT and capture
+   at taming_pet_max_point (10000): the wild pet despawns and the tamer
+   receives the pet item at rank/25+1 rarity. Still open: trap items
+   (93xxxxxx trap_level vs rank gates), pet-taming mastery
+   (MasteryType.PetTaming), and wild-pet trace behavior (wild pets stand
+   for now; the reference AI traces its taming target).
 6. ~~Pet movement~~ — done. The pet follows its owner through
    `Managers.Field.Npc.Battle.follow/5`, per the pet AI script
    (`AI/Pet/AI_DefaultPetTaming.xml` preset `default`, inspectable with the

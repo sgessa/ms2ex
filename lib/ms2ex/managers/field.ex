@@ -362,6 +362,57 @@ defmodule Ms2ex.Managers.Field do
     call(field_pid, {:add_pet, Pet.spawn_attrs(character.pet, character)})
   end
 
+  # the capture removes the actor and frees its spawn slot so the wild
+  # pet population can respawn
+  defp remove_captured_pet(state, field_pet) do
+    broadcast(state.topic, Packets.FieldRemovePet.remove_pet(field_pet.object_id))
+    broadcast(state.topic, Packets.ProxyGameObj.remove_pet(field_pet.object_id))
+
+    npc_spawns =
+      Map.new(state[:npc_spawns] || %{}, fn {spawn_id, spawn} ->
+        spawned = List.delete(spawn[:spawned_pets] || [], field_pet.object_id)
+        {spawn_id, Map.put(spawn, :spawned_pets, spawned)}
+      end)
+
+    %{state | npc_spawns: npc_spawns}
+
+    %{state | pets: Map.delete(state.pets, field_pet.object_id)}
+  end
+
+  # a captured pet becomes a pet item for the tamer at its rank's rarity
+  # (rank 1..100 -> rarity rank/25 + 1, capped at artifact-line rarities)
+  defp grant_capture_reward(%Schema.Character{} = tamer, field_pet) do
+    pet_id = field_pet.pet[:id]
+    rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
+
+    pet_state = %Types.ItemPet{name: field_pet.pet[:name] || ""}
+
+    attrs = %Schema.Item{
+      item_id: pet_id,
+      amount: 1,
+      rarity: rarity,
+      inventory_tab: :pets,
+      location: :inventory,
+      metadata: Storage.Items.get_meta(pet_id),
+      data: %{pet: Map.from_struct(pet_state)}
+    }
+
+    case Managers.Inventory.add_item(tamer, attrs) do
+      {:ok, {:create, item}} ->
+        broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
+
+      {:ok, {:update, item}} ->
+        broadcast(tamer, Packets.InventoryItem.update_item(item.id, item.amount))
+
+      {:ok, {:update_and_create, {updated, _amount}, created}} ->
+        broadcast(tamer, Packets.InventoryItem.update_item(updated.id, updated.amount))
+        broadcast(tamer, Packets.InventoryItem.add_item({:create, created}, tamer))
+
+      _ ->
+        :ok
+    end
+  end
+
   @doc "Removes the character's summoned pet from their current field."
   @spec despawn_pet(Schema.Character.t()) :: :ok | :error
   def despawn_pet(%Schema.Character{field_pid: nil}), do: :error
@@ -396,6 +447,19 @@ defmodule Ms2ex.Managers.Field do
   @spec lookup_npc(Schema.Character.t(), integer()) :: {:ok, Types.FieldNpc.t()} | :error
   def lookup_npc(%Schema.Character{} = character, object_id) do
     call(character.field_pid, {:lookup_npc, object_id})
+  end
+
+  @doc "Looks up a wild or summoned pet by object id in the character's field."
+  @spec lookup_pet(Schema.Character.t(), integer()) :: {:ok, Types.FieldPet.t()} | :error
+  def lookup_pet(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:lookup_pet, object_id})
+  end
+
+  @doc "Applies a taming hit to a wild pet; captures it at the taming cap."
+  @spec tame_pet(Schema.Character.t(), integer(), integer(), integer()) ::
+          {:hit, integer()} | {:captured, Types.FieldPet.t()} | {:miss, :no_pet}
+  def tame_pet(%Schema.Character{} = character, object_id, caster_object_id, points) do
+    call(character.field_pid, {:tame_pet, object_id, caster_object_id, points, character})
   end
 
   @doc """
@@ -833,6 +897,30 @@ defmodule Ms2ex.Managers.Field do
 
       nil ->
         {:reply, :error, state}
+    end
+  end
+
+  def handle_call({:lookup_pet, object_id}, _from, state) do
+    {:reply,
+     case Map.get(state.pets, object_id) do
+       %Types.FieldPet{} = pet -> {:ok, pet}
+       nil -> :error
+     end, state}
+  end
+
+  def handle_call({:tame_pet, object_id, caster_object_id, points, tamer}, _from, state) do
+    case Pet.apply_taming_hit(state, object_id, caster_object_id, points, Ms2ex.sync_ticks()) do
+      {:hit, state} ->
+        pet = Map.get(state.pets, object_id)
+        {:reply, {:hit, pet.taming_points}, state}
+
+      {{:captured, field_pet}, state} ->
+        state = remove_captured_pet(state, field_pet)
+        grant_capture_reward(tamer, field_pet)
+        {:reply, {:captured, field_pet}, state}
+
+      {other, state} ->
+        {:reply, other, state}
     end
   end
 

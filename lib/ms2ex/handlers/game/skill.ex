@@ -310,9 +310,32 @@ defmodule Ms2ex.GameHandlers.Skill do
           [damage_mob(skill_cast, mob, crit?)]
 
         _ ->
-          []
+          taming_or_nothing(skill_cast, obj_id)
       end
     end)
+  end
+
+  # a wild pet hit by a pet-taming attack gains taming points; any other
+  # skill does nothing to pets
+  defp taming_or_nothing(skill_cast, obj_id) do
+    case Managers.Field.lookup_pet(skill_cast.caster, obj_id) do
+      {:ok, %{owner_character_id: nil}} -> [tame_pet(skill_cast, obj_id)]
+      _ -> []
+    end
+  end
+
+  # the taming points come from the swing's attack pet-taming property
+  # (e.g. the taming candy's 1000 points per hit)
+  defp tame_pet(skill_cast, object_id) do
+    attack = Types.SkillCast.attack_point(skill_cast)
+
+    points =
+      case attack && attack[:pet_taming] do
+        %{taming_point: n} when is_integer(n) -> n
+        _ -> 0
+      end
+
+    Managers.Field.tame_pet(skill_cast.caster, object_id, skill_cast.caster.object_id, points)
   end
 
   defp read_target_ids(packet, count), do: read_target_ids(packet, count, [])
