@@ -253,10 +253,18 @@ docs). System behaviors the quest layer relies on:
    94000006, 9000 points + forced) sync SYNC_PET_TAMING_POINT and capture
    at taming_pet_max_point (10000): the wild pet despawns and the tamer
    receives the pet item at rank/25+1 rarity. Still open: trap items
-   (93xxxxxx trap_level vs rank gates), pet-taming mastery
-   (MasteryType.PetTaming), and wild-pet trace behavior (wild pets stand
-   for now; the reference AI traces its taming target).
-6. ~~Pet movement~~ — done. The pet follows its owner through
+   (93xxxxxx trap_level vs rank gates) and pet-taming mastery
+   (MasteryType.PetTaming).
+6. ~~Wild-pet behavior~~ — done. The wild AI cascades on the taming gauge
+   per the AI script's `reserved:` conditions: below 3000 points a
+   skittish wanderer (runaway hops dominate, with short approach legs and
+   stands, weighted by the distance bands to the nearest player); above
+   3000 mostly standing; above 8500 approaching but shying away inside the
+   400-unit band; at a full gauge it traces to the player and holds — the
+   snare posture. Movement rides the shared `Field.Npc.Movement` engine and
+   the pet control stream. The script ties no behavior to the taming hit
+   itself; fleeing emerges from the runaway weights while the gauge is low.
+7. ~~Pet movement~~ — done. The pet follows its owner through
    `Managers.Field.Npc.Battle.follow/5`, per the pet AI script
    (`AI/Pet/AI_DefaultPetTaming.xml` preset `default`, inspectable with the
    ingest's `--probe-ai`) plus the retail separation warp: navmesh chase in

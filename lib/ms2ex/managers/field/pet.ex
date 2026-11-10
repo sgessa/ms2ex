@@ -90,7 +90,12 @@ defmodule Ms2ex.Managers.Field.Pet do
   defp tick_pet_controls(pets, state, now) do
     {entries, views} =
       Enum.flat_map_reduce(pets, [], fn {object_id, pet}, views ->
-        {pet, _hits} = follow(pet, pet.owner_character_id, state, now)
+        {pet, _hits} =
+          if pet.owner_character_id do
+            follow(pet, pet.owner_character_id, state, now)
+          else
+            wild_ai(pet, state, now)
+          end
 
         if pet.send_control? do
           pet = %{pet | seq_counter: pet.seq_counter + 1, send_control?: false}
@@ -376,6 +381,233 @@ defmodule Ms2ex.Managers.Field.Pet do
         {:miss, state}
     end
   end
+
+  # -- wild pet AI ---------------------------------------------------------------
+  # AI_DefaultPetTaming's wild cascade: behavior presets key off the taming
+  # gauge. A low gauge is a skittish wanderer (runaway hops around the nearest
+  # player, occasional short approach legs); a fed pet calms to standing; a
+  # nearly-full gauge approaches but backs off inside the band; a full gauge
+  # traces to the player and holds — the "come here for the snare" posture.
+  # The script ties no behavior to the hit itself: the flee-ish feel comes
+  # from the runaway weights while the gauge is low.
+
+  # gauge thresholds: the script's extraData cascade values
+  @gauge_trace 9999
+  @gauge_skittish 8500
+  @gauge_calm 3000
+
+  # distance bands from the script's conditions
+  @approach_band 400
+  @close_band 300
+  @far_band 1000
+  @arrive_band 80
+  @runaway_length 450
+
+  # the script's node limits (100-2000ms), condensed
+  @idle_stand_ms 2000
+  @trace_leg_ms 300
+  @runaway_leg_ms 1200
+  @stand_min_ms 500
+  @stand_max_ms 1100
+
+  @doc """
+  One wild-pet AI step: picks the behavior preset from the taming gauge and
+  advances the current action (pathed walk legs and stands) through the
+  shared movement engine. State-in/state-out like `follow/4`.
+  """
+  def wild_ai(pet, state, now) do
+    ai = pet.wild_ai || %{action: nil}
+
+    case nearest_player(pet, state) do
+      nil ->
+        # nothing to react to: hold (the script's standbys face a target;
+        # without one the pet keeps its heading)
+        pet = Movement.stand(pet, battle(pet, now), pet.position, now)
+        {%{pet | wild_ai: %{action: nil}}, []}
+
+      target ->
+        {_character_id, _object_id, target_position} = target
+        mode = mode_for(pet.taming_points)
+        {ai, pet} = wild_step(mode, ai, pet, target_position, now)
+        {%{pet | wild_ai: ai}, []}
+    end
+  end
+
+  defp mode_for(points) when points >= @gauge_trace, do: :trace
+  defp mode_for(points) when points >= @gauge_skittish, do: :skittish
+  defp mode_for(points) when points >= @gauge_calm, do: :idle
+  defp mode_for(_points), do: :wander
+
+  # full gauge: approach and hold near the tamer
+  defp wild_step(:trace, ai, pet, target_position, now) do
+    if outside_band?(pet, target_position) do
+      {ai, approach(pet, target_position, now)}
+    else
+      {ai, Movement.stand(pet, battle(pet, now), target_position, now)}
+    end
+  end
+
+  # nearly full: approach outside the band; inside it, shy away in short legs
+  defp wild_step(:skittish, ai, pet, target_position, now) do
+    if outside_band?(pet, target_position) do
+      {ai, approach(pet, target_position, now)}
+    else
+      paced_step(:skittish, ai, pet, target_position, now)
+    end
+  end
+
+  defp wild_step(mode, ai, pet, target_position, now) do
+    paced_step(mode, ai, pet, target_position, now)
+  end
+
+  # actions with a duration: walk legs expire or arrive, stands expire; past
+  # that the mode's weighted table picks the next move
+  defp paced_step(mode, ai, pet, target_position, now) do
+    action =
+      case ai.action do
+        {:walk, goal, until} ->
+          if now < until and not arrived?(pet, goal) do
+            {:walk, goal, until}
+          else
+            decide_action(mode, pet, target_position, now)
+          end
+
+        {:stand, face, until} ->
+          if now < until do
+            {:stand, face, until}
+          else
+            decide_action(mode, pet, target_position, now)
+          end
+
+        nil ->
+          decide_action(mode, pet, target_position, now)
+      end
+
+    pet = apply_action(pet, action, now)
+    {%{ai | action: action}, pet}
+  end
+
+  # the script's select tables, condensed: {runaway, trace, standby} weights
+  defp weights(:skittish, _dist_sq), do: {70, 0, 30}
+
+  defp weights(:idle, _dist_sq), do: {0, 25, 75}
+
+  defp weights(:wander, dist_sq) do
+    cond do
+      dist_sq > square(@far_band) -> {0, 0, 100}
+      dist_sq < square(@close_band) -> {70, 20, 10}
+      true -> {60, 30, 10}
+    end
+  end
+
+  defp decide_action(mode, pet, target_position, now) do
+    {away, trace, stand} = weights(mode, square_distance(pet.position, target_position))
+    roll = :rand.uniform(max(away + trace + stand, 1))
+
+    cond do
+      roll <= away ->
+        {:walk, away_goal(pet, target_position), now + @runaway_leg_ms}
+
+      roll <= away + trace ->
+        {:walk, trace_goal(pet, target_position), now + @trace_leg_ms}
+
+      mode == :idle ->
+        {:stand, target_position, now + @idle_stand_ms}
+
+      true ->
+        {:stand, target_position,
+         now + @stand_min_ms + :rand.uniform(@stand_max_ms - @stand_min_ms)}
+    end
+  end
+
+  defp apply_action(pet, {:walk, goal, _until}, now) do
+    {pet, _} = Movement.walk_chase_route(pet, battle(pet, now), goal, now)
+    pet
+  end
+
+  defp apply_action(pet, {:stand, face, _until}, now) do
+    Movement.stand(pet, battle(pet, now), face, now)
+  end
+
+  defp approach(pet, target_position, now) do
+    {pet, _} = Movement.walk_chase_route(pet, battle(pet, now), target_position, now)
+    pet
+  end
+
+  defp outside_band?(pet, target_position) do
+    square_distance(pet.position, target_position) > square(@approach_band)
+  end
+
+  defp arrived?(pet, goal) do
+    square_distance(pet.position, goal) < square(@arrive_band)
+  end
+
+  defp away_goal(pet, target_position) do
+    dx = pet.position.x - target_position.x
+    dy = pet.position.y - target_position.y
+
+    {ux, uy} =
+      if dx == 0 and dy == 0 do
+        angle = :rand.uniform() * 2 * :math.pi()
+        {:math.cos(angle), :math.sin(angle)}
+      else
+        len = :math.sqrt(dx * dx + dy * dy)
+        {dx / len, dy / len}
+      end
+
+    goal = %Types.Coord{
+      x: pet.position.x + ux * @runaway_length,
+      y: pet.position.y + uy * @runaway_length,
+      z: pet.position.z
+    }
+
+    snap_goal(pet, goal)
+  end
+
+  # trace legs are short steps toward the target (the script's trace nodes
+  # run till=100-300ms), never the full closing distance
+  defp trace_goal(pet, target_position) do
+    dx = target_position.x - pet.position.x
+    dy = target_position.y - pet.position.y
+    len = :math.sqrt(dx * dx + dy * dy)
+    step = min(len, @runaway_length / 2)
+
+    goal = %Types.Coord{
+      x: pet.position.x + dx / len * step,
+      y: pet.position.y + dy / len * step,
+      z: pet.position.z
+    }
+
+    snap_goal(pet, goal)
+  end
+
+  defp snap_goal(pet, goal) do
+    case Navigation.snap_to_floor(pet.map_id, goal) do
+      nil -> goal
+      snapped -> snapped
+    end
+  end
+
+  # the nearest live player on the field: the script's distance conditions
+  # reference the AI target, which for a wild pet is whoever is closest
+  defp nearest_player(pet, state) do
+    dead = Map.get(state, :tombstones, %{})
+
+    state.players
+    |> Enum.reject(fn {character_id, _object_id} -> Map.has_key?(dead, character_id) end)
+    |> Enum.flat_map(fn {character_id, object_id} ->
+      case get_in(state, [:player_positions, character_id, :position]) do
+        %Types.Coord{} = position -> [{character_id, object_id, position}]
+        _ -> []
+      end
+    end)
+    |> Enum.min_by(
+      fn {_character_id, _object_id, position} -> square_distance(pet.position, position) end,
+      fn -> nil end
+    )
+  end
+
+  defp battle(pet, now), do: pet.battle || follow_battle(0, now)
 
   # -- shared helpers -----------------------------------------------------------
 

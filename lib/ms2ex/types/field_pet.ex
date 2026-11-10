@@ -41,7 +41,10 @@ defmodule Ms2ex.Types.FieldPet do
     send_control?: false,
     dead?: false,
     # the follow battle map (Battle.follow): navmesh route, repath timer
-    battle: nil
+    battle: nil,
+    # wild pets only: the current AI action (%{action, action_until}) from
+    # the AI_DefaultPetTaming wild cascade
+    wild_ai: nil
   ]
 
   @spec new(keyword() | map()) :: t()
