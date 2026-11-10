@@ -143,6 +143,8 @@ defmodule Ms2ex.Managers.Field.Pet do
               pet: metadata,
               position: position,
               rotation: struct(Types.Coord, %{}),
+              # pathing and floor-snapping resolve against the field's mesh
+              map_id: state.map_id,
               skin_id: npc_id,
               taming_rank: :rand.uniform(100)
             ]
