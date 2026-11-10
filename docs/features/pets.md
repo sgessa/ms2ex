@@ -53,6 +53,12 @@ Projected (read via `Ms2ex.Storage.Pets` / `Ms2ex.Storage.Tables.PetExp`):
 5. Constants (`taming_pet_max_point`, `pet_run_speed`, `pet_pick_distance`,
    ...) already flow through the generic `table:server.constants.xml` doc —
    read via `Ms2ex.Storage.Tables.Constants.get/1`.
+6. **`quest_chapter:<chapter id>` set** — `quest_ids` list per chapter; the
+   maple guide and chapter-completion checks read it.
+7. **`pet_npc:<npc id>` set** — `pet_id` per pet npc; npc spawns whose id
+   maps here spawn wild pets.
+8. Skill attacks carry the `pet_taming` block (`points`, `forced`,
+   `trap_level`) on the taming candies/snares.
 
 ## Item serialization
 
@@ -198,6 +204,43 @@ changes push the new skin to the live pet.
   layouts for `REQUEST_PET` / `REQUEST_PET_INVENTORY`.
 - `Ms2ex.Schema.Item` — pet struct (name, exp, level, evolve points,
   rename remaining, config, bag) + persistence.
+
+## Tutorial quest line (chapter 9081)
+
+The pet taming tutorial is a six-quest `world_quest` chapter
+(90000790–90000795, `quest_chapter:<chapter id>` docs) that exercises the
+whole taming flow. Verified end to end on the live client.
+
+- **90000790** — no conditions; introduces the NPC.
+- **90000791** — `item_exist` 30000882 (pacified slime quest item); its
+  completion grants 100 taming candies (63000000).
+- **90000792** "Taming on an empty stomach" — `pet_taming` condition on
+  npc 61000002 (hungry slime): the objective completes when the taming
+  gauge fills (the wild pet fires the `pet_taming` condition event on the
+  fill, no capture needed). Completion grants the snare-crafting
+  materials.
+- **90000793** — `item_exist` 5× 63100000 (snares): the player crafts 5
+  snares via life skills from the previous quest's materials, then turns
+  them in. The turn-in **consumes** the crafted snares (item_exist
+  conditions double as turn-in consumables, see `quest_consumables/1`)
+  and the completion reward grants 5 fresh snares.
+- **90000794** — `pet_taming` + `item_exist` 61000002: capture the slime
+  with a snare; the capture grants the pet item. Completion rewards the
+  pet itself.
+- **90000795** — `pet_enchant` condition; rewards 5× 63100102 (higher-rank
+  snares). `pet_enchant` is unimplemented.
+
+Delivery-order note (bit us once): quest turn-ins that both consume and
+grant items must push the removal packets **before** the reward add
+packets — the reward stacks usually land in the slots the consumed
+stacks just freed, and a client that receives an add for a
+still-occupied slot drops it (items appear only after the next login).
+`Managers.Quest.handle_completion_result` pushes consumes first for this
+reason. The reward-preview in the accept dialog shows the *completion*
+rewards, which can mislead players into expecting items at accept time.
+
+The maple guide gates on the whole chapter being completed
+(`quest_chapter` docs), not the first quest alone.
 
 ## Staging
 
