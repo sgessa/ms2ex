@@ -483,10 +483,16 @@ defmodule Ms2ex.Managers.Field.Npc do
     Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
       npc_id = pick_mob_id(spawn)
 
-      if wild_pet_roll?(spawn, npc_id) do
-        spawn_wild_pet(spawn, state, npc_id)
-      else
-        spawn_mob(spawn, state, npc_id)
+      cond do
+        # pet tutorial maps stage the tameable pet as a plain npc spawn
+        Storage.Pets.pet_id_for_npc(npc_id) != nil ->
+          spawn_wild_pet(spawn, state, Storage.Pets.pet_id_for_npc(npc_id))
+
+        wild_pet_roll?(spawn, npc_id) ->
+          spawn_wild_pet(spawn, state, pet_id_for(spawn, npc_id))
+
+        true ->
+          spawn_mob(spawn, state, npc_id)
       end
     end)
   end

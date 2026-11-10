@@ -97,12 +97,26 @@ defmodule Ms2ex.Navigation do
   @spec random_point_around(integer(), Coord.t(), number()) :: Coord.t() | nil
   def random_point_around(map_id, %Coord{} = center, radius)
       when is_integer(map_id) and radius > 0 do
-    random_point_around(map_id, center, radius, @random_point_attempts)
+    case native_mesh(map_id) do
+      nil ->
+        nil
+
+      mesh ->
+        random_point_around(mesh, center, radius, @random_point_attempts)
+    end
   end
 
-  def random_point_around(_, _, _, 0), do: nil
+  # the disc samples missed the mesh entirely: fall back to the native
+  # poly-based picker, which always yields a walkable point (it may sit
+  # beyond the radius on wide-open polygons)
+  defp random_point_around(mesh, center, radius, 0) do
+    case Native.random_point_around(mesh, to_nav(center), radius / 100) do
+      {:ok, point} -> to_coord(point)
+      {:error, _reason} -> nil
+    end
+  end
 
-  def random_point_around(map_id, %Coord{} = center, radius, attempts) do
+  defp random_point_around(mesh, %Coord{} = center, radius, attempts) do
     angle = :rand.uniform() * 2 * :math.pi()
     # sqrt keeps the sample uniform over the disc, not ring-weighted
     dist = radius * :math.sqrt(:rand.uniform())
@@ -113,13 +127,11 @@ defmodule Ms2ex.Navigation do
       z: center.z
     }
 
-    case snap_to_floor(map_id, point) do
-      nil -> random_point_around(map_id, center, radius, attempts - 1)
-      snapped -> snapped
+    case Native.snap(mesh, to_nav(point)) do
+      {:ok, snapped} -> to_coord(snapped)
+      {:error, _reason} -> random_point_around(mesh, center, radius, attempts - 1)
     end
   end
-
-  def random_point_around(_, _, _, _), do: nil
 
   @doc "Whether the map has walkable navmesh tiles."
   def has_navmesh?(map_id) when is_integer(map_id), do: native_mesh(map_id) != nil
