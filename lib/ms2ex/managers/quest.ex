@@ -265,10 +265,13 @@ defmodule Ms2ex.Managers.Quest do
 
   @impl true
   def handle_call({:needs_item, item_id}, _from, state) do
-    found =
-      Enum.any?(state.character_quests, fn {_quest_id, quest} ->
-        quest.state == :started and started_quest_needs_item?(quest, item_id)
-      end)
+    started =
+      for {quest_id, quest} <- state.character_quests,
+          quest.state == :started,
+          do: {quest_id, started_quest_needs_item?(quest, item_id)}
+
+    Logger.debug("needs_item #{item_id}: started quests = #{inspect(started)}")
+    found = Enum.any?(started, fn {_quest_id, needs} -> needs end)
 
     {:reply, found, state}
   end
