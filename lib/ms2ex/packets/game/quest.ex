@@ -1,4 +1,6 @@
 defmodule Ms2ex.Packets.Game.Quest do
+  @behaviour Ms2ex.Packets.Spec
+
   import Ms2ex.Packets.PacketWriter
 
   alias Ms2ex.Enums
@@ -237,5 +239,59 @@ defmodule Ms2ex.Packets.Game.Quest do
   defp condition_entries(quest) do
     quest.conditions
     |> Enum.sort_by(&elem(&1, 0))
+  end
+
+  # commands whose payload is plain PacketReader fields
+  @simple_specs %{
+    @error => [error_code: :int],
+    @complete => [quest_id: :int, _completion_count: :int, end_time: :long],
+    @abandon => [quest_id: :int],
+    @set_tracking => [quest_id: :int, track: :bool],
+    @summon_portal => [npc_object_id: :int, portal_id: :int, start_tick: :int],
+    @exploration_progress => [star_amount: :int, _unknown: :int]
+  }
+
+  @impl true
+  def commands do
+    %{
+      error: @error,
+      talk: @talk,
+      start: @start,
+      update: @update,
+      complete: @complete,
+      abandon: @abandon,
+      expired: @expired,
+      set_tracking: @set_tracking,
+      summon_portal: @summon_portal,
+      exploration_progress: @exploration_progress,
+      load_quest_states: @load_quest_states
+    }
+  end
+
+  @impl true
+  def spec(command) do
+    # repeated counters/id lists are consumed whole; the leading count field
+    # already shows how many entries the packet carries
+    tail = fn packet -> {byte_size(packet), <<>>} end
+
+    case command do
+      @talk ->
+        [npc_object_id: :int, _count: :int, _quest_ids: tail]
+
+      @start ->
+        [quest_id: :int, start_time: :long, track: :bool, _count: :int, _counters: tail]
+
+      @update ->
+        [quest_id: :int, _count: :int, _counters: tail]
+
+      @expired ->
+        [_count: :int, _quest_ids: tail]
+
+      @load_quest_states ->
+        [_count: :int, _quests: tail]
+
+      simple ->
+        Map.get(@simple_specs, simple, [])
+    end
   end
 end

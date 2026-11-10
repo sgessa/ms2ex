@@ -577,8 +577,11 @@ defmodule Ms2ex.Managers.Quest do
       {:ok, {updated_quest, consume_results, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
 
-        Managers.Quest.Rewards.deliver(character, metadata.complete_reward, results)
+        # turn-in removals go out before the reward adds: the rewards often
+        # land in the slots the consumed stacks just freed, and an add that
+        # arrives while the slot is still occupied is dropped by the client
         Enum.each(consume_results, &maybe_push_consume(character, &1))
+        Managers.Quest.Rewards.deliver(character, metadata.complete_reward, results)
 
         update_conditions(
           character.id,
