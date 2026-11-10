@@ -304,7 +304,8 @@ defmodule Ms2ex.Managers.Field.Pet do
   # the client's pet window stays honest
   defp decay_taming_points(pets, state, now) do
     Map.new(pets, fn {object_id, %Types.FieldPet{} = pet} ->
-      if pet.taming_points > 0 and now - pet.last_tame_at >= @taming_decay_ms do
+      if pet.taming_points > 0 and pet.taming_points < taming_max_point() and
+           now - pet.last_tame_at >= @taming_decay_ms do
         points = max(pet.taming_points - @taming_decay_points, 0)
         pet = %{pet | taming_points: points, last_tame_at: now}
 
@@ -327,11 +328,7 @@ defmodule Ms2ex.Managers.Field.Pet do
     end
   end
 
-  @doc """
-  Applies a taming hit to a wild pet. Returns {result, state} where the
-  result is :hit or {:captured, field_pet} — the caller grants the capture
-  reward and removes the actor.
-  """
+  @doc "Applies a taming hit to a wild pet; caps at the ready threshold."
   def apply_taming_hit(state, object_id, caster_object_id, points, now) do
     case Map.get(state.pets, object_id) do
       %Types.FieldPet{owner_character_id: nil} = pet ->
@@ -345,11 +342,34 @@ defmodule Ms2ex.Managers.Field.Pet do
         )
 
         state = put_in(state, [:pets, object_id], pet)
+        {:ready, new_points == max_point, state}
 
-        if new_points >= max_point do
+      _ ->
+        {:miss, state}
+    end
+  end
+
+  @doc """
+  A snare (trap skill) hit captures a ready wild pet — the gauge alone
+  never captures: the client prompts "use a snare" once the gauge fills.
+  """
+  def apply_snare_hit(state, object_id, caster_object_id) do
+    case Map.get(state.pets, object_id) do
+      %Types.FieldPet{owner_character_id: nil} = pet ->
+        if pet.taming_points >= taming_max_point() do
+          Field.broadcast(
+            state.topic,
+            Packets.SyncPetTamingPoint.bytes(pet, caster_object_id, pet.taming_points)
+          )
+
           {{:captured, pet}, state}
         else
-          {:hit, state}
+          Field.broadcast(
+            state.topic,
+            Packets.SyncPetTamingPoint.bytes(pet, caster_object_id, pet.taming_points)
+          )
+
+          {:not_ready, state}
         end
 
       _ ->

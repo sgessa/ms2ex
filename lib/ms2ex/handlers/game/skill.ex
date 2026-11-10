@@ -320,12 +320,26 @@ defmodule Ms2ex.GameHandlers.Skill do
 
   # the taming points ride the attack pet-taming property; the candy cast
   # rows (odd ids, no attacks) resolve to their functional sibling
-  # (94000001 -> 94000002, 1000 points per hit)
+  # (94000001 -> 94000002, 1000 points per hit). Snare skills (trap_level)
+  # capture a READY pet — the gauge alone never captures
   defp tame_pet(skill_cast, object_id) do
-    points = taming_points_for(skill_cast)
-    Managers.Field.tame_pet(skill_cast.caster, object_id, skill_cast.caster.object_id, points)
+    attack = Types.SkillCast.attack_point(skill_cast)
+    pet_taming = attack && attack[:pet_taming]
+    caster_object_id = skill_cast.caster.object_id
+
+    if pet_taming && pet_taming[:trap_level] > 0 do
+      # a snare skill hit captures a READY pet — the gauge alone never
+      # captures (the client prompts "use a snare" when the gauge fills)
+      Managers.Field.snare_pet(skill_cast.caster, object_id, caster_object_id)
+    else
+      points = taming_points_for(skill_cast)
+      Managers.Field.tame_pet(skill_cast.caster, object_id, caster_object_id, points)
+    end
   end
 
+  # the taming points ride the attack pet-taming property; the candy cast
+  # rows (odd ids, no attacks) resolve to their functional sibling
+  # (94000001 -> 94000002, 1000 points per hit)
   defp taming_points_for(skill_cast) do
     attack = Types.SkillCast.attack_point(skill_cast)
 

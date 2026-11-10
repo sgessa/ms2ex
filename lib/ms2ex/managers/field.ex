@@ -458,6 +458,13 @@ defmodule Ms2ex.Managers.Field do
     call(character.field_pid, {:tame_pet, object_id, caster_object_id, points, character})
   end
 
+  @doc "A snare (trap skill) hit on a ready wild pet captures it."
+  @spec snare_pet(Schema.Character.t(), integer(), integer()) ::
+          {:captured, Types.FieldPet.t()} | {:not_ready | :miss, nil | Types.FieldPet.t()}
+  def snare_pet(%Schema.Character{} = character, object_id, caster_object_id) do
+    call(character.field_pid, {:snare_pet, object_id, caster_object_id, character})
+  end
+
   @doc """
   Alive mobs standing inside a hit-volume prism, up to `limit`.
   """
@@ -904,19 +911,26 @@ defmodule Ms2ex.Managers.Field do
      end, state}
   end
 
-  def handle_call({:tame_pet, object_id, caster_object_id, points, tamer}, _from, state) do
+  def handle_call({:tame_pet, object_id, caster_object_id, points, _tamer}, _from, state) do
     case Pet.apply_taming_hit(state, object_id, caster_object_id, points, Ms2ex.sync_ticks()) do
-      {:hit, state} ->
+      {:ready, became_ready, state} ->
         pet = Map.get(state.pets, object_id)
-        {:reply, {:hit, pet.taming_points}, state}
+        {:reply, {:hit, became_ready, pet.taming_points}, state}
 
+      {other, state} ->
+        {:reply, other, state}
+    end
+  end
+
+  def handle_call({:snare_pet, object_id, caster_object_id, tamer}, _from, state) do
+    case Pet.apply_snare_hit(state, object_id, caster_object_id) do
       {{:captured, field_pet}, state} ->
         state = remove_captured_pet(state, field_pet)
         grant_capture_reward(tamer, field_pet)
         {:reply, {:captured, field_pet}, state}
 
-      {other, state} ->
-        {:reply, other, state}
+      {reply, state} ->
+        {:reply, reply, state}
     end
   end
 
