@@ -309,33 +309,49 @@ defmodule Ms2ex.GameHandlers.Skill do
         {:ok, %{dead?: false, type: :mob} = mob} ->
           [damage_mob(skill_cast, mob, crit?)]
 
+        # a wild pet hit by a pet-taming attack gains taming points; taming
+        # hits carry no damage records — any other skill does nothing to pets
         _ ->
-          taming_or_nothing(skill_cast, obj_id)
+          tame_pet(skill_cast, obj_id)
+          []
       end
     end)
   end
 
-  # a wild pet hit by a pet-taming attack gains taming points; any other
-  # skill does nothing to pets
-  defp taming_or_nothing(skill_cast, obj_id) do
-    case Managers.Field.lookup_pet(skill_cast.caster, obj_id) do
-      {:ok, %{owner_character_id: nil}} -> [tame_pet(skill_cast, obj_id)]
-      _ -> []
+  # the taming points ride the attack pet-taming property; the candy cast
+  # rows (odd ids, no attacks) resolve to their functional sibling
+  # (94000001 -> 94000002, 1000 points per hit)
+  defp tame_pet(skill_cast, object_id) do
+    points = taming_points_for(skill_cast)
+    Managers.Field.tame_pet(skill_cast.caster, object_id, skill_cast.caster.object_id, points)
+  end
+
+  defp taming_points_for(skill_cast) do
+    attack = Types.SkillCast.attack_point(skill_cast)
+
+    case attack && attack[:pet_taming] do
+      %{taming_point: n} when is_integer(n) -> n
+      _ -> sibling_taming_points(skill_cast.skill_id + 1)
     end
   end
 
-  # the taming points come from the swing's attack pet-taming property
-  # (e.g. the taming candy's 1000 points per hit)
-  defp tame_pet(skill_cast, object_id) do
-    attack = Types.SkillCast.attack_point(skill_cast)
+  defp sibling_taming_points(skill_id) do
+    levels = (Ms2ex.Storage.Skills.get_meta(skill_id) || %{})[:levels] || %{}
+    Enum.find_value(levels, 0, fn {_lvl, level_doc} -> attack_taming_point(level_doc) end)
+  end
 
-    points =
-      case attack && attack[:pet_taming] do
-        %{taming_point: n} when is_integer(n) -> n
-        _ -> 0
-      end
-
-    Managers.Field.tame_pet(skill_cast.caster, object_id, skill_cast.caster.object_id, points)
+  defp attack_taming_point(level_doc) do
+    (level_doc[:motions] || [])
+    |> List.wrap()
+    |> Enum.flat_map(&(&1[:attacks] || []))
+    |> Enum.find_value(fn attack ->
+      pt = attack[:pet_taming]
+      pt && pt[:taming_point]
+    end)
+    |> case do
+      n when is_integer(n) -> n
+      _ -> 0
+    end
   end
 
   defp read_target_ids(packet, count), do: read_target_ids(packet, count, [])
