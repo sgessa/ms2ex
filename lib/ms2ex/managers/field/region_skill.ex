@@ -3,6 +3,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
   alias Ms2ex.Context
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field.Pet
   alias Ms2ex.Net.SenderSession
   alias Ms2ex.Packets
   alias Ms2ex.Storage
@@ -413,9 +414,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
     case Types.SkillCast.splash_skill_cast(skill_cast) do
       {splash_cast, splash} ->
         now = Ms2ex.sync_ticks()
-        interval = Map.get(splash, :interval, 0) || 0
-        delay = Map.get(splash, :delay, 0) || 0
-        fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
+        {interval, fires, tick_after, end_tick} = region_timing(splash_cast, splash, now)
 
         splash_cast = %{
           splash_cast
@@ -426,8 +425,6 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
         reg_skill = Packets.RegionSkill.add(source_id, splash_cast, points)
         Managers.Field.broadcast(state.topic, reg_skill)
 
-        end_tick = now + delay + (Map.get(splash, :remove_delay, 0) || 0) + fires * interval
-
         region = %{
           splash_cast: splash_cast,
           interval: interval,
@@ -437,7 +434,7 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
         state = put_in(state, [:regions, source_id], region)
 
-        Process.send_after(self(), {:region_tick, source_id}, interval + delay)
+        Process.send_after(self(), {:region_tick, source_id}, tick_after)
 
         removal_delay = max(end_tick - now, 100)
         Process.send_after(self(), {:remove_region_skill, source_id}, removal_delay)
@@ -484,6 +481,11 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
   end
 
   def apply_splash(splash_cast, _source_id, state) do
+    state = hit_mobs_in_range(splash_cast, state)
+    apply_pet_taming(splash_cast, state)
+  end
+
+  defp hit_mobs_in_range(splash_cast, state) do
     targets =
       state.npcs
       |> Enum.filter(fn {_id, npc} ->
@@ -494,6 +496,65 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
       |> Enum.take(@splash_targets)
 
     hit_mobs(splash_cast, targets, state)
+  end
+
+  # a trap splash captures ready wild pets that wander into the armed
+  # window. Taming-point splashes (the candies) are not applied here: the
+  # client reports the pet as a direct hit and the candy path already
+  # counts those — a region application would double-count
+  defp apply_pet_taming(splash_cast, state) do
+    if trap_splash?(splash_cast) do
+      capture_pets_in_range(splash_cast, state)
+    else
+      state
+    end
+  end
+
+  defp capture_pets_in_range(splash_cast, state) do
+    pet_ids =
+      state.pets
+      |> Enum.filter(fn {_id, pet} ->
+        pet.owner_character_id == nil and not pet.dead? and in_splash_range?(pet, splash_cast)
+      end)
+      |> Enum.map(fn {_id, pet} -> pet.object_id end)
+
+    Enum.reduce(pet_ids, state, &capture_pet(splash_cast, &2, &1))
+  end
+
+  defp capture_pet(splash_cast, state, object_id) do
+    case Pet.apply_snare_hit(state, object_id, splash_cast.caster.object_id) do
+      {{:captured, captured_pet}, state} ->
+        Managers.Field.complete_capture(state, captured_pet, splash_cast.caster)
+
+      {_reply, state} ->
+        state
+    end
+  end
+
+  # a taming trap's splash region is its armed window: the trap sits at the
+  # landing point for the splash delay (30s for the snare) and captures on
+  # entry, so the scan runs on a short cadence for the whole window instead
+  # of the single delayed fire the generic region model would give
+  defp region_timing(splash_cast, splash, now) do
+    interval = Map.get(splash, :interval, 0) || 0
+    delay = Map.get(splash, :delay, 0) || 0
+    remove_delay = Map.get(splash, :remove_delay, 0) || 0
+
+    if trap_splash?(splash_cast) do
+      scan_interval = 500
+      fires = max(div(delay, scan_interval), 1)
+      {scan_interval, fires, scan_interval, now + delay + remove_delay}
+    else
+      fires = max(Map.get(splash, :fire_count, 0) || 0, 1)
+      {interval, fires, interval + delay, now + delay + remove_delay + fires * interval}
+    end
+  end
+
+  defp trap_splash?(splash_cast) do
+    case Types.SkillCast.attack_point(splash_cast) do
+      %{pet_taming: %{trap_level: level}} when level > 0 -> true
+      _ -> false
+    end
   end
 
   # region hits ride the standard damage record (the channel every direct

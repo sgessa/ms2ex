@@ -337,6 +337,15 @@ defmodule Ms2ex.GameHandlers.Skill do
     end
   end
 
+  # the snare's cast skill carries the trap property; its item is consumed
+  # when the trap is thrown
+  defp trap_cast?(skill_cast) do
+    case Types.SkillCast.attack_point(skill_cast) do
+      %{pet_taming: %{trap_level: level}} when level > 0 -> true
+      _ -> false
+    end
+  end
+
   # the taming points ride the attack pet-taming property; the candy cast
   # rows (odd ids, no attacks) resolve to their functional sibling
   # (94000001 -> 94000002, 1000 points per hit)
@@ -408,8 +417,10 @@ defmodule Ms2ex.GameHandlers.Skill do
       fishing_lure_item?(cast_item) or consumable_state_item?(cast_item)
 
     # pet-taming items (the candies) carry no use_item consume flag on
-    # their cast skill: throwing one consumes the item itself
-    if Types.SkillCast.use_item?(skill_cast) or taming_points_for(skill_cast) > 0 do
+    # their cast skill: throwing one consumes the item itself — the snare
+    # likewise (the trap is used whether or not it captures)
+    if Types.SkillCast.use_item?(skill_cast) or taming_points_for(skill_cast) > 0 or
+         trap_cast?(skill_cast) do
       consume_used_item(session, character, item_uid)
     end
 

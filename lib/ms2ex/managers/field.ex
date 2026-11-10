@@ -381,6 +381,28 @@ defmodule Ms2ex.Managers.Field do
 
   # a captured pet becomes a pet item for the tamer at its rank's rarity
   # (rank 1..100 -> rarity rank/25 + 1, capped at artifact-line rarities)
+  @doc """
+  Capture consequences for a snared wild pet: the tame-a-pet quest
+  condition, the actor removal and the pet item grant. Runs inside the
+  field process (the trap splash path calls it from the region tick).
+  """
+  def complete_capture(state, field_pet, tamer) do
+    # "tame a <pet>" objectives track the capture, not the gauge
+    Managers.Quest.update_conditions(
+      tamer.id,
+      :pet_taming,
+      1,
+      "",
+      0,
+      "",
+      field_pet.pet[:npc_id]
+    )
+
+    state = remove_captured_pet(state, field_pet)
+    grant_capture_reward(tamer, field_pet)
+    state
+  end
+
   defp grant_capture_reward(%Schema.Character{} = tamer, field_pet) do
     pet_id = field_pet.pet[:id]
     rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
@@ -914,19 +936,7 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:snare_pet, object_id, caster_object_id, tamer}, _from, state) do
     case Pet.apply_snare_hit(state, object_id, caster_object_id) do
       {{:captured, field_pet}, state} ->
-        # "tame a <pet>" objectives track the capture, not the gauge
-        Managers.Quest.update_conditions(
-          tamer.id,
-          :pet_taming,
-          1,
-          "",
-          0,
-          "",
-          field_pet.pet[:npc_id]
-        )
-
-        state = remove_captured_pet(state, field_pet)
-        grant_capture_reward(tamer, field_pet)
+        state = complete_capture(state, field_pet, tamer)
         {:reply, {:captured, field_pet}, state}
 
       {reply, state} ->
