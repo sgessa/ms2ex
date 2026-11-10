@@ -957,30 +957,6 @@ defmodule Ms2ex.Managers.Field do
     end
   end
 
-  # the pacified wild pet transforms into the quest item the tutorial
-  # objective tracks; notify_item_acquired completes the objective
-  defp grant_pacified_item(%Schema.Character{} = tamer) do
-    item = Context.Items.init(@pacified_slime_item_id, %{amount: 1, rarity: 1})
-
-    case Managers.Inventory.add_item(tamer, item) do
-      {:ok, {:create, item}} ->
-        broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
-        Managers.Quest.notify_item_acquired(tamer, item)
-
-      {:ok, {:update, item}} ->
-        broadcast(tamer, Packets.InventoryItem.update_item(item.id, item.amount))
-        Managers.Quest.notify_item_acquired(tamer, item)
-
-      {:ok, {:update_and_create, {updated, _amount}, created}} ->
-        broadcast(tamer, Packets.InventoryItem.update_item(updated.id, updated.amount))
-        broadcast(tamer, Packets.InventoryItem.add_item({:create, created}, tamer))
-        Managers.Quest.notify_item_acquired(tamer, created)
-
-      _ ->
-        :ok
-    end
-  end
-
   def handle_call({:update_widget, widget_key, arg}, _from, state) do
     {:reply, :ok, __MODULE__.Trigger.update_widget(state, widget_key, arg)}
   end
@@ -1436,6 +1412,30 @@ defmodule Ms2ex.Managers.Field do
     else
       if is_reference(state.dispose_timer), do: Process.cancel_timer(state.dispose_timer)
       %{state | dispose_timer: nil}
+    end
+  end
+
+  # the pacified wild pet transforms into the quest item the tutorial
+  # objective tracks; notify_item_acquired completes the objective
+  defp grant_pacified_item(%Schema.Character{} = tamer) do
+    item = Context.Items.init(@pacified_slime_item_id, %{amount: 1, rarity: 1})
+
+    case Managers.Inventory.add_item(tamer, item) do
+      {:ok, {:create, item}} ->
+        broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
+        Managers.Quest.notify_item_acquired(tamer, item)
+
+      {:ok, {:update, item}} ->
+        broadcast(tamer, Packets.InventoryItem.update_item(item.id, item.amount))
+        Managers.Quest.notify_item_acquired(tamer, item)
+
+      {:ok, {:update_and_create, {updated, _amount}, created}} ->
+        broadcast(tamer, Packets.InventoryItem.update_item(updated.id, updated.amount))
+        broadcast(tamer, Packets.InventoryItem.add_item({:create, created}, tamer))
+        Managers.Quest.notify_item_acquired(tamer, created)
+
+      _ ->
+        :ok
     end
   end
 end
