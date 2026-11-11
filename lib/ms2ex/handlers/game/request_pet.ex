@@ -161,7 +161,7 @@ defmodule Ms2ex.GameHandlers.RequestPet do
              field_pet.item.item_id,
              field_pet.item.rarity
            ) do
-        {:updated, _character} ->
+        :updated ->
           push(
             character,
             Packets.ResponsePet.add_collection(field_pet.item.item_id, field_pet.item.rarity)
