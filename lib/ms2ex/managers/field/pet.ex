@@ -20,13 +20,17 @@ defmodule Ms2ex.Managers.Field.Pet do
   alias Ms2ex.Types
 
   # taming: points come from taming-skill hits (pet_taming.taming_point,
-  # e.g. the taming candy's 1000) and decay 100/s after a 1s hold; capture
-  # happens at the taming_pet_max_point constant (10000)
+  # e.g. the taming candy's 1000) and decay once a second from ANY gauge —
+  # a full gauge drains too, so the capture window after the last hit is
+  # bounded (retail: "place the trap quickly")
   @taming_decay_ms 1_000
-  @taming_decay_points 100
+  @taming_decay_points 200
+  # the gauge at which a pet is capturable and behaves tame (approaches the
+  # tamer); below it the pet reverts to skittish wandering
+  @capture_gauge 8_500
   # an un-tamed wild pet despawns after this long without a taming hit
   # (the decay holds last_tame_at fresh while it drains, so the window
-  # runs from the last activity); ready pets wait for their snare forever
+  # runs from the last activity); capturable pets wait for their snare
   @wild_pet_ttl_ms 60_000
 
   # controls go out on change only; a fixed fast cadence makes the client
@@ -321,8 +325,7 @@ defmodule Ms2ex.Managers.Field.Pet do
   # the client's pet window stays honest
   defp decay_taming_points(pets, state, now) do
     Map.new(pets, fn {object_id, %Types.FieldPet{} = pet} ->
-      if pet.taming_points > 0 and pet.taming_points < taming_max_point() and
-           now - pet.last_tame_at >= @taming_decay_ms do
+      if pet.taming_points > 0 and now - pet.last_tame_at >= @taming_decay_ms do
         points = max(pet.taming_points - @taming_decay_points, 0)
         pet = %{pet | taming_points: points, last_tame_at: now}
 
@@ -348,12 +351,12 @@ defmodule Ms2ex.Managers.Field.Pet do
   # un-tamed wild pets despawn after the TTL without a taming hit: an
   # abandoned pet holds its spawn point's population slot forever otherwise,
   # and the spawn stops rolling new pets. Ready pets are exempt — they wait
-  # for their snare indefinitely. Returns {remaining pets, expired actors}.
+  # for their snare while capturable. Returns {remaining pets, expired actors}.
   defp expire_abandoned_pets(pets, now) do
     {expired, remaining} =
       Map.split_with(pets, fn {_object_id, %Types.FieldPet{} = pet} ->
         pet.owner_character_id == nil and
-          pet.taming_points < taming_max_point() and
+          pet.taming_points < @capture_gauge and
           now - pet.last_tame_at >= @wild_pet_ttl_ms
       end)
 
@@ -382,13 +385,13 @@ defmodule Ms2ex.Managers.Field.Pet do
   end
 
   @doc """
-  A snare (trap skill) hit captures a ready wild pet — the gauge alone
-  never captures: the client prompts "use a snare" once the gauge fills.
+  A snare (trap skill) hit captures a wild pet at or above the capture
+  gauge — below it the snare fails and only re-announces the gauge.
   """
   def apply_snare_hit(state, object_id, caster_object_id) do
     case Map.get(state.pets, object_id) do
       %Types.FieldPet{owner_character_id: nil} = pet ->
-        if pet.taming_points >= taming_max_point() do
+        if pet.taming_points >= @capture_gauge do
           Field.broadcast(
             state.topic,
             Packets.SyncPetTamingPoint.bytes(pet, caster_object_id, pet.taming_points)
@@ -418,17 +421,18 @@ defmodule Ms2ex.Managers.Field.Pet do
   # The script ties no behavior to the hit itself: the flee-ish feel comes
   # from the runaway weights while the gauge is low.
 
-  # gauge thresholds: the script's extraData cascade values
-  @gauge_trace 9999
-  @gauge_skittish 8500
+  # gauge thresholds: the script's cascade, re-banded around the capture
+  # gauge (the pet stays tame and close for the whole capture window)
   @gauge_calm 3000
 
   # distance bands from the script's conditions
-  @approach_band 400
   @close_band 300
   @far_band 1000
   @arrive_band 80
   @runaway_length 450
+  # a capturable pet stands inside the snare's reach (the trap skill's
+  # region), not at the script's 400-unit trace distance
+  @trace_hold_band 150
 
   # the script's node limits (100-2000ms), condensed
   @idle_stand_ms 2000
@@ -460,26 +464,16 @@ defmodule Ms2ex.Managers.Field.Pet do
     end
   end
 
-  defp mode_for(points) when points >= @gauge_trace, do: :trace
-  defp mode_for(points) when points >= @gauge_skittish, do: :skittish
+  defp mode_for(points) when points >= @capture_gauge, do: :trace
   defp mode_for(points) when points >= @gauge_calm, do: :idle
   defp mode_for(_points), do: :wander
 
-  # full gauge: approach and hold near the tamer
+  # capture window: approach and hold inside the snare's reach
   defp wild_step(:trace, ai, pet, target_position, now) do
-    if outside_band?(pet, target_position) do
+    if square_distance(pet.position, target_position) > square(@trace_hold_band) do
       {ai, approach(pet, target_position, now)}
     else
       {ai, Movement.stand(pet, battle(pet, now), target_position, now)}
-    end
-  end
-
-  # nearly full: approach outside the band; inside it, shy away in short legs
-  defp wild_step(:skittish, ai, pet, target_position, now) do
-    if outside_band?(pet, target_position) do
-      {ai, approach(pet, target_position, now)}
-    else
-      paced_step(:skittish, ai, pet, target_position, now)
     end
   end
 
@@ -515,8 +509,6 @@ defmodule Ms2ex.Managers.Field.Pet do
   end
 
   # the script's select tables, condensed: {runaway, trace, standby} weights
-  defp weights(:skittish, _dist_sq), do: {70, 0, 30}
-
   defp weights(:idle, _dist_sq), do: {0, 25, 75}
 
   defp weights(:wander, dist_sq) do
@@ -559,10 +551,6 @@ defmodule Ms2ex.Managers.Field.Pet do
   defp approach(pet, target_position, now) do
     {pet, _} = Movement.walk_chase_route(pet, battle(pet, now), target_position, now)
     pet
-  end
-
-  defp outside_band?(pet, target_position) do
-    square_distance(pet.position, target_position) > square(@approach_band)
   end
 
   defp arrived?(pet, goal) do

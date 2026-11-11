@@ -99,7 +99,7 @@ defmodule Ms2ex.FieldPetWildTest do
     assert pet.position.y == -1000
   end
 
-  test "a full-gauge pet traces to the player and holds inside the band" do
+  test "a pet at or above the capture gauge traces to the player and holds in snare reach" do
     {map_id, xblock} = unique_map()
     stub_world(map_id, xblock)
 
@@ -108,11 +108,11 @@ defmodule Ms2ex.FieldPetWildTest do
 
     pet = run(pet, field_with_player(player), 20)
 
-    assert distance(pet.position, player) <= 400
-    assert pet.velocity == {0, 0, 0}, "holds once inside the approach band"
+    assert distance(pet.position, player) <= 150
+    assert pet.velocity == {0, 0, 0}, "holds once inside snare reach"
   end
 
-  test "a calm pet closes distance far slower than a full-gauge one" do
+  test "a pet between the calm and capture gauges mostly stands" do
     {map_id, xblock} = unique_map()
     stub_world(map_id, xblock)
 
@@ -123,20 +123,20 @@ defmodule Ms2ex.FieldPetWildTest do
     calm = run(calm, field_with_player(player), 20)
     ready = run(ready, field_with_player(player), 20)
 
-    assert distance(ready.position, player) <= 400
-    assert distance(calm.position, player) > 400, "the fed pet mostly stands"
+    assert distance(ready.position, player) <= 150
+    assert distance(calm.position, player) > 150, "the calming pet mostly stands"
   end
 
-  test "a nearly-full pet backs off when the player is close" do
+  test "a pet that just dipped below the capture gauge still comes close" do
     {map_id, xblock} = unique_map()
     stub_world(map_id, xblock)
 
-    player = %Types.Coord{x: 1200, y: -1000, z: 0}
+    player = %Types.Coord{x: 2000, y: -1000, z: 0}
     pet = wild_pet(map_id, %Types.Coord{x: 1000, y: -1000, z: 0}, 9_000)
 
     pet = run(pet, field_with_player(player), 20)
 
-    assert distance(pet.position, player) > 200, "shies away inside the band"
+    assert distance(pet.position, player) <= 150, "traces for the whole capture window"
   end
 
   test "a panicked pet keeps its distance from a close player" do

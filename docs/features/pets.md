@@ -178,12 +178,15 @@ Wild pets & taming:
    a wild pet from the map's `pet_ids` roll table. A wild pet rolls a
    taming rank 1..100 (green < 70, yellow < 95, red >= 95).
 2. Pet-taming skill attacks add taming points (capped by
-   `TamingPetMaxPoint`); points decay 100/s and sync via
-   `SYNC_PET_TAMING_POINT`. Hitting a pet another player is taming is
+   `TamingPetMaxPoint`); points decay 200/s from any gauge (a full gauge
+   drains too — the capture window after the last hit is bounded) and sync
+   via `SYNC_PET_TAMING_POINT`. Hitting a pet another player is taming is
    rejected.
-3. At the cap (trap attacks can fail), or on a forced-capture trap, the wild
-   pet dies and drops as a pet field item with rarity `rank/25 + 1` and
-   rolled stats (`option_level`/`option_factor`).
+3. A snare hit captures at or above the capture gauge (8500 — the pet is
+   "ready" while the gauge is in the top band), and any forced-capture
+   taming hit captures regardless of the gauge. The wild pet dies and
+   drops as a pet field item with rarity `rank/25 + 1` and rolled stats
+   (`option_level`/`option_factor`).
 
 Pet skin: an equipped `:pet_skin` badge overrides the field skin id; badge
 changes push the new skin to the live pet.
@@ -247,23 +250,29 @@ docs). System behaviors the quest layer relies on:
    Mob spawn rolls turn the rolled npc into a wild pet when the spawn's
    pet_ids has an entry (pet_spawn_rate per-10k roll, pet_population cap);
    wild pets spawn with a taming rank, never damage players, and their
-   points decay 100/s a second after the last hit. Taming-skill hits
+   points decay 200/s a second after the last hit — a full gauge drains
+   too, so an untrapped pet loses readiness. Taming-skill hits
    (skills carrying the pet_taming attack property, e.g. the taming
    candies 63000000 -> skill 94000001/2, 1000 points; forced-trap candy
-   94000006, 9000 points + forced) sync SYNC_PET_TAMING_POINT and capture
-   at taming_pet_max_point (10000): the wild pet despawns and the tamer
+   94000006, 9000 points + forced) sync SYNC_PET_TAMING_POINT; a snare
+   hit captures at or above the capture gauge (8500) and a forced taming
+   hit captures at any gauge: the wild pet despawns and the tamer
    receives the pet item at rank/25+1 rarity. Still open: trap items
    (93xxxxxx trap_level vs rank gates) and pet-taming mastery
    (MasteryType.PetTaming).
 6. ~~Wild-pet behavior~~ — done. The wild AI cascades on the taming gauge
-   per the AI script's `reserved:` conditions: below 3000 points a
-   skittish wanderer (runaway hops dominate, with short approach legs and
-   stands, weighted by the distance bands to the nearest player); above
-   3000 mostly standing; above 8500 approaching but shying away inside the
-   400-unit band; at a full gauge it traces to the player and holds — the
-   snare posture. Movement rides the shared `Field.Npc.Movement` engine and
-   the pet control stream. The script ties no behavior to the taming hit
-   itself; fleeing emerges from the runaway weights while the gauge is low.
+   per the AI script's `reserved:` conditions, re-banded around the
+   capture gauge (8500): below 3000 points a skittish wanderer (runaway
+   hops dominate, with short approach legs and stands, weighted by the
+   distance bands to the nearest player); 3000 to the capture gauge mostly
+   standing; at or above the capture gauge it traces to the player and
+   holds inside the snare's reach (150 units — the trap skill's region
+   radius), the snare posture for the whole capture window. Movement rides
+   the shared `Field.Npc.Movement` engine and the pet control stream. The
+   script ties no behavior to the taming hit itself; fleeing emerges from
+   the runaway weights while the gauge is low. Un-tamed wild pets despawn
+   60s after their last taming hit and free their spawn slot (ready pets
+   are exempt while capturable).
 7. ~~Pet movement~~ — done. The pet follows its owner through
    `Managers.Field.Npc.Battle.follow/5`, per the pet AI script
    (`AI/Pet/AI_DefaultPetTaming.xml` preset `default`, inspectable with the
