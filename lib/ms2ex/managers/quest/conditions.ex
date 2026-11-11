@@ -119,7 +119,11 @@ defmodule Ms2ex.Managers.Quest.Conditions do
   ]
 
   # every condition of the quest reached its configured value; unknown
-  # metadata (or a quest without conditions) counts as met
+  # metadata (or a quest without conditions) counts as met.
+  # TODO item_exist counters only track acquisitions granted after the quest
+  # was accepted — items already held at accept time (or granted before the
+  # counter existed) never count. Retail evaluates against the actual
+  # inventory; seeding the counters at accept would match that.
   def all_met?(quest) do
     quest
     |> condition_docs()
