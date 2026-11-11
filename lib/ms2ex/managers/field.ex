@@ -365,17 +365,27 @@ defmodule Ms2ex.Managers.Field do
   # the capture removes the actor and frees its spawn slot so the wild
   # pet population can respawn
   defp remove_captured_pet(state, field_pet) do
-    broadcast(state.topic, Packets.FieldRemovePet.remove_pet(field_pet.object_id))
-    broadcast(state.topic, Packets.ProxyGameObj.remove_pet(field_pet.object_id))
+    despawn_wild_pets(state, [field_pet])
+  end
 
-    npc_spawns =
-      Map.new(state[:npc_spawns] || %{}, fn {spawn_id, spawn} ->
-        spawned = List.delete(spawn[:spawned_pets] || [], field_pet.object_id)
-        {spawn_id, Map.put(spawn, :spawned_pets, spawned)}
-      end)
+  @doc """
+  Removes wild pet actors from the field state, frees their spawn points'
+  population slots and broadcasts the removal. Runs in the field process
+  (captures and the abandonment sweep both end here).
+  """
+  def despawn_wild_pets(state, field_pets) do
+    Enum.reduce(field_pets, state, fn field_pet, state ->
+      broadcast(state.topic, Packets.FieldRemovePet.remove_pet(field_pet.object_id))
+      broadcast(state.topic, Packets.ProxyGameObj.remove_pet(field_pet.object_id))
 
-    state = %{state | npc_spawns: npc_spawns}
-    %{state | pets: Map.delete(state.pets, field_pet.object_id)}
+      npc_spawns =
+        Map.new(state[:npc_spawns] || %{}, fn {spawn_id, spawn} ->
+          spawned = List.delete(spawn[:spawned_pets] || [], field_pet.object_id)
+          {spawn_id, Map.put(spawn, :spawned_pets, spawned)}
+        end)
+
+      %{state | npc_spawns: npc_spawns, pets: Map.delete(state.pets, field_pet.object_id)}
+    end)
   end
 
   # a captured pet becomes a pet item for the tamer at its rank's rarity
@@ -429,8 +439,15 @@ defmodule Ms2ex.Managers.Field do
         Managers.Quest.notify_item_acquired(tamer, created)
 
       _ ->
-        :ok
+        # the pet never drops silently: an inventory that cannot take it
+        # mails it instead
+        Managers.Mail.send_system_mail(tamer.id, "", :inventory_overflow, items: [item])
     end
+  end
+
+  @doc "Forced taming (the trap candy) captures regardless of the gauge."
+  def force_capture(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:force_capture, object_id, character})
   end
 
   @doc "Removes the character's summoned pet from their current field."
@@ -937,6 +954,17 @@ defmodule Ms2ex.Managers.Field do
 
   def handle_call({:snare_pet, object_id, caster_object_id, tamer}, _from, state) do
     case Pet.apply_snare_hit(state, object_id, caster_object_id) do
+      {{:captured, field_pet}, state} ->
+        state = complete_capture(state, field_pet, tamer)
+        {:reply, {:captured, field_pet}, state}
+
+      {reply, state} ->
+        {:reply, reply, state}
+    end
+  end
+
+  def handle_call({:force_capture, object_id, tamer}, _from, state) do
+    case Pet.apply_forced_capture(state, object_id) do
       {{:captured, field_pet}, state} ->
         state = complete_capture(state, field_pet, tamer)
         {:reply, {:captured, field_pet}, state}

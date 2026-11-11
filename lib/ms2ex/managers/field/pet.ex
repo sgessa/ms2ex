@@ -24,6 +24,10 @@ defmodule Ms2ex.Managers.Field.Pet do
   # happens at the taming_pet_max_point constant (10000)
   @taming_decay_ms 1_000
   @taming_decay_points 100
+  # an un-tamed wild pet despawns after this long without a taming hit
+  # (the decay holds last_tame_at fresh while it drains, so the window
+  # runs from the last activity); ready pets wait for their snare forever
+  @wild_pet_ttl_ms 60_000
 
   # controls go out on change only; a fixed fast cadence makes the client
   # re-apply the sequence and flap between walk and idle
@@ -74,7 +78,13 @@ defmodule Ms2ex.Managers.Field.Pet do
         state
 
       pets ->
-        {pets, views} = tick_pet_controls(decay_taming_points(pets, state, now), state, now)
+        pets = decay_taming_points(pets, state, now)
+        {pets, expired} = expire_abandoned_pets(pets, now)
+
+        state =
+          if expired == [], do: state, else: Field.despawn_wild_pets(state, expired)
+
+        {pets, views} = tick_pet_controls(pets, state, now)
         state = %{state | pets: pets}
 
         # single-entry controls: the client mishandles multi-entry batches
@@ -333,6 +343,21 @@ defmodule Ms2ex.Managers.Field.Pet do
       n when is_integer(n) and n > 0 -> n
       _ -> 10_000
     end
+  end
+
+  # un-tamed wild pets despawn after the TTL without a taming hit: an
+  # abandoned pet holds its spawn point's population slot forever otherwise,
+  # and the spawn stops rolling new pets. Ready pets are exempt — they wait
+  # for their snare indefinitely. Returns {remaining pets, expired actors}.
+  defp expire_abandoned_pets(pets, now) do
+    {expired, remaining} =
+      Map.split_with(pets, fn {_object_id, %Types.FieldPet{} = pet} ->
+        pet.owner_character_id == nil and
+          pet.taming_points < taming_max_point() and
+          now - pet.last_tame_at >= @wild_pet_ttl_ms
+      end)
+
+    {remaining, Map.values(expired)}
   end
 
   @doc "Applies a taming hit to a wild pet; caps at the ready threshold."
@@ -615,6 +640,25 @@ defmodule Ms2ex.Managers.Field.Pet do
   end
 
   defp battle(pet, now), do: pet.battle || follow_battle(0, now)
+
+  @doc """
+  Forced taming captures the wild pet regardless of its gauge (the
+  reference's ForcedTaming items skip the readiness requirement).
+  """
+  def apply_forced_capture(state, object_id) do
+    case Map.get(state.pets, object_id) do
+      %Types.FieldPet{owner_character_id: nil} = pet ->
+        Field.broadcast(
+          state.topic,
+          Packets.SyncPetTamingPoint.bytes(pet, 0, pet.taming_points)
+        )
+
+        {{:captured, pet}, state}
+
+      _ ->
+        {:miss, state}
+    end
+  end
 
   # -- shared helpers -----------------------------------------------------------
 
