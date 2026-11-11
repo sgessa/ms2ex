@@ -88,9 +88,16 @@ defmodule Ms2ex.GameHandlers.RequestPet do
   defp handle_command(@command_switch, packet, character) do
     {item_uid, _packet} = get_long(packet)
 
-    if Managers.Character.pet_summoned(character.id) do
-      un_summon_pet(character, item_uid)
-      summon_pet(character, item_uid)
+    case Managers.Character.pet_summoned(character.id) do
+      nil ->
+        :ok
+
+      pet ->
+        # the reference disposes the current pet unconditionally before
+        # summoning the pet the packet names
+        despawn_summoned_pet(character, pet)
+        Managers.Character.pet_un_summon(character.id)
+        summon_pet(character, item_uid)
     end
   end
 
@@ -177,10 +184,14 @@ defmodule Ms2ex.GameHandlers.RequestPet do
     pet = Managers.Character.pet_summoned(character.id)
 
     if pet && pet.item.id == item_uid do
-      Field.broadcast(character, Packets.ResponsePet.un_summon(character.object_id, pet.item.id))
-      :ok = Managers.Field.despawn_pet(character)
+      despawn_summoned_pet(character, pet)
       Managers.Character.pet_un_summon(character.id)
     end
+  end
+
+  defp despawn_summoned_pet(character, pet) do
+    Field.broadcast(character, Packets.ResponsePet.un_summon(character.object_id, pet.item.id))
+    :ok = Managers.Field.despawn_pet(character)
   end
 
   defp consume_fodder(packet, count) do

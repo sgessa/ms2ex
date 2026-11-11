@@ -374,8 +374,7 @@ defmodule Ms2ex.Managers.Field do
         {spawn_id, Map.put(spawn, :spawned_pets, spawned)}
       end)
 
-    %{state | npc_spawns: npc_spawns}
-
+    state = %{state | npc_spawns: npc_spawns}
     %{state | pets: Map.delete(state.pets, field_pet.object_id)}
   end
 

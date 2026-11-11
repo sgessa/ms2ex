@@ -571,16 +571,21 @@ defmodule Ms2ex.Managers.Field.Pet do
   defp trace_goal(pet, target_position) do
     dx = target_position.x - pet.position.x
     dy = target_position.y - pet.position.y
-    len = :math.sqrt(dx * dx + dy * dy)
-    step = min(len, @runaway_length / 2)
 
-    goal = %Types.Coord{
-      x: pet.position.x + dx / len * step,
-      y: pet.position.y + dy / len * step,
-      z: pet.position.z
-    }
+    if dx == 0 and dy == 0 do
+      pet.position
+    else
+      len = :math.sqrt(dx * dx + dy * dy)
+      step = min(len, @runaway_length / 2)
 
-    snap_goal(pet, goal)
+      goal = %Types.Coord{
+        x: pet.position.x + dx / len * step,
+        y: pet.position.y + dy / len * step,
+        z: pet.position.z
+      }
+
+      snap_goal(pet, goal)
+    end
   end
 
   defp snap_goal(pet, goal) do

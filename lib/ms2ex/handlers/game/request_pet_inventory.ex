@@ -179,6 +179,9 @@ defmodule Ms2ex.GameHandlers.RequestPetInventory do
   defp bag_packet(_character, {:update, row}, _pet),
     do: [Packets.PetInventory.update(row)]
 
+  defp bag_packet(_character, {:update_and_create, {updated, _absorbed}, created}, pet),
+    do: [Packets.PetInventory.update(updated), Packets.PetInventory.add(created, pet)]
+
   defp bag_packet(_character, {:delete, row}, _pet),
     do: [Packets.PetInventory.remove(row.id)]
 

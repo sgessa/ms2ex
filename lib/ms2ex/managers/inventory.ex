@@ -595,9 +595,7 @@ defmodule Ms2ex.Managers.Inventory do
         cond do
           # a stack with room absorbs the deposit regardless of the slot hint
           stack = find_bag_stack(bag, src) ->
-            {src_result, state} = take_from_inventory(state, src, amount)
-            {{:update, updated}, state} = update_qty(state, stack, amount)
-            {:ok, %{source: src_result, bag: {:update, updated}}, state}
+            absorb_bag_deposit(state, bag, src, stack, slot, amount, bag_size, pet_item_id)
 
           slot_free?(bag, slot, bag_size) ->
             {src_result, state} = take_from_inventory(state, src, amount)
@@ -611,7 +609,7 @@ defmodule Ms2ex.Managers.Inventory do
             }
 
             {bag_result, state} = create_pet_bag_row(state, attrs)
-            {:ok, %{source: src_result, bag: bag_result}, state}
+            {{:ok, %{source: src_result, bag: bag_result}}, state}
 
           true ->
             {:error, :bag_full}
@@ -666,6 +664,48 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
+  # the stack only absorbs what fits under its limit; the remainder spills
+  # into the requested slot, and the deposit fails when the bag is full
+  defp absorb_bag_deposit(
+         state,
+         bag,
+         %Schema.Item{} = src,
+         stack,
+         slot,
+         amount,
+         bag_size,
+         pet_item_id
+       ) do
+    room = stack_limit(src) - stack.amount
+
+    cond do
+      room >= amount ->
+        {src_result, state} = take_from_inventory(state, src, amount)
+        {{:update, updated}, state} = update_qty(state, stack, amount)
+        {{:ok, %{source: src_result, bag: {:update, updated}}}, state}
+
+      slot_free?(bag, slot, bag_size) ->
+        {src_result, state} = take_from_inventory(state, src, amount)
+        {{:update, filled}, state} = update_qty(state, stack, room)
+
+        attrs = %Schema.Item{
+          src
+          | amount: amount - room,
+            location: :pet,
+            owner_item_id: pet_item_id,
+            inventory_slot: slot
+        }
+
+        {bag_result, state} = create_pet_bag_row(state, attrs)
+        {:create, created} = bag_result
+
+        {{:ok, %{source: src_result, bag: {:update_and_create, {filled, room}, created}}}, state}
+
+      true ->
+        {{:error, :bag_full}, state}
+    end
+  end
+
   defp apply_pet_bag_remove(state, pet_item_id, uid, slot, amount) when amount > 0 do
     case Enum.find(pet_bag_rows(state, pet_item_id), &(&1.id == uid)) do
       %Schema.Item{amount: row_amount} = row when row_amount >= amount ->
@@ -697,7 +737,7 @@ defmodule Ms2ex.Managers.Inventory do
         {inv_result, state} = apply_add_item(state, attrs)
 
         case inv_result do
-          {:error, _} = error -> {error, refund_bag_stack(state, attrs, bag_result)}
+          {:error, _} = error -> {error, refund_bag_row(state, row, bag_result, amount)}
           result -> {:ok, %{bag: bag_result, inventory: result}, state}
         end
 
@@ -706,13 +746,15 @@ defmodule Ms2ex.Managers.Inventory do
     end
   end
 
-  defp refund_bag_stack(state, attrs, {:update, updated_row}) do
-    {_result, state} = update_qty(state, updated_row, attrs.amount)
+  defp refund_bag_row(state, _row, {:update, updated_row}, amount) do
+    {_result, state} = update_qty(state, updated_row, amount)
     state
   end
 
-  defp refund_bag_stack(state, attrs, {:delete, _}) do
-    {_result, state} = create_pet_bag_row(state, attrs)
+  # the original bag row's location, owner and slot — not the withdraw
+  # target the failed add was built from
+  defp refund_bag_row(state, row, {:delete, _}, _amount) do
+    {_result, state} = create_pet_bag_row(state, %{row | id: nil})
     state
   end
 
