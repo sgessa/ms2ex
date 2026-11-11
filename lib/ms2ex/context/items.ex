@@ -10,9 +10,18 @@ defmodule Ms2ex.Context.Items do
 
     item
     |> load_metadata()
+    |> set_inventory_tab()
     |> set_stats()
     |> set_level()
     |> Context.ItemTransfer.apply()
+  end
+
+  # every built item resolves its inventory tab from the metadata — field
+  # drops never pass through the inventory manager, which would otherwise
+  # be the only place the tab gets assigned (and pet items serialize their
+  # pet block only when the tab says pets)
+  defp set_inventory_tab(item) do
+    %{item | inventory_tab: Types.Item.inventory_tab(item.metadata)}
   end
 
   @doc """
