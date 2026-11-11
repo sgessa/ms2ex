@@ -108,7 +108,7 @@ defmodule Ms2ex.FieldPetWildTest do
 
     pet = run(pet, field_with_player(player), 20)
 
-    assert distance(pet.position, player) <= 150
+    assert distance(pet.position, player) <= 400
     assert pet.velocity == {0, 0, 0}, "holds once inside snare reach"
   end
 
@@ -123,8 +123,8 @@ defmodule Ms2ex.FieldPetWildTest do
     calm = run(calm, field_with_player(player), 20)
     ready = run(ready, field_with_player(player), 20)
 
-    assert distance(ready.position, player) <= 150
-    assert distance(calm.position, player) > 150, "the calming pet mostly stands"
+    assert distance(ready.position, player) <= 400
+    assert distance(calm.position, player) > 400, "the calming pet mostly stands"
   end
 
   test "a pet that just dipped below the capture gauge still comes close" do
@@ -136,7 +136,7 @@ defmodule Ms2ex.FieldPetWildTest do
 
     pet = run(pet, field_with_player(player), 20)
 
-    assert distance(pet.position, player) <= 150, "traces for the whole capture window"
+    assert distance(pet.position, player) <= 400, "traces for the whole capture window"
   end
 
   test "a panicked pet keeps its distance from a close player" do

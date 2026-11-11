@@ -105,10 +105,16 @@ defmodule Ms2ex.Managers.Field.Pet do
     {entries, views} =
       Enum.flat_map_reduce(pets, [], fn {object_id, pet}, views ->
         {pet, _hits} =
-          if pet.owner_character_id do
-            follow(pet, pet.owner_character_id, state, now)
-          else
-            wild_ai(pet, state, now)
+          cond do
+            # a captured pet's corpse plays its death window untouched
+            pet.dead? ->
+              {pet, []}
+
+            pet.owner_character_id ->
+              follow(pet, pet.owner_character_id, state, now)
+
+            true ->
+              wild_ai(pet, state, now)
           end
 
         if pet.send_control? do
@@ -133,7 +139,7 @@ defmodule Ms2ex.Managers.Field.Pet do
       velocity: pet.velocity,
       animation: pet.animation,
       seq_counter: pet.seq_counter,
-      dead?: false
+      dead?: pet.dead?
     }
   end
 
@@ -355,7 +361,8 @@ defmodule Ms2ex.Managers.Field.Pet do
   defp expire_abandoned_pets(pets, now) do
     {expired, remaining} =
       Map.split_with(pets, fn {_object_id, %Types.FieldPet{} = pet} ->
-        pet.owner_character_id == nil and
+        not pet.dead? and
+          pet.owner_character_id == nil and
           pet.taming_points < @capture_gauge and
           now - pet.last_tame_at >= @wild_pet_ttl_ms
       end)
@@ -363,10 +370,10 @@ defmodule Ms2ex.Managers.Field.Pet do
     {remaining, Map.values(expired)}
   end
 
-  @doc "Applies a taming hit to a wild pet; caps at the ready threshold."
+  @doc "Applies a taming hit to a live wild pet; caps at the ready threshold."
   def apply_taming_hit(state, object_id, caster_object_id, points, now) do
     case Map.get(state.pets, object_id) do
-      %Types.FieldPet{owner_character_id: nil} = pet ->
+      %Types.FieldPet{owner_character_id: nil, dead?: false} = pet ->
         max_point = taming_max_point()
         new_points = min(pet.taming_points + points, max_point)
         pet = %{pet | taming_points: new_points, last_tame_at: now}
@@ -385,13 +392,18 @@ defmodule Ms2ex.Managers.Field.Pet do
   end
 
   @doc """
-  A snare (trap skill) hit captures a wild pet at or above the capture
-  gauge — below it the snare fails and only re-announces the gauge.
+  A snare (trap skill) hit captures a live wild pet at or above the capture
+  gauge — below it the snare fails and only re-announces the gauge. A
+  captured pet is marked dead: the corpse plays out and the pet item drops
+  on the field (see `Field.complete_capture/3`).
   """
   def apply_snare_hit(state, object_id, caster_object_id) do
     case Map.get(state.pets, object_id) do
-      %Types.FieldPet{owner_character_id: nil} = pet ->
+      %Types.FieldPet{owner_character_id: nil, dead?: false} = pet ->
         if pet.taming_points >= @capture_gauge do
+          pet = %{pet | dead?: true}
+          state = put_in(state, [:pets, object_id], pet)
+
           Field.broadcast(
             state.topic,
             Packets.SyncPetTamingPoint.bytes(pet, caster_object_id, pet.taming_points)
@@ -430,9 +442,9 @@ defmodule Ms2ex.Managers.Field.Pet do
   @far_band 1000
   @arrive_band 80
   @runaway_length 450
-  # a capturable pet stands inside the snare's reach (the trap skill's
-  # region), not at the script's 400-unit trace distance
-  @trace_hold_band 150
+  # a capturable pet holds at the script's trace distance (400) and the
+  # snare is thrown at it — the trap's 150-unit region lands on target
+  @trace_hold_band 400
 
   # the script's node limits (100-2000ms), condensed
   @idle_stand_ms 2000
@@ -468,7 +480,8 @@ defmodule Ms2ex.Managers.Field.Pet do
   defp mode_for(points) when points >= @gauge_calm, do: :idle
   defp mode_for(_points), do: :wander
 
-  # capture window: approach and hold inside the snare's reach
+  # the trace hold band is the script's own trace distance; capturable pets
+  # stand there while the snare is thrown at them
   defp wild_step(:trace, ai, pet, target_position, now) do
     if square_distance(pet.position, target_position) > square(@trace_hold_band) do
       {ai, approach(pet, target_position, now)}
@@ -635,7 +648,10 @@ defmodule Ms2ex.Managers.Field.Pet do
   """
   def apply_forced_capture(state, object_id) do
     case Map.get(state.pets, object_id) do
-      %Types.FieldPet{owner_character_id: nil} = pet ->
+      %Types.FieldPet{owner_character_id: nil, dead?: false} = pet ->
+        pet = %{pet | dead?: true}
+        state = put_in(state, [:pets, object_id], pet)
+
         Field.broadcast(
           state.topic,
           Packets.SyncPetTamingPoint.bytes(pet, 0, pet.taming_points)

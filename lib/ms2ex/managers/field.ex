@@ -362,12 +362,6 @@ defmodule Ms2ex.Managers.Field do
     call(field_pid, {:add_pet, Pet.spawn_attrs(character.pet, character)})
   end
 
-  # the capture removes the actor and frees its spawn slot so the wild
-  # pet population can respawn
-  defp remove_captured_pet(state, field_pet) do
-    despawn_wild_pets(state, [field_pet])
-  end
-
   @doc """
   Removes wild pet actors from the field state, frees their spawn points'
   population slots and broadcasts the removal. Runs in the field process
@@ -392,8 +386,10 @@ defmodule Ms2ex.Managers.Field do
   # (rank 1..100 -> rarity rank/25 + 1, capped at artifact-line rarities)
   @doc """
   Capture consequences for a snared wild pet: the tame-a-pet quest
-  condition, the actor removal and the pet item grant. Runs inside the
-  field process (the trap splash path calls it from the region tick).
+  condition, the pet's death animation, the pet item dropped as a field
+  item locked to the tamer, and the corpse removal after the death window.
+  Runs inside the field process (the trap splash path calls it from the
+  region tick).
   """
   def complete_capture(state, field_pet, tamer) do
     # "tame a <pet>" objectives track the capture, not the gauge
@@ -407,12 +403,28 @@ defmodule Ms2ex.Managers.Field do
       field_pet.pet[:npc_id]
     )
 
-    state = remove_captured_pet(state, field_pet)
-    grant_capture_reward(tamer, field_pet)
-    state
+    # the dead control needs the hp=0 stat record first, like mob deaths:
+    # without it the client ignores the state change and skips the animation
+    stats = put_in(field_pet.stats, [:health, :current], 0)
+    view = %Types.FieldNpc{Pet.control_view(field_pet) | stats: stats, dead?: true}
+
+    broadcast(state.topic, Packets.Stats.update_mob_stat(view, :health))
+    broadcast(state.topic, Packets.ControlNpc.dead(view))
+
+    corpse_ms =
+      (get_in(field_pet.npc.metadata, [:dead, :time]) || 3) * 1000
+
+    Process.send_after(self(), {:remove_dead_pet, field_pet.object_id}, corpse_ms)
+
+    drop_pet_item(state, field_pet, tamer)
+
+    # the corpse stays in state.pets (dead?) until the removal timer fires
+    %{state | pets: Map.put(state.pets, field_pet.object_id, field_pet)}
   end
 
-  defp grant_capture_reward(%Schema.Character{} = tamer, field_pet) do
+  # the captured pet drops where it stood, locked to the tamer (the
+  # reference's OnDeath + DropItem; the inventory add happens on pickup)
+  defp drop_pet_item(state, field_pet, tamer) do
     pet_id = field_pet.pet[:id]
     rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
 
@@ -424,25 +436,7 @@ defmodule Ms2ex.Managers.Field do
         data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
       })
 
-    case Managers.Inventory.add_item(tamer, item) do
-      {:ok, {:create, item}} ->
-        broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
-        Managers.Quest.notify_item_acquired(tamer, item)
-
-      {:ok, {:update, item}} ->
-        broadcast(tamer, Packets.InventoryItem.update_item(item.id, item.amount))
-        Managers.Quest.notify_item_acquired(tamer, item)
-
-      {:ok, {:update_and_create, {updated, _amount}, created}} ->
-        broadcast(tamer, Packets.InventoryItem.update_item(updated.id, updated.amount))
-        broadcast(tamer, Packets.InventoryItem.add_item({:create, created}, tamer))
-        Managers.Quest.notify_item_acquired(tamer, created)
-
-      _ ->
-        # the pet never drops silently: an inventory that cannot take it
-        # mails it instead
-        Managers.Mail.send_system_mail(tamer.id, "", :inventory_overflow, items: [item])
-    end
+    __MODULE__.Item.add_mob_drop(field_pet, item, tamer, state)
   end
 
   @doc "Forced taming (the trap candy) captures regardless of the gauge."
@@ -1328,6 +1322,15 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:remove_region_skill, source_id}, state) do
     broadcast(state.topic, Packets.RegionSkill.remove(source_id))
     {:noreply, state}
+  end
+
+  # a captured pet's corpse window elapsed: remove the actor and free its
+  # spawn slot (the death animation has long since played out)
+  def handle_info({:remove_dead_pet, object_id}, state) do
+    case Map.get(state.pets, object_id) do
+      %Types.FieldPet{} = pet -> {:noreply, despawn_wild_pets(state, [pet])}
+      nil -> {:noreply, state}
+    end
   end
 
   def handle_info({:remove_status, status}, state) do
