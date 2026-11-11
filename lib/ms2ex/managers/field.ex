@@ -418,13 +418,16 @@ defmodule Ms2ex.Managers.Field do
     case Managers.Inventory.add_item(tamer, item) do
       {:ok, {:create, item}} ->
         broadcast(tamer, Packets.InventoryItem.add_item({:create, item}, tamer))
+        Managers.Quest.notify_item_acquired(tamer, item)
 
       {:ok, {:update, item}} ->
         broadcast(tamer, Packets.InventoryItem.update_item(item.id, item.amount))
+        Managers.Quest.notify_item_acquired(tamer, item)
 
       {:ok, {:update_and_create, {updated, _amount}, created}} ->
         broadcast(tamer, Packets.InventoryItem.update_item(updated.id, updated.amount))
         broadcast(tamer, Packets.InventoryItem.add_item({:create, created}, tamer))
+        Managers.Quest.notify_item_acquired(tamer, created)
 
       _ ->
         :ok
