@@ -471,13 +471,22 @@ defmodule Ms2ex.Managers.Field.RegionSkill do
 
   defp tick(region, source_id, state) do
     state = apply_splash(region.splash_cast, source_id, state)
-    state = update_in(state, [:regions, source_id], &%{&1 | fires_left: &1.fires_left - 1})
 
-    if region.fires_left > 1 do
-      Process.send_after(self(), {:region_tick, source_id}, region.interval)
+    case Map.get(state.regions, source_id) do
+      nil ->
+        # the splash consumed its own region — a trap capture removes the
+        # trap — so there is nothing left to decrement or reschedule
+        state
+
+      _remaining ->
+        state = update_in(state, [:regions, source_id], &%{&1 | fires_left: &1.fires_left - 1})
+
+        if region.fires_left > 1 do
+          Process.send_after(self(), {:region_tick, source_id}, region.interval)
+        end
+
+        state
     end
-
-    state
   end
 
   def apply_splash(splash_cast, source_id, state) do
