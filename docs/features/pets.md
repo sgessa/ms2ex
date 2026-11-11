@@ -274,9 +274,10 @@ docs). System behaviors the quest layer relies on:
    posture for the whole capture window. Movement rides the shared
    `Field.Npc.Movement` engine and the pet control stream. The script ties
    no behavior to the taming hit itself; fleeing emerges from the runaway
-   weights while the gauge is low. Un-tamed wild pets despawn 60s after
-   their last taming hit and free their spawn slot (capturable pets are
-   exempt from the sweep).
+   weights while the gauge is low. Un-tamed wild pets despawn 2 minutes
+   after their last taming hit (the window runs from the spawn for
+   untouched pets) and free their spawn slot (capturable pets are exempt
+   from the sweep).
 7. ~~Pet movement~~ — done. The pet follows its owner through
    `Managers.Field.Npc.Battle.follow/5`, per the pet AI script
    (`AI/Pet/AI_DefaultPetTaming.xml` preset `default`, inspectable with the

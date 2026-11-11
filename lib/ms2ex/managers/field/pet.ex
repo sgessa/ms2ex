@@ -29,9 +29,9 @@ defmodule Ms2ex.Managers.Field.Pet do
   # tamer); below it the pet reverts to skittish wandering
   @capture_gauge 8_500
   # an un-tamed wild pet despawns after this long without a taming hit
-  # (the decay holds last_tame_at fresh while it drains, so the window
-  # runs from the last activity); capturable pets wait for their snare
-  @wild_pet_ttl_ms 60_000
+  # (the window runs from the spawn for untouched pets and from the last
+  # hit for fed ones); capturable pets wait for their snare
+  @wild_pet_ttl_ms 120_000
 
   # controls go out on change only; a fixed fast cadence makes the client
   # re-apply the sequence and flap between walk and idle
@@ -166,7 +166,9 @@ defmodule Ms2ex.Managers.Field.Pet do
               # pathing and floor-snapping resolve against the field's mesh
               map_id: state.map_id,
               skin_id: npc_id,
-              taming_rank: :rand.uniform(100)
+              taming_rank: :rand.uniform(100),
+              # the abandonment window runs from the spawn, not from boot
+              last_tame_at: Ms2ex.sync_ticks()
             ]
 
             {field_pet, state} = Field.register_pet(pet_attrs, state)
