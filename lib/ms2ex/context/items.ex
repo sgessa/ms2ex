@@ -11,10 +11,27 @@ defmodule Ms2ex.Context.Items do
     item
     |> load_metadata()
     |> set_inventory_tab()
+    |> set_pet_defaults()
     |> set_stats()
     |> set_level()
     |> Context.ItemTransfer.apply()
   end
+
+  # pet items carry their pet block from creation: a quest reward (or any
+  # grant) that builds a pet without data would otherwise summon a nameless
+  # pet. Captures pass their own data and are left untouched.
+  defp set_pet_defaults(%{inventory_tab: :pets, data: data} = item)
+       when is_nil(data) or data == %{} do
+    name =
+      case Storage.Pets.get_meta(item.item_id) do
+        %{name: name} when is_binary(name) -> name
+        _ -> ""
+      end
+
+    %{item | data: %{pet: Map.from_struct(%Types.ItemPet{name: name})}}
+  end
+
+  defp set_pet_defaults(item), do: item
 
   # every built item resolves its inventory tab from the metadata — field
   # drops never pass through the inventory manager, which would otherwise
