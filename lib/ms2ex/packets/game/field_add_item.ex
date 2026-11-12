@@ -49,29 +49,6 @@ defmodule Ms2ex.Packets.FieldAddItem do
     put_mob_drop_item_class(packet, item)
   end
 
-  # the captured pet's drop: DropType.Player with no receiver (unlocked —
-  # the reference spawns it the same way), lootable by anyone walking over
-  # it
-  def add_pet_drop(item) do
-    packet =
-      __MODULE__
-      |> build()
-      |> put_int(item.object_id)
-      |> put_int(item.item_id)
-      |> put_int(item.amount)
-      |> put_bool(false)
-      |> put_coord(item.position)
-      |> put_int(item.source_object_id)
-      |> put_int()
-      |> put_byte(0x2)
-      |> put_int(item.rarity)
-      |> put_short(0)
-      |> put_bool(false)
-      |> put_bool(false)
-
-    put_item_class(packet, item)
-  end
-
   # meso drops carry no item payload; the currency family uses the legacy
   # blob; every other dropped item is serialized in full so the client can
   # render it on the field
