@@ -3,6 +3,8 @@ defmodule Ms2ex.Packets.FieldAddItem do
 
   import Packets.PacketWriter
 
+  # drop types: Default (0) auto-loots on walk-over — mob drops; Player (2)
+  # is the reference's type for the captured pet's drop
   def add_item(item, character \\ nil)
 
   def add_item(%{mob_drop?: false} = item, character) do
@@ -33,8 +35,30 @@ defmodule Ms2ex.Packets.FieldAddItem do
       |> put_int(item.object_id)
       |> put_int(item.item_id)
       |> put_int(item.amount)
-      |> put_byte(0x1)
+      |> put_bool(true)
       |> put_long(item.lock_character_id)
+      |> put_coord(item.position)
+      |> put_int(item.source_object_id)
+      |> put_int()
+      |> put_byte(0x0)
+      |> put_int(item.rarity)
+      |> put_short(0)
+      |> put_bool(false)
+      |> put_bool(false)
+
+    put_mob_drop_item_class(packet, item, character)
+  end
+
+  # the captured pet's drop: DropType.Player with no receiver (the
+  # reference spawns it unlocked), lootable by anyone walking over it
+  def add_pet_drop(item) do
+    packet =
+      __MODULE__
+      |> build()
+      |> put_int(item.object_id)
+      |> put_int(item.item_id)
+      |> put_int(item.amount)
+      |> put_bool(false)
       |> put_coord(item.position)
       |> put_int(item.source_object_id)
       |> put_int()
@@ -44,7 +68,7 @@ defmodule Ms2ex.Packets.FieldAddItem do
       |> put_bool(false)
       |> put_bool(false)
 
-    put_mob_drop_item_class(packet, item, character)
+    put_item_class(packet, item, nil)
   end
 
   defp put_mob_drop_item_class(packet, %{item_id: id}, _character)
