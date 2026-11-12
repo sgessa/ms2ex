@@ -1,4 +1,6 @@
 defmodule Ms2ex.Packets.FieldPickupItem do
+  @behaviour Ms2ex.Packets.Spec
+
   alias Ms2ex.Context
   alias Ms2ex.Packets
 
@@ -21,5 +23,17 @@ defmodule Ms2ex.Packets.FieldPickupItem do
       Context.Items.stamina?(item) -> put_int(packet, item.amount)
       true -> packet
     end
+  end
+
+  # decoded pickups; the amount tail only exists for mesos (long) and
+  # stamina (int) — its byte size is reported instead
+  @impl true
+  def spec(_command) do
+    [
+      _picked: :bool,
+      object_id: :int,
+      character_object_id: :int,
+      amount: fn packet -> {byte_size(packet), <<>>} end
+    ]
   end
 end

@@ -1,7 +1,51 @@
 defmodule Ms2ex.Packets.FieldAddItem do
+  @behaviour Ms2ex.Packets.Spec
+
   alias Ms2ex.Packets
+  alias Ms2ex.Packets.PacketReader
 
   import Packets.PacketWriter
+
+  @impl true
+  def spec(_command) do
+    [
+      object_id: :int,
+      item_id: :int,
+      amount: :int,
+      # receiver flag + optional lock long, position, source actor, drop
+      # type, rarity, trailing flags; the item class body is consumed whole
+      # (its byte size reported) — it is the full shared item serialization
+      drop: fn packet -> decode_drop_fields(packet) end
+    ]
+  end
+
+  defp decode_drop_fields(packet) do
+    {receiver?, packet} = PacketReader.get_bool(packet)
+
+    {lock, packet} =
+      if receiver?, do: PacketReader.get_long(packet), else: {0, packet}
+
+    {position, packet} = PacketReader.get_coord(packet)
+    {source_object_id, packet} = PacketReader.get_int(packet)
+    {_unknown, packet} = PacketReader.get_int(packet)
+    {drop_type, packet} = PacketReader.get_byte(packet)
+    {rarity, packet} = PacketReader.get_int(packet)
+    {_short, packet} = PacketReader.get_short(packet)
+    {_fixed, packet} = PacketReader.get_bool(packet)
+    {_flag, packet} = PacketReader.get_bool(packet)
+
+    fields = %{
+      locked?: receiver?,
+      lock: lock,
+      position: position,
+      source_object_id: source_object_id,
+      drop_type: drop_type,
+      rarity: rarity,
+      item_class_bytes: byte_size(packet)
+    }
+
+    {fields, <<>>}
+  end
 
   # drop types: Default (0) auto-loots on walk-over — mob drops; Player (2)
   # is the reference's type for the captured pet's drop

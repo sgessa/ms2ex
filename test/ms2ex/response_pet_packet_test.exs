@@ -90,7 +90,11 @@ defmodule Ms2ex.ResponsePetPacketTest do
     decoded = Packets.Decoder.decode(:send, Packets.FieldAddPet.add_pet(field_pet()))
 
     assert decoded.name == "FIELD_ADD_PET"
-    # no spec yet: the packet decodes to the opcode head only
-    assert decoded.rest != <<>>
+    assert decoded.fields.object_id == field_pet().object_id
+    assert decoded.fields.item_uid == field_pet().item.id
+    assert decoded.fields.taming_rank == field_pet().taming_rank
+    assert decoded.fields.name == "Miso"
+    # the spec consumes the whole packet
+    assert decoded.rest == <<>>
   end
 end

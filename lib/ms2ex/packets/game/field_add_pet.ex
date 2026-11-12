@@ -1,8 +1,31 @@
 defmodule Ms2ex.Packets.FieldAddPet do
+  @behaviour Ms2ex.Packets.Spec
+
   alias Ms2ex.Packets
   alias Ms2ex.Types
 
   import Packets.PacketWriter
+
+  @impl true
+  def spec(_command) do
+    [
+      object_id: :int,
+      skin_id: :int,
+      npc_id: :int,
+      position: :coord,
+      rotation: :coord,
+      scale: :float,
+      owner_object_id: :int,
+      # npc stat triple block: marker byte + 3 x (long, int)
+      _stats: {:bytes, 37},
+      item_uid: :long,
+      _unknown_byte: :byte,
+      level: :short,
+      taming_rank: :short,
+      _unknown_int: :int,
+      name: :ustring
+    ]
+  end
 
   def add_pet(%Types.FieldPet{} = field_pet) do
     npc = field_pet.npc
