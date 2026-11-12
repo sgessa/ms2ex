@@ -38,6 +38,7 @@ defmodule Ms2ex.Managers.Field do
   alias Ms2ex.Context
   alias Ms2ex.Collision
   alias Ms2ex.Managers
+  alias Ms2ex.Managers.Field.Pet
   alias Ms2ex.Net
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -347,10 +348,159 @@ defmodule Ms2ex.Managers.Field do
     send(character.field_pid, {:add_mob, npc, character.position})
   end
 
+  # -- pets ------------------------------------------------------------------
+
+  @doc """
+  Registers a summoned pet on the character's current field. The field
+  allocates the object id, broadcasts the add to everyone on it, and
+  returns the id to the caller (the pet manager).
+  """
+  @spec spawn_pet(Schema.Character.t()) :: {:ok, Types.FieldPet.t()} | :error
+  def spawn_pet(%Schema.Character{field_pid: nil}), do: :error
+
+  def spawn_pet(%Schema.Character{field_pid: field_pid} = character) do
+    call(field_pid, {:add_pet, Pet.spawn_attrs(character.pet, character)})
+  end
+
+  @doc """
+  Removes wild pet actors from the field state, frees their spawn points'
+  population slots and broadcasts the removal. Runs in the field process
+  (captures and the abandonment sweep both end here).
+  """
+  def despawn_wild_pets(state, field_pets) do
+    Enum.reduce(field_pets, state, fn field_pet, state ->
+      broadcast(state.topic, Packets.FieldRemovePet.remove_pet(field_pet.object_id))
+      broadcast(state.topic, Packets.ProxyGameObj.remove_pet(field_pet.object_id))
+
+      npc_spawns =
+        Map.new(state[:npc_spawns] || %{}, fn {spawn_id, spawn} ->
+          spawned = List.delete(spawn[:spawned_pets] || [], field_pet.object_id)
+          {spawn_id, Map.put(spawn, :spawned_pets, spawned)}
+        end)
+
+      %{state | npc_spawns: npc_spawns, pets: Map.delete(state.pets, field_pet.object_id)}
+    end)
+  end
+
+  # a captured pet becomes a pet item for the tamer at its rank's rarity
+  # (rank 1..100 -> rarity rank/25 + 1, capped at artifact-line rarities)
+  @doc """
+  Capture consequences for a snared wild pet: the tame-a-pet quest
+  condition, the pet's death animation, the pet item dropped as a field
+  item locked to the tamer, and the corpse removal after the death window.
+  Runs inside the field process (the trap splash path calls it from the
+  region tick).
+  """
+  def complete_capture(state, field_pet, tamer) do
+    # "tame a <pet>" objectives track the capture, not the gauge
+    Managers.Quest.update_conditions(
+      tamer.id,
+      :pet_taming,
+      1,
+      "",
+      0,
+      "",
+      field_pet.pet[:npc_id]
+    )
+
+    # the dead control needs the hp=0 stat record first, like mob deaths:
+    # without it the client ignores the state change and skips the animation
+    stats = put_in(field_pet.stats, [:health, :current], 0)
+    view = %Types.FieldNpc{Pet.control_view(field_pet) | stats: stats, dead?: true}
+
+    broadcast(state.topic, Packets.Stats.update_mob_stat(view, :health))
+    broadcast(state.topic, Packets.ControlNpc.dead(view))
+
+    corpse_ms =
+      (get_in(field_pet.npc.metadata, [:dead, :time]) || 3) * 1000
+
+    Process.send_after(self(), {:remove_dead_pet, field_pet.object_id}, corpse_ms)
+
+    state = drop_pet_item(state, field_pet, tamer)
+
+    # the corpse stays in state.pets (dead?) until the removal timer fires
+    %{state | pets: Map.put(state.pets, field_pet.object_id, field_pet)}
+  end
+
+  # the captured pet drops where it stood, bound to the tamer exactly like
+  # a mob-kill drop (the reference's OnDeath + DropItem; the inventory add
+  # happens on pickup)
+  defp drop_pet_item(state, field_pet, _tamer) do
+    pet_id = field_pet.pet[:id]
+    rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
+
+    item =
+      Context.Items.init(pet_id, %{
+        rarity: rarity,
+        amount: 1,
+        transfer_flags: [:split, :trade],
+        data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
+      })
+
+    # the drop is DropType.Player with no receiver (the reference's pet
+    # capture spawns the item unlocked), lootable by walking over it
+    __MODULE__.Item.add_pet_drop(field_pet, item, state)
+  end
+
+  @doc "Forced taming (the trap candy) captures regardless of the gauge."
+  def force_capture(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:force_capture, object_id, character})
+  end
+
+  @doc "Removes the character's summoned pet from their current field."
+  @spec despawn_pet(Schema.Character.t()) :: :ok | :error
+  def despawn_pet(%Schema.Character{field_pid: nil}), do: :error
+
+  def despawn_pet(%Schema.Character{field_pid: field_pid} = character) do
+    call(field_pid, {:remove_pet, character.id})
+  end
+
+  @doc """
+  Registers a summoned pet on field state: allocates the object id and
+  broadcasts the add to everyone on the field. Runs in the field process
+  (the add-pet call, and the character-add path for a pet whose owner
+  just entered).
+  """
+  def register_pet(pet_attrs, state) do
+    {object_id, state} = next_local_id(state)
+
+    field_pet = Types.FieldPet.new(Keyword.put(pet_attrs, :object_id, object_id))
+
+    broadcast(state.topic, Packets.FieldAddPet.add_pet(field_pet))
+    broadcast(state.topic, Packets.ProxyGameObj.load_pet(field_pet))
+
+    # the first control spawns the visible model; the follow movement
+    # takes over from here
+    field_pet = %{field_pet | last_control_at: Ms2ex.sync_ticks()}
+    broadcast(state.topic, Packets.ControlNpc.bytes([Pet.control_view(field_pet)]))
+
+    {field_pet, put_in(state, [:pets, object_id], field_pet)}
+  end
+
   @doc "Looks up an npc by object id in the character's field."
   @spec lookup_npc(Schema.Character.t(), integer()) :: {:ok, Types.FieldNpc.t()} | :error
   def lookup_npc(%Schema.Character{} = character, object_id) do
     call(character.field_pid, {:lookup_npc, object_id})
+  end
+
+  @doc "Looks up a wild or summoned pet by object id in the character's field."
+  @spec lookup_pet(Schema.Character.t(), integer()) :: {:ok, Types.FieldPet.t()} | :error
+  def lookup_pet(%Schema.Character{} = character, object_id) do
+    call(character.field_pid, {:lookup_pet, object_id})
+  end
+
+  @doc "Applies a taming hit to a wild pet; captures it at the taming cap."
+  @spec tame_pet(Schema.Character.t(), integer(), integer(), integer()) ::
+          {:hit, integer()} | {:captured, Types.FieldPet.t()} | {:miss, :no_pet}
+  def tame_pet(%Schema.Character{} = character, object_id, caster_object_id, points) do
+    call(character.field_pid, {:tame_pet, object_id, caster_object_id, points, character})
+  end
+
+  @doc "A snare (trap skill) hit on a ready wild pet captures it."
+  @spec snare_pet(Schema.Character.t(), integer(), integer()) ::
+          {:captured, Types.FieldPet.t()} | {:not_ready | :miss, nil | Types.FieldPet.t()}
+  def snare_pet(%Schema.Character{} = character, object_id, caster_object_id) do
+    call(character.field_pid, {:snare_pet, object_id, caster_object_id, character})
   end
 
   @doc """
@@ -725,6 +875,7 @@ defmodule Ms2ex.Managers.Field do
         opened_gates: MapSet.new(),
         player_positions: %{},
         mounts: %{},
+        pets: %{},
         npcs: %{},
         npc_spawns: %{},
         performance: nil,
@@ -771,6 +922,71 @@ defmodule Ms2ex.Managers.Field do
     send(self(), :maybe_stop)
 
     {:reply, :ok, __MODULE__.Character.remove_character(character, state)}
+  end
+
+  def handle_call({:add_pet, pet_attrs}, _from, state) do
+    {field_pet, state} = register_pet(pet_attrs, state)
+    {:reply, {:ok, field_pet}, state}
+  end
+
+  def handle_call({:remove_pet, owner_character_id}, _from, state) do
+    case Enum.find(state.pets, fn {_id, pet} -> pet.owner_character_id == owner_character_id end) do
+      {object_id, _pet} ->
+        broadcast(state.topic, Packets.FieldRemovePet.remove_pet(object_id))
+        broadcast(state.topic, Packets.ProxyGameObj.remove_pet(object_id))
+        {:reply, :ok, %{state | pets: Map.delete(state.pets, object_id)}}
+
+      nil ->
+        {:reply, :error, state}
+    end
+  end
+
+  def handle_call({:lookup_pet, object_id}, _from, state) do
+    {:reply,
+     case Map.get(state.pets, object_id) do
+       %Types.FieldPet{} = pet -> {:ok, pet}
+       nil -> :error
+     end, state}
+  end
+
+  def handle_call({:snare_pet, object_id, caster_object_id, tamer}, _from, state) do
+    case Pet.apply_snare_hit(state, object_id, caster_object_id) do
+      {{:captured, field_pet}, state} ->
+        state = complete_capture(state, field_pet, tamer)
+        {:reply, {:captured, field_pet}, state}
+
+      {reply, state} ->
+        {:reply, reply, state}
+    end
+  end
+
+  def handle_call({:force_capture, object_id, tamer}, _from, state) do
+    case Pet.apply_forced_capture(state, object_id) do
+      {{:captured, field_pet}, state} ->
+        state = complete_capture(state, field_pet, tamer)
+        {:reply, {:captured, field_pet}, state}
+
+      {reply, state} ->
+        {:reply, reply, state}
+    end
+  end
+
+  def handle_call({:tame_pet, object_id, caster_object_id, points, tamer}, _from, state) do
+    case Pet.apply_taming_hit(state, object_id, caster_object_id, points, Ms2ex.sync_ticks()) do
+      {:ready, became_ready, state} ->
+        pet = Map.get(state.pets, object_id)
+
+        # the "pacify a hungry slime" objective tracks the pet_taming
+        # condition, completing when the gauge fills
+        if became_ready do
+          Managers.Quest.update_conditions(tamer.id, :pet_taming, 1, "", 0, "", pet.pet.npc_id)
+        end
+
+        {:reply, {:hit, pet.taming_points}, state}
+
+      {other, state} ->
+        {:reply, other, state}
+    end
   end
 
   def handle_call({:update_widget, widget_key, arg}, _from, state) do
@@ -1098,6 +1314,7 @@ defmodule Ms2ex.Managers.Field do
       state = __MODULE__.InteractObject.tick(state)
       state = __MODULE__.Trigger.tick(state)
       state = __MODULE__.Npc.tick(state)
+      state = Pet.tick(state)
       {:noreply, __MODULE__.Liftable.expire_placed(state)}
     end
   end
@@ -1108,6 +1325,15 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:remove_region_skill, source_id}, state) do
     broadcast(state.topic, Packets.RegionSkill.remove(source_id))
     {:noreply, state}
+  end
+
+  # a captured pet's corpse window elapsed: remove the actor and free its
+  # spawn slot (the death animation has long since played out)
+  def handle_info({:remove_dead_pet, object_id}, state) do
+    case Map.get(state.pets, object_id) do
+      %Types.FieldPet{} = pet -> {:noreply, despawn_wild_pets(state, [pet])}
+      nil -> {:noreply, state}
+    end
   end
 
   def handle_info({:remove_status, status}, state) do

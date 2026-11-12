@@ -82,26 +82,56 @@ defmodule Ms2ex.Navigation do
 
   def snap_to_floor(_, _position), do: nil
 
+  # Detour's findRandomPointAroundCircle only uses the radius to pick which
+  # polygons it may visit — the returned point lands anywhere on the chosen
+  # polygon, so for radii smaller than a polygon the result is effectively
+  # "a random point on my current (possibly huge) ground poly". Sampling the
+  # disc here and snapping to the mesh gives the radius real meaning.
+  @random_point_attempts 3
+
   @doc """
   A random walkable point within `radius` of `center`, or nil when the map
   has no navmesh or nothing walkable sits inside the circle. This is how
   idle mobs pick their wander destinations around the spawn point.
   """
   @spec random_point_around(integer(), Coord.t(), number()) :: Coord.t() | nil
-  def random_point_around(map_id, %Coord{} = center, radius) when is_integer(map_id) do
+  def random_point_around(map_id, %Coord{} = center, radius)
+      when is_integer(map_id) and radius > 0 do
     case native_mesh(map_id) do
       nil ->
         nil
 
       mesh ->
-        case Native.random_point_around(mesh, to_nav(center), radius / 100) do
-          {:ok, point} -> to_coord(point)
-          {:error, _reason} -> nil
-        end
+        random_point_around(mesh, center, radius, @random_point_attempts)
     end
   end
 
-  def random_point_around(_, _, _), do: nil
+  # the disc samples missed the mesh entirely: fall back to the native
+  # poly-based picker, which always yields a walkable point (it may sit
+  # beyond the radius on wide-open polygons)
+  defp random_point_around(mesh, center, radius, 0) do
+    case Native.random_point_around(mesh, to_nav(center), radius / 100) do
+      {:ok, point} -> to_coord(point)
+      {:error, _reason} -> nil
+    end
+  end
+
+  defp random_point_around(mesh, %Coord{} = center, radius, attempts) do
+    angle = :rand.uniform() * 2 * :math.pi()
+    # sqrt keeps the sample uniform over the disc, not ring-weighted
+    dist = radius * :math.sqrt(:rand.uniform())
+
+    point = %Coord{
+      x: center.x + :math.cos(angle) * dist,
+      y: center.y + :math.sin(angle) * dist,
+      z: center.z
+    }
+
+    case Native.snap(mesh, to_nav(point)) do
+      {:ok, snapped} -> to_coord(snapped)
+      {:error, _reason} -> random_point_around(mesh, center, radius, attempts - 1)
+    end
+  end
 
   @doc "Whether the map has walkable navmesh tiles."
   def has_navmesh?(map_id) when is_integer(map_id), do: native_mesh(map_id) != nil

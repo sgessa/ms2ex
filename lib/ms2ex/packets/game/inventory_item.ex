@@ -1,4 +1,6 @@
 defmodule Ms2ex.Packets.InventoryItem do
+  @behaviour Ms2ex.Packets.Spec
+
   alias Ms2ex.Context
   alias Ms2ex.Enums
   alias Ms2ex.Packets
@@ -19,6 +21,48 @@ defmodule Ms2ex.Packets.InventoryItem do
     load_tab: 0xE,
     reset_tab: 0xD
   }
+
+  @impl true
+  def commands, do: @modes
+
+  # layouts for commands whose payload is plain PacketReader fields
+  @specs %{
+    0x1 => [item_uid: :long],
+    0x2 => [item_uid: :long, amount: :int],
+    0x3 => [dst_uid: :long, src_slot: :short, src_uid: :long, dst_slot: :short],
+    0x8 => [item_uid: :long, amount: :int, _equip_slot: :ustring],
+    0xC => [],
+    0xD => [tab: {:int, &Enums.InventoryTab.get_key/1}],
+    0xE => [tab: {:byte, &Enums.InventoryTab.get_key/1}, extra_slots: :int],
+    0xF => [error: :int]
+  }
+
+  @impl true
+  def spec(command) do
+    case command do
+      0x0 ->
+        [
+          item_id: :int,
+          item_uid: :long,
+          slot: :short,
+          rarity: :int,
+          _equip_slot: :ustring,
+          # the serialized item body follows the login-load layout; consumed
+          # whole so `rest` proves the wrapper fields parsed exactly
+          _item: fn packet -> {byte_size(packet), <<>>} end
+        ]
+
+      0xA ->
+        [
+          tab: {:int, &Enums.InventoryTab.get_key/1},
+          count: :short,
+          _items: fn packet -> {byte_size(packet), <<>>} end
+        ]
+
+      simple ->
+        Map.get(@specs, simple, [])
+    end
+  end
 
   def add_item({:create, item}, character) do
     __MODULE__
@@ -130,7 +174,6 @@ defmodule Ms2ex.Packets.InventoryItem do
     |> put_int(item.charges)
     |> put_item_enchant_stats(item)
     |> put_template(item)
-    # TODO put pets (no pet support yet: pet items would write their info block here)
     # TODO put gem slot (socket unlock and gemstones unimplemented; only the
     #      empty socket block is written)
     |> put_int(TransferFlags.to_int(item.transfer_flags))
@@ -160,6 +203,9 @@ defmodule Ms2ex.Packets.InventoryItem do
         |> Packets.Ugc.put_ugc(item.ugc)
         |> put_blueprint(item)
 
+      item.inventory_tab == :pets ->
+        put_pet(packet, item)
+
       item.inventory_tab == :badge ->
         put_badge(packet, item)
 
@@ -169,6 +215,17 @@ defmodule Ms2ex.Packets.InventoryItem do
       true ->
         packet
     end
+  end
+
+  defp put_pet(packet, item) do
+    pet = Types.ItemPet.get(item)
+
+    packet
+    |> put_ustring(pet.name)
+    |> put_long(pet.exp)
+    |> put_int(pet.evolve_points)
+    |> put_int(pet.level)
+    |> put_bool(pet.has_items)
   end
 
   defp put_badge(packet, item) do

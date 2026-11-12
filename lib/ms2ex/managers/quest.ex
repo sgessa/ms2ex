@@ -7,6 +7,7 @@ defmodule Ms2ex.Managers.Quest do
   """
 
   use GenServer
+  require Logger
 
   alias Ms2ex.Context
   alias Ms2ex.Managers
@@ -382,6 +383,7 @@ defmodule Ms2ex.Managers.Quest do
     reply =
       case Storage.Tables.LearningQuest.get(id) do
         nil ->
+          Logger.debug("maple guide #{id}: no learningquest entry, ignored")
           :ok
 
         entry ->
@@ -542,8 +544,11 @@ defmodule Ms2ex.Managers.Quest do
       {:ok, {updated_quest, consume_results, results}} ->
         new_state = Managers.Quest.State.add_quest_to_state(updated_quest, state)
 
-        Managers.Quest.Rewards.deliver(character, metadata.complete_reward, results)
+        # turn-in removals go out before the reward adds: the rewards often
+        # land in the slots the consumed stacks just freed, and an add that
+        # arrives while the slot is still occupied is dropped by the client
         Enum.each(consume_results, &maybe_push_consume(character, &1))
+        Managers.Quest.Rewards.deliver(character, metadata.complete_reward, results)
 
         update_conditions(
           character.id,
@@ -869,15 +874,23 @@ defmodule Ms2ex.Managers.Quest do
   defp maple_guide_change_field(entry, state) do
     {:ok, character} = Managers.Character.lookup(state.character_id)
 
+    Logger.debug(
+      "maple guide #{entry.quest_id}: level=#{character.level} required=#{entry.required_level} " <>
+        "go_to=#{entry.go_to_map_id}/#{entry.go_to_portal_id}"
+    )
+
     cond do
       character.level < entry.required_level ->
+        Logger.debug("maple guide #{entry.quest_id}: level below requirement, ignored")
         :ok
 
-      maple_guide_quest_completed?(entry.quest_id, state) ->
+      maple_guide_line_completed?(entry.quest_id, state) ->
+        Logger.debug("maple guide #{entry.quest_id}: whole quest line completed, ignored")
         :ok
 
       entry.go_to_map_id == @default_home_map_id ->
         # TODO: migrate to the character's home once residences exist
+        Logger.debug("maple guide #{entry.quest_id}: home map, ignored")
         :ok
 
       true ->
@@ -888,17 +901,44 @@ defmodule Ms2ex.Managers.Quest do
   defp maple_guide_enter(character, entry) do
     case Storage.Maps.get_portal(entry.go_to_map_id, entry.go_to_portal_id) do
       %{position: position, rotation: rotation} ->
+        Logger.debug("maple guide #{entry.quest_id}: entering at portal position")
         Managers.Field.change_field(character, entry.go_to_map_id, position, rotation)
 
       nil ->
+        Logger.debug(
+          "maple guide #{entry.quest_id}: portal #{entry.go_to_portal_id} missing, entering at field spawn"
+        )
+
         Managers.Field.change_field(character, entry.go_to_map_id)
     end
   end
 
-  defp maple_guide_quest_completed?(quest_id, state) do
+  # the guide gates on the whole quest line (the entry quest's chapter),
+  # not its first quest: a player partway through the line can still travel
+  # back to the tutorial map
+  defp maple_guide_line_completed?(quest_id, state) do
+    case Storage.Quests.line_quest_ids(quest_id) do
+      [] ->
+        # no line data for the entry: fall back to the entry quest alone
+        line_quest_completed?(quest_id, state)
+
+      quest_ids ->
+        Logger.debug("maple guide #{entry_id(quest_id)}: line #{inspect(quest_ids)}")
+        Enum.all?(quest_ids, fn quest_id -> line_quest_completed?(quest_id, state) end)
+    end
+  end
+
+  defp line_quest_completed?(quest_id, state) do
     case Managers.Quest.State.get_quest_from_state(quest_id, state) do
       %{state: :completed} -> true
       _quest -> false
+    end
+  end
+
+  defp entry_id(quest_id) do
+    case Storage.Quests.get_meta(quest_id) do
+      %{basic: %{chapter_id: chapter}} -> "q#{quest_id} chapter #{chapter}"
+      _ -> "q#{quest_id}"
     end
   end
 

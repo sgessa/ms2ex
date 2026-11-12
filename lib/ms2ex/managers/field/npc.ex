@@ -1,5 +1,6 @@
 defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Context
+  require Logger
   alias Ms2ex.Managers
   alias Ms2ex.Net
   alias Ms2ex.Navigation
@@ -8,6 +9,7 @@ defmodule Ms2ex.Managers.Field.Npc do
   alias Ms2ex.Types
 
   alias Ms2ex.Managers.Field.Npc.Battle
+  alias Ms2ex.Managers.Field.Pet
   alias Ms2ex.Managers.Field.Npc.Patrol
 
   # a slow keepalive re-announcing each npc (counter refresh, position
@@ -52,6 +54,7 @@ defmodule Ms2ex.Managers.Field.Npc do
     npc_spawn =
       npc_spawn
       |> Map.put(:spawned_mobs, [])
+      |> Map.put(:spawned_pets, [])
       |> Map.put(:spawned_npcs, [])
 
     state = put_in(state, [:npc_spawns, spawn_point_id], npc_spawn)
@@ -344,7 +347,6 @@ defmodule Ms2ex.Managers.Field.Npc do
     end)
   end
 
-  # TODO: pet spawn roll (pet_spawn_rate) — pet metadata is not projected yet
   # A spawn point can be filled on demand by trigger scripts (spawn_monster):
   # spawn whatever the population is missing right away.
   def trigger_spawn(state, spawn_point_id) do
@@ -480,15 +482,69 @@ defmodule Ms2ex.Managers.Field.Npc do
     missing = spawn.population - length(spawn.spawned_mobs)
 
     Enum.reduce(1..max(missing, 0), {spawn, state}, fn _i, {spawn, state} ->
-      case spawn_npc(state, pick_mob_id(spawn), spawn) do
-        {%Types.FieldNpc{} = field_npc, state} ->
-          spawned = spawn.spawned_mobs ++ [field_npc.object_id]
-          {%{spawn | spawned_mobs: spawned}, state}
+      npc_id = pick_mob_id(spawn)
+      pet_id = Storage.Pets.pet_id_for_npc(npc_id)
 
-        {nil, state} ->
-          {spawn, state}
+      Logger.debug(
+        "spawn cycle #{spawn.spawn_point_id}: npc=#{npc_id} pet_npc=#{inspect(pet_id)} roll=#{wild_pet_roll?(spawn, npc_id)}"
+      )
+
+      cond do
+        # pet tutorial maps stage the tameable pet as a plain npc spawn
+        pet_id != nil ->
+          spawn_wild_pet(spawn, state, pet_id)
+
+        wild_pet_roll?(spawn, npc_id) ->
+          spawn_wild_pet(spawn, state, pet_id_for(spawn, npc_id))
+
+        true ->
+          spawn_mob(spawn, state, npc_id)
       end
     end)
+  end
+
+  defp spawn_wild_pet(spawn, state, pet_id) do
+    Logger.debug("spawning wild pet #{pet_id} at spawn #{spawn.spawn_point_id}")
+
+    case Pet.spawn_wild(state, pet_id, pet_id, spawn.position) do
+      {:ok, field_pet, state} ->
+        spawned = spawn.spawned_pets ++ [field_pet.object_id]
+        {%{spawn | spawned_pets: spawned}, state}
+
+      {:error, state} ->
+        {spawn, state}
+    end
+  end
+
+  defp spawn_mob(spawn, state, npc_id) do
+    case spawn_npc(state, npc_id, spawn) do
+      {%Types.FieldNpc{} = field_npc, state} ->
+        spawned = spawn.spawned_mobs ++ [field_npc.object_id]
+        {%{spawn | spawned_mobs: spawned}, state}
+
+      {nil, state} ->
+        {spawn, state}
+    end
+  end
+
+  # a spawn carrying a pet roll turns the rolled npc into a wild pet at the
+  # spawn's pet_spawn_rate (per-10k roll), bounded by pet_population
+  defp wild_pet_roll?(spawn, npc_id) do
+    rate = spawn[:pet_spawn_rate] || 0
+
+    rate > 0 and length(spawn.spawned_pets) < (spawn[:pet_population] || 0) and
+      pet_id_for(spawn, npc_id) > 0 and :rand.uniform(10_000) <= rate
+  end
+
+  # pet_ids is aligned with npc_ids (0 = that mob has no pet)
+  defp pet_id_for(spawn, npc_id) do
+    npc_ids = spawn[:npc_ids] || []
+    pet_ids = spawn[:pet_ids] || []
+
+    npc_ids
+    |> Enum.zip(pet_ids)
+    |> Enum.find_value(fn {id, pet_id} -> id == npc_id && pet_id end) ||
+      0
   end
 
   # a mob spawn document lists candidate npc ids with a parallel weight

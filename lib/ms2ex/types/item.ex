@@ -50,6 +50,10 @@ defmodule Ms2ex.Types.Item do
 
   def inventory_tab(%{property: %{type: type}}), do: Map.get(@type_tabs, type, :misc)
 
+  # metadata without a property block (minimal stubs, odd ingest rows)
+  # lands in misc rather than raising
+  def inventory_tab(_metadata), do: :misc
+
   @doc "Returns the wire badge type derived from a badge item id."
   def badge_type(item_id) when is_integer(item_id) do
     badge_group = div(item_id, 100_000)

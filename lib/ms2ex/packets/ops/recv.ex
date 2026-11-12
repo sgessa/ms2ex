@@ -59,6 +59,8 @@ defmodule Ms2ex.Packets.Ops.Recv do
     0x6F => "PARTY_SEARCH",
     0x75 => "PLAY_INSTRUMENT",
     0x74 => "FISHING",
+    0x79 => "REQUEST_PET",
+    0x7A => "REQUEST_PET_INVENTORY",
     0x81 => "STATE",
     0x83 => "GLOBAL_FACTOR",
     0x84 => "SMART_PUSH",

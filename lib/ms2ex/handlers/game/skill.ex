@@ -309,10 +309,77 @@ defmodule Ms2ex.GameHandlers.Skill do
         {:ok, %{dead?: false, type: :mob} = mob} ->
           [damage_mob(skill_cast, mob, crit?)]
 
+        # a wild pet hit by a pet-taming attack gains taming points; taming
+        # hits carry no damage records — any other skill does nothing to pets
         _ ->
+          tame_pet(skill_cast, obj_id)
           []
       end
     end)
+  end
+
+  # the taming points ride the attack pet-taming property; the candy cast
+  # rows (odd ids, no attacks) resolve to their functional sibling
+  # (94000001 -> 94000002, 1000 points per hit). Snare skills (trap_level)
+  # capture a READY pet; forced taming captures regardless of the gauge
+  defp tame_pet(skill_cast, object_id) do
+    attack = Types.SkillCast.attack_point(skill_cast)
+    pet_taming = attack && attack[:pet_taming]
+    caster_object_id = skill_cast.caster.object_id
+
+    cond do
+      pet_taming && pet_taming[:trap_level] > 0 ->
+        # a snare skill hit captures a READY pet — the gauge alone never
+        # captures (the client prompts "use a snare" when the gauge fills)
+        Managers.Field.snare_pet(skill_cast.caster, object_id, caster_object_id)
+
+      pet_taming && pet_taming[:forced_taming] ->
+        Managers.Field.force_capture(skill_cast.caster, object_id)
+
+      true ->
+        points = taming_points_for(skill_cast)
+        Managers.Field.tame_pet(skill_cast.caster, object_id, caster_object_id, points)
+    end
+  end
+
+  # the snare's cast skill carries the trap property; its item is consumed
+  # when the trap is thrown
+  defp trap_cast?(skill_cast) do
+    case Types.SkillCast.attack_point(skill_cast) do
+      %{pet_taming: %{trap_level: level}} when level > 0 -> true
+      _ -> false
+    end
+  end
+
+  # the taming points ride the attack pet-taming property; the candy cast
+  # rows (odd ids, no attacks) resolve to their functional sibling
+  # (94000001 -> 94000002, 1000 points per hit)
+  defp taming_points_for(skill_cast) do
+    attack = Types.SkillCast.attack_point(skill_cast)
+
+    case attack && attack[:pet_taming] do
+      %{taming_point: n} when is_integer(n) -> n
+      _ -> sibling_taming_points(skill_cast.skill_id + 1)
+    end
+  end
+
+  defp sibling_taming_points(skill_id) do
+    levels = (Ms2ex.Storage.Skills.get_meta(skill_id) || %{})[:levels] || %{}
+    Enum.find_value(levels, 0, fn {_lvl, level_doc} -> attack_taming_point(level_doc) end)
+  end
+
+  defp attack_taming_point(level_doc) do
+    (level_doc[:motions] || [])
+    |> List.wrap()
+    |> Enum.flat_map(&(&1[:attacks] || []))
+    |> Enum.find_value(fn attack ->
+      pt = attack[:pet_taming]
+      pt && pt[:taming_point]
+    end)
+    |> case do
+      n when is_integer(n) -> n
+      _ -> 0
+    end
   end
 
   defp read_target_ids(packet, count), do: read_target_ids(packet, count, [])
@@ -354,7 +421,11 @@ defmodule Ms2ex.GameHandlers.Skill do
     consumable_cast_item? =
       fishing_lure_item?(cast_item) or consumable_state_item?(cast_item)
 
-    if Types.SkillCast.use_item?(skill_cast) do
+    # pet-taming items (the candies) carry no use_item consume flag on
+    # their cast skill: throwing one consumes the item itself — the snare
+    # likewise (the trap is used whether or not it captures)
+    if Types.SkillCast.use_item?(skill_cast) or taming_points_for(skill_cast) > 0 or
+         trap_cast?(skill_cast) do
       consume_used_item(session, character, item_uid)
     end
 

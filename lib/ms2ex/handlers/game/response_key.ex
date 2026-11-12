@@ -103,6 +103,7 @@ defmodule Ms2ex.GameHandlers.ResponseKey do
       |> push(Packets.UserEnv.set_mode(0xA))
       |> push(Packets.UserEnv.set_mode(0xC))
       |> push(Packets.Fishing.load_album(character.fish_album || %{}))
+      |> push(Packets.ResponsePet.load_collection(character.pet_collection || %{}))
       |> push_key_table(character)
       |> push(Packets.FieldEntrance.bytes())
       |> push(Packets.InGameRank.load())

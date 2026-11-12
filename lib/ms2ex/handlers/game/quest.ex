@@ -4,6 +4,7 @@ defmodule Ms2ex.GameHandlers.Quest do
   alias Ms2ex.Storage
 
   import Packets.PacketReader
+  require Logger
 
   @accept 0x02
   @complete 0x04
@@ -99,6 +100,7 @@ defmodule Ms2ex.GameHandlers.Quest do
 
   defp handle_command(@maple_guide, packet, session) do
     {id, _packet} = get_int(packet)
+    Logger.debug("maple guide requested: id=#{id} character=#{session.character_id}")
 
     Managers.Quest.maple_guide(session.character_id, id)
   end

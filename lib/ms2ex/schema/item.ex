@@ -26,6 +26,7 @@ defmodule Ms2ex.Schema.Item do
     :limit_break_level,
     :location,
     :mail_id,
+    :owner_item_id,
     :rarity,
     :remaining_trades,
     :stats,
@@ -63,10 +64,15 @@ defmodule Ms2ex.Schema.Item do
     field :is_bound, :boolean, default: false
     field :level, :integer, virtual: true
     field :limit_break_level, :integer, default: 0
-    field :location, Ecto.Enum, values: [inventory: 0, equipment: 1, mail: 2], default: :inventory
+
+    field :location, Ecto.Enum,
+      values: [inventory: 0, equipment: 1, mail: 2, pet: 3],
+      default: :inventory
+
     field :lock_character_id, :integer, virtual: true
     field :mob_drop?, :boolean, virtual: true, default: false
     field :object_id, :integer, virtual: true
+    field :owner_item_id, :integer
     field :position, EctoTypes.Term, virtual: true
     field :rarity, :integer
     field :remaining_trades, :integer, default: 0

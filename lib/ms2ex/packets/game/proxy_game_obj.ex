@@ -2,6 +2,7 @@ defmodule Ms2ex.Packets.ProxyGameObj do
   alias Ms2ex.Schema
   alias Ms2ex.Packets
   alias Ms2ex.Enums
+  alias Ms2ex.Types
 
   import Packets.PacketWriter
 
@@ -11,7 +12,9 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     update_player: 0x5,
     load_npc: 0x6,
     remove_npc: 0x7,
-    update_npc: 0x8
+    update_npc: 0x8,
+    load_pet: 0x9,
+    remove_pet: 0xA
   }
 
   # which fields follow the flag byte
@@ -135,5 +138,23 @@ defmodule Ms2ex.Packets.ProxyGameObj do
     |> put_int(field_npc.object_id)
     |> put_bool(field_npc.dead?)
     |> put_coord(field_npc.position)
+  end
+
+  def load_pet(%Types.FieldPet{} = field_pet) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.load_pet)
+    |> put_int(field_pet.object_id)
+    |> put_int(field_pet.skin_id)
+    |> put_int(field_pet.npc.id)
+    |> put_bool(false)
+    |> put_coord(field_pet.position)
+  end
+
+  def remove_pet(object_id) do
+    __MODULE__
+    |> build()
+    |> put_byte(@modes.remove_pet)
+    |> put_int(object_id)
   end
 end

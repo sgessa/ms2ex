@@ -56,7 +56,7 @@ defmodule Ms2ex.Packets.Decoder do
   defp spec_module(name, direction) do
     prefixes =
       if direction == :send do
-        ["Elixir.Ms2ex.Packets."]
+        ["Elixir.Ms2ex.Packets.", "Elixir.Ms2ex.Packets.Game."]
       else
         [
           "Elixir.Ms2ex.Handlers.",
