@@ -101,7 +101,7 @@ defmodule Ms2ex.Managers.Field.Item do
         source_object_id: character.object_id
     }
 
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item, character))
     store(state, item)
   end
 
@@ -120,7 +120,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: if(receiver, do: receiver.object_id, else: 0)
     }
 
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item, receiver))
     store(state, item)
   end
 

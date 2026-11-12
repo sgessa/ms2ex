@@ -83,7 +83,7 @@ defmodule Ms2ex.Managers.Field.Character do
 
     # Load items
     for {_id, item} <- state.items do
-      push(character, Packets.FieldAddItem.add_item(item))
+      push(character, Packets.FieldAddItem.add_item(item, character))
     end
 
     # trigger/ui state finalizes before the player stats load; meshes carry
