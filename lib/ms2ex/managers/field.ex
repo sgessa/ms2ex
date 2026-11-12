@@ -422,9 +422,10 @@ defmodule Ms2ex.Managers.Field do
     %{state | pets: Map.put(state.pets, field_pet.object_id, field_pet)}
   end
 
-  # the captured pet drops where it stood, unlocked from the start (the
-  # reference's OnDeath + DropItem; the inventory add happens on pickup)
-  defp drop_pet_item(state, field_pet, _tamer) do
+  # the captured pet drops where it stood, bound to the tamer exactly like
+  # a mob-kill drop (the reference's OnDeath + DropItem; the inventory add
+  # happens on pickup)
+  defp drop_pet_item(state, field_pet, tamer) do
     pet_id = field_pet.pet[:id]
     rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
 
@@ -436,11 +437,7 @@ defmodule Ms2ex.Managers.Field do
         data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
       })
 
-    # the drop locks to the tamer's object id: the client's Player-drop lock
-    # check matches against object ids (a character-id lock reads as someone
-    # else's drop and never becomes lootable), and the lock keeps nearby
-    # players from stealing the capture
-    __MODULE__.Item.add_mob_drop(field_pet, item, tamer, state, tamer.object_id)
+    __MODULE__.Item.add_mob_drop(field_pet, item, tamer, state)
   end
 
   @doc "Forced taming (the trap candy) captures regardless of the gauge."

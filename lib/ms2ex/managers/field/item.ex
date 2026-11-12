@@ -105,7 +105,7 @@ defmodule Ms2ex.Managers.Field.Item do
     store(state, item)
   end
 
-  def add_mob_drop(mob, item, receiver \\ nil, state, lock_id \\ nil) do
+  def add_mob_drop(mob, item, receiver \\ nil, state) do
     {object_id, state} = Managers.Field.next_local_id(state)
     receiver = receiver || mob.first_attacker || mob.last_attacker
     item = increase_premium_meso_drop(item, receiver)
@@ -114,7 +114,7 @@ defmodule Ms2ex.Managers.Field.Item do
       item
       | position: drop_position(mob),
         object_id: object_id,
-        lock_character_id: lock_id || if(receiver, do: receiver.id, else: 0),
+        lock_character_id: if(receiver, do: receiver.id, else: 0),
         mob_drop?: true,
         source_object_id: mob.object_id,
         target_object_id: if(receiver, do: receiver.object_id, else: 0)
