@@ -1357,8 +1357,15 @@ defmodule Ms2ex.Managers.Field do
   def handle_info({:auto_loot_pet_drop, object_id, character_id}, state) do
     case Map.get(state.items, object_id) do
       %Schema.Item{} = item ->
-        {:ok, character} = Managers.Character.lookup(character_id)
-        {:noreply, __MODULE__.Item.pickup_item(character, item, state)}
+        case Process.whereis(:"characters:#{character_id}") do
+          nil ->
+            # the tamer logged out: leave the drop for later pickup
+            {:noreply, state}
+
+          _pid ->
+            {:ok, character} = Managers.Character.lookup(character_id)
+            {:noreply, __MODULE__.Item.pickup_item(character, item, state)}
+        end
 
       nil ->
         {:noreply, state}
