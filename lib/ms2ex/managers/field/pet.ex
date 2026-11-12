@@ -168,7 +168,10 @@ defmodule Ms2ex.Managers.Field.Pet do
               skin_id: npc_id,
               taming_rank: :rand.uniform(100),
               # the abandonment window runs from the spawn, not from boot
-              last_tame_at: Ms2ex.sync_ticks()
+              last_tame_at: Ms2ex.sync_ticks(),
+              # the mob-drop helper reads these; wild pets have no attackers
+              first_attacker: nil,
+              last_attacker: nil
             ]
 
             {field_pet, state} = Field.register_pet(pet_attrs, state)
