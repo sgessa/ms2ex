@@ -438,7 +438,10 @@ defmodule Ms2ex.Managers.Field do
         data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
       })
 
-    __MODULE__.Item.add_mob_drop(field_pet, item, tamer, state)
+    # the captured pet drops where it stood as a field item, unlocked —
+    # the reference's OnDeath + DropItem; the inventory add happens on
+    # pickup (which also drives the item_exist counters)
+    __MODULE__.Item.add_pet_drop(field_pet, item, state)
   end
 
   @doc "Forced taming (the trap candy) captures regardless of the gauge."
