@@ -436,10 +436,11 @@ defmodule Ms2ex.Managers.Field do
         data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
       })
 
-    # the drop is unlocked from the start (the reference's pet capture
-    # spawns the item with no receiver), so any player — in practice the
-    # tamer standing next to it — can pick it up
-    __MODULE__.Item.add_mob_drop(field_pet, item, nil, state)
+    # the drop locks to the tamer's object id: the client's Player-drop lock
+    # check matches against object ids (a character-id lock reads as someone
+    # else's drop and never becomes lootable), and the lock keeps nearby
+    # players from stealing the capture
+    __MODULE__.Item.add_mob_drop(field_pet, item, tamer, state, tamer.object_id)
   end
 
   @doc "Forced taming (the trap candy) captures regardless of the gauge."
