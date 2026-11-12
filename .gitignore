@@ -54,3 +54,4 @@ ms2ex-*.tar
 __pycache__/
 inspect_positions.sh
 watch_cutscene.sh
+packets.log
