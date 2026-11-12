@@ -157,23 +157,6 @@ defmodule Ms2ex.Managers.Field.Item do
     store(state, item)
   end
 
-  # the captured pet's field drop: DropType.Player, unlocked, at the
-  # pet's position (the reference spawns it the same way)
-  def add_pet_drop(mob, item, state) do
-    {object_id, state} = Managers.Field.next_local_id(state)
-
-    item = %{
-      item
-      | position: mob.position,
-        object_id: object_id,
-        source_object_id: mob.object_id,
-        target_object_id: 0
-    }
-
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_pet_drop(item))
-    store(state, item)
-  end
-
   # no source entity, free for any player to take
   def create_item(position, item, state) do
     {object_id, state} = Managers.Field.next_local_id(state)
