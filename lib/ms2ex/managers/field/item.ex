@@ -1,4 +1,6 @@
 defmodule Ms2ex.Managers.Field.Item do
+  require Logger
+
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
   alias Ms2ex.Context
@@ -64,7 +66,11 @@ defmodule Ms2ex.Managers.Field.Item do
         remove_item(character, item, state)
 
       # the inventory cannot hold the item; it stays on the field
-      {:error, _changeset} ->
+      {:error, changeset} ->
+        Logger.warning(
+          "pickup add_item failed: item=#{item.item_id} reason=#{inspect(changeset.errors)}"
+        )
+
         state
     end
   end
@@ -101,7 +107,7 @@ defmodule Ms2ex.Managers.Field.Item do
         source_object_id: character.object_id
     }
 
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item, character))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 
@@ -120,7 +126,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: if(receiver, do: receiver.object_id, else: 0)
     }
 
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item, receiver))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
     store(state, item)
   end
 

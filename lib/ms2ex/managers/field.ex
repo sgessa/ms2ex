@@ -1023,6 +1023,8 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:pickup_item, character, object_id}, _from, state) do
     case Map.get(state.items, object_id) do
       nil ->
+        Logger.warning("pickup miss: object_id=#{object_id} items=#{map_size(state.items)}")
+
         {:reply, :error, state}
 
       item ->
