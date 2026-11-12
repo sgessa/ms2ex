@@ -416,7 +416,7 @@ defmodule Ms2ex.Managers.Field do
 
     Process.send_after(self(), {:remove_dead_pet, field_pet.object_id}, corpse_ms)
 
-    drop_pet_item(state, field_pet, tamer)
+    state = drop_pet_item(state, field_pet, tamer)
 
     # the corpse stays in state.pets (dead?) until the removal timer fires
     %{state | pets: Map.put(state.pets, field_pet.object_id, field_pet)}
