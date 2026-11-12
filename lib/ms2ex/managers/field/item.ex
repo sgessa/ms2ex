@@ -1,6 +1,4 @@
 defmodule Ms2ex.Managers.Field.Item do
-  require Logger
-
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
   alias Ms2ex.Context
@@ -66,11 +64,7 @@ defmodule Ms2ex.Managers.Field.Item do
         remove_item(character, item, state)
 
       # the inventory cannot hold the item; it stays on the field
-      {:error, changeset} ->
-        Logger.warning(
-          "pickup add_item failed: item=#{item.item_id} reason=#{inspect(changeset.errors)}"
-        )
-
+      {:error, _changeset} ->
         state
     end
   end
@@ -107,7 +101,7 @@ defmodule Ms2ex.Managers.Field.Item do
         source_object_id: character.object_id
     }
 
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item, character))
     store(state, item)
   end
 
@@ -126,7 +120,7 @@ defmodule Ms2ex.Managers.Field.Item do
         target_object_id: if(receiver, do: receiver.object_id, else: 0)
     }
 
-    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item))
+    Managers.Field.broadcast(state.topic, Packets.FieldAddItem.add_item(item, receiver))
     store(state, item)
   end
 
@@ -140,6 +134,7 @@ defmodule Ms2ex.Managers.Field.Item do
 
   defp increase_premium_meso_drop(item, _receiver), do: item
 
+  # a fixed-position, unowned field item (trigger-spawned quest pickups):
   # the captured pet's field drop: DropType.Player, unlocked, at the
   # pet's position (the reference spawns it the same way)
   def add_pet_drop(mob, item, state) do

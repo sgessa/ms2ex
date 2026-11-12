@@ -418,24 +418,13 @@ defmodule Ms2ex.Managers.Field do
 
     state = drop_pet_item(state, field_pet, tamer)
 
-    # the client does not auto-loot pet-class field items (no pickup request
-    # is ever sent for them), so the drop collects itself to the tamer after
-    # a short beat — the pet "flies" into the inventory. Manual pickup still
-    # wins if the tamer reaches it first
-    Process.send_after(
-      self(),
-      {:auto_loot_pet_drop, field_pet.object_id, tamer.id},
-      :timer.seconds(5)
-    )
-
     # the corpse stays in state.pets (dead?) until the removal timer fires
     %{state | pets: Map.put(state.pets, field_pet.object_id, field_pet)}
   end
 
   # the captured pet drops where it stood, bound to the tamer exactly like
   # a mob-kill drop (the reference's OnDeath + DropItem; the inventory add
-  # happens on pickup). This is the packet shape that verified lootable on
-  # the live client — DropType byte, receiver lock and item body alike
+  # happens on pickup)
   defp drop_pet_item(state, field_pet, _tamer) do
     pet_id = field_pet.pet[:id]
     rarity = min(field_pet.taming_rank |> div(25) |> Kernel.+(1), 5)
@@ -448,9 +437,8 @@ defmodule Ms2ex.Managers.Field do
         data: %{pet: Map.from_struct(%Types.ItemPet{name: field_pet.pet[:name] || ""})}
       })
 
-    # the captured pet drops where it stood as a field item, unlocked —
-    # the reference's OnDeath + DropItem; the inventory add happens on
-    # pickup (which also drives the item_exist counters)
+    # the drop is DropType.Player with no receiver (the reference's pet
+    # capture spawns the item unlocked), lootable by walking over it
     __MODULE__.Item.add_pet_drop(field_pet, item, state)
   end
 
@@ -1035,8 +1023,6 @@ defmodule Ms2ex.Managers.Field do
   def handle_call({:pickup_item, character, object_id}, _from, state) do
     case Map.get(state.items, object_id) do
       nil ->
-        Logger.warning("pickup miss: object_id=#{object_id} items=#{map_size(state.items)}")
-
         {:reply, :error, state}
 
       item ->
@@ -1347,28 +1333,6 @@ defmodule Ms2ex.Managers.Field do
     case Map.get(state.pets, object_id) do
       %Types.FieldPet{} = pet -> {:noreply, despawn_wild_pets(state, [pet])}
       nil -> {:noreply, state}
-    end
-  end
-
-  # the pet drop collects itself: walking over pet-class field items does
-  # not trigger the client's auto-loot, so the tamer receives it after the
-  # beat. A successful manual pickup removes the item first, making this a
-  # no-op; a failed add (full pet tab) leaves the drop for later
-  def handle_info({:auto_loot_pet_drop, object_id, character_id}, state) do
-    case Map.get(state.items, object_id) do
-      %Schema.Item{} = item ->
-        case Process.whereis(:"characters:#{character_id}") do
-          nil ->
-            # the tamer logged out: leave the drop for later pickup
-            {:noreply, state}
-
-          _pid ->
-            {:ok, character} = Managers.Character.lookup(character_id)
-            {:noreply, __MODULE__.Item.pickup_item(character, item, state)}
-        end
-
-      nil ->
-        {:noreply, state}
     end
   end
 
