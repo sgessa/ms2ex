@@ -1,4 +1,6 @@
 defmodule Ms2ex.GameHandlers.UseItem do
+  require Logger
+
   alias Ms2ex.Managers
   alias Ms2ex.Enums
   alias Ms2ex.Context
@@ -327,17 +329,21 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp recall_party(session, character, item) do
-    consumed_item = Managers.Inventory.consume(item)
-    push(session, Packets.InventoryItem.consume(consumed_item))
-
     with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup),
          {:ok, targets} <- prompt_targets(party, character) do
+      consumed_item = Managers.Inventory.consume(item)
+      push(session, Packets.InventoryItem.consume(consumed_item))
+
       Managers.PartyServer.call(
         party.id,
         {:start_recall, Helper.Party.recall_caster(character), targets}
       )
     else
-      _ -> :ok
+      {:recall_drop, reason} ->
+        Logger.debug("scroll recall dropped: #{reason}")
+
+      _ ->
+        :ok
     end
 
     session
@@ -347,7 +353,12 @@ defmodule Ms2ex.GameHandlers.UseItem do
   # are not promptable.
   defp prompt_targets(party, caster) do
     targets = Helper.Party.recall_targets(party, caster)
-    if targets == [], do: {:error, :no_targets}, else: {:ok, targets}
+
+    if targets == [] do
+      {:recall_drop, :no_promptable_members}
+    else
+      {:ok, targets}
+    end
   end
 
   defp premium_coupon_period(%Schema.Item{metadata: %{function_parameters: parameters}})
