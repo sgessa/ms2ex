@@ -1,7 +1,10 @@
 defmodule Ms2ex.GameHandlers.UseItem do
+  require Logger
+
   alias Ms2ex.Managers
   alias Ms2ex.Enums
   alias Ms2ex.Context
+  alias Ms2ex.GameHandlers.Helper
   alias Ms2ex.GameHandlers.Helper.ItemBox
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -26,7 +29,9 @@ defmodule Ms2ex.GameHandlers.UseItem do
     end
   end
 
-  # Party Summon Scroll purchase
+  # A recall cast sends its item-use request without an item uid: the
+  # held party summon scroll is consumed automatically, so uid 0 resolves
+  # to whichever scroll the character holds.
   defp item_for_use(character, 0) do
     character
     |> Managers.Inventory.all()
@@ -326,32 +331,44 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp recall_party(session, character, item) do
-    consumed_item = Managers.Inventory.consume(item)
-    push(session, Packets.InventoryItem.consume(consumed_item))
+    with {:ok, party_id} <- Helper.Party.party_id(character),
+         {:ok, party} <- Managers.PartyServer.call(party_id, :lookup),
+         {:ok, targets} <- prompt_targets(party, character) do
+      consumed_item = Managers.Inventory.consume(item)
+      push(session, Packets.InventoryItem.consume(consumed_item))
 
-    recall_online_members(character)
+      caster = Helper.Party.recall_caster(character)
+
+      case Managers.PartyServer.call(
+             party.id,
+             {:start_recall, caster, targets}
+           ) do
+        {:ok, _recall} ->
+          Logger.debug("recall request started by #{caster.name}")
+
+        {:error, reason} ->
+          Logger.debug("recall request rejected for #{caster.name}: #{inspect(reason)}")
+      end
+    else
+      {:recall_drop, reason} ->
+        Logger.debug("scroll recall dropped: #{reason}")
+
+      _ ->
+        Logger.debug("scroll recall dropped: lookup failed")
+    end
 
     session
   end
 
-  defp recall_online_members(character) do
-    with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup) do
-      Enum.each(party.members, &recall_member(&1, character))
-    end
-  end
+  # Members already on the caster's field, dead, offline, or out of a field
+  # are not promptable.
+  defp prompt_targets(party, caster) do
+    targets = Helper.Party.recall_targets(party, caster)
 
-  defp recall_member(member, character) do
-    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
-         true <- live_member.id != character.id,
-         true <- Map.get(live_member, :online?, false),
-         false <- Map.get(live_member, :dead?, false),
-         true <- live_member.map_id != character.map_id do
-      Managers.Field.change_field(
-        live_member,
-        character.map_id,
-        character.position,
-        character.rotation
-      )
+    if targets == [] do
+      {:recall_drop, :no_promptable_members}
+    else
+      {:ok, targets}
     end
   end
 

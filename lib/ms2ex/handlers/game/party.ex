@@ -1,4 +1,6 @@
 defmodule Ms2ex.GameHandlers.Party do
+  require Logger
+
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Enums
@@ -146,19 +148,36 @@ defmodule Ms2ex.GameHandlers.Party do
     session
   end
 
-  # Summon Party: buy one party summon scroll from the party menu.
+  # Summon Party: the party menu's recall button. Consumes a held recall
+  # scroll (buying one for merets first if none) and sends every eligible
+  # member a follow prompt; members who accept are pulled to the caster's
+  # field by the RecallUser handler. The membership and prompt-target checks
+  # run before anything is consumed or charged.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, _party} <- PartyServer.call(character.party_id, :lookup) do
+         {:ok, party_id} <- party_id(character),
+         {:ok, party} <- PartyServer.call(party_id, :lookup),
+         :ok <- recall_not_pending(party),
+         {:ok, targets} <- recall_targets(party, character) do
+      Logger.debug("recall requested by #{character.name} (#{length(targets)} promptable)")
+
+      caster = recall_caster(character)
+
       case party_summon_item(character) do
         %Schema.Item{} = item ->
-          recall_party(session, character, item)
+          recall_party(session, party, caster, item, targets)
 
         nil ->
-          purchase_and_recall_party(session, character)
+          purchase_and_recall_party(session, party, caster, character, targets)
       end
     else
-      _ -> session
+      {:recall_drop, reason} ->
+        Logger.debug("party recall dropped: #{reason}")
+        session
+
+      _ ->
+        Logger.debug("party recall dropped: lookup failed")
+        session
     end
   end
 
@@ -242,13 +261,15 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
-  defp purchase_and_recall_party(session, character) do
+  defp purchase_and_recall_party(session, party, caster, character, targets) do
     with item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
          {:ok, result} <- purchase_party_summon(session, character, item),
          %Schema.Item{} = purchased_item <- purchased_item(result) do
-      recall_party(session, character, purchased_item)
+      recall_party(session, party, caster, purchased_item, targets)
     else
-      _ -> session
+      _ ->
+        Logger.debug("recall scroll purchase failed for #{character.name}")
+        session
     end
   end
 
@@ -263,29 +284,24 @@ defmodule Ms2ex.GameHandlers.Party do
     |> Enum.find(&(&1.item_id == @party_summon_scroll_id and &1.amount > 0))
   end
 
-  defp recall_party(session, character, item) do
+  defp recall_party(session, party, caster, item, targets) do
     consumed_item = Managers.Inventory.consume(item)
     push(session, Packets.InventoryItem.consume(consumed_item))
 
-    with {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
-      Enum.each(party.members, &recall_member(&1, character))
-    end
+    log_start_reply(caster, PartyServer.call(party.id, {:start_recall, caster, targets}))
 
     session
   end
 
-  defp recall_member(member, summoner) do
-    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
-         true <- live_member.id != summoner.id,
-         true <- Map.get(live_member, :online?, false),
-         false <- Map.get(live_member, :dead?, false),
-         true <- is_pid(Map.get(live_member, :field_pid)),
-         false <- live_member.field_pid == summoner.field_pid do
-      Managers.Field.summon_to_field(summoner, live_member)
-    else
-      _ -> :ok
-    end
+  defp recall_not_pending(party) do
+    if is_nil(party.recall), do: :ok, else: {:recall_drop, :request_pending}
   end
+
+  defp log_start_reply(caster, {:ok, _recall}),
+    do: Logger.debug("recall request started by #{caster.name}")
+
+  defp log_start_reply(caster, {:error, reason}),
+    do: Logger.debug("recall request rejected for #{caster.name}: #{inspect(reason)}")
 
   defp add_party_summon(character, item, premium?) do
     case Managers.Inventory.add_item(character, item) do

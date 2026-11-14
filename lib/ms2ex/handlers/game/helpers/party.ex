@@ -77,4 +77,48 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
         :ok
     end
   end
+
+  # Resolves the character's party id: the struct's party_id when present,
+  # else the party manager's record — a relogin starts the character process
+  # without the virtual field while the membership survives there. Heals the
+  # character process so later readers see the same party.
+  def party_id(character) do
+    with {:error, _} <- struct_party_id(character),
+         {:ok, party_id} <- PartyManager.lookup(character) do
+      Managers.Character.call(character, {:update, %{character | party_id: party_id}})
+      {:ok, party_id}
+    else
+      other -> other
+    end
+  end
+
+  defp struct_party_id(%{party_id: party_id}) when is_integer(party_id), do: {:ok, party_id}
+  defp struct_party_id(_character), do: {:error, :no_party}
+
+  # The fields of the summoning member that the party manager needs to run
+  # a recall; full character structs never cross into party state.
+  def recall_caster(character) do
+    %{id: character.id, name: character.name, map_id: character.map_id}
+  end
+
+  # A follow prompt goes to every live party member on a different field:
+  # online, not dead, in a field, and not already on the caster's field.
+  # Resolved here so the party manager receives only what it needs (member
+  # id and session pid); the session process can safely call the character
+  # managers.
+  def recall_targets(party, caster) do
+    party.members
+    |> Enum.reject(&(&1.id == caster.id))
+    |> Enum.flat_map(fn member ->
+      with true <- Map.get(member, :online?, false),
+           {:ok, live} <- Managers.Character.call(member.id, :lookup),
+           false <- Map.get(live, :dead?, false),
+           true <- is_pid(Map.get(live, :field_pid)),
+           false <- live.field_pid == caster.field_pid do
+        [%{id: live.id, sender_session_pid: live.sender_session_pid}]
+      else
+        _ -> []
+      end
+    end)
+  end
 end

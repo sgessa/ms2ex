@@ -6,6 +6,7 @@ defmodule Ms2ex.Types.Party do
     :pid,
     members: [],
     ready_check: [],
+    recall: nil,
     vote_kick: nil,
     dps_enabled?: false,
     dps_damage: %{}
