@@ -2,6 +2,7 @@ defmodule Ms2ex.GameHandlers.UseItem do
   alias Ms2ex.Managers
   alias Ms2ex.Enums
   alias Ms2ex.Context
+  alias Ms2ex.GameHandlers.Helper
   alias Ms2ex.GameHandlers.Helper.ItemBox
   alias Ms2ex.Packets
   alias Ms2ex.Schema
@@ -329,30 +330,24 @@ defmodule Ms2ex.GameHandlers.UseItem do
     consumed_item = Managers.Inventory.consume(item)
     push(session, Packets.InventoryItem.consume(consumed_item))
 
-    recall_online_members(character)
+    with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup),
+         {:ok, targets} <- prompt_targets(party, character) do
+      Managers.PartyServer.call(
+        party.id,
+        {:start_recall, Helper.Party.recall_caster(character), targets}
+      )
+    else
+      _ -> :ok
+    end
 
     session
   end
 
-  defp recall_online_members(character) do
-    with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup) do
-      Enum.each(party.members, &recall_member(&1, character))
-    end
-  end
-
-  defp recall_member(member, character) do
-    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
-         true <- live_member.id != character.id,
-         true <- Map.get(live_member, :online?, false),
-         false <- Map.get(live_member, :dead?, false),
-         true <- live_member.map_id != character.map_id do
-      Managers.Field.change_field(
-        live_member,
-        character.map_id,
-        character.position,
-        character.rotation
-      )
-    end
+  # Members already on the caster's field, dead, offline, or out of a field
+  # are not promptable.
+  defp prompt_targets(party, caster) do
+    targets = Helper.Party.recall_targets(party, caster)
+    if targets == [], do: {:error, :no_targets}, else: {:ok, targets}
   end
 
   defp premium_coupon_period(%Schema.Item{metadata: %{function_parameters: parameters}})

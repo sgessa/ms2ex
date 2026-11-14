@@ -158,7 +158,7 @@ defmodule Ms2ex.GameHandlers.Party do
          {:ok, party} <- PartyServer.call(character.party_id, :lookup),
          :ok <- recall_not_pending(party),
          {:ok, targets} <- recall_targets(party, character) do
-      caster = %{id: character.id, name: character.name, map_id: character.map_id}
+      caster = recall_caster(character)
 
       case party_summon_item(character) do
         %Schema.Item{} = item ->
@@ -289,30 +289,6 @@ defmodule Ms2ex.GameHandlers.Party do
 
   defp recall_not_pending(party) do
     if is_nil(party.recall), do: :ok, else: {:recall_drop, :request_pending}
-  end
-
-  # A follow prompt goes to every live party member on a different field:
-  # online, not dead, in a field, and not already on the caster's field.
-  # Resolved here so the party manager receives only what it needs (member
-  # id and session pid); the session process can safely call the character
-  # managers.
-  defp recall_targets(party, caster) do
-    targets =
-      party.members
-      |> Enum.reject(&(&1.id == caster.id))
-      |> Enum.flat_map(fn member ->
-        with true <- Map.get(member, :online?, false),
-             {:ok, live} <- Managers.Character.call(member.id, :lookup),
-             false <- Map.get(live, :dead?, false),
-             true <- is_pid(Map.get(live, :field_pid)),
-             false <- live.field_pid == caster.field_pid do
-          [%{id: live.id, sender_session_pid: live.sender_session_pid}]
-        else
-          _ -> []
-        end
-      end)
-
-    if targets == [], do: {:recall_drop, :no_promptable_members}, else: {:ok, targets}
   end
 
   defp add_party_summon(character, item, premium?) do

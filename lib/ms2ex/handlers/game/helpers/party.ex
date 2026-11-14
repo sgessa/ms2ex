@@ -77,4 +77,31 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
         :ok
     end
   end
+
+  # The fields of the summoning member that the party manager needs to run
+  # a recall; full character structs never cross into party state.
+  def recall_caster(character) do
+    %{id: character.id, name: character.name, map_id: character.map_id}
+  end
+
+  # A follow prompt goes to every live party member on a different field:
+  # online, not dead, in a field, and not already on the caster's field.
+  # Resolved here so the party manager receives only what it needs (member
+  # id and session pid); the session process can safely call the character
+  # managers.
+  def recall_targets(party, caster) do
+    party.members
+    |> Enum.reject(&(&1.id == caster.id))
+    |> Enum.flat_map(fn member ->
+      with true <- Map.get(member, :online?, false),
+           {:ok, live} <- Managers.Character.call(member.id, :lookup),
+           false <- Map.get(live, :dead?, false),
+           true <- is_pid(Map.get(live, :field_pid)),
+           false <- live.field_pid == caster.field_pid do
+        [%{id: live.id, sender_session_pid: live.sender_session_pid}]
+      else
+        _ -> []
+      end
+    end)
+  end
 end
