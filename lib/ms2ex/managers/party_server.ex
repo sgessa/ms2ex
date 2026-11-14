@@ -9,10 +9,12 @@ defmodule Ms2ex.Managers.PartyServer do
   alias Ms2ex.Types
   alias Phoenix.PubSub
 
-  @recall_type_party 0
+  # Prompt slot in the client's notify dialog: 0 guild, 1 party, 2 wedding.
+  @recall_type_party 1
   # How long follow prompts stay on screen; the client renders whatever
   # deadline the server sends, so this is the whole window.
-  @recall_window_ms 60_000
+  @recall_window_s 60
+  @recall_window_ms @recall_window_s * 1000
 
   def broadcast(nil, _packet), do: :error
 
@@ -328,7 +330,10 @@ defmodule Ms2ex.Managers.PartyServer do
     {:stop, :normal, state}
   end
 
-  defp deadline, do: Ms2ex.sync_ticks() + @recall_window_ms
+  # The client compares the deadline against its server-time clock (unix
+  # seconds, synced via the time-sync packet). A deadline in another unit
+  # reads as already expired and the prompt closes instantly.
+  defp deadline, do: System.system_time(:second) + @recall_window_s
 
   # Candidates were resolved live by the caster's session; only members still
   # in the party at this point get a prompt.

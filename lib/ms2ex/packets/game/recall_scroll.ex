@@ -5,15 +5,17 @@ defmodule Ms2ex.Packets.RecallScroll do
 
   @commands %{close: 0x0, open: 0x1}
 
-  # Popup asking a party/guild/wedding member to follow the caster. `deadline`
-  # is a server-tick timestamp (same clock as the client's time sync); the
-  # client counts it down and turns red in the last ten seconds. The two
-  # unnamed ints are stored by the client but never rendered.
-  def open(type, caster_name, map_id, deadline) do
+  # Popup asking a guild/party/wedding member to follow the caster. `slot`
+  # selects which notify clip the client renders and which notice string it
+  # shows (0 guild, 1 party, 2 wedding). `deadline` is unix seconds on the
+  # client's server-time clock (synced via the time-sync packet); the client
+  # counts it down and turns red in the last ten seconds. The two unnamed
+  # ints are stored by the client but never rendered.
+  def open(slot, caster_name, map_id, deadline) do
     __MODULE__
     |> build()
     |> put_byte(@commands[:open])
-    |> put_byte(type)
+    |> put_byte(slot)
     |> put_ustring(caster_name)
     |> put_int()
     |> put_int(map_id)
@@ -21,11 +23,11 @@ defmodule Ms2ex.Packets.RecallScroll do
     |> put_long(deadline)
   end
 
-  def close(type) do
+  def close(slot) do
     __MODULE__
     |> build()
     |> put_byte(@commands[:close])
-    |> put_byte(type)
+    |> put_byte(slot)
   end
 
   @impl true
@@ -34,7 +36,7 @@ defmodule Ms2ex.Packets.RecallScroll do
   @impl true
   def spec(0x1) do
     [
-      type: :byte,
+      slot: :byte,
       caster_name: :ustring,
       _stored_a: :int,
       map_id: :int,
@@ -43,5 +45,5 @@ defmodule Ms2ex.Packets.RecallScroll do
     ]
   end
 
-  def spec(0x0), do: [type: :byte]
+  def spec(0x0), do: [slot: :byte]
 end

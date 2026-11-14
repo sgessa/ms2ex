@@ -16,8 +16,9 @@ defmodule Ms2ex.PartyRecallTest do
              PartyServer.handle_call({:start_recall, caster(), [target(2)]}, nil, party)
 
     assert_receive {:push, packet}
-    assert {1, 0, "Leader", 30, deadline} = open_prompt(packet)
-    assert deadline in Ms2ex.sync_ticks()..(Ms2ex.sync_ticks() + 60_000)
+    assert {1, 1, "Leader", 30, deadline} = open_prompt(packet)
+    now = System.system_time(:second)
+    assert deadline in (now - 1)..(now + 61)
 
     assert recall.targets == [target(2)]
     assert recall.summoner == %{id: 1, name: "Leader"}
@@ -56,9 +57,9 @@ defmodule Ms2ex.PartyRecallTest do
     assert {:reply, {:error, :no_recall}, ^party} =
              PartyServer.handle_call({:accept_recall, 2, 0, "NotTheCaster"}, nil, party)
 
-    # wrong prompt type, unknown accepter, and the caster themselves are dropped
+    # wrong prompt slot, unknown accepter, and the caster themselves are dropped
     assert {:reply, {:error, :no_recall}, ^party} =
-             PartyServer.handle_call({:accept_recall, 2, 1, "Leader"}, nil, party)
+             PartyServer.handle_call({:accept_recall, 2, 0, "Leader"}, nil, party)
 
     assert {:reply, {:error, :no_recall}, ^party} =
              PartyServer.handle_call({:accept_recall, 3, 0, "Leader"}, nil, party)
@@ -67,7 +68,7 @@ defmodule Ms2ex.PartyRecallTest do
              PartyServer.handle_call({:accept_recall, 1, 0, "Leader"}, nil, party)
 
     assert {:reply, {:ok, caster_id}, state} =
-             PartyServer.handle_call({:accept_recall, 2, 0, "Leader"}, nil, party)
+             PartyServer.handle_call({:accept_recall, 2, 1, "Leader"}, nil, party)
 
     assert caster_id == 1
     assert state.recall == nil
@@ -80,7 +81,8 @@ defmodule Ms2ex.PartyRecallTest do
     assert {:noreply, state} =
              PartyServer.handle_info({:end_recall, party.recall.id}, party)
 
-    assert_receive {:push, <<0xBE, 0x00, 0x0, 0x0>>}
+    # opcode 0xBE RECALL_SCROLL, then close + party slot
+    assert_receive {:push, <<0xBE, 0x00, 0x0, 0x1>>}
     assert state.recall == nil
 
     # an unrelated expiry timer is ignored

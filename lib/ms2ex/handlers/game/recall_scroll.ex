@@ -9,7 +9,7 @@ defmodule Ms2ex.GameHandlers.RecallScroll do
   import Ms2ex.Net.SenderSession, only: [push: 2]
 
   # A member accepting a follow prompt: identifies the prompt's caster by
-  # name; the slot byte repeats the prompt type the client was shown.
+  # name; the slot byte repeats the prompt slot the client was shown.
   @impl true
   def spec(_command) do
     [
