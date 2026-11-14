@@ -155,7 +155,8 @@ defmodule Ms2ex.GameHandlers.Party do
   # run before anything is consumed or charged.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, party} <- PartyServer.call(character.party_id, :lookup),
+         {:ok, party_id} <- party_id(character),
+         {:ok, party} <- PartyServer.call(party_id, :lookup),
          :ok <- recall_not_pending(party),
          {:ok, targets} <- recall_targets(party, character) do
       Logger.debug("recall requested by #{character.name} (#{length(targets)} promptable)")

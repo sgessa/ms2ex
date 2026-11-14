@@ -331,7 +331,8 @@ defmodule Ms2ex.GameHandlers.UseItem do
   end
 
   defp recall_party(session, character, item) do
-    with {:ok, party} <- Managers.PartyServer.call(character.party_id, :lookup),
+    with {:ok, party_id} <- Helper.Party.party_id(character),
+         {:ok, party} <- Managers.PartyServer.call(party_id, :lookup),
          {:ok, targets} <- prompt_targets(party, character) do
       consumed_item = Managers.Inventory.consume(item)
       push(session, Packets.InventoryItem.consume(consumed_item))

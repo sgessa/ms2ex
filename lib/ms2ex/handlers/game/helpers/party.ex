@@ -78,6 +78,23 @@ defmodule Ms2ex.GameHandlers.Helper.Party do
     end
   end
 
+  # Resolves the character's party id: the struct's party_id when present,
+  # else the party manager's record — a relogin starts the character process
+  # without the virtual field while the membership survives there. Heals the
+  # character process so later readers see the same party.
+  def party_id(character) do
+    with {:error, _} <- struct_party_id(character),
+         {:ok, party_id} <- PartyManager.lookup(character) do
+      Managers.Character.call(character, {:update, %{character | party_id: party_id}})
+      {:ok, party_id}
+    else
+      other -> other
+    end
+  end
+
+  defp struct_party_id(%{party_id: party_id}) when is_integer(party_id), do: {:ok, party_id}
+  defp struct_party_id(_character), do: {:error, :no_party}
+
   # The fields of the summoning member that the party manager needs to run
   # a recall; full character structs never cross into party state.
   def recall_caster(character) do
