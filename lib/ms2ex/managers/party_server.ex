@@ -6,8 +6,14 @@ defmodule Ms2ex.Managers.PartyServer do
   alias Ms2ex.Managers
   alias Ms2ex.Managers.PartyManager
   alias Ms2ex.Managers.PartySearchServer
+  alias Ms2ex.Net
   alias Ms2ex.Types
   alias Phoenix.PubSub
+
+  @recall_type_party 0
+  # How long follow prompts stay on screen; the client renders whatever
+  # deadline the server sends, so this is the whole window.
+  @recall_window_ms 60_000
 
   def broadcast(nil, _packet), do: :error
 
@@ -69,6 +75,7 @@ defmodule Ms2ex.Managers.PartyServer do
   end
 
   def handle_call({:member_offline, character}, _from, state) do
+    state = cancel_recall_if_caster(state, character)
     state = update_member(state, character)
     PartySearchServer.cast({:update, state})
 
@@ -99,6 +106,7 @@ defmodule Ms2ex.Managers.PartyServer do
   end
 
   def handle_call({:remove_member, character}, _from, state) do
+    state = cancel_recall_if_caster(state, character)
     broadcast(state.id, Packets.Party.member_left(character))
     state = Types.Party.remove_member(state, character)
     PartyManager.unregister(character.id)
@@ -137,6 +145,26 @@ defmodule Ms2ex.Managers.PartyServer do
           do: disband(state)
 
         {:reply, {:ok, character}, state}
+    end
+  end
+
+  def handle_call({:accept_recall, character, slot, name}, _from, state) do
+    with %{summoner: summoner, targets: targets} = recall <- state.recall,
+         true <- slot == @recall_type_party,
+         true <- name == summoner.name,
+         false <- character.id == summoner.id,
+         true <- Enum.any?(targets, &(&1.id == character.id)),
+         %{} = caster <- live_summoner(state, summoner) do
+      targets = Enum.reject(targets, &(&1.id == character.id))
+      state = %{state | recall: %{recall | targets: targets}}
+
+      if Enum.empty?(targets) do
+        {:reply, {:ok, caster}, %{state | recall: nil}}
+      else
+        {:reply, {:ok, caster}, state}
+      end
+    else
+      _ -> {:reply, {:error, :no_recall}, state}
     end
   end
 
@@ -240,6 +268,19 @@ defmodule Ms2ex.Managers.PartyServer do
 
   def handle_cast({:record_damage, _character_id, _damage}, state), do: {:noreply, state}
 
+  def handle_cast({:start_recall, requestor}, state) do
+    cond do
+      state.leader_id != requestor.id ->
+        {:noreply, state}
+
+      not is_nil(state.recall) ->
+        {:noreply, state}
+
+      true ->
+        start_recall(state, requestor)
+    end
+  end
+
   def handle_info(:end_ready_check, state) do
     if Enum.count(state.members) != Enum.count(state.ready_check) do
       for m <- state.members, !Enum.member?(state.ready_check, m.id) do
@@ -269,8 +310,105 @@ defmodule Ms2ex.Managers.PartyServer do
 
   def handle_info({:end_vote_kick, _vote_id}, state), do: {:noreply, state}
 
+  def handle_info({:end_recall, recall_id}, %{recall: %{id: recall_id, targets: targets}} = state) do
+    for member <- targets, Map.get(member, :online?, false) do
+      push_close(member)
+    end
+
+    {:noreply, %{state | recall: nil}}
+  end
+
+  def handle_info({:end_recall, _recall_id}, state), do: {:noreply, state}
+
   def handle_info(:shutdown, state) do
     {:stop, :normal, state}
+  end
+
+  # A follow prompt goes to every live party member on a different field:
+  # online, not dead, in a field, and not already on the caster's field.
+  defp start_recall(state, summoner) do
+    case live_summoner(state, summoner) do
+      nil ->
+        {:noreply, state}
+
+      caster ->
+        targets = recall_targets(state, caster)
+
+        for member <- targets do
+          packet =
+            Packets.RecallScroll.open(
+              @recall_type_party,
+              summoner.name,
+              caster.map_id,
+              deadline()
+            )
+
+          Net.SenderSession.push(member.sender_session_pid, packet)
+        end
+
+        if Enum.empty?(targets) do
+          {:noreply, state}
+        else
+          recall = %{
+            id: make_ref(),
+            summoner: summoner,
+            targets: targets,
+            type: @recall_type_party
+          }
+
+          Process.send_after(self(), {:end_recall, recall.id}, @recall_window_ms)
+          {:noreply, %{state | recall: recall}}
+        end
+    end
+  end
+
+  defp recall_targets(state, caster) do
+    Enum.flat_map(state.members, fn member ->
+      with false <- member.id == caster.id,
+           true <- Map.get(member, :online?, false),
+           {:ok, live} <- Managers.Character.call(member.id, :lookup),
+           false <- Map.get(live, :dead?, false),
+           true <- is_pid(Map.get(live, :field_pid)),
+           false <- live.field_pid == caster.field_pid do
+        [live]
+      else
+        _ -> []
+      end
+    end)
+  end
+
+  defp deadline, do: Ms2ex.sync_ticks() + @recall_window_ms
+
+  # The caster must still be a party member with a live field session.
+  defp live_summoner(state, summoner) do
+    with true <- Types.Party.in_party?(state, summoner),
+         {:ok, live} <- Managers.Character.call(summoner.id, :lookup),
+         true <- Map.get(live, :online?, false),
+         true <- is_pid(Map.get(live, :field_pid)) do
+      live
+    else
+      _ -> nil
+    end
+  end
+
+  # When the caster leaves the party or logs out while prompts are up, the
+  # remaining prompts are meaningless.
+  defp cancel_recall_if_caster(state, character) do
+    case state.recall do
+      %{summoner: summoner} when summoner.id == character.id ->
+        broadcast(state.id, Packets.RecallScroll.close(@recall_type_party))
+        %{state | recall: nil}
+
+      _ ->
+        state
+    end
+  end
+
+  defp push_close(member) do
+    Net.SenderSession.push(
+      member.sender_session_pid,
+      Packets.RecallScroll.close(@recall_type_party)
+    )
   end
 
   defp update_member(party, member) do

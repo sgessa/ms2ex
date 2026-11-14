@@ -146,7 +146,10 @@ defmodule Ms2ex.GameHandlers.Party do
     session
   end
 
-  # Summon Party: buy one party summon scroll from the party menu.
+  # Summon Party: the party menu's recall button. Consumes a held recall
+  # scroll (buying one for merets first if none) and sends every eligible
+  # member a follow prompt; members who accept are pulled to the caster's
+  # field by the RecallScroll handler.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, _party} <- PartyServer.call(character.party_id, :lookup) do
@@ -267,24 +270,9 @@ defmodule Ms2ex.GameHandlers.Party do
     consumed_item = Managers.Inventory.consume(item)
     push(session, Packets.InventoryItem.consume(consumed_item))
 
-    with {:ok, party} <- PartyServer.call(character.party_id, :lookup) do
-      Enum.each(party.members, &recall_member(&1, character))
-    end
+    PartyServer.cast(character.party_id, {:start_recall, character})
 
     session
-  end
-
-  defp recall_member(member, summoner) do
-    with {:ok, live_member} <- Managers.Character.call(member.id, :lookup),
-         true <- live_member.id != summoner.id,
-         true <- Map.get(live_member, :online?, false),
-         false <- Map.get(live_member, :dead?, false),
-         true <- is_pid(Map.get(live_member, :field_pid)),
-         false <- live_member.field_pid == summoner.field_pid do
-      Managers.Field.summon_to_field(summoner, live_member)
-    else
-      _ -> :ok
-    end
   end
 
   defp add_party_summon(character, item, premium?) do

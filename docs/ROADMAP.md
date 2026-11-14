@@ -42,6 +42,7 @@ started.
 - [Badge system](features/badge-system.md) — [Partial]
 - [Name-tag insignias](features/insignia.md) — [Partial]
 - [Party damage meter](features/party-dps-meter.md) — [Partial]
+- [Party](features/party.md) — [Partial] (recall works; single-user recall, guild/wedding recalls open)
 
 ## P3 — Client parity & serialization
 
