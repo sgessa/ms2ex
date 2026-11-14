@@ -25,11 +25,11 @@ defmodule Ms2ex.PartyRecallTest do
     assert state.recall == recall
   end
 
-  test "start_recall is leader-only, single-flight, and needs targets" do
+  test "start_recall requires membership, is single-flight, and needs targets" do
     party = party_with_member(2)
 
-    assert {:reply, {:error, :not_leader}, ^party} =
-             PartyServer.handle_call({:start_recall, caster(id: 2), [target(2)]}, nil, party)
+    assert {:reply, {:error, :not_member}, ^party} =
+             PartyServer.handle_call({:start_recall, caster(id: 9), [target(2)]}, nil, party)
 
     assert {:reply, {:error, :no_targets}, ^party} =
              PartyServer.handle_call({:start_recall, caster(), []}, nil, party)

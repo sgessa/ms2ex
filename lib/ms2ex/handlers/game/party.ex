@@ -156,7 +156,6 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.call(character.party_id, :lookup),
-         :ok <- recall_leader_check(party, character),
          :ok <- recall_not_pending(party),
          {:ok, targets} <- recall_targets(party, character) do
       caster = %{id: character.id, name: character.name, map_id: character.map_id}
@@ -286,10 +285,6 @@ defmodule Ms2ex.GameHandlers.Party do
     PartyServer.call(party.id, {:start_recall, caster, targets})
 
     session
-  end
-
-  defp recall_leader_check(party, character) do
-    if party.leader_id == character.id, do: :ok, else: {:recall_drop, :not_leader}
   end
 
   defp recall_not_pending(party) do

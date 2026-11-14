@@ -12,13 +12,15 @@ the server only ever sees the finished request.
 
 Flow:
 
-1. The caster presses the recall button. The client consumes a held recall
-   scroll, or buys one for the meret price first; either way the server
-   receives `Party` (recv `0x2C`) mode `0x1D` with no payload.
-2. Before consuming anything the server checks that the requester is the
-   party leader, that no recall is pending, and that at least one member is
-   promptable: online, alive, in a field, on a different field than the
-   caster, and still in the party.
+1. A party member presses the recall button. The client offers it to every
+   member (gated on the map allowing recalls, the member standing normally,
+   someone else being online); the server accepts requests from any party
+   member, not just the leader. The client consumes a held recall scroll,
+   or buys one for the meret price first; either way the server receives
+   `Party` (recv `0x2C`) mode `0x1D` with no payload.
+2. Before consuming anything the server checks that no recall is pending
+   and that at least one member is promptable: online, alive, in a field,
+   on a different field than the requester, and still in the party.
 3. The server consumes/buys the scroll in the caster's inventory, then sends
    `RecallUser` (send `0x8E`) mode `4` to every promptable member:
    `byte mode` (4), `byte type` (0 for party), `ustring caster name`,
@@ -35,8 +37,8 @@ Flow:
    (`ustring caster name`, `byte flag`) — the server prunes them from the
    matching pending request's targets.
 5. The request stays pending server-side for 25s — a small margin past the
-   client box's own ~20s lifetime — so a leader retry after an unanswered
-   prompt is only briefly blocked (recall-in-progress). Expiry retires the
+   client box's own ~20s lifetime — so a retry after an unanswered prompt
+   is only briefly blocked (recall-in-progress). Expiry retires the
    request silently, and expiry timers are matched to their request, so a
    stale timer never clears a newer one. If the caster leaves the party or
    logs out first, the pending request is dropped. Members who leave, are

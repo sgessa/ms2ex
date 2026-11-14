@@ -155,8 +155,8 @@ defmodule Ms2ex.Managers.PartyServer do
 
   def handle_call({:start_recall, caster, candidates}, _from, state) do
     cond do
-      state.leader_id != caster.id ->
-        {:reply, {:error, :not_leader}, state}
+      not Types.Party.in_party?(state, caster) ->
+        {:reply, {:error, :not_member}, state}
 
       not is_nil(state.recall) ->
         {:reply, {:error, :recall_in_progress}, state}
