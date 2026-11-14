@@ -186,7 +186,8 @@ defmodule Ms2ex.Managers.PartyServer do
     end
   end
 
-  defp reply_recall(state, recall, _summoner, character_id, false) do
+  defp reply_recall(state, _recall, _summoner, character_id, false) do
+    # the matched request is left untouched apart from pruning the decliner
     {:reply, {:error, :declined}, prune_recall_target(state, %{id: character_id})}
   end
 
