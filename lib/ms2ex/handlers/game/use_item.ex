@@ -29,7 +29,9 @@ defmodule Ms2ex.GameHandlers.UseItem do
     end
   end
 
-  # Party Summon Scroll purchase
+  # A recall cast sends its item-use request without an item uid: the
+  # held party summon scroll is consumed automatically, so uid 0 resolves
+  # to whichever scroll the character holds.
   defp item_for_use(character, 0) do
     character
     |> Managers.Inventory.all()
