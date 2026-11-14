@@ -6,63 +6,50 @@ defmodule Ms2ex.PartyRecallTest do
   import Ms2ex.Packets.PacketReader
 
   # Prompt pushes go through Net.SenderSession.push/2, a bare send of
-  # {:push, packet}; pointing a member's session pid at the test process
-  # makes every pushed packet directly assertable.
+  # {:push, packet}; the recall targets carry the test process as their
+  # session pid, making every pushed packet directly assertable.
 
   test "start_recall prompts targets and stores the recall" do
-    caster = member(1)
-    target = member(2)
-
-    party =
-      Types.Party.create(caster)
-      |> Types.Party.add_member(%{id: 2, online?: true})
+    party = party_with_member(2)
 
     assert {:reply, {:ok, recall}, state} =
-             PartyServer.handle_call({:start_recall, caster, [target]}, nil, party)
+             PartyServer.handle_call({:start_recall, caster(), [target(2)]}, nil, party)
 
     assert_receive {:push, packet}
     assert {1, 0, "Leader", 30, deadline} = open_prompt(packet)
     assert deadline in Ms2ex.sync_ticks()..(Ms2ex.sync_ticks() + 60_000)
 
-    assert recall.targets == [target]
-    assert recall.summoner.id == 1
+    assert recall.targets == [target(2)]
+    assert recall.summoner == %{id: 1, name: "Leader"}
     assert state.recall == recall
   end
 
   test "start_recall is leader-only, single-flight, and needs targets" do
-    caster = member(1)
-    target = member(2)
-
-    party =
-      Types.Party.create(caster)
-      |> Types.Party.add_member(%{id: 2, online?: true})
+    party = party_with_member(2)
 
     assert {:reply, {:error, :not_leader}, ^party} =
-             PartyServer.handle_call({:start_recall, member(2), [target]}, nil, party)
+             PartyServer.handle_call({:start_recall, caster(id: 2), [target(2)]}, nil, party)
 
     assert {:reply, {:error, :no_targets}, ^party} =
-             PartyServer.handle_call({:start_recall, caster, []}, nil, party)
+             PartyServer.handle_call({:start_recall, caster(), []}, nil, party)
 
     # candidates outside the party are filtered before the empty check
     assert {:reply, {:error, :no_targets}, ^party} =
-             PartyServer.handle_call({:start_recall, caster, [member(9)]}, nil, party)
+             PartyServer.handle_call({:start_recall, caster(), [target(9)]}, nil, party)
 
     assert {:reply, {:ok, _recall}, state} =
-             PartyServer.handle_call({:start_recall, caster, [target]}, nil, party)
+             PartyServer.handle_call({:start_recall, caster(), [target(2)]}, nil, party)
 
     assert {:reply, {:error, :recall_in_progress}, _state} =
-             PartyServer.handle_call({:start_recall, caster, [target]}, nil, state)
+             PartyServer.handle_call({:start_recall, caster(), [target(2)]}, nil, state)
   end
 
   test "accept validates the prompt, prunes the target, and clears on the last one" do
-    caster = member(1)
-    target = member(2)
+    party = party_with_member(2)
 
     party =
-      Types.Party.create(caster)
-      |> Types.Party.add_member(%{id: 2, online?: true})
-      |> then(fn party ->
-        %{party | recall: %{id: make_ref(), summoner: caster, targets: [target], type: 0}}
+      then(party, fn party ->
+        %{party | recall: recall(targets: [target(2)])}
       end)
 
     # a stale or forged caster name does not pull anyone
@@ -87,35 +74,28 @@ defmodule Ms2ex.PartyRecallTest do
   end
 
   test "expiry closes the remaining prompts and clears the recall" do
-    caster = member(1)
-    target = member(2)
+    party = party_with_member(2)
+    party = %{party | recall: recall(targets: [target(2)])}
 
-    party =
-      Types.Party.create(caster)
-      |> Types.Party.add_member(%{id: 2, online?: true})
-
-    recall = %{id: make_ref(), summoner: caster, targets: [target], type: 0}
-    party = %{party | recall: recall}
-
-    assert {:noreply, state} = PartyServer.handle_info({:end_recall, recall.id}, party)
+    assert {:noreply, state} =
+             PartyServer.handle_info({:end_recall, party.recall.id}, party)
 
     assert_receive {:push, <<0xBE, 0x00, 0x0, 0x0>>}
     assert state.recall == nil
 
     # an unrelated expiry timer is ignored
-    assert {:noreply, ^party} = PartyServer.handle_info({:end_recall, make_ref()}, party)
+    assert {:noreply, ^party} =
+             PartyServer.handle_info({:end_recall, make_ref()}, party)
   end
 
   test "leaving members are pruned from the targets; an emptied recall clears" do
-    caster = member(1)
-
     party =
-      Types.Party.create(caster)
+      Types.Party.create(caster())
       |> Types.Party.add_member(%{id: 2, online?: true})
       |> Types.Party.add_member(%{id: 3, online?: true})
-
-    recall = %{id: make_ref(), summoner: caster, targets: [member(2), member(3)], type: 0}
-    party = %{party | recall: recall}
+      |> then(fn party ->
+        %{party | recall: recall(targets: [target(2), target(3)])}
+      end)
 
     assert {:reply, :ok, state} =
              PartyServer.handle_call({:remove_member, %{id: 2, online?: true}}, nil, party)
@@ -128,17 +108,27 @@ defmodule Ms2ex.PartyRecallTest do
     assert state.recall == nil
   end
 
-  defp member(id, extra \\ []) do
+  defp caster(attrs \\ []) do
     %{
-      id: id,
+      id: 1,
       name: "Leader",
+      map_id: 30,
       online?: true,
-      dead?: false,
-      field_pid: self(),
-      sender_session_pid: self(),
-      map_id: 30
+      sender_session_pid: self()
     }
-    |> Map.merge(Map.new(extra))
+    |> Map.merge(Map.new(attrs))
+  end
+
+  defp target(id), do: %{id: id, sender_session_pid: self()}
+
+  defp party_with_member(member_id) do
+    Types.Party.create(caster())
+    |> Types.Party.add_member(%{id: member_id, online?: true})
+  end
+
+  defp recall(attrs) do
+    %{id: make_ref(), summoner: %{id: 1, name: "Leader"}, targets: [], type: 0}
+    |> Map.merge(Map.new(attrs))
   end
 
   defp open_prompt(packet) do

@@ -39,11 +39,12 @@ Flow:
    kicked, or go offline are pruned from the prompts; an emptied recall is
    cleared outright.
 
-State lives on the party (`PartyServer`'s `recall` field: caster, pending
-targets, window timer). The party manager never calls into character
-managers: prompt targets are resolved live by the caster's session before
-the recall starts, and accepts are validated against party state, so the
-manager's own callbacks stay free of cross-process calls that could deadlock.
+State lives on the party (`PartyServer`'s `recall` field: the caster's id
+and name, the pending targets' session pids, a window timer). No character
+structs are stored: prompt targets are resolved live by the caster's session
+before the recall starts, accepts are validated against party state, and the
+party manager never calls into the character managers, keeping its callbacks
+free of cross-process calls that could deadlock.
 
 ## Open gaps
 

@@ -157,12 +157,14 @@ defmodule Ms2ex.GameHandlers.Party do
          true <- party.leader_id == character.id,
          nil <- party.recall,
          targets when targets != [] <- recall_targets(party, character) do
+      caster = %{id: character.id, name: character.name, map_id: character.map_id}
+
       case party_summon_item(character) do
         %Schema.Item{} = item ->
-          recall_party(session, party, character, item, targets)
+          recall_party(session, party, caster, item, targets)
 
         nil ->
-          purchase_and_recall_party(session, party, character, targets)
+          purchase_and_recall_party(session, party, caster, character, targets)
       end
     else
       _ -> session
@@ -249,11 +251,11 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
-  defp purchase_and_recall_party(session, party, character, targets) do
+  defp purchase_and_recall_party(session, party, caster, character, targets) do
     with item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
          {:ok, result} <- purchase_party_summon(session, character, item),
          %Schema.Item{} = purchased_item <- purchased_item(result) do
-      recall_party(session, party, character, purchased_item, targets)
+      recall_party(session, party, caster, purchased_item, targets)
     else
       _ -> session
     end
@@ -270,19 +272,20 @@ defmodule Ms2ex.GameHandlers.Party do
     |> Enum.find(&(&1.item_id == @party_summon_scroll_id and &1.amount > 0))
   end
 
-  defp recall_party(session, party, character, item, targets) do
+  defp recall_party(session, party, caster, item, targets) do
     consumed_item = Managers.Inventory.consume(item)
     push(session, Packets.InventoryItem.consume(consumed_item))
 
-    PartyServer.call(party.id, {:start_recall, character, targets})
+    PartyServer.call(party.id, {:start_recall, caster, targets})
 
     session
   end
 
   # A follow prompt goes to every live party member on a different field:
   # online, not dead, in a field, and not already on the caster's field.
-  # Resolved here so the prompt targets reach the party manager already
-  # filtered; the session process can safely call the character managers.
+  # Resolved here so the party manager receives only what it needs (member
+  # id and session pid); the session process can safely call the character
+  # managers.
   defp recall_targets(party, caster) do
     party.members
     |> Enum.reject(&(&1.id == caster.id))
@@ -292,7 +295,7 @@ defmodule Ms2ex.GameHandlers.Party do
            false <- Map.get(live, :dead?, false),
            true <- is_pid(Map.get(live, :field_pid)),
            false <- live.field_pid == caster.field_pid do
-        [live]
+        [%{id: live.id, sender_session_pid: live.sender_session_pid}]
       else
         _ -> []
       end

@@ -313,7 +313,9 @@ defmodule Ms2ex.Managers.PartyServer do
   def handle_info({:end_vote_kick, _vote_id}, state), do: {:noreply, state}
 
   def handle_info({:end_recall, recall_id}, %{recall: %{id: recall_id, targets: targets}} = state) do
-    for member <- targets, Map.get(member, :online?, false) do
+    # offline members are pruned from the targets as they leave, so every
+    # remaining target still holds an open prompt on a live session
+    for member <- targets do
       push_close(member)
     end
 
@@ -331,6 +333,9 @@ defmodule Ms2ex.Managers.PartyServer do
   # Candidates were resolved live by the caster's session; only members still
   # in the party at this point get a prompt.
   defp recall_start(state, caster, candidates) do
+    # The session passes only the caster fields the recall needs (id, name,
+    # map id) and each target's session pid; full character structs never
+    # cross into party state.
     targets = Enum.filter(candidates, &Types.Party.in_party?(state, &1))
 
     if Enum.empty?(targets) do
@@ -350,7 +355,7 @@ defmodule Ms2ex.Managers.PartyServer do
 
       recall = %{
         id: make_ref(),
-        summoner: caster,
+        summoner: %{id: caster.id, name: caster.name},
         targets: targets,
         type: @recall_type_party
       }
