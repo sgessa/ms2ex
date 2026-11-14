@@ -149,7 +149,7 @@ defmodule Ms2ex.GameHandlers.Party do
   # Summon Party: the party menu's recall button. Consumes a held recall
   # scroll (buying one for merets first if none) and sends every eligible
   # member a follow prompt; members who accept are pulled to the caster's
-  # field by the RecallScroll handler. The leader and prompt-target checks
+  # field by the RecallUser handler. The leader and prompt-target checks
   # run before anything is consumed or charged.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),

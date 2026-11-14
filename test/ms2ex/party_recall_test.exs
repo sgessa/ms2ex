@@ -2,23 +2,23 @@ defmodule Ms2ex.PartyRecallTest do
   use ExUnit.Case, async: true
 
   alias Ms2ex.Managers.PartyServer
+  alias Ms2ex.Packets
   alias Ms2ex.Types
   import Ms2ex.Packets.PacketReader
 
-  # Prompt pushes go through Net.SenderSession.push/2, a bare send of
-  # {:push, packet}; the recall targets carry the test process as their
+  # Summon request pushes go through Net.SenderSession.push/2, a bare send
+  # of {:push, packet}; the recall targets carry the test process as their
   # session pid, making every pushed packet directly assertable.
 
-  test "start_recall prompts targets and stores the recall" do
+  test "start_recall prompts targets and stores the request" do
     party = party_with_member(2)
 
     assert {:reply, {:ok, recall}, state} =
              PartyServer.handle_call({:start_recall, caster(), [target(2)]}, nil, party)
 
     assert_receive {:push, packet}
-    assert {1, 1, "Leader", 30, deadline} = open_prompt(packet)
-    now = System.system_time(:second)
-    assert deadline in (now - 1)..(now + 61)
+    assert {4, 0, "Leader", request_id} = open_request(packet)
+    assert request_id == recall.id
 
     assert recall.targets == [target(2)]
     assert recall.summoner == %{id: 1, name: "Leader"}
@@ -45,58 +45,63 @@ defmodule Ms2ex.PartyRecallTest do
              PartyServer.handle_call({:start_recall, caster(), [target(2)]}, nil, state)
   end
 
-  test "accept validates the prompt, prunes the target, and clears on the last one" do
+  test "accept validates the request id, prunes the target, and clears on the last one" do
     party = party_with_member(2)
+    party = %{party | recall: request(targets: [target(2)])}
 
-    party =
-      then(party, fn party ->
-        %{party | recall: recall(targets: [target(2)])}
-      end)
-
-    # a stale or forged caster name does not pull anyone
+    # a forged or stale request id does not pull anyone
     assert {:reply, {:error, :no_recall}, ^party} =
-             PartyServer.handle_call({:accept_recall, 2, 0, "NotTheCaster"}, nil, party)
+             PartyServer.handle_call({:recall_reply, 2, party.recall.id + 1, true}, nil, party)
 
-    # wrong prompt slot, unknown accepter, and the caster themselves are dropped
+    # an unknown accepter and the caster themselves are dropped
     assert {:reply, {:error, :no_recall}, ^party} =
-             PartyServer.handle_call({:accept_recall, 2, 0, "Leader"}, nil, party)
+             PartyServer.handle_call({:recall_reply, 3, party.recall.id, true}, nil, party)
 
     assert {:reply, {:error, :no_recall}, ^party} =
-             PartyServer.handle_call({:accept_recall, 3, 0, "Leader"}, nil, party)
-
-    assert {:reply, {:error, :no_recall}, ^party} =
-             PartyServer.handle_call({:accept_recall, 1, 0, "Leader"}, nil, party)
+             PartyServer.handle_call({:recall_reply, 1, party.recall.id, true}, nil, party)
 
     assert {:reply, {:ok, caster_id}, state} =
-             PartyServer.handle_call({:accept_recall, 2, 1, "Leader"}, nil, party)
+             PartyServer.handle_call({:recall_reply, 2, party.recall.id, true}, nil, party)
 
     assert caster_id == 1
     assert state.recall == nil
   end
 
-  test "expiry closes the remaining prompts and clears the recall" do
-    party = party_with_member(2)
-    party = %{party | recall: recall(targets: [target(2)])}
+  test "decline and busy replies prune the target; an emptied request clears" do
+    party =
+      party_with_members([2, 3])
+      |> then(fn party ->
+        %{party | recall: request(targets: [target(2), target(3)])}
+      end)
+
+    assert {:reply, {:error, :declined}, state} =
+             PartyServer.handle_call({:recall_reply, 2, party.recall.id, false}, nil, party)
+
+    assert [%{id: 3}] = state.recall.targets
 
     assert {:noreply, state} =
-             PartyServer.handle_info({:end_recall, party.recall.id}, party)
+             PartyServer.handle_cast({:recall_busy, 3, "Leader"}, state)
 
-    # opcode 0xBE RECALL_SCROLL, then close + party slot
-    assert_receive {:push, <<0xBE, 0x00, 0x0, 0x1>>}
     assert state.recall == nil
 
-    # an unrelated expiry timer is ignored
-    assert {:noreply, ^party} =
-             PartyServer.handle_info({:end_recall, make_ref()}, party)
+    # a busy reply naming another caster leaves the request alone
+    assert {:noreply, ^state} = PartyServer.handle_cast({:recall_busy, 2, "SomeoneElse"}, state)
   end
 
-  test "leaving members are pruned from the targets; an emptied recall clears" do
+  test "expiry retires the pending request without pushing anything" do
+    party = party_with_member(2)
+    party = %{party | recall: request(targets: [target(2)])}
+
+    assert {:noreply, state} = PartyServer.handle_info({:end_recall, party.recall.id}, party)
+    assert state.recall == nil
+    refute_received {:push, _packet}
+  end
+
+  test "leaving members are pruned from the targets; an emptied request clears" do
     party =
-      Types.Party.create(caster())
-      |> Types.Party.add_member(%{id: 2, online?: true})
-      |> Types.Party.add_member(%{id: 3, online?: true})
+      party_with_members([2, 3])
       |> then(fn party ->
-        %{party | recall: recall(targets: [target(2), target(3)])}
+        %{party | recall: request(targets: [target(2), target(3)])}
       end)
 
     assert {:reply, :ok, state} =
@@ -108,6 +113,13 @@ defmodule Ms2ex.PartyRecallTest do
              PartyServer.handle_call({:remove_member, %{id: 3, online?: true}}, nil, state)
 
     assert state.recall == nil
+  end
+
+  test "the request packet carries the party type, caster name and request id" do
+    packet = Packets.RecallUser.request(0, "enki", 1234)
+
+    assert <<0x8E, 0x00, payload::binary>> = packet
+    assert {4, 0, "enki", 1234} = open_request(packet)
   end
 
   defp caster(attrs \\ []) do
@@ -123,27 +135,27 @@ defmodule Ms2ex.PartyRecallTest do
 
   defp target(id), do: %{id: id, sender_session_pid: self()}
 
-  defp party_with_member(member_id) do
-    Types.Party.create(caster())
-    |> Types.Party.add_member(%{id: member_id, online?: true})
+  defp party_with_member(member_id), do: party_with_members([member_id])
+
+  defp party_with_members(member_ids) do
+    Enum.reduce(member_ids, Types.Party.create(caster()), fn id, party ->
+      Types.Party.add_member(party, %{id: id, online?: true})
+    end)
   end
 
-  defp recall(attrs) do
-    %{id: make_ref(), summoner: %{id: 1, name: "Leader"}, targets: [], type: 0}
+  defp request(attrs) do
+    %{id: 1234, summoner: %{id: 1, name: "Leader"}, targets: [], type: 0}
     |> Map.merge(Map.new(attrs))
   end
 
-  defp open_prompt(packet) do
-    # opcode 0xBE RECALL_SCROLL, then the open prompt layout
-    <<0xBE, 0x00, payload::binary>> = packet
+  defp open_request(packet) do
+    # opcode 0x8E RECALL_USER, then the request layout
+    <<0x8E, 0x00, payload::binary>> = packet
     {mode, payload} = get_byte(payload)
     {type, payload} = get_byte(payload)
     {name, payload} = get_ustring(payload)
-    {_stored_a, payload} = get_int(payload)
-    {map_id, payload} = get_int(payload)
-    {_stored_b, payload} = get_int(payload)
-    {deadline, ""} = get_long(payload)
+    {request_id, ""} = get_int(payload)
 
-    {mode, type, name, map_id, deadline}
+    {mode, type, name, request_id}
   end
 end

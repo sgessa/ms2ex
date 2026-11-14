@@ -9,10 +9,10 @@ defmodule Ms2ex.Managers.PartyServer do
   alias Ms2ex.Types
   alias Phoenix.PubSub
 
-  # Prompt slot in the client's notify dialog: 0 guild, 1 party, 2 wedding.
-  @recall_type_party 1
-  # How long follow prompts stay on screen; the client renders whatever
-  # deadline the server sends, so this is the whole window.
+  # Summon request type byte: 0 for party prompts.
+  @recall_request_type 0
+  # How long a summon request stays pending server-side; the client's own
+  # prompt box closes after roughly twenty seconds.
   @recall_window_s 60
   @recall_window_ms @recall_window_s * 1000
 
@@ -164,25 +164,30 @@ defmodule Ms2ex.Managers.PartyServer do
     end
   end
 
-  def handle_call({:accept_recall, character_id, slot, name}, _from, state) do
-    with %{summoner: summoner, targets: targets} = recall <- state.recall,
-         true <- slot == @recall_type_party,
-         true <- name == summoner.name,
-         false <- character_id == summoner.id,
-         true <- Enum.any?(targets, &(&1.id == character_id)),
+  def handle_call({:recall_reply, character_id, request_id, accepted?}, _from, state) do
+    with %{id: ^request_id, summoner: summoner, targets: targets} = recall <- state.recall,
          %{} = member when member.id == summoner.id <- Types.Party.get_member(state, summoner.id),
-         true <- Map.get(member, :online?, false) do
-      targets = Enum.reject(targets, &(&1.id == character_id))
-      state = %{state | recall: %{recall | targets: targets}}
-
-      if Enum.empty?(targets) do
-        {:reply, {:ok, summoner.id}, %{state | recall: nil}}
-      else
-        {:reply, {:ok, summoner.id}, state}
-      end
+         true <- Map.get(member, :online?, false),
+         true <- Enum.any?(targets, &(&1.id == character_id)) do
+      reply_recall(state, recall, summoner, character_id, accepted?)
     else
       _ -> {:reply, {:error, :no_recall}, state}
     end
+  end
+
+  defp reply_recall(state, recall, summoner, character_id, true) do
+    targets = Enum.reject(recall.targets, &(&1.id == character_id))
+    state = %{state | recall: %{recall | targets: targets}}
+
+    if Enum.empty?(targets) do
+      {:reply, {:ok, summoner.id}, %{state | recall: nil}}
+    else
+      {:reply, {:ok, summoner.id}, state}
+    end
+  end
+
+  defp reply_recall(state, recall, _summoner, character_id, false) do
+    {:reply, {:error, :declined}, prune_recall_target(state, %{id: character_id})}
   end
 
   def handle_cast({:start_vote_kick, requestor, target_id}, %{vote_kick: nil} = state) do
@@ -285,6 +290,17 @@ defmodule Ms2ex.Managers.PartyServer do
 
   def handle_cast({:record_damage, _character_id, _damage}, state), do: {:noreply, state}
 
+  # A member with an open prompt auto-replied busy for an older prompt.
+  def handle_cast({:recall_busy, character_id, caster_name}, state) do
+    case state.recall do
+      %{summoner: %{name: name}} when name == caster_name ->
+        {:noreply, prune_recall_target(state, %{id: character_id})}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
   def handle_info(:end_ready_check, state) do
     if Enum.count(state.members) != Enum.count(state.ready_check) do
       for m <- state.members, !Enum.member?(state.ready_check, m.id) do
@@ -314,17 +330,11 @@ defmodule Ms2ex.Managers.PartyServer do
 
   def handle_info({:end_vote_kick, _vote_id}, state), do: {:noreply, state}
 
-  def handle_info({:end_recall, recall_id}, %{recall: %{id: recall_id, targets: targets}} = state) do
-    # offline members are pruned from the targets as they leave, so every
-    # remaining target still holds an open prompt on a live session
-    for member <- targets do
-      push_close(member)
-    end
-
+  def handle_info({:end_recall, _recall_id}, state) do
+    # prompt boxes close themselves client-side after roughly twenty
+    # seconds; expiry just retires the pending request
     {:noreply, %{state | recall: nil}}
   end
-
-  def handle_info({:end_recall, _recall_id}, state), do: {:noreply, state}
 
   def handle_info(:shutdown, state) do
     {:stop, :normal, state}
@@ -333,8 +343,6 @@ defmodule Ms2ex.Managers.PartyServer do
   # The client compares the deadline against its server-time clock (unix
   # seconds, synced via the time-sync packet). A deadline in another unit
   # reads as already expired and the prompt closes instantly.
-  defp deadline, do: System.system_time(:second) + @recall_window_s
-
   # Candidates were resolved live by the caster's session; only members still
   # in the party at this point get a prompt.
   defp recall_start(state, caster, candidates) do
@@ -346,24 +354,17 @@ defmodule Ms2ex.Managers.PartyServer do
     if Enum.empty?(targets) do
       {:reply, {:error, :no_targets}, state}
     else
-      for member <- targets do
-        packet =
-          Packets.RecallScroll.open(
-            @recall_type_party,
-            caster.name,
-            caster.map_id,
-            deadline()
-          )
-
-        Net.SenderSession.push(member.sender_session_pid, packet)
-      end
-
       recall = %{
-        id: make_ref(),
+        id: Ms2ex.generate_int(),
         summoner: %{id: caster.id, name: caster.name},
         targets: targets,
-        type: @recall_type_party
+        type: @recall_request_type
       }
+
+      for member <- targets do
+        packet = Packets.RecallUser.request(recall.type, caster.name, recall.id)
+        Net.SenderSession.push(member.sender_session_pid, packet)
+      end
 
       Process.send_after(self(), {:end_recall, recall.id}, @recall_window_ms)
       {:reply, {:ok, recall}, %{state | recall: recall}}
@@ -389,23 +390,15 @@ defmodule Ms2ex.Managers.PartyServer do
   end
 
   # When the caster leaves the party or logs out while prompts are up, the
-  # remaining prompts are meaningless.
+  # remaining prompts are meaningless; the member's boxes close themselves.
   defp cancel_recall_if_caster(state, character) do
     case state.recall do
       %{summoner: summoner} when summoner.id == character.id ->
-        broadcast(state.id, Packets.RecallScroll.close(@recall_type_party))
         %{state | recall: nil}
 
       _ ->
         state
     end
-  end
-
-  defp push_close(member) do
-    Net.SenderSession.push(
-      member.sender_session_pid,
-      Packets.RecallScroll.close(@recall_type_party)
-    )
   end
 
   defp update_member(party, member) do

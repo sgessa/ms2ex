@@ -20,40 +20,41 @@ Flow:
    promptable: online, alive, in a field, on a different field than the
    caster, and still in the party.
 3. The server consumes/buys the scroll in the caster's inventory, then sends
-   `RecallScroll` (send `0xBE`) mode `1` to every promptable member:
-   `byte slot` (the client's notify-clip index: 0 guild, 1 party, 2 wedding),
-   `ustring caster name`, `int` (stored, unused), `int map id`, `int`
-   (stored, unused), `long deadline` — **unix seconds** on the client's
-   server-time clock (the int64 `serverTime` of the time-sync packet). The
-   client shows a bottom-centre prompt in the matching clip with a countdown
-   that turns red in the last ten seconds. A deadline in any other unit
-   reads as already expired and the prompt closes within a tick.
-4. A member who accepts sends `RecallScroll` (recv `0x70`):
-   `byte slot` (echoed from the prompt), `ustring caster name`, `int map id`.
-   Declining or letting the prompt expire sends nothing. On accept the
-   server validates the prompt against party state (slot, caster name,
-   member still targeted, caster still a live party member) and then pulls
-   that member to the caster's current map/position/instance, replying
-   `RecallScroll` mode `0` (`byte slot`) to close the prompt.
-5. The window is server-chosen (60s). On expiry the server sends mode `0` to
-   every member still holding a prompt. If the caster leaves the party or
-   logs out first, mode `0` closes everyone's prompt. Members who leave, are
-   kicked, or go offline are pruned from the prompts; an emptied recall is
-   cleared outright.
+   `RecallUser` (send `0x8E`) mode `4` to every promptable member:
+   `byte mode` (4), `byte type` (0 for party), `ustring caster name`,
+   `int request id`. The client shows a modal box — "{caster} wants to
+   summon you to their location" — with accept/decline buttons; it closes
+   itself after roughly twenty seconds (a timeout answers decline).
+4. A member answers with `RecallUser` (recv `0x5E`) mode `4`:
+   `byte mode` (4), `int request id`, `byte accepted` (1/0). Declining or
+   letting the box time out sends decline. On accept the server matches the
+   request id against the pending request, validates against party state
+   (member still targeted, caster still a live party member) and then pulls
+   that member to the caster's current map/position/instance. A member who
+   opens a second prompt while one is pending auto-replies mode `7`
+   (`ustring caster name`, `byte flag`) — the server prunes them from the
+   matching pending request's targets.
+5. The request stays pending server-side for 60s; expiry retires it
+   silently (the boxes have closed themselves already). If the caster
+   leaves the party or logs out first, the pending request is dropped.
+   Members who leave, are kicked, or go offline are pruned from the
+   targets; an emptied request is cleared outright.
 
-State lives on the party (`PartyServer`'s `recall` field: the caster's id
-and name, the pending targets' session pids, a window timer). No character
+State lives on the party (`PartyServer`'s `recall` field: the request id,
+the caster's id and name, the pending targets' session pids). No character
 structs are stored: prompt targets are resolved live by the caster's session
-before the recall starts, accepts are validated against party state, and the
-party manager never calls into the character managers, keeping its callbacks
-free of cross-process calls that could deadlock.
+before the request starts, replies are matched by request id and validated
+against party state, and the party manager never calls into the character
+managers, keeping its callbacks free of cross-process calls that could
+deadlock.
 
 ## Open gaps
 
-- The `RecallUser` flow (single-user summon request with a modal yes/no box,
-  recv `0x8E` / send `0x5E`) is not implemented; it is a separate opcode
-  family from the scroll recall.
-- Guild and wedding recalls share the prompt type space (type 1 and 2) but
-  only the party path exists.
+- The requester hears nothing when a member declines or the box times out;
+  the client's requester-side notices (`RecallUser` send modes `0x8E`
+  sub-modes 5/6/7) are not sent yet.
+- The bottom-centre `RecallScroll` bar family (send `0xBE` / recv `0x70`)
+  belongs to the cash recall items (guild/party/wedding call scrolls) and is
+  not implemented.
 - Maps can forbid recall; the server does not check a map property for this
   (the client disables its own button, but the server trusts the request).

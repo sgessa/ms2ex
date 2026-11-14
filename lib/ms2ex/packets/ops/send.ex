@@ -107,7 +107,7 @@ defmodule Ms2ex.Packets.Ops.Send do
     0xBA => "CHARACTER_MAX_COUNT",
     0xBB => "WORLD",
     0xBD => "PARTY_SEARCH",
-    0xBE => "RECALL_SCROLL",
+    0x8E => "RECALL_USER",
     0xC5 => "PLAY_SYSTEM_SOUND",
     0xC6 => "FISHING",
     0x70 => "GUIDE_OBJECT",
