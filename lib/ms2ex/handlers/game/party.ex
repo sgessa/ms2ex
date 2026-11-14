@@ -151,13 +151,15 @@ defmodule Ms2ex.GameHandlers.Party do
   # Summon Party: the party menu's recall button. Consumes a held recall
   # scroll (buying one for merets first if none) and sends every eligible
   # member a follow prompt; members who accept are pulled to the caster's
-  # field by the RecallUser handler. The leader and prompt-target checks
+  # field by the RecallUser handler. The membership and prompt-target checks
   # run before anything is consumed or charged.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.call(character.party_id, :lookup),
          :ok <- recall_not_pending(party),
          {:ok, targets} <- recall_targets(party, character) do
+      Logger.debug("recall requested by #{character.name} (#{length(targets)} promptable)")
+
       caster = recall_caster(character)
 
       case party_summon_item(character) do
@@ -173,6 +175,7 @@ defmodule Ms2ex.GameHandlers.Party do
         session
 
       _ ->
+        Logger.debug("party recall dropped: lookup failed")
         session
     end
   end
@@ -263,7 +266,9 @@ defmodule Ms2ex.GameHandlers.Party do
          %Schema.Item{} = purchased_item <- purchased_item(result) do
       recall_party(session, party, caster, purchased_item, targets)
     else
-      _ -> session
+      _ ->
+        Logger.debug("recall scroll purchase failed for #{character.name}")
+        session
     end
   end
 
@@ -282,7 +287,7 @@ defmodule Ms2ex.GameHandlers.Party do
     consumed_item = Managers.Inventory.consume(item)
     push(session, Packets.InventoryItem.consume(consumed_item))
 
-    PartyServer.call(party.id, {:start_recall, caster, targets})
+    log_start_reply(caster, PartyServer.call(party.id, {:start_recall, caster, targets}))
 
     session
   end
@@ -290,6 +295,12 @@ defmodule Ms2ex.GameHandlers.Party do
   defp recall_not_pending(party) do
     if is_nil(party.recall), do: :ok, else: {:recall_drop, :request_pending}
   end
+
+  defp log_start_reply(caster, {:ok, _recall}),
+    do: Logger.debug("recall request started by #{caster.name}")
+
+  defp log_start_reply(caster, {:error, reason}),
+    do: Logger.debug("recall request rejected for #{caster.name}: #{inspect(reason)}")
 
   defp add_party_summon(character, item, premium?) do
     case Managers.Inventory.add_item(character, item) do

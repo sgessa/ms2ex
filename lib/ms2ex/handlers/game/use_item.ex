@@ -336,16 +336,24 @@ defmodule Ms2ex.GameHandlers.UseItem do
       consumed_item = Managers.Inventory.consume(item)
       push(session, Packets.InventoryItem.consume(consumed_item))
 
-      Managers.PartyServer.call(
-        party.id,
-        {:start_recall, Helper.Party.recall_caster(character), targets}
-      )
+      caster = Helper.Party.recall_caster(character)
+
+      case Managers.PartyServer.call(
+             party.id,
+             {:start_recall, caster, targets}
+           ) do
+        {:ok, _recall} ->
+          Logger.debug("recall request started by #{caster.name}")
+
+        {:error, reason} ->
+          Logger.debug("recall request rejected for #{caster.name}: #{inspect(reason)}")
+      end
     else
       {:recall_drop, reason} ->
         Logger.debug("scroll recall dropped: #{reason}")
 
       _ ->
-        :ok
+        Logger.debug("scroll recall dropped: lookup failed")
     end
 
     session
