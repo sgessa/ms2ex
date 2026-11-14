@@ -97,6 +97,15 @@ defmodule Ms2ex.PartyRecallTest do
     refute_received {:push, _packet}
   end
 
+  test "a stale expiry timer does not clear a newer request" do
+    party = party_with_member(2)
+    stale_id = 1234
+    party = %{party | recall: request(id: 5678, targets: [target(2)])}
+
+    assert {:noreply, state} = PartyServer.handle_info({:end_recall, stale_id}, party)
+    assert state.recall == party.recall
+  end
+
   test "leaving members are pruned from the targets; an emptied request clears" do
     party =
       party_with_members([2, 3])

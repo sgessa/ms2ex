@@ -34,11 +34,14 @@ Flow:
    opens a second prompt while one is pending auto-replies mode `7`
    (`ustring caster name`, `byte flag`) — the server prunes them from the
    matching pending request's targets.
-5. The request stays pending server-side for 60s; expiry retires it
-   silently (the boxes have closed themselves already). If the caster
-   leaves the party or logs out first, the pending request is dropped.
-   Members who leave, are kicked, or go offline are pruned from the
-   targets; an emptied request is cleared outright.
+5. The request stays pending server-side for 25s — a small margin past the
+   client box's own ~20s lifetime — so a leader retry after an unanswered
+   prompt is only briefly blocked (recall-in-progress). Expiry retires the
+   request silently, and expiry timers are matched to their request, so a
+   stale timer never clears a newer one. If the caster leaves the party or
+   logs out first, the pending request is dropped. Members who leave, are
+   kicked, or go offline are pruned from the targets; an emptied request is
+   cleared outright.
 
 State lives on the party (`PartyServer`'s `recall` field: the request id,
 the caster's id and name, the pending targets' session pids). No character

@@ -11,9 +11,11 @@ defmodule Ms2ex.Managers.PartyServer do
 
   # Summon request type byte: 0 for party prompts.
   @recall_request_type 0
-  # How long a summon request stays pending server-side; the client's own
-  # prompt box closes after roughly twenty seconds.
-  @recall_window_s 60
+  # How long a summon request stays pending server-side. The client's own
+  # prompt box closes after roughly twenty seconds, so the server window is
+  # only a small margin past that; a leader retry inside the window is
+  # dropped as recall-in-progress.
+  @recall_window_s 25
   @recall_window_ms @recall_window_s * 1000
 
   def broadcast(nil, _packet), do: :error
@@ -331,11 +333,13 @@ defmodule Ms2ex.Managers.PartyServer do
 
   def handle_info({:end_vote_kick, _vote_id}, state), do: {:noreply, state}
 
-  def handle_info({:end_recall, _recall_id}, state) do
+  def handle_info({:end_recall, recall_id}, %{recall: %{id: recall_id}} = state) do
     # prompt boxes close themselves client-side after roughly twenty
     # seconds; expiry just retires the pending request
     {:noreply, %{state | recall: nil}}
   end
+
+  def handle_info({:end_recall, _stale_timer}, state), do: {:noreply, state}
 
   def handle_info(:shutdown, state) do
     {:stop, :normal, state}
