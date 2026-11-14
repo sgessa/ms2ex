@@ -1,4 +1,6 @@
 defmodule Ms2ex.GameHandlers.Party do
+  require Logger
+
   alias Ms2ex.Managers
   alias Ms2ex.Context
   alias Ms2ex.Enums
@@ -154,9 +156,9 @@ defmodule Ms2ex.GameHandlers.Party do
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
          {:ok, party} <- PartyServer.call(character.party_id, :lookup),
-         true <- party.leader_id == character.id,
-         nil <- party.recall,
-         targets when targets != [] <- recall_targets(party, character) do
+         :ok <- recall_leader_check(party, character),
+         :ok <- recall_not_pending(party),
+         {:ok, targets} <- recall_targets(party, character) do
       caster = %{id: character.id, name: character.name, map_id: character.map_id}
 
       case party_summon_item(character) do
@@ -167,7 +169,12 @@ defmodule Ms2ex.GameHandlers.Party do
           purchase_and_recall_party(session, party, caster, character, targets)
       end
     else
-      _ -> session
+      {:recall_drop, reason} ->
+        Logger.debug("party recall dropped: #{reason}")
+        session
+
+      _ ->
+        session
     end
   end
 
@@ -281,25 +288,36 @@ defmodule Ms2ex.GameHandlers.Party do
     session
   end
 
+  defp recall_leader_check(party, character) do
+    if party.leader_id == character.id, do: :ok, else: {:recall_drop, :not_leader}
+  end
+
+  defp recall_not_pending(party) do
+    if is_nil(party.recall), do: :ok, else: {:recall_drop, :request_pending}
+  end
+
   # A follow prompt goes to every live party member on a different field:
   # online, not dead, in a field, and not already on the caster's field.
   # Resolved here so the party manager receives only what it needs (member
   # id and session pid); the session process can safely call the character
   # managers.
   defp recall_targets(party, caster) do
-    party.members
-    |> Enum.reject(&(&1.id == caster.id))
-    |> Enum.flat_map(fn member ->
-      with true <- Map.get(member, :online?, false),
-           {:ok, live} <- Managers.Character.call(member.id, :lookup),
-           false <- Map.get(live, :dead?, false),
-           true <- is_pid(Map.get(live, :field_pid)),
-           false <- live.field_pid == caster.field_pid do
-        [%{id: live.id, sender_session_pid: live.sender_session_pid}]
-      else
-        _ -> []
-      end
-    end)
+    targets =
+      party.members
+      |> Enum.reject(&(&1.id == caster.id))
+      |> Enum.flat_map(fn member ->
+        with true <- Map.get(member, :online?, false),
+             {:ok, live} <- Managers.Character.call(member.id, :lookup),
+             false <- Map.get(live, :dead?, false),
+             true <- is_pid(Map.get(live, :field_pid)),
+             false <- live.field_pid == caster.field_pid do
+          [%{id: live.id, sender_session_pid: live.sender_session_pid}]
+        else
+          _ -> []
+        end
+      end)
+
+    if targets == [], do: {:recall_drop, :no_promptable_members}, else: {:ok, targets}
   end
 
   defp add_party_summon(character, item, premium?) do
