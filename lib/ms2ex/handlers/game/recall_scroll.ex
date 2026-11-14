@@ -24,8 +24,9 @@ defmodule Ms2ex.GameHandlers.RecallScroll do
     {caster_name, _packet} = get_ustring(packet)
 
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, caster} <-
-           PartyServer.call(character.party_id, {:accept_recall, character, slot, caster_name}) do
+         {:ok, caster_id} <-
+           PartyServer.call(character.party_id, {:accept_recall, character.id, slot, caster_name}),
+         {:ok, caster} <- Managers.Character.call(caster_id, :lookup) do
       Managers.Field.summon_to_field(caster, character)
       push(session, Packets.RecallScroll.close(slot))
     else

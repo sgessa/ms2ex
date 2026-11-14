@@ -149,16 +149,20 @@ defmodule Ms2ex.GameHandlers.Party do
   # Summon Party: the party menu's recall button. Consumes a held recall
   # scroll (buying one for merets first if none) and sends every eligible
   # member a follow prompt; members who accept are pulled to the caster's
-  # field by the RecallScroll handler.
+  # field by the RecallScroll handler. The leader and prompt-target checks
+  # run before anything is consumed or charged.
   defp handle_mode(0x1D, _packet, session) do
     with {:ok, character} <- Managers.Character.call(session.character_id, :lookup),
-         {:ok, _party} <- PartyServer.call(character.party_id, :lookup) do
+         {:ok, party} <- PartyServer.call(character.party_id, :lookup),
+         true <- party.leader_id == character.id,
+         nil <- party.recall,
+         targets when targets != [] <- recall_targets(party, character) do
       case party_summon_item(character) do
         %Schema.Item{} = item ->
-          recall_party(session, character, item)
+          recall_party(session, party, character, item, targets)
 
         nil ->
-          purchase_and_recall_party(session, character)
+          purchase_and_recall_party(session, party, character, targets)
       end
     else
       _ -> session
@@ -245,11 +249,11 @@ defmodule Ms2ex.GameHandlers.Party do
     end
   end
 
-  defp purchase_and_recall_party(session, character) do
+  defp purchase_and_recall_party(session, party, character, targets) do
     with item when not is_nil(item) <- Context.Items.drop_item(@party_summon_scroll_id, 1, 1),
          {:ok, result} <- purchase_party_summon(session, character, item),
          %Schema.Item{} = purchased_item <- purchased_item(result) do
-      recall_party(session, character, purchased_item)
+      recall_party(session, party, character, purchased_item, targets)
     else
       _ -> session
     end
@@ -266,13 +270,33 @@ defmodule Ms2ex.GameHandlers.Party do
     |> Enum.find(&(&1.item_id == @party_summon_scroll_id and &1.amount > 0))
   end
 
-  defp recall_party(session, character, item) do
+  defp recall_party(session, party, character, item, targets) do
     consumed_item = Managers.Inventory.consume(item)
     push(session, Packets.InventoryItem.consume(consumed_item))
 
-    PartyServer.cast(character.party_id, {:start_recall, character})
+    PartyServer.call(party.id, {:start_recall, character, targets})
 
     session
+  end
+
+  # A follow prompt goes to every live party member on a different field:
+  # online, not dead, in a field, and not already on the caster's field.
+  # Resolved here so the prompt targets reach the party manager already
+  # filtered; the session process can safely call the character managers.
+  defp recall_targets(party, caster) do
+    party.members
+    |> Enum.reject(&(&1.id == caster.id))
+    |> Enum.flat_map(fn member ->
+      with true <- Map.get(member, :online?, false),
+           {:ok, live} <- Managers.Character.call(member.id, :lookup),
+           false <- Map.get(live, :dead?, false),
+           true <- is_pid(Map.get(live, :field_pid)),
+           false <- live.field_pid == caster.field_pid do
+        [live]
+      else
+        _ -> []
+      end
+    end)
   end
 
   defp add_party_summon(character, item, premium?) do
